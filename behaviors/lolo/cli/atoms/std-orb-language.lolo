@@ -156,8 +156,10 @@ orbital OrbLanguageOrbital {
       LANG_SPAWNED -> versioning
         (set @entity.pid @payload.pid)
         (os/read @payload.stdout 4096 { key: "version" emit: { success: LANG_VERSION_TEXT, failure: LANG_START_FAILED } })
-      LANG_VERSION_TEXT -> versioning
-        (set @entity.reply (str/trim (bytes/to-string @payload.data)))
+      LANG_VERSION_TEXT -> versioning when (= (bytes/to-string @payload.data) null)
+        (emit LANG_START_FAILED { error: "the host binary's --version answer is not text" })
+      LANG_VERSION_TEXT -> versioning when (!= (bytes/to-string @payload.data) null)
+        (set @entity.reply (str/trim (str/default (bytes/to-string @payload.data) "")))
         (os/wait @entity.pid { key: "wait" emit: { success: LANG_WAITED, failure: LANG_START_FAILED } })
       LANG_WAITED -> probing when (str/startsWith @entity.reply "orb ")
         (set @entity.running (str/slice @entity.reply 4))
@@ -190,7 +192,7 @@ orbital OrbLanguageOrbital {
         (emit LANGUAGE_ROW { line: (array/last @entity.lines) })
         (emit LANG_NEXT { tag: (str/concat "" @entity.cursor) })
       LANG_FILE -> probing
-        (emit LANG_MANIFEST { text: (bytes/to-string @payload.data) })
+        (emit LANG_MANIFEST { text: (str/default (bytes/to-string @payload.data) "") })
       LANG_MANIFEST -> probing when (= (json/parse @payload.text OrbLanguageManifest) null)
         (set @entity.ver "")
         (set @entity.kind "json")
@@ -274,7 +276,7 @@ orbital OrbLanguageOrbital {
         (set @entity.foundCursor 0)
         (emit LANG_PACK_CHECK { tag: "0" })
       LANG_PACK_FILE -> scanning
-        (emit LANG_PACK_MANIFEST { text: (bytes/to-string @payload.data) })
+        (emit LANG_PACK_MANIFEST { text: (str/default (bytes/to-string @payload.data) "") })
       LANG_PACK_UNREAD -> scanning
         (set @entity.packCursor (+ @entity.packCursor 1))
         (emit LANG_PACK_READ { tag: (str/concat @entity.stage ":u" @entity.packCursor) })
@@ -306,15 +308,17 @@ orbital OrbLanguageOrbital {
         (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat (array/nth @entity.roots (object/get (array/nth @entity.found @entity.foundCursor) "stage")) "/" (object/get (array/nth @entity.found @entity.foundCursor) "name") "/package.json")) ": " (object/get (array/nth @entity.found @entity.foundCursor) "name") ": `orbVocabulary.compiler` " (json/stringify (object/get (array/nth @entity.found @entity.foundCursor) "compiler")) " is not a semver range: " @payload.reason) })
       LANG_VOCAB_UNREAD -> scanning
         (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat (array/nth @entity.roots (object/get (array/nth @entity.found @entity.foundCursor) "stage")) "/" (object/get (array/nth @entity.found @entity.foundCursor) "name") "/" (object/get (array/nth @entity.found @entity.foundCursor) "vocab"))) ": " (object/get (array/nth @entity.found @entity.foundCursor) "name") ": " @payload.error) })
-      LANG_VOCAB_FILE -> scanning when (= (json/parse (bytes/to-string @payload.data) VocabFile) null)
+      LANG_VOCAB_FILE -> scanning when (= (bytes/to-string @payload.data) null)
+        (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat (array/nth @entity.roots (object/get (array/nth @entity.found @entity.foundCursor) "stage")) "/" (object/get (array/nth @entity.found @entity.foundCursor) "name") "/" (object/get (array/nth @entity.found @entity.foundCursor) "vocab"))) ": " (object/get (array/nth @entity.found @entity.foundCursor) "name") ": the file is not text") })
+      LANG_VOCAB_FILE -> scanning when (and (!= (bytes/to-string @payload.data) null) (= (json/parse (str/default (bytes/to-string @payload.data) "") VocabFile) null))
         (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (str/concat (array/nth @entity.roots (object/get (array/nth @entity.found @entity.foundCursor) "stage")) "/" (object/get (array/nth @entity.found @entity.foundCursor) "name") "/" (object/get (array/nth @entity.found @entity.foundCursor) "vocab"))) ": " (object/get (array/nth @entity.found @entity.foundCursor) "name") ": invalid JSON") })
-      LANG_VOCAB_FILE -> scanning when (and (!= (json/parse (bytes/to-string @payload.data) VocabFile) null) (= (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") "en"))
+      LANG_VOCAB_FILE -> scanning when (and (!= (json/parse (str/default (bytes/to-string @payload.data) "") VocabFile) null) (= (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") VocabFile) "meta") "code") "en"))
         (emit LANG_PACK_PROBLEM { text: (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (object/get (array/nth @entity.found @entity.foundCursor) "name")) ": " (object/get (array/nth @entity.found @entity.foundCursor) "name") ": English is built in and cannot be replaced") })
-      LANG_VOCAB_FILE -> scanning when (and (!= (json/parse (bytes/to-string @payload.data) VocabFile) null) (!= (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") "en") (array/includes @entity.codes (or (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") "")))
-        (emit LANG_PACK_PROBLEM { text: (let ((code (or (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") ""))) (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (object/get (array/nth @entity.found @entity.foundCursor) "name")) ": language " (json/stringify @code) " is claimed by two packs: " (object/get (array/nth @entity.found (array/find (array/range 0 (array/len @entity.codes)) (fn i (= (array/nth @entity.codes @i) @code)))) "name") " and " (object/get (array/nth @entity.found @entity.foundCursor) "name"))) })
-      LANG_VOCAB_FILE -> scanning when (and (!= (json/parse (bytes/to-string @payload.data) VocabFile) null) (!= (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") "en") (not (array/includes @entity.codes (or (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") ""))))
-        (set @entity.codes (array/append @entity.codes (or (object/get (object/get (json/parse (bytes/to-string @payload.data) VocabFile) "meta") "code") "")))
-        (emit LANGUAGE_PACK_VOCAB { name: (object/get (array/nth @entity.found @entity.foundCursor) "name") text: (bytes/to-string @payload.data) })
+      LANG_VOCAB_FILE -> scanning when (and (!= (json/parse (str/default (bytes/to-string @payload.data) "") VocabFile) null) (!= (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") VocabFile) "meta") "code") "en") (array/includes @entity.codes (or (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") VocabFile) "meta") "code") "")))
+        (emit LANG_PACK_PROBLEM { text: (let ((code (or (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") VocabFile) "meta") "code") ""))) (str/concat "ORB_LANGUAGE_DATA_INVALID: installed language data is invalid at " (json/stringify (object/get (array/nth @entity.found @entity.foundCursor) "name")) ": language " (json/stringify @code) " is claimed by two packs: " (object/get (array/nth @entity.found (array/find (array/range 0 (array/len @entity.codes)) (fn i (= (array/nth @entity.codes @i) @code)))) "name") " and " (object/get (array/nth @entity.found @entity.foundCursor) "name"))) })
+      LANG_VOCAB_FILE -> scanning when (and (!= (json/parse (str/default (bytes/to-string @payload.data) "") VocabFile) null) (!= (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") VocabFile) "meta") "code") "en") (not (array/includes @entity.codes (or (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") VocabFile) "meta") "code") ""))))
+        (set @entity.codes (array/append @entity.codes (or (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") VocabFile) "meta") "code") "")))
+        (emit LANGUAGE_PACK_VOCAB { name: (object/get (array/nth @entity.found @entity.foundCursor) "name") text: (str/default (bytes/to-string @payload.data) "") })
         (emit LANG_PACK_REALASK { tag: (str/concat "" @entity.foundCursor) })
       LANG_PACK_PROBLEM -> scanning
         (set @entity.packProblem @payload.text)

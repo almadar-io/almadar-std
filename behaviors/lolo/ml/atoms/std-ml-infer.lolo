@@ -1,6 +1,6 @@
 app std-ml-infer [
   version: "1.0.0",
-  description: "std-ml-infer — the learned rung (R4) of the intelligence ladder, and the seam between a .lolo circuit and a trained model deployed on masar (or off-the-shelf HuggingFace weights) reached through std-ml. Sends the caller-supplied input straight to std-ml (ML_INFER), then guards the raw output before it ever becomes an effect: validates it against the declared outputContract, clamps it into range, and only then decides. Emits INFERRED when the output satisfies the contract and confidence clears confidenceFloor — carrying the clamped output, confidence, and an empty violations list. Otherwise abstains with INFER_ABSTAINED, whose reason is one of: low confidence (contract satisfied but below floor, violations empty), contract violation (violations populated via contract/violations for diagnosis), or unavailable (the inference call itself failed — a masar cold start or a down endpoint, never surfaced as a user-visible error). Use when a numeric or tensor-shaped model answer needs a licensed guard before becoming a decision — classification scores, regressions, embedding-derived predictions — and the next rung (R5 generative) should take over on any abstain.",
+  description: "std-ml-infer — the learned rung (R4) of the intelligence ladder, and the seam between a .lolo circuit and a trained model deployed on masar (or off-the-shelf HuggingFace weights) reached through std-ml. Sends the caller-supplied input straight to std-ml (ML_INFER), then guards the raw output before it ever becomes an effect: validates it against the declared outputContract, clamps it into range, and only then decides. Emits INFERRED when the output satisfies the contract and confidence clears confidenceFloor — carrying the clamped output, confidence, and an empty violations list. Otherwise abstains with INFER_ABSTAINED, whose reason is one of: low confidence (contract satisfied but below floor, violations empty), contract violation (violations populated for diagnosis: a shape_mismatch when the contract shape's product is not the output length, and a range_violation for each output index outside its range), or unavailable (the inference call itself failed — a masar cold start or a down endpoint, never surfaced as a user-visible error). Use when a numeric or tensor-shaped model answer needs a licensed guard before becoming a decision — classification scores, regressions, embedding-derived predictions — and the next rung (R5 generative) should take over on any abstain.",
   egress: ["http://localhost:3000"]
 ]
 
@@ -86,11 +86,20 @@ orbital MlInferOrbital {
       INFERRED_RAW -> resolved
         (set @entity.output ?output)
         (set @entity.confidence ?confidence)
-        (let ((validation (contract/validate-output @entity.output @config.outputContract)))
-          (if (object/get @validation "valid")
+        (let ((violations (array/concat
+            (if (and (> (array/len (object/get @config.outputContract "shape" [])) 0) (!= (array/reduce (object/get @config.outputContract "shape" []) 1 (fn (acc d) (* @acc @d))) (array/len @entity.output)))
+              [{ type: "shape_mismatch", expected: (object/get @config.outputContract "shape" []), actual: [(array/len @entity.output)] }]
+              [])
+            (array/flatten (array/map (array/range 0 (array/len @entity.output)) (fn i
+              (let ((r (object/get (object/get @config.outputContract "ranges" {}) (str/concat "" @i) null)))
+                (if (= @r null) []
+                  (if (or (< (array/nth @entity.output @i) (object/get @r "min")) (> (array/nth @entity.output @i) (object/get @r "max")))
+                    [{ type: "range_violation", dim: @i, min: (object/get @r "min"), max: (object/get @r "max"), actualMin: (array/nth @entity.output @i), actualMax: (array/nth @entity.output @i) }]
+                    [])))))))))
+          (if (= (array/len @violations) 0)
             (if (>= @entity.confidence @config.confidenceFloor)
               (do
-                (set @entity.output (contract/clamp-output @entity.output @config.outputContract))
+                (set @entity.output (array/map (array/range 0 (array/len @entity.output)) (fn i (let ((r (object/get (object/get @config.outputContract "ranges" {}) (str/concat "" @i) null))) (if (= @r null) (array/nth @entity.output @i) (math/clamp (array/nth @entity.output @i) (object/get @r "min") (object/get @r "max")))))))
                 (set @entity.violations [])
                 (set @entity.reason "")
                 (set @entity.status resolved)
@@ -101,7 +110,7 @@ orbital MlInferOrbital {
                 (set @entity.status resolved)
                 (emit INFER_ABSTAINED { reason: "low confidence", violations: @entity.violations, request: @entity.request })))
             (do
-              (set @entity.violations (contract/violations @entity.output @config.outputContract))
+              (set @entity.violations @violations)
               (set @entity.reason "contract violation")
               (set @entity.status resolved)
               (emit INFER_ABSTAINED { reason: "contract violation", violations: @entity.violations, request: @entity.request }))))

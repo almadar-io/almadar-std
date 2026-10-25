@@ -6,12 +6,16 @@ def uu(s): return f'(/ {s} {M32})'
 def rint(s,a,b): return f'(+ (math/floor (* {uu(s)} {b-a+1})) {a})'
 def numok(x): return f'(and (!= (str/trim {x}) "") (= (str/replace-pattern (str/trim {x}) "{RX}" "") ""))'
 def numv(x): return f'(str/to-number (str/trim {x}))'
+def modlen(n,xs): return f'(or (math/mod {n} (array/len {xs})) 0)'
+def iso_of(ms): return f'(let ((isd (time/format {ms} "YYYY-MM-DD")) (ist (time/format {ms} "HH:mm:ss"))) (if (or (= @isd null) (= @ist null)) null (str/concat @isd "T" @ist "." (str/padStart (str/concat "" (math/mod (math/floor {ms}) 1000)) 3 "0") "Z")))'
+def cells_bad(cells): return f'(array/some {cells} (fn bc (= (object/get @bc "text") null)))'
+CLOCK_FAILED='mock-seed: clock is not a date'
 def pad(x,n): return f'(str/padStart (str/concat "" {x}) {n} "0")'
 def slug(x): return f'(let ((sg (str/lower (str/replace-pattern {x} "[^A-Za-z0-9]" "")))) (if (= @sg "") "value" @sg))'
 def titlecase(x): return f'(str/join (array/map (array/filter (str/split (str/replaceAll (str/replaceAll (str/join (array/map (str/split {x} "") (fn c (if (and (!= @c (str/lower @c)) (= @c (str/upper @c))) (str/concat " " @c) @c))) "") "_" " ") "-" " ") " ") (fn w (!= @w ""))) (fn w (str/concat (str/upper (str/slice @w 0 1)) (str/slice @w 1 (str/len @w))))) " ")'
 def isoparts(ms):
     d=f'(time/format {ms} "YYYY-MM-DD")'
-    dt=f'(str/concat (time/format {ms} "YYYY-MM-DD") "T" (time/format {ms} "HH:mm:ss") "." (str/padStart (str/concat "" (math/mod (math/floor {ms}) 1000)) 3 "0") "Z")'
+    dt=iso_of(ms)
     return d,dt
 def draws(n,s0): return f'(array/reduce (array/range {n}) [{s0}] (fn da dj (array/append @da {nxt("(array/last @da)")})))'
 def cell(path,kind,text='""',num='0',extra=''): return f'{{ path: {path}, kind: {kind}, text: {text}, num: {num}{extra} }}'
@@ -42,10 +46,10 @@ def sampler_step(P):
     mockv='(object/get @sp "mock" "")'
     cands=f'(array/filter (array/map (str/split {mockv} ",") (fn p (str/trim @p))) (fn p (!= @p "")))'
     ncs='(array/len @cs)'
-    pick='(array/nth @cs (math/mod (- @o 1) (array/len @cs)))'
+    pick=f'(array/nth @cs {modlen("(- @o 1)","@cs")})'
     def resolve(lit):
         base=f'(if {SD} {NOW} 1781481600000)'
-        ms=f'(+ {base} (* (if (= @sg2 "-") -1 1) (str/to-number @dg) (if (= @un "m") 60000 (if (= @un "h") 3600000 (if (= @un "d") 86400000 604800000)))))'
+        ms=f'(+ {base} (* (if (= @sg2 "-") -1 1) (or (str/to-number @dg) 0) (if (= @un "m") 60000 (if (= @un "h") 3600000 (if (= @un "d") 86400000 604800000)))))'
         d,dt=isoparts(ms)
         return (f'(let ((tt (str/trim {lit}))) (let ((sg2 (str/slice @tt 0 1)) (un (str/slice @tt (- (str/len @tt) 1) (str/len @tt))) (dg (str/slice @tt 1 (- (str/len @tt) 1)))) '
                 f'(if (and (or (= @sg2 "-") (= @sg2 "+")) (array/includes ["m", "h", "d", "w"] @un) (!= @dg "") (= (str/replace-pattern @dg "[0-9]" "") "")) (if (= @ty "date") {d} {dt}) {lit})))')
@@ -54,13 +58,13 @@ def sampler_step(P):
     lit_date=f'(if (> {ncs} 0) {pick} {mockv})'
     mock_date=C(qs('string'),resolve(lit_date))
     lit_t=f'(if (> {ncs} 1) {pick} (str/concat (str/trim {mockv}) "-" @o))'
-    mock_typed=(f'(let ((lt {lit_t})) (if (and (array/includes ["number", "money"] @ty) {numok("@lt")} (= (- {numv("@lt")} {numv("@lt")}) 0)) {C(qs("number"),"@lt",numv("@lt"))} '
-                f'(if (and (= @ty "boolean") (array/includes ["true", "false"] @lt)) {C(qs("boolean"),"@lt")} {C(qs("string"),"@lt")})))')
+    mock_typed=(f'(let ((lt {lit_t})) (let ((nv (if (and (array/includes ["number", "money"] @ty) {numok("@lt")}) {numv("@lt")} null))) (if (and (!= @nv null) (= (- (or @nv 0) (or @nv 0)) 0)) {C(qs("number"),"@lt","(or @nv 0)")} '
+                f'(if (and (= @ty "boolean") (array/includes ["true", "false"] @lt)) {C(qs("boolean"),"@lt")} {C(qs("string"),"@lt")}))))')
     mock_chain=(f'(if (and (> (array/len @vals) 0) (> {ncs} 0)) {res(mock_member)} (if (= @ty "behavior") {res(mock_beh)} '
                 f'(if (array/includes ["date", "datetime", "timestamp"] @ty) {res(mock_date)} {res(mock_typed)})))')
     mock_gate=f'(let ((cs {cands})) {mock_chain})'
     projected=f'(!= {field_projection("@sp")} null)'
-    vocab=C(qs('string'),'(array/nth @vals (math/mod (- @o 1) (array/len @vals)))')
+    vocab=C(qs('string'),f'(array/nth @vals {modlen("(- @o 1)","@vals")})')
     kid_frames=lambda n,spec,namex,idx,pathx: f'(array/map (array/range {n}) (fn ki {{ spec: {spec}, name: {namex}, index: {idx}, depth: (+ @dp 1), path: {pathx} }}))'
     arr_body=lambda n,s1: res(C(qs('array'),'""',n,f', kids: (array/map (array/range {n}) (fn ki (str/concat @pa "[" @ki "]")))'),
         kid_frames(n,'(object/get @sp "items")','(str/concat (if (= @nm "") "item" @nm) "[" @ki "]")','(+ (* @ix 10) @ki)','(str/concat @pa "[" @ki "]")'),s1)
@@ -94,7 +98,8 @@ def sampler_step(P):
     phone=f'(if {SD} {phone_s} {res(C(qs("phone"),phone_i))})'
     hexs='(str/join (array/map (array/drop @dr 1) (fn hf (str/slice "0123456789abcdef" (math/floor (* (/ @hf 4294967296) 16)) (+ (math/floor (* (/ @hf 4294967296) 16)) 1)))) "")'
     uuid_s=withdraw(31,res(C(qs('uuid'),f'(let ((hx {hexs})) (str/concat (str/slice @hx 0 8) "-" (str/slice @hx 8 12) "-4" (str/slice @hx 12 15) "-" (str/slice @hx 15 19) "-" (str/slice @hx 19 31)))'),'[]',last))
-    uuid_i='(str/concat "00000000-0000-4000-8000-" (str/join (array/map (array/reverse (array/range 12)) (fn uk (str/slice "0123456789abcdef" (math/mod (math/floor (/ @ix (math/pow 16 @uk))) 16) (+ (math/mod (math/floor (/ @ix (math/pow 16 @uk))) 16) 1)))) ""))'
+    hexd=lambda k: f'(str/slice "0123456789abcdef" (math/mod (math/floor (/ @ix {16**k})) 16) (+ (math/mod (math/floor (/ @ix {16**k})) 16) 1))'
+    uuid_i='(str/concat "00000000-0000-4000-8000-" '+' '.join(hexd(k) for k in range(11,-1,-1))+')'
     uuid=f'(if {SD} {uuid_s} {res(C(qs("uuid"),uuid_i))})'
     def numeric(a,b):
         seeded=f'(let ((s1 {nxt("@s0")})) (let ((v {rint("@s1",a,b)})) {res(C("@ty","(str/concat "+qs("")+" @v)","@v"),"[]","@s1")}))'
@@ -140,6 +145,7 @@ def build_expr(cells_expr, root_path_expr='""', row_root=False):
     """Build each value into the reverse walk's map accumulator."""
     def put(value):
         return f'(object/set @vm (object/get @cl "path") {value})'
+    def put_entries(entries): return f'(let ((fe {entries})) (if (= @fe null) @vm {put("@fe")}))'
     row_value='(object/fromEntries (array/map (array/filter (array/range (array/len @ks)) (fn i (!= (object/get (array/find @allc (fn c (= (object/get @c "path") (array/nth @ks @i)))) "kind") "omit"))) (fn i [(array/nth (object/get @cl "keys" []) @i), (object/get @vm (array/nth @ks @i))])))'
     cases = [
         ('(or (= @kd "array") (= @kd "tuple"))', '(array/map @ks (fn p (object/get @vm @p)))'),
@@ -156,7 +162,7 @@ def build_expr(cells_expr, root_path_expr='""', row_root=False):
     ]
     step = put('(object/get @cl "text" "")')
     for condition, value in reversed(cases):
-        step = f'(if {condition} {put(value)} {step})'
+        step = f'(if {condition} {put_entries(value) if value.startswith("(object/fromEntries") else put(value)} {step})'
     step = f'(let ((kd (object/get @cl "kind")) (ks (object/get @cl "kids" []))) {step})'
     if row_root:
         step=f'(if (= (object/get @cl "path") {root_path_expr}) @vm {step})'

@@ -13,7 +13,7 @@ orbital MigrationAdapterAsanaOrbital {
   type AsanaTask = { gid : string, name : string, notes : string, completed : boolean, due_on : string, assignee : AsanaAssignee, memberships : [AsanaMembership], subtasks : [AsanaTask], num_subtasks : number }
   type AsanaTasks = [AsanaTask]
   type AsanaEnvelope = { data : [AsanaTask], name : string }
-  type AsanaDocument = { ref : string!, ok : boolean!, valid : boolean!, projectName : string, tasks : [AsanaTask] }
+  type AsanaDocument = { ref : string!, ok : boolean!, valid : boolean!, projectName : string!, tasks : [AsanaTask] }
   type AsanaFrame = { task : AsanaTask, index : number!, parentRef : string!, kind : "root" | "section", docRef : string!, key : string! }
   type AsanaRow = { key : string!, unit : ExtractedUnit }
   type AsanaSkipRow = { key : string!, skip : ImportSkip }
@@ -87,8 +87,6 @@ orbital MigrationAdapterAsanaOrbital {
                                  (!= (object/get @d projectName) "")
                                  (object/get @d projectName)
                                  (object/get @d ref)),
-                        content: null,
-                        parentRef: null,
                         source: "asana",
                         span: (object/get @d ref),
                         metadata: { source: "asana", taskCount: (array/len (object/get @d tasks [])) }
@@ -171,12 +169,8 @@ orbital MigrationAdapterAsanaOrbital {
                                       (validate/string (object/get (object/get @f task) gid))
                                       (object/get (object/get @f task) gid)
                                       (str/concat (object/get @f index)))),
-                            metadata: (object/merge
-                                        {
-                                          source: "asana",
-                                          completed: (not (not (object/get @t completed false)))
-                                        }
-                                        (object/fromEntries
+                            metadata: (let ((fixed : Map string ImportFieldValue { source: "asana", completed: (not (not (object/get @t completed false))) }))
+                                      (let ((none : Map string ImportFieldValue {}) (extra (object/fromEntries
                                           (array/map
                                             (array/filter
                                               [
@@ -189,7 +183,7 @@ orbital MigrationAdapterAsanaOrbital {
                                               ]
                                               (fn q
                                                 (and (!= (object/get @q v) null) (!= (object/get @q v) ""))))
-                                            (fn q [(object/get @q k), (object/get @q v)]))))
+                                            (fn q [(object/get @q k), (object/get @q v)]))))) (object/merge @fixed (or @extra @none))))
                           }
                   })))))
         (set

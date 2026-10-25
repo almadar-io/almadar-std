@@ -8,7 +8,9 @@ uses Spec from "almadar-std/orb-serve"
 uses Args from "std/behaviors/std-args"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
-type ServeProgram = { name : string }
+type ServePage = { protocol : string }
+type ServeOrbital = { pages : [ServePage] }
+type ServeProgram = { name : string, orbitals : [ServeOrbital] }
 type ServeApp = { program : ServeProgram!, text : string! }
 
 orbital OrbServeOrbital {
@@ -69,11 +71,11 @@ orbital OrbServeOrbital {
       SERVE_COMPOSE_READY -> composing when @payload.hasClient
         (set @entity.mock @payload.mock)
         (set @entity.path @payload.path)
-        (program/compose [@payload.app @payload.server] { appName: @payload.appName overrides: { "Http1.host": @payload.host, "Http1.port": @payload.port, "Http1.portFromEnv": false, "ServerStatic.clientDir": @payload.rel, grants: { net: [{ target: (str/concat @payload.host ":" @payload.port), kinds: ["listen"] }], anchored: { fs: [{ anchor: "cwd", glob: (str/concat @payload.rel "/**"), modes: ["read"] }] } } } } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
+        (program/compose @payload.programs { appName: @payload.appName overrides: { "Http1.host": @payload.host, "Http1.port": @payload.port, "Http1.portFromEnv": false, "ServerStatic.clientDir": @payload.rel, grants: { net: [{ target: (str/concat @payload.host ":" @payload.port), kinds: ["listen"] }], anchored: { fs: [{ anchor: "cwd", glob: (str/concat @payload.rel "/**"), modes: ["read"] }] } } } } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
       SERVE_COMPOSE_READY -> composing when (not @payload.hasClient)
         (set @entity.mock @payload.mock)
         (set @entity.path @payload.path)
-        (program/compose [@payload.app @payload.server] { appName: @payload.appName overrides: { "Http1.host": @payload.host, "Http1.port": @payload.port, "Http1.portFromEnv": false, grants: { net: [{ target: (str/concat @payload.host ":" @payload.port), kinds: ["listen"] }], anchored: {} } } } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
+        (program/compose @payload.programs { appName: @payload.appName overrides: { "Http1.host": @payload.host, "Http1.port": @payload.port, "Http1.portFromEnv": false, grants: { net: [{ target: (str/concat @payload.host ":" @payload.port), kinds: ["listen"] }], anchored: {} } } } { key: "compose" emit: { success: SERVE_COMPOSED, failure: SERVE_COMPOSE_REFUSED } })
     }
 
     state composing {
@@ -147,8 +149,7 @@ orbital OrbServeOrbital {
         @description "std-args's ARGS_PARSED."
       ArgsCli.ARGS_PARSED -> SERVE_ARGS_DONE
       SERVE_COMPOSE_READY {
-        server : ServeProgram!
-        app : ServeProgram!
+        programs : [ServeProgram]!
         appName : string!
         host : string!
         port : number!
@@ -206,7 +207,11 @@ orbital OrbServeOrbital {
         (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
       SERVE_APP_READ -> idle when (= (str/default (object/get (object/get @payload.result "program") "name") "") "")
         (emit SERVE_ANSWERED { status: 500, body: "", stderr: "Error: the program to serve names no app" })
-      SERVE_APP_READ -> resolving when (!= (str/default (object/get (object/get @payload.result "program") "name") "") "")
+      SERVE_APP_READ -> idle when (and (!= (str/default (object/get (object/get @payload.result "program") "name") "") "") (array/some (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))))
+        (set @entity.appName (object/get (object/get @payload.result "program") "name"))
+        (set @entity.app (object/get @payload.result "program"))
+        (emit SERVE_COMPOSE_READY { programs: [(object/get @payload.result "program")], appName: @entity.appName, host: @entity.host, port: @entity.port, rel: @entity.rel, hasClient: @entity.hasClient, mock: @entity.mock, path: @entity.out })
+      SERVE_APP_READ -> resolving when (and (!= (str/default (object/get (object/get @payload.result "program") "name") "") "") (not (array/some (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http")))))))
         (set @entity.appName (object/get (object/get @payload.result "program") "name"))
         (set @entity.app (object/get @payload.result "program"))
         (behavior/resolve { behavior: "std/behaviors/std-http-server" } {} { key: "server" emit: { success: SERVE_SERVER_RESOLVED, failure: SERVE_REFUSED } })
@@ -217,7 +222,7 @@ orbital OrbServeOrbital {
       SERVE_REFUSED -> idle
         (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
       SERVE_SERVER_RESOLVED -> idle
-        (emit SERVE_COMPOSE_READY { server: @payload.result, app: @entity.app, appName: @entity.appName, host: @entity.host, port: @entity.port, rel: @entity.rel, hasClient: @entity.hasClient, mock: @entity.mock, path: @entity.out })
+        (emit SERVE_COMPOSE_READY { programs: [@entity.app, @payload.result], appName: @entity.appName, host: @entity.host, port: @entity.port, rel: @entity.rel, hasClient: @entity.hasClient, mock: @entity.mock, path: @entity.out })
     }
 
     emits {
@@ -250,8 +255,7 @@ orbital OrbServeOrbital {
         @description "behavior/resolve: the resolved std-http-server."
         @tier "internal"
       SERVE_COMPOSE_READY {
-        server : ServeProgram!
-        app : ServeProgram!
+        programs : [ServeProgram]!
         appName : string!
         host : string!
         port : number!

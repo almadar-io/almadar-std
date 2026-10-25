@@ -162,7 +162,7 @@ orbital PlatformerBodyOrbital {
         (let ((aboveCurve (< (* (- @ny2 @curveY) @gdir) 0)))
         (let ((movingUp (< (* @vy1 @gdir) -0.01)))
         (let ((skateNow (and @inRange (and (not @gapBreak) (and (<= (math/abs (- @ny2 @curveY)) @config.skateSnap) (and (or @landed (or @entity.skating (and (not @movingUp) @aboveCurve))) (or @entity.body.grounded (not @movingUp))))))))
-        (let ((vx2 (if @skateNow (math/clamp (+ @entity.body.vx (* (/ (* @eg @slope) (+ 1 (* @slope @slope))) 0.033)) (- 0 @config.maxFallSpeed) @config.maxFallSpeed) @entity.body.vx)))
+        (let ((vx2 (if @skateNow (math/clamp (+ @entity.body.vx (* (or (/ (* @eg @slope) (+ 1 (* @slope @slope))) 0) 0.033)) (- 0 @config.maxFallSpeed) @config.maxFallSpeed) @entity.body.vx)))
         (let ((vx3 (if (== @drift null) @vx2 (math/clamp (+ @vx2 (* @dax 0.033)) (- 0 @config.maxFallSpeed) @config.maxFallSpeed))))
         (let ((fy (if @skateNow @curveY @ny2)) (fvy (if @skateNow (* (* @vx2 (math/cos (math/atan @slope))) (math/sin (math/atan @slope))) @vy2)) (fgrounded (or @landed @skateNow)))
         (let ((hazardHit (array/find @entity.platforms (fn p (and (== (object/get @p type) "hazard") (geo/aabb-overlap @rect { x: @p.x, y: @p.y, w: @p.width, h: @p.height }))))))

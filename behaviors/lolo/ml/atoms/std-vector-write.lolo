@@ -154,11 +154,16 @@ orbital VectorWriteOrbital {
     }
 
     state checking {
-      LOCK_PID_READ -> backoff when (== (str/to-int (array/first (str/split (bytes/to-string @payload.data) " "))) null)
+      LOCK_PID_READ -> backoff when (let ((text (bytes/to-string @payload.data))) (or (== @text null) (== (str/to-int (array/first (str/split @text " "))) null)))
         (emit LOCK_RETRY { })
-      LOCK_PID_READ -> probing when (!= (str/to-int (array/first (str/split (bytes/to-string @payload.data) " "))) null)
-        (set @entity.lockPid (str/to-int (array/first (str/split (bytes/to-string @payload.data) " "))))
-        (os/spawn "kill" ["-0" (str/concat (str/to-int (array/first (str/split (bytes/to-string @payload.data) " "))))] { cwd: null env: {} stdin: "null" stdout: "null" stderr: "null" detached: false } { emit: { success: KILL_SPAWNED, failure: KILL_SPAWN_FAILED } })
+      LOCK_PID_READ -> probing when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (str/to-int (array/first (str/split @text " "))) null)))
+        (let ((text (bytes/to-string @payload.data)))
+          (if (== @text null)
+            (emit LOCK_RETRY { })
+            (let ((pid (str/to-int (array/first (str/split @text " ")))))
+              (do
+                (set @entity.lockPid @pid)
+                (os/spawn "kill" ["-0" (str/concat @pid)] { cwd: null env: {} stdin: "null" stdout: "null" stderr: "null" detached: false } { emit: { success: KILL_SPAWNED, failure: KILL_SPAWN_FAILED } })))))
       LOCK_BUSY -> backoff
         (emit LOCK_RETRY { })
     }
@@ -214,11 +219,11 @@ orbital VectorWriteOrbital {
 
     state validating {
       VECTOR_RESOLVED -> merging
-        (set @entity.emodel (if (> (bytes/length @entity.existing) 0) (bytes/to-string (bytes/slice @entity.existing 10 (+ 10 (bytes/read-uint @entity.existing 8 2 "le")))) ""))
-        (set @entity.eoff (if (> (bytes/length @entity.existing) 0) (+ 16 (bytes/read-uint @entity.existing 8 2 "le")) 0))
+        (set @entity.emodel (let ((mlen (bytes/read-uint @entity.existing 8 2 "le"))) (if (and (> (bytes/length @entity.existing) 0) (validate/required @mlen)) (bytes/to-string (bytes/slice @entity.existing 10 (+ 10 @mlen))) "")))
+        (set @entity.eoff (let ((mlen (bytes/read-uint @entity.existing 8 2 "le"))) (if (and (> (bytes/length @entity.existing) 0) (validate/required @mlen)) (+ 16 @mlen) 0)))
         (set @entity.edims (if (> (bytes/length @entity.existing) 0) (bytes/read-uint @entity.existing (- @entity.eoff 6) 2 "le") 0))
         (set @entity.ecount (if (> (bytes/length @entity.existing) 0) (bytes/read-uint @entity.existing (- @entity.eoff 4) 4 "le") 0))
-        (set @entity.unreadable (or (array/some @entity.rows (fn r (not (validate/required (bytes/read-uint (bytes/slice @r 0 32) 28 4 "be"))))) (array/some (array/range 0 @entity.ecount) (fn m (not (validate/required (bytes/read-uint (bytes/slice @entity.existing (+ @entity.eoff (* @m (+ 36 @entity.edims))) (+ @entity.eoff (* @m (+ 36 @entity.edims)) 32)) 28 4 "be")))))))
+        (set @entity.unreadable (or (and (> (bytes/length @entity.existing) 0) (not (validate/required (bytes/read-uint @entity.existing 8 2 "le")))) (array/some @entity.rows (fn r (not (validate/required (bytes/read-uint (bytes/slice @r 0 32) 28 4 "be"))))) (array/some (array/range 0 @entity.ecount) (fn m (not (validate/required (bytes/read-uint (bytes/slice @entity.existing (+ @entity.eoff (* @m (+ 36 @entity.edims))) (+ @entity.eoff (* @m (+ 36 @entity.edims)) 32)) 28 4 "be")))))))
         (emit CHECKED { })
       VECTOR_REFUSED -> releasing
         (set @entity.pendingCode @payload.code)

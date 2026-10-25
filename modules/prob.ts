@@ -12,7 +12,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { NUMBER, list, sexprOf, shape, tuple, tv } from '../signature.js';
+import { NUMBER, list, sexprOf, shape, tuple, tv, nullable } from '../signature.js';
 
 /**
  * Probabilistic module operators.
@@ -206,7 +206,8 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Bin numeric samples into a histogram',
     hasSideEffects: false,
-    returnType: shape({ binEdges: list(NUMBER), counts: list(NUMBER) }),
+    failable: {},
+    returnType: nullable(shape({ binEdges: list(NUMBER), counts: list(NUMBER) })),
     params: [
       { name: 'samples', type: list('number'), description: 'Array of numeric samples' },
       { name: 'bins', type: 'number', description: 'Number of bins' },
@@ -220,7 +221,8 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Get the p-th percentile (0-100) from samples',
     hasSideEffects: false,
-    returnType: 'number',
+    failable: {},
+    returnType: nullable('number'),
     params: [
       { name: 'samples', type: list('number'), description: 'Array of numeric samples' },
       { name: 'p', type: 'number', description: 'Percentile (0 to 100)' },
@@ -234,7 +236,8 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Compute symmetric credible interval from samples',
     hasSideEffects: false,
-    returnType: tuple(NUMBER, NUMBER),
+    failable: {},
+    returnType: nullable(tuple(NUMBER, NUMBER)),
     params: [
       { name: 'samples', type: list('number'), description: 'Array of numeric samples' },
       { name: 'alpha', type: 'number', description: 'Significance level (e.g., 0.05 for 95% interval)' },

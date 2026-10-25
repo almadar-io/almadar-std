@@ -32,7 +32,7 @@ orbital MlPosteriorOrbital {
         (set @entity.observations (+ @entity.observations 1))
         (set @entity.mean (/ @entity.alpha (+ @entity.alpha @entity.beta)))
         (let ((samples (prob/sample @config.sampleCount (prob/beta @entity.alpha @entity.beta)))
-              (interval (prob/credible-interval @samples 0.05))
+              (interval (or (prob/credible-interval @samples 0.05) [0, 1]))
               (low (array/nth @interval 0))
               (high (array/nth @interval 1))
               (width (- @high @low)))

@@ -1,0 +1,106 @@
+{
+ "atom": "store/atoms/std-migration-adapter-firestore.lolo",
+ "trait": "MigrationAdapterFirestore",
+ "cases": [
+  {
+   "id": "a-reply-that-is-valid-json-but-not-a-document-is-unreadable",
+   "config": {
+    "recipes": [
+     {
+      "adapterId": "fs1",
+      "documentUnit": true,
+      "documentKind": "root",
+      "documentSlots": [],
+      "nodesField": "nodes",
+      "nodeKinds": [],
+      "edgesField": "edges",
+      "edgeKind": "folder",
+      "edgeSlots": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "MIGRATION_EXTRACT",
+     "payload": {
+      "adapter": "fs1",
+      "documents": [
+       {
+        "ref": "a",
+        "raw": "projects/p/databases/(default)/documents/c/d1"
+       }
+      ]
+     }
+    },
+    {
+     "event": "FIRESTORE_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"x\":1}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_EXTRACT_FAILED",
+        "payload": {
+         "error": "the Firestore reply is not a document"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "skip": "needs recipes config (G-ORB-460)"
+  },
+  {
+   "id": "a-reply-that-is-not-json-is-unreadable",
+   "config": {
+    "recipes": [
+     {
+      "adapterId": "fs1",
+      "documentUnit": true,
+      "documentKind": "root",
+      "documentSlots": [],
+      "nodesField": "nodes",
+      "nodeKinds": [],
+      "edgesField": "edges",
+      "edgeKind": "folder",
+      "edgeSlots": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "MIGRATION_EXTRACT",
+     "payload": {
+      "adapter": "fs1",
+      "documents": [
+       {
+        "ref": "a",
+        "raw": "projects/p/databases/(default)/documents/c/d1"
+       }
+      ]
+     }
+    },
+    {
+     "event": "FIRESTORE_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "not json"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_EXTRACT_FAILED",
+        "payload": {
+         "error": "the Firestore reply is not valid JSON"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "skip": "needs recipes config (G-ORB-460)"
+  }
+ ]
+}

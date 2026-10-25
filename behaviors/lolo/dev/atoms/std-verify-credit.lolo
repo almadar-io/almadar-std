@@ -25,14 +25,15 @@ orbital VerifyCreditOrbital {
     state ready {
       INIT -> ready
       CREDIT_REQUEST -> ready
-        (let ((hops (array/reduce @payload.steps (json/parse "[]" HopList) (fn (acc s) (array/concat @acc (object/get @s "fired" (json/parse "[]" HopList)))))))
-          (do (set @entity.credits (array/reduce (array/reduce @payload.steps (json/parse "[]" CreditIdxList) (fn (acc s) (array/concat @acc [{ idx: (array/len @acc), s: @s }]))) (json/parse "[]" CreditList) (fn (acc p)
-                (let ((step (object/get @p "s")))
-                  (let ((hit (array/find @hops (fn h (and (= (object/get @h "trait") (object/get @step "trait")) (= (object/get @h "from") (object/get @step "from")) (= (object/get @h "event") (object/get @step "event")) (or (not (object/has @step "arm")) (= (object/get @h "arm" (- 0 1)) (object/get @step "arm"))))))))
-                    (if (and (= (object/get @step "reply" "") "failure") (!= @hit null))
-                      (array/concat @acc [{ index: (object/get @p "idx"), stateBefore: (object/get @hit "from"), stateAfter: (object/get @hit "to") }])
-                      @acc))))))
-              (emit CREDIT_ANSWERED { credits: @entity.credits })))
+        (let ((noCreditIdxList : CreditIdxList []) (noCreditList : CreditList []) (noHopList : HopList []))
+          (let ((hops (array/reduce @payload.steps @noHopList (fn (acc s) (array/concat @acc (object/get @s "fired" @noHopList))))))
+            (do (set @entity.credits (array/reduce (array/reduce @payload.steps @noCreditIdxList (fn (acc s) (array/concat @acc [{ idx: (array/len @acc), s: @s }]))) @noCreditList (fn (acc p)
+                  (let ((step (object/get @p "s")))
+                    (let ((hit (array/find @hops (fn h (and (= (object/get @h "trait") (object/get @step "trait")) (= (object/get @h "from") (object/get @step "from")) (= (object/get @h "event") (object/get @step "event")) (or (not (object/has @step "arm")) (= (object/get @h "arm" (- 0 1)) (object/get @step "arm"))))))))
+                      (if (and (= (object/get @step "reply" "") "failure") (!= @hit null))
+                        (array/concat @acc [{ index: (object/get @p "idx"), stateBefore: (object/get @hit "from"), stateAfter: (object/get @hit "to") }])
+                        @acc))))))
+                (emit CREDIT_ANSWERED { credits: @entity.credits }))))
     }
 
     emits {

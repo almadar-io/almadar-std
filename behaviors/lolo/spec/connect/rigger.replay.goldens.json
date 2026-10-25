@@ -1,0 +1,26 @@
+{
+  "atom": "connect/atoms/std-rigger.lolo",
+  "trait": "RiggerClient",
+  "cases": [
+    {
+      "id": "build-mesh-error-with-a-body-that-is-not-json-reports-the-status-alone",
+      "steps": [{
+        "event": "RIGGER_BUILD_MESH_REPLIED",
+        "payload": { "status": 502, "body": "Bad Gateway" },
+        "expect": {
+          "emits": [{ "event": "RIGGER_BUILD_MESH_FAILED", "payload": { "message": "Rigger /mesh/build returned 502" } }]
+        }
+      }]
+    },
+    {
+      "id": "build-mesh-error-with-a-string-detail-reports-it",
+      "steps": [{
+        "event": "RIGGER_BUILD_MESH_REPLIED",
+        "payload": { "status": 422, "body": "{\"detail\":\"no skeleton\"}" },
+        "expect": {
+          "emits": [{ "event": "RIGGER_BUILD_MESH_FAILED", "payload": { "message": "Rigger /mesh/build returned 422: no skeleton" } }]
+        }
+      }]
+    }
+  ]
+}

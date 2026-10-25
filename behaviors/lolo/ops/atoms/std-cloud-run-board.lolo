@@ -26,9 +26,9 @@ type CrMonSeries = { resource : CrMonResource, points : [CrMonPoint] }
 type CrMonReply = { timeSeries : [CrMonSeries] }
 type CrSeriesSum = { svc : string, value : number }
 type CrSeriesSums = [CrSeriesSum]
-type CrCostRow = { svc : string, gross : string!, net : string! }
+type CrCostRow = { svc : string!, gross : string!, net : string! }
 type CrCost = { svc : string, gross : number, net : number }
-type CrBillRow = { service_name : string, total_cost : string!, currency : string }
+type CrBillRow = { service_name : string!, total_cost : string!, currency : string }
 type CrApiConfig = { name : string, title : string }
 type CrApi = { config : CrApiConfig }
 type CrEntry = { service : string, cost : number, currency : string }
@@ -164,14 +164,18 @@ orbital CloudRunBoardOrbital {
       CR_COST -> reading when (not (and @config.resourceLevelExport (!= @config.billingExportTable "")))
         (emit CR_GCLOUD { stage: "services", argv: ["run", "services", "list", (str/concat "--project=" @config.project), "--format=json"] })
       CR_RAN -> reading when (and (= @payload.stage "cost") (= @payload.exitCode 0) (json/valid (if (= (str/trim @payload.stdout) "") "[]" @payload.stdout)))
-        (set @entity.costAvailable true)
-        (set @entity.costRows (array/map (array/filter (json/parse (if (= (str/trim @payload.stdout) "") "[]" @payload.stdout) CrCostRows) (fn row (!= (or @row.svc "") ""))) (fn row { svc: @row.svc, gross: (str/to-number @row.gross), net: (str/to-number @row.net) })))
-        (emit CR_GCLOUD { stage: "services", argv: ["run", "services", "list", (str/concat "--project=" @config.project), "--format=json"] })
+        (let ((rows (json/parse (if (= (str/trim @payload.stdout) "") "[]" @payload.stdout) CrCostRows)))
+          (do
+            (when (!= @rows null)
+              (do
+                (set @entity.costAvailable true)
+                (set @entity.costRows (array/reduce @rows @entity.costRows (fn (acc row) (let ((g (str/to-number @row.gross)) (n (str/to-number @row.net))) (if (or (= (or @row.svc "") "") (= @g null) (= @n null)) @acc (array/concat @acc [{ svc: @row.svc, gross: @g, net: @n }]))))))))
+            (emit CR_GCLOUD { stage: "services", argv: ["run", "services", "list", (str/concat "--project=" @config.project), "--format=json"] })))
       CR_RAN -> reading when (and (= @payload.stage "cost") (not (and (= @payload.exitCode 0) (json/valid (if (= (str/trim @payload.stdout) "") "[]" @payload.stdout)))))
         (emit CR_GCLOUD { stage: "services", argv: ["run", "services", "list", (str/concat "--project=" @config.project), "--format=json"] })
 
       CR_RAN -> reading when (and (= @payload.stage "services") (= @payload.exitCode 0) (json/valid @payload.stdout))
-        (set @entity.services (json/parse @payload.stdout CrServices))
+        (set @entity.services (or (json/parse @payload.stdout CrServices) @entity.services))
         (set @entity.cursor 0)
         (emit CR_DESCRIBE_NEXT { })
       CR_RAN -> reading when (and (= @payload.stage "services") (not (and (= @payload.exitCode 0) (json/valid @payload.stdout))))
@@ -184,39 +188,54 @@ orbital CloudRunBoardOrbital {
         (emit CR_GCLOUD { stage: "enabled", argv: ["services", "list", "--enabled", (str/concat "--project=" @config.project), "--format=json"] })
       CR_RAN -> reading when (and (= @payload.stage "describe") (= @payload.exitCode 0) (json/valid @payload.stdout))
         (set @entity.resources (array/append @entity.resources (let ((d (json/parse @payload.stdout CrDescribe)))
-          (let ((limits (object/get @d "spec.template.spec.containers.0.resources.limits" @entity.noMap))
-                (ann (object/get @d "spec.template.metadata.annotations" @entity.noMap))
-                (selector (object/get @d "spec.template.spec.nodeSelector" @entity.noMap)))
-            (let ((cpuRaw (array/nth (object/values (object/pick @limits [(str/concat "cpu")])) 0)) (memRaw (array/nth (object/values (object/pick @limits [(str/concat "memory")])) 0)) (gpuRaw (array/nth (object/values (object/pick @limits [(str/concat "nvidia.com/gpu")])) 0)))
-              { known: true,
-                cpu: (if (== @cpuRaw null) @config.defaultCpu (if (str/endsWith @cpuRaw "m") (/ (str/to-number (str/slice @cpuRaw 0 (- (str/len @cpuRaw) 1))) 1000) (str/to-number @cpuRaw))),
-                memoryGb: (if (== @memRaw null) @config.defaultMemoryGb (let ((m (str/trim @memRaw))) (if (or (str/endsWith @m "Gi") (str/endsWith @m "Mi") (str/endsWith @m "Ki")) (/ (str/to-number (str/trim (str/slice @m 0 (- (str/len @m) 2)))) (if (str/endsWith @m "Gi") 1 (if (str/endsWith @m "Mi") 1024 1048576))) (if (or (str/endsWith @m "G") (str/endsWith @m "M") (str/endsWith @m "K")) (/ (str/to-number (str/trim (str/slice @m 0 (- (str/len @m) 1)))) (if (str/endsWith @m "G") 1 (if (str/endsWith @m "M") 1024 1048576))) (/ (str/to-number @m) 1073741824))))),
-                minInstances: (if (== (array/nth (object/values (object/pick @ann [(str/concat "autoscaling.knative.dev/minScale")])) 0) null) @config.defaultMinInstances (str/to-number (array/nth (object/values (object/pick @ann [(str/concat "autoscaling.knative.dev/minScale")])) 0))),
-                maxInstances: (if (== (array/nth (object/values (object/pick @ann [(str/concat "autoscaling.knative.dev/maxScale")])) 0) null) @config.defaultMaxInstances (str/to-number (array/nth (object/values (object/pick @ann [(str/concat "autoscaling.knative.dev/maxScale")])) 0))),
-                concurrency: (object/get @d "spec.template.spec.containerConcurrency" @config.defaultConcurrency),
-                gpuCount: (if (== @gpuRaw null) 0 (str/to-number @gpuRaw)),
-                gpu: (if (and (!= @gpuRaw null) (> (str/to-number @gpuRaw) 0)) (array/nth (object/values (object/pick @selector [(str/concat "run.googleapis.com/accelerator")])) 0) (array/nth (object/values (object/pick @entity.noMap [(str/concat "gpu")])) 0)),
-                zonal: (!= (array/nth (object/values (object/pick @ann [(str/concat "run.googleapis.com/gpu-zonal-redundancy-disabled")])) 0) "true") })))))
+          (if (= @d null) { known: false, cpu: 0, memoryGb: 0, minInstances: 0, maxInstances: 0, concurrency: 0, gpuCount: 0, zonal: true }
+            (let ((limits (object/get @d "spec.template.spec.containers.0.resources.limits" @entity.noMap))
+                  (ann (object/get @d "spec.template.metadata.annotations" @entity.noMap))
+                  (selector (object/get @d "spec.template.spec.nodeSelector" @entity.noMap)))
+              (let ((cpuRaw (array/nth (object/values (object/pick @limits [(str/concat "cpu")])) 0)) (memRaw (array/nth (object/values (object/pick @limits [(str/concat "memory")])) 0)) (gpuRaw (array/nth (object/values (object/pick @limits [(str/concat "nvidia.com/gpu")])) 0)) (minRaw (array/nth (object/values (object/pick @ann [(str/concat "autoscaling.knative.dev/minScale")])) 0)) (maxRaw (array/nth (object/values (object/pick @ann [(str/concat "autoscaling.knative.dev/maxScale")])) 0)))
+                (let ((cpu (if (== @cpuRaw null) @config.defaultCpu (if (str/endsWith @cpuRaw "m") (let ((v (str/to-number (str/slice @cpuRaw 0 (- (str/len @cpuRaw) 1))))) (if (== @v null) null (/ @v 1000))) (str/to-number @cpuRaw))))
+                      (memoryGb (if (== @memRaw null) @config.defaultMemoryGb (let ((m (str/trim @memRaw))) (if (or (str/endsWith @m "Gi") (str/endsWith @m "Mi") (str/endsWith @m "Ki")) (let ((v (str/to-number (str/trim (str/slice @m 0 (- (str/len @m) 2)))))) (if (== @v null) null (/ @v (if (str/endsWith @m "Gi") 1 (if (str/endsWith @m "Mi") 1024 1048576))))) (if (or (str/endsWith @m "G") (str/endsWith @m "M") (str/endsWith @m "K")) (let ((v (str/to-number (str/trim (str/slice @m 0 (- (str/len @m) 1)))))) (if (== @v null) null (/ @v (if (str/endsWith @m "G") 1 (if (str/endsWith @m "M") 1024 1048576))))) (let ((v (str/to-number @m))) (if (== @v null) null (/ @v 1073741824))))))))
+                      (minInstances (if (== @minRaw null) @config.defaultMinInstances (str/to-number @minRaw)))
+                      (maxInstances (if (== @maxRaw null) @config.defaultMaxInstances (str/to-number @maxRaw)))
+                      (gpuCount (if (== @gpuRaw null) 0 (str/to-number @gpuRaw))))
+                  (if (or (== @cpu null) (== @memoryGb null) (== @minInstances null) (== @maxInstances null) (== @gpuCount null)) { known: false, cpu: 0, memoryGb: 0, minInstances: 0, maxInstances: 0, concurrency: 0, gpuCount: 0, zonal: true }
+                    { known: true,
+                      cpu: @cpu,
+                      memoryGb: @memoryGb,
+                      minInstances: @minInstances,
+                      maxInstances: @maxInstances,
+                      concurrency: (object/get @d "spec.template.spec.containerConcurrency" @config.defaultConcurrency),
+                      gpuCount: @gpuCount,
+                      gpu: (if (> @gpuCount 0) (array/nth (object/values (object/pick @selector [(str/concat "run.googleapis.com/accelerator")])) 0) (array/nth (object/values (object/pick @entity.noMap [(str/concat "gpu")])) 0)),
+                      zonal: (!= (array/nth (object/values (object/pick @ann [(str/concat "run.googleapis.com/gpu-zonal-redundancy-disabled")])) 0) "true") }))))))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit CR_DESCRIBE_NEXT { })
       CR_RAN -> reading when (and (= @payload.stage "describe") (not (and (= @payload.exitCode 0) (json/valid @payload.stdout))))
-        (set @entity.resources (array/append @entity.resources (json/parse "{\"known\":false,\"cpu\":0,\"memoryGb\":0,\"minInstances\":0,\"maxInstances\":0,\"concurrency\":0,\"gpuCount\":0,\"gpu\":null,\"zonal\":true}" CrResources)))
+        (set @entity.resources (array/append @entity.resources { known: false, cpu: 0, memoryGb: 0, minInstances: 0, maxInstances: 0, concurrency: 0, gpuCount: 0, zonal: true }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit CR_DESCRIBE_NEXT { })
 
       CR_RAN -> reading when (= @payload.stage "enabled")
-        (set @entity.entries (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (array/filter (json/parse @payload.stdout CrApis) (fn a (!= (array/nth (object/values (object/pick @config.trackedServices [(object/get @a "config.name" "")])) 0) null))) (fn a { service: (array/nth (object/values (object/pick @config.trackedServices [(object/get @a "config.name" "")])) 0), cost: 0, currency: "USD" })) []))
+        (let ((apis (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (json/parse @payload.stdout CrApis) null)))
+          (set @entity.entries (if (= @apis null) [] (array/map (array/filter @apis (fn a (!= (array/nth (object/values (object/pick @config.trackedServices [(object/get @a "config.name" "")])) 0) null))) (fn a { service: (array/nth (object/values (object/pick @config.trackedServices [(object/get @a "config.name" "")])) 0), cost: 0, currency: "USD" })))))
         (set @entity.currency "USD")
         (emit CR_ROLLUP { })
       CR_ROLLUP -> reading when (!= @config.billingExportTable "")
         (emit CR_BQ { stage: "rollup", argv: [(str/concat "--project_id=" @config.project), "query", "--use_legacy_sql=false", "--format=json", (str/concat "SELECT service.description AS service_name,   SUM(cost) + SUM(IFNULL((SELECT SUM(c.amount) FROM UNNEST(credits) c), 0)) AS total_cost,   currency FROM `" @config.project ".billing_export." @config.billingExportTable "` WHERE DATE(usage_start_time) >= '" (time/format (time/startOf @entity.startedAt "month") "YYYY-MM-DD") "' GROUP BY service_name, currency ORDER BY total_cost DESC")] })
       CR_ROLLUP -> reading when (= @config.billingExportTable "")
         (emit CR_ANSWER { })
-      CR_RAN -> reading when (and (= @payload.stage "rollup") (= @payload.exitCode 0) (!= (str/trim @payload.stdout) "") (json/valid @payload.stdout) (> (array/len (json/parse @payload.stdout CrBillRows)) 0))
-        (set @entity.entries (array/map (json/parse @payload.stdout CrBillRows) (fn row { service: @row.service_name, cost: (math/round (str/to-number @row.total_cost) 2), currency: (or @row.currency "USD") })))
-        (set @entity.currency (or (object/get (array/nth (json/parse @payload.stdout CrBillRows) (- (array/len (json/parse @payload.stdout CrBillRows)) 1)) "currency" null) "USD"))
-        (emit CR_ANSWER { })
-      CR_RAN -> reading when (and (= @payload.stage "rollup") (not (and (= @payload.exitCode 0) (!= (str/trim @payload.stdout) "") (json/valid @payload.stdout) (> (array/len (json/parse @payload.stdout CrBillRows)) 0))))
+      CR_RAN -> reading when (and (= @payload.stage "rollup") (= @payload.exitCode 0) (!= (str/trim @payload.stdout) "") (json/valid @payload.stdout))
+        (let ((rows (json/parse @payload.stdout CrBillRows)) (none : [CrEntry] []))
+          (do
+            (when (!= @rows null)
+              (when (> (array/len @rows) 0)
+                (let ((built (array/reduce @rows { ok: true, es: @none } (fn (acc row) (let ((c (str/to-number @row.total_cost))) (if (or (not @acc.ok) (= @c null)) { ok: false, es: @acc.es } { ok: true, es: (array/concat @acc.es [{ service: @row.service_name, cost: (math/round @c 2), currency: (or @row.currency "USD") }]) }))))))
+                  (when @built.ok
+                    (do
+                      (set @entity.entries @built.es)
+                      (set @entity.currency (or (object/get (array/nth @rows (- (array/len @rows) 1)) "currency" null) "USD")))))))
+            (emit CR_ANSWER { })))
+      CR_RAN -> reading when (and (= @payload.stage "rollup") (not (and (= @payload.exitCode 0) (!= (str/trim @payload.stdout) "") (json/valid @payload.stdout))))
         (emit CR_ANSWER { })
 
       CR_ANSWER -> idle
@@ -231,14 +250,14 @@ orbital CloudRunBoardOrbital {
                 status: (if (== @ready null) "Unknown" (if (= @ready.status "True") "Active" "Inactive")),
                 creator: (or (array/nth (object/values (object/pick (object/get @svc "metadata.annotations" @entity.noMap) [(str/concat "serving.knative.dev/creator")])) 0) ""),
                 hasResourceData: @r.known, cpu: @r.cpu, memoryGb: @r.memoryGb, minInstances: @r.minInstances, maxInstances: @r.maxInstances, concurrency: @r.concurrency, gpu: @r.gpu, gpuCount: @r.gpuCount,
-                hourlyIfUp: (if @r.known (math/round (* (+ (+ (* @r.cpu @config.cpuRatePerSecond) (* @r.memoryGb @config.memoryRatePerSecond)) (if (and (!= @r.gpu null) (> @r.gpuCount 0) (!= (object/get @config.gpuRatesPerSecond @r.gpu null) null)) (* @r.gpuCount (if @r.zonal (object/get @config.gpuRatesPerSecond (str/concat @r.gpu ".zonal") 0) (object/get @config.gpuRatesPerSecond (str/concat @r.gpu ".noZonal") 0))) 0)) 3600) 4) 0),
+                hourlyIfUp: (if @r.known (math/round (* (+ (+ (* @r.cpu @config.cpuRatePerSecond) (* @r.memoryGb @config.memoryRatePerSecond)) (if (and (!= @r.gpu null) (> @r.gpuCount 0) (!= (object/get @config.gpuRatesPerSecond @r.gpu null) null)) (* @r.gpuCount (if @r.zonal (object/get (object/get @config.gpuRatesPerSecond @r.gpu) zonal 0) (object/get (object/get @config.gpuRatesPerSecond @r.gpu) noZonal 0))) 0)) 3600) 4) 0),
                 activeInstanceHours: (math/round (/ (array/reduce (array/filter @entity.instanceSeconds (fn x (= @x.svc @name))) 0 (fn acc x (+ @acc @x.value))) 3600) 2),
-                avgInstances: (math/round (/ (math/round (/ (array/reduce (array/filter @entity.instanceSeconds (fn x (= @x.svc @name))) 0 (fn acc x (+ @acc @x.value))) 3600) 2) (/ (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) 3600)) 3),
+                avgInstances: (math/round (or (/ (math/round (/ (array/reduce (array/filter @entity.instanceSeconds (fn x (= @x.svc @name))) 0 (fn acc x (+ @acc @x.value))) 3600) 2) (/ (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) 3600)) 0) 3),
                 requestCount: (math/round (array/reduce (array/filter @entity.requests (fn x (= @x.svc @name))) 0 (fn acc x (+ @acc @x.value))) 0),
                 hasUsageData: @entity.usageAvailable,
                 grossCostMtd: (math/round (if (== @cost null) 0 @cost.gross) 4),
                 netCostMtd: (math/round (if (== @cost null) 0 @cost.net) 4),
-                projectedMonthlyUsd: (math/round (* (if (== @cost null) 0 @cost.net) (/ @config.hoursPerMonth (/ (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) 3600))) 2),
+                projectedMonthlyUsd: (math/round (* (if (== @cost null) 0 @cost.net) (or (/ @config.hoursPerMonth (/ (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) 3600)) 0)) 2),
                 hasCostData: @entity.costAvailable })))), actualBilledUsd: (object/get (array/find @entity.entries (fn e (= @e.service "Cloud Run"))) "cost" null), periodHoursElapsed: (math/round (/ (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) 3600) 1) })
         (set @entity.fetchedAt (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"))
         (set @entity.cachedAt @now)
@@ -255,7 +274,7 @@ orbital CloudRunBoardOrbital {
         (set @entity.services [])
         (emit CR_DESCRIBE_NEXT { })
       CR_CLI_FAILED -> reading when (= @payload.stage "describe")
-        (set @entity.resources (array/append @entity.resources (json/parse "{\"known\":false,\"cpu\":0,\"memoryGb\":0,\"minInstances\":0,\"maxInstances\":0,\"concurrency\":0,\"gpuCount\":0,\"gpu\":null,\"zonal\":true}" CrResources)))
+        (set @entity.resources (array/append @entity.resources { known: false, cpu: 0, memoryGb: 0, minInstances: 0, maxInstances: 0, concurrency: 0, gpuCount: 0, zonal: true }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit CR_DESCRIBE_NEXT { })
       CR_CLI_FAILED -> reading when (= @payload.stage "enabled")

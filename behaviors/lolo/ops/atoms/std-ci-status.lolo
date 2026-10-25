@@ -5,23 +5,23 @@ app std-ci-status [
 ]
 uses Spec from "almadar-std/ci-status"
 type CiWorkflow = { name : string }
-type CiWorkflowRun = { databaseId : number, url : string, createdAt : string, workflow : CiWorkflow }
-type CiCheckSuite = { status : string, conclusion : string, workflowRun : CiWorkflowRun }
+type CiWorkflowRun = { databaseId : number!, url : string!, createdAt : string!, workflow : CiWorkflow }
+type CiCheckSuite = { status : string!, conclusion : string?, workflowRun : CiWorkflowRun! }
 type CiSuiteConnection = { nodes : [CiCheckSuite] }
 type CiCommit = { checkSuites : CiSuiteConnection }
 type CiHistory = { nodes : [CiCommit] }
 type CiTarget = { history : CiHistory }
 type CiBranchRef = { target : CiTarget }
-type CiRepository = { name : string, defaultBranchRef : CiBranchRef }
+type CiRepository = { name : string!, defaultBranchRef : CiBranchRef }
 type CiPageInfo = { hasNextPage : boolean, endCursor : string }
 type CiRepositoryConnection = { pageInfo : CiPageInfo, nodes : [CiRepository] }
 type CiOrganization = { repositories : CiRepositoryConnection }
 type CiData = { organization : CiOrganization }
 type CiReply = { data : CiData }
-type CiRun = { repo : string, fullName : string, status : string, conclusion : string, name : string, url : string, databaseId : number, createdAt : string }
-type CiRunRow = { id : string, repo : string, name : string, status : string, conclusion : string, createdAt : string, runId : number }
+type CiRun = { repo : string, fullName : string, status : string, conclusion : string?, name : string, url : string, databaseId : number, createdAt : string }
+type CiRunRow = { id : string, repo : string, name : string, status : string, conclusion : string?, createdAt : string, runId : number }
 type CiExtraRepo = { owner : string, name : string, displayName : string }
-type CiGithubRun = { id : number, name : string, status : string, conclusion : string, created_at : string, html_url : string }
+type CiGithubRun = { id : number, name : string, status : string, conclusion : string?, created_at : string, html_url : string }
 orbital CiStatusOrbital {
   uses Github from "std/behaviors/std-github"
   uses Retry from "std/behaviors/std-retry"
@@ -111,7 +111,7 @@ orbital CiStatusOrbital {
 
       CI_GQL_ANSWERED -> loading
         (emit CI_RETRY_SUCCEEDED { key: @entity.key })
-        (set @entity.collected (array/concat @entity.collected (array/map (array/filter (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "nodes" []) (fn r (not (array/includes @config.skipRepos @r.name)))) (fn r (let ((ss (array/sort (array/map (array/filter (array/flatten (array/map (object/get @r "defaultBranchRef.target.history.nodes" []) (fn c (object/get @c "checkSuites.nodes" [])))) (fn s (!= (object/get @s "workflowRun" null) null))) (fn s { at: @s.workflowRun.createdAt, suite: @s })) "at" "desc"))) (if (= (array/len @ss) 0) (object/merge (json/parse "{\"repo\":\"\",\"fullName\":\"\",\"status\":\"unknown\",\"conclusion\":null,\"name\":\"\",\"url\":\"\",\"databaseId\":0,\"createdAt\":\"\"}" CiRun) { repo: @r.name, fullName: (str/concat @config.org "/" @r.name) }) (let ((s (object/get (array/nth @ss 0) "suite"))) { repo: @r.name, fullName: (str/concat @config.org "/" @r.name), status: (str/lower @s.status), conclusion: (if (== @s.conclusion null) null (str/lower @s.conclusion)), name: (object/get @s "workflowRun.workflow.name" ""), url: @s.workflowRun.url, databaseId: @s.workflowRun.databaseId, createdAt: @s.workflowRun.createdAt })))))))
+          (set @entity.collected (array/concat @entity.collected (array/map (array/filter (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "nodes" []) (fn r (not (array/includes @config.skipRepos @r.name)))) (fn r (let ((ss (array/sort (array/map (array/filter (array/flatten (array/map (object/get @r "defaultBranchRef.target.history.nodes" []) (fn c (object/get @c "checkSuites.nodes" [])))) (fn s (!= (object/get @s "workflowRun" null) null))) (fn s { at: @s.workflowRun.createdAt, suite: @s })) "at" "desc"))) (if (= (array/len @ss) 0) { repo: @r.name, fullName: (str/concat @config.org "/" @r.name), status: "unknown", conclusion: null, name: "", url: "", databaseId: 0, createdAt: "" } (let ((s (object/get (array/nth @ss 0) "suite"))) { repo: @r.name, fullName: (str/concat @config.org "/" @r.name), status: (str/lower @s.status), conclusion: (if (== @s.conclusion null) null (str/lower @s.conclusion)), name: (object/get @s "workflowRun.workflow.name" ""), url: @s.workflowRun.url, databaseId: @s.workflowRun.databaseId, createdAt: @s.workflowRun.createdAt })))))))
         (set @entity.more (and (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.hasNextPage" false) (!= (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.endCursor" "") "") (< @entity.page @config.maxPages)))
         (set @entity.cursor (object/get (object/get (json/parse @payload.body CiReply) "data.organization.repositories" null) "pageInfo.endCursor" ""))
         (emit CI_PAGE_READ { })
@@ -129,7 +129,7 @@ orbital CiStatusOrbital {
       CI_GQL_FAILED -> idle when (not (or (= @payload.status 0) (= @payload.status 502) (= @payload.status 503) (= @payload.status 504)))
         (emit CI_RETRY_CANCEL { })
         (set @entity.runs (if @entity.hasCache @entity.runs []))
-        (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt (str/concat (time/format @now "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z")))
+        (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt (let ((t (time/format @now "YYYY-MM-DDTHH:mm:ss"))) (if (== @t null) "" (str/concat @t "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z")))))
         (set @entity.cachedAt (if @entity.hasCache @entity.cachedAt @now))
         (set @entity.hasCache true)
         (set @entity.loading false)
@@ -141,7 +141,7 @@ orbital CiStatusOrbital {
         ] })
       CI_GAVE_UP -> idle when (== @payload.key @entity.key)
         (set @entity.runs (if @entity.hasCache @entity.runs []))
-        (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt (str/concat (time/format @now "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z")))
+        (set @entity.fetchedAt (if @entity.hasCache @entity.fetchedAt (let ((t (time/format @now "YYYY-MM-DDTHH:mm:ss"))) (if (== @t null) "" (str/concat @t "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z")))))
         (set @entity.cachedAt (if @entity.hasCache @entity.cachedAt @now))
         (set @entity.hasCache true)
         (set @entity.loading false)
@@ -157,7 +157,7 @@ orbital CiStatusOrbital {
           (emit CI_EXTRA { owner: @x.owner, repo: @x.name, per_page: 1 }))
       CI_EXTRA_NEXT -> idle when (>= @entity.extra (array/len @config.extraRepos))
         (set @entity.runs @entity.collected)
-        (set @entity.fetchedAt (str/concat (time/format @now "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z"))
+        (set @entity.fetchedAt (let ((t (time/format @now "YYYY-MM-DDTHH:mm:ss"))) (if (== @t null) "" (str/concat @t "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z"))))
         (set @entity.cachedAt @now)
         (set @entity.hasCache true)
         (set @entity.loading false)
@@ -169,12 +169,12 @@ orbital CiStatusOrbital {
         ] })
       CI_EXTRA_RUNS -> loading
         (let ((x (array/nth @config.extraRepos @entity.extra)))
-          (set @entity.collected (array/append @entity.collected (if (= (array/len @payload.runs) 0) (object/merge (json/parse "{\"repo\":\"\",\"fullName\":\"\",\"status\":\"unknown\",\"conclusion\":null,\"name\":\"\",\"url\":\"\",\"databaseId\":0,\"createdAt\":\"\"}" CiRun) { repo: @x.displayName, fullName: (str/concat @x.owner "/" @x.name) }) (let ((run (array/nth @payload.runs 0))) { repo: @x.displayName, fullName: (str/concat @x.owner "/" @x.name), status: (str/lower @run.status), conclusion: (if (== @run.conclusion null) null (str/lower @run.conclusion)), name: @run.name, url: @run.html_url, databaseId: @run.id, createdAt: @run.created_at })))))
+          (set @entity.collected (array/append @entity.collected (if (= (array/len @payload.runs) 0) (let ((blank : CiRun { repo: "", fullName: "", status: "unknown", conclusion: null, name: "", url: "", databaseId: 0, createdAt: "" })) (object/merge @blank { repo: @x.displayName, fullName: (str/concat @x.owner "/" @x.name) })) (let ((run (array/nth @payload.runs 0))) { repo: @x.displayName, fullName: (str/concat @x.owner "/" @x.name), status: (str/lower @run.status), conclusion: (if (== @run.conclusion null) null (str/lower @run.conclusion)), name: @run.name, url: @run.html_url, databaseId: @run.id, createdAt: @run.created_at })))))
         (set @entity.extra (+ @entity.extra 1))
         (emit CI_EXTRA_NEXT { })
       CI_EXTRA_FAILED -> loading
         (let ((x (array/nth @config.extraRepos @entity.extra)))
-          (set @entity.collected (array/append @entity.collected (object/merge (json/parse "{\"repo\":\"\",\"fullName\":\"\",\"status\":\"unknown\",\"conclusion\":null,\"name\":\"\",\"url\":\"\",\"databaseId\":0,\"createdAt\":\"\"}" CiRun) { repo: @x.displayName, fullName: (str/concat @x.owner "/" @x.name) }))))
+          (set @entity.collected (array/append @entity.collected (let ((blank : CiRun { repo: "", fullName: "", status: "unknown", conclusion: null, name: "", url: "", databaseId: 0, createdAt: "" })) (object/merge @blank { repo: @x.displayName, fullName: (str/concat @x.owner "/" @x.name) })))))
         (set @entity.extra (+ @entity.extra 1))
         (emit CI_EXTRA_NEXT { })
     }

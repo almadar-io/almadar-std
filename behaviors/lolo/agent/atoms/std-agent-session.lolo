@@ -24,7 +24,7 @@ type AgentMemoryRow = {
 type AgentThreadRow = {
   role : "user" | "assistant"!
   content : string!
-  createdAt : number
+  createdAt : number!
 }
 type AgentToolScope = {
   scope : "declared"!
@@ -117,7 +117,7 @@ orbital AgentSessionOrbital {
     ownerId : string! @description "Whose conversation this message belongs to (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
     role : "user" | "assistant" @description "Who said it." @synonyms "speaker, author" = user
     content : string! @description "What was said." @synonyms "text, message, body"
-    createdAt : number @description "When it was said (ms)." @synonyms "time, timestamp" = 0
+    createdAt : number! @description "When it was said (ms)." @synonyms "time, timestamp" = 0
     chatId : string @description "The conversation this message belongs to (an AgentChat id)." @synonyms "conversation, thread, session" = ""
   }
 
@@ -1274,7 +1274,7 @@ orbital AgentSessionOrbital {
       ASSISTANT_EPHEMERAL_SEND -> external {
         messages : [AgentChatMessage]!
         instructions : string
-        tools : [AgentTool]
+        tools : [AgentToolData]
         ephemeral : boolean!
       }
         @description "An ephemeral conversation asked something: the whole conversation so far (greeting included), and its own `instructions` and `tools`. Nothing is stored or remembered; the assistant answers under exactly these."
@@ -1336,7 +1336,7 @@ orbital AgentSessionOrbital {
       START_CHAT {
         greeting : string
         instructions : string
-        tools : [AgentTool]
+        tools : [AgentToolData]
         title : string
         subtitle : string
         avatar : string

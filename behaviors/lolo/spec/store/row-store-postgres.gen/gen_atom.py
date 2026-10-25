@@ -26,25 +26,51 @@ def cat(*parts):
     return '(str/concat ' + ' '.join(parts) + ')'
 
 
-def u32(n):
-    return '(bytes/write-uint ' + n + ' 4 "be")'
+def bconst(*vals):
+    """A literal byte string written as text: only for bytes below 128, which UTF-8 keeps one byte each."""
+    assert all(0 <= v < 128 for v in vals), vals
+    return '(bytes/from-string "' + ''.join('\\u{%x}' % v for v in vals) + '")'
 
 
-def u16(n):
-    return '(bytes/write-uint ' + n + ' 2 "be")'
+def u32c(n):
+    return bconst((n >> 24) & 255, (n >> 16) & 255, (n >> 8) & 255, n & 255)
 
 
-def byte(n):
-    return '(bytes/write-uint ' + n + ' 1 "be")'
+def u16c(n):
+    return bconst((n >> 8) & 255, n & 255)
+
+
+_fresh = [0]
+
+
+def fresh(prefix):
+    _fresh[0] += 1
+    return prefix + str(_fresh[0])
+
+
+def chain(pairs, result, none='null'):
+    """Binds each (name, expr) in turn; the first one that answers null makes the whole expression `none`."""
+    out = result
+    for name, expr in reversed(pairs):
+        out = '(let ((' + name + ' ' + expr + ')) (if (= @' + name + ' null) ' + none + ' ' + out + '))'
+    return out
+
+
+def nmap(src, param, body, then, none='null'):
+    """Maps src with a body that may answer null; the whole is `none` if any element did, else then(list name)."""
+    a, b = fresh('nm'), fresh('nf')
+    return ('(let ((' + a + ' (array/map ' + src + ' (fn ' + param + ' ' + body + ')))) (let ((' + b + ' (array/filter @' + a + ' (fn nx (!= @nx null))))) '
+            '(if (!= (array/len @' + b + ') (array/len @' + a + ')) ' + none + ' ' + then('@' + b) + ')))')
 
 
 def fromstr(s):
     return '(bytes/from-string ' + s + ')'
 
 
-def msg(kind, body):
-    # body is an expression; wrapped in let so it is evaluated once
-    return T('(let ((mb §b§)) (bytes/concat [(bytes/from-string §k§), (bytes/write-uint (+ (bytes/length @mb) 4) 4 "be"), @mb]))', b=body, k=S(kind))
+def msg(kind, body, nullable=False):
+    """One protocol message: the kind byte, the big-endian length that counts itself, then the body. Answers null when the length does not fit four bytes (or the body is null)."""
+    inner = chain([('ml', '(bytes/write-uint (+ (bytes/length @mb) 4) 4 "be")')], '(bytes/concat [' + fromstr(S(kind)) + ', @ml, @mb])')
+    return '(let ((mb ' + body + ')) ' + (('(if (= @mb null) null ' + inner + ')') if nullable else inner) + ')'
 
 
 def quote_ident(x):
@@ -130,9 +156,45 @@ EMPTY_BYTES = '(bytes/from-string "")'
 RECV = '(os/recv @entity.sock @config.recvBytes { key: "recv" emit: { success: PG_RECEIVED, failure: PG_IO_FAILED } })'
 
 
+class G:
+    """An effect that binds `name` to a value that may be null: the effects after it run with the value present, otherwise the ask fails with PG_BROKEN."""
+
+    def __init__(self, name, expr, message):
+        self.name, self.expr, self.message = name, expr, message
+
+
+def flat(effects):
+    out = []
+    for e in effects:
+        if isinstance(e, (list, tuple)):
+            out.extend(flat(e))
+        else:
+            out.append(e)
+    return out
+
+
+def guarded(effects):
+    effects = flat(effects)
+    for i, e in enumerate(effects):
+        if isinstance(e, G):
+            rest = guarded(effects[i + 1:])
+            body = rest[0] if len(rest) == 1 else '(do ' + ' '.join(rest) + ')'
+            node = '(let ((' + e.name + ' ' + e.expr + ')) (if (= @' + e.name + ' null) (emit PG_BROKEN { message: ' + S(e.message) + ' }) ' + body + '))'
+            return effects[:i] + [node]
+    return effects
+
+
+def block(effects):
+    g = guarded(effects)
+    return g[0] if len(g) == 1 else '(do ' + ' '.join(g) + ')'
+
+
+PROOF_UNSET = 'the SCRAM exchange produced no proof'
+
+
 def tr(event, target, when=None, effects=()):
     head = '      ' + event + ' -> ' + target + ((' when ' + when) if when else '')
-    return '\n'.join([head] + ['        ' + e for e in effects])
+    return '\n'.join([head] + ['        ' + e for e in guarded(effects)])
 
 
 def stg(*names):
@@ -166,122 +228,172 @@ NUMBERED = T(
 
 PARAMS_OF = lambda binds: '(array/map ' + binds + ' (fn pb (if @pb.isNull { kind: "null" } { kind: "text", text: @pb.text })))'
 
-QUERY_FRAME = T(
-    '(let ((qs (bytes/from-string @entity.sql)) (qp (array/map @entity.binds (fn p (if @p.isNull §neg§ (let ((tb (bytes/from-string @p.text))) (bytes/concat [§plen§, @tb])))))) (z (bytes/write-uint 0 1 "be"))) (bytes/concat [§parse§, §bind§, §desc§, §exec§, §sync§]))',
-    neg=u32('4294967295'),
-    plen='(bytes/write-uint (bytes/length @tb) 4 "be")',
-    parse=msg('P', '(bytes/concat [@z, @qs, @z, ' + u16('0') + '])'),
-    bind=msg('B', '(bytes/concat (array/append (array/concat [@z, @z, ' + u16('0') + ', ' + u16('(array/len @entity.binds)') + '] @qp) ' + u16('0') + '))'),
-    desc=msg('D', '(bytes/concat [' + byte('80') + ', @z])'),
-    exec=msg('E', '(bytes/concat [@z, ' + u32('0') + '])'),
-    sync=msg('S', fromstr('""')))
+Z = fromstr(NUL)
+QUERY_PARAM = chain([('tb', '(bytes/from-string @p.text)')], chain([('pl', '(bytes/write-uint (bytes/length @tb) 4 "be")')], '(bytes/concat [@pl, @tb])'))
+QUERY_FRAME = chain(
+    [('neg', '(bytes/write-uint 4294967295 4 "be")'), ('nb', '(bytes/write-uint (array/len @entity.binds) 2 "be")')],
+    '(let ((qs (bytes/from-string @entity.sql)) (z ' + Z + ')) ' + nmap(
+        '@entity.binds', 'p', '(if @p.isNull @neg ' + QUERY_PARAM + ')',
+        lambda qq: chain(
+            [('mp', msg('P', '(bytes/concat [@z, @qs, @z, ' + u16c(0) + '])')),
+             ('mbd', msg('B', '(bytes/concat (array/append (array/concat [@z, @z, ' + u16c(0) + ', @nb] ' + qq + ') ' + u16c(0) + '))')),
+             ('md', msg('D', '(bytes/concat [' + fromstr('"P"') + ', @z])')),
+             ('me', msg('E', '(bytes/concat [@z, ' + u32c(0) + '])')),
+             ('ms', msg('S', fromstr('""')))],
+            '(bytes/concat [@mp, @mbd, @md, @me, @ms])')) + ')')
 
-TO_BYTES = lambda x: '(bytes/from-base64 ' + x + ')'
-SHA_BYTES = lambda x: TO_BYTES('(hash/sha256 ' + x + ' "base64" "bytes")')
+def SHA_BYTES(x):
+    n = fresh('sh')
+    return chain([(n, '(hash/sha256 ' + x + ' "base64" "bytes")')], '(bytes/from-base64 @' + n + ')')
+
 
 ESC_USER = '(str/replaceAll (str/replaceAll @entity.userName "=" "=3D") "," "=2C")'
 
-MD5_PASSWORD = '(str/concat "md5" (hash/md5 ' + B64('(bytes/concat [(bytes/from-string (hash/md5 (base64/encode (str/concat @entity.secret @entity.userName)) "hex")), (bytes/slice @entity.act.body 4 8)])') + ' "hex"))'
+
+def word_of(read, mask):
+    r, x = fresh('rw'), fresh('xw')
+    return chain([(r, read)], chain([(x, '(bit/xor @' + r + ' ' + mask + ')')], '(bytes/write-uint @' + x + ' 4 "be")'))
 
 
-def hmac(k, m, v):
-    ik = '(bytes/concat (array/append (array/map (array/range 0 8) (fn ' + v + 'w (bytes/write-uint (bit/xor (bytes/read-uint ' + k + ' (* @' + v + 'w 4) 4 "be") 909522486) 4 "be"))) (bytes/from-string (str/repeat "6" 32))))'
-    ok = '(bytes/concat (array/append (array/map (array/range 0 8) (fn ' + v + 'x (bytes/write-uint (bit/xor (bytes/read-uint ' + k + ' (* @' + v + 'x 4) 4 "be") 1549556828) 4 "be"))) (bytes/from-string (str/repeat "\\\\" 32))))'
-    inner = SHA_BYTES('(bytes/concat [' + ik + ', ' + m + '])')
-    return SHA_BYTES('(bytes/concat [' + ok + ', ' + inner + '])')
+def hmac(k, m):
+    pad = lambda w, mask, fill: nmap('(array/range 0 8)', w, word_of('(bytes/read-uint ' + k + ' (* @' + w + ' 4) 4 "be")', mask),
+                                      lambda ws: '(bytes/concat (array/append ' + ws + ' (bytes/from-string (str/repeat ' + fill + ' 32))))')
+    ik, ok, inner = fresh('ik'), fresh('ok'), fresh('in')
+    return chain([(ik, pad(fresh('hw'), '909522486', '"6"')), (ok, pad(fresh('hx'), '1549556828', '"\\\\"')),
+                  (inner, SHA_BYTES('(bytes/concat [@' + ik + ', ' + m + '])'))],
+                 SHA_BYTES('(bytes/concat [@' + ok + ', @' + inner + '])'))
 
 
 def scram_proof():
-    fail = lambda msg_: '{ frame: ' + EMPTY_BYTES + ', sig: "", error: ' + S(msg_) + ' }'
+    fail = lambda msg_: '{ error: ' + S(msg_) + ' }'
     find = lambda key: T('(array/find @kv (fn kf (and (= (str/slice @kf 0 1) §k§) (= (str/slice @kf 1 2) "="))))', k=S(key))
-    xor = '(bytes/concat (array/map (array/range 0 8) (fn pw ' + u32('(bit/xor (bytes/read-uint @ck (* @pw 4) 4 "be") (bytes/read-uint @cs (* @pw 4) 4 "be"))') + ')))'
-    pframe = msg('p', fromstr('(str/concat @wop ",p=" ' + B64(xor) + ')'))
+    f3 = fail('the SCRAM exchange cannot be computed from the server first message')
+    xw = lambda w: chain([(w + 'cs', '(bytes/read-uint @cs (* @' + w + ' 4) 4 "be")')], word_of('(bytes/read-uint @ck (* @' + w + ' 4) 4 "be")', '@' + w + 'cs'))
+    pw = fresh('pw')
+    xor = nmap('(array/range 0 8)', pw, xw(pw), lambda ws: '(bytes/concat ' + ws + ')')
+    pf = chain([('xr', xor)], msg('p', fromstr('(str/concat @wop ",p=" ' + B64('@xr') + ')')))
+    inner = chain(
+        [('ck', hmac('@salted', fromstr('"Client Key"'))), ('sk', hmac('@salted', fromstr('"Server Key"'))), ('stored', SHA_BYTES('@ck')),
+         ('cs', hmac('@stored', '@am')), ('ss', hmac('@sk', '@am')), ('pframe', pf)],
+        '{ frame: @pframe, sig: @ss, error: "" }', none=f3)
     return T(
-        '(let ((sf (bytes/to-string (bytes/slice @entity.act.body 4)))) (let ((kv (str/split @sf ","))) (let ((r §fr§) (s §fs§) (i §fi§)) (if (or (= @r null) (= @s null) (= @i null)) §f1§ (if (not (validate/pattern (str/slice @i 2) "^[0-9]+$")) §f1§ (let ((combined (str/slice @r 2)) (salt (str/slice @s 2)) (iter (str/to-number (str/slice @i 2)))) (if (not (str/startsWith @combined @entity.nonce)) §f2§ (if (or (< @iter 1) (> @iter 1000000)) { frame: §eb§, sig: "", error: (str/concat "the SCRAM iteration count " @iter " is outside 1 to 1000000") } (let ((bare (str/concat "n=" §esc§ ",r=" @entity.nonce)) (wop (str/concat "c=biws,r=" @combined))) (let ((am (bytes/from-string (str/concat @bare "," @sf "," @wop))) (salted (hash/pbkdf2 (bytes/from-string @entity.secret) @salt @iter 32))) (let ((ck §hck§) (sk §hsk§)) (let ((stored §stored§)) (let ((cs §hcs§) (ss §hss§)) { frame: §pframe§, sig: @ss, error: "" })))))))))))))',
+        '(let ((sf (bytes/to-string (bytes/slice @entity.act.body 4)))) (if (= @sf null) §f0§ (let ((kv (str/split @sf ","))) (let ((r §fr§) (s §fs§) (i §fi§)) (if (or (= @r null) (= @s null) (= @i null)) §f1§ (if (not (validate/pattern (str/slice @i 2) "^[0-9]+$")) §f1§ (let ((combined (str/slice @r 2)) (salt (str/slice @s 2)) (iter (str/to-number (str/slice @i 2)))) (if (= @iter null) §f1§ (if (not (str/startsWith @combined @entity.nonce)) §f2§ (if (or (< @iter 1) (> @iter 1000000)) { error: (str/concat "the SCRAM iteration count " @iter " is outside 1 to 1000000") } (let ((bare (str/concat "n=" §esc§ ",r=" @entity.nonce)) (wop (str/concat "c=biws,r=" @combined))) (let ((am (bytes/from-string (str/concat @bare "," @sf "," @wop))) (salted (hash/pbkdf2 (bytes/from-string @entity.secret) @salt @iter 32))) (if (= @salted null) §f3§ §inner§)))))))))))))',
         fr=find('r'), fs=find('s'), fi=find('i'),
+        f0=fail('the SCRAM server-first message is not text'),
         f1=fail('the SCRAM server-first message lacks r, s or i'),
         f2=fail('the SCRAM server nonce does not extend the client nonce'),
-        eb=EMPTY_BYTES, esc=ESC_USER,
-        hck=hmac('@salted', fromstr('"Client Key"'), 'h1'),
-        hsk=hmac('@salted', fromstr('"Server Key"'), 'h2'),
-        hcs=hmac('@stored', '@am', 'h3'), stored=SHA_BYTES('@ck'),
-        hss=hmac('@sk', '@am', 'h4'),
-        pframe=pframe)
+        f3=f3, esc=ESC_USER, inner=inner)
 
 
 # ---------------------------------------------------------------- scan
 def rec(**o):
-    d = dict(pos='@acc.pos', cols='@acc.cols', raw='@acc.raw', err='@acc.err', auth='@acc.auth', done='@acc.done', stop='@acc.stop')
+    d = dict(pos='@acc.pos', cols='@acc.cols', raw='@acc.raw', err='@acc.err', auth='@acc.auth', done='@acc.done', stop='@acc.stop', bad='@acc.bad')
     d.update(o)
-    return '{ ' + ', '.join(k + ': ' + d[k] for k in ['pos', 'cols', 'raw', 'err', 'auth', 'done', 'stop']) + ' }'
+    return '{ ' + ', '.join(k + ': ' + d[k] for k in ['pos', 'cols', 'raw', 'err', 'auth', 'done', 'stop', 'bad']) + ' }'
 
 
-SCAN_COLS = '(let ((cn (bytes/read-uint @body 0 2 "be"))) (let ((cr (array/reduce (array/range 0 @cn) { p: 2, cols: @acc.cols } (fn ca cj (let ((cz (bytes/index-of @body @nul @ca.p))) { p: (+ @cz 19), cols: (array/append @ca.cols { name: (bytes/to-string (bytes/slice @body @ca.p @cz)), oid: (bytes/read-uint @body (+ @cz 7) 4 "be") }) }))))) (object/get @cr "cols")))'
-SCAN_CELLS = '(let ((dn (bytes/read-uint @body 0 2 "be"))) (let ((dr (array/reduce (array/range 0 @dn) { p: 2, cells: [] } (fn da dj (let ((dl (math/default (bytes/read-uint @body @da.p 4 "be") 0))) (if (>= @dl 2147483648) { p: (+ @da.p 4), cells: (array/append @da.cells { isNull: true, text: "" }) } { p: (+ @da.p 4 @dl), cells: (array/append @da.cells { isNull: false, text: (bytes/to-string (bytes/slice @body (+ @da.p 4) (+ @da.p 4 @dl))) }) })))))) (object/get @dr "cells")))'
+BAD_REC = rec(stop='true', bad='true')
+BAD_COL = '{ p: @ca.p, cols: @ca.cols, bad: true }'
+BAD_CELL = '{ p: @da.p, cells: @da.cells, bad: true }'
+SCAN_COLS = ('(let ((cn (bytes/read-uint @body 0 2 "be"))) (if (= @cn null) null (let ((cr (array/reduce (array/range 0 @cn) { p: 2, cols: @acc.cols, bad: false } '
+             '(fn ca cj (if @ca.bad @ca (let ((cz (bytes/index-of @body @nul @ca.p))) (if (< @cz 0) ' + BAD_COL + ' '
+             '(let ((cname (bytes/to-string (bytes/slice @body @ca.p @cz))) (coid (bytes/read-uint @body (+ @cz 7) 4 "be"))) '
+             '(if (or (= @cname null) (= @coid null)) ' + BAD_COL + ' { p: (+ @cz 19), cols: (array/append @ca.cols { name: @cname, oid: @coid }), bad: false }))))))))) '
+             '(if @cr.bad null @cr.cols))))')
+SCAN_CELLS = ('(let ((dn (bytes/read-uint @body 0 2 "be"))) (if (= @dn null) null (let ((dr (array/reduce (array/range 0 @dn) { p: 2, cells: [], bad: false } '
+              '(fn da dj (if @da.bad @da (let ((dl (bytes/read-uint @body @da.p 4 "be"))) (if (= @dl null) ' + BAD_CELL + ' '
+              '(if (>= @dl 2147483648) { p: (+ @da.p 4), cells: (array/append @da.cells { isNull: true, text: "" }), bad: false } '
+              '(if (> (+ @da.p 4 @dl) (bytes/length @body)) ' + BAD_CELL + ' '
+              '(let ((ctext (bytes/to-string (bytes/slice @body (+ @da.p 4) (+ @da.p 4 @dl))))) (if (= @ctext null) ' + BAD_CELL + ' '
+              '{ p: (+ @da.p 4 @dl), cells: (array/append @da.cells { isNull: false, text: @ctext }), bad: false }))))))))))) '
+              '(if @dr.bad null @dr.cells))))')
 SCAN_ERR = T(
-    '(let ((ep (str/split (bytes/to-string @body) §nul§))) { present: true, code: §ec§, message: §em§ })',
+    '(let ((ep (str/split @etext §nul§))) { present: true, code: §ec§, message: §em§ })',
     nul=NUL,
     ec='(let ((ef (array/find @ep (fn eq (str/startsWith @eq "C"))))) (if (= @ef null) "" (str/slice @ef 1)))',
     em='(let ((eg (array/find @ep (fn er (str/startsWith @er "M"))))) (if (= @eg null) "" (str/slice @eg 1)))')
 
 SCAN = T(
-    '(let ((total (bytes/length @entity.inbox)) (nul (bytes/write-uint 0 1 "be"))) (array/reduce (array/range 0 (+ 1 (math/floor (/ @total 5)))) { pos: 0, cols: @entity.cols, raw: @entity.raw, err: @entity.err, auth: [], done: false, stop: false } (fn acc i (if (or @acc.done @acc.stop) @acc (if (< (- @total @acc.pos) 5) §stop§ (let ((len (bytes/read-uint @entity.inbox (+ @acc.pos 1) 4 "be"))) (if (< (- @total @acc.pos) (+ 1 @len)) §stop§ (let ((kind (bytes/at @entity.inbox @acc.pos)) (body (bytes/slice @entity.inbox (+ @acc.pos 5) (+ @acc.pos 1 @len))) (next (+ @acc.pos 1 @len))) (if (= @kind 84) §t§ (if (= @kind 68) §d§ (if (= @kind 69) §e§ (if (= @kind 82) §r§ (if (= @kind 90) §z§ §o§)))))))))))))',
-    stop=rec(stop='true'), t=rec(pos='@next', cols=SCAN_COLS),
-    d=rec(pos='@next', raw='(array/append @acc.raw { cells: ' + SCAN_CELLS + ' })'),
-    e=rec(pos='@next', err=SCAN_ERR),
-    r=rec(pos='@next', auth='(array/append @acc.auth { code: (bytes/read-uint @body 0 4 "be"), body: @body })'),
+    '(let ((total (bytes/length @entity.inbox)) (nul ' + Z + ')) (let ((sr (array/reduce (array/range 0 (+ 1 (math/floor (/ @total 5)))) { pos: 0, cols: @entity.cols, raw: @entity.raw, err: @entity.err, auth: [], done: false, stop: false, bad: false } (fn acc i (if (or @acc.done @acc.stop) @acc (if (< (- @total @acc.pos) 5) §stop§ (let ((len (bytes/read-uint @entity.inbox (+ @acc.pos 1) 4 "be"))) (if (= @len null) §bad§ (if (< (- @total @acc.pos) (+ 1 @len)) §stop§ (let ((kind (bytes/at @entity.inbox @acc.pos)) (body (bytes/slice @entity.inbox (+ @acc.pos 5) (+ @acc.pos 1 @len))) (next (+ @acc.pos 1 @len))) (if (= @kind 84) §t§ (if (= @kind 68) §d§ (if (= @kind 69) §e§ (if (= @kind 82) §r§ (if (= @kind 90) §z§ §o§))))))))))))))) (if @sr.bad null @sr)))',
+    stop=rec(stop='true'), bad=BAD_REC,
+    t=chain([('tc', SCAN_COLS)], rec(pos='@next', cols='@tc'), none=BAD_REC),
+    d=chain([('dc', SCAN_CELLS)], rec(pos='@next', raw='(array/append @acc.raw { cells: @dc })'), none=BAD_REC),
+    e=chain([('etext', '(bytes/to-string @body)')], rec(pos='@next', err=SCAN_ERR), none=BAD_REC),
+    r=chain([('ac', '(bytes/read-uint @body 0 4 "be")')], rec(pos='@next', auth='(array/append @acc.auth { code: @ac, body: @body })'), none=BAD_REC),
     z=rec(pos='@next', done='true'), o=rec(pos='@next'))
 
 # ---------------------------------------------------------------- cell -> JSON entries
-TS_CONVERT = '(if (str/endsWith @tx "infinity") @tx (let ((td (array/nth (str/split @tx " ") 0)) (tr (str/join (array/drop (str/split @tx " ") 1) " "))) (let ((toff (str/replace-pattern @tr "^[0-9:.]*" "")) (tclk (str/replace-pattern @tr "[+-][0-9:]*$" ""))) (let ((tclock (str/replace-pattern @tclk "\\\\..*$" "")) (tfrac (str/replace-pattern @tclk "^[^.]*\\\\.?" "")) (tsign (if (= (str/slice @toff 0 1) "-") -1 1)) (thms (str/split (str/slice @toff 1) ":"))) (let ((tsecs (+ (* 3600 (str/to-number (array/nth @thms 0))) (* 60 (if (= (array/nth @thms 1) null) 0 (str/to-number (array/nth @thms 1)))) (if (= (array/nth @thms 2) null) 0 (str/to-number (array/nth @thms 2)))))) (str/concat (time/format (- (time/parse (str/concat @td "T" @tclock "Z")) (* @tsign @tsecs 1000)) "YYYY-MM-DDTHH:mm:ss") (if (!= @tfrac "") (str/concat "." @tfrac) "") "Z"))))))'
+TS_CONVERT = '(if (str/endsWith @tx "infinity") @tx (let ((td (array/nth (str/split @tx " ") 0)) (tr (str/join (array/drop (str/split @tx " ") 1) " "))) (let ((toff (str/replace-pattern @tr "^[0-9:.]*" "")) (tclk (str/replace-pattern @tr "[+-][0-9:]*$" ""))) (let ((tclock (str/replace-pattern @tclk "\\\\..*$" "")) (tfrac (str/replace-pattern @tclk "^[^.]*\\\\.?" "")) (tsign (if (= (str/slice @toff 0 1) "-") -1 1)) (thms (str/split (str/slice @toff 1) ":"))) ' + chain(
+    [('th', '(str/to-number (array/nth @thms 0))'),
+     ('tm', '(let ((tm1 (array/nth @thms 1))) (if (= @tm1 null) 0 (str/to-number @tm1)))'),
+     ('tsc', '(let ((ts1 (array/nth @thms 2))) (if (= @ts1 null) 0 (str/to-number @ts1)))'),
+     ('tp', '(time/parse (str/concat @td "T" @tclock "Z"))'),
+     ('tf', '(time/format (- @tp (* @tsign (+ (* 3600 @th) (* 60 @tm) @tsc) 1000)) "YYYY-MM-DDTHH:mm:ss")')],
+    '(str/concat @tf (if (!= @tfrac "") (str/concat "." @tfrac) "") "Z")') + '))))'
+
 
 # ---- values by type
 ARR_OIDS = '[1000, 1001, 1005, 1007, 1009, 1014, 1015, 1016, 1021, 1022, 1115, 1182, 1185, 1231, 2951, 199, 3807]'
 ELEM_OIDS = '[16, 17, 21, 23, 25, 1042, 1043, 20, 700, 701, 1114, 1082, 1184, 1700, 2950, 114, 3802]'
 HEXV = lambda c: '(array/indexOf (str/split "0123456789abcdef" "") ' + c + ')'
-BYTEA_B64 = lambda tx: B64('(bytes/concat (array/map (array/range 0 (math/floor (/ (- (str/len ' + tx + ') 2) 2))) (fn bk (bytes/write-uint (+ (* 16 ' + HEXV('(str/slice ' + tx + ' (+ 2 (* @bk 2)) (+ 3 (* @bk 2)))') + ') ' + HEXV('(str/slice ' + tx + ' (+ 3 (* @bk 2)) (+ 4 (* @bk 2)))') + ') 1 "be"))))')
+def BYTEA_B64(tx):
+    hi = HEXV('(str/slice ' + tx + ' (+ 2 (* @bk 2)) (+ 3 (* @bk 2)))')
+    lo = HEXV('(str/slice ' + tx + ' (+ 3 (* @bk 2)) (+ 4 (* @bk 2)))')
+    byte_of = '(let ((bh ' + hi + ') (bl ' + lo + ')) (if (or (< @bh 0) (< @bl 0)) null (bytes/write-uint (+ (* 16 @bh) @bl) 1 "be")))'
+    return chain([('bb', nmap('(array/range 0 (math/floor (/ (- (str/len ' + tx + ') 2) 2)))', 'bk', byte_of, lambda bs: '(bytes/concat ' + bs + ')'))], B64('@bb'))
 
 
-def conv_json(oid, tx, ts, allow_json):
-    sv = '(if (= ' + oid + ' 1184) ' + ts + ' (if (= ' + oid + ' 1114) (str/replace ' + tx + ' " " "T") ' + tx + '))'
+def sv_of(oid, tx, ts):
+    return '(if (= ' + oid + ' 1184) ' + ts + ' (if (= ' + oid + ' 1114) (str/replace ' + tx + ' " " "T") ' + tx + '))'
+
+
+def conv_json(oid, tx, sv, allow_json):
     body = ('(if (= ' + oid + ' 16) (if (= ' + tx + ' "t") "true" "false") '
             '(if (or (= ' + oid + ' 21) (= ' + oid + ' 23) (= ' + oid + ' 26) (= ' + oid + ' 20)) (if (= (str/to-int ' + tx + ') null) (json/stringify ' + tx + ') ' + tx + ') '
             '(if (or (= ' + oid + ' 700) (= ' + oid + ' 701)) (if (array/includes ["NaN", "Infinity", "-Infinity"] ' + tx + ') "null" ' + tx + ') '
-            '(if (= ' + oid + ' 17) (json/stringify ' + BYTEA_B64(tx) + ') (json/stringify ' + sv + ')))))')
+            '(if (= ' + oid + ' 17) (let ((b64 ' + BYTEA_B64(tx) + ')) (if (= @b64 null) null (json/stringify @b64))) (json/stringify ' + sv + ')))))')
     if allow_json:
         body = '(if (or (= ' + oid + ' 114) (= ' + oid + ' 3802)) ' + tx + ' ' + body + ')'
-    return body, sv
+    return body
 
 
-ELEM_J, _ = conv_json('@eoid', '@etx', TS_CONVERT.replace('@tx', '@etx'), False)
+def arec(**o):
+    d = dict(out='@aa.out', inq='@aa.inq', esc='false', tok='@aa.tok', quoted='@aa.quoted', bad='false')
+    d.update(o)
+    return '{ ' + ', '.join(k + ': ' + d[k] for k in ['out', 'inq', 'esc', 'tok', 'quoted', 'bad']) + ' }'
+
+
+ELEM_J = chain([('esv', sv_of('@eoid', '@etx', TS_CONVERT.replace('@tx', '@etx')))], conv_json('@eoid', '@etx', '@esv', False))
 FLUSH_EL = '(if (or @aa.quoted (!= @aa.tok "")) (if (and (not @aa.quoted) (= @aa.tok "NULL")) "null" (let ((eoid @aoid) (etx @aa.tok)) ' + ELEM_J + ')) "")'
+ARRAY_BAD = arec(bad='true')
 ARRAY_JSON = T(
-    '(let ((aoid (array/nth §elems§ (array/indexOf §arrs§ @oid))) (atx (if (str/startsWith @tx "[") (str/join (array/drop (str/split @tx "=") 1) "=") @tx))) (object/get (array/reduce (str/split @atx "") { out: "", inq: false, esc: false, tok: "", quoted: false } (fn aa ac (if @aa.esc §escd§ (if @aa.inq (if (= @ac "\\\\") §bs§ (if (= @ac "\\"") §cq§ §ap§)) (if (= @ac "\\"") §oq§ (if (= @ac "{") §ob§ (if (= @ac "}") §cb§ (if (= @ac ",") §cm§ §ap§)))))))) "out"))',
+    '(let ((aoid (array/nth §elems§ (array/indexOf §arrs§ @oid))) (atx (if (str/startsWith @tx "[") (str/join (array/drop (str/split @tx "=") 1) "=") @tx))) (let ((ar (array/reduce (str/split @atx "") { out: "", inq: false, esc: false, tok: "", quoted: false, bad: false } (fn aa ac (if @aa.bad @aa (if @aa.esc §escd§ (if @aa.inq (if (= @ac "\\\\") §bs§ (if (= @ac "\\"") §cq§ §ap§)) (if (= @ac "\\"") §oq§ (if (= @ac "{") §ob§ (if (= @ac "}") §cb§ (if (= @ac ",") §cm§ §ap§))))))))))) (if @ar.bad null @ar.out)))',
     elems=ELEM_OIDS, arrs=ARR_OIDS,
-    escd='{ out: @aa.out, inq: @aa.inq, esc: false, tok: (str/concat @aa.tok @ac), quoted: @aa.quoted }',
-    bs='{ out: @aa.out, inq: true, esc: true, tok: @aa.tok, quoted: @aa.quoted }',
-    cq='{ out: @aa.out, inq: false, esc: false, tok: @aa.tok, quoted: true }',
-    ap='{ out: @aa.out, inq: @aa.inq, esc: false, tok: (str/concat @aa.tok @ac), quoted: @aa.quoted }',
-    oq='{ out: @aa.out, inq: true, esc: false, tok: @aa.tok, quoted: true }',
-    ob='{ out: (str/concat @aa.out "["), inq: false, esc: false, tok: "", quoted: false }',
-    cb='{ out: (str/concat @aa.out §flush§ "]"), inq: false, esc: false, tok: "", quoted: false }',
-    cm='{ out: (str/concat @aa.out §flush§ ","), inq: false, esc: false, tok: "", quoted: false }',
-    flush=FLUSH_EL)
+    escd=arec(tok='(str/concat @aa.tok @ac)'),
+    bs=arec(inq='true', esc='true'),
+    cq=arec(inq='false', quoted='true'),
+    ap=arec(tok='(str/concat @aa.tok @ac)'),
+    oq=arec(inq='true', quoted='true'),
+    ob=arec(out='(str/concat @aa.out "[")', inq='false', tok='""', quoted='false'),
+    cb=chain([('fl', FLUSH_EL)], arec(out='(str/concat @aa.out @fl "]")', inq='false', tok='""', quoted='false'), none=ARRAY_BAD),
+    cm=chain([('fl', FLUSH_EL)], arec(out='(str/concat @aa.out @fl ",")', inq='false', tok='""', quoted='false'), none=ARRAY_BAD))
 
-CONV_CELL, SV_CELL = conv_json('@oid', '@tx', TS_CONVERT, True)
+SV_CELL = '(if @rcell.isNull @tx ' + sv_of('@oid', '@tx', TS_CONVERT) + ')'
+CONV_CELL = conv_json('@oid', '@tx', '@sv', True)
 CELL_ENTRY = T(
-    '(let ((oid @rc.oid) (tx @rcell.text)) (let ((isArr (>= (array/indexOf §arrs§ @oid) 0)) (isJson (or (= @oid 114) (= @oid 3802))) (isBool (= @oid 16)) (isInt (or (= @oid 21) (= @oid 23) (= @oid 26) (= @oid 20))) (isFloat (or (= @oid 700) (= @oid 701)))) { n: @rc.name, s: §sv§, isStr: (and (not @isArr) (not @isJson) (not @isBool) (not @isInt) (not @isFloat)), j: (if @rcell.isNull "null" (if @isArr §arr§ §conv§)) }))',
+    '(let ((oid @rc.oid) (tx @rcell.text)) (let ((sv §sv§)) (if (= @sv null) null (let ((isArr (>= (array/indexOf §arrs§ @oid) 0)) (isJson (or (= @oid 114) (= @oid 3802))) (isBool (= @oid 16)) (isInt (or (= @oid 21) (= @oid 23) (= @oid 26) (= @oid 20))) (isFloat (or (= @oid 700) (= @oid 701)))) (let ((cj (if @rcell.isNull "null" (if @isArr §arr§ §conv§)))) (if (= @cj null) null { n: @rc.name, s: @sv, isStr: (and (not @isArr) (not @isJson) (not @isBool) (not @isInt) (not @isFloat)), j: @cj }))))))',
     arrs=ARR_OIDS, sv=SV_CELL, arr=ARRAY_JSON, conv=CONV_CELL)
-
-ENTRIES = T(
-    '(array/map (array/range 0 (array/len @entity.cols)) (fn rj (let ((rc (array/nth @entity.cols @rj)) (rcell (array/nth @rawrow.cells @rj))) §entry§)))',
-    entry=CELL_ENTRY)
 
 MILLIS = '(if (str/includes @en.s ".") (let ((mp (str/split @en.s "."))) (let ((mtail (str/join (array/drop @mp 1) "."))) (str/concat (array/nth @mp 0) "." (str/slice (str/padEnd (str/replace-pattern @mtail "[^0-9].*$" "") 3 "0") 0 3) (str/replace-pattern @mtail "^[0-9]*" "")))) (if (str/endsWith @en.s "Z") (str/concat (str/slice @en.s 0 (- (str/len @en.s) 1)) ".000Z") @en.s))'
 
-ROW_OF = T(
-    '(let ((es §entries§)) (let ((hasC (array/some @es (fn x1 (= @x1.n "createdAt")))) (hasU (array/some @es (fn x2 (= @x2.n "updatedAt"))))) (let ((fixed (array/map @es (fn en0 (let ((nn (if (and (= @en0.n "created_at") (not @hasC)) "createdAt" (if (and (= @en0.n "updated_at") (not @hasU)) "updatedAt" @en0.n)))) { n: @nn, s: @en0.s, isStr: @en0.isStr, j: @en0.j }))))) (let ((done (array/map @fixed (fn en (if (and @en.isStr (or (= @en.n "createdAt") (= @en.n "updatedAt"))) { n: @en.n, s: §ms§, isStr: true, j: (json/stringify §ms§) } @en))))) (json/parse (str/concat "{" (str/join (array/map @done (fn ej (str/concat (json/stringify @ej.n) ":" @ej.j))) ",") "}") Row)))))',
-    entries=ENTRIES, ms=MILLIS)
+ROW_TEMPLATE = T(
+    '(let ((es @es)) (let ((hasC (array/some @es (fn x1 (= @x1.n "createdAt")))) (hasU (array/some @es (fn x2 (= @x2.n "updatedAt"))))) (let ((fixed (array/map @es (fn en0 (let ((nn (if (and (= @en0.n "created_at") (not @hasC)) "createdAt" (if (and (= @en0.n "updated_at") (not @hasU)) "updatedAt" @en0.n)))) { n: @nn, s: @en0.s, isStr: @en0.isStr, j: @en0.j }))))) (let ((done (array/map @fixed (fn en (if (and @en.isStr (or (= @en.n "createdAt") (= @en.n "updatedAt"))) { n: @en.n, s: §ms§, isStr: true, j: (json/stringify §ms§) } @en))))) (json/parse (str/concat "{" (str/join (array/map @done (fn ej (str/concat (json/stringify @ej.n) ":" @ej.j))) ",") "}") Row)))))',
+    ms=MILLIS)
+
+ROW_OF = nmap('(array/range 0 (array/len @entity.cols))', 'rj',
+              '(let ((rc (array/nth @entity.cols @rj)) (rcell (array/nth @rawrow.cells @rj))) ' + CELL_ENTRY + ')', lambda es: '(let ((es ' + es + ')) ' + ROW_TEMPLATE.replace('(let ((es @es)) ', '', 1)[:-1] + ')')
+ROWS_FAILED = 'the server sent a value this driver cannot decode'
+DECODE_ROWS = [G('rw', nmap('@entity.raw', 'rawrow', ROW_OF, lambda rg: rg), ROWS_FAILED), SET('rows', '@rw')]
 
 # ---------------------------------------------------------------- scalar text of a RowCell-like value
 SCALAR_TEXT = lambda v: T('(let ((stx §v§)) (if (validate/string @stx) @stx (json/stringify @stx)))', v=v)
@@ -367,15 +479,30 @@ SENT = lambda: [EMIT('PG_WIRE_SENT', '{ stage: @entity.stage, sql: @entity.sql, 
                 '(os/send @entity.sock @entity.frame { key: "send" emit: { failure: PG_IO_FAILED } })', RECV]
 
 # ---- frames sent inline (login)
-SSL_FRAME = '(bytes/concat [' + u32('8') + ', ' + u32('80877103') + '])'
-STARTUP_FRAME = T('(let ((sb (bytes/concat [§v§, (bytes/from-string (str/concat "user" §n§ @entity.userName §n§ "database" §n§ @entity.dbName §n§ "client_encoding" §n§ "UTF8" §n§ §n§))]))) (bytes/concat [(bytes/write-uint (+ (bytes/length @sb) 4) 4 "be"), @sb]))', v=u32('196608'), n=NUL)
+SSL_FRAME = chain([('sslc', '(bytes/write-uint 80877103 4 "be")')], '(bytes/concat [' + u32c(8) + ', @sslc])')
+STARTUP_FRAME = T('(let ((sb (bytes/concat [§v§, (bytes/from-string (str/concat "user" §n§ @entity.userName §n§ "database" §n§ @entity.dbName §n§ "client_encoding" §n§ "UTF8" §n§ §n§))]))) §len§)',
+                  v=u32c(196608), n=NUL,
+                  len=chain([('sl', '(bytes/write-uint (+ (bytes/length @sb) 4) 4 "be")')], '(bytes/concat [@sl, @sb])'))
 SCRAM_FIRST_FRAME = T('(let ((first (bytes/from-string (str/concat "n,,n=" §esc§ ",r=" @entity.nonce)))) §m§)', esc=ESC_USER,
-                      m=msg('p', '(bytes/concat [(bytes/from-string (str/concat "SCRAM-SHA-256" ' + NUL + ')), ' + u32('(bytes/length @first)') + ', @first])'))
-PASSWORD_FRAME = msg('p', '(if (= @entity.act.code 3) (bytes/from-string (str/concat @entity.secret ' + NUL + ')) (bytes/from-string (str/concat ' + MD5_PASSWORD + ' ' + NUL + ')))')
+                      m=msg('p', chain([('fl', '(bytes/write-uint (bytes/length @first) 4 "be")')],
+                                       '(bytes/concat [(bytes/from-string (str/concat "SCRAM-SHA-256" ' + NUL + ')), @fl, @first])'), nullable=True))
+PW_CLEAR = '(bytes/from-string (str/concat @entity.secret ' + NUL + '))'
+PW_MD5 = chain([('md1', '(hash/md5 (base64/encode (str/concat @entity.secret @entity.userName)) "hex")'),
+                ('md2', '(hash/md5 ' + B64('(bytes/concat [(bytes/from-string @md1), (bytes/slice @entity.act.body 4 8)])') + ' "hex")')],
+               '(bytes/from-string (str/concat "md5" @md2 ' + NUL + '))')
+PASSWORD_FRAME = msg('p', '(if (= @entity.act.code 3) ' + PW_CLEAR + ' ' + PW_MD5 + ')', nullable=True)
+
+SCAN_FAILED = 'the server sent a message this driver cannot read'
+FRAME_FAILED = 'the request cannot be encoded as a Postgres message'
+
+
+def frame_sets(frame):
+    return [G('fr', frame, FRAME_FAILED), SET('frame', '@fr')]
 
 
 def send_inline(stage, frame, extra=()):
-    return [SET('stage', S(stage)), SET('sql', '""'), SET('params', '[]'), SET('frame', frame)] + list(extra) + SENT()
+    fs = frame_sets(frame)
+    return [SET('stage', S(stage)), SET('sql', '""'), SET('params', '[]')] + fs + list(extra) + SENT()
 
 
 # ---------------------------------------------------------------- composers
@@ -388,7 +515,7 @@ TEXT_BIND = lambda v: '{ isNull: false, text: ' + v + ' }'
 COVERED = T('(let ((ce (object/get @entity.schema @entity.table {}))) (and (> (array/len (object/keys @ce)) 0) (array/every @entity.fields (fn cf (or (array/includes (object/keys @ce) @cf) (array/includes ["createdAt", "updatedAt"] @cf))))))')
 KINDS_NOW = '(if @entity.needKinds (object/get @entity.schema @entity.table {}) {})'
 KINDS_MAP = '(object/fromEntries (array/map @entity.raw (fn kr [(object/get (array/nth @kr.cells 0) "text" ""), (let ((dt (object/get (array/nth @kr.cells 1) "text" ""))) (if (array/includes ["text", "character varying", "character"] @dt) "text" (if (= @dt "jsonb") "jsonb" (if (= @dt "ARRAY") "array" "other"))))])))'
-SCHEMA_UPDATE = '(object/set @entity.schema @entity.table ' + KINDS_MAP + ')'
+SCHEMA_UPDATE = '(object/set @entity.schema @entity.table @kmap)'
 
 
 def send_stmt(stage, sql, binds='[]', base='0'):
@@ -438,7 +565,7 @@ P = R.append
 # ---- transport
 # ---- frames for statements
 P(tr('PG_FRAME', 'running', None, [
-    SET('sql', NUMBERED), SET('params', PARAMS_OF('@entity.binds')), SET('frame', QUERY_FRAME),
+    SET('sql', NUMBERED), SET('params', PARAMS_OF('@entity.binds')), frame_sets(QUERY_FRAME),
     SET('err', '{ present: false, code: "", message: "" }'), SET('cols', '[]'), SET('raw', '[]'), SET('rows', '[]'), EMIT('PG_FLUSH')]))
 for st, w in WAIT_STATE.items():
     P(tr('PG_FLUSH', w, stg(st), SENT()))
@@ -446,18 +573,18 @@ for st, w in WAIT_STATE.items():
 # ---- scram proof
 P(tr('PG_PROOF', 'running', None, [SET('proof', scram_proof()), EMIT('PG_PROOFED')]))
 P(tr('PG_PROOFED', 'ready', NE('@entity.proof.error', '""'), FAIL_CLOSE('@entity.proof.error')))
-P(tr('PG_PROOFED', 'startup', EQ('@entity.proof.error', '""'), [SET('scram', '@entity.proof.sig')] + send_inline('scram-final', '@entity.proof.frame')))
+P(tr('PG_PROOFED', 'startup', EQ('@entity.proof.error', '""'), [G('psg', '@entity.proof.sig', PROOF_UNSET), SET('scram', '@psg')] + send_inline('scram-final', '@entity.proof.frame')))
 
 # ---- reading a chunk
 P(tr('PG_SCAN', 'running', None, [
-    SET('scan', SCAN), SET('cols', '@entity.scan.cols'), SET('raw', '@entity.scan.raw'), SET('err', '@entity.scan.err'),
+    G('sc', SCAN, SCAN_FAILED), SET('scan', '@sc'), SET('cols', '@entity.scan.cols'), SET('raw', '@entity.scan.raw'), SET('err', '@entity.scan.err'),
     SET('inbox', '(bytes/slice @entity.inbox @entity.scan.pos)'),
     SET('act', '(let ((cands (array/filter @entity.scan.auth (fn aa (and (!= @aa.code 0) (!= @aa.code 12)))))) (if (> (array/len @cands) 0) (array/nth @cands 0) { code: 0, body: ' + EMPTY_BYTES + ' }))'),
     SET('badSig', '(array/some @entity.scan.auth (fn ab (and (= @ab.code 12) (!= (bytes/to-string (bytes/slice @ab.body 4)) (str/concat "v=" @entity.scram)))))'),
     EMIT('PG_SCANNED')]))
 Q = stg(*QUERY_STAGES)
 P(tr('PG_SCANNED', 'running', AND(Q, '@entity.scan.done', stg('statement', 'count')),
-     [SET('rows', '(array/map @entity.raw (fn rawrow ' + ROW_OF + '))'), EMIT('PG_PLAN')]))
+     DECODE_ROWS + [EMIT('PG_PLAN')]))
 P(tr('PG_SCANNED', 'running', AND(Q, '@entity.scan.done', NOT(stg('statement', 'count'))), [EMIT('PG_PLAN')]))
 for w, sts in [('discovering', ['discover']), ('beginning', ['begin']), ('running', ['statement', 'count']), ('committing', ['commit']), ('rolling-back', ['rollback'])]:
     P(tr('PG_SCANNED', w, AND(stg(*sts), NOT('@entity.scan.done')), [RECV]))
@@ -492,7 +619,7 @@ P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"write"'), EQ('@entity.b
 P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"write"'), NE('@entity.batch.onFailure', '"atomic"')), [EMIT('PG_OP')]))
 # ---- discovery
 D = stg('discover')
-P(tr('PG_PLAN', 'running', AND(D, NOT(IS_ERR)), [SET('schema', SCHEMA_UPDATE), SET('fresh', 'true'), EMIT('PG_BUILD')]))
+P(tr('PG_PLAN', 'running', AND(D, NOT(IS_ERR)), [G('kmap', KINDS_MAP, 'the column list the server answered names a column this driver refuses'), SET('schema', SCHEMA_UPDATE), SET('fresh', 'true'), EMIT('PG_BUILD')]))
 P(tr('PG_PLAN', 'running', AND(stg('begin'), NOT(IS_ERR)), [EMIT('PG_OP')]))
 # ---- statement replies
 ST = stg('statement')
@@ -611,7 +738,7 @@ def op0_want(kind):
 
 
 # ---------------------------------------------------------------- inline statement
-FRAME_EFFECTS = [SET('sql', NUMBERED), SET('params', PARAMS_OF('@entity.binds')), SET('frame', QUERY_FRAME),
+FRAME_EFFECTS = [SET('sql', NUMBERED), SET('params', PARAMS_OF('@entity.binds')), frame_sets(QUERY_FRAME),
                  SET('err', '{ present: false, code: "", message: "" }'), SET('cols', '[]'), SET('raw', '[]'), SET('rows', '[]')]
 
 
@@ -642,19 +769,21 @@ COMPOSERS = {'create': CREATE_COMPOSE, 'upsert': UPSERT_COMPOSE, 'update': modif
 
 # ---------------------------------------------------------------- reply summaries (guards)
 def srec(**o):
-    d = dict(pos='@sa.pos', done='@sa.done', stop='@sa.stop', err='@sa.err', code='@sa.code', nd='@sa.nd', nb='@sa.nb', na='@sa.na')
+    d = dict(pos='@sa.pos', done='@sa.done', stop='@sa.stop', err='@sa.err', nd='@sa.nd', nb='@sa.nb', na='@sa.na')
     d.update(o)
-    return '{ ' + ', '.join(k + ': ' + d[k] for k in ['pos', 'done', 'stop', 'err', 'code', 'nd', 'nb', 'na']) + ' }'
+    return '{ ' + ', '.join(k + ': ' + d[k] for k in ['pos', 'done', 'stop', 'err', 'nd', 'nb', 'na']) + ' }'
 
 
-ERR_CODE_OF = '(let ((ep (str/split (bytes/to-string @sb) ' + NUL + '))) (let ((ef (array/find @ep (fn eq (str/startsWith @eq "C"))))) (if (= @ef null) "" (str/slice @ef 1))))'
-CELL0_LEN = '(math/default (bytes/read-uint @sb 2 4 "be") 99)'
-CELL0 = '(if (< ' + CELL0_LEN + ' 16) (bytes/to-string (bytes/slice @sb 6 (+ 6 ' + CELL0_LEN + '))) "")'
+CELL0_IS = lambda lit: '(let ((cl (bytes/read-uint @sb 2 4 "be"))) (if (= @cl null) false (and (< @cl 16) (= (bytes/to-string (bytes/slice @sb 6 (+ 6 @cl))) ' + lit + '))))'
 SUMMARY = lambda buf: T(
-    '(let ((sbuf §buf§)) (let ((stotal (bytes/length @sbuf))) (array/reduce (array/range 0 (+ 1 (math/floor (/ @stotal 5)))) { pos: 0, done: false, stop: false, err: false, code: "", nd: 0, nb: 0, na: 0 } (fn sa si (if (or @sa.done @sa.stop) @sa (if (< (- @stotal @sa.pos) 5) §stop§ (let ((slen (math/default (bytes/read-uint @sbuf (+ @sa.pos 1) 4 "be") 0))) (if (< (- @stotal @sa.pos) (+ 1 @slen)) §stop§ (let ((sk (bytes/at @sbuf @sa.pos)) (sb (bytes/slice @sbuf (+ @sa.pos 5) (+ @sa.pos 1 @slen))) (sn (+ @sa.pos 1 @slen))) (if (= @sk 68) §d§ (if (= @sk 69) §e§ (if (= @sk 90) §z§ §o§))))))))))))',
+    '(let ((sbuf §buf§)) (let ((stotal (bytes/length @sbuf))) (array/reduce (array/range 0 (+ 1 (math/floor (/ @stotal 5)))) { pos: 0, done: false, stop: false, err: false, nd: 0, nb: 0, na: 0 } (fn sa si (if (or @sa.done @sa.stop) @sa (if (< (- @stotal @sa.pos) 5) §stop§ §lenrec§))))))',
     buf=buf, stop=srec(stop='true'),
-    d=srec(pos='@sn', nd='(+ @sa.nd 1)', nb='(+ @sa.nb (if (= ' + CELL0 + ' "before") 1 0))', na='(+ @sa.na (if (= ' + CELL0 + ' "after") 1 0))'),
-    e=srec(pos='@sn', err='true', code=ERR_CODE_OF), z=srec(pos='@sn', done='true'), o=srec(pos='@sn'))
+    lenrec=chain([('slen', '(bytes/read-uint @sbuf (+ @sa.pos 1) 4 "be")')],
+                 T('(if (< (- @stotal @sa.pos) (+ 1 @slen)) §stop§ (let ((sk (bytes/at @sbuf @sa.pos)) (sb (bytes/slice @sbuf (+ @sa.pos 5) (+ @sa.pos 1 @slen))) (sn (+ @sa.pos 1 @slen))) (if (= @sk 68) §d§ (if (= @sk 69) §e§ (if (= @sk 90) §z§ §o§)))))',
+                   stop=srec(stop='true'),
+                   d=srec(pos='@sn', nd='(+ @sa.nd 1)', nb='(+ @sa.nb (if ' + CELL0_IS('"before"') + ' 1 0))', na='(+ @sa.na (if ' + CELL0_IS('"after"') + ' 1 0))'),
+                   e=srec(pos='@sn', err='true'), z=srec(pos='@sn', done='true'), o=srec(pos='@sn')),
+                 none=srec(done='true')))
 
 AFTER_INBOX = '(bytes/concat [@entity.inbox, @payload.data])'
 
@@ -666,10 +795,16 @@ def lrec(**o):
 
 
 LOGIN_SUMMARY = T(
-    '(let ((lbuf §buf§)) (let ((ltotal (bytes/length @lbuf))) (array/reduce (array/range 0 (+ 1 (math/floor (/ @ltotal 5)))) { pos: 0, done: false, stop: false, err: false, act: 0, bad: false } (fn la li (if (or @la.done @la.stop) @la (if (< (- @ltotal @la.pos) 5) §stop§ (let ((llen (math/default (bytes/read-uint @lbuf (+ @la.pos 1) 4 "be") 0))) (if (< (- @ltotal @la.pos) (+ 1 @llen)) §stop§ (let ((lk (bytes/at @lbuf @la.pos)) (lb (bytes/slice @lbuf (+ @la.pos 5) (+ @la.pos 1 @llen))) (ln (+ @la.pos 1 @llen))) (if (= @lk 82) §r§ (if (= @lk 69) §e§ (if (= @lk 90) §z§ §o§))))))))))))',
+    '(let ((lbuf §buf§)) (let ((ltotal (bytes/length @lbuf))) (array/reduce (array/range 0 (+ 1 (math/floor (/ @ltotal 5)))) { pos: 0, done: false, stop: false, err: false, act: 0, bad: false } (fn la li (if (or @la.done @la.stop) @la (if (< (- @ltotal @la.pos) 5) §stop§ §lenrec§))))))',
     buf=AFTER_INBOX, stop=lrec(stop='true'),
-    r='(let ((lc (math/default (bytes/read-uint @lb 0 4 "be") 0))) ' + lrec(pos='@ln', act='(if (and (= @la.act 0) (!= @lc 0) (!= @lc 12)) @lc @la.act)', bad='(or @la.bad (and (= @lc 12) (!= (bytes/to-string (bytes/slice @lb 4)) (str/concat "v=" @entity.scram))))') + ')',
-    e=lrec(pos='@ln', err='true'), z=lrec(pos='@ln', done='true'), o=lrec(pos='@ln'))
+    lenrec=chain([('llen', '(bytes/read-uint @lbuf (+ @la.pos 1) 4 "be")')],
+                 T('(if (< (- @ltotal @la.pos) (+ 1 @llen)) §stop§ (let ((lk (bytes/at @lbuf @la.pos)) (lb (bytes/slice @lbuf (+ @la.pos 5) (+ @la.pos 1 @llen))) (ln (+ @la.pos 1 @llen))) (if (= @lk 82) §r§ (if (= @lk 69) §e§ (if (= @lk 90) §z§ §o§)))))',
+                   stop=lrec(stop='true'),
+                   r=chain([('lc', '(bytes/read-uint @lb 0 4 "be")')],
+                           lrec(pos='@ln', act='(if (and (= @la.act 0) (!= @lc 0) (!= @lc 12)) @lc @la.act)', bad='(or @la.bad (and (= @lc 12) (!= (bytes/to-string (bytes/slice @lb 4)) (str/concat "v=" @entity.scram))))'),
+                           none=lrec(pos='@ln', done='true')),
+                   e=lrec(pos='@ln', err='true'), z=lrec(pos='@ln', done='true'), o=lrec(pos='@ln')),
+                 none=lrec(done='true')))
 
 # ============================== g3d
 
@@ -695,11 +830,10 @@ CONNECT = '(os/tcp-connect @config.host @config.port { key: "connect" emit: { su
 # ---------------------------------------------------------------- scan sets (the V2 PG_SCAN body, no emit)
 SCAN_SETS = [
     SET('inbox', AFTER_INBOX),
-    SET('scan', SCAN), SET('cols', '@entity.scan.cols'), SET('raw', '@entity.scan.raw'), SET('err', '@entity.scan.err'),
+    G('sc', SCAN, SCAN_FAILED), SET('scan', '@sc'), SET('cols', '@entity.scan.cols'), SET('raw', '@entity.scan.raw'), SET('err', '@entity.scan.err'),
     SET('inbox', '(bytes/slice @entity.inbox @entity.scan.pos)'),
     SET('act', '(let ((cands (array/filter @entity.scan.auth (fn aa (and (!= @aa.code 0) (!= @aa.code 12)))))) (if (> (array/len @cands) 0) (array/nth @cands 0) { code: 0, body: ' + EMPTY_BYTES + ' }))'),
     SET('badSig', '(array/some @entity.scan.auth (fn ab (and (= @ab.code 12) (!= (bytes/to-string (bytes/slice @ab.body 4)) (str/concat "v=" @entity.scram)))))')]
-DECODE_ROWS = SET('rows', '(array/map @entity.raw (fn rawrow ' + ROW_OF + '))')
 
 QUERY_COPY = '{ ' + ', '.join(f + ': @payload.query.' + f for f in ['policy', 'filter', 'order', 'offset', 'limit', 'total', 'nearest']) + ' }'
 BATCH_COPY = '{ ops: @payload.batch.ops, onFailure: @payload.batch.onFailure }'
@@ -841,8 +975,9 @@ SU(tr('PG_RECEIVED', 'startup', AND(NE_EOF, LG(AND(L_OK(), OR(EQ(L_ACT, '3'), EQ
 SU(tr('PG_RECEIVED', 'drawing', AND(NE_EOF, LG(AND(L_OK(), EQ(L_ACT, '10')))),
       SCAN_SETS + ['(random-bytes 18 { key: "nonce" emit: { success: PG_NONCE_DRAWN, failure: PG_NONCE_FAILED } })']))
 SU(tr('PG_RECEIVED', 'startup', AND(NE_EOF, LG(AND(L_OK(), EQ(L_ACT, '11'))), NE('@entity.secret', '""')),
-      SCAN_SETS + [SET('stage', '"scram-final"'), SET('proof', scram_proof()), SET('scram', '@entity.proof.sig'), SET('sql', '""'), SET('params', '[]'), SET('frame', '@entity.proof.frame'),
-                   '(if (= @entity.proof.error "") (do ' + ' '.join(SENT()) + ') (emit PG_PROOF_FAILED))']))
+      SCAN_SETS + [SET('stage', '"scram-final"'), SET('proof', scram_proof()),
+                   '(if (= @entity.proof.error "") ' + block([G('psg', '@entity.proof.sig', PROOF_UNSET), SET('scram', '@psg'), SET('sql', '""'), SET('params', '[]'),
+                                                              G('pfr', '@entity.proof.frame', PROOF_UNSET), SET('frame', '@pfr')] + SENT()) + ' (emit PG_PROOF_FAILED))']))
 SU(tr('PG_RECEIVED', 'ready', AND(NE_EOF, LG(AND(L_OK(), NE(L_ACT, '0'), NE(L_ACT, '3'), NE(L_ACT, '5'), NE(L_ACT, '10'), NE(L_ACT, '11')))),
       SCAN_SETS + FAIL_CLOSE('(str/concat "unsupported authentication method " @entity.act.code)')))
 SU(tr('PG_RECEIVED', 'running', AND(NE_EOF, LG(AND(L_OK(), EQ(L_ACT, '0'), '@lsm.done'))), SCAN_SETS + [SET('stage', '"start"'), EMIT('PG_PLAN')]))
@@ -959,8 +1094,8 @@ LOCAL_TYPES = '''  type PgNullParam = { kind : "null" }
   type PgRaw = { cells : [PgBind]! }
   type PgErr = { present : boolean!, code : string!, message : string! }
   type PgAuth = { code : number!, body : bytes! }
-  type PgScan = { pos : number!, cols : [PgCol]!, raw : [PgRaw]!, err : PgErr!, auth : [PgAuth]!, done : boolean!, stop : boolean! }
-  type PgProof = { frame : bytes!, sig : string!, error : string! }
+  type PgScan = { pos : number!, cols : [PgCol]!, raw : [PgRaw]!, err : PgErr!, auth : [PgAuth]!, done : boolean!, stop : boolean!, bad : boolean! }
+  type PgProof = { frame : bytes?, sig : bytes?, error : string! }
   type PgWrapped = { sql : string!, binds : [PgBind]! }
   type PgWhere = { sqls : [string]!, binds : [PgBind]! }
   type PgBuilt = { sql : string!, binds : [PgBind]!, bindBase : number!, countSql : string!, countBinds : [PgBind]! }
@@ -1001,10 +1136,10 @@ ENTITY = '''  entity RowStoreFlight [runtime] {
     raw : [PgRaw] @description "The data rows of the reply being read, cells undecoded" = []
     rows : [Row] @description "The decoded data rows of the finished reply" = []
     err : PgErr @description "The server error of the reply being read" = { present: false, code: "", message: "" }
-    scan : PgScan @description "The result of reading one chunk" = { pos: 0, cols: [], raw: [], err: { present: false, code: "", message: "" }, auth: [], done: false, stop: false }
+    scan : PgScan @description "The result of reading one chunk" = { pos: 0, cols: [], raw: [], err: { present: false, code: "", message: "" }, auth: [], done: false, stop: false, bad: false }
     act : PgAuth @description "The authentication request this chunk asks the driver to answer; code 0 when there is none" = { code: 0, body: "" }
     badSig : boolean @description "The server-final signature did not match" = false
-    proof : PgProof @description "The SCRAM client-final frame and the signature expected back" = { frame: "", sig: "", error: "" }
+    proof : PgProof @description "The SCRAM client-final frame and the signature expected back; absent when the exchange failed" = { error: "" }
     preds : [RowPredicate] @description "The predicates the statement in flight compiles" = []
     extra : [string] @description "Fields the statement reads besides its predicates" = []
     written : [string] @description "Fields the write in flight sets" = []
@@ -1103,8 +1238,10 @@ EMITS = '''    emits {
 INTERNAL = {
     'PG_CONNECTED': 'sock : number!', 'PG_IO_FAILED': 'error : string!', 'PG_NONCE_FAILED': 'error : string!',
     'PG_RECEIVED': 'data : bytes!\n        eof : boolean!', 'PG_NONCE_DRAWN': 'value : string!',
-    'PG_RECORD': 'outcome : RowWriteOutcome!', 'PG_HALT': 'kind : string!\n        message : string!', 'PG_PAGED': 'total : number!',
+    'PG_BROKEN': 'message : string!', 'PG_RECORD': 'outcome : RowWriteOutcome!', 'PG_HALT': 'kind : string!\n        message : string!', 'PG_PAGED': 'total : number!',
 }
+BROKEN = tr('PG_BROKEN', 'ready', None, FAIL_CLOSE('@payload.message'))
+blocks = [b.replace('\n\n', '\n' + BROKEN + '\n\n', 1) if b.lstrip().startswith('state ') else b for b in blocks]
 import re as _re
 _all = '\n'.join(blocks)
 _used = set(_re.findall(r'\(emit (PG_[A-Z_]+)', _all)) | set(_re.findall(r'(?:success|failure): (PG_[A-Z_]+)', _all))

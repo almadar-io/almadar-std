@@ -149,16 +149,16 @@ orbital SampleAccumulatorOrbital {
             (meanV (/ (array/reduce @allSamples 0 (fn (acc x) (+ @acc @x))) @countV))
             (proportionV (if (== @kind "coin") @meanV 0))
             (binCountV @config.binCount)
-            (binW (/ 1 @binCountV))
+            (binW (or (/ 1 @binCountV) 0))
             (counts (array/map (array/range @binCountV) (fn b (array/len (array/filter @allSamples (fn v (if (== @b (- @binCountV 1)) (and (>= @v (* @b @binW)) (<= @v (* (+ @b 1) @binW))) (and (>= @v (* @b @binW)) (< @v (* (+ @b 1) @binW))))))))))
             (maxCount (math/max 1 (array/reduce @counts 0 (fn (acc c) (math/max @acc @c)))))
             (plotW (- @config.width 48))
             (plotH (- @config.height 48))
             (histShapes (array/map (array/range @binCountV) (fn b
               (let (
-                  (barH (* (/ (array/nth @counts @b) @maxCount) @plotH))
+                  (barH (* (or (/ (array/nth @counts @b) @maxCount) 0) @plotH))
                 )
-                { type: "rect", x: (+ 24 (* @b (/ @plotW @binCountV))), y: (- (+ 24 @plotH) @barH), width: (* (/ @plotW @binCountV) 0.9), height: @barH, tone: @config.color, fillTone: @config.color, fillStyle: "solid" }))))
+                { type: "rect", x: (+ 24 (* @b (or (/ @plotW @binCountV) 0))), y: (- (+ 24 @plotH) @barH), width: (* (or (/ @plotW @binCountV) 0) 0.9), height: @barH, tone: @config.color, fillTone: @config.color, fillStyle: "solid" }))))
           )
           (do
             (set @entity.samples @allSamples)

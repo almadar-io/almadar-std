@@ -4,10 +4,13 @@ app std-selection [
 ]
 type FilterSpec = { field : string!, label : string, options : [string] }
 type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
+type SelectableItemRelatedRow = { id : string! }
 orbital SelectableItemOrbital {
     type SelectableItemLoaded = Event { data : [SelectableItem] } "Fired when SelectableItem finishes loading; payload.data holds the list"
 
     type SelectableItemLoadFailed = Event { error : string, code : string } "Fired when SelectableItem fails to load"
+
+    type SelectableItemRelatedLoaded = Event { data : [SelectableItemRelatedRow]! } "Related rows whose text matches the query loaded"
 
   entity SelectableItem [runtime] {
     id : string!
@@ -146,10 +149,20 @@ orbital SelectableItemOrbital {
       ;; on refetch unmounts the list and flickers every keystroke. The fetch
       ;; fires in the background; the SelectableItemLoaded arm below
       ;; re-renders in place once it lands.
-      REFETCH_QUERY -> idle
+      REFETCH_QUERY -> idle when (or (= @config.searchRelation null) (= ?searchTerm ""))
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
           filter: (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm))
+        })
+      REFETCH_QUERY -> idle when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
+        (fetch @config.relatedEntity {
+          emit: { failure: SelectableItemLoadFailed, success: SelectableItemRelatedLoaded }
+          filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
+        })
+      SelectableItemRelatedLoaded -> idle
+        (fetch SelectableItem {
+          emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+          filter: (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))
         })
       REFETCH_FILTER -> idle
         (fetch SelectableItem {
@@ -414,6 +427,10 @@ orbital SelectableItemOrbital {
     }
 
     emits {
+      SelectableItemRelatedLoaded
+        @description "Signals that the related rows matching the search query have loaded."
+        @synonyms "related loaded, relation matched"
+        @tier "internal"
       SelectableItemLoaded
         @description "Indicates a selectable item has been successfully loaded."
         @synonyms "loaded, initialized, ready"
@@ -478,6 +495,18 @@ orbital SelectableItemOrbital {
         @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, label) or the search box can never match a row."
         @synonyms "search column, search on field, match field, search key"
         @tier "policy"
+      relatedEntity : entity = SelectableItem
+        @label "Related entity"
+        @description "The entity a relation search matches through: the target of searchRelation."
+        @tier "presentation"
+      searchRelation : (field @entity (@entity @config.relatedEntity))?
+        @label "Search through relation"
+        @description "A relation field of the searched entity. When set, the query matches the related rows' relatedSearchField and the results are the rows pointing at them; unset, searchField on the row itself is matched."
+        @tier "presentation"
+      relatedSearchField : (field (@entity @config.relatedEntity) string)?
+        @label "Related search field"
+        @description "Field of the related entity matched against the query when searchRelation is set."
+        @tier "presentation"
       bodySearch : boolean = false
         @label "Show the pick-list's own search box?"
         @description "Embeds a search box above the pick-list. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — this atom has never had a search box (0 consumers today)."

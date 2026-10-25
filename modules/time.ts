@@ -12,7 +12,11 @@
  * @packageDocumentation
  */
 
-import type { StdOperatorMeta } from '../types.js';
+import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
+import { lit, union, nullable } from '../signature.js';
+
+/** The units the kernel's `TimeUnit::parse` accepts (orbital-core `TIME_UNIT_VOCABULARY`), a closed set so a wrong unit is a type error. */
+const TIME_UNIT: OperatorTypeRef = union(lit('ms'), lit('millisecond'), lit('milliseconds'), lit('s'), lit('second'), lit('seconds'), lit('m'), lit('minute'), lit('minutes'), lit('h'), lit('hour'), lit('hours'), lit('d'), lit('day'), lit('days'), lit('w'), lit('week'), lit('weeks'), lit('month'), lit('months'), lit('quarter'), lit('quarters'), lit('year'), lit('years'));
 
 /**
  * Time module operators.
@@ -48,7 +52,8 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Parse an ISO 8601 / RFC 3339 date or date-time to epoch ms (a date is midnight UTC; no offset reads as UTC); an unparsable string is an error',
     hasSideEffects: false,
-    returnType: 'number',
+    failable: {},
+    returnType: nullable('number'),
     params: [
       { name: 'str', type: 'string', description: 'ISO 8601 date or date-time, e.g. 2024-01-18 or 2024-01-18T09:30:00+02:00' },
     ],
@@ -75,7 +80,8 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Format timestamp to string, in UTC',
     hasSideEffects: false,
-    returnType: 'string',
+    failable: {},
+    returnType: nullable('string'),
     params: [
       { name: 'date', type: 'number', description: 'Timestamp' },
       { name: 'format', type: 'string', description: 'Format pattern' },
@@ -170,7 +176,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'date', type: 'number', description: 'Timestamp' },
       { name: 'amount', type: 'number', description: 'Amount to add' },
-      { name: 'unit', type: 'string', description: 'Time unit (year/month/week/day/hour/minute/second/ms)' },
+      { name: 'unit', type: TIME_UNIT, description: 'Time unit (year/month/week/day/hour/minute/second/ms)' },
     ],
     example: '["time/add", ["time/now"], 7, "day"]',
   },
@@ -185,7 +191,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'date', type: 'number', description: 'Timestamp' },
       { name: 'amount', type: 'number', description: 'Amount to subtract' },
-      { name: 'unit', type: 'string', description: 'Time unit' },
+      { name: 'unit', type: TIME_UNIT, description: 'Time unit' },
     ],
     example: '["time/subtract", ["time/now"], 1, "hour"]',
   },
@@ -200,7 +206,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'a', type: 'number', description: 'First timestamp' },
       { name: 'b', type: 'number', description: 'Second timestamp' },
-      { name: 'unit', type: 'string', description: 'Result unit', optional: true, defaultValue: 'ms' },
+      { name: 'unit', type: TIME_UNIT, description: 'Result unit', optional: true, defaultValue: 'ms' },
     ],
     example: '["time/diff", 1700000000000, ["time/now"], "year"]',
   },
@@ -214,7 +220,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'number',
     params: [
       { name: 'date', type: 'number', description: 'Timestamp' },
-      { name: 'unit', type: 'string', description: 'Time unit (year/month/week/day/hour/minute)' },
+      { name: 'unit', type: TIME_UNIT, description: 'Time unit (year/month/week/day/hour/minute)' },
     ],
     example: '["time/startOf", ["time/now"], "month"]',
   },
@@ -228,7 +234,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'number',
     params: [
       { name: 'date', type: 'number', description: 'Timestamp' },
-      { name: 'unit', type: 'string', description: 'Time unit' },
+      { name: 'unit', type: TIME_UNIT, description: 'Time unit' },
     ],
     example: '["time/endOf", ["time/now"], "month"]',
   },
@@ -286,7 +292,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'a', type: 'number', description: 'First timestamp' },
       { name: 'b', type: 'number', description: 'Second timestamp' },
-      { name: 'unit', type: 'string', description: 'Comparison unit', optional: true },
+      { name: 'unit', type: TIME_UNIT, description: 'Comparison unit', optional: true },
     ],
     example: '["time/isSame", 1700000000000, 1700001000000, "day"]',
   },

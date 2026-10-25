@@ -1,1 +1,553 @@
-{"atom": "cli/atoms/std-orb-serve.lolo", "trait": "ServeEngine", "cases": [{"id": "the call asks std-args to parse with the serve flag table", "steps": [{"trait": "OrbServe", "from": "ready", "event": "SERVE_CALLED", "payload": {"headers": {}, "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"}, "expect": {"state": "parsing", "emits": [{"event": "SERVE_ARGS_PARSE", "payload": {"stage": "serve", "argv": ["a.lolo"], "flags": [{"name": "port", "aliases": ["-p"], "takesValue": true, "repeatable": false}, {"name": "host", "aliases": [], "takesValue": true, "repeatable": false}, {"name": "client-dir", "aliases": [], "takesValue": true, "repeatable": false}, {"name": "no-mock", "aliases": [], "takesValue": false, "repeatable": false}, {"name": "open", "aliases": [], "takesValue": false, "repeatable": false}, {"name": "no-emulators", "aliases": [], "takesValue": false, "repeatable": false}]}}]}}]}, {"id": "no file answers the usage", "steps": [{"trait": "OrbServe", "from": "parsing", "event": "SERVE_ARGS_DONE", "payload": {"stage": "serve", "flags": {}, "positionals": [], "errors": [], "words": []}, "expect": {"state": "ready", "emits": [{"event": "SERVE_ANSWERED", "payload": {"status": 400, "body": "", "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"}}]}}]}, {"id": "control: a second file answers the usage", "steps": [{"trait": "OrbServe", "from": "parsing", "event": "SERVE_ARGS_DONE", "payload": {"stage": "serve", "flags": {}, "positionals": ["a.lolo", "b.lolo"], "errors": [], "words": []}, "expect": {"state": "ready", "emits": [{"event": "SERVE_ANSWERED", "payload": {"status": 400, "body": "", "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"}}]}}]}, {"id": "one file with no flags starts with the defaults", "steps": [{"trait": "OrbServe", "from": "parsing", "event": "SERVE_ARGS_DONE", "payload": {"stage": "serve", "flags": {}, "positionals": ["a.lolo"], "errors": [], "words": []}, "expect": {"state": "working", "emits": [{"event": "SERVE_START", "payload": {"cwd": "/w", "path": "/w/a.lolo", "portText": "3030", "portOk": true, "host": "127.0.0.1", "hasClient": false, "clientDir": "", "clientGiven": "", "clientInside": true, "mock": true, "open": false, "noEmulators": false}}]}}], "entity": {"path": "/w"}}, {"id": "--port, --host and --no-mock reach the request", "steps": [{"trait": "OrbServe", "from": "parsing", "event": "SERVE_ARGS_DONE", "payload": {"stage": "serve", "flags": {"port": ["4100"], "host": ["0.0.0.0"], "no-mock": ["true"]}, "positionals": ["a.lolo"], "errors": [], "words": []}, "expect": {"state": "working", "emits": [{"event": "SERVE_START", "payload": {"cwd": "/w", "path": "/w/a.lolo", "portText": "4100", "portOk": true, "host": "0.0.0.0", "hasClient": false, "clientDir": "", "clientGiven": "", "clientInside": true, "mock": false, "open": false, "noEmulators": false}}]}}], "entity": {"path": "/w"}}, {"id": "a port above 65535 is not ok", "steps": [{"trait": "OrbServe", "from": "parsing", "event": "SERVE_ARGS_DONE", "payload": {"stage": "serve", "flags": {"port": ["70000"]}, "positionals": ["a.lolo"], "errors": [], "words": []}, "expect": {"state": "working", "emits": [{"event": "SERVE_START", "payload": {"cwd": "/w", "path": "/w/a.lolo", "portText": "70000", "portOk": false, "host": "127.0.0.1", "hasClient": false, "clientDir": "", "clientGiven": "", "clientInside": true, "mock": true, "open": false, "noEmulators": false}}]}}], "entity": {"path": "/w"}}, {"id": "--open is refused", "steps": [{"trait": "ServeEngine", "from": "idle", "event": "SERVE_START", "payload": {"cwd": "/w", "path": "/w/a.lolo", "portText": "3030", "portOk": true, "host": "127.0.0.1", "hasClient": false, "clientDir": "", "clientGiven": "", "clientInside": true, "mock": true, "open": true, "noEmulators": false}, "expect": {"state": "idle", "emits": [{"event": "SERVE_ANSWERED", "payload": {"status": 500, "body": "", "stderr": "Error: orb serve --open has no declared counterpart in std-http-server: open the browser yourself"}}]}}]}, {"id": "--no-emulators is refused", "steps": [{"trait": "ServeEngine", "from": "idle", "event": "SERVE_START", "payload": {"cwd": "/w", "path": "/w/a.lolo", "portText": "3030", "portOk": true, "host": "127.0.0.1", "hasClient": false, "clientDir": "", "clientGiven": "", "clientInside": true, "mock": true, "open": false, "noEmulators": true}, "expect": {"state": "idle", "emits": [{"event": "SERVE_ANSWERED", "payload": {"status": 500, "body": "", "stderr": "Error: orb serve --no-emulators has no declared counterpart in std-http-server: sign-in is selected by AUTH_PROVIDER in the environment"}}]}}]}, {"id": "a bad port answers 400", "steps": [{"trait": "ServeEngine", "from": "idle", "event": "SERVE_START", "payload": {"cwd": "/w", "path": "/w/a.lolo", "portText": "abc", "portOk": false, "host": "127.0.0.1", "hasClient": false, "clientDir": "", "clientGiven": "", "clientInside": true, "mock": true, "open": false, "noEmulators": false}, "expect": {"state": "idle", "emits": [{"event": "SERVE_ANSWERED", "payload": {"status": 400, "body": "", "stderr": "error: invalid value 'abc' for '--port <PORT>': not an integer from 0 to 65535"}}]}}]}, {"id": "a client dir outside the working directory is refused", "steps": [{"trait": "ServeEngine", "from": "idle", "event": "SERVE_START", "payload": {"cwd": "/w", "path": "/w/a.lolo", "portText": "3030", "portOk": true, "host": "127.0.0.1", "hasClient": true, "clientDir": "/x/dist", "clientGiven": "/x/dist", "clientInside": false, "mock": true, "open": false, "noEmulators": false}, "expect": {"state": "idle", "emits": [{"event": "SERVE_ANSWERED", "payload": {"status": 500, "body": "", "stderr": "Error: --client-dir /x/dist is outside the working directory /w; the server reads its client under it"}}]}}]}, {"id": "a refused read answers 500 with the reason", "steps": [{"trait": "ServeEngine", "from": "reading", "event": "SERVE_REFUSED", "payload": {"error": "program/read: no such file"}, "expect": {"state": "idle", "emits": [{"event": "SERVE_ANSWERED", "payload": {"status": 500, "body": "", "stderr": "Error: program/read: no such file"}}]}}]}, {"id": "a refused composition answers 500 with the reason", "steps": [{"trait": "OrbServe", "from": "composing", "event": "SERVE_COMPOSE_REFUSED", "payload": {"error": "program/compose: bad override"}, "expect": {"state": "ready", "emits": [{"event": "SERVE_ANSWERED", "payload": {"status": 500, "body": "", "stderr": "Error: program/compose: bad override"}}]}}]}]}
+{
+ "atom": "cli/atoms/std-orb-serve.lolo",
+ "trait": "ServeEngine",
+ "cases": [
+  {
+   "id": "the call asks std-args to parse with the serve flag table",
+   "steps": [
+    {
+     "trait": "OrbServe",
+     "from": "ready",
+     "event": "SERVE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "SERVE_ARGS_PARSE",
+        "payload": {
+         "stage": "serve",
+         "argv": [
+          "a.lolo"
+         ],
+         "flags": [
+          {
+           "name": "port",
+           "aliases": [
+            "-p"
+           ],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "host",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "client-dir",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          },
+          {
+           "name": "no-mock",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "open",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "no-emulators",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no file answers the usage",
+   "steps": [
+    {
+     "trait": "OrbServe",
+     "from": "parsing",
+     "event": "SERVE_ARGS_DONE",
+     "payload": {
+      "stage": "serve",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SERVE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a second file answers the usage",
+   "steps": [
+    {
+     "trait": "OrbServe",
+     "from": "parsing",
+     "event": "SERVE_ARGS_DONE",
+     "payload": {
+      "stage": "serve",
+      "flags": {},
+      "positionals": [
+       "a.lolo",
+       "b.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SERVE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "one file with no flags starts with the defaults",
+   "steps": [
+    {
+     "trait": "OrbServe",
+     "from": "parsing",
+     "event": "SERVE_ARGS_DONE",
+     "payload": {
+      "stage": "serve",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "SERVE_START",
+        "payload": {
+         "cwd": "/w",
+         "path": "/w/a.lolo",
+         "portText": "3030",
+         "portOk": true,
+         "host": "127.0.0.1",
+         "hasClient": false,
+         "clientDir": "",
+         "clientGiven": "",
+         "clientInside": true,
+         "mock": true,
+         "open": false,
+         "noEmulators": false
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "path": "/w"
+   }
+  },
+  {
+   "id": "--port, --host and --no-mock reach the request",
+   "steps": [
+    {
+     "trait": "OrbServe",
+     "from": "parsing",
+     "event": "SERVE_ARGS_DONE",
+     "payload": {
+      "stage": "serve",
+      "flags": {
+       "port": [
+        "4100"
+       ],
+       "host": [
+        "0.0.0.0"
+       ],
+       "no-mock": [
+        "true"
+       ]
+      },
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "SERVE_START",
+        "payload": {
+         "cwd": "/w",
+         "path": "/w/a.lolo",
+         "portText": "4100",
+         "portOk": true,
+         "host": "0.0.0.0",
+         "hasClient": false,
+         "clientDir": "",
+         "clientGiven": "",
+         "clientInside": true,
+         "mock": false,
+         "open": false,
+         "noEmulators": false
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "path": "/w"
+   }
+  },
+  {
+   "id": "a port above 65535 is not ok",
+   "steps": [
+    {
+     "trait": "OrbServe",
+     "from": "parsing",
+     "event": "SERVE_ARGS_DONE",
+     "payload": {
+      "stage": "serve",
+      "flags": {
+       "port": [
+        "70000"
+       ]
+      },
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "state": "working",
+      "emits": [
+       {
+        "event": "SERVE_START",
+        "payload": {
+         "cwd": "/w",
+         "path": "/w/a.lolo",
+         "portText": "70000",
+         "portOk": false,
+         "host": "127.0.0.1",
+         "hasClient": false,
+         "clientDir": "",
+         "clientGiven": "",
+         "clientInside": true,
+         "mock": true,
+         "open": false,
+         "noEmulators": false
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "path": "/w"
+   }
+  },
+  {
+   "id": "--open is refused",
+   "steps": [
+    {
+     "trait": "ServeEngine",
+     "from": "idle",
+     "event": "SERVE_START",
+     "payload": {
+      "cwd": "/w",
+      "path": "/w/a.lolo",
+      "portText": "3030",
+      "portOk": true,
+      "host": "127.0.0.1",
+      "hasClient": false,
+      "clientDir": "",
+      "clientGiven": "",
+      "clientInside": true,
+      "mock": true,
+      "open": true,
+      "noEmulators": false
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SERVE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: orb serve --open has no declared counterpart in std-http-server: open the browser yourself"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "--no-emulators is refused",
+   "steps": [
+    {
+     "trait": "ServeEngine",
+     "from": "idle",
+     "event": "SERVE_START",
+     "payload": {
+      "cwd": "/w",
+      "path": "/w/a.lolo",
+      "portText": "3030",
+      "portOk": true,
+      "host": "127.0.0.1",
+      "hasClient": false,
+      "clientDir": "",
+      "clientGiven": "",
+      "clientInside": true,
+      "mock": true,
+      "open": false,
+      "noEmulators": true
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SERVE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: orb serve --no-emulators has no declared counterpart in std-http-server: sign-in is selected by AUTH_PROVIDER in the environment"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a bad port answers 400",
+   "steps": [
+    {
+     "trait": "ServeEngine",
+     "from": "idle",
+     "event": "SERVE_START",
+     "payload": {
+      "cwd": "/w",
+      "path": "/w/a.lolo",
+      "portText": "abc",
+      "portOk": false,
+      "host": "127.0.0.1",
+      "hasClient": false,
+      "clientDir": "",
+      "clientGiven": "",
+      "clientInside": true,
+      "mock": true,
+      "open": false,
+      "noEmulators": false
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SERVE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "error: invalid value 'abc' for '--port <PORT>': not an integer from 0 to 65535"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a client dir outside the working directory is refused",
+   "steps": [
+    {
+     "trait": "ServeEngine",
+     "from": "idle",
+     "event": "SERVE_START",
+     "payload": {
+      "cwd": "/w",
+      "path": "/w/a.lolo",
+      "portText": "3030",
+      "portOk": true,
+      "host": "127.0.0.1",
+      "hasClient": true,
+      "clientDir": "/x/dist",
+      "clientGiven": "/x/dist",
+      "clientInside": false,
+      "mock": true,
+      "open": false,
+      "noEmulators": false
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SERVE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: --client-dir /x/dist is outside the working directory /w; the server reads its client under it"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a refused read answers 500 with the reason",
+   "steps": [
+    {
+     "trait": "ServeEngine",
+     "from": "reading",
+     "event": "SERVE_REFUSED",
+     "payload": {
+      "error": "program/read: no such file"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SERVE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: program/read: no such file"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a refused composition answers 500 with the reason",
+   "steps": [
+    {
+     "trait": "OrbServe",
+     "from": "composing",
+     "event": "SERVE_COMPOSE_REFUSED",
+     "payload": {
+      "error": "program/compose: bad override"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SERVE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: program/compose: bad override"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an app that declares an http endpoint is composed alone, with no std-http-server beside it",
+   "steps": [
+    {
+     "trait": "ServeEngine",
+     "from": "reading",
+     "event": "SERVE_APP_READ",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "app",
+        "orbitals": [
+         {
+          "name": "O",
+          "pages": [
+           {
+            "name": "Api",
+            "protocol": "http"
+           }
+          ]
+         }
+        ]
+       },
+       "text": ""
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emitCounts": {
+       "SERVE_COMPOSE_READY": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an app with routes only resolves std-http-server to compose beside it",
+   "steps": [
+    {
+     "trait": "ServeEngine",
+     "from": "reading",
+     "event": "SERVE_APP_READ",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "app",
+        "orbitals": [
+         {
+          "name": "O",
+          "pages": [
+           {
+            "name": "Home",
+            "path": "/"
+           }
+          ]
+         }
+        ]
+       },
+       "text": ""
+      }
+     },
+     "expect": {
+      "state": "resolving",
+      "emitCounts": {
+       "SERVE_COMPOSE_READY": 0
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

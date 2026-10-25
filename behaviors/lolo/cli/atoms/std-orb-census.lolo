@@ -2,7 +2,7 @@ app std-orb-census [
   version: "1.0.0",
   inbound: ["cli-census"],
   fs: { cwd: "**": [read] },
-  description: "std-orb-census — the `orb census [--root <dir>] [--json] [--path <dir>]... [--max-bytes <n>] <package-name>...` command, the consumer census a package passes before it moves to archive/ (port of tools/almadar-retire/census.mjs). It walks the root directory by os/list-dir, pruning the skipped directories (node_modules, dist, target, archive, .git, .next, .turbo, .orbital, .vite, build) by name, then reports per package every package.json outside the package's own directory that names it (dependencies, devDependencies, peerDependencies, optionalDependencies, pnpm.overrides, overrides, resolutions) as `  manifest <file> <kind> <range>` and every TS or JS source outside that directory that imports it (from, import(), require(), any subpath) as `  import   <file> <specifiers>`, then the `<name>: N import file(s), M manifest edge(s)` line; each --path adds `<dir>: N file(s) name this path`. A file over --max-bytes is stat-ed and never read: it is listed under UNSCANNED. --json prints the report as JSON. Zero hits answers status 200 (exit 0); any hit or unscanned file, status 500 (exit 1; the tool's exit 3 for unscanned-only needs an answer exit code); a usage error, status 400 (exit 2). os/glob cannot prune and its `**` re-walks the whole tree under its literal prefix per pattern, so the walk lists directories one by one."
+  description: "std-orb-census — the `orb census [--root <dir>] [--json] [--path <dir>]... [--max-bytes <n>] <package-name>...` command, the consumer census a package passes before it moves to archive/ (port of tools/almadar-retire/census.mjs). It walks the root directory by os/list-dir, pruning the skipped directories (node_modules, dist, target, archive, .git, .next, .turbo, .orbital, .vite, build) by name, then reports per package every package.json outside the package's own directory that names it (dependencies, devDependencies, peerDependencies, optionalDependencies, pnpm.overrides, overrides, resolutions) as `  manifest <file> <kind> <range>` and every TS or JS source outside that directory that imports it (from, import(), require(), any subpath) as `  import   <file> <specifiers>`, then the `<name>: N import file(s), M manifest edge(s)` line; each --path adds `<dir>: N file(s) name this path`. A file over --max-bytes is stat-ed and never read, and a file that is not text is never scanned: both are listed under UNSCANNED. --json prints the report as JSON. Zero hits answers status 200 (exit 0); any hit or unscanned file, status 500 (exit 1; the tool's exit 3 for unscanned-only needs an answer exit code); a usage error, status 400 (exit 2). os/glob cannot prune and its `**` re-walks the whole tree under its literal prefix per pattern, so the walk lists directories one by one."
 ]
 uses Spec from "almadar-std/orb-census"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -76,7 +76,7 @@ orbital OrbCensusOrbital {
             [(str/concat @d ": " (array/len (array/filter @entity.hits (fn h (and (= (object/get @h "name") @d) (= (object/get @h "kind") "path"))))) " file(s) name this path")]
             (array/map (array/filter @entity.hits (fn h (and (= (object/get @h "name") @d) (= (object/get @h "kind") "path")))) (fn h (str/concat "  path     " (object/get @h "file"))))))))
           (if (> (array/len @entity.unscanned) 0)
-            (array/concat [(str/concat "UNSCANNED (over " @entity.acc.maxBytes " bytes, not read): " (array/len @entity.unscanned) " file(s)")] (array/map @entity.unscanned (fn u (str/concat "  " @u))))
+            (array/concat [(str/concat "UNSCANNED (over " @entity.acc.maxBytes " bytes or not text, not read): " (array/len @entity.unscanned) " file(s)")] (array/map @entity.unscanned (fn u (str/concat "  " @u))))
             [])) "\n") })
       CENSUS_FINISH -> ready when (and (or (> (array/len @entity.hits) 0) (> (array/len @entity.unscanned) 0)) @entity.acc.json)
         (emit CENSUS_ANSWERED { status: 500, body: (json/stringify (object/fromEntries (array/concat
@@ -130,8 +130,12 @@ orbital OrbCensusOrbital {
       CENSUS_STATTED -> statting when (and (<= @payload.size @entity.acc.maxBytes) (= (array/len @entity.acc.dirs) 0) (not (validate/pattern (array/nth @entity.files @entity.cursor) @config.sourcePattern)) (not (str/endsWith (array/nth @entity.files @entity.cursor) "package.json")))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit CENSUS_STAT { })
-      CENSUS_FILE_READ -> statting
-        (let ((text (bytes/to-string @payload.data))
+      CENSUS_FILE_READ -> statting when (= (bytes/to-string @payload.data) null)
+        (set @entity.unscanned (array/append @entity.unscanned (array/nth @entity.files @entity.cursor)))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit CENSUS_STAT { })
+      CENSUS_FILE_READ -> statting when (!= (bytes/to-string @payload.data) null)
+        (let ((text (str/default (bytes/to-string @payload.data) ""))
               (file (array/nth @entity.files @entity.cursor)))
           (do
             (set @entity.ownDirs (array/concat @entity.ownDirs

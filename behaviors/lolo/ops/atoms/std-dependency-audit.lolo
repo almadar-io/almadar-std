@@ -107,7 +107,7 @@ orbital DependencyAuditOrbital {
               (low (array/len (array/filter (array/flatten (array/map @entity.packages (fn p @p.vulnerabilities))) (fn v (= @v.severity "low")))))
               (info (array/len (array/filter (array/flatten (array/map @entity.packages (fn p @p.vulnerabilities))) (fn v (= @v.severity "info")))))
               (idx (array/indexOf ["critical", "high", "moderate", "low"] @entity.failOn))
-              (iso (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"))
+              (iso (str/concat (or (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"))
               (sevColor { critical: "\u{1b}[41m\u{1b}[37m\u{1b}[1m", high: "\u{1b}[31m\u{1b}[1m", moderate: "\u{1b}[33m", low: "\u{1b}[34m", info: "\u{1b}[2m" })
               (sevLabel { critical: "CRITICAL", high: "HIGH", moderate: "MODERATE", low: "LOW", info: "INFO" })
               (sarifLevel { critical: "error", high: "error", moderate: "warning", low: "note", info: "note" }))
@@ -248,12 +248,15 @@ orbital DependencyAuditOrbital {
         (emit AUD_NEXT { })
 
       AUD_PACKAGE_READ -> auditing
-        (let ((p (json/parse (bytes/to-string @payload.data) PackageJson)))
-          (do
-            (set @entity.pkgName (or (object/get @p "name") "unknown"))
-            (set @entity.pkgVersion (or (object/get @p "version") "0.0.0"))
-            (set @entity.pkgScripts (or (object/get @p "scripts") {}))))
-        (emit AUD_NODE_CONFIG { })
+        (let ((text (bytes/to-string @payload.data)))
+          (if (== @text null)
+            (emit AUD_PACKAGE_UNREAD { error: "package.json is not valid UTF-8" })
+            (let ((p (json/parse @text PackageJson)))
+              (do
+                (set @entity.pkgName (or (object/get @p "name") "unknown"))
+                (set @entity.pkgVersion (or (object/get @p "version") "0.0.0"))
+                (set @entity.pkgScripts (or (object/get @p "scripts") {}))
+                (emit AUD_NODE_CONFIG { })))))
       AUD_PACKAGE_UNREAD -> auditing
         (set @entity.pkgName "unknown")
         (set @entity.pkgVersion "0.0.0")
@@ -263,8 +266,12 @@ orbital DependencyAuditOrbital {
       AUD_NODE_CONFIG -> auditing when (not (array/includes @entity.present ".npmrc"))
         (emit AUD_NODE_AUDIT { })
       AUD_NPMRC_READ -> auditing
-        (set @entity.npmrcAuditOff (str/includes (bytes/to-string @payload.data) "audit=false"))
-        (emit AUD_NODE_AUDIT { })
+        (let ((text (bytes/to-string @payload.data)))
+          (if (== @text null)
+            (emit AUD_NPMRC_UNREAD { error: ".npmrc is not valid UTF-8" })
+            (do
+              (set @entity.npmrcAuditOff (str/includes @text "audit=false"))
+              (emit AUD_NODE_AUDIT { }))))
       AUD_NPMRC_UNREAD -> auditing
         (emit AUD_NODE_AUDIT { })
 
@@ -294,7 +301,7 @@ orbital DependencyAuditOrbital {
       AUD_NODE_OUTDATED -> auditing when (= @entity.pm "npm")
         (emit AUD_NPM_RUN { stage: "outdated", argv: ["--prefix", (str/concat @config.root "/" @entity.rel), "outdated", "--json"], env: @config.env })
       AUD_RAN -> auditing when (and (= @payload.stage "outdated") (or (= @payload.exitCode 0) (= @payload.exitCode 1)))
-        (set @entity.outdated (let ((outdatedMap (json/parse (if (= @payload.stdout "") "{}" @payload.stdout) NodeOutdatedMap))) (array/filter (array/map (array/concat (array/map (array/sort (array/map (array/filter (array/range 0 (array/len (object/keys @outdatedMap))) (fn i (validate/pattern (array/nth (object/keys @outdatedMap) @i) "^(0|[1-9][0-9]*)$"))) (fn i { i: @i, n: (str/to-number (array/nth (object/keys @outdatedMap) @i)) })) "n") (fn x @x.i)) (array/filter (array/range 0 (array/len (object/keys @outdatedMap))) (fn i (not (validate/pattern (array/nth (object/keys @outdatedMap) @i) "^(0|[1-9][0-9]*)$"))))) (fn i (let ((k (array/nth (object/keys @outdatedMap) @i)) (v (array/nth (object/values @outdatedMap) @i))) { package: @k, current: @v.current, latest: @v.latest, wanted: @v.wanted, ecosystem: "node", isDevDependency: (= @v.type "devDependencies") }))) (fn d (or @entity.includeDev (not @d.isDevDependency))))))
+        (let ((outdatedMap (json/parse (if (= @payload.stdout "") "{}" @payload.stdout) NodeOutdatedMap))) (if (== @outdatedMap null) (set @entity.log (array/append @entity.log (str/concat "\u{1b}[33m⚠\u{1b}[0m " "outdated report is not valid JSON"))) (set @entity.outdated (array/filter (array/map (array/concat (array/map (array/sort (array/map (array/filter (array/range 0 (array/len (object/keys @outdatedMap))) (fn i (validate/pattern (array/nth (object/keys @outdatedMap) @i) "^(0|[1-9][0-9]*)$"))) (fn i { i: @i, n: (str/to-number (array/nth (object/keys @outdatedMap) @i)) })) "n") (fn x @x.i)) (array/filter (array/range 0 (array/len (object/keys @outdatedMap))) (fn i (not (validate/pattern (array/nth (object/keys @outdatedMap) @i) "^(0|[1-9][0-9]*)$"))))) (fn i (let ((k (array/nth (object/keys @outdatedMap) @i)) (v (array/nth (object/values @outdatedMap) @i))) { package: @k, current: @v.current, latest: @v.latest, wanted: @v.wanted, ecosystem: "node", isDevDependency: (= @v.type "devDependencies") }))) (fn d (or @entity.includeDev (not @d.isDevDependency)))))))
         (emit AUD_NODE_VERSION { })
       AUD_RAN -> auditing when (and (= @payload.stage "outdated") (!= @payload.exitCode 0) (!= @payload.exitCode 1))
         (emit AUD_NODE_VERSION { })
@@ -312,10 +319,11 @@ orbital DependencyAuditOrbital {
       AUD_RAN -> auditing when (= @payload.stage "node-version")
         (let ((version (str/trim @payload.stdout)) (major (str/to-number (array/first (str/split (str/slice (str/trim @payload.stdout) 1) ".")))))
           (set @entity.issues
+           (if (== @major null) @entity.issues
             (array/concat
               (array/concat @entity.issues
                 (if (array/includes [14, 15, 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 0, 1, 2, 3] @major) [{ type: "deprecated", config: "Node.js version", description: (str/concat "Node.js " @version " has reached End-of-Life (EOL)"), severity: "critical", recommendation: "Upgrade to an actively supported Node.js version (18.x, 20.x, or 22.x)", ecosystem: "node" }] []))
-              (if (= @major 18) [{ type: "deprecated", config: "Node.js version", description: (str/concat "Node.js " @major ".x is in Maintenance LTS mode"), severity: "low", recommendation: "Consider upgrading to Active LTS (20.x or 22.x) for latest features and security fixes", ecosystem: "node" }] []))))
+              (if (= @major 18) [{ type: "deprecated", config: "Node.js version", description: (str/concat "Node.js " @major ".x is in Maintenance LTS mode"), severity: "low", recommendation: "Consider upgrading to Active LTS (20.x or 22.x) for latest features and security fixes", ecosystem: "node" }] [])))))
         (emit AUD_PACKAGE_DONE { ecosystem: "node" })
       AUD_RUN_FAILED -> auditing when (= @payload.stage "node-version")
         (emit AUD_PACKAGE_DONE { ecosystem: "node" })
@@ -329,14 +337,22 @@ orbital DependencyAuditOrbital {
         (set @entity.pkgVersion "0.0.0")
         (emit AUD_PY_REQUIREMENTS { })
       AUD_PYPROJECT_READ -> auditing
-        (set @entity.pyproject (bytes/to-string @payload.data))
-        (set @entity.pkgName (or (array/first (array/map (array/filter (array/drop (str/split (str/replace-pattern (bytes/to-string @payload.data) "name\\s*=\\s*[\"']" "\u{1}") "\u{1}") 1) (fn seg (and (!= (array/first (str/split (array/first (str/split @seg "\"")) "'")) "") (< (str/len (array/first (str/split (array/first (str/split @seg "\"")) "'"))) (str/len @seg))))) (fn seg (array/first (str/split (array/first (str/split @seg "\"")) "'"))))) "unknown"))
-        (set @entity.pkgVersion (or (array/first (array/map (array/filter (array/drop (str/split (str/replace-pattern (bytes/to-string @payload.data) "version\\s*=\\s*[\"']" "\u{1}") "\u{1}") 1) (fn seg (and (!= (array/first (str/split (array/first (str/split @seg "\"")) "'")) "") (< (str/len (array/first (str/split (array/first (str/split @seg "\"")) "'"))) (str/len @seg))))) (fn seg (array/first (str/split (array/first (str/split @seg "\"")) "'"))))) "0.0.0"))
-        (emit AUD_PY_REQUIREMENTS { })
+        (let ((text (bytes/to-string @payload.data)))
+          (if (== @text null)
+            (emit AUD_PY_META_UNREAD { error: "project metadata is not valid UTF-8" })
+            (do
+              (set @entity.pyproject @text)
+              (set @entity.pkgName (or (array/first (array/map (array/filter (array/drop (str/split (str/replace-pattern @text "name\\s*=\\s*[\"']" "\u{1}") "\u{1}") 1) (fn seg (and (!= (array/first (str/split (array/first (str/split @seg "\"")) "'")) "") (< (str/len (array/first (str/split (array/first (str/split @seg "\"")) "'"))) (str/len @seg))))) (fn seg (array/first (str/split (array/first (str/split @seg "\"")) "'"))))) "unknown"))
+              (set @entity.pkgVersion (or (array/first (array/map (array/filter (array/drop (str/split (str/replace-pattern @text "version\\s*=\\s*[\"']" "\u{1}") "\u{1}") 1) (fn seg (and (!= (array/first (str/split (array/first (str/split @seg "\"")) "'")) "") (< (str/len (array/first (str/split (array/first (str/split @seg "\"")) "'"))) (str/len @seg))))) (fn seg (array/first (str/split (array/first (str/split @seg "\"")) "'"))))) "0.0.0"))
+              (emit AUD_PY_REQUIREMENTS { }))))
       AUD_SETUP_READ -> auditing
-        (set @entity.pkgName (or (array/first (array/map (array/filter (array/drop (str/split (str/replace-pattern (bytes/to-string @payload.data) "name\\s*=\\s*[\"']" "\u{1}") "\u{1}") 1) (fn seg (and (!= (array/first (str/split (array/first (str/split @seg "\"")) "'")) "") (< (str/len (array/first (str/split (array/first (str/split @seg "\"")) "'"))) (str/len @seg))))) (fn seg (array/first (str/split (array/first (str/split @seg "\"")) "'"))))) "unknown"))
-        (set @entity.pkgVersion (or (array/first (array/map (array/filter (array/drop (str/split (str/replace-pattern (bytes/to-string @payload.data) "version\\s*=\\s*[\"']" "\u{1}") "\u{1}") 1) (fn seg (and (!= (array/first (str/split (array/first (str/split @seg "\"")) "'")) "") (< (str/len (array/first (str/split (array/first (str/split @seg "\"")) "'"))) (str/len @seg))))) (fn seg (array/first (str/split (array/first (str/split @seg "\"")) "'"))))) "0.0.0"))
-        (emit AUD_PY_REQUIREMENTS { })
+        (let ((text (bytes/to-string @payload.data)))
+          (if (== @text null)
+            (emit AUD_PY_META_UNREAD { error: "project metadata is not valid UTF-8" })
+            (do
+              (set @entity.pkgName (or (array/first (array/map (array/filter (array/drop (str/split (str/replace-pattern @text "name\\s*=\\s*[\"']" "\u{1}") "\u{1}") 1) (fn seg (and (!= (array/first (str/split (array/first (str/split @seg "\"")) "'")) "") (< (str/len (array/first (str/split (array/first (str/split @seg "\"")) "'"))) (str/len @seg))))) (fn seg (array/first (str/split (array/first (str/split @seg "\"")) "'"))))) "unknown"))
+              (set @entity.pkgVersion (or (array/first (array/map (array/filter (array/drop (str/split (str/replace-pattern @text "version\\s*=\\s*[\"']" "\u{1}") "\u{1}") 1) (fn seg (and (!= (array/first (str/split (array/first (str/split @seg "\"")) "'")) "") (< (str/len (array/first (str/split (array/first (str/split @seg "\"")) "'"))) (str/len @seg))))) (fn seg (array/first (str/split (array/first (str/split @seg "\"")) "'"))))) "0.0.0"))
+              (emit AUD_PY_REQUIREMENTS { }))))
       AUD_PY_META_UNREAD -> auditing
         (set @entity.pkgName "unknown")
         (set @entity.pkgVersion "0.0.0")
@@ -347,8 +363,12 @@ orbital DependencyAuditOrbital {
       AUD_PY_REQUIREMENTS -> auditing when (not (array/includes @entity.present "requirements.txt"))
         (emit AUD_PY_SAFETY { })
       AUD_REQUIREMENTS_READ -> auditing
-        (set @entity.requirements (bytes/to-string @payload.data))
-        (emit AUD_PY_SAFETY { })
+        (let ((text (bytes/to-string @payload.data)))
+          (if (== @text null)
+            (emit AUD_REQUIREMENTS_UNREAD { error: "requirements.txt is not valid UTF-8" })
+            (do
+              (set @entity.requirements @text)
+              (emit AUD_PY_SAFETY { }))))
       AUD_REQUIREMENTS_UNREAD -> auditing
         (emit AUD_PY_SAFETY { })
 
@@ -396,12 +416,13 @@ orbital DependencyAuditOrbital {
               (if (and (array/includes @entity.present "pyproject.toml") (not (str/includes @entity.pyproject "bandit")) (not (str/includes @entity.pyproject "safety"))) [{ type: "missing", config: "pyproject.toml", description: "No security tools configured in pyproject.toml", severity: "low", recommendation: "Add security tools like bandit and safety to dev dependencies", ecosystem: "python" }] []))))
         (emit AUD_PYTHON_RUN { stage: "python-version", argv: ["--version"], env: @config.env })
       AUD_RAN -> auditing when (and (= @payload.stage "python-version") (validate/pattern (str/trim @payload.stdout) "Python \\d+\\.\\d+\\.\\d+"))
-        (let ((parts (str/split (array/nth (str/split (str/trim @payload.stdout) "Python ") 1) ".")) (major (str/to-number (array/nth (str/split (array/nth (str/split (str/trim @payload.stdout) "Python ") 1) ".") 0))) (minor (str/to-number (array/nth (str/split (array/nth (str/split (str/trim @payload.stdout) "Python ") 1) ".") 1))) (eol (array/find [{ major: 2, minor: 7, date: "2020-01-01" }, { major: 3, minor: 5, date: "2020-09-13" }, { major: 3, minor: 6, date: "2021-12-23" }, { major: 3, minor: 7, date: "2023-06-27" }] (fn e (and (= @e.major (str/to-number (array/nth (str/split (array/nth (str/split (str/trim @payload.stdout) "Python ") 1) ".") 0))) (<= (str/to-number (array/nth (str/split (array/nth (str/split (str/trim @payload.stdout) "Python ") 1) ".") 1)) @e.minor))))))
+        (let ((parts (str/split (array/nth (str/split (str/trim @payload.stdout) "Python ") 1) ".")) (major (str/to-number (array/nth (str/split (array/nth (str/split (str/trim @payload.stdout) "Python ") 1) ".") 0))) (minor (str/to-number (array/nth (str/split (array/nth (str/split (str/trim @payload.stdout) "Python ") 1) ".") 1))) (eol (if (or (== @major null) (== @minor null)) null (array/find [{ major: 2, minor: 7, date: "2020-01-01" }, { major: 3, minor: 5, date: "2020-09-13" }, { major: 3, minor: 6, date: "2021-12-23" }, { major: 3, minor: 7, date: "2023-06-27" }] (fn e (and (= @e.major @major) (<= @minor @e.minor)))))))
           (set @entity.issues
+           (if (or (== @major null) (== @minor null)) @entity.issues
             (array/concat
               (array/concat @entity.issues
                 (if (== @eol null) [] [{ type: "deprecated", config: "Python version", description: (str/concat "Python " @major "." @minor " reached End-of-Life on " @eol.date), severity: (if (= @major 2) "critical" "high"), recommendation: "Upgrade to Python 3.9+ (3.11 or 3.12 recommended)", ecosystem: "python" }]))
-              (if (and (= @major 3) (= @minor 8)) [{ type: "deprecated", config: "Python version", description: "Python 3.8 is in security-fix-only mode", severity: "low", recommendation: "Upgrade to Python 3.11 or 3.12 for active development support", ecosystem: "python" }] []))))
+              (if (and (= @major 3) (= @minor 8)) [{ type: "deprecated", config: "Python version", description: "Python 3.8 is in security-fix-only mode", severity: "low", recommendation: "Upgrade to Python 3.11 or 3.12 for active development support", ecosystem: "python" }] [])))))
         (emit AUD_PACKAGE_DONE { ecosystem: "python" })
       AUD_RAN -> auditing when (and (= @payload.stage "python-version") (not (validate/pattern (str/trim @payload.stdout) "Python \\d+\\.\\d+\\.\\d+")))
         (emit AUD_PACKAGE_DONE { ecosystem: "python" })

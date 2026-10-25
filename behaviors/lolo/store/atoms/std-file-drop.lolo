@@ -33,9 +33,9 @@ orbital FileDropOrbital {
 
     state ready {
       INIT -> ready
-      FILE_DELIVERED -> ready when (not (and (str/startsWith (json/stringify (json/parse @payload.rawBody FileDropBody)) "{") (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody FileDropBody) "name")) "\"") (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody FileDropBody) "data")) "\"") (validate/pattern (object/get (json/parse @payload.rawBody FileDropBody) "name") "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$")))
+      FILE_DELIVERED -> ready when (not (let ((b (json/parse @payload.rawBody FileDropBody))) (if (== @b null) false (validate/pattern (object/get @b "name") "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$"))))
         (emit FILE_DROP_ANSWERED { status: 400, body: "{\"error\":\"expected { name, data } with a relative name of letters, digits, _ and -\"}" })
-      FILE_DELIVERED -> ready when (and (str/startsWith (json/stringify (json/parse @payload.rawBody FileDropBody)) "{") (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody FileDropBody) "name")) "\"") (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody FileDropBody) "data")) "\"") (validate/pattern (object/get (json/parse @payload.rawBody FileDropBody) "name") "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$"))
+      FILE_DELIVERED -> ready when (let ((b (json/parse @payload.rawBody FileDropBody))) (if (== @b null) false (validate/pattern (object/get @b "name") "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$")))
         (set @entity.name (object/get (json/parse @payload.rawBody FileDropBody) "name"))
         (set @entity.data (object/get (json/parse @payload.rawBody FileDropBody) "data"))
         (os/mkdir (str/concat @config.dir (os/path-dir (object/get (json/parse @payload.rawBody FileDropBody) "name"))) true { emit: { success: DROP_DIR_READY, failure: DROP_WRITE_FAILED } })

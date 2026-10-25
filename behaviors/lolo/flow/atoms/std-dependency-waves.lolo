@@ -27,9 +27,9 @@ orbital DependencyWavesOrbital {
     state ready {
       INIT -> ready
       WAVES_REQUEST -> ready
-        (let ((names (array/map @payload.nodes (fn n (object/get @n "name")))))
-          (let ((deps (array/reduce @payload.nodes (json/parse "{}" WaveReach) (fn (acc n) (object/set @acc (object/get @n "name") (array/filter (object/get @n "deps") (fn d (array/includes @names @d))))))))
-            (let ((idx (array/reduce (array/range 0 (array/len @names)) (json/parse "{}" WaveLevel) (fn (acc i) (object/set @acc (array/nth @names @i) @i)))))
+        (let ((names (array/map @payload.nodes (fn n (object/get @n "name")))) (emptyReach : WaveReach {}) (emptyLevel : WaveLevel {}))
+          (let ((deps (array/reduce @payload.nodes @emptyReach (fn (acc n) (object/set @acc (object/get @n "name") (array/filter (object/get @n "deps") (fn d (array/includes @names @d))))))))
+            (let ((idx (array/reduce (array/range 0 (array/len @names)) @emptyLevel (fn (acc i) (object/set @acc (array/nth @names @i) @i)))))
               (let ((dix (array/map @payload.nodes (fn nd (array/map (array/filter (object/get @nd "deps") (fn d (object/has @idx @d))) (fn d (object/get @idx @d)))))))
                 (let ((lv (array/reduce (array/range 0 (array/len @names)) (array/map @names (fn x 0)) (fn (cur r) (array/map @dix (fn ds (array/reduce @ds 0 (fn (m j) (math/max @m (+ (array/nth @cur @j) 1))))))))))
                   (let ((top (array/reduce @lv 0 (fn (m l) (math/max @m @l)))))
@@ -37,8 +37,8 @@ orbital DependencyWavesOrbital {
                           (recs (array/sort (array/map (array/range 0 (array/len @names)) (fn i { k: (let ((t (str/concat "000000" (array/nth @lv @i)))) (str/concat (str/slice @t (- (str/len @t) 6) (str/len @t)) "|" (array/nth @names @i))), v: (array/nth @names @i), l: (array/nth @lv @i) })) "k" "asc")))
                       (let ((sorted (array/map @recs (fn s (object/get @s "v")))))
                         (let ((reach (if @cyclic
-                                       (json/parse "{}" WaveReach)
-                                       (array/reduce @sorted (json/parse "{}" WaveReach) (fn (acc x) (object/set @acc @x (array/unique (array/concat (object/get @deps @x []) (array/flatten (array/map (object/get @deps @x []) (fn d (object/get @acc @d []))))))))))))
+                                       @emptyReach
+                                       (array/reduce @sorted @emptyReach (fn (acc x) (object/set @acc @x (array/unique (array/concat (object/get @deps @x []) (array/flatten (array/map (object/get @deps @x []) (fn d (object/get @acc @d []))))))))))))
                           (let ((keys (if @cyclic (let ((cons (array/map (array/range 0 (array/len @names)) (fn i (array/filter (array/range 0 (array/len @names)) (fn j (array/includes (array/nth @dix @j) @i)))))))
                               (let ((asg (array/reduce (array/range 0 (array/len @names)) (array/map (array/range 0 (array/len @names)) (fn i (- 0 1))) (fn (a o) (if (not (array/some @a (fn x (< @x 0)))) @a
                                 (let ((col (array/reduce (array/range 0 (array/len @names)) (array/map (array/range 0 (array/len @names)) (fn i (if (< (array/nth @a @i) 0) @i (- 0 1)))) (fn (c r) (array/map (array/range 0 (array/len @names)) (fn i (if (< (array/nth @a @i) 0) (array/reduce (array/nth @cons @i) @i (fn (m j) (math/max @m (array/nth @c @j)))) (- 0 1))))))))

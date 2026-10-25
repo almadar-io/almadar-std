@@ -54,17 +54,16 @@ orbital OrbLintTickRequiresRuntimeOrbital {
                                 []
                                 (array/flatten (array/map (array/range 0 (array/len (object/get @tk "effects" []))) (fn j
                                   (let ((ef (array/nth (object/get @tk "effects" []) @j)))
-                                    (let ((op (let ((fd (tree/fold @ef (fn (n k)
+                                    (let ((fd (tree/fold @ef (fn (n k)
                                       (if (validate/array @n)
                                         (array/concat
                                           (if (validate/string (array/nth @n 0)) (if (array/includes @llm (array/nth @n 0)) [(array/nth @n 0)] []) [])
                                           (array/flatten (array/filter @k (fn r (validate/array @r)))))
                                         (if (validate/object @n)
                                           (array/flatten (array/filter (object/values @k) (fn r (validate/array @r))))
-                                          []))) TickShape))) (if (> (array/len @fd) 0) (let ((o0 (array/first @fd))) (if (validate/string @o0) @o0 "")) ""))))
-                                      (if (= @op "")
+                                          []))) TickShape))) (if (= @fd null) (let ((up (str/concat @where ".ticks[" @i "].effects[" @j "]"))) [{ code: "LINT_NODE_UNCHECKED", path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a TickShape; this rule could not check it"), suggestion: "", severity: "error" }]) (let ((op (if (> (array/len @fd) 0) (let ((o0 (array/first @fd))) (if (validate/string @o0) @o0 "")) ""))) (if (= @op "")
                                         []
-                                        [{ code: "ORB_TICK_ASYNC_EFFECT", path: (str/concat @where ".ticks[" @i "].effects[" @j "]"), message: (str/concat "trait \"" @tn "\" tick '" (object/get @tk "name" "") "' calls server-async operator '" @op "' on a non-cron interval — repeated per-tick agent/LLM calls can pile up"), suggestion: "Trigger the async call from an explicit event-driven transition, or use a Cron-scheduled tick", severity: "error" }])))))))))))))))))))))))))
+                                        [{ code: "ORB_TICK_ASYNC_EFFECT", path: (str/concat @where ".ticks[" @i "].effects[" @j "]"), message: (str/concat "trait \"" @tn "\" tick '" (object/get @tk "name" "") "' calls server-async operator '" @op "' on a non-cron interval — repeated per-tick agent/LLM calls can pile up"), suggestion: "Trigger the async call from an explicit event-driven transition, or use a Cron-scheduled tick", severity: "error" }])))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "tick-requires-runtime", scope: @entity.scope, findings: @entity.findings })

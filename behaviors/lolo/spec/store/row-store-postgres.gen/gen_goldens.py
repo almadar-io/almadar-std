@@ -83,7 +83,7 @@ def recv(data, frm=None, entity=None, expect=None):
 def wire(stage, sql, params, frame):
     return {"event": "PG_WIRE_SENT", "payload": {"stage": stage, "sql": sql, "params": [prm(p) for p in params], "frame": b64(frame)}}
 def emit(ev, **p): return {"event": ev, "payload": p}
-SEND_RECV = [{"type": "os/send"}, {"type": "os/recv"}]
+SEND_RECV = [{"type": "let"}]
 def stmt(stage, sql, params): return wire(stage, sql, params, query_frame(sql, params))
 
 def ask(event, payload, entity, state, emits, effects=SEND_RECV, nev=("STORE_FAILED",)):
@@ -111,7 +111,7 @@ case("bad-connection-refused-fails-with-the-address",
 case("good-connected-asks-for-tls-first-under-sslmode-prefer",
      [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}},
       {"event": "PG_CONNECTED", "payload": {"sock": 3},
-       "expect": {"state": "negotiating", "emits": [wire("ssl-request", "", [], SSL_REQUEST)], "effects": [{"type": "os/send"}, {"type": "os/recv"}], "neverEmits": ["STORE_FAILED"]}}],
+       "expect": {"state": "negotiating", "emits": [wire("ssl-request", "", [], SSL_REQUEST)], "effects": [{"type": "let"}], "neverEmits": ["STORE_FAILED"]}}],
      note="SSLRequest is 00 00 00 08 04 d2 16 2f")
 case("good-server-answers-n-and-startup-follows",
      [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}},
@@ -173,18 +173,21 @@ server_final = "v=" + b64(server_sig)
 
 def scram_to_proof():
     return to_startup() + [
-        recv(R(10, cstr("SCRAM-SHA-256") + b"\0"), expect={"state": "drawing", "effects": [{"type": "random-bytes"}]}),
+        recv(R(10, cstr("SCRAM-SHA-256") + b"\0"), expect={"state": "drawing", "effects": [{"type": "let"}]}),
         {"event": "PG_NONCE_DRAWN", "payload": {"value": NONCE}, "from": "drawing",
          "expect": {"state": "startup", "emits": [wire("scram-first", "", [], msg(b"p", first_body))]}},
         recv(R(11, server_first.encode()), expect={"state": "startup", "emits": [wire("scram-final", "", [], msg(b"p", client_final.encode()))]})]
 case("good-scram-sha-256-login-sends-first-then-proof-and-verifies-the-server",
      scram_to_proof() + [recv(R(12, server_final.encode()) + ok_session, expect={"state": "running", "emits": [stmt("statement", READ_SQL, ["t1"])], "neverEmits": ["STORE_FAILED"]})],
      note="client nonce = base64 of 18 bytes 01..12 (random-bytes 18); salt, iterations and server nonce are the recorded fixtures/postgres/scram-wrong-password-fails values; proof computed with pbkdf2/hmac (no hmac-over-bytes operator, so the atom builds HMAC from hash/sha256 bytes)")
+case("bad-scram-server-first-that-is-not-text-is-store-failed",
+     scram_to_proof()[:-1] + [recv(R(11, b"\xff\xfe"), expect={"emits": [emit("STORE_FAILED", key="k", message="the SCRAM server-first message is not text")], "neverEmits": ["ROW_FOUND"]})],
+     note="the server-first message must decode as text before r, s and i are read; undecodable bytes end the login with the proof error, never an empty string")
 case("bad-scram-server-signature-mismatch-fails",
      scram_to_proof() + [recv(R(12, ("v="+b64(bytes(32))).encode()) + ok_session, expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message="the SCRAM server signature does not match: the server does not know the password")], "neverEmits": ["ROW_FOUND"]})],
      note="Scram::verify text")
 case("bad-scram-wrong-password-fails-with-the-server-message",
-     scram_to_proof() + [recv(E("28P01", f'password authentication failed for user "{USER}"', "FATAL"), expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message=f'password authentication failed for user "{USER}"')], "effects": [{"type": "os/close"}], "neverEmits": ["ROW_FOUND"]})],
+     scram_to_proof() + [recv(E("28P01", f'password authentication failed for user "{USER}"', "FATAL"), expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message=f'password authentication failed for user "{USER}"')], "effects": [{"type": "let"}], "neverEmits": ["ROW_FOUND"]})],
      note="E 28P01 recorded in scram-wrong-password-fails; the row-store message is the server message only")
 case("bad-unsupported-authentication-method",
      to_startup() + [recv(R(7), expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message="unsupported authentication method 7")]})])
@@ -217,6 +220,39 @@ case("bad-read-missing-table-fails-with-the-server-message",
      [ask("ROW_READ", {"key": "k", "entityType": "Ticket", "id": "t1"}, warm(), "running", [stmt("statement", READ_SQL, ["t1"])]),
       recv(PARSE_BIND[:0] + E("42P01", 'relation "tickets" does not exist') + Z(), expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message='relation "tickets" does not exist')], "neverEmits": ["ROW_FOUND"]})],
      note="E arrives before ReadyForQuery; the error is reported at Z; a server error keeps the session")
+SCAN_FAILED = "the server sent a message this driver cannot read"
+ROWS_FAILED = "the server sent a value this driver cannot decode"
+def malformed(reply, message, id, note):
+    case(id,
+         [ask("ROW_READ", {"key": "k", "entityType": "Ticket", "id": "t1"}, warm(), "running", [stmt("statement", READ_SQL, ["t1"])]),
+          recv(reply, expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message=message)], "neverEmits": ["ROW_FOUND"]})],
+         note=note)
+ID_COL = struct.pack(">IHIhiH", 0, 0, TXT, -1, -1, 0)
+malformed(PARSE_BIND + msg(b"T", struct.pack(">H", 1) + b"\xff\xfe\0" + ID_COL) + C("SELECT 0") + Z(), SCAN_FAILED,
+          "bad-read-reply-with-a-column-name-that-is-not-text-is-store-failed",
+          "a column name that does not decode as UTF-8 is a protocol failure: the whole chunk is refused, no stand-in name")
+malformed(PARSE_BIND + T([("id", TXT)]) + msg(b"D", struct.pack(">H", 1) + struct.pack(">i", 2) + b"\xff\xfe") + C("SELECT 1") + Z(), SCAN_FAILED,
+          "bad-read-reply-with-a-cell-that-is-not-text-is-store-failed",
+          "a cell whose bytes do not decode as UTF-8 is a protocol failure, not an empty string")
+malformed(PARSE_BIND + T([("id", TXT)]) + msg(b"D", struct.pack(">H", 1) + struct.pack(">i", 50) + b"ab") + C("SELECT 1") + Z(), SCAN_FAILED,
+          "bad-read-reply-with-a-cell-longer-than-its-message-is-store-failed",
+          "a cell length that runs past the end of its DataRow is a protocol failure")
+malformed(PARSE_BIND + msg(b"E", b"\xff\xfe\0") + Z(), SCAN_FAILED,
+          "bad-read-reply-with-an-error-that-is-not-text-is-store-failed",
+          "an ErrorResponse whose bytes do not decode as UTF-8 is a protocol failure, not an error with an empty message")
+malformed(PARSE_BIND + msg(b"R", b"\0\0") + Z(), SCAN_FAILED,
+          "bad-read-reply-with-an-authentication-code-that-is-too-short-is-store-failed",
+          "an authentication message too short to hold its four-byte code is a protocol failure")
+bad_ts = ticket("t1", "Fix login", "open", 3, '["a"]', created="not a time")
+malformed(result(TICKET_COLS, [bad_ts], "SELECT 1"), ROWS_FAILED,
+          "bad-read-reply-with-a-timestamp-that-does-not-parse-is-store-failed",
+          "a timestamptz cell that time/parse refuses fails the ask; no epoch date stands in for it")
+malformed(PARSE_BIND + T([("data", 17)]) + D(["\\xzz"]) + C("SELECT 1") + Z(), ROWS_FAILED,
+          "bad-read-reply-with-a-bytea-that-is-not-hex-is-store-failed",
+          "a bytea cell with a non-hex digit fails the ask instead of decoding to a wrong byte")
+malformed(PARSE_BIND + T([("seen", 1185)]) + D(['{"not a time"}']) + C("SELECT 1") + Z(), ROWS_FAILED,
+          "bad-read-reply-with-an-array-element-that-does-not-decode-is-store-failed",
+          "a timestamptz[] element that time/parse refuses fails the whole row")
 case("bad-read-connection-closed-mid-reply-fails-and-drops-the-session",
      [ask("ROW_READ", {"key": "k", "entityType": "Ticket", "id": "t1"}, warm(), "running", [stmt("statement", READ_SQL, ["t1"])]),
       {"event": "PG_RECEIVED", "payload": {"data": "", "eof": True}, "expect": {"state": "ready", "emits": [emit("STORE_FAILED", key="k", message="the server closed the connection")], "effects": [{"type": "os/close"}]}}])
@@ -470,10 +506,11 @@ case("x-read-decodes-arrays-bytea-bool-and-floats",
     recv(result(cols_x,[["t1",'{a,"b c",NULL,"q\\"uote"}','{1,2,NULL}','\\x48656c6c6f','{"2026-03-05 10:00:00+00"}','t','9007199254740993','1.5','{{1,2},{3}}']],"SELECT 1"),
          expect={"state":"ready","emits":[emit("ROW_FOUND", key="k", row={"id":"t1","labels":["a","b c",None,'q"uote'],"scores":[1,2,None],"blob":"SGVsbG8=","seen":["2026-03-05T10:00:00Z"],"flag":True,"big":"9007199254740993","ratio":1.5,"nested":[[1,2],[3]]})]})])
 
-doc = {"atom": "store/atoms/std-row-store-postgres.lolo", "trait": "RowStoreDriver",
+doc = {"atom": "spec/store/row-store-postgres.fixture.lolo", "trait": "RowStoreDriver",
        "spec": "spec/store/row-store-postgres.lolo",
        "source": "orbital-rust/crates/orbital-core/crates/runtime/src/stores/pg_rows.rs over drivers/postgres.rs (behavior and tests)",
        "note": "Replay goldens feed the os reply events the kernel would route (PG_CONNECTED, PG_RECEIVED with the server bytes as base64, PG_NONCE_DRAWN) and assert state, emits and the effects' types. Effect arguments are compared evaluated; the exact bytes the driver writes are asserted through the spec's PG_WIRE_SENT diagnostic emit (stage, sql, params, frame = base64 of the whole send). Server answers are hand-built Postgres v3 messages (cross-checked against fixtures/postgres/*.json); the SCRAM server-first is the recorded scram-wrong-password-fails one. Cases marked skip need case-level config (unsupported until G-ORB-460). The same case list is the Rust-side run list: each id names the Rust unit/live test it mirrors in `source`.",
        "cases": cases}
 json.dump(doc, open(OUT, "w"), indent=1)
+open(OUT, "a").write("\n")
 print(len(cases), "cases")

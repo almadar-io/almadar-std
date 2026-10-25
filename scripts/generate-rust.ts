@@ -10,7 +10,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STD_OPERATORS, STD_OPERATORS_BY_MODULE } from '../registry.js';
-import type { EffectHost, OperatorEffectMeta, OperatorTypeRef, RunsOn, StdOperatorMeta, StdModule } from '../types.js';
+import type { EffectHost, FailableMeta, OperatorEffectMeta, OperatorTypeRef, RunsOn, StdOperatorMeta, StdModule } from '../types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STD_ROOT = resolve(__dirname, '..');
@@ -58,15 +58,6 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
     'std-ease': { description: 'Easing and interpolation curves', target: ['ts', 'rust'] },
     'std-noise': { description: 'Coherent noise (procedural gen)', target: ['ts', 'rust'] },
     'std-path': { description: 'Grid pathfinding', target: ['ts', 'rust'] },
-    'std-nn': { description: 'Neural network layer definitions', target: ['python'] },
-    'std-tensor': { description: 'Tensor operations', target: ['python'] },
-    'std-train': { description: 'Training operations', target: ['python'] },
-    'ml-arch': { description: 'Architecture layer definitions (Python compile target)', target: ['python'] },
-    'ml-effect': { description: 'ML execution effects (Python compile target)', target: ['python'] },
-    'ml-tensor': { description: 'Tensor manipulation (Python compile target)', target: ['python'] },
-    'ml-graph': { description: 'Graph construction (Python compile target)', target: ['python'] },
-    'ml-contract': { description: 'Input/output contract validation (Python compile target)', target: ['python'] },
-    'ml-data': { description: 'Data loading and preprocessing (Python compile target)', target: ['python'] },
 };
 
 // ============================================================================
@@ -106,6 +97,7 @@ interface CanonicalOperatorEntry {
      * wrong-arg-order class (e.g. `(array/reduce arr (fn …) init)`).
      */
     lambdaArgPosition?: number;
+    failable?: FailableMeta;
     runsOn?: RunsOn;
     host?: EffectHost;
     /** 0-indexed argument naming a data effect's target entity; the effect runs where that entity lives. */
@@ -168,6 +160,7 @@ function toCanonicalEntry(
     if (meta.hasSideEffects) entry.hasSideEffects = true;
     if (meta.effect) entry.effect = meta.effect;
     if (meta.returnSemantics) entry.returnSemantics = meta.returnSemantics;
+    if (meta.failable) entry.failable = meta.failable;
     if (meta.runsOn) entry.runsOn = meta.runsOn;
     if (meta.host) entry.host = meta.host;
     if (meta.entityArgPosition != null) entry.entityArgPosition = meta.entityArgPosition;

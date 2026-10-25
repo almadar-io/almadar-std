@@ -26,13 +26,15 @@ orbital VerifyTransientProbeOrbital {
       INIT -> ready
       TRANSIENT_REQUEST -> ready
         (let ((ts @payload.transitions)
-              (ev @payload.query.event))
+              (ev @payload.query.event)
+              (opKinds : StrList ["persist", "fetch", "call-service"])
+              (writeKinds : StrList ["create", "update", "delete"]))
           (let ((effs (array/flatten (array/map @ts (fn t (object/get @t "effects" [])))))
                 (rounds (array/range 0 (array/len @payload.transitions))))
-            (let ((fails (array/filter @effs (fn e (and (array/includes (json/parse "[\"persist\",\"fetch\",\"call-service\"]" StrList) (object/get @e "op")) (= (object/get (object/get @e "emit" {}) "failure" "") @ev)))))
+            (let ((fails (array/filter @effs (fn e (and (array/includes @opKinds (object/get @e "op")) (= (object/get (object/get @e "emit" {}) "failure" "") @ev)))))
                   (emitted (array/unique (array/filter (array/flatten (array/map @effs (fn e [(object/get (object/get @e "emit" {}) "success" ""), (object/get (object/get @e "emit" {}) "failure" ""), (object/get (object/get @e "emit" {}) "cancelled" "")]))) (fn x (!= @x ""))))))
               (let ((closureFrom (array/reduce @rounds [@payload.query.from] (fn (seen r) (array/unique (array/concat @seen (array/map (array/filter @ts (fn t (and (array/includes @seen (object/get @t "from")) (array/includes @emitted (object/get @t "event"))))) (fn t (object/get @t "to"))))))))
-                    (enter (array/find @ts (fn t (array/some (object/get @t "effects" []) (fn e (and (= (object/get @e "op") "persist") (array/includes (json/parse "[\"create\",\"update\",\"delete\"]" StrList) (object/get @e "kind" "")) (= (object/get (object/get @e "emit" {}) "failure" "") @ev))))))))
+                    (enter (array/find @ts (fn t (array/some (object/get @t "effects" []) (fn e (and (= (object/get @e "op") "persist") (array/includes @writeKinds (object/get @e "kind" "")) (= (object/get (object/get @e "emit" {}) "failure" "") @ev))))))))
                 (let ((closureTo (if (= @enter null) [] (array/reduce @rounds [(object/get @enter "to")] (fn (seen r) (array/unique (array/concat @seen (array/map (array/filter @ts (fn t (and (array/includes @seen (object/get @t "from")) (array/includes @emitted (object/get @t "event"))))) (fn t (object/get @t "to"))))))))))
                   (do (set @entity.answer
                         (if (or (= (array/len @fails) 0) (<= (array/len @closureFrom) 1)) { outcome: "not-transient" }

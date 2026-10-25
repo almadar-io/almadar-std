@@ -66,7 +66,7 @@ orbital CliOrbital {
         (set @entity.envCursor (+ @entity.envCursor 1))
         (emit CLI_ENV_NEXT { })
       CLI_ENV_READ -> running when (!= @payload.value null)
-        (set @entity.passed (object/merge @entity.passed (object/fromEntries [[(array/nth @config.passEnv @entity.envCursor), @payload.value]])))
+        (let ((entry (object/fromEntries [[(array/nth @config.passEnv @entity.envCursor), @payload.value]]))) (set @entity.passed (if (= @entry null) @entity.passed (object/merge @entity.passed @entry))))
         (set @entity.envCursor (+ @entity.envCursor 1))
         (emit CLI_ENV_NEXT { })
       CLI_ENV_NEXT -> running when (and (>= @entity.envCursor (array/len @config.passEnv)) (= @config.cwd "") (= @config.stdio "pipe") (not @entity.hasStdin))

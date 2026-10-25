@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-24T18:19:06.503Z",
+  "generated": "2026-10-24T20:22:01.872Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -250,60 +250,6 @@
         "ts",
         "rust"
       ]
-    },
-    "std-nn": {
-      "description": "Neural network layer definitions",
-      "target": [
-        "python"
-      ]
-    },
-    "std-tensor": {
-      "description": "Tensor operations",
-      "target": [
-        "python"
-      ]
-    },
-    "std-train": {
-      "description": "Training operations",
-      "target": [
-        "python"
-      ]
-    },
-    "ml-arch": {
-      "description": "Architecture layer definitions (Python compile target)",
-      "target": [
-        "python"
-      ]
-    },
-    "ml-effect": {
-      "description": "ML execution effects (Python compile target)",
-      "target": [
-        "python"
-      ]
-    },
-    "ml-tensor": {
-      "description": "Tensor manipulation (Python compile target)",
-      "target": [
-        "python"
-      ]
-    },
-    "ml-graph": {
-      "description": "Graph construction (Python compile target)",
-      "target": [
-        "python"
-      ]
-    },
-    "ml-contract": {
-      "description": "Input/output contract validation (Python compile target)",
-      "target": [
-        "python"
-      ]
-    },
-    "ml-data": {
-      "description": "Data loading and preprocessing (Python compile target)",
-      "target": [
-        "python"
-      ]
     }
   },
   "operators": {
@@ -346,6 +292,11 @@
       "description": "Modulo (remainder)",
       "module": "core",
       "returnSemantics": "integer-closed",
+      "failable": {
+        "unlessLiteral": [
+          1
+        ]
+      },
       "title": "Modulo",
       "params": [
         {
@@ -441,6 +392,11 @@
       "returnType": "number",
       "description": "Divide numbers",
       "module": "core",
+      "failable": {
+        "unlessLiteral": [
+          1
+        ]
+      },
       "title": "Divide",
       "params": [
         {
@@ -1053,6 +1009,7 @@
       "returnType": "number",
       "description": "Cosine similarity between two numeric vectors, in [-1, 1] (1 = identical direction). The building block for \"is this answer semantically the reference answer\" checks over embeddings. Pure math — usable in guards and value position, unlike the async llm/* substrate operators.",
       "module": "array",
+      "failable": {},
       "title": "Cosine Similarity",
       "params": [
         {
@@ -1836,6 +1793,7 @@
       },
       "description": "Find the candidate vector nearest a query vector by cosine similarity. Returns { index, score, margin } — index/score of the best match, and margin (best score minus second-best), which is what makes an abstaining gate possible: a small margin means the top match is not confidently distinguished from the runner-up.",
       "module": "array",
+      "failable": {},
       "title": "Nearest",
       "params": [
         {
@@ -2711,6 +2669,7 @@
       "returnType": "string",
       "description": "Decode standard base64 (RFC 4648) to a UTF-8 string; invalid base64 or non-UTF-8 bytes are an evaluation error",
       "module": "base64",
+      "failable": {},
       "params": [
         {
           "name": "s",
@@ -3451,6 +3410,7 @@
       "returnType": "number",
       "description": "Bitwise AND of two or more 32-bit words, folded left. Each operand must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. The result is a whole number 0..4294967295.",
       "module": "bit",
+      "failable": {},
       "params": [
         {
           "name": "...words",
@@ -3471,6 +3431,7 @@
       "returnType": "number",
       "description": "Bitwise NOT over 32 bits (4294967295 - a). The operand must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. The result is a whole number 0..4294967295.",
       "module": "bit",
+      "failable": {},
       "params": [
         {
           "name": "a",
@@ -3491,6 +3452,7 @@
       "returnType": "number",
       "description": "Bitwise OR of two or more 32-bit words, folded left. Each operand must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. The result is a whole number 0..4294967295.",
       "module": "bit",
+      "failable": {},
       "params": [
         {
           "name": "...words",
@@ -3511,6 +3473,7 @@
       "returnType": "number",
       "description": "Rotate left by n bits within 32 bits. The word must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. A count outside the whole numbers 0..31 (32 included) fails with kind invalid; nothing is masked. The result is a whole number 0..4294967295.",
       "module": "bit",
+      "failable": {},
       "params": [
         {
           "name": "a",
@@ -3537,6 +3500,7 @@
       "returnType": "number",
       "description": "Rotate right by n bits within 32 bits. The word must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. A count outside the whole numbers 0..31 (32 included) fails with kind invalid; nothing is masked. The result is a whole number 0..4294967295.",
       "module": "bit",
+      "failable": {},
       "params": [
         {
           "name": "a",
@@ -3563,6 +3527,7 @@
       "returnType": "number",
       "description": "Left shift by n bits; bits shifted past bit 31 are discarded. The word must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. A count outside the whole numbers 0..31 (32 included) fails with kind invalid; nothing is masked. The result is a whole number 0..4294967295.",
       "module": "bit",
+      "failable": {},
       "params": [
         {
           "name": "a",
@@ -3589,6 +3554,7 @@
       "returnType": "number",
       "description": "Logical (zero-fill) right shift by n bits. The word must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. A count outside the whole numbers 0..31 (32 included) fails with kind invalid; nothing is masked. The result is a whole number 0..4294967295.",
       "module": "bit",
+      "failable": {},
       "params": [
         {
           "name": "a",
@@ -3615,6 +3581,7 @@
       "returnType": "number",
       "description": "Bitwise XOR of two or more 32-bit words, folded left. Each operand must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. The result is a whole number 0..4294967295.",
       "module": "bit",
+      "failable": {},
       "params": [
         {
           "name": "...words",
@@ -3721,6 +3688,7 @@
       "description": "brotli (RFC 7932) of bytes at the brotli CLI defaults (quality 11, window 22), through the brotli crate (a bytes value is a standard padded base64 string at run time)",
       "module": "brotli",
       "returnSemantics": "option-branch<1,result>",
+      "failable": {},
       "params": [
         {
           "name": "data",
@@ -3845,6 +3813,7 @@
       "description": "Decompress one brotli stream through the brotli crate. An output past maxBytes, corrupt input or a maxBytes that is not a whole number from 0 fails with kind invalid",
       "module": "brotli",
       "returnSemantics": "option-branch<2,result>",
+      "failable": {},
       "params": [
         {
           "name": "data",
@@ -5738,6 +5707,7 @@
       },
       "description": "The byte at index i as a number 0-255; null when i is outside the data (negative included). A non-whole index fails with kind invalid. A bytes value is a standard padded base64 string at run time.",
       "module": "bytes",
+      "failable": {},
       "params": [
         {
           "name": "data",
@@ -5813,6 +5783,7 @@
       "returnType": "bytes",
       "description": "The bytes a standard padded base64 text (RFC 4648) encodes, unchanged at run time; other text fails with kind invalid. A bytes value is a standard padded base64 string at run time.",
       "module": "bytes",
+      "failable": {},
       "params": [
         {
           "name": "s",
@@ -5923,6 +5894,7 @@
       },
       "description": "The unsigned integer stored in width bytes at offset, big-endian (be) or little-endian (le); null when those bytes run past the data. A width-8 value above 2^53 - 1 fails with kind invalid rather than round. A bytes value is a standard padded base64 string at run time.",
       "module": "bytes",
+      "failable": {},
       "params": [
         {
           "name": "data",
@@ -6053,6 +6025,7 @@
       "returnType": "string",
       "description": "Decode bytes as UTF-8 text; bytes that are not valid UTF-8 fail with kind invalid. A bytes value is a standard padded base64 string at run time.",
       "module": "bytes",
+      "failable": {},
       "params": [
         {
           "name": "data",
@@ -6073,6 +6046,7 @@
       "returnType": "bytes",
       "description": "A whole number as width unsigned bytes, big-endian (be) or little-endian (le). A value that is negative, not whole, too large for the width, or above 2^53 - 1 fails with kind invalid. A bytes value is a standard padded base64 string at run time.",
       "module": "bytes",
+      "failable": {},
       "params": [
         {
           "name": "value",
@@ -6239,222 +6213,6 @@
       ],
       "examples": [
         "(cancel-call @entity.id)"
-      ],
-      "docsSource": "generated"
-    },
-    "checkpoint/load": {
-      "category": "ml-effect",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "nn/module",
-      "description": "Load a model checkpoint (ML effect)",
-      "module": "train",
-      "title": "Load",
-      "params": [
-        {
-          "name": "key",
-          "type": "string",
-          "description": "Checkpoint identifier"
-        }
-      ],
-      "examples": [
-        "(checkpoint/load \"model-v1\") // => {}"
-      ],
-      "docsSource": "generated"
-    },
-    "checkpoint/save": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "void",
-      "description": "Save a model checkpoint (ML effect)",
-      "module": "train",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Save",
-      "params": [
-        {
-          "name": "model",
-          "type": "nn/module",
-          "description": "The neural network module"
-        },
-        {
-          "name": "key",
-          "type": "string",
-          "description": "Checkpoint identifier"
-        }
-      ],
-      "examples": [
-        "(checkpoint/save {\"layers\":[{\"type\":\"dense\",\"units\":2}]} \"ckpt-1\")"
-      ],
-      "docsSource": "generated"
-    },
-    "contract/clamp-output": {
-      "category": "ml-contract",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "var",
-        "name": "T"
-      },
-      "description": "Clamp output tensor to contract ranges",
-      "module": "contract",
-      "title": "Clamp Output",
-      "params": [
-        {
-          "name": "tensor",
-          "type": {
-            "kind": "var",
-            "name": "T"
-          },
-          "description": "Output tensor (the clamped tensor has the same type)"
-        },
-        {
-          "name": "contract",
-          "type": "ContractSpec",
-          "description": "Output contract spec"
-        }
-      ],
-      "examples": [
-        "(contract/clamp-output [1 2 3] {\"min\": 0, \"max\": 255}) // => [1 2 3]"
-      ],
-      "docsSource": "generated"
-    },
-    "contract/entity-to-tensor": {
-      "category": "ml-contract",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Convert entity fields to tensor via contract",
-      "module": "contract",
-      "title": "Entity To Tensor",
-      "params": [
-        {
-          "name": "entity",
-          "type": {
-            "kind": "var",
-            "name": "E",
-            "bound": {
-              "kind": "record"
-            }
-          },
-          "description": "Entity data"
-        },
-        {
-          "name": "contract",
-          "type": "ContractSpec",
-          "description": "Input contract mapping fields to dims"
-        }
-      ],
-      "examples": [
-        "(contract/entity-to-tensor {\"price\":10,\"qty\":2} {\"fields\":[\"price\",\"qty\"]}) // => []"
-      ],
-      "docsSource": "generated"
-    },
-    "contract/tensor-to-payload": {
-      "category": "ml-contract",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "map",
-        "key": "string",
-        "value": "TensorValue"
-      },
-      "description": "Convert output tensor to event payload via contract",
-      "module": "contract",
-      "title": "Tensor To Payload",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "Output tensor"
-        },
-        {
-          "name": "contract",
-          "type": "ContractSpec",
-          "description": "Output contract mapping dims to fields"
-        }
-      ],
-      "examples": [
-        "(contract/tensor-to-payload [0.5,0.7] {\"fields\":[\"price\",\"qty\"]}) // => {}"
-      ],
-      "docsSource": "generated"
-    },
-    "contract/validate-input": {
-      "category": "ml-contract",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "ContractValidationResult",
-      "description": "Validate tensor against input contract. Returns { valid, violations } — guard on `valid`, or read `violations` for the detail.",
-      "module": "contract",
-      "title": "Validate Input",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "Input tensor"
-        },
-        {
-          "name": "contract",
-          "type": "ContractSpec",
-          "description": "Input contract spec"
-        }
-      ],
-      "examples": [
-        "(contract/validate-input [0.5,0.7] {\"ranges\":{\"0\":{\"min\":0,\"max\":1},\"1\":{\"min\":0,\"max\":1}}}) // => {\"valid\": true, \"violations\": []}"
-      ],
-      "docsSource": "generated"
-    },
-    "contract/validate-output": {
-      "category": "ml-contract",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "ContractValidationResult",
-      "description": "Validate tensor against output contract. Returns { valid, violations } — guard on `valid`, or read `violations` for the detail.",
-      "module": "contract",
-      "title": "Validate Output",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "Output tensor"
-        },
-        {
-          "name": "contract",
-          "type": "ContractSpec",
-          "description": "Output contract spec"
-        }
-      ],
-      "examples": [
-        "(contract/validate-output [0.5,0.7] {\"ranges\":{\"0\":{\"min\":0,\"max\":1},\"1\":{\"min\":0,\"max\":1}}}) // => {\"valid\": true, \"violations\": []}"
-      ],
-      "docsSource": "generated"
-    },
-    "contract/violations": {
-      "category": "ml-contract",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "array",
-        "of": "ContractViolation"
-      },
-      "description": "List contract violations",
-      "module": "contract",
-      "title": "Violations",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "Tensor to check"
-        },
-        {
-          "name": "contract",
-          "type": "ContractSpec",
-          "description": "Contract spec"
-        }
-      ],
-      "examples": [
-        "(contract/violations [0.5,1.7] {\"ranges\":{\"0\":{\"min\":0,\"max\":1},\"1\":{\"min\":0,\"max\":1}}}) // => []"
       ],
       "docsSource": "generated"
     },
@@ -7017,316 +6775,6 @@
       ],
       "docsSource": "generated"
     },
-    "data/augment": {
-      "category": "ml-data",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Apply data augmentation",
-      "module": "data",
-      "title": "Augment",
-      "params": [
-        {
-          "name": "data",
-          "type": "tensor",
-          "description": "Numeric data (nested arrays)"
-        },
-        {
-          "name": "config",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "batchSize": "number",
-              "shuffle": "boolean",
-              "trainRatio": "number",
-              "method": "string",
-              "noiseScale": "number",
-              "mode": "string",
-              "maxLength": "number",
-              "padValue": "number",
-              "vocab": {
-                "kind": "map",
-                "key": "string",
-                "value": "number"
-              }
-            },
-            "open": true
-          },
-          "description": "Augmentation config"
-        }
-      ],
-      "examples": [
-        "(data/augment [[1.0,2.0],[3.0,4.0]] {\"flip\":true,\"rotate\":15}) // => {}"
-      ],
-      "docsSource": "generated"
-    },
-    "data/dataloader": {
-      "category": "ml-data",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "DataLoader",
-      "description": "Create batched dataloader from dataset",
-      "module": "data",
-      "title": "Dataloader",
-      "params": [
-        {
-          "name": "dataset",
-          "type": "Dataset",
-          "description": "Dataset"
-        },
-        {
-          "name": "config",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "batchSize": "number",
-              "shuffle": "boolean",
-              "trainRatio": "number",
-              "method": "string",
-              "noiseScale": "number",
-              "mode": "string",
-              "maxLength": "number",
-              "padValue": "number",
-              "vocab": {
-                "kind": "map",
-                "key": "string",
-                "value": "number"
-              }
-            },
-            "open": true
-          },
-          "description": "Config with batch_size, shuffle, etc."
-        }
-      ],
-      "examples": [
-        "(data/dataloader [\"data/dataset\",[[1,2],[3,4],[5,6]],{}] {\"batch-size\":2,\"shuffle\":true})"
-      ],
-      "docsSource": "generated"
-    },
-    "data/dataset": {
-      "category": "ml-data",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "Dataset",
-      "description": "Create dataset from entity collection and contracts",
-      "module": "data",
-      "title": "Dataset",
-      "params": [
-        {
-          "name": "entities",
-          "type": {
-            "kind": "array",
-            "of": {
-              "kind": "union",
-              "of": [
-                {
-                  "kind": "var",
-                  "name": "E",
-                  "bound": {
-                    "kind": "record"
-                  }
-                },
-                "TensorValue"
-              ]
-            }
-          },
-          "description": "Entity records or tensors"
-        },
-        {
-          "name": "contracts",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "input": "ContractSpec",
-              "output": "ContractSpec"
-            }
-          },
-          "description": "Input/output contract pair"
-        }
-      ],
-      "examples": [
-        "(data/dataset [{\"x\":1,\"y\":2}] {\"input\":{\"fields\":[\"x\"]},\"output\":{\"fields\":[\"y\"]}})"
-      ],
-      "docsSource": "generated"
-    },
-    "data/normalize": {
-      "category": "ml-data",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Normalize features (mean/std or min/max)",
-      "module": "data",
-      "title": "Normalize",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "Feature tensor"
-        },
-        {
-          "name": "config",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "batchSize": "number",
-              "shuffle": "boolean",
-              "trainRatio": "number",
-              "method": "string",
-              "noiseScale": "number",
-              "mode": "string",
-              "maxLength": "number",
-              "padValue": "number",
-              "vocab": {
-                "kind": "map",
-                "key": "string",
-                "value": "number"
-              }
-            },
-            "open": true
-          },
-          "description": "Normalization config (method, per_dim, etc.)"
-        }
-      ],
-      "examples": [
-        "(data/normalize [[1,2],[3,4]] {\"method\":\"standard\"})"
-      ],
-      "docsSource": "generated"
-    },
-    "data/pad": {
-      "category": "ml-data",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Pad sequences to uniform length",
-      "module": "data",
-      "title": "Pad",
-      "params": [
-        {
-          "name": "sequences",
-          "type": "TensorValue",
-          "description": "List of token sequences"
-        },
-        {
-          "name": "config",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "batchSize": "number",
-              "shuffle": "boolean",
-              "trainRatio": "number",
-              "method": "string",
-              "noiseScale": "number",
-              "mode": "string",
-              "maxLength": "number",
-              "padValue": "number",
-              "vocab": {
-                "kind": "map",
-                "key": "string",
-                "value": "number"
-              }
-            },
-            "open": true
-          },
-          "description": "Padding config (max_length, pad_value)"
-        }
-      ],
-      "examples": [
-        "(data/pad [[1,2,3],[4,5]] {\"max-length\":4,\"pad-value\":0})"
-      ],
-      "docsSource": "generated"
-    },
-    "data/split": {
-      "category": "ml-data",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "tuple",
-        "items": [
-          "Dataset",
-          "Dataset"
-        ]
-      },
-      "description": "Train/validation split. Config carries `trainRatio` (default 0.8); the remainder is the validation split.",
-      "module": "data",
-      "title": "Split",
-      "params": [
-        {
-          "name": "dataset",
-          "type": "Dataset",
-          "description": "Dataset"
-        },
-        {
-          "name": "config",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "batchSize": "number",
-              "shuffle": "boolean",
-              "trainRatio": "number",
-              "method": "string",
-              "noiseScale": "number",
-              "mode": "string",
-              "maxLength": "number",
-              "padValue": "number",
-              "vocab": {
-                "kind": "map",
-                "key": "string",
-                "value": "number"
-              }
-            },
-            "open": true
-          },
-          "description": "Split config, e.g. { trainRatio: 0.8 }"
-        }
-      ],
-      "examples": [
-        "(data/split [\"data/dataset\",[1,2,3,4,5],{}] {\"trainRatio\":0.8})"
-      ],
-      "docsSource": "generated"
-    },
-    "data/tokenize": {
-      "category": "ml-data",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Tokenize text fields",
-      "module": "data",
-      "title": "Tokenize",
-      "params": [
-        {
-          "name": "text",
-          "type": "string",
-          "description": "Text to tokenize"
-        },
-        {
-          "name": "config",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "batchSize": "number",
-              "shuffle": "boolean",
-              "trainRatio": "number",
-              "method": "string",
-              "noiseScale": "number",
-              "mode": "string",
-              "maxLength": "number",
-              "padValue": "number",
-              "vocab": {
-                "kind": "map",
-                "key": "string",
-                "value": "number"
-              }
-            },
-            "open": true
-          },
-          "description": "Tokenizer config (method, vocab_size, max_length)"
-        }
-      ],
-      "examples": [
-        "(data/tokenize \"hello world\" {\"method\":\"bpe\",\"max-length\":512})"
-      ],
-      "docsSource": "generated"
-    },
     "deref": {
       "category": "effect",
       "minArity": 1,
@@ -7535,40 +6983,6 @@
       ],
       "docsSource": "generated"
     },
-    "evaluate": {
-      "category": "ml-effect",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": "train/validationResult",
-      "description": "Evaluate a model against test cases (ML effect)",
-      "module": "train",
-      "title": "Evaluate",
-      "params": [
-        {
-          "name": "model",
-          "type": "nn/module",
-          "description": "The neural network module"
-        },
-        {
-          "name": "testCases",
-          "type": {
-            "kind": "array",
-            "of": {
-              "kind": "object",
-              "fields": {
-                "input": "tensor",
-                "expected": "tensor"
-              }
-            }
-          },
-          "description": "Test cases (optional)"
-        }
-      ],
-      "examples": [
-        "(evaluate {\"layers\":[{\"type\":\"dense\",\"units\":2}]} [{\"input\":[0],\"expected\":[1]}])"
-      ],
-      "docsSource": "generated"
-    },
     "fetch": {
       "category": "effect",
       "minArity": 1,
@@ -7765,6 +7179,7 @@
       "returnType": "string",
       "description": "Format bytes as human-readable size (1024 steps, B to PB); a negative or non-finite size is an error",
       "module": "format",
+      "failable": {},
       "title": "Bytes",
       "params": [
         {
@@ -7805,6 +7220,7 @@
       "returnType": "string",
       "description": "Format as currency, written as English writes it (symbol before the amount, the currency's own minor units). Supported currencies: USD EUR GBP JPY CNY INR KRW CAD AUD CHF MXN BRL SEK NOK DKK PLN CZK ZAR NZD SGD HKD AED SAR ILS TRY RUB KWD BHD CLP VND; another currency is an error",
       "module": "format",
+      "failable": {},
       "title": "Currency",
       "params": [
         {
@@ -7877,6 +7293,7 @@
       "returnType": "string",
       "description": "Format number with locale grouping and decimal separators. Supported locales: en, en-US, en-GB, en-CA, en-AU, ja, de, pt, pt-BR, nl, fr, es, it, sl, ar, ru (and their -DE/-FR/-ES/-IT/-SI/-NL/-RU/-JP forms); another locale is an error. Rounds half away from zero; with no options the fraction is 0 to 3 digits",
       "module": "format",
+      "failable": {},
       "title": "Number",
       "params": [
         {
@@ -7931,6 +7348,7 @@
       "returnType": "string",
       "description": "Format as percentage (en-US conventions): the value times 100 with `decimals` fraction digits and a percent sign",
       "module": "format",
+      "failable": {},
       "title": "Percent",
       "params": [
         {
@@ -8007,31 +7425,6 @@
         "(format/plural 5 \"item\" \"items\") // => \"5 items\""
       ],
       "docsSource": "reference-docs"
-    },
-    "forward": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Run a forward pass through a model (ML effect)",
-      "module": "nn",
-      "title": "Forward",
-      "params": [
-        {
-          "name": "model",
-          "type": "nn/module",
-          "description": "The neural network module"
-        },
-        {
-          "name": "input",
-          "type": "tensor",
-          "description": "Input tensor"
-        }
-      ],
-      "examples": [
-        "(forward {\"layers\":[{\"type\":\"dense\",\"units\":2}]} [0.5])"
-      ],
-      "docsSource": "generated"
     },
     "geo/aabb-overlap": {
       "category": "std-geo",
@@ -8214,323 +7607,6 @@
       ],
       "examples": [
         "(geo/segment-intersect {\"x1\":0,\"y1\":0,\"x2\":4,\"y2\":4} {\"x1\":0,\"y1\":4,\"x2\":4,\"y2\":0})"
-      ],
-      "docsSource": "generated"
-    },
-    "graph/add-self-loops": {
-      "category": "ml-graph",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "graph",
-      "description": "Add self-loop edges to graph",
-      "module": "graph",
-      "title": "Add Self Loops",
-      "params": [
-        {
-          "name": "graph",
-          "type": "graph",
-          "description": "Input graph"
-        }
-      ],
-      "examples": [
-        "(graph/add-self-loops [\"graph/from-adjacency\",[[0,1],[1,0]],[[1.0],[2.0]]])"
-      ],
-      "docsSource": "generated"
-    },
-    "graph/batch": {
-      "category": "ml-graph",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "graph",
-      "description": "Batch multiple graphs into one",
-      "module": "graph",
-      "title": "Batch",
-      "params": [
-        {
-          "name": "graphs",
-          "type": {
-            "kind": "array",
-            "of": "graph"
-          },
-          "description": "List of graphs"
-        }
-      ],
-      "examples": [
-        "(graph/batch [[\"graph/from-adjacency\",[[0,1],[1,0]],[[1.0],[2.0]]]])"
-      ],
-      "docsSource": "generated"
-    },
-    "graph/degree": {
-      "category": "ml-graph",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "tensor",
-      "description": "Get node degree tensor",
-      "module": "graph",
-      "title": "Degree",
-      "params": [
-        {
-          "name": "graph",
-          "type": "graph",
-          "description": "Input graph"
-        }
-      ],
-      "examples": [
-        "(graph/degree [\"graph/from-adjacency\",[[0,1],[1,0]],[[1.0],[2.0]]])"
-      ],
-      "docsSource": "generated"
-    },
-    "graph/edge-features": {
-      "category": "ml-graph",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "tensor",
-      "description": "Get edge feature matrix",
-      "module": "graph",
-      "title": "Edge Features",
-      "params": [
-        {
-          "name": "graph",
-          "type": "graph",
-          "description": "Input graph"
-        }
-      ],
-      "examples": [
-        "(graph/edge-features [\"graph/from-adjacency\",[[0,1],[1,0]],[[1.0],[2.0]]])"
-      ],
-      "docsSource": "generated"
-    },
-    "graph/edge-index": {
-      "category": "ml-graph",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "tensor",
-      "description": "Get edge index tensor",
-      "module": "graph",
-      "title": "Edge Index",
-      "params": [
-        {
-          "name": "graph",
-          "type": "graph",
-          "description": "Input graph"
-        }
-      ],
-      "examples": [
-        "(graph/edge-index [\"graph/from-adjacency\",[[0,1],[1,0]],[[1.0],[2.0]]])"
-      ],
-      "docsSource": "generated"
-    },
-    "graph/from-adjacency": {
-      "category": "ml-graph",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "graph",
-      "description": "Build graph from adjacency matrix and features",
-      "module": "graph",
-      "title": "From Adjacency",
-      "params": [
-        {
-          "name": "adjacency",
-          "type": "tensor",
-          "description": "Adjacency matrix"
-        },
-        {
-          "name": "features",
-          "type": "tensor",
-          "description": "Node feature matrix"
-        }
-      ],
-      "examples": [
-        "(graph/from-adjacency [[0,1],[1,0]] [[1.0],[2.0]])"
-      ],
-      "docsSource": "generated"
-    },
-    "graph/from-edge-list": {
-      "category": "ml-graph",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "graph",
-      "description": "Build graph from edge list and features",
-      "module": "graph",
-      "title": "From Edge List",
-      "params": [
-        {
-          "name": "edges",
-          "type": "tensor",
-          "description": "Edge index tensor [2, num_edges]"
-        },
-        {
-          "name": "features",
-          "type": "tensor",
-          "description": "Node feature matrix"
-        }
-      ],
-      "examples": [
-        "(graph/from-edge-list [[0,1]] [[1.0],[2.0]])"
-      ],
-      "docsSource": "generated"
-    },
-    "graph/from-entities": {
-      "category": "ml-graph",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "graph",
-      "description": "Build PyG graph from entity collections",
-      "module": "graph",
-      "title": "From Entities",
-      "params": [
-        {
-          "name": "entities",
-          "type": {
-            "kind": "array",
-            "of": {
-              "kind": "var",
-              "name": "E",
-              "bound": {
-                "kind": "record"
-              }
-            }
-          },
-          "description": "Entity rows; one node per entity from its numeric fields"
-        }
-      ],
-      "examples": [
-        "(graph/from-entities [{\"age\":30,\"score\":0.5},{\"age\":25,\"score\":0.7}])"
-      ],
-      "docsSource": "generated"
-    },
-    "graph/k-hop": {
-      "category": "ml-graph",
-      "minArity": 3,
-      "maxArity": 3,
-      "returnType": "graph",
-      "description": "K-hop neighborhood subgraph",
-      "module": "graph",
-      "title": "K Hop",
-      "params": [
-        {
-          "name": "graph",
-          "type": "graph",
-          "description": "Input graph"
-        },
-        {
-          "name": "node",
-          "type": "number",
-          "description": "Center node index"
-        },
-        {
-          "name": "k",
-          "type": "number",
-          "description": "Number of hops"
-        }
-      ],
-      "examples": [
-        "(graph/k-hop [\"graph/from-adjacency\",[[0,1],[1,0]],[[1.0],[2.0]]] 0 2)"
-      ],
-      "docsSource": "generated"
-    },
-    "graph/node-features": {
-      "category": "ml-graph",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "tensor",
-      "description": "Get node feature matrix",
-      "module": "graph",
-      "title": "Node Features",
-      "params": [
-        {
-          "name": "graph",
-          "type": "graph",
-          "description": "Input graph"
-        }
-      ],
-      "examples": [
-        "(graph/node-features [\"graph/from-adjacency\",[[0,1],[1,0]],[[1.0],[2.0]]])"
-      ],
-      "docsSource": "generated"
-    },
-    "graph/num-edges": {
-      "category": "ml-graph",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "number",
-      "description": "Get edge count",
-      "module": "graph",
-      "title": "Num Edges",
-      "params": [
-        {
-          "name": "graph",
-          "type": "graph",
-          "description": "Input graph"
-        }
-      ],
-      "examples": [
-        "(graph/num-edges [\"graph/from-adjacency\",[[0,1],[1,0]],[[1.0],[2.0]]]) // => 2"
-      ],
-      "docsSource": "generated"
-    },
-    "graph/num-nodes": {
-      "category": "ml-graph",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "number",
-      "description": "Get node count",
-      "module": "graph",
-      "title": "Num Nodes",
-      "params": [
-        {
-          "name": "graph",
-          "type": "graph",
-          "description": "Input graph"
-        }
-      ],
-      "examples": [
-        "(graph/num-nodes [\"graph/from-adjacency\",[[0,1],[1,0]],[[1.0],[2.0]]]) // => 2"
-      ],
-      "docsSource": "generated"
-    },
-    "graph/subgraph": {
-      "category": "ml-graph",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "graph",
-      "description": "Extract subgraph by node mask",
-      "module": "graph",
-      "title": "Subgraph",
-      "params": [
-        {
-          "name": "graph",
-          "type": "graph",
-          "description": "Input graph"
-        },
-        {
-          "name": "mask",
-          "type": "tensor",
-          "description": "Boolean node mask"
-        }
-      ],
-      "examples": [
-        "(graph/subgraph [\"graph/from-adjacency\",[[0,1],[1,0]],[[1.0],[2.0]]] [true,false])"
-      ],
-      "docsSource": "generated"
-    },
-    "graph/to-undirected": {
-      "category": "ml-graph",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "graph",
-      "description": "Convert directed graph to undirected",
-      "module": "graph",
-      "title": "To Undirected",
-      "params": [
-        {
-          "name": "graph",
-          "type": "graph",
-          "description": "Input graph"
-        }
-      ],
-      "examples": [
-        "(graph/to-undirected [\"graph/from-adjacency\",[[0,1],[1,0]],[[1.0],[2.0]]])"
       ],
       "docsSource": "generated"
     },
@@ -8903,6 +7979,7 @@
       "description": "gzip (RFC 1952) of bytes at the default level, through the flate2 crate (a bytes value is a standard padded base64 string at run time)",
       "module": "gzip",
       "returnSemantics": "option-branch<1,result>",
+      "failable": {},
       "params": [
         {
           "name": "data",
@@ -9025,6 +8102,7 @@
       "description": "Decompress every gzip member (as gzip -d reads them), through the flate2 crate. An output past maxBytes, corrupt input or a maxBytes that is not a whole number from 0 fails with kind invalid",
       "module": "gzip",
       "returnSemantics": "option-branch<2,result>",
+      "failable": {},
       "params": [
         {
           "name": "data",
@@ -9065,6 +8143,7 @@
       "returnType": "string",
       "description": "MD5 digest of binary data given as standard padded base64 (decoded once, hashed as bytes), as lower-case hex or standard base64 (RFC 1321)",
       "module": "hash",
+      "failable": {},
       "params": [
         {
           "name": "bytes",
@@ -9103,6 +8182,7 @@
       "returnType": "bytes",
       "description": "PBKDF2 with HMAC-SHA256 (RFC 8018) over bytes, answering length derived bytes (a bytes value is a standard padded base64 string at run time). Iterations and length are whole numbers from 1; anything else fails with kind invalid",
       "module": "hash",
+      "failable": {},
       "params": [
         {
           "name": "password",
@@ -9174,6 +8254,7 @@
       "returnType": "string",
       "description": "SHA-256 digest (FIPS 180-2) as lower-case hex or standard base64. Input \"text\" (the default) hashes a string's UTF-8 bytes; \"bytes\" hashes a bytes value (standard padded base64, decoded once, as hash/md5 reads it). Invalid base64 or another input kind fails with kind invalid",
       "module": "hash",
+      "failable": {},
       "params": [
         {
           "name": "data",
@@ -10233,6 +9314,11 @@
       "returnType": "string",
       "description": "The active locale's message for a catalog key, with {{placeholders}} filled from params",
       "module": "i18n",
+      "failable": {
+        "unlessLiteral": [
+          0
+        ]
+      },
       "params": [
         {
           "name": "key",
@@ -11506,6 +10592,11 @@
       "description": "Modulo (remainder)",
       "module": "math",
       "returnSemantics": "integer-closed",
+      "failable": {
+        "unlessLiteral": [
+          1
+        ]
+      },
       "title": "Mod",
       "params": [
         {
@@ -11590,6 +10681,7 @@
       "returnType": "number",
       "description": "Random integer in range [min, max] (inclusive)",
       "module": "math",
+      "failable": {},
       "title": "Random Integer",
       "params": [
         {
@@ -11897,295 +10989,6 @@
       "title": "Navigate Back",
       "examples": [
         "(navigate-back)"
-      ],
-      "docsSource": "generated"
-    },
-    "nn/batchnorm": {
-      "category": "ml-arch",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "nn/layer",
-      "description": "Batch normalization layer",
-      "module": "nn",
-      "title": "Batch Normalization",
-      "params": [
-        {
-          "name": "numFeatures",
-          "type": "number",
-          "description": "Number of features to normalize"
-        }
-      ],
-      "examples": [
-        "(nn/batchnorm 64)"
-      ],
-      "docsSource": "generated"
-    },
-    "nn/clone": {
-      "category": "ml-arch",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "nn/module",
-      "description": "Create a deep copy of the network with same weights",
-      "module": "nn",
-      "title": "Clone Network",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network module to clone"
-        }
-      ],
-      "examples": [
-        "(nn/clone {\"layers\":[{\"type\":\"dense\",\"units\":2}]})"
-      ],
-      "docsSource": "generated"
-    },
-    "nn/dropout": {
-      "category": "ml-arch",
-      "minArity": 0,
-      "maxArity": 1,
-      "returnType": "nn/layer",
-      "description": "Dropout layer for regularization (randomly zeros elements during training)",
-      "module": "nn",
-      "title": "Dropout",
-      "params": [
-        {
-          "name": "p",
-          "type": "number",
-          "description": "Dropout probability",
-          "optional": true,
-          "defaultValue": 0.5
-        }
-      ],
-      "examples": [
-        "(nn/dropout)"
-      ],
-      "docsSource": "generated"
-    },
-    "nn/forward": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Execute forward pass through network",
-      "module": "nn",
-      "title": "Forward Pass",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network module"
-        },
-        {
-          "name": "input",
-          "type": "tensor",
-          "description": "Input tensor"
-        }
-      ],
-      "examples": [
-        "(nn/forward {\"layers\":[{\"type\":\"dense\",\"units\":2}]} [0.1,0.2])"
-      ],
-      "docsSource": "generated"
-    },
-    "nn/getWeights": {
-      "category": "ml-arch",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "tensor",
-      "description": "Get network weights as a flat tensor",
-      "module": "nn",
-      "title": "Get Weights",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network module"
-        }
-      ],
-      "examples": [
-        "(nn/getWeights {\"layers\":[{\"type\":\"dense\",\"units\":2}]})"
-      ],
-      "docsSource": "generated"
-    },
-    "nn/layernorm": {
-      "category": "ml-arch",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "nn/layer",
-      "description": "Layer normalization",
-      "module": "nn",
-      "title": "Layer Normalization",
-      "params": [
-        {
-          "name": "normalizedShape",
-          "type": {
-            "kind": "union",
-            "of": [
-              "number",
-              {
-                "kind": "array",
-                "of": "number"
-              }
-            ]
-          },
-          "description": "Shape to normalize over"
-        }
-      ],
-      "examples": [
-        "(nn/layernorm 64)"
-      ],
-      "docsSource": "generated"
-    },
-    "nn/linear": {
-      "category": "ml-arch",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "nn/layer",
-      "description": "Fully connected linear layer (output = input * weights + bias)",
-      "module": "nn",
-      "title": "Linear Layer",
-      "params": [
-        {
-          "name": "inFeatures",
-          "type": "number",
-          "description": "Input dimension"
-        },
-        {
-          "name": "outFeatures",
-          "type": "number",
-          "description": "Output dimension"
-        }
-      ],
-      "examples": [
-        "(nn/linear 128 64)"
-      ],
-      "docsSource": "generated"
-    },
-    "nn/paramCount": {
-      "category": "ml-arch",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "number",
-      "description": "Get total number of trainable parameters",
-      "module": "nn",
-      "title": "Parameter Count",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network module"
-        }
-      ],
-      "examples": [
-        "(nn/paramCount {\"layers\":[{\"type\":\"dense\",\"units\":2}]})"
-      ],
-      "docsSource": "generated"
-    },
-    "nn/relu": {
-      "category": "ml-arch",
-      "minArity": 0,
-      "maxArity": 0,
-      "returnType": "nn/layer",
-      "description": "ReLU activation function: max(0, x)",
-      "module": "nn",
-      "title": "ReLU",
-      "examples": [
-        "(nn/relu)"
-      ],
-      "docsSource": "generated"
-    },
-    "nn/sequential": {
-      "category": "ml-arch",
-      "minArity": 1,
-      "maxArity": null,
-      "returnType": "nn/module",
-      "description": "Create a sequential neural network from layers",
-      "module": "nn",
-      "title": "Sequential",
-      "params": [
-        {
-          "name": "...layers",
-          "type": "nn/layer",
-          "description": "Layers to stack sequentially"
-        }
-      ],
-      "examples": [
-        "(nn/sequential [\"nn/linear\",16,64] [\"nn/relu\"] [\"nn/linear\",64,4])"
-      ],
-      "docsSource": "generated"
-    },
-    "nn/setWeights": {
-      "category": "ml-arch",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "nn/module",
-      "description": "Set network weights from a flat tensor",
-      "module": "nn",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Set Weights",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network module"
-        },
-        {
-          "name": "weights",
-          "type": "tensor",
-          "description": "New weights as flat tensor"
-        }
-      ],
-      "examples": [
-        "(nn/setWeights {\"layers\":[{\"type\":\"dense\",\"units\":2}]} [0.1,0.2,0.3])"
-      ],
-      "docsSource": "generated"
-    },
-    "nn/sigmoid": {
-      "category": "ml-arch",
-      "minArity": 0,
-      "maxArity": 0,
-      "returnType": "nn/layer",
-      "description": "Sigmoid activation function: 1 / (1 + e^-x)",
-      "module": "nn",
-      "title": "Sigmoid",
-      "examples": [
-        "(nn/sigmoid)"
-      ],
-      "docsSource": "generated"
-    },
-    "nn/softmax": {
-      "category": "ml-arch",
-      "minArity": 0,
-      "maxArity": 1,
-      "returnType": "nn/layer",
-      "description": "Softmax activation function (normalizes to probability distribution)",
-      "module": "nn",
-      "title": "Softmax",
-      "params": [
-        {
-          "name": "dim",
-          "type": "number",
-          "description": "Dimension to apply softmax",
-          "optional": true,
-          "defaultValue": -1
-        }
-      ],
-      "examples": [
-        "(nn/softmax)"
-      ],
-      "docsSource": "generated"
-    },
-    "nn/tanh": {
-      "category": "ml-arch",
-      "minArity": 0,
-      "maxArity": 0,
-      "returnType": "nn/layer",
-      "description": "Tanh activation function: (e^x - e^-x) / (e^x + e^-x)",
-      "module": "nn",
-      "title": "Tanh",
-      "examples": [
-        "(nn/tanh)"
       ],
       "docsSource": "generated"
     },
@@ -12760,6 +11563,7 @@
       },
       "description": "Deep merge objects (later wins). A `__proto__` key (or path segment) is refused with an error",
       "module": "object",
+      "failable": {},
       "title": "Deep Merge",
       "params": [
         {
@@ -12939,6 +11743,7 @@
       },
       "description": "Create object from [key, value] pairs. A `__proto__` key (or path segment) is refused with an error",
       "module": "object",
+      "failable": {},
       "title": "From Entries",
       "params": [
         {
@@ -13108,6 +11913,7 @@
       },
       "description": "Transform all keys. A `__proto__` key (or path segment) is refused with an error",
       "module": "object",
+      "failable": {},
       "lambdaArgPosition": 1,
       "title": "Map Keys",
       "params": [
@@ -13221,6 +12027,7 @@
       },
       "description": "Shallow merge objects (later wins). A `__proto__` key (or path segment) is refused with an error",
       "module": "object",
+      "failable": {},
       "title": "Merge",
       "params": [
         {
@@ -13335,6 +12142,7 @@
       },
       "description": "Set nested value by path (returns new object). A `__proto__` key (or path segment) is refused with an error",
       "module": "object",
+      "failable": {},
       "title": "Set",
       "params": [
         {
@@ -20429,6 +19237,7 @@
       },
       "description": "Compute symmetric credible interval from samples",
       "module": "prob",
+      "failable": {},
       "title": "Credible Interval",
       "params": [
         {
@@ -20539,6 +19348,7 @@
       },
       "description": "Bin numeric samples into a histogram",
       "module": "prob",
+      "failable": {},
       "title": "Histogram",
       "params": [
         {
@@ -20615,6 +19425,7 @@
       "returnType": "number",
       "description": "Get the p-th percentile (0-100) from samples",
       "module": "prob",
+      "failable": {},
       "title": "Percentile",
       "params": [
         {
@@ -22543,6 +21354,7 @@
       "returnType": "boolean",
       "description": "Whether the row satisfies the typed RowPredicate, decided by the kernel's one predicate evaluator (the one every store runs a compiled where/filter through); an absent predicate or row is an absent result",
       "module": "object",
+      "failable": {},
       "params": [
         {
           "name": "pred",
@@ -23049,6 +21861,7 @@
       "returnType": "string",
       "description": "Decode a percent-encoded URI component (JavaScript decodeURIComponent; %XX sequences as UTF-8, + is not a space, malformed input is an evaluation error, null yields null)",
       "module": "str",
+      "failable": {},
       "params": [
         {
           "name": "s",
@@ -23398,6 +22211,11 @@
       "returnType": "string",
       "description": "Replace every match of a regex pattern of the shared dialect (see validate/pattern; Unicode mode, so \\p{L} and \\p{N} work). The replacement is literal: $ has no meaning. An invalid or unsupported pattern is an error",
       "module": "str",
+      "failable": {
+        "unlessLiteral": [
+          1
+        ]
+      },
       "params": [
         {
           "name": "s",
@@ -23839,950 +22657,6 @@
       ],
       "docsSource": "generated"
     },
-    "tensor/add": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Element-wise addition",
-      "module": "tensor",
-      "title": "Add",
-      "params": [
-        {
-          "name": "a",
-          "type": "tensor",
-          "description": "First tensor"
-        },
-        {
-          "name": "b",
-          "type": {
-            "kind": "union",
-            "of": [
-              "tensor",
-              "number"
-            ]
-          },
-          "description": "Second tensor or scalar"
-        }
-      ],
-      "examples": [
-        "(tensor/add [1,2] [3,4])"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/allInRange": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "boolean",
-      "description": "Check if all elements are within range [min, max]",
-      "module": "tensor",
-      "title": "All In Range",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "range",
-          "type": {
-            "kind": "tuple",
-            "items": [
-              "number",
-              "number"
-            ]
-          },
-          "description": "Range as [min, max]"
-        }
-      ],
-      "examples": [
-        "(tensor/allInRange [0.5,-0.2] [-1.0,1.0]) // => true"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/argmax": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "union",
-        "of": [
-          "number",
-          "tensor"
-        ]
-      },
-      "description": "Index of maximum value",
-      "module": "tensor",
-      "title": "Argmax",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "dim",
-          "type": "number",
-          "description": "Dimension to reduce",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(tensor/argmax [0.1,0.9,0.3]) // => 1"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/cat": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Concatenate two tensors along the last dimension",
-      "module": "tensor",
-      "title": "Concatenate",
-      "params": [
-        {
-          "name": "a",
-          "type": "tensor",
-          "description": "First tensor"
-        },
-        {
-          "name": "b",
-          "type": "tensor",
-          "description": "Second tensor"
-        }
-      ],
-      "examples": [
-        "(tensor/cat [1,2] [3,4])"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/clamp": {
-      "category": "ml-tensor",
-      "minArity": 3,
-      "maxArity": 3,
-      "returnType": "tensor",
-      "description": "Clamp all elements to range [min, max]",
-      "module": "tensor",
-      "title": "Clamp",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "min",
-          "type": "number",
-          "description": "Minimum value"
-        },
-        {
-          "name": "max",
-          "type": "number",
-          "description": "Maximum value"
-        }
-      ],
-      "examples": [
-        "(tensor/clamp [5,-15,3] -10.0 10.0)"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/clampPerDim": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Clamp each dimension to its specified range",
-      "module": "tensor",
-      "title": "Clamp Per Dimension",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "ranges",
-          "type": {
-            "kind": "map",
-            "key": "string",
-            "value": {
-              "kind": "object",
-              "fields": {
-                "min": "number",
-                "max": "number"
-              }
-            }
-          },
-          "description": "Per-dimension ranges { \"0\": {min, max}, ... }"
-        }
-      ],
-      "examples": [
-        "(tensor/clampPerDim [5,-15] {\"0\":{\"min\":0,\"max\":10},\"1\":{\"min\":-10,\"max\":10}})"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/div": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Element-wise division",
-      "module": "tensor",
-      "title": "Divide",
-      "params": [
-        {
-          "name": "a",
-          "type": "tensor",
-          "description": "First tensor"
-        },
-        {
-          "name": "b",
-          "type": {
-            "kind": "union",
-            "of": [
-              "tensor",
-              "number"
-            ]
-          },
-          "description": "Second tensor or scalar"
-        }
-      ],
-      "examples": [
-        "(tensor/div [10,20] 2)"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/dot": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "number",
-      "description": "Dot product of two 1D tensors",
-      "module": "tensor",
-      "title": "Dot Product",
-      "params": [
-        {
-          "name": "a",
-          "type": "tensor",
-          "description": "First vector"
-        },
-        {
-          "name": "b",
-          "type": "tensor",
-          "description": "Second vector"
-        }
-      ],
-      "examples": [
-        "(tensor/dot [1,2] [3,4]) // => 11"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/flatten": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "tensor",
-      "description": "Flatten tensor to 1D",
-      "module": "tensor",
-      "title": "Flatten",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        }
-      ],
-      "examples": [
-        "(tensor/flatten [[1,2],[3,4]])"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/from": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "tensor",
-      "description": "Create tensor from array",
-      "module": "tensor",
-      "title": "From Array",
-      "params": [
-        {
-          "name": "data",
-          "type": "TensorValue",
-          "description": "Array of numbers (can be nested for multi-dimensional)"
-        }
-      ],
-      "examples": [
-        "(tensor/from [1 2 3 4])"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/get": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "number",
-      "description": "Get element at index",
-      "module": "tensor",
-      "title": "Get",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "index",
-          "type": {
-            "kind": "union",
-            "of": [
-              "number",
-              {
-                "kind": "array",
-                "of": "number"
-              }
-            ]
-          },
-          "description": "Index (single for 1D, array for multi-D)"
-        }
-      ],
-      "examples": [
-        "(tensor/get [10,20,30,40] 3) // => 3.14"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/matmul": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Matrix multiplication",
-      "module": "tensor",
-      "title": "Matrix Multiply",
-      "params": [
-        {
-          "name": "a",
-          "type": "tensor",
-          "description": "First tensor (NxM)"
-        },
-        {
-          "name": "b",
-          "type": "tensor",
-          "description": "Second tensor (MxK)"
-        }
-      ],
-      "examples": [
-        "(tensor/matmul [[1,2],[3,4]] [[5,6],[7,8]])"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/max": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "union",
-        "of": [
-          "number",
-          "tensor"
-        ]
-      },
-      "description": "Maximum value in tensor",
-      "module": "tensor",
-      "title": "Maximum",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "dim",
-          "type": "number",
-          "description": "Dimension to reduce",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(tensor/max [0.1,0.9,0.3]) // => 99"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/mean": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "union",
-        "of": [
-          "number",
-          "tensor"
-        ]
-      },
-      "description": "Mean of tensor elements",
-      "module": "tensor",
-      "title": "Mean",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "dim",
-          "type": "number",
-          "description": "Dimension to reduce",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(tensor/mean [0.2,0.4,0.6]) // => 50"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/min": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "union",
-        "of": [
-          "number",
-          "tensor"
-        ]
-      },
-      "description": "Minimum value in tensor",
-      "module": "tensor",
-      "title": "Minimum",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "dim",
-          "type": "number",
-          "description": "Dimension to reduce",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(tensor/min [3,1,2]) // => 1"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/mul": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Element-wise multiplication",
-      "module": "tensor",
-      "title": "Multiply",
-      "params": [
-        {
-          "name": "a",
-          "type": "tensor",
-          "description": "First tensor"
-        },
-        {
-          "name": "b",
-          "type": {
-            "kind": "union",
-            "of": [
-              "tensor",
-              "number"
-            ]
-          },
-          "description": "Second tensor or scalar"
-        }
-      ],
-      "examples": [
-        "(tensor/mul [0.5,0.7] 0.99)"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/norm": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": "number",
-      "description": "L2 norm of tensor",
-      "module": "tensor",
-      "title": "L2 Norm",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "p",
-          "type": "number",
-          "description": "Norm order (default 2)",
-          "optional": true,
-          "defaultValue": 2
-        }
-      ],
-      "examples": [
-        "(tensor/norm [3,4]) // => 5.2"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/ones": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "tensor",
-      "description": "Create tensor filled with ones",
-      "module": "tensor",
-      "title": "Ones",
-      "params": [
-        {
-          "name": "shape",
-          "type": {
-            "kind": "array",
-            "of": "number"
-          },
-          "description": "Shape of the tensor"
-        }
-      ],
-      "examples": [
-        "(tensor/ones [2 3])"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/outOfRangeDims": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "array",
-        "of": "number"
-      },
-      "description": "Get dimensions that exceed their specified ranges",
-      "module": "tensor",
-      "title": "Out Of Range Dims",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "ranges",
-          "type": {
-            "kind": "map",
-            "key": "string",
-            "value": {
-              "kind": "object",
-              "fields": {
-                "min": "number",
-                "max": "number"
-              }
-            }
-          },
-          "description": "Per-dimension ranges { \"0\": {min, max}, ... }"
-        }
-      ],
-      "examples": [
-        "(tensor/outOfRangeDims [5,-15] {\"0\":{\"min\":0,\"max\":10},\"1\":{\"min\":-10,\"max\":10}}) // => [0]"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/outOfRangeIndices": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "array",
-        "of": "number"
-      },
-      "description": "Get indices of elements outside range",
-      "module": "tensor",
-      "title": "Out Of Range Indices",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "range",
-          "type": {
-            "kind": "tuple",
-            "items": [
-              "number",
-              "number"
-            ]
-          },
-          "description": "Range as [min, max]"
-        }
-      ],
-      "examples": [
-        "(tensor/outOfRangeIndices [0.5,1.5] [-1.0,1.0]) // => [0 2]"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/rand": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "tensor",
-      "description": "Create tensor with random values in [0, 1)",
-      "module": "tensor",
-      "title": "Random",
-      "params": [
-        {
-          "name": "shape",
-          "type": {
-            "kind": "array",
-            "of": "number"
-          },
-          "description": "Shape of the tensor"
-        }
-      ],
-      "examples": [
-        "(tensor/rand [2 3])"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/randn": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "tensor",
-      "description": "Create tensor with random values from standard normal distribution",
-      "module": "tensor",
-      "title": "Random Normal",
-      "params": [
-        {
-          "name": "shape",
-          "type": {
-            "kind": "array",
-            "of": "number"
-          },
-          "description": "Shape of the tensor"
-        }
-      ],
-      "examples": [
-        "(tensor/randn [2 3])"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/reshape": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Reshape tensor to new shape (total elements must match)",
-      "module": "tensor",
-      "title": "Reshape",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "shape",
-          "type": {
-            "kind": "array",
-            "of": "number"
-          },
-          "description": "New shape"
-        }
-      ],
-      "examples": [
-        "(tensor/reshape [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] [4,4])"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/shape": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": {
-        "kind": "array",
-        "of": "number"
-      },
-      "description": "Get tensor shape as array",
-      "module": "tensor",
-      "title": "Shape",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        }
-      ],
-      "examples": [
-        "(tensor/shape [[1,2],[3,4]]) // => [3 4 5]"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/slice": {
-      "category": "ml-tensor",
-      "minArity": 3,
-      "maxArity": 3,
-      "returnType": "tensor",
-      "description": "Get slice of tensor",
-      "module": "tensor",
-      "title": "Slice",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "start",
-          "type": "number",
-          "description": "Start index"
-        },
-        {
-          "name": "end",
-          "type": "number",
-          "description": "End index (exclusive)"
-        }
-      ],
-      "examples": [
-        "(tensor/slice [10,20,30,40] 0 3)"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/squeeze": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "tensor",
-      "description": "Remove all dimensions of size one",
-      "module": "tensor",
-      "title": "Squeeze",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        }
-      ],
-      "examples": [
-        "(tensor/squeeze [[1,2,3]])"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/stack": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Stack two tensors along a new leading dimension",
-      "module": "tensor",
-      "title": "Stack",
-      "params": [
-        {
-          "name": "a",
-          "type": "tensor",
-          "description": "First tensor"
-        },
-        {
-          "name": "b",
-          "type": "tensor",
-          "description": "Second tensor"
-        }
-      ],
-      "examples": [
-        "(tensor/stack [1,2] [3,4])"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/sub": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Element-wise subtraction",
-      "module": "tensor",
-      "title": "Subtract",
-      "params": [
-        {
-          "name": "a",
-          "type": "tensor",
-          "description": "First tensor"
-        },
-        {
-          "name": "b",
-          "type": {
-            "kind": "union",
-            "of": [
-              "tensor",
-              "number"
-            ]
-          },
-          "description": "Second tensor or scalar"
-        }
-      ],
-      "examples": [
-        "(tensor/sub [1,2] [3,4])"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/sum": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "union",
-        "of": [
-          "number",
-          "tensor"
-        ]
-      },
-      "description": "Sum of tensor elements",
-      "module": "tensor",
-      "title": "Sum",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "dim",
-          "type": "number",
-          "description": "Dimension to reduce",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(tensor/sum [1,0,1]) // => 500"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/toArray": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "TensorValue",
-      "description": "Convert tensor to nested array",
-      "module": "tensor",
-      "title": "To Array",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        }
-      ],
-      "examples": [
-        "(tensor/toArray [[1,2],[3,4]]) // => [[1 2] [3 4]]"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/toList": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": {
-        "kind": "array",
-        "of": "number"
-      },
-      "description": "Convert 1D tensor to flat array",
-      "module": "tensor",
-      "title": "To List",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor (must be 1D)"
-        }
-      ],
-      "examples": [
-        "(tensor/toList [1,2,3]) // => [1 2 3]"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/transpose": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 3,
-      "returnType": "tensor",
-      "description": "Transpose a tensor (optionally swapping two named dimensions)",
-      "module": "tensor",
-      "title": "Transpose",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor to transpose"
-        },
-        {
-          "name": "dim0",
-          "type": "number",
-          "description": "First dimension to swap (optional)"
-        },
-        {
-          "name": "dim1",
-          "type": "number",
-          "description": "Second dimension to swap (optional)"
-        }
-      ],
-      "examples": [
-        "(tensor/transpose [[1,2],[3,4]] 0 1)"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/unsqueeze": {
-      "category": "ml-tensor",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Insert a dimension of size one at the given position",
-      "module": "tensor",
-      "title": "Unsqueeze",
-      "params": [
-        {
-          "name": "tensor",
-          "type": "tensor",
-          "description": "The tensor"
-        },
-        {
-          "name": "dim",
-          "type": "number",
-          "description": "Position to insert the new dimension"
-        }
-      ],
-      "examples": [
-        "(tensor/unsqueeze [1,2,3] 0)"
-      ],
-      "docsSource": "generated"
-    },
-    "tensor/zeros": {
-      "category": "ml-tensor",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "tensor",
-      "description": "Create tensor filled with zeros",
-      "module": "tensor",
-      "title": "Zeros",
-      "params": [
-        {
-          "name": "shape",
-          "type": {
-            "kind": "array",
-            "of": "number"
-          },
-          "description": "Shape of the tensor"
-        }
-      ],
-      "examples": [
-        "(tensor/zeros [2 3])"
-      ],
-      "docsSource": "generated"
-    },
     "time/add": {
       "category": "std-time",
       "minArity": 3,
@@ -24804,7 +22678,107 @@
         },
         {
           "name": "unit",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "ms"
+              },
+              {
+                "kind": "literal",
+                "value": "millisecond"
+              },
+              {
+                "kind": "literal",
+                "value": "milliseconds"
+              },
+              {
+                "kind": "literal",
+                "value": "s"
+              },
+              {
+                "kind": "literal",
+                "value": "second"
+              },
+              {
+                "kind": "literal",
+                "value": "seconds"
+              },
+              {
+                "kind": "literal",
+                "value": "m"
+              },
+              {
+                "kind": "literal",
+                "value": "minute"
+              },
+              {
+                "kind": "literal",
+                "value": "minutes"
+              },
+              {
+                "kind": "literal",
+                "value": "h"
+              },
+              {
+                "kind": "literal",
+                "value": "hour"
+              },
+              {
+                "kind": "literal",
+                "value": "hours"
+              },
+              {
+                "kind": "literal",
+                "value": "d"
+              },
+              {
+                "kind": "literal",
+                "value": "day"
+              },
+              {
+                "kind": "literal",
+                "value": "days"
+              },
+              {
+                "kind": "literal",
+                "value": "w"
+              },
+              {
+                "kind": "literal",
+                "value": "week"
+              },
+              {
+                "kind": "literal",
+                "value": "weeks"
+              },
+              {
+                "kind": "literal",
+                "value": "month"
+              },
+              {
+                "kind": "literal",
+                "value": "months"
+              },
+              {
+                "kind": "literal",
+                "value": "quarter"
+              },
+              {
+                "kind": "literal",
+                "value": "quarters"
+              },
+              {
+                "kind": "literal",
+                "value": "year"
+              },
+              {
+                "kind": "literal",
+                "value": "years"
+              }
+            ]
+          },
           "description": "Time unit (year/month/week/day/hour/minute/second/ms)",
           "rejectsNull": true
         }
@@ -24855,7 +22829,107 @@
         },
         {
           "name": "unit",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "ms"
+              },
+              {
+                "kind": "literal",
+                "value": "millisecond"
+              },
+              {
+                "kind": "literal",
+                "value": "milliseconds"
+              },
+              {
+                "kind": "literal",
+                "value": "s"
+              },
+              {
+                "kind": "literal",
+                "value": "second"
+              },
+              {
+                "kind": "literal",
+                "value": "seconds"
+              },
+              {
+                "kind": "literal",
+                "value": "m"
+              },
+              {
+                "kind": "literal",
+                "value": "minute"
+              },
+              {
+                "kind": "literal",
+                "value": "minutes"
+              },
+              {
+                "kind": "literal",
+                "value": "h"
+              },
+              {
+                "kind": "literal",
+                "value": "hour"
+              },
+              {
+                "kind": "literal",
+                "value": "hours"
+              },
+              {
+                "kind": "literal",
+                "value": "d"
+              },
+              {
+                "kind": "literal",
+                "value": "day"
+              },
+              {
+                "kind": "literal",
+                "value": "days"
+              },
+              {
+                "kind": "literal",
+                "value": "w"
+              },
+              {
+                "kind": "literal",
+                "value": "week"
+              },
+              {
+                "kind": "literal",
+                "value": "weeks"
+              },
+              {
+                "kind": "literal",
+                "value": "month"
+              },
+              {
+                "kind": "literal",
+                "value": "months"
+              },
+              {
+                "kind": "literal",
+                "value": "quarter"
+              },
+              {
+                "kind": "literal",
+                "value": "quarters"
+              },
+              {
+                "kind": "literal",
+                "value": "year"
+              },
+              {
+                "kind": "literal",
+                "value": "years"
+              }
+            ]
+          },
           "description": "Result unit",
           "optional": true,
           "defaultValue": "ms",
@@ -24903,7 +22977,107 @@
         },
         {
           "name": "unit",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "ms"
+              },
+              {
+                "kind": "literal",
+                "value": "millisecond"
+              },
+              {
+                "kind": "literal",
+                "value": "milliseconds"
+              },
+              {
+                "kind": "literal",
+                "value": "s"
+              },
+              {
+                "kind": "literal",
+                "value": "second"
+              },
+              {
+                "kind": "literal",
+                "value": "seconds"
+              },
+              {
+                "kind": "literal",
+                "value": "m"
+              },
+              {
+                "kind": "literal",
+                "value": "minute"
+              },
+              {
+                "kind": "literal",
+                "value": "minutes"
+              },
+              {
+                "kind": "literal",
+                "value": "h"
+              },
+              {
+                "kind": "literal",
+                "value": "hour"
+              },
+              {
+                "kind": "literal",
+                "value": "hours"
+              },
+              {
+                "kind": "literal",
+                "value": "d"
+              },
+              {
+                "kind": "literal",
+                "value": "day"
+              },
+              {
+                "kind": "literal",
+                "value": "days"
+              },
+              {
+                "kind": "literal",
+                "value": "w"
+              },
+              {
+                "kind": "literal",
+                "value": "week"
+              },
+              {
+                "kind": "literal",
+                "value": "weeks"
+              },
+              {
+                "kind": "literal",
+                "value": "month"
+              },
+              {
+                "kind": "literal",
+                "value": "months"
+              },
+              {
+                "kind": "literal",
+                "value": "quarter"
+              },
+              {
+                "kind": "literal",
+                "value": "quarters"
+              },
+              {
+                "kind": "literal",
+                "value": "year"
+              },
+              {
+                "kind": "literal",
+                "value": "years"
+              }
+            ]
+          },
           "description": "Time unit",
           "rejectsNull": true
         }
@@ -25099,7 +23273,107 @@
         },
         {
           "name": "unit",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "ms"
+              },
+              {
+                "kind": "literal",
+                "value": "millisecond"
+              },
+              {
+                "kind": "literal",
+                "value": "milliseconds"
+              },
+              {
+                "kind": "literal",
+                "value": "s"
+              },
+              {
+                "kind": "literal",
+                "value": "second"
+              },
+              {
+                "kind": "literal",
+                "value": "seconds"
+              },
+              {
+                "kind": "literal",
+                "value": "m"
+              },
+              {
+                "kind": "literal",
+                "value": "minute"
+              },
+              {
+                "kind": "literal",
+                "value": "minutes"
+              },
+              {
+                "kind": "literal",
+                "value": "h"
+              },
+              {
+                "kind": "literal",
+                "value": "hour"
+              },
+              {
+                "kind": "literal",
+                "value": "hours"
+              },
+              {
+                "kind": "literal",
+                "value": "d"
+              },
+              {
+                "kind": "literal",
+                "value": "day"
+              },
+              {
+                "kind": "literal",
+                "value": "days"
+              },
+              {
+                "kind": "literal",
+                "value": "w"
+              },
+              {
+                "kind": "literal",
+                "value": "week"
+              },
+              {
+                "kind": "literal",
+                "value": "weeks"
+              },
+              {
+                "kind": "literal",
+                "value": "month"
+              },
+              {
+                "kind": "literal",
+                "value": "months"
+              },
+              {
+                "kind": "literal",
+                "value": "quarter"
+              },
+              {
+                "kind": "literal",
+                "value": "quarters"
+              },
+              {
+                "kind": "literal",
+                "value": "year"
+              },
+              {
+                "kind": "literal",
+                "value": "years"
+              }
+            ]
+          },
           "description": "Comparison unit",
           "optional": true,
           "rejectsNull": true
@@ -25190,6 +23464,7 @@
       "returnType": "number",
       "description": "Parse an ISO 8601 / RFC 3339 date or date-time to epoch ms (a date is midnight UTC; no offset reads as UTC); an unparsable string is an error",
       "module": "time",
+      "failable": {},
       "title": "Parse",
       "params": [
         {
@@ -25260,7 +23535,107 @@
         },
         {
           "name": "unit",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "ms"
+              },
+              {
+                "kind": "literal",
+                "value": "millisecond"
+              },
+              {
+                "kind": "literal",
+                "value": "milliseconds"
+              },
+              {
+                "kind": "literal",
+                "value": "s"
+              },
+              {
+                "kind": "literal",
+                "value": "second"
+              },
+              {
+                "kind": "literal",
+                "value": "seconds"
+              },
+              {
+                "kind": "literal",
+                "value": "m"
+              },
+              {
+                "kind": "literal",
+                "value": "minute"
+              },
+              {
+                "kind": "literal",
+                "value": "minutes"
+              },
+              {
+                "kind": "literal",
+                "value": "h"
+              },
+              {
+                "kind": "literal",
+                "value": "hour"
+              },
+              {
+                "kind": "literal",
+                "value": "hours"
+              },
+              {
+                "kind": "literal",
+                "value": "d"
+              },
+              {
+                "kind": "literal",
+                "value": "day"
+              },
+              {
+                "kind": "literal",
+                "value": "days"
+              },
+              {
+                "kind": "literal",
+                "value": "w"
+              },
+              {
+                "kind": "literal",
+                "value": "week"
+              },
+              {
+                "kind": "literal",
+                "value": "weeks"
+              },
+              {
+                "kind": "literal",
+                "value": "month"
+              },
+              {
+                "kind": "literal",
+                "value": "months"
+              },
+              {
+                "kind": "literal",
+                "value": "quarter"
+              },
+              {
+                "kind": "literal",
+                "value": "quarters"
+              },
+              {
+                "kind": "literal",
+                "value": "year"
+              },
+              {
+                "kind": "literal",
+                "value": "years"
+              }
+            ]
+          },
           "description": "Time unit (year/month/week/day/hour/minute)",
           "rejectsNull": true
         }
@@ -25291,7 +23666,107 @@
         },
         {
           "name": "unit",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "ms"
+              },
+              {
+                "kind": "literal",
+                "value": "millisecond"
+              },
+              {
+                "kind": "literal",
+                "value": "milliseconds"
+              },
+              {
+                "kind": "literal",
+                "value": "s"
+              },
+              {
+                "kind": "literal",
+                "value": "second"
+              },
+              {
+                "kind": "literal",
+                "value": "seconds"
+              },
+              {
+                "kind": "literal",
+                "value": "m"
+              },
+              {
+                "kind": "literal",
+                "value": "minute"
+              },
+              {
+                "kind": "literal",
+                "value": "minutes"
+              },
+              {
+                "kind": "literal",
+                "value": "h"
+              },
+              {
+                "kind": "literal",
+                "value": "hour"
+              },
+              {
+                "kind": "literal",
+                "value": "hours"
+              },
+              {
+                "kind": "literal",
+                "value": "d"
+              },
+              {
+                "kind": "literal",
+                "value": "day"
+              },
+              {
+                "kind": "literal",
+                "value": "days"
+              },
+              {
+                "kind": "literal",
+                "value": "w"
+              },
+              {
+                "kind": "literal",
+                "value": "week"
+              },
+              {
+                "kind": "literal",
+                "value": "weeks"
+              },
+              {
+                "kind": "literal",
+                "value": "month"
+              },
+              {
+                "kind": "literal",
+                "value": "months"
+              },
+              {
+                "kind": "literal",
+                "value": "quarter"
+              },
+              {
+                "kind": "literal",
+                "value": "quarters"
+              },
+              {
+                "kind": "literal",
+                "value": "year"
+              },
+              {
+                "kind": "literal",
+                "value": "years"
+              }
+            ]
+          },
           "description": "Time unit",
           "rejectsNull": true
         }
@@ -25454,643 +23929,6 @@
       ],
       "docsSource": "generated"
     },
-    "train": {
-      "category": "ml-effect",
-      "minArity": 1,
-      "maxArity": 3,
-      "returnType": "train/result",
-      "description": "Train a model over a dataset (ML effect)",
-      "module": "train",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Train",
-      "params": [
-        {
-          "name": "model",
-          "type": "nn/module",
-          "description": "The neural network module"
-        },
-        {
-          "name": "data",
-          "type": "tensor",
-          "description": "Training data (optional)"
-        },
-        {
-          "name": "config",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "epochs": "number",
-              "learningRate": "number",
-              "batchSize": "number"
-            },
-            "open": true
-          },
-          "description": "Training config (optional)"
-        }
-      ],
-      "examples": [
-        "(train {\"layers\":[{\"type\":\"dense\",\"units\":2}]} [[0,1],[1,0]] {\"epochs\":100})"
-      ],
-      "docsSource": "generated"
-    },
-    "train/adam": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 4,
-      "returnType": "void",
-      "description": "Adam optimizer step",
-      "module": "train",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Adam",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network"
-        },
-        {
-          "name": "lr",
-          "type": "number",
-          "description": "Learning rate"
-        },
-        {
-          "name": "beta1",
-          "type": "number",
-          "description": "First moment decay",
-          "optional": true,
-          "defaultValue": 0.9
-        },
-        {
-          "name": "beta2",
-          "type": "number",
-          "description": "Second moment decay",
-          "optional": true,
-          "defaultValue": 0.999
-        }
-      ],
-      "examples": [
-        "(train/adam {\"layers\":[{\"type\":\"dense\",\"units\":2}]} 0.001)"
-      ],
-      "docsSource": "generated"
-    },
-    "train/checkConstraints": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "train/constraintResult",
-      "description": "Check if network weights satisfy all constraints",
-      "module": "train",
-      "title": "Check Constraints",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network"
-        },
-        {
-          "name": "constraints",
-          "type": "train/constraints",
-          "description": "Constraint specification"
-        }
-      ],
-      "examples": [
-        "(train/checkConstraints [0.1,0.2] {\"maxMagnitude\":10})"
-      ],
-      "docsSource": "generated"
-    },
-    "train/checkForbiddenOutputs": {
-      "category": "ml-effect",
-      "minArity": 3,
-      "maxArity": 3,
-      "returnType": "train/forbiddenResult",
-      "description": "Check if model produces outputs in forbidden regions",
-      "module": "train",
-      "title": "Check Forbidden Outputs",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network"
-        },
-        {
-          "name": "testInputs",
-          "type": "tensor",
-          "description": "Inputs to test"
-        },
-        {
-          "name": "forbiddenRegions",
-          "type": {
-            "kind": "map",
-            "key": "string",
-            "value": {
-              "kind": "object",
-              "fields": {
-                "min": "number",
-                "max": "number"
-              }
-            }
-          },
-          "description": "Forbidden output regions"
-        }
-      ],
-      "examples": [
-        "(train/checkForbiddenOutputs {\"layers\":[{\"type\":\"dense\",\"units\":2}]} [[0],[1]] {\"0\":{\"min\":100,\"max\":200}})"
-      ],
-      "docsSource": "generated"
-    },
-    "train/checkRegression": {
-      "category": "ml-effect",
-      "minArity": 3,
-      "maxArity": 3,
-      "returnType": "train/regressionResult",
-      "description": "Check if new model regresses on required invariants",
-      "module": "train",
-      "title": "Check Regression",
-      "params": [
-        {
-          "name": "newModule",
-          "type": "nn/module",
-          "description": "Newly trained network"
-        },
-        {
-          "name": "oldModule",
-          "type": "nn/module",
-          "description": "Previous network"
-        },
-        {
-          "name": "invariants",
-          "type": {
-            "kind": "array",
-            "of": {
-              "kind": "object",
-              "fields": {
-                "input": "tensor",
-                "expected": "tensor"
-              }
-            }
-          },
-          "description": "Test cases that must not regress"
-        }
-      ],
-      "examples": [
-        "(train/checkRegression [0.1,0.2] {\"layers\":[{\"type\":\"dense\",\"units\":2}]} [{\"input\":[0],\"expected\":[1]}])"
-      ],
-      "docsSource": "generated"
-    },
-    "train/checkWeightMagnitude": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "boolean",
-      "description": "Check if all weights are within magnitude limit",
-      "module": "train",
-      "title": "Check Weight Magnitude",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network"
-        },
-        {
-          "name": "maxMagnitude",
-          "type": "number",
-          "description": "Maximum allowed weight magnitude"
-        }
-      ],
-      "examples": [
-        "(train/checkWeightMagnitude {\"layers\":[{\"type\":\"dense\",\"units\":2}]} 10.0) // => true"
-      ],
-      "docsSource": "generated"
-    },
-    "train/clipGradients": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "number",
-      "description": "Clip gradients to max norm (modifies in place)",
-      "module": "train",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Clip Gradients",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network"
-        },
-        {
-          "name": "maxNorm",
-          "type": "number",
-          "description": "Maximum gradient norm"
-        }
-      ],
-      "examples": [
-        "(train/clipGradients {\"layers\":[{\"type\":\"dense\",\"units\":2}]} 1.0)"
-      ],
-      "docsSource": "generated"
-    },
-    "train/clipWeights": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "void",
-      "description": "Clip weights to max magnitude (modifies in place)",
-      "module": "train",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Clip Weights",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network"
-        },
-        {
-          "name": "maxMagnitude",
-          "type": "number",
-          "description": "Maximum weight magnitude"
-        }
-      ],
-      "examples": [
-        "(train/clipWeights {\"layers\":[{\"type\":\"dense\",\"units\":2}]} 10.0)"
-      ],
-      "docsSource": "generated"
-    },
-    "train/computeAdvantages": {
-      "category": "ml-effect",
-      "minArity": 3,
-      "maxArity": 3,
-      "returnType": "tensor",
-      "description": "Compute GAE advantages for policy gradient",
-      "module": "train",
-      "title": "Compute Advantages",
-      "params": [
-        {
-          "name": "rewards",
-          "type": {
-            "kind": "array",
-            "of": "number"
-          },
-          "description": "Array of rewards"
-        },
-        {
-          "name": "values",
-          "type": "tensor",
-          "description": "Value estimates"
-        },
-        {
-          "name": "config",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "gamma": "number",
-              "lambda": "number"
-            }
-          },
-          "description": "Config with gamma, lambda"
-        }
-      ],
-      "examples": [
-        "(train/computeAdvantages [1,0,1] [0.5,0.4,0.3] {\"gamma\":0.99,\"lambda\":0.95})"
-      ],
-      "docsSource": "generated"
-    },
-    "train/computeReturns": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "tensor",
-      "description": "Compute discounted returns from rewards",
-      "module": "train",
-      "title": "Compute Returns",
-      "params": [
-        {
-          "name": "rewards",
-          "type": {
-            "kind": "array",
-            "of": "number"
-          },
-          "description": "Array of rewards"
-        },
-        {
-          "name": "gamma",
-          "type": "number",
-          "description": "Discount factor"
-        }
-      ],
-      "examples": [
-        "(train/computeReturns [1,0,1] 0.99)"
-      ],
-      "docsSource": "generated"
-    },
-    "train/crossEntropy": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "number",
-      "description": "Cross-entropy loss for classification",
-      "module": "train",
-      "title": "Cross Entropy",
-      "params": [
-        {
-          "name": "logits",
-          "type": "tensor",
-          "description": "Raw model outputs (logits)"
-        },
-        {
-          "name": "labels",
-          "type": "tensor",
-          "description": "Target class labels"
-        }
-      ],
-      "examples": [
-        "(train/crossEntropy [0.1 0.9] [0 1]) // => 0.105"
-      ],
-      "docsSource": "generated"
-    },
-    "train/getGradientNorm": {
-      "category": "ml-effect",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "number",
-      "description": "Get current gradient norm",
-      "module": "train",
-      "title": "Get Gradient Norm",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network"
-        }
-      ],
-      "examples": [
-        "(train/getGradientNorm {\"layers\":[{\"type\":\"dense\",\"units\":2}]})"
-      ],
-      "docsSource": "generated"
-    },
-    "train/getMaxWeightMagnitude": {
-      "category": "ml-effect",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "number",
-      "description": "Get maximum weight magnitude in network",
-      "module": "train",
-      "title": "Get Max Weight Magnitude",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network"
-        }
-      ],
-      "examples": [
-        "(train/getMaxWeightMagnitude {\"layers\":[{\"type\":\"dense\",\"units\":2}]})"
-      ],
-      "docsSource": "generated"
-    },
-    "train/huber": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 3,
-      "returnType": "number",
-      "description": "Huber loss (smooth L1, robust to outliers)",
-      "module": "train",
-      "title": "Huber Loss",
-      "params": [
-        {
-          "name": "predicted",
-          "type": "tensor",
-          "description": "Predicted values"
-        },
-        {
-          "name": "target",
-          "type": "tensor",
-          "description": "Target values"
-        },
-        {
-          "name": "delta",
-          "type": "number",
-          "description": "Threshold for quadratic vs linear",
-          "optional": true,
-          "defaultValue": 1
-        }
-      ],
-      "examples": [
-        "(train/huber 0.5 0.7 1.0)"
-      ],
-      "docsSource": "generated"
-    },
-    "train/loop": {
-      "category": "ml-effect",
-      "minArity": 3,
-      "maxArity": 3,
-      "returnType": "train/result",
-      "description": "Execute training loop with constraints",
-      "module": "train",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Training Loop",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network to train"
-        },
-        {
-          "name": "data",
-          "type": {
-            "kind": "array",
-            "of": {
-              "kind": "object",
-              "fields": {
-                "state": "tensor",
-                "action": "number",
-                "reward": "number"
-              }
-            }
-          },
-          "description": "Training data (array of {input, target} or experiences)"
-        },
-        {
-          "name": "config",
-          "type": "train/config",
-          "description": "Training configuration with constraints"
-        }
-      ],
-      "examples": [
-        "(train/loop {\"layers\":[{\"type\":\"dense\",\"units\":2}]} [{\"state\":[0],\"action\":1,\"reward\":1}] {\"epochs\":10})"
-      ],
-      "docsSource": "generated"
-    },
-    "train/mse": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "number",
-      "description": "Mean squared error loss",
-      "module": "train",
-      "title": "Mean Squared Error",
-      "params": [
-        {
-          "name": "predicted",
-          "type": "tensor",
-          "description": "Predicted values"
-        },
-        {
-          "name": "target",
-          "type": "tensor",
-          "description": "Target values"
-        }
-      ],
-      "examples": [
-        "(train/mse [1.0 2.0] [1.1 2.1]) // => 0.01"
-      ],
-      "docsSource": "generated"
-    },
-    "train/sampleBatch": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "array",
-        "of": {
-          "kind": "var",
-          "name": "T"
-        }
-      },
-      "description": "Sample random batch from experience buffer",
-      "module": "train",
-      "title": "Sample Batch",
-      "params": [
-        {
-          "name": "buffer",
-          "type": {
-            "kind": "array",
-            "of": {
-              "kind": "var",
-              "name": "T"
-            }
-          },
-          "description": "Experience buffer"
-        },
-        {
-          "name": "batchSize",
-          "type": "number",
-          "description": "Number of samples"
-        }
-      ],
-      "examples": [
-        "(train/sampleBatch [{\"state\":[0],\"reward\":1},{\"state\":[1],\"reward\":0}] 2)"
-      ],
-      "docsSource": "generated"
-    },
-    "train/sgd": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 3,
-      "returnType": "void",
-      "description": "Stochastic gradient descent optimizer step",
-      "module": "train",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "SGD Optimizer Step",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network"
-        },
-        {
-          "name": "lr",
-          "type": "number",
-          "description": "Learning rate"
-        },
-        {
-          "name": "momentum",
-          "type": "number",
-          "description": "Momentum factor",
-          "optional": true,
-          "defaultValue": 0
-        }
-      ],
-      "examples": [
-        "(train/sgd {\"layers\":[{\"type\":\"dense\",\"units\":2}]} 0.01 0.9)"
-      ],
-      "docsSource": "generated"
-    },
-    "train/step": {
-      "category": "ml-effect",
-      "minArity": 4,
-      "maxArity": 4,
-      "returnType": "train/stepResult",
-      "description": "Execute single training step (forward, loss, backward, update)",
-      "module": "train",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "title": "Training Step",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network"
-        },
-        {
-          "name": "input",
-          "type": "tensor",
-          "description": "Input tensor"
-        },
-        {
-          "name": "target",
-          "type": "tensor",
-          "description": "Target tensor"
-        },
-        {
-          "name": "config",
-          "type": "train/config",
-          "description": "Training configuration"
-        }
-      ],
-      "examples": [
-        "(train/step {\"layers\":[{\"type\":\"dense\",\"units\":2}]} [0.1,0.2] [1] {\"lr\":0.01})"
-      ],
-      "docsSource": "generated"
-    },
-    "train/validate": {
-      "category": "ml-effect",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "train/validationResult",
-      "description": "Validate model on test cases, returns pass/fail metrics",
-      "module": "train",
-      "title": "Validate Model",
-      "params": [
-        {
-          "name": "module",
-          "type": "nn/module",
-          "description": "The neural network"
-        },
-        {
-          "name": "testCases",
-          "type": {
-            "kind": "array",
-            "of": {
-              "kind": "object",
-              "fields": {
-                "input": "tensor",
-                "expected": "tensor"
-              }
-            }
-          },
-          "description": "Array of {input, expected, tolerance?}"
-        }
-      ],
-      "examples": [
-        "(train/validate {\"layers\":[{\"type\":\"dense\",\"units\":2}]} [{\"input\":[0],\"expected\":[1]}])"
-      ],
-      "docsSource": "generated"
-    },
     "tree/fold": {
       "category": "std-json",
       "minArity": 3,
@@ -26102,6 +23940,7 @@
       "description": "The structural bottom-up fold over a value of a recursive type (the third argument names it). The children of a node are its fields whose declared type is the type itself, a list of it or a Map of it, read from the type, never from names or the value's shape; a union node is read through the variant it belongs to. The step is called once per node with (node childResults), childResults holding one entry per child field present, in its position: a field holds the child's result, a list the list of results, a map the map of results; a leaf gets {}. Every call works on a strict subterm of a finite value, so the fold terminates. An absent value folds to null",
       "module": "json",
       "returnSemantics": "lambda-result",
+      "failable": {},
       "lambdaArgPosition": 1,
       "params": [
         {
@@ -27500,6 +25339,7 @@
       },
       "description": "Parse XML text into a value of the declared shape (the second argument names a type): namespaces are ignored by local name, an attribute is the field \"@name\" (declare it in the shape as a quoted field, `{ \"@href\" : string }`, and read it with `(object/get @x (quote \"@href\"))`), a repeated child element is a list (a field the shape declares as a list is one even with a single child), an element with no attributes or children is its text (whitespace collapsed, trimmed), other elements are objects with \"#text\" for their own text; malformed XML is an evaluation error, a null input is null",
       "module": "xml",
+      "failable": {},
       "params": [
         {
           "name": "s",

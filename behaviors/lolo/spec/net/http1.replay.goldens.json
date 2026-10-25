@@ -1,0 +1,265 @@
+{
+ "atom": "net/atoms/std-http1.lolo",
+ "trait": "Http1",
+ "note": "the head and body framing refusals the atom answers itself",
+ "cases": [
+  {
+   "id": "a-chunked-body-is-assembled",
+   "steps": [
+    {
+     "event": "LISTENING",
+     "payload": {
+      "address": "127.0.0.1",
+      "port": 8080
+     }
+    },
+    {
+     "event": "CONN_ACCEPTED",
+     "payload": {
+      "sock": 7,
+      "peer": "1.2.3.4:5",
+      "key": "listener"
+     }
+    },
+    {
+     "event": "CHUNK_READ",
+     "payload": {
+      "key": "conn-7",
+      "eof": false,
+      "data": "UE9TVCAvYT94PTEgSFRUUC8xLjENCkhvc3Q6IGENClRyYW5zZmVyLUVuY29kaW5nOiBjaHVua2VkDQoNCjUNCmhlbGxvDQowDQoNCg=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "REQUEST_RECEIVED",
+        "payload": {
+         "requestId": 7,
+         "method": "POST",
+         "path": "/a",
+         "query": "x=1",
+         "headers": {
+          "host": "a",
+          "transfer-encoding": "chunked"
+         },
+         "body": "aGVsbG8=",
+         "peer": "1.2.3.4:5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-content-length-body-is-delivered",
+   "steps": [
+    {
+     "event": "LISTENING",
+     "payload": {
+      "address": "127.0.0.1",
+      "port": 8080
+     }
+    },
+    {
+     "event": "CONN_ACCEPTED",
+     "payload": {
+      "sock": 7,
+      "peer": "1.2.3.4:5",
+      "key": "listener"
+     }
+    },
+    {
+     "event": "CHUNK_READ",
+     "payload": {
+      "key": "conn-7",
+      "eof": false,
+      "data": "UE9TVCAvYSBIVFRQLzEuMQ0KSG9zdDogYQ0KQ29udGVudC1MZW5ndGg6IDMNCg0KYWJj"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "REQUEST_RECEIVED",
+        "payload": {
+         "requestId": 7,
+         "method": "POST",
+         "path": "/a",
+         "query": "",
+         "headers": {
+          "host": "a",
+          "content-length": "3"
+         },
+         "body": "YWJj",
+         "peer": "1.2.3.4:5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-chunk-size-that-is-not-hex-is-a-400",
+   "steps": [
+    {
+     "event": "LISTENING",
+     "payload": {
+      "address": "127.0.0.1",
+      "port": 8080
+     }
+    },
+    {
+     "event": "CONN_ACCEPTED",
+     "payload": {
+      "sock": 7,
+      "peer": "1.2.3.4:5",
+      "key": "listener"
+     }
+    },
+    {
+     "event": "CHUNK_READ",
+     "payload": {
+      "key": "conn-7",
+      "eof": false,
+      "data": "UE9TVCAvYSBIVFRQLzEuMQ0KSG9zdDogYQ0KVHJhbnNmZXItRW5jb2Rpbmc6IGNodW5rZWQNCg0KenoNCmhlbGxvDQowDQoNCg=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEND_RESPONSE",
+        "payload": {
+         "requestId": 7,
+         "status": 400,
+         "headers": [],
+         "body": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-trailer-that-is-not-a-header-line-is-a-400",
+   "steps": [
+    {
+     "event": "LISTENING",
+     "payload": {
+      "address": "127.0.0.1",
+      "port": 8080
+     }
+    },
+    {
+     "event": "CONN_ACCEPTED",
+     "payload": {
+      "sock": 7,
+      "peer": "1.2.3.4:5",
+      "key": "listener"
+     }
+    },
+    {
+     "event": "CHUNK_READ",
+     "payload": {
+      "key": "conn-7",
+      "eof": false,
+      "data": "UE9TVCAvYSBIVFRQLzEuMQ0KSG9zdDogYQ0KVHJhbnNmZXItRW5jb2Rpbmc6IGNodW5rZWQNCg0KMA0KYmFkIHRyYWlsZXINCg0K"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEND_RESPONSE",
+        "payload": {
+         "requestId": 7,
+         "status": 400,
+         "headers": [],
+         "body": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-head-with-a-non-ascii-byte-is-a-400",
+   "steps": [
+    {
+     "event": "LISTENING",
+     "payload": {
+      "address": "127.0.0.1",
+      "port": 8080
+     }
+    },
+    {
+     "event": "CONN_ACCEPTED",
+     "payload": {
+      "sock": 7,
+      "peer": "1.2.3.4:5",
+      "key": "listener"
+     }
+    },
+    {
+     "event": "CHUNK_READ",
+     "payload": {
+      "key": "conn-7",
+      "eof": false,
+      "data": "R0VUIC//IEhUVFAvMS4xDQpIb3N0OiBhDQoNCg=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEND_RESPONSE",
+        "payload": {
+         "requestId": 7,
+         "status": 400,
+         "headers": [],
+         "body": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-content-length-past-the-body-limit-is-a-413",
+   "steps": [
+    {
+     "event": "LISTENING",
+     "payload": {
+      "address": "127.0.0.1",
+      "port": 8080
+     }
+    },
+    {
+     "event": "CONN_ACCEPTED",
+     "payload": {
+      "sock": 7,
+      "peer": "1.2.3.4:5",
+      "key": "listener"
+     }
+    },
+    {
+     "event": "CHUNK_READ",
+     "payload": {
+      "key": "conn-7",
+      "eof": false,
+      "data": "UE9TVCAvYSBIVFRQLzEuMQ0KSG9zdDogYQ0KQ29udGVudC1MZW5ndGg6IDk5OTk5OTk5OTk5DQoNCg=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEND_RESPONSE",
+        "payload": {
+         "requestId": 7,
+         "status": 413,
+         "headers": [],
+         "body": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

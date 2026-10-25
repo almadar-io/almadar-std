@@ -8,6 +8,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
+import { nullable } from '../signature.js';
 
 /**
  * Math module operators.
@@ -112,7 +113,8 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Exponentiation (base^exp)',
     hasSideEffects: false,
-    returnType: 'number',
+    failable: {},
+    returnType: nullable('number'),
     params: [
       { name: 'base', type: 'number', description: 'The base' },
       { name: 'exp', type: 'number', description: 'The exponent' },
@@ -126,7 +128,8 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Square root',
     hasSideEffects: false,
-    returnType: 'number',
+    failable: {},
+    returnType: nullable('number'),
     params: [{ name: 'n', type: 'number', description: 'The number' }],
     example: '["math/sqrt", 16] // => 4',
   },
@@ -137,7 +140,8 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Base-10 logarithm',
     hasSideEffects: false,
-    returnType: 'number',
+    failable: {},
+    returnType: nullable('number'),
     params: [{ name: 'n', type: 'number', description: 'The number' }],
     example: '["math/log10", 100] // => 2',
   },
@@ -148,7 +152,8 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Natural logarithm (base e)',
     hasSideEffects: false,
-    returnType: 'number',
+    failable: {},
+    returnType: nullable('number'),
     params: [{ name: 'n', type: 'number', description: 'The number' }],
     example: '["math/ln", 2.718281828] // => 1',
   },
@@ -159,7 +164,8 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Modulo (remainder)',
     hasSideEffects: false,
-    returnType: 'number',
+    failable: { unlessLiteral: [1] },
+    returnType: nullable('number'),
     returnSemantics: 'integer-closed',
     params: [
       { name: 'a', type: 'number', description: 'Dividend' },
@@ -228,7 +234,8 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Random integer in range [min, max] (inclusive)',
     hasSideEffects: false,
-    returnType: 'number',
+    failable: {},
+    returnType: nullable('number'),
     params: [
       { name: 'min', type: 'number', description: 'Minimum (inclusive)' },
       { name: 'max', type: 'number', description: 'Maximum (inclusive)' },
@@ -303,7 +310,8 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Arcsine (inverse sine) in radians',
     hasSideEffects: false,
-    returnType: 'number',
+    failable: {},
+    returnType: nullable('number'),
     params: [{ name: 'x', type: 'number', description: 'Value in [-1, 1]' }],
     example: '["math/asin", 1] // => 1.5707963267948966',
   },
@@ -314,7 +322,8 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Arccosine (inverse cosine) in radians',
     hasSideEffects: false,
-    returnType: 'number',
+    failable: {},
+    returnType: nullable('number'),
     params: [{ name: 'x', type: 'number', description: 'Value in [-1, 1]' }],
     example: '["math/acos", 1] // => 0',
   },

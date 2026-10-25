@@ -20,7 +20,8 @@ orbital StdMeshAssetArtOrbital {
         (set @entity.meshAssetArt (object/merge @config.seedArt @entity.meshAssetArt))
 
       MESH_ASSET_PUBLISH -> collecting
-        (set @entity.meshAssetArt (object/merge @entity.meshAssetArt (object/fromEntries [[?kind, ?states]])))
+        (let ((entry (object/fromEntries [[?kind, ?states]])))
+          (when (!= @entry null) (set @entity.meshAssetArt (object/merge @entity.meshAssetArt @entry))))
     }
 
     emits {

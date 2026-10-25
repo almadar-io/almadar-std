@@ -8,7 +8,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, RECORD, STRING, each, eachRec, fieldOf, fn, keyOf, list, mapOf, mergeOf, omitOf, pickOf, rec, tuple, tv, union } from '../signature.js';
+import { BOOLEAN, RECORD, STRING, each, eachRec, fieldOf, fn, keyOf, list, mapOf, mergeOf, omitOf, pickOf, rec, tuple, tv, union, nullable } from '../signature.js';
 
 /**
  * Object module operators.
@@ -55,7 +55,8 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Create object from [key, value] pairs. A `__proto__` key (or path segment) is refused with an error',
     hasSideEffects: false,
-    returnType: mapOf(tv('K'), tv('V')),
+    failable: {},
+    returnType: nullable(mapOf(tv('K'), tv('V'))),
     params: [{ name: 'entries', type: list(tuple(tv('K'), each('V'))), description: 'Array of [key, value] pairs; the values may differ in type (a record)' }],
     example: '["object/fromEntries", [["a", 1], ["b", 2]]] // => {"a": 1, "b": 2}',
   },
@@ -81,7 +82,8 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 3,
     description: 'Set nested value by path (returns new object). A `__proto__` key (or path segment) is refused with an error',
     hasSideEffects: false,
-    returnType: tv('R'),
+    failable: {},
+    returnType: nullable(tv('R')),
     params: [
       { name: 'obj', type: rec('R'), description: 'The object' },
       { name: 'path', type: keyOf('R'), description: 'Dot-separated path' },
@@ -110,7 +112,8 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: null,
     description: 'Shallow merge objects (later wins). A `__proto__` key (or path segment) is refused with an error',
     hasSideEffects: false,
-    returnType: mergeOf('R'),
+    failable: {},
+    returnType: nullable(mergeOf('R')),
     params: [{ name: '...objs', type: eachRec('R'), description: 'Objects to merge' }],
     example: '["object/merge", {"a": 1}, {"b": 2}] // => {"a": 1, "b": 2}',
   },
@@ -121,7 +124,8 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: null,
     description: 'Deep merge objects (later wins). A `__proto__` key (or path segment) is refused with an error',
     hasSideEffects: false,
-    returnType: mergeOf('R'),
+    failable: {},
+    returnType: nullable(mergeOf('R')),
     params: [{ name: '...objs', type: eachRec('R'), description: 'Objects to merge' }],
     example: '["object/deepMerge", {"a": {"b": 1}}, {"a": {"c": 2}}]',
   },
@@ -176,7 +180,8 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Transform all keys. A `__proto__` key (or path segment) is refused with an error',
     hasSideEffects: false,
-    returnType: mapOf(tv('J'), tv('V')),
+    failable: {},
+    returnType: nullable(mapOf(tv('J'), tv('V'))),
     acceptsLambda: true,
     lambdaArgPosition: 1,
     params: [
@@ -257,7 +262,8 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Whether the row satisfies the typed RowPredicate, decided by the kernel\'s one predicate evaluator (the one every store runs a compiled where/filter through); an absent predicate or row is an absent result',
     hasSideEffects: false,
-    returnType: BOOLEAN,
+    failable: {},
+    returnType: nullable(BOOLEAN),
     params: [
       { name: 'pred', type: 'RowPredicate', description: 'The typed predicate (compare, member, hasElement, contains, isNull, all, any, not, const)' },
       { name: 'row', type: rec('E'), description: 'The row' },

@@ -8120,6 +8120,44 @@
     }
    ],
    "note": "G-ORB-452 (mixed-element arrays under a recursive union): did not bite on orb 18.0.5"
+  },
+  {
+   "id": "update-of-a-stored-document-that-is-not-an-object-fails",
+   "steps": [
+    {
+     "event": "COUCH_READ_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "[1]"
+     },
+     "from": "reading",
+     "entity": {
+      "id": "c",
+      "op": "update",
+      "db": "stocks",
+      "docId": "s1",
+      "attempt": 1,
+      "changes": {
+       "id": "zzz",
+       "stock": 0
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "COUCH_FAILED",
+        "payload": {
+         "op": "update",
+         "status": 200,
+         "message": "CouchDB answered a document that cannot be read"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

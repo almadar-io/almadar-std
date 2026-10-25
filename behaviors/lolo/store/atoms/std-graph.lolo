@@ -159,18 +159,19 @@ orbital GraphOrbital {
       INIT -> idle
       GraphEdgesLoaded -> computed when (= @entity.reqOp "reach")
         (set @entity.scratchEdges ?data)
-        (set @entity.reachIds
+        (let ((noStrs : GraphStrings []))
+          (set @entity.reachIds
           (array/reject
             (object/get
-              (array/reduce (array/range 0 (+ (array/len ?data) 1)) { seen: (json/parse "[]" GraphStrings), frontier: (array/append (json/parse "[]" GraphStrings) @entity.reqNodeId) }
+              (array/reduce (array/range 0 (+ (array/len ?data) 1)) { seen: @noStrs, frontier: (array/append @noStrs @entity.reqNodeId) }
                 (fn acc i
-                  (let ((seen (array/unique (array/concat (object/get @acc seen (json/parse "[]" GraphStrings)) (object/get @acc frontier (json/parse "[]" GraphStrings))))))
+                  (let ((seen (array/unique (array/concat (object/get @acc seen @noStrs) (object/get @acc frontier @noStrs)))))
                     {
                       seen: @seen
                       frontier: (array/reject
                         (array/unique
                           (array/flatten
-                            (array/map (object/get @acc frontier (json/parse "[]" GraphStrings))
+                            (array/map (object/get @acc frontier @noStrs)
                               (fn nid
                                 (array/map
                                   (array/filter ?data
@@ -181,11 +182,12 @@ orbital GraphOrbital {
                         (fn nid (array/includes @seen @nid)))
                     })))
               seen [])
-            (fn nid (= @nid @entity.reqNodeId))))
+            (fn nid (= @nid @entity.reqNodeId)))))
         (emit GraphComputed)
       GraphEdgesLoaded -> computed when (!= @entity.reqOp "reach")
         (set @entity.scratchEdges ?data)
-        (let ((nodeIds (array/map
+        (let ((noStrs : GraphStrings []) (noDeps : GraphDepRows []) (noLayers : GraphLayerRecords []))
+          (let ((nodeIds (array/map
                 (array/reject @entity.scratchNodes (fn n (and (= @entity.reqOp "removeNode") (= (object/get @n nodeId "") @entity.reqNodeId))))
                 (fn n (object/get @n nodeId "")))))
           (let ((edges (array/filter
@@ -202,31 +204,31 @@ orbital GraphOrbital {
                     (array/includes @nodeIds (object/get @e source ""))
                     (array/includes @nodeIds (object/get @e target "")))))))
             (let ((run (array/reduce (array/range 0 (array/len @nodeIds)) {
-                    done: (json/parse "[]" GraphLayerRecords)
+                    done: @noLayers
                     remaining: (array/map (array/map (array/sort (array/reject @entity.scratchNodes (fn n (and (= @entity.reqOp "removeNode") (= (object/get @n nodeId "") @entity.reqNodeId)))) nodeId asc) (fn n (object/get @n nodeId "")))
                       (fn nid { id: @nid, deps: (array/unique (array/map (array/filter @edges (fn e (= (object/get @e source "") @nid))) (fn e (object/get @e target "")))) }))
                   }
                   (fn acc i
                     (let ((doneIds (array/map (object/get @acc done []) (fn r (object/get @r id "")))))
-                      (let ((ready (array/filter (object/get @acc remaining (json/parse "[]" GraphDepRows))
-                            (fn row (array/every (object/get @row deps (json/parse "[]" GraphStrings)) (fn d (array/includes @doneIds @d)))))))
+                      (let ((ready (array/filter (object/get @acc remaining @noDeps)
+                            (fn row (array/every (object/get @row deps @noStrs) (fn d (array/includes @doneIds @d)))))))
                         {
                           done: (array/concat (object/get @acc done [])
                             (array/map @ready
                               (fn row {
                                 id: (object/get @row id "")
                                 depth: @i
-                                deps: (object/get @row deps (json/parse "[]" GraphStrings))
-                                closure: (array/unique (array/flatten (array/map (object/get @row deps (json/parse "[]" GraphStrings)) (fn d (array/prepend (object/get (array/find (object/get @acc done []) (fn r (= (object/get @r id "") @d))) closure []) @d)))))
+                                deps: (object/get @row deps @noStrs)
+                                closure: (array/unique (array/flatten (array/map (object/get @row deps @noStrs) (fn d (array/prepend (object/get (array/find (object/get @acc done []) (fn r (= (object/get @r id "") @d))) closure []) @d)))))
                               })))
-                          remaining: (array/reject (object/get @acc remaining (json/parse "[]" GraphDepRows)) (fn row (array/some @ready (fn q (= (object/get @q id "") (object/get @row id ""))))))
+                          remaining: (array/reject (object/get @acc remaining @noDeps) (fn row (array/some @ready (fn q (= (object/get @q id "") (object/get @row id ""))))))
                         }))))))
               (do
                 (set @entity.edgeEndpointsExist (and (array/includes @nodeIds @entity.reqSource) (array/includes @nodeIds @entity.reqTarget)))
                 (set @entity.edgeDuplicate (array/some ?data (fn e (and (= (object/get @e source "") @entity.reqSource) (= (object/get @e target "") @entity.reqTarget) (= (object/get @e edgeType "") @entity.reqEdgeType)))))
                 (set @entity.engineOrder (array/map (object/get @run done []) (fn r (object/get @r id ""))))
-                (set @entity.engineCyclicIds (array/map (object/get @run remaining (json/parse "[]" GraphDepRows)) (fn row (object/get @row id ""))))
-                (set @entity.engineCyclic (> (array/len (object/get @run remaining (json/parse "[]" GraphDepRows))) 0))
+                (set @entity.engineCyclicIds (array/map (object/get @run remaining @noDeps) (fn row (object/get @row id ""))))
+                (set @entity.engineCyclic (> (array/len (object/get @run remaining @noDeps)) 0))
                 (set @entity.pendingUpdates
                   (array/map
                     (array/filter (object/get @run done [])
@@ -241,7 +243,7 @@ orbital GraphOrbital {
                       dependencyIds: (object/get @r deps [])
                       dependencyClosure: (object/get @r closure [])
                     })))
-                (emit GraphComputed)))))
+                (emit GraphComputed))))))
       GraphFailed -> idle
         (emit GRAPH_FAILED { error: ?error, graphId: @entity.reqGraphId })
         (notify error (str/concat "The graph change failed: " ?error))

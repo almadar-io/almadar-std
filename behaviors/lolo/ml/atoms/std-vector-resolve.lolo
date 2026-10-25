@@ -184,7 +184,7 @@ orbital VectorResolveOrbital {
 
     state idle {
       RESOLVE -> idle when (== (array/len @payload.wanted) 0)
-        (emit VECTORS_ANSWERED { model: (array/reduce @payload.snapshots (if (!= @payload.providerModel "") @payload.providerModel "") (fn sm sb (if (!= @sm "") @sm (if (< (bytes/length @sb) 12) "" (bytes/to-string (bytes/slice @sb 10 (+ 10 (bytes/read-uint @sb 8 2 "le")))))))), vectors: [] })
+        (emit VECTORS_ANSWERED { model: (array/reduce @payload.snapshots (if (!= @payload.providerModel "") @payload.providerModel "") (fn sm sb (if (!= @sm "") @sm (if (< (bytes/length @sb) 12) "" (let ((ml (bytes/read-uint @sb 8 2 "le"))) (if (validate/required @ml) (bytes/to-string (bytes/slice @sb 10 (+ 10 @ml))) "")))))), vectors: [] })
 
       RESOLVE -> reading when (> (array/len @payload.wanted) 0)
         (set @entity.wanted @payload.wanted)
@@ -198,7 +198,7 @@ orbital VectorResolveOrbital {
         (set @entity.got [])
         (set @entity.chunkIdx 0)
         (set @entity.persisted 0)
-        (set @entity.model (let ((snap (array/reduce @payload.snapshots "" (fn sm sb (if (!= @sm "") @sm (if (< (bytes/length @sb) 12) "" (bytes/to-string (bytes/slice @sb 10 (+ 10 (bytes/read-uint @sb 8 2 "le"))))))))))
+        (set @entity.model (let ((snap (array/reduce @payload.snapshots "" (fn sm sb (if (!= @sm "") @sm (if (< (bytes/length @sb) 12) "" (let ((ml (bytes/read-uint @sb 8 2 "le"))) (if (validate/required @ml) (bytes/to-string (bytes/slice @sb 10 (+ 10 @ml))) ""))))))))
           (if (!= @snap "") @snap (if (!= @payload.providerModel "") @payload.providerModel "baai/bge-base-en-v1.5"))))
         (set @entity.userPath (str/concat @entity.userDir "/" (str/replace-pattern @entity.model "[^A-Za-z0-9._-]" "_") ".vec"))
         (emit USER_STORE_NEEDED { model: @entity.model, path: @entity.userPath })

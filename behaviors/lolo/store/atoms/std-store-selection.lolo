@@ -68,7 +68,7 @@ orbital StoreSelectionOrbital {
         (set @entity.url @payload.value)
         (emit STORE_SELECTED { backend: "couchdb" url: @payload.value poolMax: null })
       STORE_POOL_MAX -> idle
-        (set @entity.poolMax (if (== @payload.value null) null (let ((d (if (str/startsWith @payload.value "+") (str/slice @payload.value 1 (str/len @payload.value)) @payload.value))) (if (and (> (str/len @d) 0) (= (str/replace-pattern @d "[0-9]" "") "") (<= (str/to-number @d) 4294967295)) (str/to-number @d) null))))
+        (set @entity.poolMax (if (== @payload.value null) null (let ((d (if (str/startsWith @payload.value "+") (str/slice @payload.value 1 (str/len @payload.value)) @payload.value))) (let ((n (if (and (> (str/len @d) 0) (= (str/replace-pattern @d "[0-9]" "") "")) (str/to-number @d) null))) (if (and (!= @n null) (<= @n 4294967295)) @n null)))))
         (emit STORE_SELECTED { backend: "postgres" url: @entity.url poolMax: @entity.poolMax })
       STORE_HOST_FAILED -> idle
         (emit STORE_SELECTION_FAILED { code: "store_host_failed" message: (or @payload.error "") })

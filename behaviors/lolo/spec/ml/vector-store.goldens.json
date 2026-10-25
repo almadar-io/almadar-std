@@ -458,7 +458,7 @@
         "event": "VECTOR_REFUSED",
         "payload": {
          "code": "ORB_VECTOR_MODEL_MISMATCH",
-         "detail": "baai/bge-base-en-v1.5 vs other-model \u2014 vectors from different embedding models are not comparable"
+         "detail": "baai/bge-base-en-v1.5 vs other-model — vectors from different embedding models are not comparable"
         }
        }
       ]
@@ -1288,6 +1288,47 @@
           5.516929133858268e-47,
           -5.516929133858268e-47
          ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a model name that is not text is refused as corrupt",
+   "steps": [
+    {
+     "event": "VECTOR_LOOKUP",
+     "payload": {
+      "stores": [
+       "T1JCVkVDAQACAP/+AQAAAAAA"
+      ],
+      "origins": [
+       "/v/store0.vec"
+      ],
+      "model": "baai/bge-base-en-v1.5",
+      "text": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_MANY_PARSED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "VECTOR_MANY_PARSED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VECTOR_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_CORRUPT",
+         "detail": "/v/store0.vec: unreadable or empty model name, or zero dims"
         }
        }
       ]

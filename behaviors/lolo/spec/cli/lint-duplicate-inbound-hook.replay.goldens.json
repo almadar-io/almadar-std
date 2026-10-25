@@ -1,205 +1,239 @@
 {
- "atom": "cli/atoms/std-orb-lint-duplicate-inbound-hook.lolo",
- "trait": "OrbLintDuplicateInboundHook",
- "cases": [
-  {
-   "id": "an-argument-is-a-usage-error",
-   "steps": [
+  "atom": "cli/atoms/std-orb-lint-duplicate-inbound-hook.lolo",
+  "trait": "OrbLintDuplicateInboundHook",
+  "cases": [
     {
-     "trait": "OrbLintDuplicateInboundHook",
-     "from": "ready",
-     "event": "LINT_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "{\"argv\":[\"x\"],\"cwd\":\".\"}"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "LINT_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb lint duplicate-inbound-hook"
+      "id": "an-argument-is-a-usage-error",
+      "steps": [
+        {
+          "trait": "OrbLintDuplicateInboundHook",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\":[\"x\"],\"cwd\":\".\"}"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint duplicate-inbound-hook"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "no-argument-starts-the-walk-of-both-trees",
-   "steps": [
+    },
     {
-     "trait": "OrbLintDuplicateInboundHook",
-     "from": "ready",
-     "event": "LINT_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "{\"argv\":[],\"cwd\":\".\"}"
-     },
-     "expect": {
-      "state": "walking",
-      "emits": [
-       {
-        "event": "LINT_WALK",
-        "payload": {}
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "every-hook-with-one-owner-is-clean",
-   "steps": [
-    {
-     "trait": "OrbLintDuplicateInboundHook",
-     "from": "ready",
-     "event": "LINT_FINISH",
-     "payload": {},
-     "entity": {
-      "dups": [],
-      "unread": [],
-      "hooks": [
-       {
-        "name": "a",
-        "file": "x.lolo"
-       },
-       {
-        "name": "b",
-        "file": "y.lolo"
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "duplicate-inbound-hook: clean"
+      "id": "no-argument-starts-the-walk-of-both-trees",
+      "steps": [
+        {
+          "trait": "OrbLintDuplicateInboundHook",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\":[],\"cwd\":\".\"}"
+          },
+          "expect": {
+            "state": "walking",
+            "emits": [
+              {
+                "event": "LINT_WALK",
+                "payload": {}
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-hook-handled-by-two-files-is-reported-with-the-files",
-   "steps": [
+    },
     {
-     "trait": "OrbLintDuplicateInboundHook",
-     "from": "ready",
-     "event": "LINT_FINISH",
-     "payload": {},
-     "entity": {
-      "dups": [
-       "cli-x"
+      "id": "every-hook-with-one-owner-is-clean",
+      "steps": [
+        {
+          "trait": "OrbLintDuplicateInboundHook",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "entity": {
+            "dups": [],
+            "unread": [],
+            "hooks": [
+              {
+                "name": "a",
+                "file": "x.lolo"
+              },
+              {
+                "name": "b",
+                "file": "y.lolo"
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "duplicate-inbound-hook: clean"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-hook-handled-by-two-files-is-reported-with-the-files",
+      "steps": [
+        {
+          "trait": "OrbLintDuplicateInboundHook",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "entity": {
+            "dups": [
+              "cli-x"
+            ],
+            "unread": [],
+            "hooks": [
+              {
+                "name": "cli-x",
+                "file": "cli/atoms/b.lolo"
+              },
+              {
+                "name": "cli-x",
+                "file": "cli/atoms/a.lolo"
+              },
+              {
+                "name": "cli-y",
+                "file": "cli/atoms/c.lolo"
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "[inbound-hook-duplicate] cli-x: hook 'cli-x' is handled by 2 programs: cli/atoms/a.lolo, cli/atoms/b.lolo\n  suggestion: one program owns a hook; split the shared trait into a cli trait and an engine trait and compose the engine"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-unread-file-fails-the-run",
+      "steps": [
+        {
+          "trait": "OrbLintDuplicateInboundHook",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "entity": {
+            "dups": [],
+            "unread": [
+              "z.lolo"
+            ],
+            "hooks": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "[unread] z.lolo: the file could not be read or listed"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "end-of-files-collects-the-hooks-handled-by-more-than-one-file",
+      "steps": [
+        {
+          "trait": "OrbLintDuplicateInboundHook",
+          "from": "reading",
+          "event": "LINT_READ",
+          "payload": {},
+          "entity": {
+            "cursor": 2,
+            "paths": [
+              {
+                "root": 0,
+                "rel": "a.lolo"
+              },
+              {
+                "root": 0,
+                "rel": "b.lolo"
+              }
+            ],
+            "hooks": [
+              {
+                "name": "h",
+                "file": "a.lolo"
+              },
+              {
+                "name": "h",
+                "file": "b.lolo"
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-file-that-is-not-valid-text-is-listed-unread",
+      "steps": [
+        {
+          "trait": "OrbLintDuplicateInboundHook",
+          "from": "reading",
+          "event": "LINT_FILE_READ",
+          "payload": {
+            "data": "/w=="
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading",
+            "emits": [
+              {
+                "event": "LINT_FILE_UNREAD",
+                "payload": {
+                  "error": "the file is not valid text"
+                }
+              }
+            ]
+          }
+        }
       ],
-      "unread": [],
-      "hooks": [
-       {
-        "name": "cli-x",
-        "file": "cli/atoms/b.lolo"
-       },
-       {
-        "name": "cli-x",
-        "file": "cli/atoms/a.lolo"
-       },
-       {
-        "name": "cli-y",
-        "file": "cli/atoms/c.lolo"
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "[inbound-hook-duplicate] cli-x: hook 'cli-x' is handled by 2 programs: cli/atoms/a.lolo, cli/atoms/b.lolo\n  suggestion: one program owns a hook; split the shared trait into a cli trait and an engine trait and compose the engine"
-        }
-       }
-      ]
-     }
+      "entity": {
+        "cursor": 0,
+        "paths": [
+          {
+            "root": 0,
+            "rel": "a.lolo"
+          }
+        ]
+      }
     }
-   ]
-  },
-  {
-   "id": "an-unread-file-fails-the-run",
-   "steps": [
-    {
-     "trait": "OrbLintDuplicateInboundHook",
-     "from": "ready",
-     "event": "LINT_FINISH",
-     "payload": {},
-     "entity": {
-      "dups": [],
-      "unread": [
-       "z.lolo"
-      ],
-      "hooks": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "[unread] z.lolo: the file could not be read or listed"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "end-of-files-collects-the-hooks-handled-by-more-than-one-file",
-   "steps": [
-    {
-     "trait": "OrbLintDuplicateInboundHook",
-     "from": "reading",
-     "event": "LINT_READ",
-     "payload": {},
-     "entity": {
-      "cursor": 2,
-      "paths": [
-       {
-        "root": 0,
-        "rel": "a.lolo"
-       },
-       {
-        "root": 0,
-        "rel": "b.lolo"
-       }
-      ],
-      "hooks": [
-       {
-        "name": "h",
-        "file": "a.lolo"
-       },
-       {
-        "name": "h",
-        "file": "b.lolo"
-       }
-      ]
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "LINT_FINISH",
-        "payload": {}
-       }
-      ]
-     }
-    }
-   ]
-  }
- ]
+  ]
 }

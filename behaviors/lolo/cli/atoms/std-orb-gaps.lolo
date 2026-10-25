@@ -233,9 +233,11 @@ orbital OrbGapsOrbital {
         (os/read-file { anchor: "cwd" path: (str/concat (object/get (array/nth @entity.work @entity.cursor) "path") "/.gitmodules") } { key: "modules" emit: { success: GAPS_GM_TEXT, failure: GAPS_GM_FAIL } })
       GAPS_PROBE_GM -> probing when (not (object/get (array/last @entity.probes) "hasModules"))
         (emit GAPS_PROBE_LEDGER { })
-      GAPS_GM_TEXT -> probing
+      GAPS_GM_TEXT -> probing when (= (bytes/to-string @payload.data) null)
+        (emit GAPS_GM_FAIL { error: "the .gitmodules is not text" })
+      GAPS_GM_TEXT -> probing when (!= (bytes/to-string @payload.data) null)
         (set @entity.work (array/concat @entity.work (array/map
-          (array/filter (str/split (bytes/to-string @payload.data) "\n") (fn l (validate/pattern @l "^\\s*path\\s*=")))
+          (array/filter (str/split (str/default (bytes/to-string @payload.data) "") "\n") (fn l (validate/pattern @l "^\\s*path\\s*=")))
           (fn l { path: (os/path-normalize (os/path-join (object/get (array/nth @entity.work @entity.cursor) "path") (str/trim (str/replace-pattern @l "^\\s*path\\s*=" "")))), nested: (!= (object/get (array/nth @entity.work @entity.cursor) "path") ".") }))))
         (emit GAPS_PROBE_LEDGER { })
       GAPS_GM_FAIL -> probing
@@ -244,8 +246,10 @@ orbital OrbGapsOrbital {
         (os/read-file { anchor: "cwd" path: (str/concat (object/get (array/nth @entity.work @entity.cursor) "path") "/Almadar_Gaps.md") } { key: "ledger" emit: { success: GAPS_PL_READ, failure: GAPS_PL_FAIL } })
       GAPS_PROBE_LEDGER -> probing when (not (object/get (array/last @entity.probes) "hasLedger"))
         (emit GAPS_PROBE_NEXT { })
-      GAPS_PL_READ -> probing
-        (set @entity.reads (array/append @entity.reads { path: (os/path-normalize (os/path-join (object/get (array/nth @entity.work @entity.cursor) "path") "Almadar_Gaps.md")), ok: true, text: (bytes/to-string @payload.data) }))
+      GAPS_PL_READ -> probing when (= (bytes/to-string @payload.data) null)
+        (emit GAPS_PL_FAIL { error: "the ledger is not text" })
+      GAPS_PL_READ -> probing when (!= (bytes/to-string @payload.data) null)
+        (set @entity.reads (array/append @entity.reads { path: (os/path-normalize (os/path-join (object/get (array/nth @entity.work @entity.cursor) "path") "Almadar_Gaps.md")), ok: true, text: (str/default (bytes/to-string @payload.data) "") }))
         (emit GAPS_PROBE_NEXT { })
       GAPS_PL_FAIL -> probing
         (emit GAPS_PROBE_NEXT { })
@@ -272,8 +276,10 @@ orbital OrbGapsOrbital {
       INIT -> reading
       GAPS_READ -> reading when (< @entity.cursor (array/len @entity.queue))
         (os/read-file { anchor: "cwd" path: (array/nth @entity.queue @entity.cursor) } { key: "ledger" emit: { success: GAPS_FILE_READ, failure: GAPS_FILE_UNREAD } })
-      GAPS_FILE_READ -> reading
-        (set @entity.reads (array/append @entity.reads { path: (array/nth @entity.queue @entity.cursor), ok: true, text: (bytes/to-string @payload.data) }))
+      GAPS_FILE_READ -> reading when (= (bytes/to-string @payload.data) null)
+        (emit GAPS_FILE_UNREAD { error: "the file is not text" })
+      GAPS_FILE_READ -> reading when (!= (bytes/to-string @payload.data) null)
+        (set @entity.reads (array/append @entity.reads { path: (array/nth @entity.queue @entity.cursor), ok: true, text: (str/default (bytes/to-string @payload.data) "") }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit GAPS_READ_NEXT { })
       GAPS_FILE_UNREAD -> reading
@@ -317,7 +323,7 @@ orbital OrbGapsOrbital {
             (array/append @acc
               (if (!= @prev "")
                 (if (validate/pattern (str/trim (object/get @m "text")) (str/concat "^" (str/slice @prev 0 1) "{" (str/len @prev) ",}$")) "" @prev)
-                (str/slice @lead 0 (- (str/len @lead) (str/len (str/replace-pattern @lead (str/concat "^" (str/slice @lead 0 1) "+") "")))))))))) 
+                (str/slice @lead 0 (- (str/len @lead) (str/len (or (str/replace-pattern @lead (str/concat "^" (str/slice @lead 0 1) "+") "") @lead)))))))))) 
         (set @entity.curSpans (array/map (array/filter (array/range 0 (array/len @entity.curCand)) (fn k (and (!= (array/nth @entity.curFences @k) "") (or (= @k 0) (= (array/nth @entity.curFences (- @k 1)) ""))))) (fn k
           { lo: (object/get (array/nth @entity.curCand @k) "at"),
             hi: (let ((j (array/find (array/range (+ @k 1) (array/len @entity.curCand)) (fn j (= (array/nth @entity.curFences @j) ""))))) (if (= @j null) @entity.curN (object/get (array/nth @entity.curCand @j) "at"))) })))
@@ -609,7 +615,7 @@ orbital OrbGapsOrbital {
           (let ((lines (str/split @entity.uText "\n"))
                 (needle (str/concat "Next code: `G-" @entity.uPrefix "-")))
             (let ((digits (array/first (str/split (array/nth (str/split (array/nth @lines @entity.uCi) @needle) 1) "`"))))
-              (let ((num (array/max (array/append (array/map (array/filter (array/concat (array/map @entity.merged (fn e (object/get @e "code"))) (array/map @entity.uEntries (fn e (object/get @e "code")))) (fn c (and (str/startsWith @c (str/concat "G-" @entity.uPrefix "-")) (validate/pattern @c (str/concat "^G-" @entity.uPrefix "-\\d+$"))))) (fn c (+ 1 (str/to-number (str/replace @c (str/concat "G-" @entity.uPrefix "-") ""))))) (str/to-number @digits)))))
+              (let ((num (array/max (array/append (array/map (array/filter (array/concat (array/map @entity.merged (fn e (object/get @e "code"))) (array/map @entity.uEntries (fn e (object/get @e "code")))) (fn c (and (str/startsWith @c (str/concat "G-" @entity.uPrefix "-")) (validate/pattern @c (str/concat "^G-" @entity.uPrefix "-\\d+$"))))) (fn c (+ 1 (or (str/to-number (str/replace @c (str/concat "G-" @entity.uPrefix "-") "")) 0)))) (or (str/to-number @digits) 0)))))
                 (str/join (array/flatten (array/map @lines (fn line
                   (if (= @index @entity.uCi)
                     [(str/replace @line (str/concat @needle @digits "`") (str/concat @needle (str/padStart (str/concat @num) 3 "0") "`"))]

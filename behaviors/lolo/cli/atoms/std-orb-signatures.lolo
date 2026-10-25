@@ -118,13 +118,13 @@ orbital OrbSignaturesOrbital {
       INIT -> core
       SIGNATURES_FAILED -> idle
         (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
-      SIGNATURES_CORE -> idle when (let ((lang (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage"))) (or (= @lang null) (= (object/get @lang "constructs") null) (= (object/get @lang "validationCodes") null) (= (object/get @lang "vocabulary") null) (= (object/get @lang "patterns") null)))
+      SIGNATURES_CORE -> idle when (let ((lang (object/get (json/parse (str/default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage"))) (or (= @lang null) (= (object/get @lang "constructs") null) (= (object/get @lang "validationCodes") null) (= (object/get @lang "vocabulary") null) (= (object/get @lang "patterns") null)))
         (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: "Error: orb signatures: the installed @almadar/core declares no orbLanguage constructs, validationCodes, vocabulary and patterns" })
-      SIGNATURES_CORE -> std when (let ((lang (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage"))) (and (!= @lang null) (!= (object/get @lang "constructs") null) (!= (object/get @lang "validationCodes") null) (!= (object/get @lang "vocabulary") null) (!= (object/get @lang "patterns") null)))
-        (set @entity.constructsPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage") "constructs")))
-        (set @entity.codesPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage") "validationCodes")))
-        (set @entity.vocabularyPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage") "vocabulary")))
-        (set @entity.patternsPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage") "patterns")))
+      SIGNATURES_CORE -> std when (let ((lang (object/get (json/parse (str/default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage"))) (and (!= @lang null) (!= (object/get @lang "constructs") null) (!= (object/get @lang "validationCodes") null) (!= (object/get @lang "vocabulary") null) (!= (object/get @lang "patterns") null)))
+        (set @entity.constructsPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "constructs")))
+        (set @entity.codesPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "validationCodes")))
+        (set @entity.vocabularyPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "vocabulary")))
+        (set @entity.patternsPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "patterns")))
         (os/read-file { anchor: "cwd" path: "node_modules/@almadar/std/package.json" } { key: "std" emit: { success: SIGNATURES_STD, failure: SIGNATURES_FAILED } })
     }
 
@@ -132,10 +132,10 @@ orbital OrbSignaturesOrbital {
       INIT -> std
       SIGNATURES_FAILED -> idle
         (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
-      SIGNATURES_STD -> idle when (let ((lang (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage"))) (or (= @lang null) (= (object/get @lang "operators") null)))
+      SIGNATURES_STD -> idle when (let ((lang (object/get (json/parse (str/default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage"))) (or (= @lang null) (= (object/get @lang "operators") null)))
         (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: "Error: orb signatures: the installed @almadar/std declares no orbLanguage operators" })
-      SIGNATURES_STD -> constructs when (let ((lang (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage"))) (and (!= @lang null) (!= (object/get @lang "operators") null)))
-        (set @entity.operatorsPath (str/concat "node_modules/@almadar/std/" (object/get (object/get (json/parse (bytes/to-string @payload.data) SigManifest) "orbLanguage") "operators")))
+      SIGNATURES_STD -> constructs when (let ((lang (object/get (json/parse (str/default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage"))) (and (!= @lang null) (!= (object/get @lang "operators") null)))
+        (set @entity.operatorsPath (str/concat "node_modules/@almadar/std/" (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") SigManifest) "orbLanguage") "operators")))
         (os/read-file { anchor: "cwd" path: @entity.constructsPath } { key: "constructs" emit: { success: SIGNATURES_CONSTRUCTS, failure: SIGNATURES_FAILED } })
     }
 
@@ -143,8 +143,10 @@ orbital OrbSignaturesOrbital {
       INIT -> constructs
       SIGNATURES_FAILED -> idle
         (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
-      SIGNATURES_CONSTRUCTS -> vocabulary
-        (set @entity.constructs (json/parse (bytes/to-string @payload.data) SigJson))
+      SIGNATURES_CONSTRUCTS -> constructs when (= (json/parse (str/default (bytes/to-string @payload.data) "") SigJson) null)
+        (emit SIGNATURES_FAILED { error: (str/concat @entity.constructsPath " is not valid JSON") })
+      SIGNATURES_CONSTRUCTS -> vocabulary when (!= (json/parse (str/default (bytes/to-string @payload.data) "") SigJson) null)
+        (set @entity.constructs (json/parse (str/default (bytes/to-string @payload.data) "") SigJson))
         (os/read-file { anchor: "cwd" path: @entity.vocabularyPath } { key: "vocabulary" emit: { success: SIGNATURES_VOCABULARY, failure: SIGNATURES_FAILED } })
     }
 
@@ -152,8 +154,10 @@ orbital OrbSignaturesOrbital {
       INIT -> vocabulary
       SIGNATURES_FAILED -> idle
         (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
-      SIGNATURES_VOCABULARY -> codes
-        (set @entity.vocabulary (json/parse (bytes/to-string @payload.data) SigJson))
+      SIGNATURES_VOCABULARY -> vocabulary when (= (json/parse (str/default (bytes/to-string @payload.data) "") SigJson) null)
+        (emit SIGNATURES_FAILED { error: (str/concat @entity.vocabularyPath " is not valid JSON") })
+      SIGNATURES_VOCABULARY -> codes when (!= (json/parse (str/default (bytes/to-string @payload.data) "") SigJson) null)
+        (set @entity.vocabulary (json/parse (str/default (bytes/to-string @payload.data) "") SigJson))
         (os/read-file { anchor: "cwd" path: @entity.codesPath } { key: "codes" emit: { success: SIGNATURES_CODES, failure: SIGNATURES_FAILED } })
     }
 
@@ -161,8 +165,10 @@ orbital OrbSignaturesOrbital {
       INIT -> codes
       SIGNATURES_FAILED -> idle
         (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
-      SIGNATURES_CODES -> operators
-        (set @entity.codes (json/parse (bytes/to-string @payload.data) SigJson))
+      SIGNATURES_CODES -> codes when (= (json/parse (str/default (bytes/to-string @payload.data) "") SigJson) null)
+        (emit SIGNATURES_FAILED { error: (str/concat @entity.codesPath " is not valid JSON") })
+      SIGNATURES_CODES -> operators when (!= (json/parse (str/default (bytes/to-string @payload.data) "") SigJson) null)
+        (set @entity.codes (json/parse (str/default (bytes/to-string @payload.data) "") SigJson))
         (os/read-file { anchor: "cwd" path: @entity.operatorsPath } { key: "operators" emit: { success: SIGNATURES_OPERATORS, failure: SIGNATURES_FAILED } })
     }
 
@@ -170,8 +176,10 @@ orbital OrbSignaturesOrbital {
       INIT -> operators
       SIGNATURES_FAILED -> idle
         (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
-      SIGNATURES_OPERATORS -> patterns
-        (set @entity.operators (object/get (json/parse (bytes/to-string @payload.data) SigOperatorTable) "operators"))
+      SIGNATURES_OPERATORS -> operators when (= (json/parse (str/default (bytes/to-string @payload.data) "") SigOperatorTable) null)
+        (emit SIGNATURES_FAILED { error: (str/concat @entity.operatorsPath " is not valid JSON") })
+      SIGNATURES_OPERATORS -> patterns when (!= (json/parse (str/default (bytes/to-string @payload.data) "") SigOperatorTable) null)
+        (set @entity.operators (object/get (json/parse (str/default (bytes/to-string @payload.data) "") SigOperatorTable) "operators"))
         (os/read-file { anchor: "cwd" path: @entity.patternsPath } { key: "patterns" emit: { success: SIGNATURES_PATTERNS, failure: SIGNATURES_FAILED } })
     }
 
@@ -179,13 +187,15 @@ orbital OrbSignaturesOrbital {
       INIT -> patterns
       SIGNATURES_FAILED -> idle
         (emit SIGNATURES_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb signatures: " @payload.error) })
-      SIGNATURES_PATTERNS -> idle when (= @entity.out "")
-        (emit SIGNATURES_ANSWERED { status: 200, body: (json/stringify { codes: @entity.codes, constructs: @entity.constructs, operators: @entity.operators, patterns: (object/get (json/parse (bytes/to-string @payload.data) SigPatternTable) "patterns"), vocabulary: @entity.vocabulary } { pretty: true sorted: true }) })
-      SIGNATURES_PATTERNS -> writing when (and (!= @entity.out "") (not (os/path-is-absolute @entity.out)))
-        (set @entity.catalog (json/stringify { codes: @entity.codes, constructs: @entity.constructs, operators: @entity.operators, patterns: (object/get (json/parse (bytes/to-string @payload.data) SigPatternTable) "patterns"), vocabulary: @entity.vocabulary } { pretty: true sorted: true }))
+      SIGNATURES_PATTERNS -> patterns when (= (json/parse (str/default (bytes/to-string @payload.data) "") SigPatternTable) null)
+        (emit SIGNATURES_FAILED { error: (str/concat @entity.patternsPath " is not valid JSON") })
+      SIGNATURES_PATTERNS -> idle when (and (!= (json/parse (str/default (bytes/to-string @payload.data) "") SigPatternTable) null) (= @entity.out ""))
+        (emit SIGNATURES_ANSWERED { status: 200, body: (json/stringify { codes: @entity.codes, constructs: @entity.constructs, operators: @entity.operators, patterns: (object/get (json/parse (str/default (bytes/to-string @payload.data) "") SigPatternTable) "patterns"), vocabulary: @entity.vocabulary } { pretty: true sorted: true }) })
+      SIGNATURES_PATTERNS -> writing when (and (!= (json/parse (str/default (bytes/to-string @payload.data) "") SigPatternTable) null) (!= @entity.out "") (not (os/path-is-absolute @entity.out)))
+        (set @entity.catalog (json/stringify { codes: @entity.codes, constructs: @entity.constructs, operators: @entity.operators, patterns: (object/get (json/parse (str/default (bytes/to-string @payload.data) "") SigPatternTable) "patterns"), vocabulary: @entity.vocabulary } { pretty: true sorted: true }))
         (os/write-file { anchor: "cwd" path: @entity.out } (bytes/from-string @entity.catalog) { key: "catalog" emit: { success: SIGNATURES_WRITTEN, failure: SIGNATURES_FAILED } })
-      SIGNATURES_PATTERNS -> writing when (and (!= @entity.out "") (os/path-is-absolute @entity.out))
-        (set @entity.catalog (json/stringify { codes: @entity.codes, constructs: @entity.constructs, operators: @entity.operators, patterns: (object/get (json/parse (bytes/to-string @payload.data) SigPatternTable) "patterns"), vocabulary: @entity.vocabulary } { pretty: true sorted: true }))
+      SIGNATURES_PATTERNS -> writing when (and (!= (json/parse (str/default (bytes/to-string @payload.data) "") SigPatternTable) null) (!= @entity.out "") (os/path-is-absolute @entity.out))
+        (set @entity.catalog (json/stringify { codes: @entity.codes, constructs: @entity.constructs, operators: @entity.operators, patterns: (object/get (json/parse (str/default (bytes/to-string @payload.data) "") SigPatternTable) "patterns"), vocabulary: @entity.vocabulary } { pretty: true sorted: true }))
         (os/write-file (str/concat "/" (str/slice @entity.out 1 (str/len @entity.out))) (bytes/from-string @entity.catalog) { key: "catalog" emit: { success: SIGNATURES_WRITTEN, failure: SIGNATURES_FAILED } })
     }
 

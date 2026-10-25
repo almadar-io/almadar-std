@@ -33,10 +33,9 @@ orbital MlLookupOrbital {
               (candNorm (if @config.normalize (str/lower (str/trim @candStr)) @candStr))
               (found (array/find ?accepted
                        (fn item
-                         (let ((raw (if (== @config.matchField "") @item (object/get @item @config.matchField)))
-                               (rawStr (str/concat @raw))
-                               (rawNorm (if @config.normalize (str/lower (str/trim @rawStr)) @rawStr)))
-                           (== @rawNorm @candNorm))))))
+                         (let ((raw (if (== @config.matchField "") @item (object/get @item @config.matchField))))
+                           (and (validate/string @raw)
+                                (== (if @config.normalize (str/lower (str/trim @raw)) @raw) @candNorm)))))))
           (if (!= @found null)
             (do
               (set @entity.matched true)

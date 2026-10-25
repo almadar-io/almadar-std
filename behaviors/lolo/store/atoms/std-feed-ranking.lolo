@@ -27,21 +27,23 @@ orbital FeedRankingOrbital {
         (let ((limit (if (= ?limit null) @config.defaultLimit ?limit))
               (mix (if (= ?mix null) { review: @config.mixReview, frontier: @config.mixFrontier, explore: @config.mixExplore } ?mix)))
           (let ((b64 (if (= ?cursor null) "" (str/padEnd (str/replaceAll (str/replaceAll ?cursor "-" "+") "_" "/") (* 4 (math/ceil (/ (str/len ?cursor) 4))) "="))))
-            (let ((cursorOk (or (= ?cursor null) (and (base64/valid @b64) (!= (json/parse (base64/decode @b64) FeedCursor) null)))))
-              (let ((decoded (if (and (!= ?cursor null) @cursorOk) (json/parse (base64/decode @b64) FeedCursor) null)))
+            (let ((raw (if (and (!= ?cursor null) (base64/valid @b64)) (base64/decode @b64) null)))
+              (let ((decoded (if (= @raw null) null (json/parse @raw FeedCursor))))
+                (let ((cursorOk (or (= ?cursor null) (!= @decoded null))))
                 (emit FeedPrepared {
                   reason: (if (not (and (= @limit (math/floor @limit)) (>= @limit @config.limitMin) (<= @limit @config.limitMax))) "bad-limit" (if (or (< (object/get @mix review 0) 0) (< (object/get @mix frontier 0) 0) (< (object/get @mix explore 0) 0)) "bad-mix" (if @cursorOk "" "bad-cursor")))
                   candidates: ?candidates
-                  explore: (if (= ?explore null) (json/parse "[]" FeedExploreItems) ?explore)
+                  explore: (if (= ?explore null) [] ?explore)
                   limit: @limit
                   mix: @mix
-                  seen: (if (= @decoded null) (json/parse "[]" FeedStrings) (object/get @decoded seen (json/parse "[]" FeedStrings)))
+                  seen: (if (= @decoded null) [] (object/get @decoded seen []))
                   asOf: (if (= @decoded null) @now (object/get @decoded asOf 0))
-                })))))
+                }))))))
       FeedPrepared -> idle when (!= ?reason "")
         (emit FEED_REJECTED { reason: ?reason })
       FeedPrepared -> idle when (= ?reason "")
-        (let ((liftedKeys (array/unique (array/flatten (array/map (array/filter ?candidates (fn c (object/get @c liked false))) (fn c (object/get @c neighbours (json/parse "[]" FeedStrings)))))))
+        (let ((noStrs : FeedStrings []) (noPicks : FeedPicks []))
+          (let ((liftedKeys (array/unique (array/flatten (array/map (array/filter ?candidates (fn c (object/get @c liked false))) (fn c (object/get @c neighbours @noStrs))))))
               (cooldownMs (* @config.seenCooldownHours 3600000)))
           (let ((revList (let ((due (array/sort
                       (array/filter ?candidates (fn c (and
@@ -59,16 +61,16 @@ orbital FeedRankingOrbital {
                         (not (array/includes ?seen (object/get @c key "")))
                         (not (and (!= (object/get @c lastSeen null) null) (< (- ?asOf (object/get @c lastSeen 0)) @cooldownMs)))
                         (= (object/get @c level 0) @config.frontierLevel)
-                        (array/every (object/get @c prerequisites (json/parse "[]" FeedStrings))
+                        (array/every (object/get @c prerequisites @noStrs)
                           (fn p (>= (object/get (array/find ?candidates (fn x (= (object/get @x key "") @p))) level 0) @config.prerequisiteLevel))))))
                       (fn c (object/merge @c { nameKey: (str/collate-key (object/get @c name "")) }))) nameKey asc) sequence asc) tier asc)))
                     (array/concat
                       (array/filter @ranked (fn c (array/includes @liftedKeys (object/get @c key ""))))
                       (array/reject @ranked (fn c (array/includes @liftedKeys (object/get @c key ""))))))))
             (let ((offered (array/reject ?explore (fn x (array/includes ?seen (object/get @x key ""))))))
-              (let ((run (array/reduce (array/range 0 ?limit) { picks: (json/parse "[]" FeedPicks), r: 0, f: 0, e: 0 }
+              (let ((run (array/reduce (array/range 0 ?limit) { picks: @noPicks, r: 0, f: 0, e: 0 }
                     (fn acc i
-                      (let ((picks0 (object/get @acc picks (json/parse "[]" FeedPicks)))
+                      (let ((picks0 (object/get @acc picks @noPicks))
                             (r0 (object/get @acc r 0))
                             (f0 (object/get @acc f 0))
                             (e0 (object/get @acc e 0)))
@@ -84,11 +86,11 @@ orbital FeedRankingOrbital {
                                     e: (+ @e0 @ne)
                                   }))))))))))
                 (emit FEED_RANKED {
-                  picks: (object/get @run picks (json/parse "[]" FeedPicks))
+                  picks: (object/get @run picks @noPicks)
                   nextCursor: (if (or (< (object/get @run r 0) (array/len @revList)) (< (object/get @run f 0) (array/len @frList)) (< (object/get @run e 0) (array/len @offered)))
-                    (str/replaceAll (str/replaceAll (str/replaceAll (base64/encode (str/concat "{\"seen\":" (json/stringify (array/concat ?seen (array/map (object/get @run picks (json/parse "[]" FeedPicks)) (fn p (object/get @p key ""))))) ",\"asOf\":" ?asOf "}")) "+" "-") "/" "_") "=" "")
+                    (str/replaceAll (str/replaceAll (str/replaceAll (base64/encode (str/concat "{\"seen\":" (json/stringify (array/concat ?seen (array/map (object/get @run picks @noPicks) (fn p (object/get @p key ""))))) ",\"asOf\":" ?asOf "}")) "+" "-") "/" "_") "=" "")
                     null)
-                })))))
+                }))))))
 
     emits {
       FEED_RANKED -> external {

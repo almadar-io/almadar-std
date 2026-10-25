@@ -2,9 +2,17 @@ app std-scatter [
   version: "1.0.0",
   description: "std-scatter — embeddable scatter / bubble chart atom. ITEMS_LOADED maps @payload.data into {x,y,label,size,color} points using configured fields (no aggregation step — distinct from std-graphs). Drop into a dashboard alongside std-stats / std-graphs for two-numeric correlation views."
 ]
-type ObjectSpec = { id : string, label : string, value : string }
 orbital ScatterItemOrbital {
     type ScatterPoint = { x : number!, y : number!, label : string, size : number, color : string }
+
+  entity ScatterRow [runtime] {
+    id : string!
+    x : number!
+    y : number!
+    label : string
+    size : number
+    color : string
+  }
 
   entity ScatterItem [runtime] {
     id : string!
@@ -79,7 +87,7 @@ orbital ScatterItemOrbital {
 
     listens {
       ITEMS_LOADED {
-        data : [ObjectSpec]!
+        data : [@entity @config.rowEntity]!
         totalCount : number
       }
         @description "Data has been received and is ready for visualization."
@@ -88,25 +96,29 @@ orbital ScatterItemOrbital {
     }
 
     config {
-      xField : string = x
+      rowEntity : entity = ScatterRow
+        @label "Row entity"
+        @description "The entity whose rows ITEMS_LOADED delivers; the axis, label, size and color knobs name its columns."
+        @tier "internal"
+      xField : field (@entity @config.rowEntity) number = x
         @label "X-axis field"
         @description "Entity field mapped to the horizontal axis"
         @tier "presentation"
-      yField : string = y
+      yField : field (@entity @config.rowEntity) number = y
         @label "Y-axis field"
         @description "Entity field mapped to the vertical axis"
         @tier "presentation"
-      labelField : string = ""
+      labelField : (field (@entity @config.rowEntity) string)?
         @label "Label field"
-        @description "Field used as the point label tooltip (blank = none)"
+        @description "Field used as the point label tooltip (unset = none)"
         @tier "presentation"
-      sizeField : string = ""
+      sizeField : (field (@entity @config.rowEntity) number)?
         @label "Size field"
-        @description "Numeric field that scales bubble size (blank = uniform)"
+        @description "Numeric field that scales bubble size (unset = uniform)"
         @tier "presentation"
-      colorField : string = ""
+      colorField : (field (@entity @config.rowEntity) string)?
         @label "Color field"
-        @description "Field used to color-code points (blank = single color)"
+        @description "Field used to color-code points (unset = single color)"
         @tier "presentation"
       title : string = Correlation
         @label "Title"

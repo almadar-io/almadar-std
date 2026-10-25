@@ -1,0 +1,74 @@
+{
+  "atom": "connect/atoms/std-google-calendar.lolo",
+  "trait": "CalendarClient",
+  "cases": [
+    {
+      "id": "create-event-with-a-start-that-is-not-a-date-and-no-end-is-refused",
+      "steps": [
+        {
+          "event": "CALENDAR_CREATE_EVENT",
+          "payload": {
+            "summary": "Standup",
+            "start": "not-a-date",
+            "durationMinutes": 30
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CALENDAR_CREATE_EVENT_FAILED",
+                "payload": {
+                  "message": "createEvent could not read `start` as a date or date-time to compute `end`"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "create-event-with-an-end-reaches-the-request-without-reading-start",
+      "steps": [
+        {
+          "event": "CALENDAR_CREATE_EVENT",
+          "payload": {
+            "summary": "Standup",
+            "start": "not-a-date",
+            "end": "2026-10-26T10:00:00Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CALENDAR_REQUEST_FAILED",
+                "payload": {
+                  "key": "create"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "create-event-without-end-or-duration-is-refused",
+      "steps": [
+        {
+          "event": "CALENDAR_CREATE_EVENT",
+          "payload": {
+            "summary": "Standup",
+            "start": "2026-10-26T09:00:00Z"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CALENDAR_CREATE_EVENT_FAILED",
+                "payload": {
+                  "message": "createEvent requires `end` or a positive `durationMinutes`"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

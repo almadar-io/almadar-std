@@ -112,10 +112,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -546,7 +543,7 @@
       "state": "drawing",
       "effects": [
        {
-        "type": "random-bytes"
+        "type": "let"
        }
       ]
      }
@@ -626,6 +623,94 @@
    "note": "client nonce = base64 of 18 bytes 01..12 (random-bytes 18); salt, iterations and server nonce are the recorded fixtures/postgres/scram-wrong-password-fails values; proof computed with pbkdf2/hmac (no hmac-over-bytes operator, so the atom builds HMAC from hash/sha256 bytes)"
   },
   {
+   "id": "bad-scram-server-first-that-is-not-text-is-store-failed",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f"
+     }
+    },
+    {
+     "event": "PG_CONNECTED",
+     "payload": {
+      "sock": 3
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "Tg==",
+      "eof": false
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "UgAAABcAAAAKU0NSQU0tU0hBLTI1NgAA",
+      "eof": false
+     },
+     "expect": {
+      "state": "drawing",
+      "effects": [
+       {
+        "type": "let"
+       }
+      ]
+     }
+    },
+    {
+     "event": "PG_NONCE_DRAWN",
+     "payload": {
+      "value": "AQIDBAUGBwgJCgsMDQ4PEBES"
+     },
+     "from": "drawing",
+     "expect": {
+      "state": "startup",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "scram-first",
+         "sql": "",
+         "params": [],
+         "frame": "cAAAADlTQ1JBTS1TSEEtMjU2AAAAACNuLCxuPWFwcCxyPUFRSURCQVVHQndnSkNnc01EUTRQRUJFUw=="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "UgAAAAoAAAAL//4=",
+      "eof": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the SCRAM server-first message is not text"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROW_FOUND"
+      ]
+     }
+    }
+   ],
+   "note": "the server-first message must decode as text before r, s and i are read; undecodable bytes end the login with the proof error, never an empty string"
+  },
+  {
    "id": "bad-scram-server-signature-mismatch-fails",
    "steps": [
     {
@@ -663,7 +748,7 @@
       "state": "drawing",
       "effects": [
        {
-        "type": "random-bytes"
+        "type": "let"
        }
       ]
      }
@@ -773,7 +858,7 @@
       "state": "drawing",
       "effects": [
        {
-        "type": "random-bytes"
+        "type": "let"
        }
       ]
      }
@@ -839,7 +924,7 @@
       ],
       "effects": [
        {
-        "type": "os/close"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -1051,10 +1136,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -1143,10 +1225,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -1224,10 +1303,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -1310,10 +1386,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -1345,6 +1418,638 @@
     }
    ],
    "note": "E arrives before ReadyForQuery; the error is reported at Z; a server error keeps the session"
+  },
+  {
+   "id": "bad-read-reply-with-a-column-name-that-is-not-text-is-store-failed",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABFQAAAAbAAH//gAAAAAAAAAAAAAZ////////AABDAAAADVNFTEVDVCAwAFoAAAAFSQ==",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the server sent a message this driver cannot read"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROW_FOUND"
+      ]
+     }
+    }
+   ],
+   "note": "a column name that does not decode as UTF-8 is a protocol failure: the whole chunk is refused, no stand-in name"
+  },
+  {
+   "id": "bad-read-reply-with-a-cell-that-is-not-text-is-store-failed",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABFQAAAAbAAFpZAAAAAAAAAAAAAAZ////////AABEAAAADAABAAAAAv/+QwAAAA1TRUxFQ1QgMQBaAAAABUk=",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the server sent a message this driver cannot read"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROW_FOUND"
+      ]
+     }
+    }
+   ],
+   "note": "a cell whose bytes do not decode as UTF-8 is a protocol failure, not an empty string"
+  },
+  {
+   "id": "bad-read-reply-with-a-cell-longer-than-its-message-is-store-failed",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABFQAAAAbAAFpZAAAAAAAAAAAAAAZ////////AABEAAAADAABAAAAMmFiQwAAAA1TRUxFQ1QgMQBaAAAABUk=",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the server sent a message this driver cannot read"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROW_FOUND"
+      ]
+     }
+    }
+   ],
+   "note": "a cell length that runs past the end of its DataRow is a protocol failure"
+  },
+  {
+   "id": "bad-read-reply-with-an-error-that-is-not-text-is-store-failed",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABEUAAAAH//4AWgAAAAVJ",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the server sent a message this driver cannot read"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROW_FOUND"
+      ]
+     }
+    }
+   ],
+   "note": "an ErrorResponse whose bytes do not decode as UTF-8 is a protocol failure, not an error with an empty message"
+  },
+  {
+   "id": "bad-read-reply-with-an-authentication-code-that-is-too-short-is-store-failed",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABFIAAAAGAABaAAAABUk=",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the server sent a message this driver cannot read"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROW_FOUND"
+      ]
+     }
+    }
+   ],
+   "note": "an authentication message too short to hold its four-byte code is a protocol failure"
+  },
+  {
+   "id": "bad-read-reply-with-a-timestamp-that-does-not-parse-is-store-failed",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABFQAAAC4AAdpZAAAAAAAAAAAAAAZ////////AABjcmVhdGVkX2F0AAAAAAAAAAAABKD///////8AAHVwZGF0ZWRfYXQAAAAAAAAAAAAEoP///////wAAdGl0bGUAAAAAAAAAAAAAGf///////wAAc3RhdHVzAAAAAAAAAAAAABn///////8AAHByaW9yaXR5AAAAAAAAAAAAABf///////8AAHRhZ3MAAAAAAAAAAAAO2v///////wAARAAAAFcABwAAAAJ0MQAAAApub3QgYSB0aW1lAAAAFjIwMjYtMDMtMDYgMTE6MDA6MDArMDAAAAAJRml4IGxvZ2luAAAABG9wZW4AAAABMwAAAAVbImEiXUMAAAANU0VMRUNUIDEAWgAAAAVJ",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the server sent a value this driver cannot decode"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROW_FOUND"
+      ]
+     }
+    }
+   ],
+   "note": "a timestamptz cell that time/parse refuses fails the ask; no epoch date stands in for it"
+  },
+  {
+   "id": "bad-read-reply-with-a-bytea-that-is-not-hex-is-store-failed",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABFQAAAAdAAFkYXRhAAAAAAAAAAAAABH///////8AAEQAAAAOAAEAAAAEXHh6ekMAAAANU0VMRUNUIDEAWgAAAAVJ",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the server sent a value this driver cannot decode"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROW_FOUND"
+      ]
+     }
+    }
+   ],
+   "note": "a bytea cell with a non-hex digit fails the ask instead of decoding to a wrong byte"
+  },
+  {
+   "id": "bad-read-reply-with-an-array-element-that-does-not-decode-is-store-failed",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABFQAAAAdAAFzZWVuAAAAAAAAAAAABKH///////8AAEQAAAAYAAEAAAAOeyJub3QgYSB0aW1lIn1DAAAADVNFTEVDVCAxAFoAAAAFSQ==",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the server sent a value this driver cannot decode"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROW_FOUND"
+      ]
+     }
+    }
+   ],
+   "note": "a timestamptz[] element that time/parse refuses fails the whole row"
   },
   {
    "id": "bad-read-connection-closed-mid-reply-fails-and-drops-the-session",
@@ -1392,10 +2097,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -1475,10 +2177,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -1577,10 +2276,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -1671,10 +2367,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -1734,10 +2427,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -1788,10 +2478,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -1896,10 +2583,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -2015,10 +2699,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -2146,10 +2827,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -2236,10 +2914,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -2344,10 +3019,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -2451,10 +3123,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -2539,10 +3208,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -2600,10 +3266,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -2686,10 +3349,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -2753,10 +3413,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ]
      }
@@ -2884,10 +3541,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ]
      }
@@ -2973,10 +3627,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -3080,10 +3731,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -3237,10 +3885,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ]
      }
@@ -3320,10 +3965,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -3444,10 +4086,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -3524,10 +4163,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -3635,10 +4271,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -3757,10 +4390,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -3894,10 +4524,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -4007,10 +4634,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -4105,10 +4729,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -4207,10 +4828,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -4284,10 +4902,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -4396,10 +5011,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -4495,10 +5107,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -4594,10 +5203,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ]
      }
@@ -4687,10 +5293,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -4886,10 +5489,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -5060,10 +5660,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -5199,10 +5796,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ]
      }
@@ -5308,10 +5902,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -5494,10 +6085,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -5606,10 +6194,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -5742,10 +6327,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -5897,10 +6479,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -6138,10 +6717,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -6252,10 +6828,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -6363,10 +6936,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [
@@ -6482,10 +7052,7 @@
       ],
       "effects": [
        {
-        "type": "os/send"
-       },
-       {
-        "type": "os/recv"
+        "type": "let"
        }
       ],
       "neverEmits": [

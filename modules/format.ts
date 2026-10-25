@@ -7,7 +7,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { NUMBER, PRIMITIVE_VALUE, STRING, list, shape } from '../signature.js';
+import { NUMBER, PRIMITIVE_VALUE, STRING, list, shape, nullable } from '../signature.js';
 
 /**
  * Format module operators.
@@ -21,7 +21,8 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Format number with locale grouping and decimal separators. Supported locales: en, en-US, en-GB, en-CA, en-AU, ja, de, pt, pt-BR, nl, fr, es, it, sl, ar, ru (and their -DE/-FR/-ES/-IT/-SI/-NL/-RU/-JP forms); another locale is an error. Rounds half away from zero; with no options the fraction is 0 to 3 digits',
     hasSideEffects: false,
-    returnType: 'string',
+    failable: {},
+    returnType: nullable('string'),
     params: [
       { name: 'n', type: 'number', description: 'Number to format' },
       { name: 'opts', type: shape({ locale: STRING, decimals: NUMBER, minimumFractionDigits: NUMBER, maximumFractionDigits: NUMBER }), description: 'Format options: locale; decimals (both bounds at once) or minimumFractionDigits / maximumFractionDigits', optional: true },
@@ -35,7 +36,8 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 3,
     description: 'Format as currency, written as English writes it (symbol before the amount, the currency\'s own minor units). Supported currencies: USD EUR GBP JPY CNY INR KRW CAD AUD CHF MXN BRL SEK NOK DKK PLN CZK ZAR NZD SGD HKD AED SAR ILS TRY RUB KWD BHD CLP VND; another currency is an error',
     hasSideEffects: false,
-    returnType: 'string',
+    failable: {},
+    returnType: nullable('string'),
     params: [
       { name: 'n', type: 'number', description: 'Amount' },
       { name: 'currency', type: 'string', description: 'Currency code (USD, EUR, etc.)' },
@@ -50,7 +52,8 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Format as percentage (en-US conventions): the value times 100 with `decimals` fraction digits and a percent sign',
     hasSideEffects: false,
-    returnType: 'string',
+    failable: {},
+    returnType: nullable('string'),
     params: [
       { name: 'n', type: 'number', description: 'Number (0.5 = 50%)' },
       { name: 'decimals', type: 'number', description: 'Decimal places', optional: true, defaultValue: 0 },
@@ -64,7 +67,8 @@ export const FORMAT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Format bytes as human-readable size (1024 steps, B to PB); a negative or non-finite size is an error',
     hasSideEffects: false,
-    returnType: 'string',
+    failable: {},
+    returnType: nullable('string'),
     params: [{ name: 'n', type: 'number', description: 'Bytes' }],
     example: '["format/bytes", 2500000] // => "2.4 MB"',
   },

@@ -60,7 +60,7 @@ orbital VectorQuantizeOrbital {
 
     state casting {
       F32_ENCODED -> scaling
-        (set @entity.ints (array/map (array/range 0 (array/len @entity.texts)) (fn ri (let ((cs (array/slice @payload.rounded (* @ri @entity.dims) (* (+ @ri 1) @entity.dims)))) (let ((sc (let ((mx (array/reduce @cs 0 (fn ma c (let ((ab (math/abs @c))) (if (> @ab @ma) @ab @ma)))))) (if (<= @mx 0) 1 @mx)))) (array/map @cs (fn c (math/clamp (math/floor (+ (* (/ @c @sc) 127) 0.5)) -128 127))))))))
+        (set @entity.ints (array/map (array/range 0 (array/len @entity.texts)) (fn ri (let ((cs (array/slice @payload.rounded (* @ri @entity.dims) (* (+ @ri 1) @entity.dims)))) (let ((sc (let ((mx (array/reduce @cs 0 (fn ma c (let ((ab (math/abs @c))) (if (> @ab @ma) @ab @ma)))))) (if (<= @mx 0) 1 @mx)))) (array/map @cs (fn c (math/clamp (math/floor (+ (* (or (/ @c @sc) 0) 127) 0.5)) -128 127))))))))
         (set @entity.scales (array/map (array/range 0 (array/len @entity.texts)) (fn ri (let ((cs (array/slice @payload.rounded (* @ri @entity.dims) (* (+ @ri 1) @entity.dims)))) (let ((mx (array/reduce @cs 0 (fn ma c (let ((ab (math/abs @c))) (if (> @ab @ma) @ab @ma)))))) (if (<= @mx 0) 1 @mx))))))
         (emit SIG6 { scales: @entity.scales })
       F32_REFUSED -> idle

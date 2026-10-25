@@ -271,12 +271,12 @@ orbital SemanticIndexOrbital {
       SemanticResume -> idle when (and (= @entity.semPhase "embed") (= @entity.semOp "pairs") (= (array/len ?embeddings) (array/len @entity.semTexts)))
         (emit SEMANTIC_PAIRS_RESULT {
           key: @entity.semKey,
-          pairs: (array/filter
-            (array/flatten
-              (array/map (array/range 0 (array/len ?embeddings))
-                (fn i (array/map (array/range (+ @i 1) (array/len ?embeddings))
-                  (fn j { a: (object/get (array/nth @entity.semTexts @i) id ""), b: (object/get (array/nth @entity.semTexts @j) id ""), score: (array/cosine (array/nth ?embeddings @i) (array/nth ?embeddings @j)) })))))
-            (fn p (>= @p.score @config.pairFloor)))
+          pairs: (array/flatten
+            (array/map (array/range 0 (array/len ?embeddings))
+              (fn i (array/flatten (array/map (array/range (+ @i 1) (array/len ?embeddings))
+                (fn j (let ((c (array/cosine (array/nth ?embeddings @i) (array/nth ?embeddings @j))))
+                  (if (== @c null) []
+                    (if (>= @c @config.pairFloor) [{ a: (object/get (array/nth @entity.semTexts @i) id ""), b: (object/get (array/nth @entity.semTexts @j) id ""), score: (or @c 0) }] [])))))))))
         })
 
       SemanticResume -> working when (and (= @entity.semPhase "embed") (= @entity.semOp "canonical") (= (array/len ?embeddings) (array/len @entity.semTexts)))
@@ -304,9 +304,10 @@ orbital SemanticIndexOrbital {
         (emit SEMANTIC_RESULTS {
           key: @entity.semKey,
           query: @entity.semQuery,
-          hits: (array/filter
-            (array/map ?data (fn r { id: @r.id, graphId: (object/get @r graphId ""), nodeId: (object/get @r nodeId ""), nodeType: (object/get @r nodeType ""), name: (object/get @r name ""), score: (array/cosine @r.embedding @entity.semQueryVector) }))
-            (fn h (>= @h.score @entity.semFloor)))
+          hits: (array/flatten
+            (array/map ?data (fn r (let ((c (array/cosine @r.embedding @entity.semQueryVector)))
+              (if (== @c null) []
+                (if (>= @c @entity.semFloor) [{ id: @r.id, graphId: (object/get @r graphId ""), nodeId: (object/get @r nodeId ""), nodeType: (object/get @r nodeType ""), name: (object/get @r name ""), score: (or @c 0) }] []))))))
         })
 
       SemanticFetched -> working when (and (= @entity.semPhase "canonical") (= @entity.semOp "canonical"))
@@ -316,7 +317,9 @@ orbital SemanticIndexOrbital {
               (if (= (array/len ?data) 0)
                 { id: @rid, adopted: false, matchId: "", matchName: "", score: 0 }
                 (let ((score (array/cosine (object/get @best embedding []) (array/nth @entity.semVectors @entity.semCursor))))
-                  { id: @rid, adopted: (>= @score @config.canonicalThreshold), matchId: (object/get @best id ""), matchName: (object/get @best name ""), score: @score })))]))
+                  (if (== @score null)
+                    { id: @rid, adopted: false, matchId: "", matchName: "", score: 0 }
+                    { id: @rid, adopted: (>= @score @config.canonicalThreshold), matchId: (object/get @best id ""), matchName: (object/get @best name ""), score: (or @score 0) }))))]))
         (set @entity.semCursor (+ @entity.semCursor 1))
         (emit SEMANTIC_NEXT { index: @entity.semCursor })
 

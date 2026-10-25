@@ -8,7 +8,7 @@ orbital MigrationJobOrbital {
   type MigrationFile = { name : string, size : number, type : string, lastModified : number }
   type ImportSourceOption = { id : string!, kind : string!, label : string!, event : string }
   type ImportFieldValue = string | number | boolean
-  type ImportUnit = { ref : string!, targetEntity : string!, title : string, fields : Map string ImportFieldValue, parentRef : string }
+  type ImportUnit = { ref : string!, targetEntity : string!, title : string?, fields : Map string ImportFieldValue, parentRef : string? }
   type ImportSkip = { ref : string!, reason : string! }
   type ImportFailure = { ref : string!, reason : string! }
   type ImportValidationError = { ref : string!, code : string!, field : string, message : string! }
@@ -191,40 +191,33 @@ orbital MigrationJobOrbital {
                 (contentKey (object/get (object/get @entity.profile "shaping") "content")))
             (if
               (validate/array @records)
-              (array/map
-                (array/filter
+              (array/flatten
+                (array/map
                   (array/range (array/len @records))
                   (fn i
-                    (and
-                      (validate/object (array/nth @records @i))
-                      (validate/string @titleKey)
-                      (validate/string
-                        (object/get
-                          (array/nth @records @i)
-                          (str/replaceAll (str/replaceAll @titleKey "\\" "\\\\") "." "\\."))))))
-                (fn i
-                  {
-                    id: (str/concat
-                          (object/get
-                            (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex)
-                            "name")
-                          ":"
-                          @i),
-                    title: (object/get
-                             (array/nth @records @i)
-                             (str/replaceAll (str/replaceAll @titleKey "\\" "\\\\") "." "\\.")),
-                    content: (if
-                               (and
-                                 (validate/string @contentKey)
-                                 (validate/string
-                                   (object/get
-                                     (array/nth @records @i)
-                                     (str/replaceAll (str/replaceAll @contentKey "\\" "\\\\") "." "\\."))))
-                               (object/get
-                                 (array/nth @records @i)
-                                 (str/replaceAll (str/replaceAll @contentKey "\\" "\\\\") "." "\\."))
-                               "")
-                  }))
+                    (if
+                      (and (validate/object (array/nth @records @i)) (validate/string @titleKey))
+                      (let ((tv (object/get
+                                  (array/nth @records @i)
+                                  (str/replaceAll (str/replaceAll @titleKey "\\" "\\\\") "." "\\.")))
+                            (cv (object/get
+                                  (array/nth @records @i)
+                                  (if
+                                    (validate/string @contentKey)
+                                    (str/replaceAll (str/replaceAll @contentKey "\\" "\\\\") "." "\\.")
+                                    "")))
+                            (name (object/get
+                                    (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex)
+                                    "name")))
+                        (if
+                          (validate/string @tv)
+                          [{
+                            id: (str/concat @name ":" @i),
+                            title: @tv,
+                            content: (if (and (validate/string @contentKey) (validate/string @cv)) @cv "")
+                          }]
+                          []))
+                      []))))
               []))))
         (set @entity.endpointIndex (+ @entity.endpointIndex 1))
         (emit MIGRATION_SOURCE_NEXT { index: @entity.endpointIndex })
@@ -309,8 +302,7 @@ orbital MigrationJobOrbital {
                          (object/get @u "kind")
                          (object/get (object/get @entity.profile "unitTargets") "root")))
                     (fm (object/get (object/get @entity.profile "fieldMappings") @te {}))
-                    (slots (object/merge
-                            (object/fromEntries
+                    (fe1 (object/fromEntries
                               (array/map
                                 (array/filter
                                   [
@@ -318,9 +310,11 @@ orbital MigrationJobOrbital {
                                    { k: "content", v: (object/get @u "content") }
                                   ]
                                   (fn s (validate/string (object/get @s "v"))))
-                                (fn s [(object/get @s "k"), (object/get @s "v")])))
-                            (object/get @u "metadata")))
-                    (keys (object/keys @slots))
+                                (fn s [(object/get @s "k"), (object/get @s "v")])))))
+                (if (= @fe1 null) { unit: { ref: (object/get @u "ref"), targetEntity: @te, title: (object/get @u "title"), parentRef: (object/get @u "parentRef") }, ledger: [{ ref: (object/get @u "ref"), reason: "the unit's fields could not be built from its extracted slots" }] }
+                  (let ((slots (object/merge @fe1 (object/get @u "metadata"))))
+                    (if (= @slots null) { unit: { ref: (object/get @u "ref"), targetEntity: @te, title: (object/get @u "title"), parentRef: (object/get @u "parentRef") }, ledger: [{ ref: (object/get @u "ref"), reason: "the unit's fields could not be built from its extracted slots" }] }
+                      (let ((keys (object/keys @slots))
                     (pairs (array/map
                             (array/filter @keys (fn k (object/has @fm @k)))
                             (fn k { t: (object/get @fm @k), v: (object/get @slots @k) })))
@@ -331,20 +325,20 @@ orbital MigrationJobOrbital {
                                (array/some
                                  (array/drop @pairs (+ @i 1))
                                  (fn x (= (object/get @x "t") (object/get @p "t"))))))))
-                    (merged (object/merge
-                             (object/fromEntries
+                    (f1 (object/fromEntries
                                (array/map
                                  (array/filter @last (fn p (validate/string (object/get @p "v"))))
-                                 (fn p [(object/get @p "t"), (object/get @p "v")])))
-                             (object/fromEntries
+                                 (fn p [(object/get @p "t"), (object/get @p "v")])))) (f2 (object/fromEntries
                                (array/map
                                  (array/filter @last (fn p (validate/number (object/get @p "v"))))
-                                 (fn p [(object/get @p "t"), (object/get @p "v")])))
-                             (object/fromEntries
+                                 (fn p [(object/get @p "t"), (object/get @p "v")])))) (f3 (object/fromEntries
                                (array/map
                                  (array/filter @last (fn p (validate/boolean (object/get @p "v"))))
-                                 (fn p [(object/get @p "t"), (object/get @p "v")]))))))
-                {
+                                 (fn p [(object/get @p "t"), (object/get @p "v")])))))
+                        (if (or (= @f1 null) (= @f2 null) (= @f3 null)) { unit: { ref: (object/get @u "ref"), targetEntity: @te, title: (object/get @u "title"), parentRef: (object/get @u "parentRef") }, ledger: [{ ref: (object/get @u "ref"), reason: "the unit's fields could not be built from its extracted slots" }] }
+                          (let ((merged (object/merge @f1 @f2 @f3)))
+                            (if (= @merged null) { unit: { ref: (object/get @u "ref"), targetEntity: @te, title: (object/get @u "title"), parentRef: (object/get @u "parentRef") }, ledger: [{ ref: (object/get @u "ref"), reason: "the unit's fields could not be built from its extracted slots" }] }
+{
                   unit: {
                           ref: (object/get @u "ref"),
                           targetEntity: @te,
@@ -366,7 +360,7 @@ orbital MigrationJobOrbital {
                                           @te
                                           "'")
                               }))
-                }))))
+                })))))))))))
         (set @entity.units
           (array/map @entity.staging (fn s (object/get @s "unit"))))
         (set @entity.skipped (array/concat ?skipped

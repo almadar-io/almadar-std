@@ -135,24 +135,6 @@ export const DESCRIPTION: OperatorTypeRef = openShape({
   model: STRING,
 });
 
-/** A model test case: the input and the output the model is expected to produce. */
-export const TEST_CASES: OperatorTypeRef = list(shape({ input: 'tensor', expected: 'tensor' }));
-
-export const TRAIN_CONFIG: OperatorTypeRef = openShape({ epochs: NUMBER, learningRate: NUMBER, batchSize: NUMBER });
-
-/** The configuration keys the `data/*` operators read. */
-export const DATA_CONFIG: OperatorTypeRef = openShape({
-  batchSize: NUMBER,
-  shuffle: BOOLEAN,
-  trainRatio: NUMBER,
-  method: STRING,
-  noiseScale: NUMBER,
-  mode: STRING,
-  maxLength: NUMBER,
-  padValue: NUMBER,
-  vocab: mapOf(STRING, NUMBER),
-});
-
 /** The signature grammar of a type: `[T]`, `(T) -> U`, `key-of R`, `Map K V`, ... */
 export function formatOperatorType(ref: OperatorTypeRef): string {
   if (typeof ref === 'string') return ref;

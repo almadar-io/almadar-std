@@ -43,8 +43,7 @@ orbital OrbLintPayloadFieldNameOrbital {
                       (array/flatten (array/map (object/get @td "emits" []) (fn em (array/map (object/get @em "payloadSchema" []) (fn pf { f: @pf, w: (str/concat @tp ".emits(" (object/get @em "event" "") ")") })))))
                       (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "events" []) (fn ev (array/map (object/get @ev "payloadSchema" []) (fn pf { f: @pf, w: (str/concat @tp ".events(" (object/get @ev "key" "") ")") }))))))))
                       (array/flatten (array/map @roots (fn x
-                        (array/map
-                          (tree/fold (object/get @x "f")
+                        (let ((fres (tree/fold (object/get @x "f")
                             (fn (n k)
                               (if (validate/array @n)
                                 (array/flatten (array/filter @k (fn r (validate/array @r))))
@@ -55,8 +54,9 @@ orbital OrbLintPayloadFieldNameOrbital {
                                       (if (or (= @nm "") (!= (str/replace-pattern @nm "^[A-Za-z_][A-Za-z0-9_]*$" "") "")) [{ rel: "", nm: @nm }] [])
                                       (array/map (object/get @k "properties" []) (fn h { rel: (str/concat "." @nm (let ((r0 (object/get @h "rel" ""))) (if (validate/string @r0) @r0 ""))), nm: (let ((n0 (object/get @h "nm" ""))) (if (validate/string @n0) @n0 "")) })))))
                                   [])))
-                            PayloadShape)
-                          (fn h (let ((rel (let ((r0 (object/get @h "rel" ""))) (if (validate/string @r0) @r0 ""))) (hn (let ((n0 (object/get @h "nm" ""))) (if (validate/string @n0) @n0 "")))) { code: "ORB_X_PAYLOAD_FIELD_NAME", path: (str/concat (object/get @x "w") @rel "." @hn), message: (str/concat "Payload field name '" @hn "' is not a valid TypeScript identifier"), suggestion: "Use a single identifier (letters, digits, underscores; no dot, no space, no leading digit). For a nested shape, declare an object field with nested properties instead of a dotted name.", severity: "error" }))))))))))))))))))
+                            PayloadShape))) (if (= @fres null) (let ((up (object/get @x "w"))) [{ code: "LINT_NODE_UNCHECKED", path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a PayloadShape; this rule could not check it"), suggestion: "", severity: "error" }]) (array/map
+                          @fres
+                          (fn h (let ((rel (let ((r0 (object/get @h "rel" ""))) (if (validate/string @r0) @r0 ""))) (hn (let ((n0 (object/get @h "nm" ""))) (if (validate/string @n0) @n0 "")))) { code: "ORB_X_PAYLOAD_FIELD_NAME", path: (str/concat (object/get @x "w") @rel "." @hn), message: (str/concat "Payload field name '" @hn "' is not a valid TypeScript identifier"), suggestion: "Use a single identifier (letters, digits, underscores; no dot, no space, no leading digit). For a nested shape, declare an object field with nested properties instead of a dotted name.", severity: "error" }))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "payload-field-name", scope: @entity.scope, findings: @entity.findings })

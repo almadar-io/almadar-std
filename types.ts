@@ -31,9 +31,6 @@ export const OPERATOR_CATEGORIES = [
   'std-time',
   'std-format',
   'std-i18n',
-  'std-nn',
-  'std-tensor',
-  'std-train',
   'std-prob',
   'std-os',
   'std-kv',
@@ -46,12 +43,6 @@ export const OPERATOR_CATEGORIES = [
   'std-ease',
   'std-noise',
   'std-path',
-  'ml-arch',
-  'ml-effect',
-  'ml-tensor',
-  'ml-graph',
-  'ml-contract',
-  'ml-data',
   // Substrate categories (Almadar_Rabit_LOLO_Plan.md Phase 3)
   'std-llm',
   'std-workspace',
@@ -109,6 +100,11 @@ export type ReturnSemantics =
 /** Where an effect executes: a client host delegates `server` effects, a server ships `client` effects back, `any` runs wherever it is dispatched. */
 export type RunsOn = 'client' | 'server' | 'any';
 
+/** How a failable operator fails (see {@link OperatorMeta.failable}). */
+export interface FailableMeta {
+  unlessLiteral?: number[];
+}
+
 /** A host outside the runtime that executes an effect. */
 export type EffectHost = 'program' | 'os' | 'kv';
 
@@ -134,6 +130,12 @@ export interface OperatorMeta {
    * verification doc.
    */
   returnSemantics?: ReturnSemantics;
+  /**
+   * The operator can fail on a well-typed value; it answers null then, never raising, so its result is optional
+   * (`T?`) and the program handles the missing value (owner ruling 2026-10-25). `unlessLiteral` lists the argument
+   * positions whose bad value is the only way to fail: with a literal at every one the result is not optional.
+   */
+  failable?: FailableMeta;
   /** Execution site of an effect operator; set on every `hasSideEffects` operator, absent on pure ones. */
   runsOn?: RunsOn;
   /** The host that executes this effect: `program` = the shared program host (`@almadar/runtime` `host/program` `runProgramEffect`), on both execution paths. `os` = the `os/` family, executed by the OS host under a declared grant. Absent for effects the runtime executes itself. */
@@ -161,16 +163,10 @@ export const STD_MODULES = [
   'validate',
   'format',
   'i18n',
-  'nn',
-  'tensor',
-  'train',
   'prob',
   'os',
   'kv',
   'browser',
-  'graph',
-  'contract',
-  'data',
   'composition',
   'vec',
   'geo',
@@ -214,9 +210,6 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-validate',
   'std-format',
   'std-i18n',
-  'std-nn',
-  'std-tensor',
-  'std-train',
   'std-prob',
   'std-os',
   'std-kv',
@@ -229,12 +222,6 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-ease',
   'std-noise',
   'std-path',
-  'ml-arch',
-  'ml-effect',
-  'ml-tensor',
-  'ml-graph',
-  'ml-contract',
-  'ml-data',
   // Substrate categories (Almadar_Rabit_LOLO_Plan.md Phase 3)
   'std-llm',
   'std-workspace',

@@ -1,0 +1,137 @@
+{
+ "atom": "store/atoms/std-file-drop.lolo",
+ "trait": "FileDrop",
+ "note": "the inbound hook answers 400 and writes nothing when the body is not the JSON { name, data } or the name is not a relative path of letters, digits, _ and -",
+ "cases": [
+  {
+   "id": "refuses-body-that-is-not-json",
+   "steps": [
+    {
+     "event": "FILE_DELIVERED",
+     "payload": {
+      "rawBody": "not json"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "FILE_DROP_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "{\"error\":\"expected { name, data } with a relative name of letters, digits, _ and -\"}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "refuses-json-that-is-not-an-object",
+   "steps": [
+    {
+     "event": "FILE_DELIVERED",
+     "payload": {
+      "rawBody": "[1,2]"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "FILE_DROP_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "{\"error\":\"expected { name, data } with a relative name of letters, digits, _ and -\"}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "refuses-name-that-is-not-a-string",
+   "steps": [
+    {
+     "event": "FILE_DELIVERED",
+     "payload": {
+      "rawBody": "{\"name\":1,\"data\":\"AAAA\"}"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "FILE_DROP_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "{\"error\":\"expected { name, data } with a relative name of letters, digits, _ and -\"}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "refuses-name-with-dot-segment",
+   "steps": [
+    {
+     "event": "FILE_DELIVERED",
+     "payload": {
+      "rawBody": "{\"name\":\"../x\",\"data\":\"AAAA\"}"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "FILE_DROP_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "{\"error\":\"expected { name, data } with a relative name of letters, digits, _ and -\"}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "refuses-missing-data",
+   "steps": [
+    {
+     "event": "FILE_DELIVERED",
+     "payload": {
+      "rawBody": "{\"name\":\"a/b\"}"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "FILE_DROP_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "{\"error\":\"expected { name, data } with a relative name of letters, digits, _ and -\"}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "accepts-a-valid-delivery-and-asks-for-its-directory",
+   "steps": [
+    {
+     "event": "FILE_DELIVERED",
+     "payload": {
+      "rawBody": "{\"name\":\"a/b\",\"data\":\"AAAA\"}"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": []
+     }
+    }
+   ]
+  }
+ ]
+}

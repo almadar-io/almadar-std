@@ -65,7 +65,7 @@ orbital LearnScatterFitOrbital {
             (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
             (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
             (newIntercept (- @meanY (* @newSlope @meanX)))
-            (newR (if (and (> @sxx 0) (> @syy 0)) (/ @sxy (math/sqrt (* @sxx @syy))) 0))
+            (newR (if (and (> @sxx 0) (> @syy 0)) (or (/ @sxy (or (math/sqrt (* @sxx @syy)) 0)) 0) 0))
             (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
               { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
               { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }
@@ -146,7 +146,7 @@ orbital LearnScatterFitOrbital {
             (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
             (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
             (newIntercept (- @meanY (* @newSlope @meanX)))
-            (newR (if (and (> @sxx 0) (> @syy 0)) (/ @sxy (math/sqrt (* @sxx @syy))) 0))
+            (newR (if (and (> @sxx 0) (> @syy 0)) (or (/ @sxy (or (math/sqrt (* @sxx @syy)) 0)) 0) 0))
             (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
               { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
               { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }
@@ -222,7 +222,7 @@ orbital LearnScatterFitOrbital {
             (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
             (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
             (newIntercept (- @meanY (* @newSlope @meanX)))
-            (newR (if (and (> @sxx 0) (> @syy 0)) (/ @sxy (math/sqrt (* @sxx @syy))) 0))
+            (newR (if (and (> @sxx 0) (> @syy 0)) (or (/ @sxy (or (math/sqrt (* @sxx @syy)) 0)) 0) 0))
             (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
               { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
               { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }
@@ -293,14 +293,14 @@ orbital LearnScatterFitOrbital {
             (newPoint { id: (str/concat "p" (array/len @entity.points)), x: (math/round (+ @config.axisXMin (+ @marginX (* (math/random) @usableX)))), y: (math/round (+ @config.axisYMin (+ @marginY (* (math/random) @usableY)))), label: "", color: @config.newPointColor, radius: @config.newPointRadius })
             (pts (array/append @entity.points @newPoint))
             (n (array/len @pts))
-            (meanX (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p x)))) @n))
-            (meanY (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p y)))) @n))
+            (meanX (or (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p x)))) @n) 0))
+            (meanY (or (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p y)))) @n) 0))
             (sxx (array/reduce @pts 0 (fn (acc p) (let ((dx (- (object/get @p x) @meanX))) (+ @acc (* @dx @dx))))))
             (syy (array/reduce @pts 0 (fn (acc p) (let ((dy (- (object/get @p y) @meanY))) (+ @acc (* @dy @dy))))))
             (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
             (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
             (newIntercept (- @meanY (* @newSlope @meanX)))
-            (newR (if (and (> @sxx 0) (> @syy 0)) (/ @sxy (math/sqrt (* @sxx @syy))) 0))
+            (newR (if (and (> @sxx 0) (> @syy 0)) (or (/ @sxy (or (math/sqrt (* @sxx @syy)) 0)) 0) 0))
             (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
               { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
               { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }
@@ -382,7 +382,7 @@ orbital LearnScatterFitOrbital {
             (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
             (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
             (newIntercept (- @meanY (* @newSlope @meanX)))
-            (newR (if (and (> @sxx 0) (> @syy 0)) (/ @sxy (math/sqrt (* @sxx @syy))) 0))
+            (newR (if (and (> @sxx 0) (> @syy 0)) (or (/ @sxy (or (math/sqrt (* @sxx @syy)) 0)) 0) 0))
             (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
               { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
               { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }
@@ -461,7 +461,7 @@ orbital LearnScatterFitOrbital {
             (newIntercept (- @meanY (* @newSlope @meanX)))
             (ssFit (array/reduce @pts 0 (fn (acc p) (let ((e (- (object/get @p y) (+ (* @newSlope (object/get @p x)) @newIntercept)))) (+ @acc (* @e @e))))))
             (ssGuess (array/reduce @pts 0 (fn (acc p) (let ((e (- (object/get @p y) (+ (* @gSlope (object/get @p x)) @gIntercept)))) (+ @acc (* @e @e))))))
-            (newScore (if (> @ssGuess 0) (math/round (math/clamp (* 100 (/ @ssFit @ssGuess)) 0 100)) 100))
+            (newScore (if (> @ssGuess 0) (math/round (math/clamp (* 100 (or (/ @ssFit @ssGuess) 0)) 0 100)) 100))
             (guessCurve { label: @config.guessLabel, color: @config.guessColor, samples: [
               { x: @config.axisXMin, y: (math/clamp @gIntercept @config.axisYMin @config.axisYMax) },
               { x: @config.axisXMax, y: (math/clamp (+ (* @gSlope @config.axisXMax) @gIntercept) @config.axisYMin @config.axisYMax) }
@@ -632,7 +632,7 @@ orbital LearnScatterFitOrbital {
             (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
             (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
             (newIntercept (- @meanY (* @newSlope @meanX)))
-            (newR (if (and (> @sxx 0) (> @syy 0)) (/ @sxy (math/sqrt (* @sxx @syy))) 0))
+            (newR (if (and (> @sxx 0) (> @syy 0)) (or (/ @sxy (or (math/sqrt (* @sxx @syy)) 0)) 0) 0))
             (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
               { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
               { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }
@@ -701,14 +701,14 @@ orbital LearnScatterFitOrbital {
             (newPoint { id: (str/concat "p" (array/len @entity.points)), x: (math/round (+ @config.axisXMin (+ @marginX (* (math/random) @usableX)))), y: (math/round (+ @config.axisYMin (+ @marginY (* (math/random) @usableY)))), label: "", color: @config.newPointColor, radius: @config.newPointRadius })
             (pts (array/append @entity.points @newPoint))
             (n (array/len @pts))
-            (meanX (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p x)))) @n))
-            (meanY (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p y)))) @n))
+            (meanX (or (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p x)))) @n) 0))
+            (meanY (or (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p y)))) @n) 0))
             (sxx (array/reduce @pts 0 (fn (acc p) (let ((dx (- (object/get @p x) @meanX))) (+ @acc (* @dx @dx))))))
             (syy (array/reduce @pts 0 (fn (acc p) (let ((dy (- (object/get @p y) @meanY))) (+ @acc (* @dy @dy))))))
             (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
             (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
             (newIntercept (- @meanY (* @newSlope @meanX)))
-            (newR (if (and (> @sxx 0) (> @syy 0)) (/ @sxy (math/sqrt (* @sxx @syy))) 0))
+            (newR (if (and (> @sxx 0) (> @syy 0)) (or (/ @sxy (or (math/sqrt (* @sxx @syy)) 0)) 0) 0))
             (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
               { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
               { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }

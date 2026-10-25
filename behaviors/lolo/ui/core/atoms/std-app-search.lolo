@@ -52,7 +52,7 @@ orbital AppSearchOrbital {
       APP_SEARCH -> searching when (= @config.searchRelation null)
         (set @entity.searchTerm ?value)
         (fetch AppSearchTarget {
-          filter: (or (= ?value "") (str/includes (object/get @entity @config.searchField) ?value))
+          filter: (or (= ?value "") (and (!= @config.searchField null) (str/includes (object/get @entity @config.searchField) ?value)))
           emit: { success: AppSearchLoaded, failure: AppSearchFailed }
         })
         (render-ui main {
@@ -102,7 +102,7 @@ orbital AppSearchOrbital {
       APP_SEARCH -> searching when (= @config.searchRelation null)
         (set @entity.searchTerm ?value)
         (fetch AppSearchTarget {
-          filter: (or (= ?value "") (str/includes (object/get @entity @config.searchField) ?value))
+          filter: (or (= ?value "") (and (!= @config.searchField null) (str/includes (object/get @entity @config.searchField) ?value)))
           emit: { success: AppSearchLoaded, failure: AppSearchFailed }
         })
         (render-ui main {
@@ -203,7 +203,7 @@ orbital AppSearchOrbital {
       APP_SEARCH -> searching when (= @config.searchRelation null)
         (set @entity.searchTerm ?value)
         (fetch AppSearchTarget {
-          filter: (or (= ?value "") (str/includes (object/get @entity @config.searchField) ?value))
+          filter: (or (= ?value "") (and (!= @config.searchField null) (str/includes (object/get @entity @config.searchField) ?value)))
           emit: { success: AppSearchLoaded, failure: AppSearchFailed }
         })
         (render-ui main {
@@ -271,9 +271,9 @@ orbital AppSearchOrbital {
         @label "Idle content"
         @description "The normal content view (e.g. the data ledger/browse trait) shown when no search is active."
         @tier "presentation"
-      searchField : field @entity string = name
+      searchField : (field @entity string)? = name
         @label "Search field"
-        @description "Entity field matched against the query (case-insensitive substring)."
+        @description "Entity field matched against the query (case-insensitive substring). `null` for an entity with no text column: only searchRelation can then match."
         @tier "presentation"
       relatedEntity : entity = AppSearchTarget
         @label "Related entity"
@@ -283,7 +283,7 @@ orbital AppSearchOrbital {
         @label "Search through relation"
         @description "A relation field of the searched entity. When set, the query matches the related rows' relatedSearchField and the results are the rows pointing at them; unset, searchField on the row itself is matched."
         @tier "presentation"
-      relatedSearchField : field (@entity @config.relatedEntity) string = name
+      relatedSearchField : (field (@entity @config.relatedEntity) string)?
         @label "Related search field"
         @description "Field of the related entity matched against the query when searchRelation is set."
         @tier "presentation"

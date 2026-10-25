@@ -27,10 +27,13 @@ orbital MapsOrbital {
       MAPS_GEOCODE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit MAPS_FAILURE { error: (str/concat "Nominatim answered HTTP " @payload.status), code: "http_error" })
       MAPS_GEOCODE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((place (array/first (json/parse @payload.body NominatimPlaces))))
-          (if (= @place null)
-            (emit MAPS_FAILURE { error: "no place matches the address", code: "not_found" })
-            (emit GEOCODED { lat: (str/to-number (object/get @place lat "0")), lng: (str/to-number (object/get @place lon "0")), formattedAddress: (object/get @place display_name "") })))
+        (let ((places (json/parse @payload.body NominatimPlaces)))
+          (if (= @places null)
+            (emit MAPS_FAILURE { error: "Nominatim answered a body that is not a list of places", code: "http_error" })
+            (let ((place (array/first @places)))
+              (if (= @place null)
+                (emit MAPS_FAILURE { error: "no place matches the address", code: "not_found" })
+                (emit GEOCODED { lat: (str/to-number (object/get @place lat "0")), lng: (str/to-number (object/get @place lon "0")), formattedAddress: (object/get @place display_name "") })))))
 
       REVERSE_GEOCODE -> idle
         (http GET @config.origin (str/concat "/reverse?format=json&lat=" @payload.lat "&lon=" @payload.lng) {
@@ -48,8 +51,9 @@ orbital MapsOrbital {
       DISTANCE -> idle
         (let ((phi1 (math/deg-rad @payload.fromLat)))
           (let ((phi2 (math/deg-rad @payload.toLat)))
-            (let ((a (+ (math/pow (math/sin (/ (- @phi2 @phi1) 2)) 2) (* (* (math/cos @phi1) (math/cos @phi2)) (math/pow (math/sin (/ (math/deg-rad (- @payload.toLng @payload.fromLng)) 2)) 2)))))
-              (emit DISTANCE_COMPUTED { distanceKm: (math/round (* 12742.0176 (math/atan2 (math/sqrt @a) (math/sqrt (- 1 @a)))) 3) }))))
+            (let ((sinLat (math/sin (/ (- @phi2 @phi1) 2))) (sinLng (math/sin (/ (math/deg-rad (- @payload.toLng @payload.fromLng)) 2))))
+              (let ((a (math/clamp (+ (* @sinLat @sinLat) (* (* (math/cos @phi1) (math/cos @phi2)) (* @sinLng @sinLng))) 0 1)))
+                (emit DISTANCE_COMPUTED { distanceKm: (math/round (* 12742.0176 (math/atan2 (or (math/sqrt @a) 0) (or (math/sqrt (- 1 @a)) 0))) 3) })))))
 
       MAPS_REQUEST_FAILED -> idle
         (emit MAPS_FAILURE { error: @payload.error, code: @payload.kind })

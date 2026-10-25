@@ -7,6 +7,7 @@ type BrowseFieldSpec = { name : string!, label : string, variant : h3 | h4 | ove
 type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
 type ColumnSpec = { key : string!, field : string, header : string, label : string, width : string, align : left | center | right, className : string, weight : normal | medium | semibold, format : badge | date | currency | number | percent | boolean, icon : icon, sortable : boolean, colorMap : Map string BadgeColor, labels : Map string string, variant : h3 | h4 }
 type FilterSpec = { field : string!, label : string, options : [string] }
+type BrowseItemRelatedRow = { id : string! }
 orbital BrowseItemOrbital {
   type BrowseDetailAction = {
     label : string!
@@ -20,6 +21,8 @@ orbital BrowseItemOrbital {
     type BrowseItemLoaded = Event { data : [BrowseItem]!, totalCount : number } "Fired when the BrowseItem collection finishes loading; payload.data holds the (possibly paginated) slice and totalCount holds the unsliced filter total. totalCount is optional so compiled-path emitters that haven't been migrated yet still validate"
 
     type BrowseItemLoadFailed = Event { error : string, code : string } "Fired when the BrowseItem collection fails to load"
+
+    type BrowseItemRelatedLoaded = Event { data : [BrowseItemRelatedRow]! } "Related rows whose text matches the query loaded"
 
   entity BrowseItem [runtime] {
     id : string!
@@ -115,10 +118,24 @@ orbital BrowseItemOrbital {
       ;; in the background; when BrowseItemLoaded arrives we render the
       ;; grid with the new rows (handler below), so React reconciles the
       ;; data-grid in place instead of unmounting it.
-      REFETCH_QUERY -> browsing
+      REFETCH_QUERY -> browsing when (or (= @config.searchRelation null) (= ?searchTerm ""))
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm)))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (= ?searchTerm "") (and (!= @config.searchField null) (str/includes (object/get @entity @config.searchField) ?searchTerm))))
+          include: @config.include
+          limit: @config.pageSize
+          orderBy: @config.orderBy
+          offset: 0
+        })
+      REFETCH_QUERY -> browsing when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
+        (fetch @config.relatedEntity {
+          emit: { failure: BrowseItemLoadFailed, success: BrowseItemRelatedLoaded }
+          filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
+        })
+      BrowseItemRelatedLoaded -> browsing
+        (fetch BrowseItem {
+          emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -186,6 +203,10 @@ orbital BrowseItemOrbital {
     }
 
     emits {
+      BrowseItemRelatedLoaded
+        @description "Signals that the related rows matching the search query have loaded."
+        @synonyms "related loaded, relation matched"
+        @tier "internal"
       BrowseItemLoaded
         @description "Signals that a browse item has been successfully loaded."
         @synonyms "loaded, received, populated"
@@ -376,11 +397,23 @@ orbital BrowseItemOrbital {
         @description "Adds a checkbox column with select-all to the dense table. Enable only when the surface offers bulk actions — checkboxes with nothing to act on are a dead affordance."
         @synonyms "row checkboxes, multi-select, bulk select, selection column"
         @tier "presentation"
-      searchField : field @entity string = name
+      searchField : (field @entity string)? = name
         @label "Which column does the search box match against?"
-        @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, content) or the search box can never match a row."
+        @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, content) or the search box can never match a row. `null` when the entity has no text column: the search box then matches only through searchRelation."
         @synonyms "search column, search on field, match field, search key"
         @tier "policy"
+      relatedEntity : entity = BrowseItem
+        @label "Related entity"
+        @description "The entity a relation search matches through: the target of searchRelation."
+        @tier "presentation"
+      searchRelation : (field @entity (@entity @config.relatedEntity))?
+        @label "Search through relation"
+        @description "A relation field of the searched entity. When set, the query matches the related rows' relatedSearchField and the results are the rows pointing at them; unset, searchField on the row itself is matched."
+        @tier "presentation"
+      relatedSearchField : (field (@entity @config.relatedEntity) string)?
+        @label "Related search field"
+        @description "Field of the related entity matched against the query when searchRelation is set."
+        @tier "presentation"
       bodySearch : boolean = true
         @label "Show the list's own search box?"
         @description "The dense/feed/gallery looks embed their own search box above the rows. Set false when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two."

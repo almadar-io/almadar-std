@@ -66,64 +66,65 @@ orbital InfraProjectionOrbital {
     state idle {
       INIT -> idle
 
-      INFRA_PROJECT -> idle when (not (str/startsWith (json/stringify (json/parse @payload.program InfraProgram)) "{"))
+      INFRA_PROJECT -> idle when (== (json/parse @payload.program InfraProgram) null)
         (set @entity.status "failed")
         (emit INFRA_PROJECT_FAILED { error: "the program is not a JSON object" })
-      INFRA_PROJECT -> idle when (str/startsWith (json/stringify (json/parse @payload.program InfraProgram)) "{")
+      INFRA_PROJECT -> idle when (!= (json/parse @payload.program InfraProgram) null)
         (set @entity.appName @payload.appName)
         (set @entity.provider (or @payload.provider "gcp"))
         (set @entity.region (or @payload.region ""))
         (set @entity.tierOverride (if (== @payload.tier null) 0 @payload.tier))
         (set @entity.database (or @payload.database ""))
         (set @entity.maxInstances (if (== @payload.maxInstances null) 0 @payload.maxInstances))
-        (let ((p (json/parse @payload.program InfraProgram)))
-          (let ((orbitals (object/get @p "orbitals" [])))
-            (let ((infos (array/map @orbitals (fn o (let ((ts (array/map (array/filter (or @o.traits []) (fn t (str/startsWith (json/stringify @t) "{"))) (fn t (json/parse (json/stringify @t) InfraTrait)))))
-                    (let ((forms (array/map (array/flatten (array/map @ts (fn t (array/concat (array/flatten (array/map (or @t.stateMachine.transitions []) (fn x (or @x.effects [])))) (array/flatten (array/map (or @t.ticks []) (fn x (or @x.effects [])))))))) (fn e (if (str/startsWith (json/stringify @e) "[") (json/parse (json/stringify @e) InfraForm) (json/parse "[]" InfraForm))))))
-                      {
-                        name: (or @o.name ""),
-                        ts: @ts,
-                        forms: @forms,
-                        services: (array/concat
-                          (array/filter (array/map (or @o.services []) (fn s (if (str/startsWith (json/stringify @s) "\"") (object/get (json/parse (str/concat "{\"v\":" (json/stringify @s) "}") InfraText) "v") (let ((d (json/parse (json/stringify @s) InfraService))) (or @d.ref @d.name ""))))) (fn n (!= @n "")))
-                          (array/flatten (array/map @forms (fn f (array/concat
-                            (array/map (array/filter (json/nodes (array/drop @f 1)) (fn n (and (str/startsWith (json/stringify @n) "[") (let ((l (json/parse (json/stringify @n) InfraForm))) (and (> (array/len @l) 1) (array/includes [(str/concat "\"call-service\""), (str/concat "\"call_service\"")] (json/stringify (array/first @l))) (str/startsWith (json/stringify (array/nth @l 1)) "\"")))))) (fn n (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth (json/parse (json/stringify @n) InfraForm) 1)) "}") InfraText) "v")))
-                            (if (and (> (array/len @f) 1) (= (json/stringify (array/first @f)) "\"call-service\"") (str/startsWith (json/stringify (array/nth @f 1)) "\"")) [(str/concat (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth @f 1)) "}") InfraText) "v"))] (array/take [""] 0))))))),
-                        emits: (array/unique (array/filter (array/map (array/flatten (array/map @ts (fn t (or @t.emits [])))) (fn e (if (str/startsWith (json/stringify @e) "\"") (object/get (json/parse (str/concat "{\"v\":" (json/stringify @e) "}") InfraText) "v") (if (str/startsWith (json/stringify @e) "{") (or (object/get (json/parse (json/stringify @e) InfraEventRef) "event") "") "")))) (fn n (!= @n "")))),
-                        listens: (array/unique (array/filter (array/map (array/flatten (array/map @ts (fn t (or @t.listens [])))) (fn e (if (str/startsWith (json/stringify @e) "\"") (object/get (json/parse (str/concat "{\"v\":" (json/stringify @e) "}") InfraText) "v") (if (str/startsWith (json/stringify @e) "{") (or (object/get (json/parse (json/stringify @e) InfraEventRef) "event") "") "")))) (fn n (!= @n ""))))
-                      }))))))
-              (let ((allTs (array/flatten (array/map @infos (fn i @i.ts))))
-                    (forms (array/flatten (array/map @infos (fn i @i.forms))))
-                    (entities (array/map (array/filter @orbitals (fn o (str/startsWith (json/stringify @o.entity) "{"))) (fn o { entity: (json/parse (json/stringify @o.entity) InfraEntity), orbital: (or @o.name "") })))
-                    (schemaServices (array/concat (or @p.services []) (array/flatten (array/map @orbitals (fn o (or @o.services [])))))))
-                (let ((heads (array/map @forms (fn f (if (> (array/len @f) 0) (json/stringify (array/first @f)) ""))))
-                      (refs (array/unique (array/concat (array/flatten (array/map @infos (fn i @i.services))) (array/filter (array/map (or @p.services []) (fn s (if (str/startsWith (json/stringify @s) "{") (or (object/get (json/parse (json/stringify @s) InfraService) "name") "") ""))) (fn n (!= @n "")))))))
-                  (do
-                    (set @entity.orbitalCount (array/len @orbitals))
-                    (set @entity.traitCount (array/len @allTs))
-                    (set @entity.pageCount (array/sum (array/map @orbitals (fn o (array/len (or @o.pages []))))))
-                    (set @entity.totalTransitions (array/sum (array/map @allTs (fn t (array/len (or @t.stateMachine.transitions []))))))
-                    (set @entity.tickCount (array/sum (array/map @allTs (fn t (array/len (or @t.ticks []))))))
-                    (set @entity.persistentEntityCount (array/len (array/filter @entities (fn e (= (or @e.entity.persistence "persistent") "persistent")))))
-                    (set @entity.runtimeEntityCount (array/len (array/filter @entities (fn e (= @e.entity.persistence "runtime")))))
-                    (set @entity.hasFileUploads (array/some @entities (fn e (array/some (or @e.entity.fields []) (fn f (or (= @f.type "file") (= @f.type "image")))))))
-                    (set @entity.entityNames (array/map @entities (fn e (or @e.entity.name @e.orbital))))
-                    (set @entity.renderUI (array/len (array/filter @heads (fn h (= @h "\"render-ui\"")))))
-                    (set @entity.persistCount (array/len (array/filter @heads (fn h (= @h "\"persist\"")))))
-                    (set @entity.fetchCount (array/len (array/filter @heads (fn h (= @h "\"fetch\"")))))
-                    (set @entity.callService (array/len (array/filter @heads (fn h (= @h "\"call-service\"")))))
-                    (set @entity.emitExternal (array/len (array/filter @heads (fn h (= @h "\"emit\"")))))
-                    (set @entity.spawnCount (array/len (array/filter @heads (fn h (= @h "\"spawn\"")))))
-                    (set @entity.despawnCount (array/len (array/filter @heads (fn h (= @h "\"despawn\"")))))
-                    (set @entity.navigateCount (array/len (array/filter @heads (fn h (= @h "\"navigate\"")))))
-                    (set @entity.notifyCount (array/len (array/filter @heads (fn h (= @h "\"notify\"")))))
-                    (set @entity.setCount (array/len (array/filter @heads (fn h (= @h "\"set\"")))))
-                    (set @entity.hasAuth (array/some (array/concat (array/map @orbitals (fn o @o.entity)) (array/flatten (array/map @orbitals (fn o (or @o.auxiliaryEntities []))))) (fn e (and (str/startsWith (json/stringify @e) "{") (= (object/get (json/parse (json/stringify @e) InfraEntity) "identity") true)))))
-                    (set @entity.crossOrbitalEventCount (array/sum (array/map (array/range 0 (array/len @infos)) (fn i (array/sum (array/map (array/range 0 (array/len @infos)) (fn j (if (= (object/get (array/nth @infos @i) "name") (object/get (array/nth @infos @j) "name")) 0 (array/len (array/filter (object/get (array/nth @infos @i) "emits") (fn ev (array/includes (object/get (array/nth @infos @j) "listens") @ev))))))))))))
-                    (set @entity.serviceRefs @refs)
-                    (set @entity.serviceCredentials (array/map @refs (fn svc (let ((registered (if (>= (array/indexOf (object/keys (or @payload.credentials {})) @svc) 0) (array/nth (object/values (or @payload.credentials {})) (array/indexOf (object/keys (or @payload.credentials {})) @svc)) (array/take [{ envVar: "", required: false, description: "" }] 0))))
-                      { name: @svc, credentials: (if (> (array/len @registered) 0) @registered (array/map (array/filter (array/map (array/filter @schemaServices (fn s (str/startsWith (json/stringify @s) "{"))) (fn s (json/parse (json/stringify @s) InfraService))) (fn s (and (= @s.name @svc) (= @s.type "rest") (!= (or @s.auth.secretEnv "") "")))) (fn s { envVar: @s.auth.secretEnv, required: true, description: (str/concat "API credential for " @svc) }))) }))))
-                    (emit INFRA_ANALYZED { })))))))
+        (let ((noInfraForm : InfraForm []))
+          (let ((p (json/parse @payload.program InfraProgram)))
+            (let ((orbitals (object/get @p "orbitals" [])))
+              (let ((infos (array/map @orbitals (fn o (let ((ts (array/map (array/filter (or @o.traits []) (fn t (str/startsWith (json/stringify @t) "{"))) (fn t (json/parse (json/stringify @t) InfraTrait)))))
+                      (let ((forms (array/map (array/flatten (array/map @ts (fn t (array/concat (array/flatten (array/map (or @t.stateMachine.transitions []) (fn x (or @x.effects [])))) (array/flatten (array/map (or @t.ticks []) (fn x (or @x.effects [])))))))) (fn e (if (str/startsWith (json/stringify @e) "[") (or (json/parse (json/stringify @e) InfraForm) @noInfraForm) @noInfraForm)))))
+                        {
+                          name: (or @o.name ""),
+                          ts: @ts,
+                          forms: @forms,
+                          services: (array/concat
+                            (array/filter (array/map (or @o.services []) (fn s (if (str/startsWith (json/stringify @s) "\"") (object/get (json/parse (str/concat "{\"v\":" (json/stringify @s) "}") InfraText) "v") (let ((d (json/parse (json/stringify @s) InfraService))) (or @d.ref @d.name ""))))) (fn n (!= @n "")))
+                            (array/flatten (array/map @forms (fn f (array/concat
+                              (array/map (array/filter (json/nodes (array/drop @f 1)) (fn n (and (str/startsWith (json/stringify @n) "[") (let ((l (or (json/parse (json/stringify @n) InfraForm) @noInfraForm))) (and (> (array/len @l) 1) (array/includes [(str/concat "\"call-service\""), (str/concat "\"call_service\"")] (json/stringify (array/first @l))) (str/startsWith (json/stringify (array/nth @l 1)) "\"")))))) (fn n (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth (or (json/parse (json/stringify @n) InfraForm) @noInfraForm) 1)) "}") InfraText) "v")))
+                              (if (and (> (array/len @f) 1) (= (json/stringify (array/first @f)) "\"call-service\"") (str/startsWith (json/stringify (array/nth @f 1)) "\"")) [(str/concat (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth @f 1)) "}") InfraText) "v"))] (array/take [""] 0))))))),
+                          emits: (array/unique (array/filter (array/map (array/flatten (array/map @ts (fn t (or @t.emits [])))) (fn e (if (str/startsWith (json/stringify @e) "\"") (object/get (json/parse (str/concat "{\"v\":" (json/stringify @e) "}") InfraText) "v") (if (str/startsWith (json/stringify @e) "{") (or (object/get (json/parse (json/stringify @e) InfraEventRef) "event") "") "")))) (fn n (!= @n "")))),
+                          listens: (array/unique (array/filter (array/map (array/flatten (array/map @ts (fn t (or @t.listens [])))) (fn e (if (str/startsWith (json/stringify @e) "\"") (object/get (json/parse (str/concat "{\"v\":" (json/stringify @e) "}") InfraText) "v") (if (str/startsWith (json/stringify @e) "{") (or (object/get (json/parse (json/stringify @e) InfraEventRef) "event") "") "")))) (fn n (!= @n ""))))
+                        }))))))
+                (let ((allTs (array/flatten (array/map @infos (fn i @i.ts))))
+                      (forms (array/flatten (array/map @infos (fn i @i.forms))))
+                      (entities (array/map (array/filter @orbitals (fn o (str/startsWith (json/stringify @o.entity) "{"))) (fn o { entity: (json/parse (json/stringify @o.entity) InfraEntity), orbital: (or @o.name "") })))
+                      (schemaServices (array/concat (or @p.services []) (array/flatten (array/map @orbitals (fn o (or @o.services [])))))))
+                  (let ((heads (array/map @forms (fn f (if (> (array/len @f) 0) (json/stringify (array/first @f)) ""))))
+                        (refs (array/unique (array/concat (array/flatten (array/map @infos (fn i @i.services))) (array/filter (array/map (or @p.services []) (fn s (if (str/startsWith (json/stringify @s) "{") (or (object/get (json/parse (json/stringify @s) InfraService) "name") "") ""))) (fn n (!= @n "")))))))
+                    (do
+                      (set @entity.orbitalCount (array/len @orbitals))
+                      (set @entity.traitCount (array/len @allTs))
+                      (set @entity.pageCount (array/sum (array/map @orbitals (fn o (array/len (or @o.pages []))))))
+                      (set @entity.totalTransitions (array/sum (array/map @allTs (fn t (array/len (or @t.stateMachine.transitions []))))))
+                      (set @entity.tickCount (array/sum (array/map @allTs (fn t (array/len (or @t.ticks []))))))
+                      (set @entity.persistentEntityCount (array/len (array/filter @entities (fn e (= (or @e.entity.persistence "persistent") "persistent")))))
+                      (set @entity.runtimeEntityCount (array/len (array/filter @entities (fn e (= @e.entity.persistence "runtime")))))
+                      (set @entity.hasFileUploads (array/some @entities (fn e (array/some (or @e.entity.fields []) (fn f (or (= @f.type "file") (= @f.type "image")))))))
+                      (set @entity.entityNames (array/map @entities (fn e (or @e.entity.name @e.orbital))))
+                      (set @entity.renderUI (array/len (array/filter @heads (fn h (= @h "\"render-ui\"")))))
+                      (set @entity.persistCount (array/len (array/filter @heads (fn h (= @h "\"persist\"")))))
+                      (set @entity.fetchCount (array/len (array/filter @heads (fn h (= @h "\"fetch\"")))))
+                      (set @entity.callService (array/len (array/filter @heads (fn h (= @h "\"call-service\"")))))
+                      (set @entity.emitExternal (array/len (array/filter @heads (fn h (= @h "\"emit\"")))))
+                      (set @entity.spawnCount (array/len (array/filter @heads (fn h (= @h "\"spawn\"")))))
+                      (set @entity.despawnCount (array/len (array/filter @heads (fn h (= @h "\"despawn\"")))))
+                      (set @entity.navigateCount (array/len (array/filter @heads (fn h (= @h "\"navigate\"")))))
+                      (set @entity.notifyCount (array/len (array/filter @heads (fn h (= @h "\"notify\"")))))
+                      (set @entity.setCount (array/len (array/filter @heads (fn h (= @h "\"set\"")))))
+                      (set @entity.hasAuth (array/some (array/concat (array/map @orbitals (fn o @o.entity)) (array/flatten (array/map @orbitals (fn o (or @o.auxiliaryEntities []))))) (fn e (and (str/startsWith (json/stringify @e) "{") (= (object/get (json/parse (json/stringify @e) InfraEntity) "identity") true)))))
+                      (set @entity.crossOrbitalEventCount (array/sum (array/map (array/range 0 (array/len @infos)) (fn i (array/sum (array/map (array/range 0 (array/len @infos)) (fn j (if (= (object/get (array/nth @infos @i) "name") (object/get (array/nth @infos @j) "name")) 0 (array/len (array/filter (object/get (array/nth @infos @i) "emits") (fn ev (array/includes (object/get (array/nth @infos @j) "listens") @ev))))))))))))
+                      (set @entity.serviceRefs @refs)
+                      (set @entity.serviceCredentials (array/map @refs (fn svc (let ((registered (if (>= (array/indexOf (object/keys (or @payload.credentials {})) @svc) 0) (array/nth (object/values (or @payload.credentials {})) (array/indexOf (object/keys (or @payload.credentials {})) @svc)) (array/take [{ envVar: "", required: false, description: "" }] 0))))
+                        { name: @svc, credentials: (if (> (array/len @registered) 0) @registered (array/map (array/filter (array/map (array/filter @schemaServices (fn s (str/startsWith (json/stringify @s) "{"))) (fn s (json/parse (json/stringify @s) InfraService))) (fn s (and (= @s.name @svc) (= @s.type "rest") (!= (or @s.auth.secretEnv "") "")))) (fn s { envVar: @s.auth.secretEnv, required: true, description: (str/concat "API credential for " @svc) }))) }))))
+                      (emit INFRA_ANALYZED { }))))))))
 
       INFRA_ANALYZED -> idle
         (let ((breakdown (array/filter [

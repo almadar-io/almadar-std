@@ -49,7 +49,7 @@ orbital OrbLintRelationTargetsOrbital {
                     (let ((fields (object/get (object/get @eb "ent") "fields" [])) (ename (object/get (object/get @eb "ent") "name" "")))
                       (array/flatten (array/map (array/range 0 (array/len @fields)) (fn fi
                         (let ((f (array/nth @fields @fi)))
-                          (array/flatten (array/map (tree/fold @f  (fn (n k)
+                          (let ((fres (tree/fold @f  (fn (n k)
                         (if (validate/array @n)
                           (array/flatten (array/filter @k (fn r (validate/array @r))))
                           (if (validate/object @n)
@@ -66,12 +66,12 @@ orbital OrbLintRelationTargetsOrbital {
                                 [])
                               (array/map (object/get @k "items" []) (fn h { rel: (str/concat ".items" (object/get @h "rel")), nm: (object/get @h "nm"), tg: (object/get @h "tg"), miss: (object/get @h "miss") }))
                               (object/get @k "properties" [])))))
-                            []))) FieldShape) (fn h
+                            []))) FieldShape))) (if (= @fres null) (let ((up (str/concat (object/get @eb "base") ".fields[" @fi "]"))) [{ code: "LINT_NODE_UNCHECKED", path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a FieldShape; this rule could not check it"), suggestion: "", severity: "error" }]) (array/flatten (array/map @fres (fn h
                             (if (object/get @h "miss")
                               (if (and (object/get @eb "e") (!= (object/get @h "rel") "")) [{ code: "ORB_E_INVALID_RELATION", path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation"), message: "Relation field requires a 'relation' configuration", suggestion: "Add relation: { entity: 'EntityName', cardinality: 'one' }", severity: "error" }] [])
                               (array/concat
                               (if (object/get @eb "e") [{ code: "ORB_E_INVALID_RELATION", path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation target entity '" (object/get @h "tg") "' does not exist"), suggestion: "Ensure the related entity is defined in the schema", validValues: (array/sort (array/unique (array/filter @declared (fn n (!= @n ""))))), severity: "error" }] [])
-                              [{ code: "ORB_X_UNRESOLVED_RELATION_TARGET", path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation field '" (object/get @h "nm") "' on '" @ename "' points at '" (object/get @h "tg") "', which is not declared in this schema"), suggestion: "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.", validValues: (array/sort (array/unique (array/filter @declared (fn n (!= @n ""))))), severity: "error" }]))))))))))))))))))))
+                              [{ code: "ORB_X_UNRESOLVED_RELATION_TARGET", path: (str/concat (object/get @eb "base") ".fields[" @fi "]" (object/get @h "rel") ".relation.entity"), message: (str/concat "Relation field '" (object/get @h "nm") "' on '" @ename "' points at '" (object/get @h "tg") "', which is not declared in this schema"), suggestion: "Declare the target entity in one of the schema's orbitals, or correct the relation.entity name.", validValues: (array/sort (array/unique (array/filter @declared (fn n (!= @n ""))))), severity: "error" }]))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "relation-targets", scope: @entity.scope, findings: @entity.findings })

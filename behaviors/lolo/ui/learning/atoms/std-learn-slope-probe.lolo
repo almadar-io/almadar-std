@@ -50,8 +50,8 @@ orbital LearnSlopeProbeOrbital {
                 (rightSamp (array/first (array/filter @entity.curve (fn s (> (object/get @s x) @payload.x))))))
           (let ((slope (if (== @rightSamp null) 0 (/ (- (object/get @rightSamp y) (object/get @leftSamp y)) (- (object/get @rightSamp x) (object/get @leftSamp x))))))
           (let ((curveY (if (== @rightSamp null) (object/get @leftSamp y) (+ (object/get @leftSamp y) (* @slope (- @payload.x (object/get @leftSamp x)))))))
-          (let ((norm (math/sqrt (+ 1 (* @slope @slope)))))
-          (let ((dx (/ @config.window @norm)) (dy (/ (* @slope @config.window) @norm)))
+          (let ((norm (or (math/sqrt (+ 1 (* @slope @slope))) 1)))
+          (let ((dx (or (/ @config.window @norm) 0)) (dy (or (/ (* @slope @config.window) @norm) 0)))
           (let ((newBucket (* (math/round (* @slope 2) 0) 0.5)))
             (do
               (set @entity.probing true)

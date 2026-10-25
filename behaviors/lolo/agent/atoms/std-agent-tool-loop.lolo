@@ -225,8 +225,8 @@ orbital AgentToolLoopOrbital {
                     [{ name: "read", description: "Read the rows of an entity that you may see", parameters: { type: "object", properties: { entity: { type: "string", enum: @payload.result.entities } }, required: ["entity"] }, label: "read", kind: read, readAny: true }]
                     []))
                 (if (object/has @t read)
-                  (let ((rd : AgentToolRead (json/parse (json/stringify @t) AgentToolRead))) [{ name: (str/concat "read__" @rd.read), description: (str/concat "Read the " @rd.read " rows you may see"), parameters: { type: "object", properties: {} }, label: @rd.read, kind: read, entity: @rd.read }])
-                  (let ((ev : AgentToolInputData (json/parse (json/stringify @t) AgentToolInputData))) (array/map (array/take (array/drop @payload.result.selected (array/count (array/take @entity.turnTools @i) (fn y (object/has @y event)))) 1) (fn s
+                  (let ((rd : AgentToolRead @t)) [{ name: (str/concat "read__" @rd.read), description: (str/concat "Read the " @rd.read " rows you may see"), parameters: { type: "object", properties: {} }, label: @rd.read, kind: read, entity: @rd.read }])
+                  (let ((ev : AgentToolInputData @t)) (array/map (array/take (array/drop @payload.result.selected (array/count (array/take @entity.turnTools @i) (fn y (object/has @y event)))) 1) (fn s
                     { name: (str/replaceAll @ev.event "." "__"), description: (str/default @s.description @ev.event), parameters: @s.parameters, label: @ev.event, kind: input, address: @s.address, contract: (object/get @ev payload []), contracted: (object/has @ev payload), fireAndForget: (object/get @ev fireAndForget false) }))))))) @r)))))))))
           (do
             (set @entity.table @table)
@@ -489,7 +489,7 @@ orbital AgentToolLoopOrbital {
         messages : [AgentChatMessage]!
         context : string
         instructions : string
-        tools : [AgentTool]
+        tools : [AgentToolData]
         ephemeral : boolean
       }
         @description "Answer this conversation; the last turn is the request. `context` is what the assistant remembers that may be relevant. An `ephemeral` conversation runs under its own `instructions` (empty: the configured ones) and exactly its own `tools` (absent or `[]`: none, never the configured ones), streams no live steps and shows no failure toast."

@@ -12,7 +12,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { SHAPE, STRING, list } from '../signature.js';
+import { SHAPE, STRING, list, nullable } from '../signature.js';
 
 export const XML_OPERATORS: Record<string, StdOperatorMeta> = {
   'xml/valid': {
@@ -33,7 +33,8 @@ export const XML_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 3,
     description: 'Parse XML text into a value of the declared shape (the second argument names a type): namespaces are ignored by local name, an attribute is the field "@name" (declare it in the shape as a quoted field, \`{ "@href" : string }\`, and read it with \`(object/get @x (quote "@href"))\`), a repeated child element is a list (a field the shape declares as a list is one even with a single child), an element with no attributes or children is its text (whitespace collapsed, trimmed), other elements are objects with "#text" for their own text; malformed XML is an evaluation error, a null input is null',
     hasSideEffects: false,
-    returnType: SHAPE,
+    failable: {},
+    returnType: nullable(SHAPE),
     params: [
       { name: 's', type: 'string', description: 'The XML text' },
       { name: 'shape', type: SHAPE, description: 'The name of the type the parsed value has' },

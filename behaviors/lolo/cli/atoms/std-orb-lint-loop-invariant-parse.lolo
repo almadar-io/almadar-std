@@ -44,9 +44,7 @@ orbital OrbLintLoopInvariantParseOrbital {
                                 (if (object/has @tr "guard") [{ w: (str/concat @base ".guard"), e: (object/get @tr "guard") }] [])
                                 (array/map (array/range 0 (array/len (object/get @tr "effects" []))) (fn ei { w: (str/concat @base ".effects[" @ei "]"), e: (array/nth (object/get @tr "effects" []) @ei) })))))
                           (array/flatten (array/map @roots (fn x
-                            (array/map
-                              (array/filter
-                                (tree/fold (object/get @x "e")
+                            (let ((fres (tree/fold (object/get @x "e")
                                   (fn (n k)
                                     (if (validate/array @n)
                                       (let ((op (let ((o0 (array/nth @n 0))) (if (validate/string @o0) @o0 ""))) (all (array/flatten @k)))
@@ -69,13 +67,15 @@ orbital OrbLintLoopInvariantParseOrbital {
                                               (let ((arg @all))
                                                 (array/append @all { kind: "call", name: "", op: @op, refs: (array/map (array/filter @arg (fn f (= (object/get @f "kind") "ref"))) (fn f (object/get @f "name"))), binds: (array/map (array/filter @arg (fn f (= (object/get @f "kind") "bind"))) (fn f (object/get @f "name"))) }))
                                               @all))))
-                                      (if (and (validate/string @n) (str/startsWith @n (str/decode-uri-component "%40")))
+                                      (if (and (validate/string @n) (str/startsWith @n (quote "@")))
                                         [{ kind: "ref", name: (array/first (str/split (str/slice @n 1 (str/len @n)) ".")), op: "", refs: (array/filter [""] (fn q false)), binds: (array/filter [""] (fn q false)) }]
                                         [])))
-                                  LoopExpr)
+                                  LoopExpr))) (if (= @fres null) (let ((up (object/get @x "w"))) [{ code: "LINT_NODE_UNCHECKED", path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a LoopExpr; this rule could not check it"), suggestion: "", severity: "error" }]) (array/map
+                              (array/filter
+                                @fres
                                 (fn f (= (object/get @f "kind") "hit")))
                               (fn c
-                                { code: "ORB_W_LOOP_INVARIANT_PARSE", path: (object/get @x "w"), message: (str/concat (object/get @c "op") " re-parses the same value for every element; bind it once with let outside the lambda"), suggestion: "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.", severity: "warning" })))))))))))))))))))))
+                                { code: "ORB_W_LOOP_INVARIANT_PARSE", path: (object/get @x "w"), message: (str/concat (object/get @c "op") " re-parses the same value for every element; bind it once with let outside the lambda"), suggestion: "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.", severity: "warning" })))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "loop-invariant-parse", scope: @entity.scope, findings: @entity.findings })

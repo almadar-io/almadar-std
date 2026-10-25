@@ -7,9 +7,9 @@ app std-training-board [
 uses Spec from "almadar-std/training-board"
 type TrListed = { Id : string, Type : string, IP : string, Launch : string }
 type TrListing = [TrListed]
-type TrFound = { instanceId : string, instanceType : string, publicIp : string, launchTime : string }
+type TrFound = { instanceId : string?, instanceType : string?, publicIp : string, launchTime : string? }
 type TrGpu = { name : string, temp : number, memoryUsed : number, memoryTotal : number, utilization : number }
-type TrProcess = { pid : number, cpu : number, memoryMb : number, elapsed : string, command : string }
+type TrProcess = { pid : number, cpu : number, memoryMb : number?, elapsed : string, command : string }
 type TrGpuMap = Map string TrGpu
 type TrProcessMap = Map string TrProcess
 type TrMetricText = Map string string
@@ -70,8 +70,8 @@ orbital TrainingBoardOrbital {
         (set @entity.collected [])
         (set @entity.cursor 0)
         (set @entity.noText (object/fromEntries (array/take [["", ""]] 0)))
-        (set @entity.noGpu (json/parse "{}" TrGpuMap))
-        (set @entity.noProcess (json/parse "{}" TrProcessMap))
+        (set @entity.noGpu {})
+        (set @entity.noProcess {})
         (set @entity.noMetrics (object/fromEntries (array/take [["", 0]] 0)))
         (emit TR_AWS { stage: "list", argv: ["ec2", "describe-instances", "--region", @config.region, "--filters", "Name=instance-state-name,Values=running", (str/concat "Name=instance-type,Values=" (str/join @config.instanceTypes ",")), "--query", "Reservations[].Instances[].{Id:InstanceId,Type:InstanceType,IP:PublicIpAddress,Launch:LaunchTime}", "--output", "json"] })
       TRAINING_REFRESH -> reading
@@ -81,8 +81,8 @@ orbital TrainingBoardOrbital {
         (set @entity.collected [])
         (set @entity.cursor 0)
         (set @entity.noText (object/fromEntries (array/take [["", ""]] 0)))
-        (set @entity.noGpu (json/parse "{}" TrGpuMap))
-        (set @entity.noProcess (json/parse "{}" TrProcessMap))
+        (set @entity.noGpu {})
+        (set @entity.noProcess {})
         (set @entity.noMetrics (object/fromEntries (array/take [["", 0]] 0)))
         (emit TR_AWS { stage: "list", argv: ["ec2", "describe-instances", "--region", @config.region, "--filters", "Name=instance-state-name,Values=running", (str/concat "Name=instance-type,Values=" (str/join @config.instanceTypes ",")), "--query", "Reservations[].Instances[].{Id:InstanceId,Type:InstanceType,IP:PublicIpAddress,Launch:LaunchTime}", "--output", "json"] })
     }
@@ -114,7 +114,7 @@ orbital TrainingBoardOrbital {
         (emit TR_NEXT { })
       TR_NEXT -> idle when (>= @entity.cursor (array/len @entity.found))
         (set @entity.instances @entity.collected)
-        (set @entity.fetchedAt (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"))
+        (set @entity.fetchedAt (str/concat (or (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"))
         (set @entity.cachedAt @now)
         (set @entity.hasCache true)
         (set @entity.loading false)
@@ -129,15 +129,15 @@ orbital TrainingBoardOrbital {
               { instanceId: @inst.instanceId, instanceType: @inst.instanceType, publicIp: @inst.publicIp, launchTime: @inst.launchTime,
                 uptime: (if (= @upText "") (array/nth (object/values (object/pick @entity.noText [(str/concat "x")])) 0) @upText),
                 gpu: (if (and (!= @gpuText "") (!= @gpuText "N/A") (>= (array/len @gpuParts) 5)) { name: (array/nth @gpuParts 0), temp: (str/to-number (array/nth (str/split (str/trim (array/nth @gpuParts 1)) " ") 0)), memoryUsed: (str/to-number (array/nth (str/split (str/trim (array/nth @gpuParts 2)) " ") 0)), memoryTotal: (str/to-number (array/nth (str/split (str/trim (array/nth @gpuParts 3)) " ") 0)), utilization: (str/to-number (array/nth (str/split (str/trim (array/nth @gpuParts 4)) " ") 0)) } (array/nth (object/values (object/pick @entity.noGpu [(str/concat "x")])) 0)),
-                process: (if (and (!= @procText "") (!= @procText "NONE") (>= (array/len @cols) 11)) { pid: (str/to-number (array/nth @cols 1)), cpu: (str/to-number (array/nth @cols 2)), memoryMb: (math/round (/ (str/to-number (array/nth @cols 5)) 1024) 0), elapsed: (array/nth @cols 9), command: (str/join (array/slice @cols 10) " ") } (array/nth (object/values (object/pick @entity.noProcess [(str/concat "x")])) 0)),
+                process: (if (and (!= @procText "") (!= @procText "NONE") (>= (array/len @cols) 11)) { pid: (str/to-number (array/nth @cols 1)), cpu: (str/to-number (array/nth @cols 2)), memoryMb: (let ((rss (str/to-number (array/nth @cols 5)))) (if (== @rss null) null (math/round (/ @rss 1024) 0))), elapsed: (array/nth @cols 9), command: (str/join (array/slice @cols 10) " ") } (array/nth (object/values (object/pick @entity.noProcess [(str/concat "x")])) 0)),
                 epochs: (array/flatten (array/map @lines (fn l (if (validate/pattern @l "Epoch\\s+\\d+\\s*\\|.+\\(\\d+(?:\\.\\d+)?s\\)") [(let ((afterPipe (str/join (array/slice (str/split @l "|") 1) "|")))
             (let ((parts (str/split @afterPipe "(")))
               { epoch: (str/to-number (str/trim (array/nth (str/split (array/nth (str/split @l "|") 0) "Epoch") (- (array/len (str/split (array/nth (str/split @l "|") 0) "Epoch")) 1)))),
                 metrics: (object/fromEntries (array/map (array/filter (str/split (str/trim (str/join (array/take @parts (- (array/len @parts) 1)) "(")) " ") (fn t (validate/pattern @t "^\\w+=[\\d.]+$"))) (fn t [(array/nth (str/split @t "=") 0), (str/to-number (array/nth (str/split @t "=") 1))]))),
                 time: (str/to-number (array/nth (str/split (array/nth @parts (- (array/len @parts) 1)) "s)") 0)),
-                isBest: (str/includes @l "*BEST*") }))] (if (validate/pattern @l "\\{(?:'[a-z_]+':\\s*'[\\d.e+-]+',?\\s*)+\\}") [(let ((dict (json/parse (str/replaceAll (let ((afterBrace (str/join (array/slice (str/split @l "{") 1) "{"))) (str/concat "{" (str/join (array/take (str/split @afterBrace "}") (- (array/len (str/split @afterBrace "}")) 1)) "}") "}")) "'" "\"") TrMetricText)))
-            (let ((metrics (object/fromEntries (array/map (object/entries @dict) (fn e [(array/nth @e 0), (str/to-number (array/nth @e 1))])))))
-              { epoch: (math/round (* (object/get @metrics "epoch" 0) 1000) 0), metrics: @metrics, time: 0, isBest: false }))] (array/take [{ epoch: 0, metrics: @entity.noMetrics, time: 0, isBest: false }] 0)))))),
+                isBest: (str/includes @l "*BEST*") }))] (let ((dict (if (validate/pattern @l "\\{(?:'[a-z_]+':\\s*'[\\d.e+-]+',?\\s*)+\\}") (json/parse (str/replaceAll (let ((afterBrace (str/join (array/slice (str/split @l "{") 1) "{"))) (str/concat "{" (str/join (array/take (str/split @afterBrace "}") (- (array/len (str/split @afterBrace "}")) 1)) "}") "}")) "'" "\"") TrMetricText) null)))
+            (if (== @dict null) (array/take [{ epoch: 0, metrics: @entity.noMetrics, time: 0, isBest: false }] 0) [(let ((metrics (object/fromEntries (array/map (object/entries @dict) (fn e [(array/nth @e 0), (str/to-number (array/nth @e 1))])))))
+              { epoch: (math/round (* (object/get @metrics "epoch" 0) 1000) 0), metrics: @metrics, time: 0, isBest: false })])))))),
                 logTail: (array/takeLast @lines @config.tailLines) })))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit TR_NEXT { })

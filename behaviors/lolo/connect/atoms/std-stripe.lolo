@@ -84,7 +84,9 @@ orbital StripeOrbital {
           auth: { scheme: bearer, credential: @config.secretKey },
           timeoutMs: @config.timeoutMs
         } { key: (json/stringify { action: "cancelSubscription" }), emit: { success: STRIPE_REPLIED, failure: STRIPE_HTTP_FAILED } })
-      STRIPE_KEY_DRAWN -> idle
+      STRIPE_KEY_DRAWN -> idle when (= (hash/sha256 @payload.value "hex") null)
+        (emit STRIPE_FAILED { code: null, message: "The idempotency key could not be derived" })
+      STRIPE_KEY_DRAWN -> idle when (!= (hash/sha256 @payload.value "hex") null)
         (let ((h (hash/sha256 @payload.value "hex")))
           (http POST @config.origin (object/get (json/parse @payload.key StripeDraw) path "") {
           headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": @config.apiVersion, "Idempotency-Key": (str/concat "stripe-node-retry-" (str/slice @h 0 8) "-" (str/slice @h 8 12) "-4" (str/slice @h 13 16) "-" (array/nth ["8", "9", "a", "b"] (math/mod (array/indexOf ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"] (str/slice @h 16 17)) 4)) (str/slice @h 17 20) "-" (str/slice @h 20 32)) },

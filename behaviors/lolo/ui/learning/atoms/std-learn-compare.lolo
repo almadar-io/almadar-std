@@ -47,7 +47,7 @@ orbital CompareOrbital {
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @lA (math/pow @x @lB))
+                          (* @lA (or (math/pow @x @lB) 0))
                           (if (== @kind "linear")
                             (+ @lA (* @lB @x))
                             (* @lA (math/sin (* @lB @x))))))
@@ -57,7 +57,7 @@ orbital CompareOrbital {
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @rA (math/pow @x @rB))
+                          (* @rA (or (math/pow @x @rB) 0))
                           (if (== @kind "linear")
                             (+ @rA (* @rB @x))
                             (* @rA (math/sin (* @rB @x))))))
@@ -68,8 +68,8 @@ orbital CompareOrbital {
             (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
             (xMidV (/ (+ @config.xMin @config.xMax) 2))
-            (lMid (if (== @kind "power") (* @lA (math/pow @xMidV @lB)) (if (== @kind "linear") (+ @lA (* @lB @xMidV)) (* @lA (math/sin (* @lB @xMidV))))))
-            (rMid (if (== @kind "power") (* @rA (math/pow @xMidV @rB)) (if (== @kind "linear") (+ @rA (* @rB @xMidV)) (* @rA (math/sin (* @rB @xMidV))))))
+            (lMid (if (== @kind "power") (* @lA (or (math/pow @xMidV @lB) 0)) (if (== @kind "linear") (+ @lA (* @lB @xMidV)) (* @lA (math/sin (* @lB @xMidV))))))
+            (rMid (if (== @kind "power") (* @rA (or (math/pow @xMidV @rB) 0)) (if (== @kind "linear") (+ @rA (* @rB @xMidV)) (* @rA (math/sin (* @rB @xMidV))))))
           )
           (do
             (set @entity.active true)
@@ -138,7 +138,7 @@ orbital CompareOrbital {
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @lA (math/pow @x @lB))
+                          (* @lA (or (math/pow @x @lB) 0))
                           (if (== @kind "linear")
                             (+ @lA (* @lB @x))
                             (* @lA (math/sin (* @lB @x))))))
@@ -148,7 +148,7 @@ orbital CompareOrbital {
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @rA (math/pow @x @rB))
+                          (* @rA (or (math/pow @x @rB) 0))
                           (if (== @kind "linear")
                             (+ @rA (* @rB @x))
                             (* @rA (math/sin (* @rB @x))))))
@@ -159,8 +159,8 @@ orbital CompareOrbital {
             (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
             (xMidV (/ (+ @config.xMin @config.xMax) 2))
-            (lMid (if (== @kind "power") (* @lA (math/pow @xMidV @lB)) (if (== @kind "linear") (+ @lA (* @lB @xMidV)) (* @lA (math/sin (* @lB @xMidV))))))
-            (rMid (if (== @kind "power") (* @rA (math/pow @xMidV @rB)) (if (== @kind "linear") (+ @rA (* @rB @xMidV)) (* @rA (math/sin (* @rB @xMidV))))))
+            (lMid (if (== @kind "power") (* @lA (or (math/pow @xMidV @lB) 0)) (if (== @kind "linear") (+ @lA (* @lB @xMidV)) (* @lA (math/sin (* @lB @xMidV))))))
+            (rMid (if (== @kind "power") (* @rA (or (math/pow @xMidV @rB) 0)) (if (== @kind "linear") (+ @rA (* @rB @xMidV)) (* @rA (math/sin (* @rB @xMidV))))))
           )
           (do
             (set @entity.active true)
@@ -225,7 +225,7 @@ orbital CompareOrbital {
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @lA (math/pow @x @lB))
+                          (* @lA (or (math/pow @x @lB) 0))
                           (if (== @kind "linear")
                             (+ @lA (* @lB @x))
                             (* @lA (math/sin (* @lB @x))))))
@@ -235,7 +235,7 @@ orbital CompareOrbital {
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @rA (math/pow @x @rB))
+                          (* @rA (or (math/pow @x @rB) 0))
                           (if (== @kind "linear")
                             (+ @rA (* @rB @x))
                             (* @rA (math/sin (* @rB @x))))))
@@ -245,8 +245,8 @@ orbital CompareOrbital {
             (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
             (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
-            (lMid (if (== @kind "power") (* @lA (math/pow @entity.xMid @lB)) (if (== @kind "linear") (+ @lA (* @lB @entity.xMid)) (* @lA (math/sin (* @lB @entity.xMid))))))
-            (rMid (if (== @kind "power") (* @rA (math/pow @entity.xMid @rB)) (if (== @kind "linear") (+ @rA (* @rB @entity.xMid)) (* @rA (math/sin (* @rB @entity.xMid))))))
+            (lMid (if (== @kind "power") (* @lA (or (math/pow @entity.xMid @lB) 0)) (if (== @kind "linear") (+ @lA (* @lB @entity.xMid)) (* @lA (math/sin (* @lB @entity.xMid))))))
+            (rMid (if (== @kind "power") (* @rA (or (math/pow @entity.xMid @rB) 0)) (if (== @kind "linear") (+ @rA (* @rB @entity.xMid)) (* @rA (math/sin (* @rB @entity.xMid))))))
           )
           (do
             (set @entity.leftA @lA)

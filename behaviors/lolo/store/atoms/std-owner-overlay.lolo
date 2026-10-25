@@ -23,24 +23,38 @@ orbital OwnerOverlayOrbital {
       INIT -> ready
 
       OVERLAY_PICK -> ready
-        (do (set @entity.found (> (array/len @payload.rows) 0))
-            (set @entity.rowId
-              (if (> (array/len @payload.rows) 0)
-                (let ((ids (array/sort (array/map @payload.rows (fn (r) (object/get @r "id"))))))
-                  (array/nth @ids (math/mod (bytes/read-uint (hash/sha256 @payload.ownerId "base64") 0 4 "be") (array/len @ids))))
-                "")))
+        (do (set @entity.rowId
+              (let ((ids (array/sort (array/map @payload.rows (fn (r) (object/get @r "id"))))))
+                (let ((h (hash/sha256 @payload.ownerId "base64")))
+                  (if (== @h null)
+                    ""
+                    (let ((n (bytes/read-uint @h 0 4 "be")))
+                      (if (== @n null)
+                        ""
+                        (let ((m (math/mod @n (array/len @ids))))
+                          (if (== @m null) "" (array/nth @ids @m)))))))))
+            (set @entity.found (!= @entity.rowId "")))
         (emit OVERLAY_PICKED { rowId: @entity.rowId, found: @entity.found })
 
       OVERLAY_APPLY -> ready
-        (if (or (= (array/len @payload.fields) 0) (= (array/len @payload.rows) 0))
+        (if (= (array/len @payload.fields) 0)
           (set @entity.rows @payload.rows)
           (let ((ids (array/sort (array/map @payload.rows (fn (r) (object/get @r "id"))))))
-            (let ((target (array/nth @ids (math/mod (bytes/read-uint (hash/sha256 @payload.ownerId "base64") 0 4 "be") (array/len @ids)))))
+            (let ((target (let ((h (hash/sha256 @payload.ownerId "base64")))
+                            (if (== @h null)
+                              ""
+                              (let ((n (bytes/read-uint @h 0 4 "be")))
+                                (if (== @n null)
+                                  ""
+                                  (let ((m (math/mod @n (array/len @ids))))
+                                    (if (== @m null) "" (array/nth @ids @m)))))))))
               (set @entity.rows
-                (array/map @payload.rows (fn (r)
-                  (if (= (object/get @r "id") @target)
-                    (array/reduce @payload.fields @r (fn (acc f) (object/set @acc @f @payload.ownerId)))
-                    @r)))))))
+                (if (= @target "")
+                  @payload.rows
+                  (array/map @payload.rows (fn (r)
+                    (if (= (object/get @r "id") @target)
+                      (array/reduce @payload.fields @r (fn (acc f) (object/set @acc @f @payload.ownerId)))
+                      @r))))))))
         (emit OVERLAY_APPLIED { rows: @entity.rows })
     }
 

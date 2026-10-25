@@ -206,7 +206,7 @@ orbital VerifyWalkOrbital {
           })) { key: "steps" emit: { success: WALK_STEPPED, failure: WALK_FAILED } })
       WALK_STEPPED -> judging
         (set @entity.played @payload.result)
-        (set @entity.hops (array/reduce (array/filter @payload.result (fn p (object/get (object/get @p "result") "transitionFired"))) (json/parse "[]" WalkHopList) (fn acc p
+        (set @entity.hops (array/reduce (array/filter @payload.result (fn p (object/get (object/get @p "result") "transitionFired"))) [] (fn acc p
           (array/concat @acc [{ trait: (object/get @p "trait"), from: (object/get @p "from"), event: (object/get @p "event"), to: (object/get (object/get (object/get @p "result") "state") "after"), arm: (object/get (object/get @p "result") "firedArm" (- 0 1)) }]))))
         (set @entity.judged [])
         (emit WALK_JUDGE_NEXT {})

@@ -10,7 +10,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, SHAPE, STRING, childrenOf, fn, openShape, tv } from '../signature.js';
+import { BOOLEAN, SHAPE, STRING, childrenOf, fn, openShape, tv, nullable } from '../signature.js';
 
 export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
   'json/valid': {
@@ -31,7 +31,8 @@ export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Parse a JSON string into a value of the declared shape (the second argument names a type); invalid JSON or non-string input returns null (never throws)',
     hasSideEffects: false,
-    returnType: SHAPE,
+    failable: {},
+    returnType: nullable(SHAPE),
     params: [
       { name: 's', type: 'string', description: 'The JSON string to parse' },
       { name: 'shape', type: SHAPE, description: 'The name of the type the parsed value has' },
@@ -56,7 +57,8 @@ export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 4,
     description: 'The structural bottom-up fold over a value of a recursive type (the third argument names it). The children of a node are its fields whose declared type is the type itself, a list of it or a Map of it, read from the type, never from names or the value\'s shape; a union node is read through the variant it belongs to. The step is called once per node with (node childResults), childResults holding one entry per child field present, in its position: a field holds the child\'s result, a list the list of results, a map the map of results; a leaf gets {}. Every call works on a strict subterm of a finite value, so the fold terminates. An absent value folds to null',
     hasSideEffects: false,
-    returnType: tv('R'),
+    failable: {},
+    returnType: nullable(tv('R')),
     returnSemantics: 'lambda-result',
     acceptsLambda: true,
     lambdaArgPosition: 1,

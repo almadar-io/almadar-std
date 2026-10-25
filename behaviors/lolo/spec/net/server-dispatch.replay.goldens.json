@@ -1096,6 +1096,43 @@
      }
     }
    ]
+  },
+  {
+   "id": "non-text-body-is-400",
+   "note": "a body that is not valid UTF-8 cannot be JSON: the same 400 as an unparseable one",
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 8,
+      "method": "POST",
+      "path": "/api/orbitals/Notes/events",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "/w==",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_ADMITTED",
+     "payload": {
+      "requestId": 8
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 8,
+         "status": 400
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

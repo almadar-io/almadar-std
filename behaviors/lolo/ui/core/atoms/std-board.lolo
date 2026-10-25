@@ -6,6 +6,7 @@ type ObjectSpec = { id : string, label : string, value : string }
 type BoardColumnSpec = { key : string!, label : string!, icon : string, variant : string }
 type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
 type FilterSpec = { field : string!, label : string, options : [string] }
+type BoardItemsRelatedRow = { id : string! }
 orbital BoardOrbital {
     type BoardItem = { id : string!, title : string, description : string, stage : string, notes : string, position : number }
 
@@ -14,6 +15,8 @@ orbital BoardOrbital {
     type BoardItemsLoaded = Event { data : [@entity]! } "Fired when board items finish loading (from an upstream fetcher / persistor)"
 
     type BoardItemsLoadFailed = Event { error : string, code : string } "Fired when the upstream fetch fails"
+
+    type BoardItemsRelatedLoaded = Event { data : [BoardItemsRelatedRow]! } "Related rows whose text matches the query loaded"
 
     type BoardItemsSaved = Event @entity "Fired when a board item has been persisted"
 
@@ -233,11 +236,22 @@ orbital BoardOrbital {
       ;; the background; the BoardItemsLoaded arm below already recomputes
       ;; @entity.boards, which the mounted data-grid is bound to, so the grid
       ;; updates in place with no unmount/flicker.
-      REFETCH_QUERY -> viewing_board
+      REFETCH_QUERY -> viewing_board when (or (= @config.searchRelation null) (= ?searchTerm ""))
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           filter: (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm))
+        })
+      REFETCH_QUERY -> viewing_board when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
+        (fetch @config.relatedEntity {
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsRelatedLoaded }
+          filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
+        })
+      BoardItemsRelatedLoaded -> viewing_board
+        (fetch BoardView {
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          include: @config.include
+          filter: (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))
         })
       REFETCH_FILTER -> viewing_board
         (fetch BoardView {
@@ -325,6 +339,10 @@ orbital BoardOrbital {
     }
 
     emits {
+      BoardItemsRelatedLoaded
+        @description "Signals that the related rows matching the search query have loaded."
+        @synonyms "related loaded, relation matched"
+        @tier "internal"
       OPEN_CARD {
         id : string!
         row : BoardItem!
@@ -541,6 +559,18 @@ orbital BoardOrbital {
         @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `title` column must set this to a real field (e.g. name, summary) or the search box can never match a card."
         @synonyms "search column, search on field, match field, search key"
         @tier "policy"
+      relatedEntity : entity = BoardView
+        @label "Related entity"
+        @description "The entity a relation search matches through: the target of searchRelation."
+        @tier "presentation"
+      searchRelation : (field @entity (@entity @config.relatedEntity))?
+        @label "Search through relation"
+        @description "A relation field of the searched entity. When set, the query matches the related rows' relatedSearchField and the results are the rows pointing at them; unset, searchField on the row itself is matched."
+        @tier "presentation"
+      relatedSearchField : (field (@entity @config.relatedEntity) string)?
+        @label "Related search field"
+        @description "Field of the related entity matched against the query when searchRelation is set."
+        @tier "presentation"
       columns : [BoardColumnSpec] = [{
         icon: circle
         key: todo

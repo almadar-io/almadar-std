@@ -8,7 +8,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { NUMBER } from '../signature.js';
+import { NUMBER, nullable } from '../signature.js';
 
 const WORD = 'a whole number 0..4294967295 (an unsigned 32-bit word)';
 const REFUSED =
@@ -24,7 +24,8 @@ function fold(name: string, label: string, example: string): StdOperatorMeta {
     maxArity: null,
     description: `${label} of two or more 32-bit words, folded left. Each operand must be ${WORD}. ${REFUSED} ${RESULT}`,
     hasSideEffects: false,
-    returnType: NUMBER,
+    failable: {},
+    returnType: nullable(NUMBER),
     params: [{ name: '...words', type: NUMBER, description: 'Unsigned 32-bit words' }],
     example: `["${name}", ${example}`,
   };
@@ -38,7 +39,8 @@ function shift(name: string, label: string, example: string): StdOperatorMeta {
     maxArity: 2,
     description: `${label} The word must be ${WORD}. ${REFUSED} ${COUNT_REFUSED} ${RESULT}`,
     hasSideEffects: false,
-    returnType: NUMBER,
+    failable: {},
+    returnType: nullable(NUMBER),
     params: [
       { name: 'a', type: NUMBER, description: 'Unsigned 32-bit word' },
       { name: 'n', type: NUMBER, description: 'Bit count, a whole number 0..31' },
@@ -58,7 +60,8 @@ export const BIT_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: `Bitwise NOT over 32 bits (4294967295 - a). The operand must be ${WORD}. ${REFUSED} ${RESULT}`,
     hasSideEffects: false,
-    returnType: NUMBER,
+    failable: {},
+    returnType: nullable(NUMBER),
     params: [{ name: 'a', type: NUMBER, description: 'Unsigned 32-bit word' }],
     example: '["bit/not", 0] // => 4294967295',
   },

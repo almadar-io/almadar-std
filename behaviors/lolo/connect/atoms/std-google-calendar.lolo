@@ -39,13 +39,16 @@ orbital CalendarOrbital {
           timeoutMs: @config.timeoutMs
         } { key: "list", emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
       CALENDAR_CREATE_EVENT -> idle when (or (validate/required @payload.end) (= (str/len @payload.start) 10) (> (or @payload.durationMinutes 0) 0))
-        (let ((endValue (if (validate/required @payload.end) @payload.end (if (= (str/len @payload.start) 10) (time/format (time/add (time/parse @payload.start) 1 day) "YYYY-MM-DD") (let ((ts (math/floor (+ (time/parse @payload.start) (* @payload.durationMinutes 60000))))) (str/concat (time/format @ts "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @ts 1000)) 3 "0") "Z"))))))
+        (let ((st (time/parse @payload.start)))
+         (let ((endValue (if (validate/required @payload.end) @payload.end (if (== @st null) null (if (= (str/len @payload.start) 10) (time/format (time/add @st 1 day) "YYYY-MM-DD") (let ((ts (math/floor (+ @st (* @payload.durationMinutes 60000))))) (let ((f (time/format @ts "YYYY-MM-DDTHH:mm:ss"))) (if (== @f null) null (str/concat @f "." (str/padStart (str/concat (math/mod @ts 1000)) 3 "0") "Z")))))))))
+          (if (== @endValue null)
+            (emit CALENDAR_CREATE_EVENT_FAILED { code: null, message: "createEvent could not read `start` as a date or date-time to compute `end`" })
           (http POST @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (or @payload.calendarId @config.calendarId)) "/events") {
             headers: { Accept: "*/*", Content-Type: "application/json" },
             text: (str/concat "{" (str/join (array/filter [(str/concat "\"summary\":" (json/stringify @payload.summary)) (if (validate/required @payload.description) (str/concat "\"description\":" (json/stringify @payload.description)) "") (if (validate/required @payload.location) (str/concat "\"location\":" (json/stringify @payload.location)) "") (str/concat "\"start\":" (if (= (str/len @payload.start) 10) (str/concat "{\"date\":" (json/stringify @payload.start) "}") (str/concat "{\"dateTime\":" (json/stringify @payload.start) "}"))) (str/concat "\"end\":" (if (= (str/len @endValue) 10) (str/concat "{\"date\":" (json/stringify @endValue) "}") (str/concat "{\"dateTime\":" (json/stringify @endValue) "}")))] (fn p (!= @p ""))) ",") "}"),
             auth: { scheme: jwt-bearer, key: @config.serviceAccount, alg: RS256, claims: (object/merge { scope: @config.scope, aud: @config.tokenUrl, exp: (+ (math/floor (/ @now 1000)) 3600), iat: (math/floor (/ @now 1000)) } (if (!= @config.subject "") { sub: @config.subject } {})), tokenUrl: @config.tokenUrl, expiresMarginMs: 300000, storeAs: { name: @config.tokenCache }, grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "timeout", "failed"], noResponseMax: 2, scheduleMs: [100, 500, 1500] } } },
             timeoutMs: @config.timeoutMs
-          } { key: "create", emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } }))
+          } { key: "create", emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } }))))
       CALENDAR_CREATE_EVENT -> idle when (and (not (validate/required @payload.end)) (!= (str/len @payload.start) 10) (<= (or @payload.durationMinutes 0) 0))
         (emit CALENDAR_CREATE_EVENT_FAILED { code: null, message: "createEvent requires `end` or a positive `durationMinutes`" })
       CALENDAR_UPDATE_EVENT -> idle

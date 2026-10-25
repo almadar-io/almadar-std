@@ -13,8 +13,6 @@ import type { StdOperatorMeta } from '../types.js';
 
 /** Operator name to the zero-based argument positions that raise on null. */
 export const NULL_REJECTING_OPERANDS: Readonly<Record<string, readonly number[]>> = {
-  '%': [1],
-  '/': [1],
   'array/append': [0],
   'array/avg': [0, 1],
   'array/cosine': [0, 1],
@@ -74,7 +72,6 @@ export const NULL_REJECTING_OPERANDS: Readonly<Record<string, readonly number[]>
   'bytes/to-base64': [0],
   'bytes/to-string': [0],
   'bytes/write-uint': [0, 1, 2],
-  'format/currency': [1],
   'hash/md5': [0, 1],
   'hash/pbkdf2': [0, 1, 2, 3],
   'hash/sha256': [0, 1, 2],
@@ -84,8 +81,6 @@ export const NULL_REJECTING_OPERANDS: Readonly<Record<string, readonly number[]>
   'brotli/decompress': [0, 1],
   'hmac/sha256': [0, 1, 2],
   'json/valid': [0],
-  'math/mod': [1],
-  'math/randomInt': [1],
   'object/clone': [0],
   'object/filter': [0],
   'object/fromEntries': [0],
@@ -102,7 +97,7 @@ export const NULL_REJECTING_OPERANDS: Readonly<Record<string, readonly number[]>
   'os/path-relative': [0, 1],
   'prob/credible-interval': [0],
   'prob/expected-value': [0],
-  'prob/histogram': [0, 1],
+  'prob/histogram': [0],
   'prob/percentile': [0],
   'prob/variance': [0],
   'str/encode-uri-component': [0],

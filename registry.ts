@@ -25,12 +25,6 @@ import { TIME_OPERATORS } from './modules/time.js';
 import { VALIDATE_OPERATORS } from './modules/validate.js';
 import { FORMAT_OPERATORS } from './modules/format.js';
 import { I18N_OPERATORS } from './modules/i18n.js';
-import { NN_OPERATORS } from './modules/nn.js';
-import { TENSOR_OPERATORS } from './modules/tensor.js';
-import { TRAIN_OPERATORS } from './modules/train.js';
-import { GRAPH_OPERATORS } from './modules/graph.js';
-import { CONTRACT_OPERATORS } from './modules/contract.js';
-import { DATA_OPERATORS } from './modules/data.js';
 import { PROB_OPERATORS } from './modules/prob.js';
 import { OS_OPERATORS } from './modules/os.js';
 import { KV_OPERATORS } from './modules/kv.js';
@@ -76,12 +70,6 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = withNullRejection(
   ...VALIDATE_OPERATORS,
   ...FORMAT_OPERATORS,
   ...I18N_OPERATORS,
-  ...NN_OPERATORS,
-  ...TENSOR_OPERATORS,
-  ...TRAIN_OPERATORS,
-  ...GRAPH_OPERATORS,
-  ...CONTRACT_OPERATORS,
-  ...DATA_OPERATORS,
   ...PROB_OPERATORS,
   ...OS_OPERATORS,
   ...KV_OPERATORS,
@@ -132,12 +120,6 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   validate: VALIDATE_OPERATORS,
   format: FORMAT_OPERATORS,
   i18n: I18N_OPERATORS,
-  nn: NN_OPERATORS,
-  tensor: TENSOR_OPERATORS,
-  train: TRAIN_OPERATORS,
-  graph: GRAPH_OPERATORS,
-  contract: CONTRACT_OPERATORS,
-  data: DATA_OPERATORS,
   prob: PROB_OPERATORS,
   os: OS_OPERATORS,
   kv: KV_OPERATORS,

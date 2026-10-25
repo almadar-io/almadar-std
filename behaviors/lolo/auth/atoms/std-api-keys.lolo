@@ -42,18 +42,21 @@ orbital ApiKeysOrbital {
       INIT -> idle
 
       SEED_DRAWN -> saving
-        (let (
-            (plaintext (str/concat @config.prefix (hash/sha256 ?value "hex")))
-            (keyHash (hash/scrypt (str/concat @config.prefix (hash/sha256 ?value "hex")) @config.salt)))
-          (if (= @keyHash null)
-            (emit SALT_UNUSABLE {})
-            (do
-              (set @entity.plaintext @plaintext)
-              (set @entity.keyHash @keyHash)
-              (set @entity.lastFour (str/slice @plaintext (- (str/len @plaintext) 4)))
-              (persist create @config.keyEntity (array/reduce @entity.extra { id: @keyHash, lastFour: (str/slice @plaintext (- (str/len @plaintext) 4)) } (fn (row field) (object/set @row (object/get @field name) (object/get @field value)))) {
-                emit: { success: KEY_SAVED, failure: KEY_NOT_SAVED }
-              }))))
+        (let ((digest (hash/sha256 ?value "hex")))
+          (if (= @digest null)
+            (emit API_KEY_FAILED { code: null, message: "The drawn seed could not be hashed" })
+            (let (
+                (plaintext (str/concat @config.prefix @digest))
+                (keyHash (hash/scrypt (str/concat @config.prefix @digest) @config.salt)))
+              (if (= @keyHash null)
+                (emit SALT_UNUSABLE {})
+                (do
+                  (set @entity.plaintext @plaintext)
+                  (set @entity.keyHash @keyHash)
+                  (set @entity.lastFour (str/slice @plaintext (- (str/len @plaintext) 4)))
+                  (persist create @config.keyEntity (array/reduce @entity.extra { id: @keyHash, lastFour: (str/slice @plaintext (- (str/len @plaintext) 4)) } (fn (row field) (object/set @row (object/get @field name) (object/get @field value)))) {
+                    emit: { success: KEY_SAVED, failure: KEY_NOT_SAVED }
+                  }))))))
       SEED_FAILED -> idle
         (emit API_KEY_FAILED { code: null, message: ?error })
     }

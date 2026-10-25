@@ -265,7 +265,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Divide numbers',
     hasSideEffects: false,
-    returnType: 'number',
+    failable: { unlessLiteral: [1] },
+    returnType: nullable('number'),
     params: [
       { name: 'a', type: NUMBER, description: 'Numerator' },
       { name: 'b', type: NUMBER, description: 'Denominator' },
@@ -279,7 +280,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Modulo (remainder)',
     hasSideEffects: false,
-    returnType: 'number',
+    failable: { unlessLiteral: [1] },
+    returnType: nullable('number'),
     returnSemantics: 'integer-closed',
     params: [
       { name: 'a', type: NUMBER, description: 'Dividend' },

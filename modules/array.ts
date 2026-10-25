@@ -459,7 +459,8 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Average of values (optionally by field)',
     hasSideEffects: false,
-    returnType: 'number',
+    failable: {},
+    returnType: nullable('number'),
     params: [
       { name: 'arr', type: list(tv('T')), description: 'The array' },
       { name: 'key', type: keyOf('T'), description: 'Field to average', optional: true },
@@ -591,7 +592,8 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Cosine similarity between two numeric vectors, in [-1, 1] (1 = identical direction). The building block for "is this answer semantically the reference answer" checks over embeddings. Pure math — usable in guards and value position, unlike the async llm/* substrate operators.',
     hasSideEffects: false,
-    returnType: 'number',
+    failable: {},
+    returnType: nullable('number'),
     params: [
       { name: 'a', type: { kind: 'array', of: 'number' }, description: 'First vector' },
       { name: 'b', type: { kind: 'array', of: 'number' }, description: 'Second vector' },
@@ -605,7 +607,8 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Find the candidate vector nearest a query vector by cosine similarity. Returns { index, score, margin } — index/score of the best match, and margin (best score minus second-best), which is what makes an abstaining gate possible: a small margin means the top match is not confidently distinguished from the runner-up.',
     hasSideEffects: false,
-    returnType: shape({ index: NUMBER, score: NUMBER, margin: NUMBER }),
+    failable: {},
+    returnType: nullable(shape({ index: NUMBER, score: NUMBER, margin: NUMBER })),
     params: [
       { name: 'query', type: { kind: 'array', of: 'number' }, description: 'Query vector' },
       { name: 'candidates', type: { kind: 'array', of: { kind: 'array', of: 'number' } }, description: 'Candidate vectors to search' },

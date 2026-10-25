@@ -14,7 +14,7 @@ type OrbFinding = { code : string!, path : string!, message : string!, suggestio
 type StoreBindArm = { event : string, effects : [StoreShape] }
 type StoreBindMachine = { transitions : [StoreBindArm] }
 type StoreBindTrait = { name : string, stateMachine : StoreBindMachine }
-type StoreBindEntity = { name : string, store : string, persistence : string, local : boolean }
+type StoreBindEntity = { name : string, store : string, persistence : string, browser : boolean }
 type StoreBindCaps = { conditional : boolean }
 type StoreBindCapsSlot = { default : StoreBindCaps }
 type StoreBindConfig = { writeCapabilities : StoreBindCapsSlot }
@@ -45,7 +45,7 @@ orbital OrbLintStoreBindingOrbital {
                            (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
                              (let ((ents (array/filter (array/concat [(object/get (array/nth @orbitals @oi) "entity" {})] (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])) (fn xe (validate/object @xe)))))
                                (array/map (array/filter @ents (fn e (object/has @e "store")))
-                                 (fn e { path: (str/concat "orbitals[" @oi "].entity." (object/get @e "name" "")), driver: (object/get @e "store"), bad: (or (= (object/get @e "persistence" "") "runtime") (= (object/get @e "local" false) true)), label: (object/get @e "name" "") })))))))))
+                                 (fn e { path: (str/concat "orbitals[" @oi "].entity." (object/get @e "name" "")), driver: (object/get @e "store"), bad: (or (= (object/get @e "persistence" "") "runtime") (= (object/get @e "browser" false) true)), label: (object/get @e "name" "") })))))))))
               (array/flatten (array/map (array/range 0 (array/len @bound)) (fn bi
                 (let ((b (array/nth @bound @bi)))
                   (let ((d (object/get @b "driver")))
@@ -74,17 +74,17 @@ orbital OrbLintStoreBindingOrbital {
                       (array/flatten (array/map (object/get @orb "traits" []) (fn td
                         (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "transitions" []) (fn tr
                           (array/flatten (array/map (object/get @tr "effects" []) (fn ef
-                            (array/map
-                              (tree/fold @ef (fn (n k)
+                            (let ((fres (tree/fold @ef (fn (n k)
                                 (if (validate/array @n)
                                   (array/concat
                                     (let ((h0 (array/nth @n 0)) (a0 (array/nth @n 1))) (if (validate/string @h0) (if (= @h0 "emit") (if (validate/string @a0) (if (array/includes ["ROW_READ", "ROW_LIST", "ROWS_QUERY", "ROWS_WRITE"] @a0) [@a0] []) []) []) []))
                                     (array/flatten (array/filter @k (fn r (validate/array @r)))))
-                                  [])) StoreShape)
-                              (fn verb { code: "ORB_STORE_VERB_OUTSIDE_SEAM", path: (str/concat "orbitals[" @oi "].traits." (object/get @td "name" "")), message: (str/concat "trait " (object/get @td "name" "") " emits the row verb " @verb "; a store driver is asked only by the store seam, one frame per ask (EXEC-STORE-4)"), suggestion: "Read and write the rows through persist/fetch on an entity bound to the driver", severity: "error" }))))))))))))))))))
+                                  [])) StoreShape))) (if (= @fres null) (let ((up (str/concat "orbitals[" @oi "].traits." (object/get @td "name" "")))) [{ code: "LINT_NODE_UNCHECKED", path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a StoreShape; this rule could not check it"), suggestion: "", severity: "error" }]) (array/map
+                              @fres
+                              (fn verb { code: "ORB_STORE_VERB_OUTSIDE_SEAM", path: (str/concat "orbitals[" @oi "].traits." (object/get @td "name" "")), message: (str/concat "trait " (object/get @td "name" "") " emits the row verb " @verb "; a store driver is asked only by the store seam, one frame per ask (EXEC-STORE-4)"), suggestion: "Read and write the rows through persist/fetch on an entity bound to the driver", severity: "error" }))))))))))))))))))))
             (let ((bnd (array/flatten (array/map @orbitals (fn o
                      (array/flatten (array/map (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn xe (validate/object @xe))) (fn e
-                       (if (and (!= (object/get @e "persistence" "") "runtime") (not (object/get @e "local" false)))
+                       (if (and (!= (object/get @e "persistence" "") "runtime") (not (object/get @e "browser" false)))
                          (let ((dv (if (object/has @e "store") (object/get @e "store") (if (object/has @payload.program "store") (object/get @payload.program "store") ""))))
                            (if (= @dv "") [] [{ name: (object/get @e "name" ""), driver: @dv }]))
                          [])))))))))
@@ -96,13 +96,13 @@ orbital OrbLintStoreBindingOrbital {
                       (let ((td (array/nth (object/get @orb "traits" []) @ti)))
                         (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "transitions" []) (fn tr
                           (array/flatten (array/map (object/get @tr "effects" []) (fn ef
-                            (array/flatten (array/map
-                              (tree/fold @ef (fn (n k)
+                            (let ((fres (tree/fold @ef (fn (n k)
                                 (if (validate/array @n)
                                   (array/concat
                                     (let ((h0 (array/nth @n 0)) (v0 (array/nth @n 1)) (e0 (array/nth @n 2))) (if (validate/string @h0) (if (= @h0 "persist") (if (validate/string @v0) (if (or (= @v0 "delete") (= @v0 "update")) (if (validate/string @e0) [@e0] []) []) []) []) []))
                                     (array/flatten (array/filter @k (fn r (validate/array @r)))))
-                                  [])) StoreShape)
+                                  [])) StoreShape))) (if (= @fres null) (let ((up (str/concat "orbitals[" @oi " (" (object/get @orb "name") ")].traits[" @ti " (" (object/get @td "name") ")]"))) [{ code: "LINT_NODE_UNCHECKED", path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a StoreShape; this rule could not check it"), suggestion: "", severity: "error" }]) (array/flatten (array/map
+                              @fres
                               (fn en
                                 (let ((hits (array/filter @bnd (fn x (= (object/get @x "name") @en)))))
                                   (if (= (array/len @hits) 0)
@@ -111,7 +111,7 @@ orbital OrbLintStoreBindingOrbital {
                                       (let ((drv (array/filter @orbitals (fn o (= (object/get @o "name") @dv)))))
                                         (if (and (> (array/len @drv) 0) (= (object/get (object/get (object/get (object/get (array/first @drv) "config" {}) "writeCapabilities" {}) "default" {}) "conditional" null) false))
                                           [{ code: "ORB_STORE_DRIVER_NOT_CONDITIONAL", path: (str/concat "orbitals[" @oi " (" (object/get @orb "name") ")].traits[" @ti " (" (object/get @td "name") ")]"), message: (str/concat "persist on " @en " is one conditional op (EXEC-STEP-8), and its store driver " @dv " declares writeCapabilities.conditional false"), suggestion: "Bind the entity to a driver that writes conditionally, or take rows through a persist batch", severity: "error" }]
-                                          []))))))))))))))))))))))))))))
+                                          []))))))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "store-binding", scope: @entity.scope, findings: @entity.findings })

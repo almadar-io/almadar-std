@@ -148,8 +148,10 @@ orbital OrbRunnersOrbital {
         (os/getenv "RUNNER_DIR" { key: "RUNNER_DIR" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
       RN_ENV_NEXT -> reading when (= @entity.cursor 9)
         (os/getenv "RUNNER_LABELS" { key: "RUNNER_LABELS" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
-      RN_ENV_READ -> reading
-        (set @entity.vars (object/merge @entity.vars (object/fromEntries [[@payload.key, (or @payload.value "")]])))
+      RN_ENV_READ -> ready when (or (= @payload.key null) (= (object/fromEntries [[@payload.key, (or @payload.value "")]]) null))
+        (emit RUNNERS_ANSWERED { status: 500, body: "an environment variable answered without its name" })
+      RN_ENV_READ -> reading when (and (!= @payload.key null) (!= (object/fromEntries [[@payload.key, (or @payload.value "")]]) null))
+        (set @entity.vars (let ((entry (object/fromEntries [[@payload.key, (or @payload.value "")]]))) (if (= @entry null) @entity.vars (object/merge @entity.vars @entry))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RN_ENV_NEXT { })
       RN_ENV_NEXT -> reading when (>= @entity.cursor 10)
@@ -169,8 +171,10 @@ orbital OrbRunnersOrbital {
         (os/read-file { anchor: { env: "ALMADAR_ROOT" } path: ".env" } { key: "dotenv" emit: { success: RN_DOTENV, failure: RN_DOTENV_MISSING } })
       RN_TOKEN_NEXT -> reading when (and (= @entity.pat "") (= (object/get @entity.vars "ALMADAR_ROOT") ""))
         (os/read-file "~/kflow.ai.builder/.env" { key: "dotenv" emit: { success: RN_DOTENV, failure: RN_DOTENV_MISSING } })
-      RN_DOTENV -> reading
-        (set @entity.pat (str/replace-pattern (or (array/first (array/map (array/filter (str/split (bytes/to-string @payload.data) "\n") (fn l (str/startsWith @l "GITHUB_TOKEN="))) (fn l (str/slice @l 13)))) "") "[\\x22'\\r]" ""))
+      RN_DOTENV -> reading when (= (bytes/to-string @payload.data) null)
+        (emit RN_START { })
+      RN_DOTENV -> reading when (!= (bytes/to-string @payload.data) null)
+        (set @entity.pat (let ((text (bytes/to-string @payload.data))) (if (= @text null) @entity.pat (str/replace-pattern (or (array/first (array/map (array/filter (str/split @text "\n") (fn l (str/startsWith @l "GITHUB_TOKEN="))) (fn l (str/slice @l 13)))) "") "[\\x22'\\r]" ""))))
         (emit RN_START { })
       RN_DOTENV_MISSING -> reading
         (emit RN_START { })

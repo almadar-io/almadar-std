@@ -454,12 +454,14 @@ orbital SocialGraphOrbital {
 
     state loadingMessages {
       INIT -> idle
-      MessagesLoaded -> idle
+      MessagesLoaded -> idle when (= (hash/sha256 (if (= (object/get (array/first @entity.scratchConn) callerId "") @entity.reqMember) (object/get (array/first @entity.scratchConn) peerId "") (object/get (array/first @entity.scratchConn) callerId "")) "hex") null)
+        (emit SOCIAL_CONNECTION_FAILED { error: "the peer handle could not be derived" })
+      MessagesLoaded -> idle when (!= (hash/sha256 (if (= (object/get (array/first @entity.scratchConn) callerId "") @entity.reqMember) (object/get (array/first @entity.scratchConn) peerId "") (object/get (array/first @entity.scratchConn) callerId "")) "hex") null)
         (let ((vconn (array/first @entity.scratchConn)))
           (emit SOCIAL_VIEWED {
             connectionId: @entity.reqConnection
             status: @entity.scratchStatus
-            peerHandle: (str/concat "peer-" (str/slice (hash/sha256 (if (= (object/get @vconn callerId "") @entity.reqMember) (object/get @vconn peerId "") (object/get @vconn callerId "")) "hex") 0 6))
+            peerHandle: (str/concat "peer-" (str/slice (hash/sha256 (if (= (object/get (array/first @entity.scratchConn) callerId "") @entity.reqMember) (object/get (array/first @entity.scratchConn) peerId "") (object/get (array/first @entity.scratchConn) callerId "")) "hex") 0 6))
             originKind: (object/get @vconn originKind "")
             originLabel: (object/get @vconn originId "")
             badges: (array/map (object/get @vconn badges (json/parse "[]" SocialBadges)) (fn b { id: (object/get @b id ""), label: (object/get @b label ""), kind: (object/get @b kind ""), active: (= (object/get @b id "") (object/get @vconn activeBadgeId "")) }))

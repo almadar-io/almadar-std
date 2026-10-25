@@ -10,7 +10,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { PRIMITIVE_VALUE, STRING, mapOf } from '../signature.js';
+import { PRIMITIVE_VALUE, STRING, mapOf, nullable } from '../signature.js';
 
 export const I18N_OPERATORS: Record<string, StdOperatorMeta> = {
   'i18n/t': {
@@ -20,7 +20,8 @@ export const I18N_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: "The active locale's message for a catalog key, with {{placeholders}} filled from params",
     hasSideEffects: false,
-    returnType: 'string',
+    failable: { unlessLiteral: [0] },
+    returnType: nullable('string'),
     params: [
       { name: 'key', type: 'string', description: 'Catalog key (a string literal)' },
       { name: 'params', type: mapOf(STRING, PRIMITIVE_VALUE), description: 'Values for the message {{placeholders}}', optional: true },

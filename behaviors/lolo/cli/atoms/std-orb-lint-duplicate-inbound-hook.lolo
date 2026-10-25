@@ -80,9 +80,11 @@ orbital OrbLintDuplicateInboundHookOrbital {
         (emit LINT_FINISH { })
       LINT_OPENED -> reading
         (os/read @payload.fd 4194304 { key: "chunk" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
-      LINT_FILE_READ -> reading when (str/includes (bytes/to-string @payload.data) "inbound \"")
+      LINT_FILE_READ -> reading when (= (bytes/to-string @payload.data) null)
+        (emit LINT_FILE_UNREAD { error: "the file is not valid text" })
+      LINT_FILE_READ -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (str/includes @text "inbound \"")))
         (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
-      LINT_FILE_READ -> reading when (not (str/includes (bytes/to-string @payload.data) "inbound \""))
+      LINT_FILE_READ -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (not (str/includes @text "inbound \""))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LINT_READ { })
       LINT_PROGRAM_READ -> reading

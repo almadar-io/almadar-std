@@ -98,6 +98,8 @@ orbital OrbShellCheckOrbital {
 
     state scanning {
       INIT -> scanning
+      SC_IO_FAILED -> ready
+        (emit SHELL_CHECK_ANSWERED { status: 500, body: (str/concat "shell layout read failed: " @payload.error), errors: [(str/concat "shell layout read failed: " @payload.error)] })
       SC_NEXT -> ready when (= (array/len @entity.tasks) 0)
         (emit SHELL_LAYOUT_EVALUATE { roots: @entity.roots, packs: @entity.packs })
       SC_NEXT -> listingPack when (> (array/len @entity.tasks) 0)
@@ -135,8 +137,8 @@ orbital OrbShellCheckOrbital {
       SC_IO_FAILED -> ready
         (emit SHELL_CHECK_ANSWERED { status: 500, body: (str/concat "shell layout read failed: " @payload.error), errors: [(str/concat "shell layout read failed: " @payload.error)] })
       SC_ROLE_READ -> scanning
-        (set @entity.packs (array/append @entity.packs { path: (object/get @entity.current "path"), role: (str/default (object/get (json/parse (bytes/to-string @payload.data) ShellRoleDescriptor) "role") ""), empty: (= (array/len (array/filter @entity.entries (fn entry (!= (object/get @entry "name") @config.descriptor)))) 0) }))
-        (emit SC_NEXT { })
+        (set @entity.packs (let ((text (bytes/to-string @payload.data))) (if (= @text null) @entity.packs (array/append @entity.packs { path: (object/get @entity.current "path"), role: (str/default (object/get (json/parse @text ShellRoleDescriptor) "role") ""), empty: (= (array/len (array/filter @entity.entries (fn entry (!= (object/get @entry "name") @config.descriptor)))) 0) }))))
+        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit SC_IO_FAILED { error: (str/concat (object/get @entity.current "path") " is not readable text") }) (emit SC_NEXT { })))
     }
 
     emits {

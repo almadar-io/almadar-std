@@ -441,9 +441,11 @@ orbital CouchdbOrbital {
       INIT -> idle
         (set @entity.op "")
         (set @entity.attempt 0)
-      COUCH_READ_REPLIED -> idle when (and (= @payload.status 200) (or (= @entity.op "update") (= @entity.op "delete")) (not (or (= @entity.guard null) (row/matches @entity.guard (object/omit (json/parse @payload.body CouchDoc) ["_id", "_rev"])))))
+      COUCH_READ_REPLIED -> idle when (and (= @payload.status 200) (= (json/parse @payload.body CouchDoc) null))
+        (emit COUCH_FAILED { op: @entity.op, status: 200, message: "CouchDB answered a document that cannot be read" })
+      COUCH_READ_REPLIED -> idle when (and (= @payload.status 200) (!= (json/parse @payload.body CouchDoc) null) (or (= @entity.op "update") (= @entity.op "delete")) (not (or (= @entity.guard null) (row/matches @entity.guard (object/omit (json/parse @payload.body CouchDoc) ["_id", "_rev"])))))
         (emit COUCH_REFUSED { db: @entity.db, id: @entity.docId })
-      COUCH_READ_REPLIED -> writing when (and (= @payload.status 200) (= @entity.op "update") (or (= @entity.guard null) (row/matches @entity.guard (object/omit (json/parse @payload.body CouchDoc) ["_id", "_rev"]))))
+      COUCH_READ_REPLIED -> writing when (and (= @payload.status 200) (!= (json/parse @payload.body CouchDoc) null) (= @entity.op "update") (or (= @entity.guard null) (row/matches @entity.guard (object/omit (json/parse @payload.body CouchDoc) ["_id", "_rev"]))))
         (set @entity.before (if (= @entity.guard null) null (object/omit (json/parse @payload.body CouchDoc) ["_id", "_rev"])))
         (set @entity.rev (object/get (json/parse @payload.body CouchRev) _rev ""))
         (set @entity.row (object/merge (json/parse @payload.body CouchDoc) (object/omit @entity.changes ["id"]) { _id: @entity.docId }))
@@ -453,7 +455,7 @@ orbital CouchdbOrbital {
           auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
           timeoutMs: @config.timeoutMs
         } { emit: { success: COUCH_WRITE_REPLIED, failure: COUCH_UNREACHABLE } })
-      COUCH_READ_REPLIED -> writing when (and (= @payload.status 200) (= @entity.op "upsert"))
+      COUCH_READ_REPLIED -> writing when (and (= @payload.status 200) (!= (json/parse @payload.body CouchDoc) null) (= @entity.op "upsert"))
         (set @entity.rev (object/get (json/parse @payload.body CouchRev) _rev ""))
         (set @entity.row (object/merge @entity.changes (object/pick (json/parse @payload.body CouchDoc) ["createdAt", "_rev"]) { _id: @entity.docId, id: @entity.docId }))
         (http PUT @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/" (str/encode-uri-component @entity.docId)) {
@@ -462,7 +464,7 @@ orbital CouchdbOrbital {
           auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
           timeoutMs: @config.timeoutMs
         } { emit: { success: COUCH_WRITE_REPLIED, failure: COUCH_UNREACHABLE } })
-      COUCH_READ_REPLIED -> writing when (and (= @payload.status 200) (= @entity.op "delete") (or (= @entity.guard null) (row/matches @entity.guard (object/omit (json/parse @payload.body CouchDoc) ["_id", "_rev"]))))
+      COUCH_READ_REPLIED -> writing when (and (= @payload.status 200) (!= (json/parse @payload.body CouchDoc) null) (= @entity.op "delete") (or (= @entity.guard null) (row/matches @entity.guard (object/omit (json/parse @payload.body CouchDoc) ["_id", "_rev"]))))
         (set @entity.before (if (= @entity.guard null) null (object/omit (json/parse @payload.body CouchDoc) ["_id", "_rev"])))
         (set @entity.rev (object/get (json/parse @payload.body CouchRev) _rev ""))
         (http DELETE @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/" (str/encode-uri-component @entity.docId) "?rev=" (str/encode-uri-component (object/get (json/parse @payload.body CouchRev) _rev ""))) {

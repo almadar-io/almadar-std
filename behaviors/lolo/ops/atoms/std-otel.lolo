@@ -64,7 +64,10 @@ orbital OtelOrbital {
           emit: { success: OTEL_SPAN_DRAWN, failure: OTEL_RANDOM_FAILED }
         })
       OTEL_SPAN_DRAWN -> idle
-        (let ((d (json/parse @payload.key OtelSpanDraw)) (spanId (str/slice (hash/sha256 (str/concat @payload.value "span") "hex") 0 16)) (traceId (if (!= (object/get (json/parse @payload.key OtelSpanDraw) traceId "") "") (object/get (json/parse @payload.key OtelSpanDraw) traceId "") (str/slice (hash/sha256 (str/concat @payload.value "trace") "hex") 0 32))))
+        (let ((spanHash (hash/sha256 (str/concat @payload.value "span") "hex")) (traceHash (hash/sha256 (str/concat @payload.value "trace") "hex")))
+          (if (or (== @spanHash null) (== @traceHash null))
+            (emit OTEL_EXPORT_FAILED { signal: "traces", kind: "random", error: "the drawn random bytes could not be hashed" })
+            (let ((d (json/parse @payload.key OtelSpanDraw)) (spanId (str/slice @spanHash 0 16)) (traceId (if (!= (object/get (json/parse @payload.key OtelSpanDraw) traceId "") "") (object/get (json/parse @payload.key OtelSpanDraw) traceId "") (str/slice @traceHash 0 32))))
           (do (persist create OtelSpan {
             id: @spanId,
             traceId: @traceId,
@@ -74,7 +77,7 @@ orbital OtelOrbital {
             startTime: (time/now),
             attributes: (object/get @d attributes {})
           } { emit: { success: OTEL_SPAN_STORED, failure: OTEL_STORE_FAILED } })
-          (emit START_SPAN_RESULT { spanId: @spanId, traceId: @traceId })))
+          (emit START_SPAN_RESULT { spanId: @spanId, traceId: @traceId })))))
       OTEL_RANDOM_FAILED -> idle
         (emit OTEL_EXPORT_FAILED { signal: "traces", kind: "random", error: @payload.error })
       OTEL_SPAN_STORED -> idle
@@ -145,7 +148,10 @@ orbital OtelOrbital {
           emit: { success: OTEL_METRIC_DRAWN, failure: OTEL_RANDOM_FAILED }
         })
       OTEL_METRIC_DRAWN -> idle
-        (let ((d (json/parse @payload.key OtelMetricDraw)) (id (str/slice (hash/sha256 (str/concat @payload.value "metric") "hex") 0 32)) (now (time/now)))
+        (let ((idHash (hash/sha256 (str/concat @payload.value "metric") "hex")))
+          (if (== @idHash null)
+            (emit OTEL_EXPORT_FAILED { signal: "metrics", kind: "random", error: "the drawn random bytes could not be hashed" })
+            (let ((d (json/parse @payload.key OtelMetricDraw)) (id (str/slice @idHash 0 32)) (now (time/now)))
           (do (persist create OtelMetric {
             id: @id,
             name: (object/get @d name ""),
@@ -173,7 +179,7 @@ orbital OtelOrbital {
                       { sum: { aggregationTemporality: 1, isMonotonic: true, dataPoints: [{ attributes: (let ((m (object/mapValues (object/get @d labels {}) (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) }))), startTimeUnixNano: (str/concat @now "000000"), timeUnixNano: (str/concat @now "000000"), asDouble: (object/get @d value 0) }] } })))]
               }]
             }] })
-          })))
+          })))))
       OTEL_METRIC_STORED -> idle
         (emit RECORD_METRIC_RESULT { recorded: true })
       OTEL_METRIC_NOT_STORED -> idle
