@@ -119,7 +119,7 @@ orbital SocialGraphOrbital {
     state loadingMembers {
       INIT -> idle
       PresenceLoaded -> idle when (= (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqMember)))) 0)
-        (emit SOCIAL_PEERS_LISTED { peers: (json/parse "[]" SocialPeers) })
+        (emit SOCIAL_PEERS_LISTED { peers: [] })
       PresenceLoaded -> drawing when (> (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqMember)))) 0)
         (set @entity.reqMembers (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqMember))))
         (random-bytes (* @config.tokenBytes (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqMember))))) { key: "social-peer-tokens", emit: { success: TokensDrawn, failure: PeerFailed } })

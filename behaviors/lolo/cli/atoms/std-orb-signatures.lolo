@@ -1,7 +1,7 @@
 app std-orb-signatures [
   version: "1.0.0",
   inbound: ["cli-signatures"],
-  fs: { cwd: "**": [read, write, create], "/**": [write, create] },
+  fs: { cwd: "**": [read, write], "/**": [write] },
   description: "std-orb-signatures — the `orb signatures [--out FILE]` command (spec/cli/orb-signatures.lolo; port of orbital-cli lib.rs print_lolo_signatures and commands/reference.rs everything()). It reads the installed language tables the way std-orb-reference does (constructs, validation codes and vocabulary from the file set @almadar/core declares under orbLanguage, plus its patterns registry; the operator table from the file @almadar/std declares as orbLanguage.operators) and answers one pretty JSON object { codes, constructs, operators, patterns, vocabulary }, sorted-key (canonical: every object's keys sorted, indented two spaces). --out FILE (relative to the directory the command runs in, or absolute) writes it there instead and reports `Wrote N bytes to FILE` on stderr (status 200, empty body). A flag it does not know, a repeated --out, a missing value or any word answers the usage (status 400, exit 2); an unreadable or missing table answers status 500 (exit 1) on stderr."
 ]
 uses Spec from "almadar-std/orb-signatures"
@@ -41,7 +41,9 @@ orbital OrbSignaturesOrbital {
 
     state ready {
       INIT -> ready
-      SIGNATURES_CALLED -> parsing
+      SIGNATURES_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit SIGNATURES_ANSWERED { status: 400, body: "", stderr: "usage: orb signatures [--out FILE]" })
+      SIGNATURES_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit SIGNATURES_ARGS_PARSE { stage: "signatures" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "out" aliases: [] takesValue: true repeatable: false }] })
     }
 

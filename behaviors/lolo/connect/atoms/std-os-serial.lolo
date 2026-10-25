@@ -1,0 +1,159 @@
+app std-os-serial [
+  version: "1.0.0",
+  dev: { "mmio:0x09000000+0x1000": [read, write], "irq:33": [wait, ack] },
+  description: "Byte transport over a PL011 UART through the os/ device operators. SERIAL_START enables the UART, unmasks its receive interrupt and waits on its irq line; each interrupt drains the receive FIFO, delivering one INPUT_BYTES per byte, then clears and acknowledges the interrupt and waits again. WRITE_BYTES queues bytes and writes them one register write at a time while the transmit FIFO has room. Every register access is an os/mmio-read or os/mmio-write inside the granted window at base; a failed device call emits SERIAL_ERROR and stops the driver. The grant covers the defaults (QEMU virt UART0); a call site that moves base or irq grants its own window and line."
+]
+
+orbital OsSerialOrbital {
+  entity SerialSession [runtime] {
+    id : string!
+    txQueue : bytes = ""
+    txBusy : boolean = false
+  }
+
+  trait SerialPort -> SerialSession [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      SERIAL_START -> starting
+        (os/mmio-write @config.base 48 4 769 { emit: { success: SERIAL_ENABLED, failure: SERIAL_FAILED } })
+      SERIAL_FAILED -> failed
+        (emit SERIAL_ERROR { error: @payload.error })
+    }
+
+    state starting {
+      INIT -> starting
+      SERIAL_ENABLED -> unmasking
+        (os/mmio-write @config.base 56 4 80 { emit: { success: SERIAL_UNMASKED, failure: SERIAL_FAILED } })
+      SERIAL_FAILED -> failed
+        (emit SERIAL_ERROR { error: @payload.error })
+    }
+
+    state unmasking {
+      INIT -> unmasking
+      SERIAL_UNMASKED -> running
+        (os/irq-wait @config.irq { key: "serial-rx" emit: { success: SERIAL_IRQ, failure: SERIAL_FAILED } })
+      SERIAL_FAILED -> failed
+        (emit SERIAL_ERROR { error: @payload.error })
+    }
+
+    state running {
+      INIT -> running
+      SERIAL_IRQ -> running
+        (os/mmio-read @config.base 24 4 { emit: { success: SERIAL_RX_FLAGS, failure: SERIAL_FAILED } })
+      SERIAL_RX_FLAGS -> running when (= (bit/and @payload.value 16) 0)
+        (os/mmio-read @config.base 0 4 { emit: { success: SERIAL_RX_BYTE, failure: SERIAL_FAILED } })
+      SERIAL_RX_FLAGS -> running when (!= (bit/and @payload.value 16) 0)
+        (os/mmio-write @config.base 68 4 2047 { emit: { success: SERIAL_CLEARED, failure: SERIAL_FAILED } })
+      SERIAL_RX_BYTE -> running when (let ((low (bit/and @payload.value 255))) (if (= @low null) false (!= (bytes/write-uint @low 1 "be") null)))
+        (let ((low (bit/and @payload.value 255)))
+          (if (= @low null)
+            (emit SERIAL_ERROR { error: "the data register held no byte" })
+            (let ((byte (bytes/write-uint @low 1 "be")))
+              (if (= @byte null)
+                (emit SERIAL_ERROR { error: "the data register held no byte" })
+                (emit INPUT_BYTES { data: @byte })))))
+        (os/mmio-read @config.base 24 4 { emit: { success: SERIAL_RX_FLAGS, failure: SERIAL_FAILED } })
+      SERIAL_RX_BYTE -> failed when (let ((low (bit/and @payload.value 255))) (if (= @low null) true (= (bytes/write-uint @low 1 "be") null)))
+        (emit SERIAL_ERROR { error: "the data register held no byte" })
+      SERIAL_CLEARED -> running
+        (os/irq-ack @config.irq { emit: { success: SERIAL_ACKED, failure: SERIAL_FAILED } })
+      SERIAL_ACKED -> running
+        (os/irq-wait @config.irq { key: "serial-rx" emit: { success: SERIAL_IRQ, failure: SERIAL_FAILED } })
+      WRITE_BYTES -> running when @entity.txBusy
+        (set @entity.txQueue (bytes/concat [@entity.txQueue @payload.data]))
+      WRITE_BYTES -> running when (not @entity.txBusy)
+        (set @entity.txQueue (bytes/concat [@entity.txQueue @payload.data]))
+        (set @entity.txBusy true)
+        (emit SERIAL_TX_PUMP {})
+      SERIAL_TX_PUMP -> running when (> (bytes/length @entity.txQueue) 0)
+        (os/mmio-read @config.base 24 4 { emit: { success: SERIAL_TX_FLAGS, failure: SERIAL_FAILED } })
+      SERIAL_TX_PUMP -> running when (= (bytes/length @entity.txQueue) 0)
+        (set @entity.txBusy false)
+      SERIAL_TX_FLAGS -> running when (= (bit/and @payload.value 32) 0)
+        (let ((next (bytes/read-uint @entity.txQueue 0 1 "be")))
+          (if (= @next null)
+            (emit SERIAL_ERROR { error: "the transmit queue held no byte" })
+            (os/mmio-write @config.base 0 4 @next { emit: { success: SERIAL_TX_WRITTEN, failure: SERIAL_FAILED } })))
+        (set @entity.txQueue (bytes/slice @entity.txQueue 1))
+      SERIAL_TX_FLAGS -> running when (!= (bit/and @payload.value 32) 0)
+        (os/mmio-read @config.base 24 4 { emit: { success: SERIAL_TX_FLAGS, failure: SERIAL_FAILED } })
+      SERIAL_TX_WRITTEN -> running
+        (emit SERIAL_TX_PUMP {})
+      SERIAL_FAILED -> failed
+        (emit SERIAL_ERROR { error: @payload.error })
+    }
+
+    state failed {
+      INIT -> failed
+    }
+
+    emits {
+      INPUT_BYTES -> external { data : bytes! }
+        @description "One byte received on the serial line."
+      SERIAL_ERROR -> external { error : string! }
+        @description "A device call failed; the driver stopped."
+      SERIAL_TX_PUMP {}
+        @description "Internal: write the next queued byte or stop transmitting."
+        @tier "internal"
+      SERIAL_ENABLED {}
+        @description "Internal: the control register was written."
+        @tier "internal"
+      SERIAL_UNMASKED {}
+        @description "Internal: the receive interrupt was unmasked."
+        @tier "internal"
+      SERIAL_IRQ { irq : int! }
+        @description "Internal: the irq line fired."
+        @tier "internal"
+      SERIAL_RX_FLAGS { value : int! }
+        @description "Internal: the flag register, read while draining the receive FIFO."
+        @tier "internal"
+      SERIAL_RX_BYTE { value : int! }
+        @description "Internal: the data register."
+        @tier "internal"
+      SERIAL_CLEARED {}
+        @description "Internal: the interrupt was cleared."
+        @tier "internal"
+      SERIAL_ACKED {}
+        @description "Internal: the irq line was acknowledged."
+        @tier "internal"
+      SERIAL_TX_FLAGS { value : int! }
+        @description "Internal: the flag register, read before a transmit write."
+        @tier "internal"
+      SERIAL_TX_WRITTEN {}
+        @description "Internal: one byte was written to the data register."
+        @tier "internal"
+      SERIAL_FAILED { error : string! kind : string }
+        @description "Internal: a device call failed."
+        @tier "internal"
+    }
+
+    listens {
+      SERIAL_START {}
+        @description "Enable the UART and start receiving, once."
+      WRITE_BYTES { data : bytes! }
+        @description "Queue these bytes for transmission."
+      SERIAL_TX_PUMP {}
+      SERIAL_ENABLED {}
+      SERIAL_UNMASKED {}
+      SERIAL_IRQ { irq : int! }
+      SERIAL_RX_FLAGS { value : int! }
+      SERIAL_RX_BYTE { value : int! }
+      SERIAL_CLEARED {}
+      SERIAL_ACKED {}
+      SERIAL_TX_FLAGS { value : int! }
+      SERIAL_TX_WRITTEN {}
+      SERIAL_FAILED { error : string! kind : string }
+    }
+
+    config {
+      base : int = 150994944
+        @description "Base address of the UART's 4 KiB register window (QEMU virt UART0 is 0x09000000)."
+      irq : int = 33
+        @description "Interrupt line of the UART (QEMU virt UART0 is 33)."
+    }
+  }
+
+  page boot as OsSerialOrbitalStart -> SerialPort
+}

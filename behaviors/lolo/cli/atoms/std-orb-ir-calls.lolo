@@ -66,8 +66,10 @@ orbital IrCallsOrbital {
                                                 @res)
                                               (fn h { head: (object/get @h "head"), args: (object/get @h "args"), rel: (str/concat @piece (object/get @h "rel")), d: (+ 1 (object/get @h "d")) })))))))))
                                   @pairs))))
-                          (array/flatten (array/map (object/entries @k) (fn e
-                            (array/map (array/nth @e 1) (fn h { head: (object/get @h "head"), args: (object/get @h "args"), rel: (str/concat "." (array/nth @e 0) (object/get @h "rel")), d: (+ 1 (object/get @h "d")) })))))))
+                          (if (validate/object @n)
+                            (array/flatten (array/map (object/entries @k) (fn e
+                              (array/map (array/nth @e 1) (fn h { head: (object/get @h "head"), args: (object/get @h "args"), rel: (str/concat "." (array/nth @e 0) (object/get @h "rel")), d: (+ 1 (object/get @h "d")) })))))
+                            [])))
                       "IrExpr"))) (if (= @fres null) [{ head: "", args: [], path: (object/get @r "path") }] (array/map
                     @fres
                     (fn h { head: (object/get @h "head"), args: (object/get @h "args"), path: (str/concat (object/get @r "path") (object/get @h "rel")) })))))))))))

@@ -5,7 +5,8 @@ app std-banking [
 ]
 type BankingRequisition = { id : string, link : string }
 type BankingRequisitionReply = { id : string, accounts : [string] }
-type BankingTransactionRow = { transactionId : string, internalTransactionId : string, bookingDate : string, remittanceInformationUnstructured : string, creditorName : string, debtorName : string }
+type BankingAmount = { amount : string, currency : string }
+type BankingTransactionRow = { transactionAmount : BankingAmount, transactionId : string, internalTransactionId : string, bookingDate : string, remittanceInformationUnstructured : string, creditorName : string, debtorName : string }
 type BankingTransactionsReply = { transactions : BankingBooked }
 type BankingBooked = { booked : [BankingTransactionRow] }
 type BankingTransaction = { id : string?, amount : number, currency : string, date : string?, description : string?, counterparty : string? }
@@ -116,16 +117,22 @@ orbital BankingOrbital {
       BANKING_TRANSACTIONS_REPLIED -> idle when (and (< @payload.status 500) (json/valid @payload.body) (or (< @payload.status 200) (>= @payload.status 300)))
         (emit BANKING_FAILED { code: null, message: (str/concat "GoCardless error " (format/number @payload.status) ": " @payload.body) })
       BANKING_TRANSACTIONS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
-        (emit BANKING_TRANSACTIONS_RESULT {
-          transactions: (array/map (or (object/get (json/parse @payload.body BankingTransactionsReply) "transactions.booked" null) []) (fn tx {
-            id: (if (validate/required (object/get @tx transactionId null)) (object/get @tx transactionId null) (object/get @tx internalTransactionId null)),
-            amount: (str/to-number (or (object/get @tx "transactionAmount.amount" null) "0")),
-            currency: (or (object/get @tx "transactionAmount.currency" null) ""),
-            date: (object/get @tx bookingDate null),
-            description: (object/get @tx remittanceInformationUnstructured null),
-            counterparty: (if (validate/required (object/get @tx creditorName null)) (object/get @tx creditorName null) (object/get @tx debtorName null))
-          }))
-        })
+        (let (
+            (booked (or (object/get (json/parse @payload.body BankingTransactionsReply) "transactions.booked" null) []))
+          )
+          (let (
+              (rows (array/reduce @booked [] (fn acc tx (let ((amount (str/to-number (or (object/get @tx "transactionAmount.amount" null) "")))) (if (= @amount null) @acc (array/append @acc {
+                id: (if (validate/required (object/get @tx transactionId null)) (object/get @tx transactionId null) (object/get @tx internalTransactionId null)),
+                amount: @amount,
+                currency: (or (object/get @tx "transactionAmount.currency" null) ""),
+                date: (object/get @tx bookingDate null),
+                description: (object/get @tx remittanceInformationUnstructured null),
+                counterparty: (if (validate/required (object/get @tx creditorName null)) (object/get @tx creditorName null) (object/get @tx debtorName null))
+              }))))))
+            )
+            (if (< (array/len @rows) (array/len @booked))
+              (emit BANKING_FAILED { code: null, message: "GoCardless returned a transaction whose amount is not a number" })
+              (emit BANKING_TRANSACTIONS_RESULT { transactions: @rows }))))
 
       BANKING_HTTP_FAILED -> idle when (= @payload.kind "unconfigured")
         (emit BANKING_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: banking. Set GOCARDLESS_SECRET_ID / GOCARDLESS_SECRET_KEY." })

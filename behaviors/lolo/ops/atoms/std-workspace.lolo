@@ -43,7 +43,6 @@ orbital WorkspaceOrbital {
     outputs : [string] = []
     codes : [number] = []
     failures : [string] = []
-    outValid : boolean = true
     entries : [WorkspaceEntry] = []
     paths : [string] = []
     ref : string = ""
@@ -215,7 +214,7 @@ orbital WorkspaceOrbital {
         (emit WS_START { })
 
       WS_START -> working
-        (emit WS_STEPS_RUN { requestId: "step", steps: @entity.steps, prefix: ["-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "-c", "protocol.allow=never"], env: (object/fromEntries [["PATH", @config.gitPath], ["LC_ALL", "C"], ["GIT_CEILING_DIRECTORIES", (os/path-dir @entity.dir)]]), rootDir: @config.root, repoDir: @entity.dir, dirFlag: "-C", rawInputs: @entity.rawInputs })
+        (emit WS_STEPS_RUN { requestId: "step", steps: @entity.steps, prefix: ["-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "-c", "protocol.allow=never"], env: (object/merge { PATH: @config.gitPath, LC_ALL: "C" } { GIT_CEILING_DIRECTORIES: (os/path-dir @entity.dir) }), rootDir: @config.root, repoDir: @entity.dir, dirFlag: "-C", rawInputs: @entity.rawInputs })
 
       WS_STEPS_DONE -> working
         (set @entity.outputs @payload.outputs)
@@ -564,7 +563,6 @@ orbital WorkspaceOrbital {
         (os/read-file (str/concat @config.root "/" @entity.wsRel "/" (array/nth @entity.rpaths @entity.rcursor)) { emit: { success: WS_R_GOT, failure: WS_R_ERR } })
       WS_R_GOT -> working
         (set @entity.stdoutBytes @payload.data)
-        (set @entity.outValid (base64/valid (bytes/to-base64 @entity.stdoutBytes)))
         (set @entity.rdata (array/append @entity.rdata @payload.data))
         (set @entity.rcursor (+ @entity.rcursor 1))
         (emit WS_R_NEXT { })
@@ -573,11 +571,13 @@ orbital WorkspaceOrbital {
         (emit WS_NEXT { })
       WS_R_ERR -> working when (!= @entity.rstage "read")
         (emit WS_FAIL { code: "", message: @payload.error })
-      WS_R_DONE -> working when (and (== @entity.rstage "read") @entity.outValid)
-        (emit WORKSPACE_FILE_READ { workspace: @entity.workspace, path: @entity.path, exists: true, content: (bytes/to-string (array/first @entity.rdata)) })
-        (emit WS_NEXT { })
-      WS_R_DONE -> working when (and (== @entity.rstage "read") (not @entity.outValid))
-        (emit WS_FAIL { code: "not-text", message: (str/concat "not valid UTF-8 text: " @entity.path) })
+      WS_R_DONE -> working when (== @entity.rstage "read")
+        (let ((text (bytes/to-string (array/first @entity.rdata))))
+          (if (== @text null)
+            (emit WS_FAIL { code: "not-text", message: (str/concat "not valid UTF-8 text: " @entity.path) })
+            (do
+              (emit WORKSPACE_FILE_READ { workspace: @entity.workspace, path: @entity.path, exists: true, content: @text })
+              (emit WS_NEXT { }))))
       WS_R_DONE -> working when (== @entity.rstage "sync")
         (set @entity.paths @entity.rpaths)
         (set @entity.bstage "syncPut")
@@ -658,7 +658,7 @@ orbital WorkspaceOrbital {
       WS_WALK_START -> working when (!= @entity.wcur "")
         (os/list-dir (str/concat @config.root "/" @entity.wsRel "/" @entity.wcur) { emit: { success: WS_WALK_LISTED, failure: WS_WALK_ERR } })
       WS_WALK_LISTED -> working
-        (set @entity.wstack (array/concat (array/map (array/sort (array/filter (array/map @payload.entries (fn e (object/get @e name))) (fn n (not (and (== @entity.wcur "") (== @n ".git")))))) (fn n { path: (if (== @entity.wcur "") @n (str/concat @entity.wcur "/" @n)), kind: (object/get (array/find @payload.entries (fn e (== (object/get @e name) @n))) kind "file") })) @entity.wstack))
+        (set @entity.wstack (array/concat (array/map (array/sort (array/filter (array/filter (array/map @payload.entries (fn e (object/get @e name ""))) (fn n (!= @n ""))) (fn n (not (and (== @entity.wcur "") (== @n ".git")))))) (fn n { path: (if (== @entity.wcur "") @n (str/concat @entity.wcur "/" @n)), kind: (object/get (array/find @payload.entries (fn e (== (object/get @e name) @n))) kind "file") })) @entity.wstack))
         (set @entity.wstarted true)
         (emit WS_WALK_NEXT { })
       WS_WALK_ERR -> working when (and (not @entity.wstarted) (== @payload.kind "not-found") (== @entity.wfor "tree"))

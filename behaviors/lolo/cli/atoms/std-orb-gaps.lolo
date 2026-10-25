@@ -114,7 +114,9 @@ orbital OrbGapsOrbital {
 
     state ready {
       INIT -> ready
-      GAPS_CALLED -> ready
+      GAPS_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit GAPS_ANSWERED { status: 500, body: "Error: orb gaps: the command arguments could not be read" })
+      GAPS_CALLED -> ready when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
         (set @entity.cmd (str/default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))
         (emit GAPS_ARGS_PARSE { stage: "gaps" argv: (array/drop (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) flags: [{ name: "from" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }, { name: "write" aliases: [] takesValue: false repeatable: false }, { name: "check" aliases: [] takesValue: false repeatable: false }] })
@@ -472,7 +474,7 @@ orbital OrbGapsOrbital {
           (array/map @entity.lEntries (fn e { code: (object/get @e "code"), side: "l", repo: (object/get @e "repo"), heading: (object/get @e "heading"), body: (object/get @e "body") }))
           (array/map @entity.bEntries (fn e { code: (object/get @e "code"), side: "p", repo: (object/get @e "repo"), heading: (object/get @e "heading"), body: (object/get @e "body") }))) "code"))
         (set @entity.rows (array/map @entity.codes (fn c
-          (let ((g (object/get @entity.groups @c)))
+          (let ((g (object/get @entity.groups @c [])))
             (let ((mm (array/find @g (fn s (= (object/get @s "side") "m"))))
                   (ll (array/find @g (fn s (= (object/get @s "side") "l"))))
                   (pp (array/find @g (fn s (= (object/get @s "side") "p")))))

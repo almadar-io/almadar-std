@@ -4627,6 +4627,32 @@
           }
         }
       ]
+    },
+    {
+      "id": "an unreadable command body answers 500",
+      "steps": [
+        {
+          "trait": "OrbLintEntityLocaleInstancesCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: orb lint entity-locale-instances: the command arguments could not be read"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ],
   "note": " Added cases copy tests/local_entity_validation.rs a_written_row_with_an_unknown_field_is_rejected, a_written_row_on_a_local_entity_needs_an_id and locale_rows_are_checked_like_the_default_rows (the paths follow check_instance_rows), plus the required-with-default and server-entity branches. The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it)."

@@ -51,7 +51,7 @@ orbital CloudRunBoardOrbital {
     cachedAt : number @description "Epoch milliseconds at which the board was cached." = 0
     hasCache : boolean = false
     loading : boolean @description "Whether a read is in flight." = false
-    startedAt : number @description "Epoch milliseconds at which the read in flight began." = 0
+    startedAt : instant @description "Epoch milliseconds at which the read in flight began." = 0
     token : string @description "The access token gcloud minted for the read in flight; empty without one." = ""
     usageAvailable : boolean = false
     instanceSeconds : [CrSeriesSum] = []
@@ -97,7 +97,7 @@ orbital CloudRunBoardOrbital {
         (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: CLOUD_RUN_REFRESH }] }, { type: typography, variant: caption, content: (str/concat @entity.billing.billingPeriod ": " @entity.billing.currency " " @entity.billing.totalCost (if (== @entity.cloudRun.actualBilledUsd null) "" (str/concat " (Cloud Run " @entity.cloudRun.actualBilledUsd ")"))) }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.billing.entries (fn e { id: @e.service, service: @e.service, cost: @e.cost, currency: @e.currency })), fields: [{ label: Service, name: service, variant: body }, { label: Cost, name: cost, variant: caption }, { label: Currency, name: currency, variant: caption }] }, { type: data-grid, cols: 1, gap: sm, entity: (array/map @entity.cloudRun.services (fn v { id: @v.name, name: @v.name, region: @v.region, status: @v.status, size: (if @v.hasResourceData (str/concat @v.cpu " vCPU, " @v.memoryGb " GiB" (if (> @v.gpuCount 0) (str/concat ", " @v.gpuCount " " @v.gpu) "")) "unknown"), instances: (str/concat @v.minInstances "–" @v.maxInstances), hours: @v.activeInstanceHours, requests: @v.requestCount, net: @v.netCostMtd, projected: @v.projectedMonthlyUsd })), fields: [{ label: Service, name: name, variant: body }, { label: Region, name: region, variant: caption }, { label: Status, name: status, variant: badge }, { label: Size, name: size, variant: caption }, { label: Instances, name: instances, variant: caption }, { label: Hours, name: hours, variant: caption }, { label: Requests, name: requests, variant: caption }, { label: Net, name: net, variant: caption }, { label: Projected, name: projected, variant: caption }] }] })
       CLOUD_RUN_LOAD -> reading when (not (and @entity.hasCache (< (- @now @entity.cachedAt) @config.cacheTtlMs)))
         (set @entity.loading true)
-        (set @entity.startedAt @now)
+        (set @entity.startedAt (time/now))
         (set @entity.token "")
         (set @entity.usageAvailable false)
         (set @entity.instanceSeconds [])
@@ -112,7 +112,7 @@ orbital CloudRunBoardOrbital {
         (emit CR_GCLOUD { stage: "token", argv: ["auth", "print-access-token"] })
       CLOUD_RUN_REFRESH -> reading
         (set @entity.loading true)
-        (set @entity.startedAt @now)
+        (set @entity.startedAt (time/now))
         (set @entity.token "")
         (set @entity.usageAvailable false)
         (set @entity.instanceSeconds [])

@@ -9,7 +9,7 @@ app std-orb-update-notice [
 uses Spec from "almadar-std/orb-update-notice"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type NoticeCache = { checkedAt : number!, available : [[string]]! }
-type NoticeManifest = { dependencies : Map string string? }
+type NoticeManifest = { dependencies : Map string string! }
 type NoticeInstalled = { version : string? }
 type NoticeDep = { name : string!, range : string! }
 
@@ -49,12 +49,14 @@ orbital OrbUpdateNoticeOrbital {
 
     state ready {
       INIT -> ready
-      UPDATE_NOTICE_CALLED -> writing when (= (str/default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "record")
+      UPDATE_NOTICE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit UPDATE_NOTICE_ANSWERED { status: 500, body: "", stderr: "Error: orb update-notice: the command arguments could not be read" })
+      UPDATE_NOTICE_CALLED -> writing when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (str/default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "record"))
         (set @entity.mode "record")
         (set @entity.nowSec (math/floor (/ (time/now) 1000)))
         (set @entity.found [])
         (emit UN_WRITE { })
-      UPDATE_NOTICE_CALLED -> gating when (!= (str/default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "record")
+      UPDATE_NOTICE_CALLED -> gating when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (str/default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "record"))
         (set @entity.mode "check")
         (set @entity.nowSec (math/floor (/ (time/now) 1000)))
         (set @entity.found [])

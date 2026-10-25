@@ -112,32 +112,32 @@ orbital OtelOrbital {
         (fetch OtelSpanEvent { filter: { shipped: false }, orderBy: "timestamp", emit: { success: OTEL_EVENTS_LOADED, failure: OTEL_READ_FAILED } })
       OTEL_ENDING_LOADED -> idle when (= (array/count @payload.data) 0)
       OTEL_EVENTS_LOADED -> idle
-        (let ((evs (array/filter @payload.data (fn ev (array/some @entity.spans (fn s (= (object/get @s id "") (object/get @ev spanId ""))))))))
+        (let ((evs (array/filter @payload.data (fn ev (array/some @entity.spans (fn s (= @s.id @ev.spanId)))))))
           (emit OTEL_SEND {
             signal: "traces",
             path: "/v1/traces",
-            key: (json/stringify { signal: "traces", spanIds: (array/map @entity.spans (fn s (object/get @s id ""))), eventIds: (array/map @evs (fn ev (object/get @ev id ""))), metricId: "" }),
+            key: (json/stringify { signal: "traces", spanIds: (array/map @entity.spans (fn s @s.id)), eventIds: (array/map @evs (fn ev @ev.id)), metricId: "" }),
             body: (json/stringify { resourceSpans: [{
               resource: { attributes: [{ key: "service.name", value: { stringValue: @config.serviceName } }] },
               scopeSpans: [{
                 scope: { name: @config.scopeName },
                 spans: (array/map @entity.spans (fn s (object/merge
                   {
-                    traceId: (object/get @s traceId ""),
-                    spanId: (object/get @s id ""),
-                    name: (object/get @s name ""),
-                    kind: (object/get @s kind 1),
-                    startTimeUnixNano: (str/concat (object/get @s startTime 0) "000000"),
-                    endTimeUnixNano: (str/concat (object/get @s endTime 0) "000000"),
-                    attributes: (let ((m (object/mapValues (object/get @s attributes {}) (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) }))),
-                    events: (array/map (array/filter @evs (fn ev (= (object/get @ev spanId "") (object/get @s id "")))) (fn ev {
-                      timeUnixNano: (str/concat (object/get @ev timestamp 0) "000000"),
-                      name: (object/get @ev name ""),
-                      attributes: (let ((m (object/mapValues (object/get @ev attributes {}) (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) })))
+                    traceId: @s.traceId,
+                    spanId: @s.id,
+                    name: @s.name,
+                    kind: @s.kind,
+                    startTimeUnixNano: (str/concat @s.startTime "000000"),
+                    endTimeUnixNano: (str/concat @s.endTime "000000"),
+                    attributes: (let ((m (object/mapValues @s.attributes (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) }))),
+                    events: (array/map (array/filter @evs (fn ev (= @ev.spanId @s.id))) (fn ev {
+                      timeUnixNano: (str/concat @ev.timestamp "000000"),
+                      name: @ev.name,
+                      attributes: (let ((m (object/mapValues @ev.attributes (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) })))
                     })),
-                    status: (if (= (object/get @s status "") "ok") { code: 1, message: (object/get @s statusMessage "") } (if (= (object/get @s status "") "error") { code: 2, message: (object/get @s statusMessage "") } { code: 0 }))
+                    status: (if (= @s.status "ok") { code: 1, message: @s.statusMessage } (if (= @s.status "error") { code: 2, message: @s.statusMessage } { code: 0 }))
                   }
-                  (if (!= (object/get @s parentSpanId "") "") { parentSpanId: (object/get @s parentSpanId "") } {}))))
+                  (if (!= @s.parentSpanId "") { parentSpanId: @s.parentSpanId } {}))))
               }]
             }] })
           }))
@@ -228,15 +228,15 @@ orbital OtelOrbital {
         (let ((s (array/first @entity.spans)))
           (emit GET_SPAN_RESULT { found: true, span: (object/merge
             {
-              spanId: (object/get @s id ""),
-              traceId: (object/get @s traceId ""),
-              name: (object/get @s name ""),
-              startTime: (object/get @s startTime 0),
-              attributes: (object/get @s attributes {}),
-              events: (array/map @payload.data (fn ev { name: (object/get @ev name ""), timestamp: (object/get @ev timestamp 0), attributes: (object/get @ev attributes {}) }))
+              spanId: @s.id,
+              traceId: @s.traceId,
+              name: @s.name,
+              startTime: @s.startTime,
+              attributes: @s.attributes,
+              events: (array/map @payload.data (fn ev { name: @ev.name, timestamp: @ev.timestamp, attributes: @ev.attributes }))
             }
-            (if (!= (object/get @s endTime 0) 0) { endTime: (object/get @s endTime 0) } {})
-            (if (!= (object/get @s status "") "") { status: (object/get @s status "") } {})) }))
+            (if (!= @s.endTime 0) { endTime: @s.endTime } {})
+            (if (!= @s.status "") { status: @s.status } {})) }))
 
       GET_METRICS -> idle
         (fetch OtelMetric { orderBy: "timestamp", emit: { success: OTEL_METRICS_LOADED, failure: OTEL_READ_FAILED } })

@@ -85,7 +85,9 @@ orbital OrbCompleteOrbital {
 
     state ready {
       INIT -> ready
-      COMPLETE_CALLED -> parsing
+      COMPLETE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit COMPLETE_ANSWERED { status: 400, body: "usage: orb complete <file.lolo> --offset <n>" })
+      COMPLETE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
         (emit COMPLETE_ARGS_PARSE { stage: "complete" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "offset" aliases: [] takesValue: true repeatable: false }, { name: "stdin" aliases: [] takesValue: false repeatable: false }] })
     }
@@ -195,7 +197,7 @@ orbital OrbCompleteOrbital {
       COMPLETE_PATTERNS -> loading when (= (bytes/to-string @payload.data) null)
         (emit COMPLETE_FAILED { error: "the installed @almadar/core patterns registry is not valid text" })
       COMPLETE_PATTERNS -> loading when (!= (bytes/to-string @payload.data) null)
-        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit COMPLETE_FAILED { error: "the installed @almadar/core patterns registry is not valid text" }) (emit COMPLETE_RUN { source: @entity.source, offset: @entity.offset, effects: @entity.effects, types: @entity.types, rows: (let ((pats (object/get (json/parse @text PatternsRegistry) "patterns"))) (array/map (object/keys @pats) (fn p { pattern: @p, tag: (str/join (array/map (str/split @p "-") (fn s (str/concat (str/upper (str/slice @s 0 1)) (str/slice @s 1 (str/len @s))))) ""), props: (object/keys (or (object/get (object/get @pats @p) "propsSchema") (json/parse "{}" PatternProps))) }))) })))
+        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit COMPLETE_FAILED { error: "the installed @almadar/core patterns registry is not valid text" }) (let ((reg (json/parse @text PatternsRegistry))) (if (= @reg null) (emit COMPLETE_FAILED { error: "the installed @almadar/core patterns registry is not a patterns registry" }) (emit COMPLETE_RUN { source: @entity.source, offset: @entity.offset, effects: @entity.effects, types: @entity.types, rows: (let ((pats (object/get @reg "patterns"))) (array/map (object/keys @pats) (fn p { pattern: @p, tag: (str/join (array/map (str/split @p "-") (fn s (str/concat (str/upper (str/slice @s 0 1)) (str/slice @s 1 (str/len @s))))) ""), props: (object/keys (or (object/get (object/get @pats @p) "propsSchema") {})) }))) })))))
       COMPLETE_RUN -> loading
         (set @entity.source @payload.source)
         (set @entity.offset @payload.offset)

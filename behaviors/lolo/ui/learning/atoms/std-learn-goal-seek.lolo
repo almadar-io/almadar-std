@@ -27,7 +27,7 @@ orbital GoalSeekOrbital {
     paramBLabel : string
     targetSamples : [GoalSeekCurveSample] = []
     curves : [GoalSeekCurve]
-    distance : number = 0
+    distance : number? = 0
     attempts : number = 0
     solved : boolean = false
     feedback : string
@@ -48,34 +48,34 @@ orbital GoalSeekOrbital {
             (tB @config.targetB)
             (A @config.paramADefault)
             (B @config.paramBDefault)
-            (targetSamples (array/map (array/range 0 81) (fn (i)
+            (targetSamples (array/flatten (array/map (array/range 0 81) (fn (i)
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @tA (or (math/pow @x @tB) 0))
+                          (let ((pw (math/pow @x @tB))) (if (== @pw null) null (* @tA @pw)))
                           (if (== @kind "linear")
                             (+ @tA (* @tB @x))
                             (* @tA (math/sin (* @tB @x))))))
                 )
-                { x: @x, y: @yVal }))))
-            (samples (array/map (array/range 0 81) (fn (i)
+                (if (== @yVal null) [] [{ x: @x, y: @yVal }]))))))
+            (samples (array/flatten (array/map (array/range 0 81) (fn (i)
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @A (or (math/pow @x @B) 0))
+                          (let ((pw (math/pow @x @B))) (if (== @pw null) null (* @A @pw)))
                           (if (== @kind "linear")
                             (+ @A (* @B @x))
                             (* @A (math/sin (* @B @x))))))
                 )
-                { x: @x, y: @yVal }))))
-            (dist (math/sqrt (/ (array/sum (array/map (array/range 0 81) (fn (i)
-              (let (
-                  (dY (- (object/get (array/nth @samples @i) y) (object/get (array/nth @targetSamples @i) y)))
-                )
-                (* @dY @dY))))) 81)))
+                (if (== @yVal null) [] [{ x: @x, y: @yVal }]))))))
+            (sqs (array/flatten (array/map @samples (fn (s)
+              (let ((t (array/find @targetSamples (fn (q) (== (object/get @q x) (object/get @s x))))))
+                (if (== @t null) [] [(let ((dY (- (object/get @s y) (object/get @t y)))) (* @dY @dY))]))))))
+            (ms (/ (array/sum @sqs) (array/len @sqs)))
+            (dist (if (== @ms null) null (math/sqrt @ms)))
             (allSamples (array/concat @samples @targetSamples))
-            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
-            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yMinRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
+            (yMaxRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y))))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
           )
           (do
@@ -116,7 +116,7 @@ orbital GoalSeekOrbital {
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                     { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) },
                     { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
-                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
+                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (if (== @entity.distance null) "n/a" (str/concat "" (math/round @entity.distance 3))) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
                   ] },
                 { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
                 { type: stack, direction: vertical, gap: sm, children: [
@@ -147,34 +147,34 @@ orbital GoalSeekOrbital {
             (tB @config.targetB)
             (A @config.paramADefault)
             (B @config.paramBDefault)
-            (targetSamples (array/map (array/range 0 81) (fn (i)
+            (targetSamples (array/flatten (array/map (array/range 0 81) (fn (i)
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @tA (or (math/pow @x @tB) 0))
+                          (let ((pw (math/pow @x @tB))) (if (== @pw null) null (* @tA @pw)))
                           (if (== @kind "linear")
                             (+ @tA (* @tB @x))
                             (* @tA (math/sin (* @tB @x))))))
                 )
-                { x: @x, y: @yVal }))))
-            (samples (array/map (array/range 0 81) (fn (i)
+                (if (== @yVal null) [] [{ x: @x, y: @yVal }]))))))
+            (samples (array/flatten (array/map (array/range 0 81) (fn (i)
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @A (or (math/pow @x @B) 0))
+                          (let ((pw (math/pow @x @B))) (if (== @pw null) null (* @A @pw)))
                           (if (== @kind "linear")
                             (+ @A (* @B @x))
                             (* @A (math/sin (* @B @x))))))
                 )
-                { x: @x, y: @yVal }))))
-            (dist (math/sqrt (/ (array/sum (array/map (array/range 0 81) (fn (i)
-              (let (
-                  (dY (- (object/get (array/nth @samples @i) y) (object/get (array/nth @targetSamples @i) y)))
-                )
-                (* @dY @dY))))) 81)))
+                (if (== @yVal null) [] [{ x: @x, y: @yVal }]))))))
+            (sqs (array/flatten (array/map @samples (fn (s)
+              (let ((t (array/find @targetSamples (fn (q) (== (object/get @q x) (object/get @s x))))))
+                (if (== @t null) [] [(let ((dY (- (object/get @s y) (object/get @t y)))) (* @dY @dY))]))))))
+            (ms (/ (array/sum @sqs) (array/len @sqs)))
+            (dist (if (== @ms null) null (math/sqrt @ms)))
             (allSamples (array/concat @samples @targetSamples))
-            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
-            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yMinRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
+            (yMaxRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y))))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
           )
           (do
@@ -215,7 +215,7 @@ orbital GoalSeekOrbital {
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                     { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) },
                     { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
-                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
+                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (if (== @entity.distance null) "n/a" (str/concat "" (math/round @entity.distance 3))) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
                   ] },
                 { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
                 { type: stack, direction: vertical, gap: sm, children: [
@@ -242,34 +242,34 @@ orbital GoalSeekOrbital {
             (tB ?targetB)
             (A @config.paramADefault)
             (B @config.paramBDefault)
-            (targetSamples (array/map (array/range 0 81) (fn (i)
+            (targetSamples (array/flatten (array/map (array/range 0 81) (fn (i)
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @tA (or (math/pow @x @tB) 0))
+                          (let ((pw (math/pow @x @tB))) (if (== @pw null) null (* @tA @pw)))
                           (if (== @kind "linear")
                             (+ @tA (* @tB @x))
                             (* @tA (math/sin (* @tB @x))))))
                 )
-                { x: @x, y: @yVal }))))
-            (samples (array/map (array/range 0 81) (fn (i)
+                (if (== @yVal null) [] [{ x: @x, y: @yVal }]))))))
+            (samples (array/flatten (array/map (array/range 0 81) (fn (i)
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @A (or (math/pow @x @B) 0))
+                          (let ((pw (math/pow @x @B))) (if (== @pw null) null (* @A @pw)))
                           (if (== @kind "linear")
                             (+ @A (* @B @x))
                             (* @A (math/sin (* @B @x))))))
                 )
-                { x: @x, y: @yVal }))))
-            (dist (math/sqrt (/ (array/sum (array/map (array/range 0 81) (fn (i)
-              (let (
-                  (dY (- (object/get (array/nth @samples @i) y) (object/get (array/nth @targetSamples @i) y)))
-                )
-                (* @dY @dY))))) 81)))
+                (if (== @yVal null) [] [{ x: @x, y: @yVal }]))))))
+            (sqs (array/flatten (array/map @samples (fn (s)
+              (let ((t (array/find @targetSamples (fn (q) (== (object/get @q x) (object/get @s x))))))
+                (if (== @t null) [] [(let ((dY (- (object/get @s y) (object/get @t y)))) (* @dY @dY))]))))))
+            (ms (/ (array/sum @sqs) (array/len @sqs)))
+            (dist (if (== @ms null) null (math/sqrt @ms)))
             (allSamples (array/concat @samples @targetSamples))
-            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
-            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yMinRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
+            (yMaxRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y))))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
           )
           (do
@@ -310,7 +310,7 @@ orbital GoalSeekOrbital {
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                     { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) },
                     { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
-                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
+                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (if (== @entity.distance null) "n/a" (str/concat "" (math/round @entity.distance 3))) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
                   ] },
                 { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
                 { type: stack, direction: vertical, gap: sm, children: [
@@ -339,24 +339,24 @@ orbital GoalSeekOrbital {
             (B @entity.paramB)
             (kind @entity.curveKind)
             (span (- @config.xMax @config.xMin))
-            (samples (array/map (array/range 0 81) (fn (i)
+            (samples (array/flatten (array/map (array/range 0 81) (fn (i)
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @A (or (math/pow @x @B) 0))
+                          (let ((pw (math/pow @x @B))) (if (== @pw null) null (* @A @pw)))
                           (if (== @kind "linear")
                             (+ @A (* @B @x))
                             (* @A (math/sin (* @B @x))))))
                 )
-                { x: @x, y: @yVal }))))
-            (dist (math/sqrt (/ (array/sum (array/map (array/range 0 81) (fn (i)
-              (let (
-                  (dY (- (object/get (array/nth @samples @i) y) (object/get (array/nth @entity.targetSamples @i) y)))
-                )
-                (* @dY @dY))))) 81)))
+                (if (== @yVal null) [] [{ x: @x, y: @yVal }]))))))
+            (sqs (array/flatten (array/map @samples (fn (s)
+              (let ((t (array/find @entity.targetSamples (fn (q) (== (object/get @q x) (object/get @s x))))))
+                (if (== @t null) [] [(let ((dY (- (object/get @s y) (object/get @t y)))) (* @dY @dY))]))))))
+            (ms (/ (array/sum @sqs) (array/len @sqs)))
+            (dist (if (== @ms null) null (math/sqrt @ms)))
             (allSamples (array/concat @samples @entity.targetSamples))
-            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
-            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yMinRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
+            (yMaxRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y))))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
           )
           (do
@@ -384,7 +384,7 @@ orbital GoalSeekOrbital {
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                     { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) },
                     { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
-                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
+                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (if (== @entity.distance null) "n/a" (str/concat "" (math/round @entity.distance 3))) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
                   ] },
                 { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
                 { type: stack, direction: vertical, gap: sm, children: [
@@ -410,24 +410,24 @@ orbital GoalSeekOrbital {
             (B (math/clamp ?value @config.paramBMin @config.paramBMax))
             (kind @entity.curveKind)
             (span (- @config.xMax @config.xMin))
-            (samples (array/map (array/range 0 81) (fn (i)
+            (samples (array/flatten (array/map (array/range 0 81) (fn (i)
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @A (or (math/pow @x @B) 0))
+                          (let ((pw (math/pow @x @B))) (if (== @pw null) null (* @A @pw)))
                           (if (== @kind "linear")
                             (+ @A (* @B @x))
                             (* @A (math/sin (* @B @x))))))
                 )
-                { x: @x, y: @yVal }))))
-            (dist (math/sqrt (/ (array/sum (array/map (array/range 0 81) (fn (i)
-              (let (
-                  (dY (- (object/get (array/nth @samples @i) y) (object/get (array/nth @entity.targetSamples @i) y)))
-                )
-                (* @dY @dY))))) 81)))
+                (if (== @yVal null) [] [{ x: @x, y: @yVal }]))))))
+            (sqs (array/flatten (array/map @samples (fn (s)
+              (let ((t (array/find @entity.targetSamples (fn (q) (== (object/get @q x) (object/get @s x))))))
+                (if (== @t null) [] [(let ((dY (- (object/get @s y) (object/get @t y)))) (* @dY @dY))]))))))
+            (ms (/ (array/sum @sqs) (array/len @sqs)))
+            (dist (if (== @ms null) null (math/sqrt @ms)))
             (allSamples (array/concat @samples @entity.targetSamples))
-            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
-            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yMinRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
+            (yMaxRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y))))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
           )
           (do
@@ -455,7 +455,7 @@ orbital GoalSeekOrbital {
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                     { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) },
                     { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
-                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
+                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (if (== @entity.distance null) "n/a" (str/concat "" (math/round @entity.distance 3))) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
                   ] },
                 { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
                 { type: stack, direction: vertical, gap: sm, children: [
@@ -477,10 +477,12 @@ orbital GoalSeekOrbital {
 
       CHECK -> idle when (and (== @entity.active true) (== @entity.solved false))
         (set @entity.attempts (+ @entity.attempts 1))
-        (set @entity.solved (if (<= @entity.distance @config.tolerance) true false))
-        (set @entity.feedback (if (<= @entity.distance @config.tolerance)
-          (str/concat "Matched! Distance " (math/round @entity.distance 3) " is within tolerance " (math/round @config.tolerance 3) ".")
-          (str/concat "Not yet — distance " (math/round @entity.distance 3) " is above tolerance " (math/round @config.tolerance 3) ". Keep tuning.")))
+        (set @entity.solved (if (== @entity.distance null) false (<= @entity.distance @config.tolerance)))
+        (set @entity.feedback (if (== @entity.distance null)
+          "Not yet — your curve shares no defined point with the target. Keep tuning."
+          (if (<= @entity.distance @config.tolerance)
+            (str/concat "Matched! Distance " (math/round @entity.distance 3) " is within tolerance " (math/round @config.tolerance 3) ".")
+            (str/concat "Not yet — distance " (math/round @entity.distance 3) " is above tolerance " (math/round @config.tolerance 3) ". Keep tuning."))))
         (set @entity.resultRow (array/concat (if @entity.solved [ { type: badge, variant: success, label: "Solved" } ] []) [ { type: typography, variant: caption, content: @entity.feedback } ]))
         (render-ui main {
           type: box
@@ -497,7 +499,7 @@ orbital GoalSeekOrbital {
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                     { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) },
                     { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
-                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
+                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (if (== @entity.distance null) "n/a" (str/concat "" (math/round @entity.distance 3))) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
                   ] },
                 { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
                 { type: stack, direction: vertical, gap: sm, children: [
@@ -524,24 +526,24 @@ orbital GoalSeekOrbital {
             (B @config.paramBDefault)
             (kind @entity.curveKind)
             (span (- @config.xMax @config.xMin))
-            (samples (array/map (array/range 0 81) (fn (i)
+            (samples (array/flatten (array/map (array/range 0 81) (fn (i)
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @A (or (math/pow @x @B) 0))
+                          (let ((pw (math/pow @x @B))) (if (== @pw null) null (* @A @pw)))
                           (if (== @kind "linear")
                             (+ @A (* @B @x))
                             (* @A (math/sin (* @B @x))))))
                 )
-                { x: @x, y: @yVal }))))
-            (dist (math/sqrt (/ (array/sum (array/map (array/range 0 81) (fn (i)
-              (let (
-                  (dY (- (object/get (array/nth @samples @i) y) (object/get (array/nth @entity.targetSamples @i) y)))
-                )
-                (* @dY @dY))))) 81)))
+                (if (== @yVal null) [] [{ x: @x, y: @yVal }]))))))
+            (sqs (array/flatten (array/map @samples (fn (s)
+              (let ((t (array/find @entity.targetSamples (fn (q) (== (object/get @q x) (object/get @s x))))))
+                (if (== @t null) [] [(let ((dY (- (object/get @s y) (object/get @t y)))) (* @dY @dY))]))))))
+            (ms (/ (array/sum @sqs) (array/len @sqs)))
+            (dist (if (== @ms null) null (math/sqrt @ms)))
             (allSamples (array/concat @samples @entity.targetSamples))
-            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
-            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yMinRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
+            (yMaxRaw (if (== (array/len @allSamples) 0) 0 (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y))))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
           )
           (do
@@ -573,7 +575,7 @@ orbital GoalSeekOrbital {
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                     { type: button, action: CHECK, label: @config.checkLabel, icon: "check", variant: primary, disabled: (if @entity.solved true false) },
                     { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
-                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
+                    { type: typography, variant: caption, color: muted, content: (if @config.showLiveDistance (str/concat "Distance from target: " (if (== @entity.distance null) "n/a" (str/concat "" (math/round @entity.distance 3))) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) }
                   ] },
                 { type: math-canvas, keyMap: { Space: CHECK, KeyR: RESET }, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
                 { type: stack, direction: vertical, gap: sm, children: [
@@ -633,13 +635,13 @@ orbital GoalSeekOrbital {
       PARAMS_CHANGED -> external {
         paramA : number
         paramB : number
-        distance : number
+        distance : number?
       }
         @description "The learner's parameter values and current distance after a slider change — a composed listener (readout, coach) can subscribe; a harmless no-op when the atom runs standalone."
         @tier "domain"
       GOAL_CHECKED -> external {
         matched : boolean
-        distance : number
+        distance : number?
         attempts : number
       }
         @description "The verdict of a Check press: whether the learner's curve is within tolerance of the target, the RMS distance, and how many attempts it took."

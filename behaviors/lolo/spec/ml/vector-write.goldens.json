@@ -1002,6 +1002,60 @@
      }
     }
    ]
+  },
+  {
+   "id": "a header that cannot be encoded refuses as corrupt instead of writing",
+   "entity": {
+    "id": "w",
+    "path": "/u/m.vec",
+    "model": "baai/bge-base-en-v1.5",
+    "dims": 70000,
+    "rows": [],
+    "existing": ""
+   },
+   "steps": [
+    {
+     "from": "validating",
+     "event": "VECTOR_RESOLVED",
+     "payload": {
+      "model": "baai/bge-base-en-v1.5",
+      "entries": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHECKED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "merging",
+     "event": "CHECKED",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "HEADER_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_CORRUPT",
+         "detail": "/u/m.vec: the store header could not be encoded"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "merging",
+     "event": "HEADER_REFUSED",
+     "payload": {
+      "code": "ORB_VECTOR_CORRUPT",
+      "detail": "/u/m.vec: the store header could not be encoded"
+     },
+     "expect": {}
+    }
+   ]
   }
  ]
 }

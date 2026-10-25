@@ -289,25 +289,25 @@ orbital DataImportOrbital {
       ;; filter to this batch, keep rows whose rowJson parses to an object,
       ;; remap keys through the batch's mappingJson, and hand the consumer
       ;; mapped rows + a failed count (failed rows surface, never drop
-      ;; silently). json/parse yields null on invalid JSON, so the guard-level
-      ;; branch is validate/object on the parse result.
+      ;; silently). json/parse yields null on invalid JSON: such a row counts
+      ;; as failed, and an invalid mappingJson fails the whole import.
       IMPORT_ROWS_FETCHED -> confirmed
-        (emit IMPORT_ROWS_PARSED {
-          batchId: @entity.id
-          failed: (array/len (array/filter ?data (fn row (and
-            (= (object/get @row "batchId") @entity.id)
-            (not (validate/object (json/parse (object/get @row "rowJson") ImportCells)))))))
-          rows: (let ((mapping (json/parse @entity.mappingJson ImportCells))) (array/map
-            (array/filter ?data (fn row (and
-              (= (object/get @row "batchId") @entity.id)
-              (validate/object (json/parse (object/get @row "rowJson") ImportCells)))))
-            (fn row (object/mapKeys
-              (json/parse (object/get @row "rowJson") ImportCells)
-              (fn k (if (object/has @mapping @k)
-                (object/get @mapping @k)
-                @k))))))
-          targetEntity: @config.targetEntity
-        })
+        (let ((mapping (json/parse @entity.mappingJson ImportCells)))
+          (if (= @mapping null)
+            (emit IMPORT_FAILED { batchId: @entity.id, error: "The column mapping is not valid JSON, nothing was imported." })
+            (let ((batchRows (array/filter ?data (fn row (= (object/get @row "batchId") @entity.id)))))
+              (let ((mapped (array/flatten (array/map @batchRows (fn row
+                (let ((cells (json/parse (object/get @row "rowJson") ImportCells)))
+                  (if (= @cells null)
+                    []
+                    (let ((m (object/mapKeys @cells (fn k (object/get @mapping @k @k)))))
+                      (if (= @m null) [] [@m])))))))))
+                (emit IMPORT_ROWS_PARSED {
+                  batchId: @entity.id
+                  failed: (- (array/len @batchRows) (array/len @mapped))
+                  rows: @mapped
+                  targetEntity: @config.targetEntity
+                })))))
       ;; Same transient-failure self-loop as in `staged` — the row fetch can
       ;; fail after the batch row was already persisted as confirmed.
       IMPORT_PERSIST_FAILED -> confirmed
@@ -397,7 +397,7 @@ orbital DataImportOrbital {
         @synonyms "import confirmed, commit import, accept staged rows, approve import"
         @tier "domain"
       IMPORT_ROWS_FETCHED {
-        data : [ImportRow]
+        data : [ImportRow]!
       }
         @description "import_rows collection-fetch success on confirm — payload carries every staged row flat; the atom filters to @entity.id by batchId in the IMPORT_ROWS_PARSED arm (self-loop only)"
         @tier "secondary"

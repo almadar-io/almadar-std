@@ -12013,6 +12013,32 @@
           }
         }
       ]
+    },
+    {
+      "id": "an unreadable command body answers 500",
+      "steps": [
+        {
+          "trait": "OrbLintSlotCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: orb lint slot: the command arguments could not be read"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ],
   "note": "Slots follow validate_page_slots over the traits of ROUTE pages only: an endpoint or boot page (a page with a protocol) is not checked. A trait some sibling embeds with `@trait.X` (in a render payload, a config default, a transition guard or effect, or a tick, inside an `if` or not) paints inside that sibling's frame and owns no page slot, and the embed set is read from every page trait, so mutually embedding traits leave none. A page is covered when any trait on it paints (a non-null render-ui) on any slot in any transition; a clear (render-ui slot null) is not a paint and owns no slot for contention, but still counts for nesting. A trait counts once per slot, a render-ui inside `if` or `do` counts, and modal and toast are shared overlays that never contend. Only a render-ui array is a render (an object-shaped effect is not). The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it). A `@config.<knob>` slot is read through the trait's declared default, what the compiler sees after inlining."

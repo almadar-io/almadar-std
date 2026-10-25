@@ -62,7 +62,7 @@ orbital OrbLintEntityFieldTypeOrbital {
     }
 
     config {
-      fieldTypes : [string] = ["string", "number", "int", "boolean", "date", "datetime", "timestamp", "email", "url", "phone", "uuid", "image", "money", "file", "bytes", "CallKey", "array", "tuple", "object", "enum", "relation", "trait", "orbital", "behavior", "slot", "pattern", "node", "event", "union"]
+      fieldTypes : [string] = ["string", "number", "int", "boolean", "date", "datetime", "timestamp", "instant", "email", "url", "phone", "uuid", "image", "money", "file", "bytes", "CallKey", "array", "tuple", "object", "enum", "relation", "trait", "orbital", "behavior", "slot", "pattern", "node", "event", "union"]
         @label "Field types"
         @description "The field types an entity field may declare, as the compiler's field validation accepts them (G-STD-145)."
     }
@@ -88,9 +88,9 @@ orbital OrbLintEntityFieldTypeOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-field-type <file>" })
-      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
     }
 

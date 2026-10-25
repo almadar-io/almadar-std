@@ -8,8 +8,8 @@ orbital MlPosteriorOrbital {
     alpha : float @description "Beta distribution success count (prior + observed successes)." = 1
     beta : float @description "Beta distribution failure count (prior + observed failures)." = 1
     mean : float @description "Posterior mean: alpha / (alpha + beta)." = 0
-    intervalLow : float @description "Lower bound of the last computed credible interval." = 0
-    intervalHigh : float @description "Upper bound of the last computed credible interval." = 0
+    intervalLow : float? @description "Lower bound of the last computed credible interval; null when no draw could be made." = null
+    intervalHigh : float? @description "Upper bound of the last computed credible interval; null when no draw could be made." = null
     observations : number @description "Number of observations folded into the posterior so far." = 0
     status : "idle" | "insufficient" | "mastered" | "remediate" = idle
   }
@@ -22,8 +22,8 @@ orbital MlPosteriorOrbital {
         (set @entity.alpha @config.priorAlpha)
         (set @entity.beta @config.priorBeta)
         (set @entity.mean (/ @config.priorAlpha (+ @config.priorAlpha @config.priorBeta)))
-        (set @entity.intervalLow 0)
-        (set @entity.intervalHigh 0)
+        (set @entity.intervalLow null)
+        (set @entity.intervalHigh null)
         (set @entity.observations 0)
         (set @entity.status idle)
       OBSERVE -> idle
@@ -32,28 +32,34 @@ orbital MlPosteriorOrbital {
         (set @entity.observations (+ @entity.observations 1))
         (set @entity.mean (/ @entity.alpha (+ @entity.alpha @entity.beta)))
         (let ((samples (prob/sample @config.sampleCount (prob/beta @entity.alpha @entity.beta)))
-              (interval (or (prob/credible-interval @samples 0.05) [0, 1]))
-              (low (array/nth @interval 0))
-              (high (array/nth @interval 1))
-              (width (- @high @low)))
-          (do
-            (set @entity.intervalLow @low)
-            (set @entity.intervalHigh @high)
-            (if (> @width @config.intervalWidthMax)
+              (interval (prob/credible-interval @samples 0.05)))
+          (if (= @interval null)
+              (do
+                (set @entity.intervalLow null)
+                (set @entity.intervalHigh null)
+                (set @entity.status insufficient)
+                (emit EVIDENCE_INSUFFICIENT { mean: @entity.mean, intervalLow: null, intervalHigh: null }))
+              (let ((low (array/nth @interval 0))
+                    (high (array/nth @interval 1))
+                    (width (- @high @low)))
                 (do
-                  (set @entity.status insufficient)
-                  (emit EVIDENCE_INSUFFICIENT { mean: @entity.mean, intervalLow: @low, intervalHigh: @high }))
-                (if (>= @entity.mean @config.masteryFloor)
-                    (do
-                      (set @entity.status mastered)
-                      (emit MASTERY_REACHED { mean: @entity.mean, intervalLow: @low, intervalHigh: @high }))
-                    (if (<= @entity.mean @config.remediationCeiling)
-                        (do
-                          (set @entity.status remediate)
-                          (emit REMEDIATION_NEEDED { mean: @entity.mean, intervalLow: @low, intervalHigh: @high }))
-                        (do
-                          (set @entity.status insufficient)
-                          (emit EVIDENCE_INSUFFICIENT { mean: @entity.mean, intervalLow: @low, intervalHigh: @high })))))))
+                  (set @entity.intervalLow @low)
+                  (set @entity.intervalHigh @high)
+                  (if (> @width @config.intervalWidthMax)
+                      (do
+                        (set @entity.status insufficient)
+                        (emit EVIDENCE_INSUFFICIENT { mean: @entity.mean, intervalLow: @low, intervalHigh: @high }))
+                      (if (>= @entity.mean @config.masteryFloor)
+                          (do
+                            (set @entity.status mastered)
+                            (emit MASTERY_REACHED { mean: @entity.mean, intervalLow: @low, intervalHigh: @high }))
+                          (if (<= @entity.mean @config.remediationCeiling)
+                              (do
+                                (set @entity.status remediate)
+                                (emit REMEDIATION_NEEDED { mean: @entity.mean, intervalLow: @low, intervalHigh: @high }))
+                              (do
+                                (set @entity.status insufficient)
+                                (emit EVIDENCE_INSUFFICIENT { mean: @entity.mean, intervalLow: @low, intervalHigh: @high })))))))))
     }
 
     emits {
@@ -63,8 +69,8 @@ orbital MlPosteriorOrbital {
       REMEDIATION_NEEDED -> external { mean : float!, intervalLow : float!, intervalHigh : float! }
         @description "The posterior mean is at or below remediationCeiling with a credible interval narrow enough to trust."
         @tier "primary"
-      EVIDENCE_INSUFFICIENT -> external { mean : float!, intervalLow : float!, intervalHigh : float! }
-        @description "The abstain — the credible interval is still wider than intervalWidthMax, so no verdict is licensed yet."
+      EVIDENCE_INSUFFICIENT -> external { mean : float!, intervalLow : float?, intervalHigh : float? }
+        @description "The abstain — the credible interval is still wider than intervalWidthMax, or no interval could be drawn (null bounds), so no verdict is licensed yet."
         @tier "primary"
     }
 

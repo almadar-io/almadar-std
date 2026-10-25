@@ -18,6 +18,7 @@ orbital MigrationAdapterFirestoreOrbital {
   type FirestoreRecipe = { adapterId : string!, documentUnit : boolean!, documentKind : "root" | "folder" | "section" | "qa"!, documentSlots : [string], nodesField : string!, nodeKinds : [FirestoreNodeKind], edgesField : string!, edgeKind : "root" | "folder" | "section" | "qa"!, edgeSlots : [string] }
   type FirestoreUnitSet = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string, span : string, extra : Map string ImportFieldValue, fields : FirestoreFields, hidden : [string] }
   type FirestoreStrings = [string]
+  type FirestoreNodeBuild = { ref : string!, unit : FirestoreUnitSet? }
 
   entity MigrationAdapterFirestoreRun [runtime] {
     id : string!
@@ -28,6 +29,7 @@ orbital MigrationAdapterFirestoreOrbital {
     docs : [FirestoreDocument] = []
     unreadable : [ImportSkip] = []
     docSets : [FirestoreUnitSet] = []
+    nodeBuilds : [FirestoreNodeBuild] = []
     nodeSets : [FirestoreUnitSet] = []
     edgeSets : [FirestoreUnitSet] = []
     sets : [FirestoreUnitSet] = []
@@ -111,7 +113,7 @@ orbital MigrationAdapterFirestoreOrbital {
                     hidden: (array/filter [(object/get @entity.recipe "nodesField"), (object/get @entity.recipe "edgesField")] (fn h (!= @h "")))
                   })))
             []))
-        (set @entity.nodeSets
+        (set @entity.nodeBuilds
           (array/flatten
             (array/map
               @entity.docs
@@ -126,26 +128,32 @@ orbital MigrationAdapterFirestoreOrbital {
                        (if (validate/required @nk)
                       [{
                         ref: (str/concat "fs:" @path "#node:" (object/get @e "0")),
-                        kind: @nk.kind,
-                       
-                        span: (str/concat @path "#" (object/get @e "0")),
-                        extra: {
-                          documentId: (array/last (str/split @path "/")),
-                          documentPath: @path,
-                          nodeId: (object/get @e "0"),
-                          nodeType: (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")
-                        },
-                        fields: (let ((keyed (object/mapKeys
-                                               (object/omit (object/get (object/get @e "1") "mapValue.fields" {}) ["id", "type", "properties"])
-                                               (fn k (str/concat "node_" @k))))
-                                       (slots (object/get @nk "slots" [])))
-                                  (if (== @keyed null) {}
-                                    (let ((all (object/merge (object/get (object/get @e "1") "mapValue.fields.properties.mapValue.fields" {}) @keyed)))
-                                      (if (== @all null) {}
-                                        (if (> (array/len @slots) 0) (object/pick @all @slots) @all))))),
-                        hidden: []
+                        unit: (let ((keyed (object/mapKeys
+                                             (object/omit (object/get (object/get @e "1") "mapValue.fields" {}) ["id", "type", "properties"])
+                                             (fn k (str/concat "node_" @k))))
+                                    (slots (object/get @nk "slots" [])))
+                                (if (== @keyed null) null
+                                  (let ((all (object/merge (object/get (object/get @e "1") "mapValue.fields.properties.mapValue.fields" {}) @keyed)))
+                                    (if (== @all null) null
+                                      {
+                                        ref: (str/concat "fs:" @path "#node:" (object/get @e "0")),
+                                        kind: @nk.kind,
+
+                                        span: (str/concat @path "#" (object/get @e "0")),
+                                        extra: {
+                                          documentId: (array/last (str/split @path "/")),
+                                          documentPath: @path,
+                                          nodeId: (object/get @e "0"),
+                                          nodeType: (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")
+                                        },
+                                        fields: (if (> (array/len @slots) 0) (object/pick @all @slots) @all),
+                                        hidden: []
+                                      }))))
                       }]
                       []))))))))))
+        (set @entity.nodeSets
+          (array/flatten
+            (array/map @entity.nodeBuilds (fn b (let ((u @b.unit)) (if (== @u null) [] [@u]))))))
         (set @entity.edgeSets
           (array/flatten
             (array/map
@@ -173,6 +181,7 @@ orbital MigrationAdapterFirestoreOrbital {
                       })))))))
         (set @entity.sets (array/concat @entity.docSets @entity.nodeSets @entity.edgeSets))
         (set @entity.ledger
+          (array/concat
           (array/flatten
             (array/map
               @entity.docs
@@ -191,7 +200,9 @@ orbital MigrationAdapterFirestoreOrbital {
                       {
                         ref: (str/concat "fs:" @path "#edge:" (object/get @v "mapValue.fields.id.stringValue" "")),
                         reason: (str/concat "relationship from '" (object/get @v "mapValue.fields.source.stringValue" "") "' to '" (object/get @v "mapValue.fields.target.stringValue" "") "' has an endpoint that is not an emitted node of its document")
-                      })))))))
+                      }))))))
+            (array/flatten
+              (array/map @entity.nodeBuilds (fn b (if (== @b.unit null) [{ ref: @b.ref, reason: "the fields of this Firestore node could not be built" }] []))))))
         (emit FIRESTORE_BUILT {})
     }
 

@@ -25,12 +25,14 @@ orbital OrbLintAllOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (not (or (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2) (= (array/nth (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) "--json"))))
+      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit LINT_ANSWERED { status: 500, body: "Error: orb lint all: the command arguments could not be read" })
+      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (not (or (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2) (= (array/nth (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) "--json")))))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint all <file> [--json]" })
-      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (set @entity.asJson false)
         (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
-      LINT_CALLED -> waiting when (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2) (= (array/nth (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) "--json"))
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2) (= (array/nth (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) "--json"))
         (set @entity.asJson true)
         (emit LINT_RUN { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
     }

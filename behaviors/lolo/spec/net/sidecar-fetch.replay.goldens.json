@@ -664,6 +664,46 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-200-body-that-is-not-base64-is-refused",
+   "steps": [
+    {
+     "event": "SIDECAR_FETCHED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "!!not base64!!",
+      "key": "sidecar"
+     },
+     "from": "fetching",
+     "entity": {
+      "id": "s",
+      "requestId": "r1",
+      "name": "pkg-a",
+      "version": "1.0.0",
+      "declared": "dist/vectors.vec",
+      "sha256": "abc123",
+      "url": "https://storage.googleapis.com/o/x?token=TOPSECRETTOKEN"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SIDECAR_REFUSED",
+        "payload": {
+         "requestId": "r1",
+         "code": "fetch-failed",
+         "error": "ORB_SIDECAR_FETCH_FAILED: pkg-a@1.0.0 dist/vectors.vec from https://storage.googleapis.com: the body is not valid base64"
+        }
+       }
+      ],
+      "neverEmits": [
+       "SC_HASH",
+       "SIDECAR_RESOLVED"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

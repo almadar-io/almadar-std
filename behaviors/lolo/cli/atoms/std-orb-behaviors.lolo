@@ -75,23 +75,35 @@ orbital OrbBehaviorsOrbital {
 
     state ready {
       INIT -> ready
-      CATALOG_CALLED -> parsing
+      CATALOG_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]" })
+      CATALOG_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.sub "catalog")
         (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "no-vectors" aliases: [] takesValue: false repeatable: false }, { name: "exposure" aliases: [] takesValue: true repeatable: true }] })
-      DESCRIBE_CALLED -> parsing
+      DESCRIBE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors describe <behavior>.traits.<Trait>" })
+      DESCRIBE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.sub "describe")
         (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "knob-vectors" aliases: [] takesValue: false repeatable: false }] })
-      SOURCE_CALLED -> parsing
+      SOURCE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors source <behavior>" })
+      SOURCE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.sub "source")
         (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }] })
-      WHICH_CALLED -> parsing
+      WHICH_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors which <spec>" })
+      WHICH_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.sub "which")
         (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [] })
-      EXPECTS_CALLED -> parsing
+      EXPECTS_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors expects <spec>" })
+      EXPECTS_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.sub "expects")
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
         (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }] })
-      TEXTS_CALLED -> parsing
+      TEXTS_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "usage: orb behaviors texts <scope…> [--kind organism|capability|knob] [--json]" })
+      TEXTS_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.sub "texts")
         (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "kind" aliases: [] takesValue: true repeatable: false }] })
     }

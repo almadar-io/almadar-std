@@ -4051,6 +4051,32 @@
           "trait": "OrbLintPayloadFieldName"
         }
       ]
+    },
+    {
+      "id": "an unreadable command body answers 500",
+      "steps": [
+        {
+          "trait": "OrbLintPayloadFieldNameCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: orb lint payload-field-name: the command arguments could not be read"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

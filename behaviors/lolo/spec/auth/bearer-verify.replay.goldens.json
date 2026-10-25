@@ -334,6 +334,72 @@
      }
     }
    ]
+  },
+  {
+   "id": "a token segment that is not base64 is refused malformed",
+   "entity": {
+    "queue": [
+     {
+      "requestId": 7,
+      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.%%%%.sig"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BEARER_PUMP",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "reason": "malformed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "JWS_VERIFY",
+       "JWS_VERIFIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a token segment that decodes to bytes that are not text is refused malformed",
+   "entity": {
+    "queue": [
+     {
+      "requestId": 7,
+      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0._w.sig"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BEARER_PUMP",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "reason": "malformed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "JWS_VERIFY",
+       "JWS_VERIFIED"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

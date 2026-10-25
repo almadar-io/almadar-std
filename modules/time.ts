@@ -13,7 +13,7 @@
  */
 
 import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
-import { lit, union, nullable } from '../signature.js';
+import { lit, union, nullable, tv } from '../signature.js';
 
 /** The units the kernel's `TimeUnit::parse` accepts (orbital-core `TIME_UNIT_VOCABULARY`), a closed set so a wrong unit is a type error. */
 const TIME_UNIT: OperatorTypeRef = union(lit('ms'), lit('millisecond'), lit('milliseconds'), lit('s'), lit('second'), lit('seconds'), lit('m'), lit('minute'), lit('minutes'), lit('h'), lit('hour'), lit('hours'), lit('d'), lit('day'), lit('days'), lit('w'), lit('week'), lit('weeks'), lit('month'), lit('months'), lit('quarter'), lit('quarters'), lit('year'), lit('years'));
@@ -30,7 +30,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 0,
     description: 'Current timestamp',
     hasSideEffects: false,
-    returnType: 'number',
+    returnType: 'instant',
     params: [],
     example: '["time/now"] // => 1705593600000',
   },
@@ -41,7 +41,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 0,
     description: 'Today at midnight UTC (the host timezone is never read)',
     hasSideEffects: false,
-    returnType: 'number',
+    returnType: 'instant',
     params: [],
     example: '["time/today"]',
   },
@@ -50,12 +50,12 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 1,
     maxArity: 1,
-    description: 'Parse an ISO 8601 / RFC 3339 date or date-time to epoch ms (a date is midnight UTC; no offset reads as UTC); an unparsable string is an error',
+    description: 'Parse an ISO 8601 / RFC 3339 date or date-time to epoch ms (a date is midnight UTC; no offset reads as UTC); a date or datetime value already held as epoch ms is that number; anything else answers null',
     hasSideEffects: false,
     failable: {},
     returnType: nullable('number'),
     params: [
-      { name: 'str', type: 'string', description: 'ISO 8601 date or date-time, e.g. 2024-01-18 or 2024-01-18T09:30:00+02:00' },
+      { name: 'str', type: union('string', 'date', 'datetime'), description: 'ISO 8601 date or date-time (e.g. 2024-01-18 or 2024-01-18T09:30:00+02:00), or a date/datetime value' },
     ],
     example: '["time/parse", "2024-01-18T09:30:00Z"]',
     exampleSource: 'module',
@@ -80,7 +80,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Format timestamp to string, in UTC',
     hasSideEffects: false,
-    failable: {},
+    failable: { unlessTyped: [{ arg: 0, type: 'instant' }] },
     returnType: nullable('string'),
     params: [
       { name: 'date', type: 'number', description: 'Timestamp' },
@@ -172,9 +172,9 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 3,
     description: 'Add time to timestamp (calendar units in UTC)',
     hasSideEffects: false,
-    returnType: 'number',
+    returnType: tv('T', 'number'),
     params: [
-      { name: 'date', type: 'number', description: 'Timestamp' },
+      { name: 'date', type: tv('T', 'number'), description: 'Timestamp' },
       { name: 'amount', type: 'number', description: 'Amount to add' },
       { name: 'unit', type: TIME_UNIT, description: 'Time unit (year/month/week/day/hour/minute/second/ms)' },
     ],
@@ -187,9 +187,9 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 3,
     description: 'Subtract time from timestamp (calendar units in UTC)',
     hasSideEffects: false,
-    returnType: 'number',
+    returnType: tv('T', 'number'),
     params: [
-      { name: 'date', type: 'number', description: 'Timestamp' },
+      { name: 'date', type: tv('T', 'number'), description: 'Timestamp' },
       { name: 'amount', type: 'number', description: 'Amount to subtract' },
       { name: 'unit', type: TIME_UNIT, description: 'Time unit' },
     ],
@@ -217,9 +217,9 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Get start of time period (UTC)',
     hasSideEffects: false,
-    returnType: 'number',
+    returnType: tv('T', 'number'),
     params: [
-      { name: 'date', type: 'number', description: 'Timestamp' },
+      { name: 'date', type: tv('T', 'number'), description: 'Timestamp' },
       { name: 'unit', type: TIME_UNIT, description: 'Time unit (year/month/week/day/hour/minute)' },
     ],
     example: '["time/startOf", ["time/now"], "month"]',
@@ -231,9 +231,9 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Get end of time period (UTC)',
     hasSideEffects: false,
-    returnType: 'number',
+    returnType: tv('T', 'number'),
     params: [
-      { name: 'date', type: 'number', description: 'Timestamp' },
+      { name: 'date', type: tv('T', 'number'), description: 'Timestamp' },
       { name: 'unit', type: TIME_UNIT, description: 'Time unit' },
     ],
     example: '["time/endOf", ["time/now"], "month"]',

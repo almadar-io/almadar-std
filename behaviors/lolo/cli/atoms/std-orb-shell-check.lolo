@@ -56,7 +56,9 @@ orbital OrbShellCheckOrbital {
 
     state ready {
       INIT -> ready
-      SC_CALLED -> parsing
+      SC_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit SHELL_CHECK_ANSWERED { status: 500, body: "Error: orb shell check: the command arguments could not be read", errors: [] })
+      SC_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit SC_ARGS_PARSE { stage: "shell-check", argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"), flags: [{ name: "json", aliases: [], takesValue: false, repeatable: false }] })
       SHELL_LAYOUT_EVALUATE -> ready
         (set @entity.errors (array/concat

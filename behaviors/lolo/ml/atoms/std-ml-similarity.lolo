@@ -120,17 +120,24 @@ orbital MlSimilarityOrbital {
             (set @entity.queryVector (array/first @entity.embeddings))
             (set @entity.candidateVectors (array/drop @entity.embeddings 1))
             (let ((nearest (array/nearest @entity.queryVector @entity.candidateVectors)))
-              (do
-                (set @entity.matchIndex (object/get @nearest "index"))
-                (set @entity.matchScore (object/get @nearest "score"))
-                (set @entity.matchMargin (object/get @nearest "margin"))
-                (if (and (>= @entity.matchScore @config.floor) (>= @entity.matchMargin @config.margin))
-                    (do
-                      (set @entity.reason "")
-                      (emit SIMILARITY_MATCHED { index: @entity.matchIndex, score: @entity.matchScore }))
-                    (do
-                      (set @entity.reason (if (< @entity.matchScore @config.floor) "below floor" "thin margin"))
-                      (emit SIMILARITY_ABSTAINED { reason: @entity.reason, request: @entity.request })))))))
+              (if (= @nearest null)
+                (do
+                  (set @entity.matchIndex 0)
+                  (set @entity.matchScore 0)
+                  (set @entity.matchMargin 0)
+                  (set @entity.reason "vectors not comparable")
+                  (emit SIMILARITY_ABSTAINED { reason: "vectors not comparable", request: @entity.request }))
+                (do
+                  (set @entity.matchIndex (math/floor (object/get @nearest "index")))
+                  (set @entity.matchScore (object/get @nearest "score"))
+                  (set @entity.matchMargin (object/get @nearest "margin"))
+                  (if (and (>= @entity.matchScore @config.floor) (>= @entity.matchMargin @config.margin))
+                      (do
+                        (set @entity.reason "")
+                        (emit SIMILARITY_MATCHED { index: @entity.matchIndex, score: @entity.matchScore }))
+                      (do
+                        (set @entity.reason (if (< @entity.matchScore @config.floor) "below floor" "thin margin"))
+                        (emit SIMILARITY_ABSTAINED { reason: @entity.reason, request: @entity.request }))))))))
 
       EMBED_FAILED -> resolved
         (set @entity.embeddings [])

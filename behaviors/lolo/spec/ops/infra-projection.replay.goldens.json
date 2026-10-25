@@ -1,0 +1,80 @@
+{
+ "atom": "ops/atoms/std-infra-projection.lolo",
+ "trait": "InfraProjector",
+ "cases": [
+  {
+   "id": "a program that is not a JSON object answers failed",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "INFRA_PROJECT",
+     "payload": {
+      "program": "[1]",
+      "appName": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INFRA_PROJECT_FAILED",
+        "payload": {
+         "error": "the program is not a JSON object"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a well-formed form node is counted, not failed",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "INFRA_PROJECT",
+     "payload": {
+      "program": "{\"name\": \"a\", \"orbitals\": [{\"name\": \"O\", \"entity\": {\"name\": \"E\", \"persistence\": \"runtime\", \"fields\": []}, \"traits\": [{\"name\": \"T\", \"stateMachine\": {\"transitions\": [{\"effects\": [[\"set\", \"@entity.x\", 1]]}]}}]}]}",
+      "appName": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INFRA_ANALYZED",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "INFRA_PROJECT_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a form node holding null answers failed naming the node",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "INFRA_PROJECT",
+     "payload": {
+      "program": "{\"name\": \"a\", \"orbitals\": [{\"name\": \"O\", \"entity\": {\"name\": \"E\", \"persistence\": \"runtime\", \"fields\": []}, \"traits\": [{\"name\": \"T\", \"stateMachine\": {\"transitions\": [{\"effects\": [[\"set\", null]]}]}}]}]}",
+      "appName": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INFRA_PROJECT_FAILED",
+        "payload": {
+         "error": "a form node of the program is malformed: [\"set\",null]"
+        }
+       }
+      ],
+      "neverEmits": [
+       "INFRA_ANALYZED",
+       "INFRA_PROJECTED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

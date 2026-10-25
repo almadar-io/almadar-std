@@ -261,7 +261,8 @@ DERIVE='''      DERIVE_OWNERS -> ready
         (set @entity.dsOwnerPairs [])
         (set @entity.dsLocale "")
         (set @entity.dsRegsAll @@REGS@@)
-        (emit OWNERS_DERIVED { owners: (object/fromEntries (array/map (array/filter @entity.dsRegsAll (fn r (> (array/len (object/get @r "ownerCols")) 0))) (fn r [(str/lower (object/get @r "label")), (object/get @r "ownerCols")]))) })
+        (let ((owners (object/fromEntries (array/map (array/filter @entity.dsRegsAll (fn r (> (array/len (object/get @r "ownerCols")) 0))) (fn r [(str/lower (object/get @r "label")), (object/get @r "ownerCols")])))))
+          (if (= @owners null) (emit OWNERS_FAILED { error: "mock-seed: an entity name cannot be a record key" }) (emit OWNERS_DERIVED { owners: @owners })))
 '''
 RO='''      READ_OWNERS -> ready
         (set @entity.roHit (and (!= ?column "id") ?hasReadPolicy ?targetKnown (> (array/len (array/filter (array/range (array/len ?ids)) (fn i (and (array/nth ?admitsOwn @i) (not (array/nth ?admitsBlank @i)))))) 0)))
@@ -311,15 +312,15 @@ links_fold=f'(array/reduce @entity.dsLinks @entity.dsStores (fn sm lk {_lf}))'
 projs_only=f'(array/reduce @entity.dsProjs @entity.dsStores (fn sm pj {proj_fill()}))'
 VIEWER_ROW='(if @entity.dsHasViewerRecord @entity.dsViewerRecord (let ((vr (array/find (object/get @entity.dsStores @entity.dsIdStore []) (fn t (= (object/get @t "id" "") @entity.dsViewer))))) (if (= @vr null) { id: @entity.dsViewer } @vr)))'
 def mk(action,colval,viewer,col):
-    return f'{{ entity: (object/get @reg "policyEntity"), action: "{action}", row: (object/set @row {col} {colval}), viewer: {viewer} }}'
+    return f'(let ((asked (object/set @row {col} {colval}))) (if (= @asked null) [] [{{ entity: (object/get @reg "policyEntity"), action: "{action}", row: @asked, viewer: {viewer} }}]))'
 Q='"'
 def reqs(read,rel,viewer_req,col):
     idj='(object/get (array/nth @idrows @j) "id")'
     parts=[]
-    parts.append(f'(if {read} (array/map (array/range (array/len @idrows)) (fn j {mk("read",idj,"(array/nth @idrows @j)",col)})) [])')
-    parts.append(f'(if {read} (array/map (array/range (array/len @idrows)) (fn j {mk("read",Q+Q,"(array/nth @idrows @j)",col)})) [])')
-    parts.append(f'(if {rel} (array/map (array/range (array/len @idrows)) (fn j {mk("create",idj,"(array/nth @idrows @j)",col)})) [])')
-    if viewer_req: parts.append(f'(array/append [] {mk("create","@entity.dsViewer",VIEWER_ROW,col)})')
+    parts.append(f'(if {read} (array/flatten (array/map (array/range (array/len @idrows)) (fn j {mk("read",idj,"(array/nth @idrows @j)",col)}))) [])')
+    parts.append(f'(if {read} (array/flatten (array/map (array/range (array/len @idrows)) (fn j {mk("read",Q+Q,"(array/nth @idrows @j)",col)}))) [])')
+    parts.append(f'(if {rel} (array/flatten (array/map (array/range (array/len @idrows)) (fn j {mk("create",idj,"(array/nth @idrows @j)",col)}))) [])')
+    if viewer_req: parts.append(mk("create","@entity.dsViewer",VIEWER_ROW,col))
     return '(array/concat '+' '.join(parts)+')'
 SEEDREGS='(array/filter @entity.dsRegsAll (fn r (object/get @r "seeds")))'
 def reg_of(storex): return f'(array/find (if (= @entity.dsMode "restamp") @entity.dsRegsAll {SEEDREGS}) (fn r (= (object/get @r "store") {storex})))'
@@ -338,8 +339,8 @@ olink_context=(f'(let ((lk (array/first @entity.dsOlinks))) (let ((reg {reg_of(G
   f'(let ((rd (object/get @reg "hasRead"))) '
   f'@@BODY@@))))')
 scalar_ids='(array/map @idrows (fn t (str/template "{{id}}" { id: (object/get @t "id") })))'
-stamp_plan=stamp_context.replace('@@BODY@@',f'{{ queue: {reqs("@rd","@rel",True,"@col")}, n: (array/len @idrows), read: @rd, rel: @rel, ids: {scalar_ids}, viewer: true }}')
-olink_plan=olink_context.replace('@@BODY@@',f'{{ queue: {reqs("@rd","true",False,"@col")}, n: (array/len @idrows), read: @rd, rel: true, ids: {scalar_ids}, viewer: false }}')
+stamp_plan=stamp_context.replace('@@BODY@@',f'{{ queue: {reqs("@rd","@rel",True,"@col")}, planned: (+ (if @rd (* 2 (array/len @idrows)) 0) (if @rel (array/len @idrows) 0) 1), n: (array/len @idrows), read: @rd, rel: @rel, ids: {scalar_ids}, viewer: true }}')
+olink_plan=olink_context.replace('@@BODY@@',f'{{ queue: {reqs("@rd","true",False,"@col")}, planned: (+ (if @rd (* 2 (array/len @idrows)) 0) (array/len @idrows)), n: (array/len @idrows), read: @rd, rel: true, ids: {scalar_ids}, viewer: false }}')
 bad_id='(not (or (= (object/get @t "id") null) (validate/string (object/get @t "id")) (validate/number (object/get @t "id")) (validate/boolean (object/get @t "id"))))'
 bad_ids=f'(array/filter @idrows (fn t {bad_id}))'
 stamp_bad=stamp_context.replace('@@BODY@@',bad_ids)
@@ -431,13 +432,12 @@ STORE_BATCH=('(let ((start : DsBatch { stores: @entity.dsStores, s: @entity.rng,
              '(let ((bst (object/get @bacc "stores")) (bs (object/get @bacc "s")) (bmi (object/get @bacc "minted"))) '
              '(let ((bo '+BATCH_STEP+')) '
              '{ stores: (object/get @bo "stores"), s: (object/get @bo "s"), minted: (object/get @bo "minted"), stamps: (object/get @bo "stamps"), used: (+ (object/get @bacc "used") 1), halt: (or (object/get @bo "bad") (> (array/len (object/get @bo "stamps")) 0)), bad: (object/get @bo "bad") }))))))')
-RESTAMP_OPS=('(array/flatten (array/map @entity.rsChanges (fn ch (let ((ce '+entity_of('(object/get @ch "store")')+')) '
-             '(let ((all [["update" @ce (object/get @ch "id") (object/set {} (object/get @ch "column") (object/get @ch "ownerId"))] '
-             '["delete" @ce (object/get @ch "id")] '
-             '["create" @ce (array/reduce (object/get @entity.dsStores (object/get @ch "store") []) {} (fn acc rw (if (= (object/get @rw "id") (object/get @ch "ownerId")) @rw @acc)))]])) '
-             '(if (= (object/get @ch "kind") "set") (array/take @all 1) (array/drop @all 1)))))))')
+RESTAMP_GROUPS=('(array/flatten (array/map @entity.rsChanges (fn ch (let ((ce '+entity_of('(object/get @ch "store")')+')) '
+             '(let ((one : [[[MockValue?]]] (if (= (object/get @ch "kind") "set") '
+             '(let ((cell (object/set @blank (object/get @ch "column") (object/get @ch "ownerId")))) (if (= @cell null) [] [[["update" @ce (object/get @ch "id") @cell]]])) '
+             '[(array/concat [["delete" @ce (object/get @ch "id")]] (if (array/some (object/get @entity.rsStores (object/get @ch "store") []) (fn rw (= (object/get @rw "id") (object/get @ch "ownerId")))) [["delete" @ce (object/get @ch "ownerId")]] []) [["create" @ce (array/reduce (object/get @entity.dsStores (object/get @ch "store") []) @blank (fn acc rw (if (= (object/get @rw "id") (object/get @ch "ownerId")) @rw @acc)))]])]))) @one)))))')
 STORE_AFTER=f'''      DS_STAMP -> ready when (= (array/len @entity.dsStamps) 0)
-        (if (= @entity.dsMode "restamp") (persist batch {RESTAMP_OPS} {{ emit: {{ success: DS_RESTAMPED, failure: DS_WRITE_FAILED }} }}) (emit DS_STORE {{ at: (array/len @entity.dsRegs) }}))
+        (if (= @entity.dsMode "restamp") (let ((blank : SampleValueMap {{}})) (let ((groups : [[[MockValue?]]] {RESTAMP_GROUPS})) (if (!= (array/len @groups) (array/len @entity.rsChanges)) (emit DS_WRITE_FAILED {{ error: "mock-seed: a restamp owner change could not be built as a row write" }}) (if (= (array/len @groups) 0) (emit DS_RESTAMPED {{ }}) (persist batch (array/flatten @groups) {{ emit: {{ success: DS_RESTAMPED, failure: DS_WRITE_FAILED }} }}))))) (emit DS_STORE {{ at: (array/len @entity.dsRegs) }}))
       DS_RESTAMPED -> ready
         (emit RESTAMP_DONE {{ journal: @entity.rsJournal, changes: @entity.rsChanges }})
       DS_STAMP -> ready when (and (> (array/len @entity.dsStamps) 0) (< (object/get (array/first @entity.dsStamps) "i") 0))
@@ -447,16 +447,20 @@ STORE_AFTER=f'''      DS_STAMP -> ready when (= (array/len @entity.dsStamps) 0)
       DS_STAMP -> ready when (and (> (array/len @entity.dsStamps) 0) (>= (object/get (array/first @entity.dsStamps) "i") 0) (> (array/len {stamp_bad}) 0))
 {reject_ids(stamp_bad)}
       DS_STAMP -> ready when (and (> (array/len @entity.dsStamps) 0) (>= (object/get (array/first @entity.dsStamps) "i") 0) (= (array/len {stamp_bad}) 0))
-        (set @entity.acPlan {stamp_plan})
-        (set @entity.acQueue (object/get @entity.acPlan "queue"))
-        (set @entity.acN (object/get @entity.acPlan "n"))
-        (set @entity.acRead (object/get @entity.acPlan "read"))
-        (set @entity.acRel (object/get @entity.acPlan "rel"))
-        (set @entity.acIds (object/get @entity.acPlan "ids"))
-        (set @entity.acViewer (object/get @entity.acPlan "viewer"))
-        (set @entity.acAnswers [])
-        (set @entity.acPurpose "stamp")
-        (emit AC_ASK {{ at: (array/len @entity.acQueue) }})
+        (let ((plan {stamp_plan}))
+          (if (!= (array/len (object/get @plan "queue")) (object/get @plan "planned"))
+            (emit DS_WRITE_FAILED {{ error: "mock-seed: an owner column name cannot be a record key" }})
+            (do
+              (set @entity.acPlan @plan)
+              (set @entity.acQueue (object/get @plan "queue"))
+              (set @entity.acN (object/get @plan "n"))
+              (set @entity.acRead (object/get @plan "read"))
+              (set @entity.acRel (object/get @plan "rel"))
+              (set @entity.acIds (object/get @plan "ids"))
+              (set @entity.acViewer (object/get @plan "viewer"))
+              (set @entity.acAnswers [])
+              (set @entity.acPurpose "stamp")
+              (emit AC_ASK {{ at: (array/len @entity.acQueue) }}))))
       DS_OLINK -> ready when (= (array/len @entity.dsOlinks) 0)
         (emit DS_PROJS {{ at: 0 }})
       DS_OLINK -> ready when (and (> (array/len @entity.dsOlinks) 0) (> (array/len {olink_bad}) 0))
@@ -468,16 +472,20 @@ STORE_AFTER=f'''      DS_STAMP -> ready when (= (array/len @entity.dsStamps) 0)
         (set @entity.dsWork (+ @entity.dsWork 3))
         (if (>= @entity.dsWork @config.stepsPerDispatch) (do (set @entity.dsNext "olink") (program/dispatch "DS_RESUME" {{ }} {{ viewer: null }} {{ key: "mock-seed-resume", emit: {{ success: DS_RESUMED, failure: DS_WRITE_FAILED }} }})) (emit DS_OLINK {{ at: (array/len @entity.dsOlinks) }}))
       DS_OLINK -> ready when (and (> (array/len @entity.dsOlinks) 0) (= (array/len {olink_bad}) 0) (not (object/has @entity.dsOlinkCache {OLINK_KEY})))
-        (set @entity.acPlan {olink_plan})
-        (set @entity.acQueue (object/get @entity.acPlan "queue"))
-        (set @entity.acN (object/get @entity.acPlan "n"))
-        (set @entity.acRead (object/get @entity.acPlan "read"))
-        (set @entity.acRel (object/get @entity.acPlan "rel"))
-        (set @entity.acIds (object/get @entity.acPlan "ids"))
-        (set @entity.acViewer (object/get @entity.acPlan "viewer"))
-        (set @entity.acAnswers [])
-        (set @entity.acPurpose "link")
-        (emit AC_ASK {{ at: (array/len @entity.acQueue) }})
+        (let ((plan {olink_plan}))
+          (if (!= (array/len (object/get @plan "queue")) (object/get @plan "planned"))
+            (emit DS_WRITE_FAILED {{ error: "mock-seed: an owner column name cannot be a record key" }})
+            (do
+              (set @entity.acPlan @plan)
+              (set @entity.acQueue (object/get @plan "queue"))
+              (set @entity.acN (object/get @plan "n"))
+              (set @entity.acRead (object/get @plan "read"))
+              (set @entity.acRel (object/get @plan "rel"))
+              (set @entity.acIds (object/get @plan "ids"))
+              (set @entity.acViewer (object/get @plan "viewer"))
+              (set @entity.acAnswers [])
+              (set @entity.acPurpose "link")
+              (emit AC_ASK {{ at: (array/len @entity.acQueue) }}))))
       AC_ASK -> ready when (> (array/len @entity.acQueue) 0)
         (access-check {{ entity: (object/get (array/first @entity.acQueue) "entity"), action: (object/get (array/first @entity.acQueue) "action"), row: (object/get (array/first @entity.acQueue) "row"), viewer: (object/get (array/first @entity.acQueue) "viewer") }} {{ emit: {{ success: AC_ANSWER, failure: AC_FAILED }} }})
       AC_ASK -> ready when (= (array/len @entity.acQueue) 0)
@@ -603,6 +611,7 @@ DATASET=f'''      RESTAMP_INPUT -> ready when (not (or (= ?firstOwner true) @con
         (set @entity.dsHasViewerRecord true)
         (set @entity.dsViewer (object/get @entity.dsViewerRecord "id"))
         (set @entity.dsStores ?stores)
+        (set @entity.rsStores ?stores)
         (set @entity.rsJournal (object/set ?journal "viewerId" @entity.dsViewer))
         (set @entity.rsChanges [])
         (set @entity.dsStamps (if (or (= @entity.dsViewer "") (= @entity.dsViewer (object/get ?journal "viewerId"))) [] {restamp_queue}))
@@ -803,6 +812,7 @@ E+=ext('STREAM_SEEDED',['seed : number','nowMs : number'],'The stream was reset 
 E+=ext('RESTAMP_DONE',['journal : SeedOwnerJournal!', 'changes : [SeedOwnerChange]!'],'The updated owner journal and ordered owner-cell writes or row-key moves, each with an explicit row target (singleton for a runtime entity, else the changed row key), with no reseeding.')
 E+=ext('DATASET_DONE',['stores : Map string [Map string MockValue?]', 'journal : SeedOwnerJournal!', 'defaultPersona : string'],'The whole seeded dataset: every store rows, identity first, owner columns stamped and relations linked.')
 E+=ext('OWNERS_DERIVED',['owners : Map string [string]'],'The owner columns of each entity, by lower-case entity name.')
+E+=ext('OWNERS_FAILED',['error : string'],'The owner columns could not be keyed by entity name.')
 E+=''.join(f"      {n} {{ {f} }}\n        @description \"Internal: {d}\"\n        @tier \"internal\"\n" for n,f,d in [('DS_STAMP','at : number','the next owner stamp'),('DS_OLINK','at : number','the next owner link'),('DS_PROJS','at : number','the projected fields'),('DS_WRITTEN','','the seeded rows were written'),('DS_RESTAMPED','','the owner changes were written'),('DS_WRITE_FAILED','error : string','a seed write failed'),('DS_WRITE_NEXT','at : number','the next owner chunk'),('DS_CHUNK_WRITTEN','','an owner chunk was written'),('DS_CHUNK_REFUSED','error : string','an owner chunk was refused'),('DS_WRITER','at : number','the next row writer'),('DS_SELF_READ','result : SeedProgram','the running app program was read'),('DS_MARK_FOUND','data : MockSeedMark!','the seed marker exists'),('DS_MARK_ABSENT','error : string  code : string','no seed marker, or the store failed'),('AC_ASK','at : number','ask the next access check'),('AC_ANSWER','allowed : boolean','an access check verdict'),('AC_FAILED','error : string','an access check could not be evaluated'),('AC_DONE','at : number','all checks answered')])
 E+=ext('ACCESS_CHECK_FAILED',['error : string'],'An owner access check failed; it was counted as a denial and the seed carried on.')
 E+=ext('DATASET_FAILED',['error : string'],'The program could not be read or a consumed identity ID was not a primitive; the request stops without a success journal.')
@@ -836,6 +846,7 @@ fields='''    id : string!
     dsViewerRecord : Viewer = { id: "", claims: [] }
     rsJournal : SeedOwnerJournal = { viewerId: "", stamped: [], deferred: [] }
     rsChanges : [SeedOwnerChange] = []
+    rsStores : Map string [Map string MockValue?] @description "The rows each store held when the restamp began, so a rekey onto a held key replaces that row." = {}
     rsApplied : boolean = false
     rsWrite : boolean = false
     dsStamped : [DsStamp] @description "Seed-owned cells successfully stamped, indexed until final row ids are known." = []
@@ -850,7 +861,7 @@ fields='''    id : string!
     acRel : boolean @description "Whether the owner column is a relation to the identity store." = false
     acViewer : boolean @description "Whether a viewer create check is queued last." = false
     acIds : [string] @description "The identity row ids the checks cover." = []
-    acPlan : AcPlan @description "The queued checks and their shape." = { queue: [], n: 0, read: false, rel: false, ids: [], viewer: false }
+    acPlan : AcPlan @description "The queued checks and their shape." = { queue: [], planned: 0, n: 0, read: false, rel: false, ids: [], viewer: false }
     acOut : AcOut @description "The decoded verdicts." = { hit: false, owner: "", elig: [], viewer: false }
     dsSource : string @description "The program text the dataset is derived from." = ""
     dsOwnerPairs : [SeedOwnerPair] @description "Explicit entity and owner-column pairs, or parsed environment pairs." = []
@@ -895,14 +906,16 @@ type SingletonTarget = { kind : "singleton" }
 type KeyTarget = { kind : "key", key : string! }
 type RowTarget = SingletonTarget | KeyTarget
 type SeedOwnerChange = { kind : "set" | "rekey", store : string!, id : string!, column : string!, ownerId : string!, target : RowTarget! }
-type SeedEntity = { name : string!, persistence : string, collection : string, identity : boolean, browser : boolean, seedMock : boolean, fields : [MockFieldSpec], instances : [Map string MockValue?], localeInstances : Map string [Map string MockValue?], read_policy : Expr, create_policy : Expr, update_policy : Expr, delete_policy : Expr }
+type SeedEntity = { name : string!, persistence : string, collection : string, identity : boolean, browser : boolean, seedMock : boolean, fields : [SeedField], instances : [Map string MockValue?], localeInstances : Map string [Map string MockValue?], read_policy : Expr, create_policy : Expr, update_policy : Expr, delete_policy : Expr }
 type SeedOrbital = { entity : SeedEntity!, auxiliaryEntities : [SeedEntity] }
 type SeedProgram = { orbitals : [SeedOrbital] }
 type MockValue = string | number | boolean | [MockValue?] | Map string MockValue?
 type SampleValueMap = Map string MockValue?
 type MockRelation = { entity : string, cardinality : string }
-type MockProjection = { type : string, field : string }
+type MockProjection = { type : string!, field : string }
+type SeedProjection = { type : string!, field : string! }
 type MockFieldSpec = { name : string, type : string!, values : [string], mock : string, default : MockValue?, intrinsic : boolean, required : boolean, relation : MockRelation, projectedFrom : MockProjection, items : MockFieldSpec, properties : Map string MockFieldSpec, slots : [MockFieldSpec] }
+type SeedField = { name : string!, type : string!, values : [string], mock : string, default : MockValue?, intrinsic : boolean, required : boolean, relation : MockRelation, projectedFrom : MockProjection, items : MockFieldSpec, properties : Map string MockFieldSpec, slots : [MockFieldSpec] }
 type MockWalkCell = { path : string!, kind : string!, text : string?, num : number, url : string, mime : string, kids : [string], keys : [string], val : MockValue? }
 type WalkOut = { cells : [MockWalkCell], s : number, value : MockValue? }
 type SeedEmitted = { event : string!, payload : Map string MockValue? }
@@ -913,10 +926,10 @@ type SeedWrite = { viewer : (Map string MockValue?)?, ops : [[MockValue?]]! }
 type DsStamp = { store : string!, i : number!, col : string!, id : string, wasDeferred : boolean }
 type DsOlink = { store : string!, field : string!, i : number!, target : string!, scalar : boolean! }
 type AccessReq = { entity : string!, action : string!, row : Map string MockValue?, viewer : Map string MockValue? }
-type AcPlan = { queue : [AccessReq], n : number, read : boolean, rel : boolean, ids : [string], viewer : boolean }
+type AcPlan = { queue : [AccessReq], planned : number, n : number, read : boolean, rel : boolean, ids : [string], viewer : boolean }
 type AcOut = { hit : boolean!, owner : string!, elig : [string]!, viewer : boolean! }
 type DsBatch = { stores : Map string [Map string MockValue?]!, s : number!, minted : number!, stamps : [DsStamp]!, used : number!, halt : boolean!, bad : boolean! }
-type DatasetReg = { label : string!, store : string!, fields : [MockFieldSpec]!, identity : boolean!, runtime : boolean!, seeds : boolean!, ownerCols : [string]!, policyEntity : string!, hasRead : boolean!, hasCreate : boolean!, policyRefs : [string]!, instances : [Map string MockValue?]! }
+type DatasetReg = { label : string!, store : string!, fields : [SeedField]!, identity : boolean!, runtime : boolean!, seeds : boolean!, ownerCols : [string]!, policyEntity : string!, hasRead : boolean!, hasCreate : boolean!, policyRefs : [string]!, instances : [Map string MockValue?]! }
 type StorePolicy = { name : string!, hasRead : boolean!, hasCreate : boolean!, refs : [string]! }
 type DatasetLink = { store : string!, field : string!, target : string!, scalar : boolean!, isOwner : boolean! }
 type DatasetProj = { store : string!, field : string!, target : string!, targetField : string!, isArray : boolean! }

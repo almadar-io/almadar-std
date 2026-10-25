@@ -30,7 +30,9 @@ orbital ProgramHostOrbital {
 
     state waiting {
       INIT -> waiting
-      HOST_CALLED -> parsing
+      HOST_CALLED -> waiting when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit HOST_COMMAND_ANSWERED { status: 500, body: "Error: orb host: the command arguments could not be read" })
+      HOST_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit HOST_ARGS_PARSE { stage: "host" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "grant" aliases: [] takesValue: true repeatable: true }] })
     }
 

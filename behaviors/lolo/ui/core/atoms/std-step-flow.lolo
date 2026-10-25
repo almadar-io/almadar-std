@@ -3,7 +3,7 @@ app std-step-flow [
   description: "std-step-flow — generic N-step sequential decision chain (Stripe Connect / TurboTax / Vercel deploy style). `config.steps` is an array of step definitions `{ key, label, description, icon, allowedRoles?: [string] }`; the trait projects the current step into a prominent body card and a `wizard-progress` stepper bar at the top. When a step declares `allowedRoles`, only users whose `@user.role` is in that list can advance through it. One primary button ADVANCEs along the chain; at the last step the same button finalizes (label/icon/variant swap via entity binding, state routed via guard). REJECT/ESCALATE terminate. Topology = loading / running / approved / rejected / escalated / error."
 ]
 type ObjectSpec = { id : string, label : string, value : string }
-type StepSpec = { label : string!, key : string, icon : string, description : string, fields : [string], allowedRoles : [string] }
+type StepSpec = { label : string!, key : string!, icon : string, description : string, fields : [string], allowedRoles : [string] }
 orbital StepFlowOrbital {
     type WizardStep = { id : string!, key : string, title : string!, label : string, description : string, icon : string, indexLabel : string, isPending : boolean, badgeVariant : string, labelColor : string }
 
@@ -99,8 +99,8 @@ orbital StepFlowOrbital {
           emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
         })
       ;; Role guard idiom: a step that declares no allowedRoles permits everyone; one that does
-      ;; falls through to array/includes.
-      ADVANCE -> running when (and (not @entity.isLastStep) (or (not (object/has (array/nth @config.steps @entity.currentStepIndex) allowedRoles)) (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) allowedRoles []) @user.role)))
+      ;; falls through to array/includes. checkRoles false drops the @user read for a [client] flow.
+      ADVANCE -> running when (and @config.checkRoles (not @entity.isLastStep) (or (not (object/has (array/nth @config.steps @entity.currentStepIndex) allowedRoles)) (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) allowedRoles []) @user.role)))
         (set @entity.currentStepIndex (+ @entity.currentStepIndex 1))
         (set @entity.currentStepLabel (object/get (array/nth @config.steps @entity.currentStepIndex) label))
         (set @entity.currentStepDescription (object/get (array/nth @config.steps @entity.currentStepIndex) description ""))
@@ -123,7 +123,66 @@ orbital StepFlowOrbital {
           title: (object/get @step label)
         })))
         (render-ui main @config.bodyContent)
-      ADVANCE -> approved when (and @entity.isLastStep (or (not (object/has (array/nth @config.steps @entity.currentStepIndex) allowedRoles)) (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) allowedRoles []) @user.role)))
+      ADVANCE -> running when (and (not @config.checkRoles) (not @entity.isLastStep))
+        (set @entity.currentStepIndex (+ @entity.currentStepIndex 1))
+        (set @entity.currentStepLabel (object/get (array/nth @config.steps @entity.currentStepIndex) label))
+        (set @entity.currentStepDescription (object/get (array/nth @config.steps @entity.currentStepIndex) description ""))
+        (set @entity.currentStepIcon (object/get (array/nth @config.steps @entity.currentStepIndex) icon user))
+        (set @entity.isFirstStep (= @entity.currentStepIndex 0))
+        (set @entity.isLastStep (= @entity.currentStepIndex (- @entity.totalSteps 1)))
+        (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Finalize Approval" "Approve & Continue"))
+        (set @entity.primaryActionVariant (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) success primary))
+        (set @entity.primaryActionIcon (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) check-circle chevron-right))
+        (set @entity.wizardSteps (array/map @config.steps (fn step {
+          badgeVariant: (if (< @index @entity.currentStepIndex) success (if (= @index @entity.currentStepIndex) primary neutral))
+          description: (object/get @step description "")
+          icon: (object/get @step icon circle)
+          id: (object/get @step key)
+          indexLabel: (str/concat "" (+ @index 1))
+          isPending: (> @index @entity.currentStepIndex)
+          key: (object/get @step key)
+          label: (object/get @step label)
+          labelColor: (if (= @index @entity.currentStepIndex) default muted)
+          title: (object/get @step label)
+        })))
+        (render-ui main @config.bodyContent)
+      ADVANCE -> approved when (and @config.checkRoles @entity.isLastStep (or (not (object/has (array/nth @config.steps @entity.currentStepIndex) allowedRoles)) (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) allowedRoles []) @user.role)))
+        (set @entity.finalStatus approved)
+        (render-ui main {
+          align: center
+          children: [{
+            name: check-circle
+            size: xl
+            type: icon
+          }, {
+            align: center
+            content: Approved
+            type: typography
+            variant: h2
+          }, {
+            align: center
+            color: muted
+            content: @config.completedText
+            type: typography
+            variant: body
+          }, {
+            allowNavigation: false
+            currentStep: @entity.totalSteps
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
+            type: wizard-progress
+          }, {
+            action: RESTART
+            actionPayload: { id: @entity.id }
+            icon: rotate-ccw
+            label: @config.restartLabel
+            type: button
+            variant: secondary
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      ADVANCE -> approved when (and (not @config.checkRoles) @entity.isLastStep)
         (set @entity.finalStatus approved)
         (render-ui main {
           align: center
@@ -423,6 +482,10 @@ orbital StepFlowOrbital {
     }
 
     config {
+      checkRoles : boolean = true
+        @label "Check step roles"
+        @description "When true, a step's allowedRoles gate who may advance it (reads @user.role, so the flow needs a server); false lets anyone advance, for a [client] flow"
+        @tier "domain"
       continueLabel : string = "Approve & Continue"
         @label "Continue label"
         @tier "presentation"

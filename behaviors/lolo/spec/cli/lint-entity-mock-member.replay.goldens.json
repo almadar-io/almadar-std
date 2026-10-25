@@ -1614,6 +1614,32 @@
           }
         }
       ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintEntityMockMemberCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint entity-mock-member <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ],
   "note": " The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it). The spec-orbital control follows validate_all_entities, which skips `orbital.is_spec()`."

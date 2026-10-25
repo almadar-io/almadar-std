@@ -8159,6 +8159,32 @@
           }
         }
       ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintStateShapeCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint state-shape <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ],
   "note": "The existing fixtures keep their shapes. Paths are the compiler's own `orbitals[i (Orbital)].traits[j (Trait)]...`. ORB_T_MISSING_INIT_TRANSITION follows validate_state_machine: a trait mounted on a ROUTE page (or embedded, directly or through other traits, by a route trait) that paints a page body (a render-ui into main, content or screen, an unresolved `@config.` slot with no string default, or a computed slot, from a transition or a tick, inside an `if` or not) needs an INIT arm on its first initial state; a trait on no page, only on an endpoint page, or that renders only toast, modal or another non-body slot is a helper and needs none (tests in page.rs endpoint_tests). ORB_T_EXTERNAL_INPUT_NOT_RESTING reads the event's `input` flag (tests/external_input_validation.rs). The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it)."

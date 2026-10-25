@@ -1,1170 +1,1198 @@
 {
- "atom": "cli/atoms/std-orb-signatures.lolo",
- "trait": "SignaturesEngine",
- "cases": [
-  {
-   "id": "the call asks std-args to parse with the out flag table",
-   "steps": [
+  "atom": "cli/atoms/std-orb-signatures.lolo",
+  "trait": "SignaturesEngine",
+  "cases": [
     {
-     "trait": "OrbSignatures",
-     "from": "ready",
-     "event": "SIGNATURES_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "{\"argv\": [\"--out\", \"c.json\"], \"cwd\": \"/w\"}"
-     },
-     "expect": {
-      "state": "parsing",
-      "emits": [
-       {
-        "event": "SIGNATURES_ARGS_PARSE",
-        "payload": {
-         "stage": "signatures",
-         "argv": [
-          "--out",
-          "c.json"
-         ],
-         "flags": [
-          {
-           "name": "out",
-           "aliases": [],
-           "takesValue": true,
-           "repeatable": false
+      "id": "the call asks std-args to parse with the out flag table",
+      "steps": [
+        {
+          "trait": "OrbSignatures",
+          "from": "ready",
+          "event": "SIGNATURES_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"--out\", \"c.json\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "state": "parsing",
+            "emits": [
+              {
+                "event": "SIGNATURES_ARGS_PARSE",
+                "payload": {
+                  "stage": "signatures",
+                  "argv": [
+                    "--out",
+                    "c.json"
+                  ],
+                  "flags": [
+                    {
+                      "name": "out",
+                      "aliases": [],
+                      "takesValue": true,
+                      "repeatable": false
+                    }
+                  ]
+                }
+              }
+            ]
           }
-         ]
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "no words starts the catalog with no out file",
-   "steps": [
+    },
     {
-     "trait": "OrbSignatures",
-     "from": "parsing",
-     "event": "SIGNATURES_ARGS_DONE",
-     "payload": {
-      "stage": "signatures",
-      "flags": {},
-      "positionals": [],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "SIGNATURES_START",
-        "payload": {
-         "out": ""
+      "id": "no words starts the catalog with no out file",
+      "steps": [
+        {
+          "trait": "OrbSignatures",
+          "from": "parsing",
+          "event": "SIGNATURES_ARGS_DONE",
+          "payload": {
+            "stage": "signatures",
+            "flags": {},
+            "positionals": [],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "SIGNATURES_START",
+                "payload": {
+                  "out": ""
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "--out FILE starts the catalog with the file",
-   "steps": [
+    },
     {
-     "trait": "OrbSignatures",
-     "from": "parsing",
-     "event": "SIGNATURES_ARGS_DONE",
-     "payload": {
-      "stage": "signatures",
-      "flags": {
-       "out": [
-        "c.json"
-       ]
-      },
-      "positionals": [],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "SIGNATURES_START",
-        "payload": {
-         "out": "c.json"
+      "id": "--out FILE starts the catalog with the file",
+      "steps": [
+        {
+          "trait": "OrbSignatures",
+          "from": "parsing",
+          "event": "SIGNATURES_ARGS_DONE",
+          "payload": {
+            "stage": "signatures",
+            "flags": {
+              "out": [
+                "c.json"
+              ]
+            },
+            "positionals": [],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "SIGNATURES_START",
+                "payload": {
+                  "out": "c.json"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a stray word is the usage",
-   "steps": [
+    },
     {
-     "trait": "OrbSignatures",
-     "from": "parsing",
-     "event": "SIGNATURES_ARGS_DONE",
-     "payload": {
-      "stage": "signatures",
-      "flags": {},
-      "positionals": [
-       "x"
+      "id": "control: a stray word is the usage",
+      "steps": [
+        {
+          "trait": "OrbSignatures",
+          "from": "parsing",
+          "event": "SIGNATURES_ARGS_DONE",
+          "payload": {
+            "stage": "signatures",
+            "flags": {},
+            "positionals": [
+              "x"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb signatures [--out FILE]"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIGNATURES_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a stray word beside --out is the usage",
+      "steps": [
+        {
+          "trait": "OrbSignatures",
+          "from": "parsing",
+          "event": "SIGNATURES_ARGS_DONE",
+          "payload": {
+            "stage": "signatures",
+            "flags": {
+              "out": [
+                "c.json"
+              ]
+            },
+            "positionals": [
+              "x"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb signatures [--out FILE]"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIGNATURES_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an unknown flag is the usage",
+      "steps": [
+        {
+          "trait": "OrbSignatures",
+          "from": "parsing",
+          "event": "SIGNATURES_ARGS_DONE",
+          "payload": {
+            "stage": "signatures",
+            "flags": {},
+            "positionals": [],
+            "errors": [
+              "unknown flag: --bogus"
+            ],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb signatures [--out FILE]"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIGNATURES_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a repeated --out is the usage",
+      "steps": [
+        {
+          "trait": "OrbSignatures",
+          "from": "parsing",
+          "event": "SIGNATURES_ARGS_DONE",
+          "payload": {
+            "stage": "signatures",
+            "flags": {
+              "out": [
+                "a",
+                "b"
+              ]
+            },
+            "positionals": [],
+            "errors": [
+              "repeated flag: --out"
+            ],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb signatures [--out FILE]"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIGNATURES_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: --out without a value is the usage",
+      "steps": [
+        {
+          "trait": "OrbSignatures",
+          "from": "parsing",
+          "event": "SIGNATURES_ARGS_DONE",
+          "payload": {
+            "stage": "signatures",
+            "flags": {
+              "out": []
+            },
+            "positionals": [],
+            "errors": [
+              "missing value for --out"
+            ],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb signatures [--out FILE]"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIGNATURES_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the engine answer is relayed to the hook with its stderr",
+      "steps": [
+        {
+          "trait": "OrbSignatures",
+          "from": "working",
+          "event": "SIGNATURES_DONE",
+          "payload": {
+            "status": 200,
+            "body": "",
+            "stderr": "Wrote 3 bytes to c.json"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "",
+                  "stderr": "Wrote 3 bytes to c.json"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the engine answer is relayed to the hook without a stderr",
+      "steps": [
+        {
+          "trait": "OrbSignatures",
+          "from": "working",
+          "event": "SIGNATURES_DONE",
+          "payload": {
+            "status": 200,
+            "body": "{}"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "start reads the core manifest",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "idle",
+          "event": "SIGNATURES_START",
+          "payload": {
+            "out": "c.json"
+          },
+          "expect": {
+            "state": "core"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a complete core manifest moves on to the std manifest",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "core",
+          "event": "SIGNATURES_CORE",
+          "payload": {
+            "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7ImNvbnN0cnVjdHMiOiJkaXN0L2xhbmd1YWdlL2NvbnN0cnVjdHMuanNvbiIsInZhbGlkYXRpb25Db2RlcyI6ImRpc3QvbGFuZ3VhZ2UvdmFsaWRhdGlvbi1jb2Rlcy5qc29uIiwidm9jYWJ1bGFyeSI6ImRpc3QvbGFuZ3VhZ2Uvdm9jYWJ1bGFyeS5qc29uIiwicGF0dGVybnMiOiJkaXN0L3BhdHRlcm5zL3BhdHRlcm5zLXJlZ2lzdHJ5Lmpzb24ifX0="
+          },
+          "expect": {
+            "state": "std"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a core manifest without constructs answers 500",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "core",
+          "event": "SIGNATURES_CORE",
+          "payload": {
+            "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7InZhbGlkYXRpb25Db2RlcyI6ImRpc3QvbGFuZ3VhZ2UvdmFsaWRhdGlvbi1jb2Rlcy5qc29uIiwidm9jYWJ1bGFyeSI6ImRpc3QvbGFuZ3VhZ2Uvdm9jYWJ1bGFyeS5qc29uIiwicGF0dGVybnMiOiJkaXN0L3BhdHRlcm5zL3BhdHRlcm5zLXJlZ2lzdHJ5Lmpzb24ifX0="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: the installed @almadar/core declares no orbLanguage constructs, validationCodes, vocabulary and patterns"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a core manifest without validationCodes answers 500",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "core",
+          "event": "SIGNATURES_CORE",
+          "payload": {
+            "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7ImNvbnN0cnVjdHMiOiJkaXN0L2xhbmd1YWdlL2NvbnN0cnVjdHMuanNvbiIsInZvY2FidWxhcnkiOiJkaXN0L2xhbmd1YWdlL3ZvY2FidWxhcnkuanNvbiIsInBhdHRlcm5zIjoiZGlzdC9wYXR0ZXJucy9wYXR0ZXJucy1yZWdpc3RyeS5qc29uIn19"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: the installed @almadar/core declares no orbLanguage constructs, validationCodes, vocabulary and patterns"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a core manifest without vocabulary answers 500",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "core",
+          "event": "SIGNATURES_CORE",
+          "payload": {
+            "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7ImNvbnN0cnVjdHMiOiJkaXN0L2xhbmd1YWdlL2NvbnN0cnVjdHMuanNvbiIsInZhbGlkYXRpb25Db2RlcyI6ImRpc3QvbGFuZ3VhZ2UvdmFsaWRhdGlvbi1jb2Rlcy5qc29uIiwicGF0dGVybnMiOiJkaXN0L3BhdHRlcm5zL3BhdHRlcm5zLXJlZ2lzdHJ5Lmpzb24ifX0="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: the installed @almadar/core declares no orbLanguage constructs, validationCodes, vocabulary and patterns"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a core manifest without patterns answers 500",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "core",
+          "event": "SIGNATURES_CORE",
+          "payload": {
+            "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7ImNvbnN0cnVjdHMiOiJkaXN0L2xhbmd1YWdlL2NvbnN0cnVjdHMuanNvbiIsInZhbGlkYXRpb25Db2RlcyI6ImRpc3QvbGFuZ3VhZ2UvdmFsaWRhdGlvbi1jb2Rlcy5qc29uIiwidm9jYWJ1bGFyeSI6ImRpc3QvbGFuZ3VhZ2Uvdm9jYWJ1bGFyeS5qc29uIn19"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: the installed @almadar/core declares no orbLanguage constructs, validationCodes, vocabulary and patterns"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a core manifest with no orbLanguage answers 500",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "core",
+          "event": "SIGNATURES_CORE",
+          "payload": {
+            "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSJ9"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: the installed @almadar/core declares no orbLanguage constructs, validationCodes, vocabulary and patterns"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an unreadable core manifest answers 500 with the reason",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "core",
+          "event": "SIGNATURES_FAILED",
+          "payload": {
+            "error": "No such file or directory"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: No such file or directory"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a std manifest naming the operators moves on to the constructs",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "std",
+          "event": "SIGNATURES_STD",
+          "payload": {
+            "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7Im9wZXJhdG9ycyI6ImNhbm9uaWNhbC1vcGVyYXRvcnMuanNvbiJ9fQ=="
+          },
+          "expect": {
+            "state": "constructs"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a std manifest without operators answers 500",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "std",
+          "event": "SIGNATURES_STD",
+          "payload": {
+            "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7InZvY2FidWxhcnkiOiJ4In19"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: the installed @almadar/std declares no orbLanguage operators"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a std manifest with no orbLanguage answers 500",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "std",
+          "event": "SIGNATURES_STD",
+          "payload": {
+            "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSJ9"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: the installed @almadar/std declares no orbLanguage operators"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an unreadable std manifest answers 500 with the reason",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "std",
+          "event": "SIGNATURES_FAILED",
+          "payload": {
+            "error": "denied"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: denied"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIGNATURES_CONSTRUCTS reads the next table",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "constructs",
+          "event": "SIGNATURES_CONSTRUCTS",
+          "payload": {
+            "data": "WzFd"
+          },
+          "expect": {
+            "state": "vocabulary"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a failed read in constructs answers 500 and stops",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "constructs",
+          "event": "SIGNATURES_FAILED",
+          "payload": {
+            "error": "no constructs"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: no constructs"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIGNATURES_VOCABULARY reads the next table",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "vocabulary",
+          "event": "SIGNATURES_VOCABULARY",
+          "payload": {
+            "data": "WzFd"
+          },
+          "expect": {
+            "state": "codes"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a failed read in vocabulary answers 500 and stops",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "vocabulary",
+          "event": "SIGNATURES_FAILED",
+          "payload": {
+            "error": "no vocabulary"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: no vocabulary"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIGNATURES_CODES reads the next table",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "codes",
+          "event": "SIGNATURES_CODES",
+          "payload": {
+            "data": "WzFd"
+          },
+          "expect": {
+            "state": "operators"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a failed read in codes answers 500 and stops",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "codes",
+          "event": "SIGNATURES_FAILED",
+          "payload": {
+            "error": "no codes"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: no codes"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIGNATURES_OPERATORS reads the next table",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "operators",
+          "event": "SIGNATURES_OPERATORS",
+          "payload": {
+            "data": "eyJvcGVyYXRvcnMiOnsieCI6MX19"
+          },
+          "expect": {
+            "state": "patterns"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a failed read in operators answers 500 and stops",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "operators",
+          "event": "SIGNATURES_FAILED",
+          "payload": {
+            "error": "no operators"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: no operators"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a failed read in patterns answers 500",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "patterns",
+          "event": "SIGNATURES_FAILED",
+          "payload": {
+            "error": "boom"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: boom"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a failed write in writing answers 500",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "writing",
+          "event": "SIGNATURES_FAILED",
+          "payload": {
+            "error": "boom"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb signatures: boom"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the whole catalog is one object with the five tables, sorted pretty, null and float values kept",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "idle",
+          "event": "SIGNATURES_START",
+          "payload": {
+            "out": ""
+          },
+          "expect": {
+            "state": "core"
+          }
+        },
+        {
+          "trait": "SignaturesEngine",
+          "from": "core",
+          "event": "SIGNATURES_CORE",
+          "payload": {
+            "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7ImNvbnN0cnVjdHMiOiJkaXN0L2xhbmd1YWdlL2NvbnN0cnVjdHMuanNvbiIsInZhbGlkYXRpb25Db2RlcyI6ImRpc3QvbGFuZ3VhZ2UvdmFsaWRhdGlvbi1jb2Rlcy5qc29uIiwidm9jYWJ1bGFyeSI6ImRpc3QvbGFuZ3VhZ2Uvdm9jYWJ1bGFyeS5qc29uIiwicGF0dGVybnMiOiJkaXN0L3BhdHRlcm5zL3BhdHRlcm5zLXJlZ2lzdHJ5Lmpzb24ifX0="
+          },
+          "expect": {
+            "state": "std"
+          }
+        },
+        {
+          "trait": "SignaturesEngine",
+          "from": "std",
+          "event": "SIGNATURES_STD",
+          "payload": {
+            "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7Im9wZXJhdG9ycyI6ImNhbm9uaWNhbC1vcGVyYXRvcnMuanNvbiJ9fQ=="
+          },
+          "expect": {
+            "state": "constructs"
+          }
+        },
+        {
+          "trait": "SignaturesEngine",
+          "from": "constructs",
+          "event": "SIGNATURES_CONSTRUCTS",
+          "payload": {
+            "data": "W3sibmFtZSI6IlNwYW4iLCJraW5kIjoic3RydWN0IiwiZG9jIjoiZCIsImZpZWxkcyI6W119XQ=="
+          },
+          "expect": {
+            "state": "vocabulary"
+          }
+        },
+        {
+          "trait": "SignaturesEngine",
+          "from": "vocabulary",
+          "event": "SIGNATURES_VOCABULARY",
+          "payload": {
+            "data": "eyJrZXl3b3JkcyI6WyJhcHAiXSwidGFncyI6W119"
+          },
+          "expect": {
+            "state": "codes"
+          }
+        },
+        {
+          "trait": "SignaturesEngine",
+          "from": "codes",
+          "event": "SIGNATURES_CODES",
+          "payload": {
+            "data": "W3siY29kZSI6Ik9SQl9FX1giLCJjYXRlZ29yeSI6ImVudGl0eSIsImRlc2NyaXB0aW9uIjoieCJ9XQ=="
+          },
+          "expect": {
+            "state": "operators"
+          }
+        },
+        {
+          "trait": "SignaturesEngine",
+          "from": "operators",
+          "event": "SIGNATURES_OPERATORS",
+          "payload": {
+            "data": "eyJ2ZXJzaW9uIjoiMSIsIm9wZXJhdG9ycyI6eyIrIjp7ImNhdGVnb3J5Ijoic3RkLW1hdGgiLCJub3RlIjpudWxsLCJ3ZWlnaHQiOjEuNSwiYXJncyI6WzEsImEiLHRydWUsW251bGxdXX19fQ=="
+          },
+          "expect": {
+            "state": "patterns"
+          }
+        },
+        {
+          "trait": "SignaturesEngine",
+          "from": "patterns",
+          "event": "SIGNATURES_PATTERNS",
+          "payload": {
+            "data": "eyJ2ZXJzaW9uIjoiMSIsInBhdHRlcm5zIjp7InN0YWNrIjp7InR5cGUiOiJzdGFjayIsInByb3BzIjp7ImdhcCI6eyJ0eXBlcyI6WyJzdHJpbmciXX19fX0sImNhdGVnb3JpZXMiOltdfQ=="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"codes\": [\n    {\n      \"category\": \"entity\",\n      \"code\": \"ORB_E_X\",\n      \"description\": \"x\"\n    }\n  ],\n  \"constructs\": [\n    {\n      \"doc\": \"d\",\n      \"fields\": [],\n      \"kind\": \"struct\",\n      \"name\": \"Span\"\n    }\n  ],\n  \"operators\": {\n    \"+\": {\n      \"args\": [\n        1,\n        \"a\",\n        true,\n        [\n          null\n        ]\n      ],\n      \"category\": \"std-math\",\n      \"note\": null,\n      \"weight\": 1.5\n    }\n  },\n  \"patterns\": {\n    \"stack\": {\n      \"props\": {\n        \"gap\": {\n          \"types\": [\n            \"string\"\n          ]\n        }\n      },\n      \"type\": \"stack\"\n    }\n  },\n  \"vocabulary\": {\n    \"keywords\": [\n      \"app\"\n    ],\n    \"tags\": []\n  }\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: with --out the catalog is held for the write and nothing is printed",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "idle",
+          "event": "SIGNATURES_START",
+          "payload": {
+            "out": "c.json"
+          },
+          "expect": {
+            "state": "core"
+          }
+        },
+        {
+          "trait": "SignaturesEngine",
+          "from": "core",
+          "event": "SIGNATURES_CORE",
+          "payload": {
+            "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7ImNvbnN0cnVjdHMiOiJkaXN0L2xhbmd1YWdlL2NvbnN0cnVjdHMuanNvbiIsInZhbGlkYXRpb25Db2RlcyI6ImRpc3QvbGFuZ3VhZ2UvdmFsaWRhdGlvbi1jb2Rlcy5qc29uIiwidm9jYWJ1bGFyeSI6ImRpc3QvbGFuZ3VhZ2Uvdm9jYWJ1bGFyeS5qc29uIiwicGF0dGVybnMiOiJkaXN0L3BhdHRlcm5zL3BhdHRlcm5zLXJlZ2lzdHJ5Lmpzb24ifX0="
+          },
+          "expect": {
+            "state": "std"
+          }
+        },
+        {
+          "trait": "SignaturesEngine",
+          "from": "std",
+          "event": "SIGNATURES_STD",
+          "payload": {
+            "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7Im9wZXJhdG9ycyI6ImNhbm9uaWNhbC1vcGVyYXRvcnMuanNvbiJ9fQ=="
+          },
+          "expect": {
+            "state": "constructs"
+          }
+        },
+        {
+          "trait": "SignaturesEngine",
+          "from": "constructs",
+          "event": "SIGNATURES_CONSTRUCTS",
+          "payload": {
+            "data": "W3sibmFtZSI6IlNwYW4iLCJraW5kIjoic3RydWN0IiwiZG9jIjoiZCIsImZpZWxkcyI6W119XQ=="
+          },
+          "expect": {
+            "state": "vocabulary"
+          }
+        },
+        {
+          "trait": "SignaturesEngine",
+          "from": "vocabulary",
+          "event": "SIGNATURES_VOCABULARY",
+          "payload": {
+            "data": "eyJrZXl3b3JkcyI6WyJhcHAiXSwidGFncyI6W119"
+          },
+          "expect": {
+            "state": "codes"
+          }
+        },
+        {
+          "trait": "SignaturesEngine",
+          "from": "codes",
+          "event": "SIGNATURES_CODES",
+          "payload": {
+            "data": "W3siY29kZSI6Ik9SQl9FX1giLCJjYXRlZ29yeSI6ImVudGl0eSIsImRlc2NyaXB0aW9uIjoieCJ9XQ=="
+          },
+          "expect": {
+            "state": "operators"
+          }
+        },
+        {
+          "trait": "SignaturesEngine",
+          "from": "operators",
+          "event": "SIGNATURES_OPERATORS",
+          "payload": {
+            "data": "eyJ2ZXJzaW9uIjoiMSIsIm9wZXJhdG9ycyI6eyIrIjp7ImNhdGVnb3J5Ijoic3RkLW1hdGgiLCJub3RlIjpudWxsLCJ3ZWlnaHQiOjEuNSwiYXJncyI6WzEsImEiLHRydWUsW251bGxdXX19fQ=="
+          },
+          "expect": {
+            "state": "patterns"
+          }
+        },
+        {
+          "trait": "SignaturesEngine",
+          "from": "patterns",
+          "event": "SIGNATURES_PATTERNS",
+          "payload": {
+            "data": "eyJ2ZXJzaW9uIjoiMSIsInBhdHRlcm5zIjp7InN0YWNrIjp7InR5cGUiOiJzdGFjayIsInByb3BzIjp7ImdhcCI6eyJ0eXBlcyI6WyJzdHJpbmciXX19fX0sImNhdGVnb3JpZXMiOltdfQ=="
+          },
+          "expect": {
+            "state": "writing",
+            "neverEmits": [
+              "SIGNATURES_ANSWERED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the write reports its byte length and path on stderr",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "writing",
+          "event": "SIGNATURES_WRITTEN",
+          "payload": {
+            "bytes": 9
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "",
+                  "stderr": "Wrote 9 bytes to c.json"
+                }
+              }
+            ]
+          }
+        }
       ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "usage: orb signatures [--out FILE]"
+      "entity": {
+        "out": "c.json",
+        "catalog": "123456789"
+      }
+    },
+    {
+      "id": "control: the byte length counts UTF-8 bytes, not characters",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "writing",
+          "event": "SIGNATURES_WRITTEN",
+          "payload": {
+            "bytes": 4
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "",
+                  "stderr": "Wrote 4 bytes to d/c.json"
+                }
+              }
+            ]
+          }
         }
-       }
       ],
-      "neverEmits": [
-       "SIGNATURES_START"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a stray word beside --out is the usage",
-   "steps": [
+      "entity": {
+        "out": "d/c.json",
+        "catalog": "éé"
+      }
+    },
     {
-     "trait": "OrbSignatures",
-     "from": "parsing",
-     "event": "SIGNATURES_ARGS_DONE",
-     "payload": {
-      "stage": "signatures",
-      "flags": {
-       "out": [
-        "c.json"
-       ]
-      },
-      "positionals": [
-       "x"
+      "id": "control: with no out file a finished catalog prints and does not write",
+      "steps": [
+        {
+          "trait": "SignaturesEngine",
+          "from": "patterns",
+          "event": "SIGNATURES_PATTERNS",
+          "payload": {
+            "data": "eyJ2ZXJzaW9uIjoiMSIsInBhdHRlcm5zIjp7InN0YWNrIjp7InR5cGUiOiJzdGFjayIsInByb3BzIjp7ImdhcCI6eyJ0eXBlcyI6WyJzdHJpbmciXX19fX0sImNhdGVnb3JpZXMiOltdfQ=="
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"codes\": [\n    {\n      \"category\": \"entity\",\n      \"code\": \"ORB_E_X\",\n      \"description\": \"x\"\n    }\n  ],\n  \"constructs\": [\n    {\n      \"doc\": \"d\",\n      \"fields\": [],\n      \"kind\": \"struct\",\n      \"name\": \"Span\"\n    }\n  ],\n  \"operators\": {\n    \"+\": {\n      \"args\": [\n        1,\n        \"a\",\n        true,\n        [\n          null\n        ]\n      ],\n      \"category\": \"std-math\",\n      \"note\": null,\n      \"weight\": 1.5\n    }\n  },\n  \"patterns\": {\n    \"stack\": {\n      \"props\": {\n        \"gap\": {\n          \"types\": [\n            \"string\"\n          ]\n        }\n      },\n      \"type\": \"stack\"\n    }\n  },\n  \"vocabulary\": {\n    \"keywords\": [\n      \"app\"\n    ],\n    \"tags\": []\n  }\n}"
+                }
+              }
+            ],
+            "neverEmits": [
+              "SIGNATURES_WRITTEN"
+            ]
+          }
+        }
       ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "usage: orb signatures [--out FILE]"
-        }
-       }
-      ],
-      "neverEmits": [
-       "SIGNATURES_START"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: an unknown flag is the usage",
-   "steps": [
-    {
-     "trait": "OrbSignatures",
-     "from": "parsing",
-     "event": "SIGNATURES_ARGS_DONE",
-     "payload": {
-      "stage": "signatures",
-      "flags": {},
-      "positionals": [],
-      "errors": [
-       "unknown flag: --bogus"
-      ],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "usage: orb signatures [--out FILE]"
-        }
-       }
-      ],
-      "neverEmits": [
-       "SIGNATURES_START"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a repeated --out is the usage",
-   "steps": [
-    {
-     "trait": "OrbSignatures",
-     "from": "parsing",
-     "event": "SIGNATURES_ARGS_DONE",
-     "payload": {
-      "stage": "signatures",
-      "flags": {
-       "out": [
-        "a",
-        "b"
-       ]
-      },
-      "positionals": [],
-      "errors": [
-       "repeated flag: --out"
-      ],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "usage: orb signatures [--out FILE]"
-        }
-       }
-      ],
-      "neverEmits": [
-       "SIGNATURES_START"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: --out without a value is the usage",
-   "steps": [
-    {
-     "trait": "OrbSignatures",
-     "from": "parsing",
-     "event": "SIGNATURES_ARGS_DONE",
-     "payload": {
-      "stage": "signatures",
-      "flags": {
-       "out": []
-      },
-      "positionals": [],
-      "errors": [
-       "missing value for --out"
-      ],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "usage: orb signatures [--out FILE]"
-        }
-       }
-      ],
-      "neverEmits": [
-       "SIGNATURES_START"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the engine answer is relayed to the hook with its stderr",
-   "steps": [
-    {
-     "trait": "OrbSignatures",
-     "from": "working",
-     "event": "SIGNATURES_DONE",
-     "payload": {
-      "status": 200,
-      "body": "",
-      "stderr": "Wrote 3 bytes to c.json"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "",
-         "stderr": "Wrote 3 bytes to c.json"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the engine answer is relayed to the hook without a stderr",
-   "steps": [
-    {
-     "trait": "OrbSignatures",
-     "from": "working",
-     "event": "SIGNATURES_DONE",
-     "payload": {
-      "status": 200,
-      "body": "{}"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "start reads the core manifest",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "idle",
-     "event": "SIGNATURES_START",
-     "payload": {
-      "out": "c.json"
-     },
-     "expect": {
-      "state": "core"
-     }
-    }
-   ]
-  },
-  {
-   "id": "a complete core manifest moves on to the std manifest",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "core",
-     "event": "SIGNATURES_CORE",
-     "payload": {
-      "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7ImNvbnN0cnVjdHMiOiJkaXN0L2xhbmd1YWdlL2NvbnN0cnVjdHMuanNvbiIsInZhbGlkYXRpb25Db2RlcyI6ImRpc3QvbGFuZ3VhZ2UvdmFsaWRhdGlvbi1jb2Rlcy5qc29uIiwidm9jYWJ1bGFyeSI6ImRpc3QvbGFuZ3VhZ2Uvdm9jYWJ1bGFyeS5qc29uIiwicGF0dGVybnMiOiJkaXN0L3BhdHRlcm5zL3BhdHRlcm5zLXJlZ2lzdHJ5Lmpzb24ifX0="
-     },
-     "expect": {
-      "state": "std"
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a core manifest without constructs answers 500",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "core",
-     "event": "SIGNATURES_CORE",
-     "payload": {
-      "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7InZhbGlkYXRpb25Db2RlcyI6ImRpc3QvbGFuZ3VhZ2UvdmFsaWRhdGlvbi1jb2Rlcy5qc29uIiwidm9jYWJ1bGFyeSI6ImRpc3QvbGFuZ3VhZ2Uvdm9jYWJ1bGFyeS5qc29uIiwicGF0dGVybnMiOiJkaXN0L3BhdHRlcm5zL3BhdHRlcm5zLXJlZ2lzdHJ5Lmpzb24ifX0="
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: the installed @almadar/core declares no orbLanguage constructs, validationCodes, vocabulary and patterns"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a core manifest without validationCodes answers 500",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "core",
-     "event": "SIGNATURES_CORE",
-     "payload": {
-      "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7ImNvbnN0cnVjdHMiOiJkaXN0L2xhbmd1YWdlL2NvbnN0cnVjdHMuanNvbiIsInZvY2FidWxhcnkiOiJkaXN0L2xhbmd1YWdlL3ZvY2FidWxhcnkuanNvbiIsInBhdHRlcm5zIjoiZGlzdC9wYXR0ZXJucy9wYXR0ZXJucy1yZWdpc3RyeS5qc29uIn19"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: the installed @almadar/core declares no orbLanguage constructs, validationCodes, vocabulary and patterns"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a core manifest without vocabulary answers 500",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "core",
-     "event": "SIGNATURES_CORE",
-     "payload": {
-      "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7ImNvbnN0cnVjdHMiOiJkaXN0L2xhbmd1YWdlL2NvbnN0cnVjdHMuanNvbiIsInZhbGlkYXRpb25Db2RlcyI6ImRpc3QvbGFuZ3VhZ2UvdmFsaWRhdGlvbi1jb2Rlcy5qc29uIiwicGF0dGVybnMiOiJkaXN0L3BhdHRlcm5zL3BhdHRlcm5zLXJlZ2lzdHJ5Lmpzb24ifX0="
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: the installed @almadar/core declares no orbLanguage constructs, validationCodes, vocabulary and patterns"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a core manifest without patterns answers 500",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "core",
-     "event": "SIGNATURES_CORE",
-     "payload": {
-      "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7ImNvbnN0cnVjdHMiOiJkaXN0L2xhbmd1YWdlL2NvbnN0cnVjdHMuanNvbiIsInZhbGlkYXRpb25Db2RlcyI6ImRpc3QvbGFuZ3VhZ2UvdmFsaWRhdGlvbi1jb2Rlcy5qc29uIiwidm9jYWJ1bGFyeSI6ImRpc3QvbGFuZ3VhZ2Uvdm9jYWJ1bGFyeS5qc29uIn19"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: the installed @almadar/core declares no orbLanguage constructs, validationCodes, vocabulary and patterns"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a core manifest with no orbLanguage answers 500",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "core",
-     "event": "SIGNATURES_CORE",
-     "payload": {
-      "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSJ9"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: the installed @almadar/core declares no orbLanguage constructs, validationCodes, vocabulary and patterns"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an unreadable core manifest answers 500 with the reason",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "core",
-     "event": "SIGNATURES_FAILED",
-     "payload": {
-      "error": "No such file or directory"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: No such file or directory"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a std manifest naming the operators moves on to the constructs",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "std",
-     "event": "SIGNATURES_STD",
-     "payload": {
-      "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7Im9wZXJhdG9ycyI6ImNhbm9uaWNhbC1vcGVyYXRvcnMuanNvbiJ9fQ=="
-     },
-     "expect": {
-      "state": "constructs"
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a std manifest without operators answers 500",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "std",
-     "event": "SIGNATURES_STD",
-     "payload": {
-      "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7InZvY2FidWxhcnkiOiJ4In19"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: the installed @almadar/std declares no orbLanguage operators"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a std manifest with no orbLanguage answers 500",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "std",
-     "event": "SIGNATURES_STD",
-     "payload": {
-      "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSJ9"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: the installed @almadar/std declares no orbLanguage operators"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an unreadable std manifest answers 500 with the reason",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "std",
-     "event": "SIGNATURES_FAILED",
-     "payload": {
-      "error": "denied"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: denied"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "SIGNATURES_CONSTRUCTS reads the next table",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "constructs",
-     "event": "SIGNATURES_CONSTRUCTS",
-     "payload": {
-      "data": "WzFd"
-     },
-     "expect": {
-      "state": "vocabulary"
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a failed read in constructs answers 500 and stops",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "constructs",
-     "event": "SIGNATURES_FAILED",
-     "payload": {
-      "error": "no constructs"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: no constructs"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "SIGNATURES_VOCABULARY reads the next table",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "vocabulary",
-     "event": "SIGNATURES_VOCABULARY",
-     "payload": {
-      "data": "WzFd"
-     },
-     "expect": {
-      "state": "codes"
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a failed read in vocabulary answers 500 and stops",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "vocabulary",
-     "event": "SIGNATURES_FAILED",
-     "payload": {
-      "error": "no vocabulary"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: no vocabulary"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "SIGNATURES_CODES reads the next table",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "codes",
-     "event": "SIGNATURES_CODES",
-     "payload": {
-      "data": "WzFd"
-     },
-     "expect": {
-      "state": "operators"
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a failed read in codes answers 500 and stops",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "codes",
-     "event": "SIGNATURES_FAILED",
-     "payload": {
-      "error": "no codes"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: no codes"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "SIGNATURES_OPERATORS reads the next table",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "operators",
-     "event": "SIGNATURES_OPERATORS",
-     "payload": {
-      "data": "eyJvcGVyYXRvcnMiOnsieCI6MX19"
-     },
-     "expect": {
-      "state": "patterns"
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a failed read in operators answers 500 and stops",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "operators",
-     "event": "SIGNATURES_FAILED",
-     "payload": {
-      "error": "no operators"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: no operators"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a failed read in patterns answers 500",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "patterns",
-     "event": "SIGNATURES_FAILED",
-     "payload": {
-      "error": "boom"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: boom"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a failed write in writing answers 500",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "writing",
-     "event": "SIGNATURES_FAILED",
-     "payload": {
-      "error": "boom"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: orb signatures: boom"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the whole catalog is one object with the five tables, sorted pretty, null and float values kept",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "idle",
-     "event": "SIGNATURES_START",
-     "payload": {
-      "out": ""
-     },
-     "expect": {
-      "state": "core"
-     }
+      "entity": {
+        "constructs": [
+          {
+            "name": "Span",
+            "kind": "struct",
+            "doc": "d",
+            "fields": []
+          }
+        ],
+        "vocabulary": {
+          "keywords": [
+            "app"
+          ],
+          "tags": []
+        },
+        "codes": [
+          {
+            "code": "ORB_E_X",
+            "category": "entity",
+            "description": "x"
+          }
+        ],
+        "operators": {
+          "+": {
+            "category": "std-math",
+            "note": null,
+            "weight": 1.5,
+            "args": [
+              1,
+              "a",
+              true,
+              [
+                null
+              ]
+            ]
+          }
+        },
+        "out": ""
+      }
     },
     {
-     "trait": "SignaturesEngine",
-     "from": "core",
-     "event": "SIGNATURES_CORE",
-     "payload": {
-      "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7ImNvbnN0cnVjdHMiOiJkaXN0L2xhbmd1YWdlL2NvbnN0cnVjdHMuanNvbiIsInZhbGlkYXRpb25Db2RlcyI6ImRpc3QvbGFuZ3VhZ2UvdmFsaWRhdGlvbi1jb2Rlcy5qc29uIiwidm9jYWJ1bGFyeSI6ImRpc3QvbGFuZ3VhZ2Uvdm9jYWJ1bGFyeS5qc29uIiwicGF0dGVybnMiOiJkaXN0L3BhdHRlcm5zL3BhdHRlcm5zLXJlZ2lzdHJ5Lmpzb24ifX0="
-     },
-     "expect": {
-      "state": "std"
-     }
-    },
-    {
-     "trait": "SignaturesEngine",
-     "from": "std",
-     "event": "SIGNATURES_STD",
-     "payload": {
-      "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7Im9wZXJhdG9ycyI6ImNhbm9uaWNhbC1vcGVyYXRvcnMuanNvbiJ9fQ=="
-     },
-     "expect": {
-      "state": "constructs"
-     }
-    },
-    {
-     "trait": "SignaturesEngine",
-     "from": "constructs",
-     "event": "SIGNATURES_CONSTRUCTS",
-     "payload": {
-      "data": "W3sibmFtZSI6IlNwYW4iLCJraW5kIjoic3RydWN0IiwiZG9jIjoiZCIsImZpZWxkcyI6W119XQ=="
-     },
-     "expect": {
-      "state": "vocabulary"
-     }
-    },
-    {
-     "trait": "SignaturesEngine",
-     "from": "vocabulary",
-     "event": "SIGNATURES_VOCABULARY",
-     "payload": {
-      "data": "eyJrZXl3b3JkcyI6WyJhcHAiXSwidGFncyI6W119"
-     },
-     "expect": {
-      "state": "codes"
-     }
-    },
-    {
-     "trait": "SignaturesEngine",
-     "from": "codes",
-     "event": "SIGNATURES_CODES",
-     "payload": {
-      "data": "W3siY29kZSI6Ik9SQl9FX1giLCJjYXRlZ29yeSI6ImVudGl0eSIsImRlc2NyaXB0aW9uIjoieCJ9XQ=="
-     },
-     "expect": {
-      "state": "operators"
-     }
-    },
-    {
-     "trait": "SignaturesEngine",
-     "from": "operators",
-     "event": "SIGNATURES_OPERATORS",
-     "payload": {
-      "data": "eyJ2ZXJzaW9uIjoiMSIsIm9wZXJhdG9ycyI6eyIrIjp7ImNhdGVnb3J5Ijoic3RkLW1hdGgiLCJub3RlIjpudWxsLCJ3ZWlnaHQiOjEuNSwiYXJncyI6WzEsImEiLHRydWUsW251bGxdXX19fQ=="
-     },
-     "expect": {
-      "state": "patterns"
-     }
-    },
-    {
-     "trait": "SignaturesEngine",
-     "from": "patterns",
-     "event": "SIGNATURES_PATTERNS",
-     "payload": {
-      "data": "eyJ2ZXJzaW9uIjoiMSIsInBhdHRlcm5zIjp7InN0YWNrIjp7InR5cGUiOiJzdGFjayIsInByb3BzIjp7ImdhcCI6eyJ0eXBlcyI6WyJzdHJpbmciXX19fX0sImNhdGVnb3JpZXMiOltdfQ=="
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"codes\": [\n    {\n      \"category\": \"entity\",\n      \"code\": \"ORB_E_X\",\n      \"description\": \"x\"\n    }\n  ],\n  \"constructs\": [\n    {\n      \"doc\": \"d\",\n      \"fields\": [],\n      \"kind\": \"struct\",\n      \"name\": \"Span\"\n    }\n  ],\n  \"operators\": {\n    \"+\": {\n      \"args\": [\n        1,\n        \"a\",\n        true,\n        [\n          null\n        ]\n      ],\n      \"category\": \"std-math\",\n      \"note\": null,\n      \"weight\": 1.5\n    }\n  },\n  \"patterns\": {\n    \"stack\": {\n      \"props\": {\n        \"gap\": {\n          \"types\": [\n            \"string\"\n          ]\n        }\n      },\n      \"type\": \"stack\"\n    }\n  },\n  \"vocabulary\": {\n    \"keywords\": [\n      \"app\"\n    ],\n    \"tags\": []\n  }\n}"
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbSignatures",
+          "from": "ready",
+          "event": "SIGNATURES_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIGNATURES_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb signatures [--out FILE]"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
     }
-   ]
-  },
-  {
-   "id": "control: with --out the catalog is held for the write and nothing is printed",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "idle",
-     "event": "SIGNATURES_START",
-     "payload": {
-      "out": "c.json"
-     },
-     "expect": {
-      "state": "core"
-     }
-    },
-    {
-     "trait": "SignaturesEngine",
-     "from": "core",
-     "event": "SIGNATURES_CORE",
-     "payload": {
-      "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7ImNvbnN0cnVjdHMiOiJkaXN0L2xhbmd1YWdlL2NvbnN0cnVjdHMuanNvbiIsInZhbGlkYXRpb25Db2RlcyI6ImRpc3QvbGFuZ3VhZ2UvdmFsaWRhdGlvbi1jb2Rlcy5qc29uIiwidm9jYWJ1bGFyeSI6ImRpc3QvbGFuZ3VhZ2Uvdm9jYWJ1bGFyeS5qc29uIiwicGF0dGVybnMiOiJkaXN0L3BhdHRlcm5zL3BhdHRlcm5zLXJlZ2lzdHJ5Lmpzb24ifX0="
-     },
-     "expect": {
-      "state": "std"
-     }
-    },
-    {
-     "trait": "SignaturesEngine",
-     "from": "std",
-     "event": "SIGNATURES_STD",
-     "payload": {
-      "data": "eyJuYW1lIjoiQGFsbWFkYXIvY29yZSIsIm9yYkxhbmd1YWdlIjp7Im9wZXJhdG9ycyI6ImNhbm9uaWNhbC1vcGVyYXRvcnMuanNvbiJ9fQ=="
-     },
-     "expect": {
-      "state": "constructs"
-     }
-    },
-    {
-     "trait": "SignaturesEngine",
-     "from": "constructs",
-     "event": "SIGNATURES_CONSTRUCTS",
-     "payload": {
-      "data": "W3sibmFtZSI6IlNwYW4iLCJraW5kIjoic3RydWN0IiwiZG9jIjoiZCIsImZpZWxkcyI6W119XQ=="
-     },
-     "expect": {
-      "state": "vocabulary"
-     }
-    },
-    {
-     "trait": "SignaturesEngine",
-     "from": "vocabulary",
-     "event": "SIGNATURES_VOCABULARY",
-     "payload": {
-      "data": "eyJrZXl3b3JkcyI6WyJhcHAiXSwidGFncyI6W119"
-     },
-     "expect": {
-      "state": "codes"
-     }
-    },
-    {
-     "trait": "SignaturesEngine",
-     "from": "codes",
-     "event": "SIGNATURES_CODES",
-     "payload": {
-      "data": "W3siY29kZSI6Ik9SQl9FX1giLCJjYXRlZ29yeSI6ImVudGl0eSIsImRlc2NyaXB0aW9uIjoieCJ9XQ=="
-     },
-     "expect": {
-      "state": "operators"
-     }
-    },
-    {
-     "trait": "SignaturesEngine",
-     "from": "operators",
-     "event": "SIGNATURES_OPERATORS",
-     "payload": {
-      "data": "eyJ2ZXJzaW9uIjoiMSIsIm9wZXJhdG9ycyI6eyIrIjp7ImNhdGVnb3J5Ijoic3RkLW1hdGgiLCJub3RlIjpudWxsLCJ3ZWlnaHQiOjEuNSwiYXJncyI6WzEsImEiLHRydWUsW251bGxdXX19fQ=="
-     },
-     "expect": {
-      "state": "patterns"
-     }
-    },
-    {
-     "trait": "SignaturesEngine",
-     "from": "patterns",
-     "event": "SIGNATURES_PATTERNS",
-     "payload": {
-      "data": "eyJ2ZXJzaW9uIjoiMSIsInBhdHRlcm5zIjp7InN0YWNrIjp7InR5cGUiOiJzdGFjayIsInByb3BzIjp7ImdhcCI6eyJ0eXBlcyI6WyJzdHJpbmciXX19fX0sImNhdGVnb3JpZXMiOltdfQ=="
-     },
-     "expect": {
-      "state": "writing",
-      "neverEmits": [
-       "SIGNATURES_ANSWERED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the write reports its byte length and path on stderr",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "writing",
-     "event": "SIGNATURES_WRITTEN",
-     "payload": {
-      "bytes": 9
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "",
-         "stderr": "Wrote 9 bytes to c.json"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "entity": {
-    "out": "c.json",
-    "catalog": "123456789"
-   }
-  },
-  {
-   "id": "control: the byte length counts UTF-8 bytes, not characters",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "writing",
-     "event": "SIGNATURES_WRITTEN",
-     "payload": {
-      "bytes": 4
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "",
-         "stderr": "Wrote 4 bytes to d/c.json"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "entity": {
-    "out": "d/c.json",
-    "catalog": "éé"
-   }
-  },
-  {
-   "id": "control: with no out file a finished catalog prints and does not write",
-   "steps": [
-    {
-     "trait": "SignaturesEngine",
-     "from": "patterns",
-     "event": "SIGNATURES_PATTERNS",
-     "payload": {
-      "data": "eyJ2ZXJzaW9uIjoiMSIsInBhdHRlcm5zIjp7InN0YWNrIjp7InR5cGUiOiJzdGFjayIsInByb3BzIjp7ImdhcCI6eyJ0eXBlcyI6WyJzdHJpbmciXX19fX0sImNhdGVnb3JpZXMiOltdfQ=="
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "SIGNATURES_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"codes\": [\n    {\n      \"category\": \"entity\",\n      \"code\": \"ORB_E_X\",\n      \"description\": \"x\"\n    }\n  ],\n  \"constructs\": [\n    {\n      \"doc\": \"d\",\n      \"fields\": [],\n      \"kind\": \"struct\",\n      \"name\": \"Span\"\n    }\n  ],\n  \"operators\": {\n    \"+\": {\n      \"args\": [\n        1,\n        \"a\",\n        true,\n        [\n          null\n        ]\n      ],\n      \"category\": \"std-math\",\n      \"note\": null,\n      \"weight\": 1.5\n    }\n  },\n  \"patterns\": {\n    \"stack\": {\n      \"props\": {\n        \"gap\": {\n          \"types\": [\n            \"string\"\n          ]\n        }\n      },\n      \"type\": \"stack\"\n    }\n  },\n  \"vocabulary\": {\n    \"keywords\": [\n      \"app\"\n    ],\n    \"tags\": []\n  }\n}"
-        }
-       }
-      ],
-      "neverEmits": [
-       "SIGNATURES_WRITTEN"
-      ]
-     }
-    }
-   ],
-   "entity": {
-    "constructs": [
-     {
-      "name": "Span",
-      "kind": "struct",
-      "doc": "d",
-      "fields": []
-     }
-    ],
-    "vocabulary": {
-     "keywords": [
-      "app"
-     ],
-     "tags": []
-    },
-    "codes": [
-     {
-      "code": "ORB_E_X",
-      "category": "entity",
-      "description": "x"
-     }
-    ],
-    "operators": {
-     "+": {
-      "category": "std-math",
-      "note": null,
-      "weight": 1.5,
-      "args": [
-       1,
-       "a",
-       true,
-       [
-        null
-       ]
-      ]
-     }
-    },
-    "out": ""
-   }
-  }
- ]
+  ]
 }

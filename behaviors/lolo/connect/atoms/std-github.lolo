@@ -117,7 +117,9 @@ orbital GithubOrbital {
         })
       GITHUB_GET_ISSUE_UNREACHABLE -> idle
         (emit GITHUB_GET_ISSUE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
-      GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
+      GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.key GithubIssue) null))
+        (emit GITHUB_GET_ISSUE_FAILED { code: "PARSE_ERROR", message: "GitHub answered an issue that could not be read" })
+      GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.key GithubIssue) null))
         (emit GITHUB_ISSUE { issue: (json/parse @payload.key GithubIssue), comments: (json/parse @payload.body [GithubComment]) })
       GITHUB_GET_ISSUE_COMMENTS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit GITHUB_GET_ISSUE_FAILED {

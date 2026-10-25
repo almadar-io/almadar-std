@@ -1041,7 +1041,91 @@
       ],
       "effects": [
        {
-        "type": "let"
+        "type": "let",
+        "arg1": [
+         "if",
+         [
+          "=",
+          "@servers",
+          null
+         ],
+         [
+          "emit",
+          "MCP_HOST_FAILED",
+          {
+           "error": "could not register orb in the servers entry"
+          }
+         ],
+         [
+          "let",
+          [
+           [
+            "merged",
+            [
+             "object/set",
+             "@entity.config",
+             "@entity.serversKey",
+             "@servers"
+            ]
+           ]
+          ],
+          [
+           "if",
+           [
+            "=",
+            "@merged",
+            null
+           ],
+           [
+            "emit",
+            "MCP_HOST_FAILED",
+            {
+             "error": "could not register orb in the servers entry"
+            }
+           ],
+           [
+            "do",
+            [
+             "set",
+             "@entity.config",
+             "@merged"
+            ],
+            [
+             "os/mkdir",
+             {
+              "anchor": "cwd",
+              "path": "@entity.dir"
+             },
+             true,
+             {
+              "key": "dir",
+              "emit": {
+               "success": "MCP_DIR_READY",
+               "failure": "MCP_HOST_FAILED"
+              }
+             }
+            ]
+           ]
+          ]
+         ]
+        ]
+       }
+      ],
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbMcpInstall",
+     "from": "writing",
+     "event": "MCP_DIR_READY",
+     "payload": {},
+     "expect": {
+      "state": "writing",
+      "effects": [
+       {
+        "type": "os/write-file",
+        "key": "config",
+        "optionsAt": 2
        }
       ],
       "fired": true
@@ -1072,7 +1156,91 @@
       ],
       "effects": [
        {
-        "type": "let"
+        "type": "let",
+        "arg1": [
+         "if",
+         [
+          "=",
+          "@servers",
+          null
+         ],
+         [
+          "emit",
+          "MCP_HOST_FAILED",
+          {
+           "error": "could not register orb in the servers entry"
+          }
+         ],
+         [
+          "let",
+          [
+           [
+            "merged",
+            [
+             "object/set",
+             "@entity.config",
+             "@entity.serversKey",
+             "@servers"
+            ]
+           ]
+          ],
+          [
+           "if",
+           [
+            "=",
+            "@merged",
+            null
+           ],
+           [
+            "emit",
+            "MCP_HOST_FAILED",
+            {
+             "error": "could not register orb in the servers entry"
+            }
+           ],
+           [
+            "do",
+            [
+             "set",
+             "@entity.config",
+             "@merged"
+            ],
+            [
+             "os/mkdir",
+             {
+              "anchor": "cwd",
+              "path": "@entity.dir"
+             },
+             true,
+             {
+              "key": "dir",
+              "emit": {
+               "success": "MCP_DIR_READY",
+               "failure": "MCP_HOST_FAILED"
+              }
+             }
+            ]
+           ]
+          ]
+         ]
+        ]
+       }
+      ],
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbMcpInstall",
+     "from": "writing",
+     "event": "MCP_DIR_READY",
+     "payload": {},
+     "expect": {
+      "state": "writing",
+      "effects": [
+       {
+        "type": "os/write-file",
+        "key": "config",
+        "optionsAt": 2
        }
       ],
       "fired": true
@@ -1534,6 +1702,47 @@
        }
       ],
       "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "a call whose arguments cannot be read answers 500",
+   "entity": {},
+   "steps": [
+    {
+     "trait": "OrbMcpInstall",
+     "from": "ready",
+     "event": "MCP_CALLED",
+     "payload": {
+      "rawBody": "not json"
+     },
+     "expect": {
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "MCP_ARGS_UNREAD",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbMcpInstall",
+     "from": "parsing",
+     "event": "MCP_ARGS_UNREAD",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "MCP_INSTALL_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "Error: the call's arguments could not be read"
+        }
+       }
+      ]
      }
     }
    ]

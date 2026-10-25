@@ -178,8 +178,12 @@ orbital HttpDispatchOrbital {
               (do
                 (emit RESPOND { requestId: @payload.requestId, status: 400, headers: (array/append (object/get @p "responseHeaders") { name: "content-type", value: "text/plain; charset=utf-8" }), body: (bytes/from-string "Failed to parse the request body as JSON") })
                 (set @entity.pending (array/filter @entity.pending (fn q (!= @q.requestId @payload.requestId)))))
-              (let ((reference (object/get (json/parse @text DispatchRowsBody) "ref")) (viewer (object/get @p "viewer" null)))
-                (emit RESOLVE_ROWS_REQUESTED { requestId: @payload.requestId, reference: (json/stringify @reference), viewer: @viewer })))))
+              (let ((rb (json/parse @text DispatchRowsBody)) (viewer (object/get @p "viewer" null)))
+                (if (= @rb null)
+                  (do
+                    (emit RESPOND { requestId: @payload.requestId, status: 400, headers: (array/append (object/get @p "responseHeaders") { name: "content-type", value: "text/plain; charset=utf-8" }), body: (bytes/from-string "The request body does not carry a rows reference") })
+                    (set @entity.pending (array/filter @entity.pending (fn q (!= @q.requestId @payload.requestId)))))
+                  (emit RESOLVE_ROWS_REQUESTED { requestId: @payload.requestId, reference: (json/stringify (object/get @rb "ref")), viewer: @viewer }))))))
 
       RESOLVE_ROWS_REQUESTED -> serving when (array/some @entity.pending (fn p (and (= @p.requestId @payload.requestId) (= @p.kind "resolve-rows"))))
         (program/resolve-rows (json/parse @payload.reference DispatchJson) @payload.viewer { key: (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "dispatchKey"), emit: { success: ROWS_ANSWERED, failure: ROWS_FAILED } })

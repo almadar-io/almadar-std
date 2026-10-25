@@ -170,6 +170,90 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-tarball-body-that-is-not-base64-is-refused-as-unhashable",
+   "steps": [
+    {
+     "event": "PKG_DOWNLOADED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "***",
+      "key": "tarball"
+     },
+     "from": "downloading",
+     "entity": {
+      "id": "p",
+      "cmd": "add",
+      "dir": "/w",
+      "cwd": "/w",
+      "targets": [
+       {
+        "name": "pkg-a",
+        "version": "1.0.0",
+        "url": "https://registry.example/packages/pkg-a/1.0.0.tgz",
+        "integrity": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+       }
+      ],
+      "cursor": 0,
+      "digest": "",
+      "tarballSize": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_VERIFY",
+        "payload": {}
+       },
+       {
+        "event": "PACKAGE_REFUSED",
+        "payload": {
+         "name": "pkg-a",
+         "problem": "integrity-unavailable"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-call-whose-arguments-cannot-be-read-answers-500",
+   "steps": [
+    {
+     "event": "PACKAGES_CALLED",
+     "payload": {
+      "rawBody": "not json"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_ARGS_UNREAD",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "PKG_ARGS_UNREAD",
+     "payload": {},
+     "from": "parsing",
+     "expect": {
+      "emits": [
+       {
+        "event": "PACKAGES_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: the call's arguments could not be read"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

@@ -5,7 +5,7 @@ app std-hero-nav [
 orbital HeroNavOrbital {
   type Unit = {
     id : string!
-    position : { x : number!  y : number! }
+    position : { x : number!  y : number! }!
     x : number
     y : number
     z : number
@@ -43,7 +43,7 @@ orbital HeroNavOrbital {
         (emit HERO_STEPPED { unitId: @payload.unitId, x: @payload.x, z: @payload.y, movesLeft: @entity.movesLeft })
 
       WANDER -> active when @config.running
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "neutral") (let ((cell (object/get @u position)) (dir (math/floor (* (math/random) 4)))) (let ((nc (if (== @dir 0) { x: (+ (object/get @cell x) 1), y: (object/get @cell y) } (if (== @dir 1) { x: (- (object/get @cell x) 1), y: (object/get @cell y) } (if (== @dir 2) { x: (object/get @cell x), y: (+ (object/get @cell y) 1) } { x: (object/get @cell x), y: (- (object/get @cell y) 1) }))))) (if (and (grid/in-bounds @nc @config.gridWidth @config.gridHeight) (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) (object/get @nc x)) (== (object/get @t y) (object/get @nc y))))) passable) true) (== (array/len (array/filter @entity.units (fn o (and (!= @o.id @u.id) (and (== (object/get (object/get @o position) x) (object/get @nc x)) (== (object/get (object/get @o position) y) (object/get @nc y))))))) 0))) (object/merge @u { position: @nc }) @u))) @u))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "neutral") (let ((cell (object/get @u position)) (dir (math/floor (* (math/random) 4)))) (let ((nc (if (== @dir 0) { x: (+ @cell.x 1), y: @cell.y } (if (== @dir 1) { x: (- @cell.x 1), y: @cell.y } (if (== @dir 2) { x: @cell.x, y: (+ @cell.y 1) } { x: @cell.x, y: (- @cell.y 1) }))))) (if (and (grid/in-bounds @nc @config.gridWidth @config.gridHeight) (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) (object/get @nc x)) (== (object/get @t y) (object/get @nc y))))) passable) true) (== (array/len (array/filter @entity.units (fn o (and (!= @o.id @u.id) (and (== (object/get (object/get @o position) x) (object/get @nc x)) (== (object/get (object/get @o position) y) (object/get @nc y))))))) 0))) (object/merge @u { position: @nc }) @u))) @u))))
 
       RESTART -> active
         (set @entity.units @config.units)
@@ -62,7 +62,7 @@ orbital HeroNavOrbital {
     }
 
     listens {
-      MOVE { unitId : string, x : number, y : number }
+      MOVE { unitId : string, x : number!, y : number! }
       WANDER { tick : number }
       RESTART { id : string }
     }

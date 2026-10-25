@@ -45,7 +45,7 @@ orbital StdAssetPackOrbital {
       INIT -> loading when (and (!= @config.assetPack "") (= @config.transport "http"))
         (set @entity.assetPackStatus "loading")
         (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "loading", category: "loading", name: @k }]))))
-        (set @entity.assetManifest (object/fromEntries (array/map @config.groups (fn g [@g (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)])))]))))
+        (let ((m (object/fromEntries (array/map @config.groups (fn g [@g (or (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)]))) {})]))))) (set @entity.assetManifest (if (= @m null) @entity.assetManifest @m)))
         (http GET @config.origin @config.packPath {
           headers: { Accept: "application/json" },
           timeoutMs: @config.timeoutMs
@@ -53,7 +53,7 @@ orbital StdAssetPackOrbital {
       INIT -> loading when (and (!= @config.assetPack "") (= @config.transport "file"))
         (set @entity.assetPackStatus "loading")
         (set @entity.assetByKey (object/fromEntries (array/map @config.expectedKeys (fn k [@k { key: @k, url: @config.placeholderUrl, role: "loading", category: "loading", name: @k }]))))
-        (set @entity.assetManifest (object/fromEntries (array/map @config.groups (fn g [@g (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)])))]))))
+        (let ((m (object/fromEntries (array/map @config.groups (fn g [@g (or (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)]))) {})]))))) (set @entity.assetManifest (if (= @m null) @entity.assetManifest @m)))
     }
 
     state loading {
@@ -89,7 +89,7 @@ orbital StdAssetPackOrbital {
         (set @entity.assetPackMissing (array/filter @config.expectedKeys (fn k (not (object/has @entity.assetByKey @k)))))
         (set @entity.assetPackCursor 0)
         (let ((placeholders (object/fromEntries (array/map @entity.assetPackMissing (fn k [@k { key: @k, url: @config.placeholderUrl, role: "placeholder", category: "missing", name: @k }]))))) (set @entity.assetByKey (if (= @placeholders null) @entity.assetByKey (object/merge @entity.assetByKey @placeholders))))
-        (set @entity.assetManifest (object/fromEntries (array/map @config.groups (fn g [@g (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)])))]))))
+        (let ((m (object/fromEntries (array/map @config.groups (fn g [@g (or (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)]))) {})]))))) (set @entity.assetManifest (if (= @m null) @entity.assetManifest @m)))
         (emit ASSET_PACK_REPORT_NEXT { cursor: 0 })
       PACK_TEXT -> failed when (or (= (json/parse @payload.text AssetPackManifest) null) (array/some (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (not (validate/required (object/get @r "key"))))) (!= (array/len (array/unique (array/map (object/get (json/parse @payload.text AssetPackManifest) "assets") (fn r (object/get @r "key"))))) (array/len (object/get (json/parse @payload.text AssetPackManifest) "assets"))))
         (set @entity.assetPackStatus "failed")
@@ -103,7 +103,7 @@ orbital StdAssetPackOrbital {
     state failed {
       INIT -> failed
       ASSET_PACK_PUBLISH -> reporting
-        (set @entity.assetManifest (object/fromEntries (array/map @config.groups (fn g [@g (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)])))]))))
+        (let ((m (object/fromEntries (array/map @config.groups (fn g [@g (or (object/fromEntries (array/map (array/filter (object/entries @entity.assetByKey) (fn e (str/startsWith (array/nth @e 0) (str/concat @g "/")))) (fn e [(str/replace (array/nth @e 0) (str/concat @g "/") "") (array/nth @e 1)]))) {})]))))) (set @entity.assetManifest (if (= @m null) @entity.assetManifest @m)))
         (emit ASSET_PACK_REPORT_NEXT { cursor: 0 })
     }
 

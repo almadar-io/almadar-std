@@ -4,36 +4,138 @@
   "cases": [
     {
       "id": "graphql-valid-json-retains-the-response-text",
-      "steps": [{
-        "event": "GITHUB_GRAPHQL_REPLIED",
-        "payload": { "status": 200, "body": "{\"data\":{\"organization\":null},\"errors\":[{\"message\":\"not found\"}]}" },
-        "expect": {
-          "emits": [{ "event": "GITHUB_GRAPHQL_ANSWERED", "payload": { "body": "{\"data\":{\"organization\":null},\"errors\":[{\"message\":\"not found\"}]}" } }],
-          "neverEmits": ["GITHUB_GRAPHQL_FAILED"]
+      "steps": [
+        {
+          "event": "GITHUB_GRAPHQL_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "{\"data\":{\"organization\":null},\"errors\":[{\"message\":\"not found\"}]}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_GRAPHQL_ANSWERED",
+                "payload": {
+                  "body": "{\"data\":{\"organization\":null},\"errors\":[{\"message\":\"not found\"}]}"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_GRAPHQL_FAILED"
+            ]
+          }
         }
-      }]
+      ]
     },
     {
       "id": "graphql-success-with-html-is-a-parse-failure",
-      "steps": [{
-        "event": "GITHUB_GRAPHQL_REPLIED",
-        "payload": { "status": 200, "body": "<html>upstream unavailable</html>" },
-        "expect": {
-          "emits": [{ "event": "GITHUB_GRAPHQL_FAILED", "payload": { "status": 200, "code": "PARSE_ERROR", "message": "GitHub answered a GraphQL body that is not JSON" } }],
-          "neverEmits": ["GITHUB_GRAPHQL_ANSWERED"]
+      "steps": [
+        {
+          "event": "GITHUB_GRAPHQL_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "<html>upstream unavailable</html>"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_GRAPHQL_FAILED",
+                "payload": {
+                  "status": 200,
+                  "code": "PARSE_ERROR",
+                  "message": "GitHub answered a GraphQL body that is not JSON"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_GRAPHQL_ANSWERED"
+            ]
+          }
         }
-      }]
+      ]
     },
     {
       "id": "graphql-html-auth-error-still-answers-failure",
-      "steps": [{
-        "event": "GITHUB_GRAPHQL_REPLIED",
-        "payload": { "status": 401, "body": "<html>unauthorized</html>" },
-        "expect": {
-          "emits": [{ "event": "GITHUB_GRAPHQL_FAILED", "payload": { "status": 401, "code": "AUTH_ERROR" } }],
-          "neverEmits": ["GITHUB_GRAPHQL_ANSWERED"]
+      "steps": [
+        {
+          "event": "GITHUB_GRAPHQL_REPLIED",
+          "payload": {
+            "status": 401,
+            "body": "<html>unauthorized</html>"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_GRAPHQL_FAILED",
+                "payload": {
+                  "status": 401,
+                  "code": "AUTH_ERROR"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_GRAPHQL_ANSWERED"
+            ]
+          }
         }
-      }]
+      ]
+    },
+    {
+      "id": "issue-comments-reply-with-an-unreadable-issue-is-a-parse-failure",
+      "steps": [
+        {
+          "event": "GITHUB_GET_ISSUE_COMMENTS_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "[]",
+            "key": "<html>not json</html>"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_GET_ISSUE_FAILED",
+                "payload": {
+                  "code": "PARSE_ERROR",
+                  "message": "GitHub answered an issue that could not be read"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_ISSUE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "issue-comments-reply-with-a-readable-issue-answers-it",
+      "steps": [
+        {
+          "event": "GITHUB_GET_ISSUE_COMMENTS_REPLIED",
+          "payload": {
+            "status": 200,
+            "body": "[]",
+            "key": "{\"number\":7,\"title\":\"t\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GITHUB_ISSUE",
+                "payload": {
+                  "issue": {
+                    "number": 7,
+                    "title": "t"
+                  },
+                  "comments": []
+                }
+              }
+            ],
+            "neverEmits": [
+              "GITHUB_GET_ISSUE_FAILED"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

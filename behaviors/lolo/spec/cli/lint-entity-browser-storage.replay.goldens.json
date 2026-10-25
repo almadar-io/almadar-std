@@ -4142,6 +4142,32 @@
           "trait": "OrbLintEntityBrowserStorage"
         }
       ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintEntityBrowserStorageCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint entity-browser-storage <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

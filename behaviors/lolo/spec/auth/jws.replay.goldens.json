@@ -1,0 +1,127 @@
+{
+ "atom": "auth/atoms/std-jws.lolo",
+ "trait": "JwsVerifier",
+ "cases": [
+  {
+   "id": "a header segment that is not base64 is refused malformed",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "JWS_VERIFY",
+     "payload": {
+      "token": "%%%%.eyJzdWIiOiJ1MSJ9.c2ln",
+      "jwk": {
+       "kty": "RSA",
+       "n": "AQAB",
+       "e": "AQAB"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JWS_REFUSED",
+        "payload": {
+         "reason": "malformed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "JWS_RSA_VERIFY",
+       "JWS_EC_VERIFY",
+       "JWS_VERIFIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a header segment whose bytes are not text is refused malformed",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "JWS_VERIFY",
+     "payload": {
+      "token": "_w.eyJzdWIiOiJ1MSJ9.c2ln",
+      "jwk": {
+       "kty": "RSA",
+       "n": "AQAB",
+       "e": "AQAB"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JWS_REFUSED",
+        "payload": {
+         "reason": "malformed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "JWS_RSA_VERIFY",
+       "JWS_EC_VERIFY",
+       "JWS_VERIFIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a payload segment whose bytes are not text is refused malformed",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "JWS_VERIFY",
+     "payload": {
+      "token": "eyJhbGciOiJSUzI1NiJ9._w.c2ln",
+      "jwk": {
+       "kty": "RSA",
+       "n": "AQAB",
+       "e": "AQAB"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JWS_REFUSED",
+        "payload": {
+         "reason": "malformed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "JWS_RSA_VERIFY",
+       "JWS_EC_VERIFY",
+       "JWS_VERIFIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL a decodable header and payload reach std-rsa",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "JWS_VERIFY",
+     "payload": {
+      "token": "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ1MSJ9.c2ln",
+      "jwk": {
+       "kty": "RSA",
+       "n": "AQAB",
+       "e": "AQAB"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JWS_RSA_VERIFY",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -26,7 +26,9 @@ orbital OrbEmitOrbital {
 
     state ready {
       INIT -> ready
-      EMIT_CALLED -> parsing
+      EMIT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit EMIT_ANSWERED { status: 500, body: "", stderr: "Error: orb emit: the command arguments could not be read" })
+      EMIT_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
         (emit EMIT_ARGS_PARSE { stage: "emit" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "section" aliases: [] takesValue: true repeatable: false }, { name: "output" aliases: ["-o"] takesValue: true repeatable: false }, { name: "format" aliases: [] takesValue: true repeatable: false }, { name: "only" aliases: [] takesValue: true repeatable: false }, { name: "map" aliases: [] takesValue: false repeatable: false }, { name: "inspect-source" aliases: [] takesValue: true repeatable: false }, { name: "document-version" aliases: [] takesValue: true repeatable: false }, { name: "unit" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }, { name: "sign-key" aliases: [] takesValue: true repeatable: false }, { name: "key-id" aliases: [] takesValue: true repeatable: false }] })
     }

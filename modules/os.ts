@@ -17,6 +17,7 @@ import { OS_NET_OPERATORS } from './os-net.js';
 import { OS_TIME_USERS_OPERATORS } from './os-time-users.js';
 import { OS_SYS_OPERATORS } from './os-sys.js';
 import { OS_DESKTOP_OPERATORS } from './os-desktop.js';
+import { OS_DEV_OPERATORS } from './os-dev.js';
 
 export const OS_OPERATORS: Record<string, StdOperatorMeta> = {
   ...OS_FS_OPERATORS,
@@ -28,4 +29,5 @@ export const OS_OPERATORS: Record<string, StdOperatorMeta> = {
   ...OS_TIME_USERS_OPERATORS,
   ...OS_SYS_OPERATORS,
   ...OS_DESKTOP_OPERATORS,
+  ...OS_DEV_OPERATORS,
 };

@@ -17,7 +17,6 @@ type EnglishParser = { keywords : [string]!, shapes : [string]!, tags : [string]
 type PackMeta = { code : string! }
 type PackDef = { meta : PackMeta!, keywords : Map string string, shapes : Map string string, tags : Map string string, categories : Map string string, capabilities : Map string string, annotations : Map string string, sigils : Map string string, effects : Map string string, types : Map string string, units : Map string string, literals : Map string string, reservedEvents : Map string string, orb : Map string string, operators : Map string string }
 type PackEntry = { code : string!, def : PackDef? }
-type PackText = { name : string!, text : string! }
 type EnSection = { name : string!, keys : [string]! }
 type OrbOnly = { orb : Map string string }
 type OperatorEntry = { category : string? }
@@ -36,7 +35,6 @@ orbital OrbI18nOrbital {
     orbKeys : [string] = []
     opKeys : [string] = []
     enSections : [EnSection] = []
-    packs : [PackText] = []
     defs : [PackEntry] = []
     packProblem : string = ""
     cov : [string] = []
@@ -72,7 +70,9 @@ orbital OrbI18nOrbital {
 
     state ready {
       INIT -> ready
-      I18N_CALLED -> parsing
+      I18N_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit I18N_ANSWERED { status: 400, body: "", stderr: "usage: orb i18n vocab [--json] | orb i18n check" })
+      I18N_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
         (emit I18N_ARGS_PARSE { stage: "i18n" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }] })
     }
@@ -117,22 +117,24 @@ orbital OrbI18nOrbital {
       I18N_LOADED -> ready when (= @entity.cmd "vocab")
         (emit I18N_ANSWERED { status: 200, body: (if @entity.json (str/concat "{\n" (str/join (array/concat (array/map @config.parserSections (fn s (str/concat "  " (json/stringify @s) ": " (let ((a (object/get @entity.eng @s))) (if (= (array/len @a) 0) "[]" (str/concat "[\n    " (str/join (array/map @a (fn w (json/stringify @w))) ",\n    ") "\n  ]")))))) [(str/concat "  " (json/stringify "orb") ": " (let ((a (array/map (array/sort (array/map @entity.orbKeys (fn k { k: @k })) "k" "asc") (fn o (object/get @o "k"))))) (if (= (array/len @a) 0) "[]" (str/concat "[\n    " (str/join (array/map @a (fn w (json/stringify @w))) ",\n    ") "\n  ]")))) (str/concat "  " (json/stringify "operators") ": " (let ((a (array/map (array/sort (array/map @entity.opKeys (fn k { k: @k })) "k" "asc") (fn o (object/get @o "k"))))) (if (= (array/len @a) 0) "[]" (str/concat "[\n    " (str/join (array/map @a (fn w (json/stringify @w))) ",\n    ") "\n  ]"))))]) ",\n") "\n}") (str/join (array/concat (array/map @config.parserSections (fn s (str/concat @s " (" (array/len (object/get @entity.eng @s)) "): " (str/join (object/get @entity.eng @s) " ")))) [(str/concat "orb (" (array/len @entity.orbKeys) "): " (str/join (array/map (array/sort (array/map @entity.orbKeys (fn k { k: @k })) "k" "asc") (fn o (object/get @o "k"))) " ")) (str/concat "operators (" (array/len @entity.opKeys) "): " (str/join (array/map (array/sort (array/map @entity.opKeys (fn k { k: @k })) "k" "asc") (fn o (object/get @o "k"))) " "))]) "\n")), stderr: "" })
       I18N_LOADED -> checking when (= @entity.cmd "check")
-        (set @entity.packs [])
+        (set @entity.defs [])
         (set @entity.packProblem "")
         (emit I18N_PACKS_RUN { cwd: @entity.cwd })
     }
 
     state checking {
       INIT -> checking
-      LANGUAGE_PACK_VOCAB_HEARD -> checking
-        (set @entity.packs (array/append @entity.packs { name: @payload.name, text: @payload.text }))
+      LANGUAGE_PACK_VOCAB_HEARD -> ready when (= (json/parse @payload.text PackDef) null)
+        (emit I18N_ANSWERED { status: 500, body: (str/concat "orb i18n check: language packs → " @payload.name " is not a language pack"), stderr: "" })
+      LANGUAGE_PACK_VOCAB_HEARD -> checking when (!= (json/parse @payload.text PackDef) null)
+        (set @entity.defs (array/append @entity.defs { code: (object/get (object/get (json/parse @payload.text PackDef) "meta") "code"), def: (json/parse @payload.text PackDef) }))
       LANGUAGE_PACKS_DONE_HEARD -> ready when (!= @payload.problem "")
         (emit I18N_ANSWERED { status: 500, body: (str/concat "orb i18n check: language packs → " @payload.problem), stderr: "" })
       LANGUAGE_PACKS_DONE_HEARD -> checking when (= @payload.problem "")
         (emit I18N_COMPUTE { tag: "0" })
       I18N_COMPUTE -> checking
         (set @entity.enSections (array/map @config.sections (fn s (let ((raw (if (= @s "orb") @entity.orbKeys (if (= @s "operators") @entity.opKeys (object/get @entity.eng @s))))) { name: @s, keys: (array/map (array/sort (array/map @raw (fn k { k: @k })) "k" "asc") (fn o (object/get @o "k"))) }))))
-        (set @entity.defs (array/sort (array/map @entity.packs (fn p { code: (object/get (object/get (json/parse (object/get @p "text") PackDef) "meta") "code"), def: (json/parse (object/get @p "text") PackDef) })) "code" "asc"))
+        (set @entity.defs (array/sort @entity.defs "code" "asc"))
         (set @entity.cov (array/concat (array/flatten (array/map @entity.defs (fn e (let ((c (object/get @e "code")) (d (object/get @e "def"))) (array/flatten (array/map @entity.enSections (fn sec (let ((s (object/get @sec "name")) (E (object/get @sec "keys")) (M (or (object/get @d (object/get @sec "name")) {}))) (array/concat (array/map (array/filter @E (fn k (or (= (object/get @M @k) null) (= (object/get @M @k) "")))) (fn k (str/concat "  " @c "." @s "." @k ": " (if (= (object/get @M @k) null) "Missing" "Empty")))) (array/map (array/filter (array/map (array/sort (array/map (object/keys @M) (fn k { k: @k })) "k" "asc") (fn o (object/get @o "k"))) (fn k (not (array/includes @E @k)))) (fn k (str/concat "  " @c "." @s "." @k ": Orphan")))))))))))) (array/flatten (array/map @entity.defs (fn e (let ((c (object/get @e "code")) (d (object/get @e "def"))) (array/flatten (array/map @entity.enSections (fn sec (let ((s (object/get @sec "name")) (M (or (object/get @d (object/get @sec "name")) {}))) (let ((ks (array/map (array/sort (array/map (object/keys @M) (fn k { k: @k })) "k" "asc") (fn o (object/get @o "k"))))) (array/map (array/filter (array/range 0 (array/len @ks)) (fn i (> (array/len (array/filter (array/range 0 @i) (fn j (= (object/get @M (array/nth @ks @j)) (object/get @M (array/nth @ks @i)))))) 0))) (fn i (str/concat "  " @c "." @s "." (array/nth @ks @i) ": Collision")))))))))))) (let ((u (array/sort (array/flatten (array/map (array/sort (array/concat @entity.defs [{ code: "en" }]) "code" "asc") (fn e (let ((c (object/get @e "code")) (d (object/get @e "def"))) (array/concat (array/map (array/filter @config.selectorKeywords (fn kw (or (= @c "en") (!= (object/get (object/get @d "keywords") @kw) null)))) (fn kw { v: (if (= @c "en") @kw (object/get (object/get @d "keywords") @kw)), code: @c, section: "keywords", key: @kw })) (if (or (= @c "en") (!= (object/get (object/get @d "orb") "orbitals") null)) [{ v: (if (= @c "en") "orbitals" (object/get (object/get @d "orb") "orbitals")), code: @c, section: "orb", key: "orbitals" }] [])))))) "v" "asc"))) (array/map (array/filter @u (fn x (> (array/len (array/filter @u (fn y (and (= (object/get @y "v") (object/get @x "v")) (!= (object/get @y "code") (object/get @x "code")))))) 0))) (fn x (str/concat "  " (object/get @x "code") "." (object/get @x "section") "." (object/get @x "key") ": SelectorNotUnique"))))))
         (set @entity.pcov (array/flatten (array/map @entity.defs (fn e (let ((c (object/get @e "code")) (d (object/get @e "def"))) (array/flatten (array/map @config.parserSections (fn s (let ((M (or (object/get @d @s) {}))) (array/map (array/filter (object/get @entity.eng @s) (fn w (or (= (object/get @M @w) null) (= (object/get @M @w) "")))) (fn w (str/concat "  " @c "." @s "." @w ": " (if (= (object/get @M @w) null) "missing" "empty")))))))))))))
         (emit I18N_REPORT { tag: "0" })

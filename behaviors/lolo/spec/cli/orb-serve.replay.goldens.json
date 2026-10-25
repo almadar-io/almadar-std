@@ -166,7 +166,8 @@
          "clientInside": true,
          "mock": true,
          "open": false,
-         "noEmulators": false
+         "noEmulators": false,
+         "flagged": false
         }
        }
       ]
@@ -220,7 +221,8 @@
          "clientInside": true,
          "mock": false,
          "open": false,
-         "noEmulators": false
+         "noEmulators": false,
+         "flagged": true
         }
        }
       ]
@@ -268,7 +270,8 @@
          "clientInside": true,
          "mock": true,
          "open": false,
-         "noEmulators": false
+         "noEmulators": false,
+         "flagged": true
         }
        }
       ]
@@ -298,7 +301,8 @@
       "clientInside": true,
       "mock": true,
       "open": true,
-      "noEmulators": false
+      "noEmulators": false,
+      "flagged": false
      },
      "expect": {
       "state": "idle",
@@ -335,7 +339,8 @@
       "clientInside": true,
       "mock": true,
       "open": false,
-      "noEmulators": true
+      "noEmulators": true,
+      "flagged": false
      },
      "expect": {
       "state": "idle",
@@ -372,7 +377,8 @@
       "clientInside": true,
       "mock": true,
       "open": false,
-      "noEmulators": false
+      "noEmulators": false,
+      "flagged": true
      },
      "expect": {
       "state": "idle",
@@ -409,7 +415,8 @@
       "clientInside": false,
       "mock": true,
       "open": false,
-      "noEmulators": false
+      "noEmulators": false,
+      "flagged": true
      },
      "expect": {
       "state": "idle",
@@ -480,7 +487,7 @@
    ]
   },
   {
-   "id": "an app that declares an http endpoint is composed alone, with no std-http-server beside it",
+   "id": "an app that declares an http endpoint is served by its own server orbital, with no std-http-server composed beside it",
    "steps": [
     {
      "trait": "ServeEngine",
@@ -508,11 +515,60 @@
      "expect": {
       "state": "idle",
       "emitCounts": {
-       "SERVE_COMPOSE_READY": 1
+       "SERVE_DECLARED_READY": 1,
+       "SERVE_COMPOSE_READY": 0
       }
      }
     }
    ]
+  },
+  {
+   "id": "an app that declares an http endpoint refuses --port, --host and --client-dir",
+   "steps": [
+    {
+     "trait": "ServeEngine",
+     "from": "reading",
+     "event": "SERVE_APP_READ",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "app",
+        "orbitals": [
+         {
+          "name": "O",
+          "pages": [
+           {
+            "name": "Api",
+            "protocol": "http"
+           }
+          ]
+         }
+        ]
+       },
+       "text": ""
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SERVE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "Error: app declares its own http endpoint, so its host, port and client folder are set in the program; drop --port, --host and --client-dir"
+        }
+       }
+      ],
+      "emitCounts": {
+       "SERVE_DECLARED_READY": 0
+      }
+     }
+    }
+   ],
+   "entity": {
+    "flagged": true
+   }
   },
   {
    "id": "control: an app with routes only resolves std-http-server to compose beside it",
@@ -543,8 +599,140 @@
      "expect": {
       "state": "resolving",
       "emitCounts": {
+       "SERVE_DECLARED_READY": 0,
        "SERVE_COMPOSE_READY": 0
       }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the written server program is resolved, then composed beside the app",
+   "entity": {
+    "appName": "app",
+    "app": {
+     "name": "app",
+     "orbitals": [
+      {
+       "name": "O",
+       "pages": [
+        {
+         "name": "Home",
+         "path": "/"
+        }
+       ]
+      }
+     ]
+    },
+    "host": "0.0.0.0",
+    "port": 4100
+   },
+   "steps": [
+    {
+     "event": "SERVE_SERVER_WRITTEN",
+     "from": "resolving",
+     "payload": {
+      "bytes": 10
+     },
+     "expect": {
+      "fired": true,
+      "state": "resolving",
+      "emitCounts": {
+       "SERVE_COMPOSE_READY": 0
+      }
+     }
+    },
+    {
+     "event": "SERVE_SERVER_RESOLVED",
+     "from": "resolving",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "orb-served-server",
+        "orbitals": [
+         {
+          "name": "HttpServerOrbital",
+          "pages": [
+           {
+            "name": "Api",
+            "protocol": "http"
+           }
+          ]
+         }
+        ]
+       },
+       "text": ""
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SERVE_COMPOSE_READY",
+        "payload": {
+         "programs": [
+          {
+           "name": "app",
+           "orbitals": [
+            {
+             "name": "O",
+             "pages": [
+              {
+               "name": "Home",
+               "path": "/"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "orb-served-server",
+           "orbitals": [
+            {
+             "name": "HttpServerOrbital",
+             "pages": [
+              {
+               "name": "Api",
+               "protocol": "http"
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "appName": "app",
+         "host": "0.0.0.0",
+         "port": 4100
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an args body that does not parse is the usage error",
+   "steps": [
+    {
+     "trait": "OrbServe",
+     "from": "ready",
+     "event": "SERVE_CALLED",
+     "payload": {
+      "rawBody": "not json"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SERVE_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb serve <FILE> [--port N] [--host H] [--no-mock] [--client-dir DIR] [--open] [--no-emulators]"
+        }
+       }
+      ]
      }
     }
    ]

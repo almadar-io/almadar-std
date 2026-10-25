@@ -20,7 +20,10 @@ orbital StdSvgAssetArtOrbital {
         (set @entity.svgAssetArt (object/merge @config.seedArt @entity.svgAssetArt))
 
       SVG_ASSET_PUBLISH -> collecting
-        (set @entity.svgAssetArt (object/merge @entity.svgAssetArt (or (object/fromEntries [[?kind, ?states]]) {})))
+        (let ((entry (object/fromEntries [[?kind, ?states]])))
+          (let ((next (if (= @entry null) null (object/merge @entity.svgAssetArt @entry))))
+            (when (!= @next null)
+              (set @entity.svgAssetArt @next))))
     }
 
     emits {

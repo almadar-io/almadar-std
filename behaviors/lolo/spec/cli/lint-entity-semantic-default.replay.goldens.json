@@ -9810,6 +9810,32 @@
           }
         }
       ]
+    },
+    {
+      "id": "an unreadable command body answers 500",
+      "steps": [
+        {
+          "trait": "OrbLintEntitySemanticDefaultCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: orb lint entity-semantic-default: the command arguments could not be read"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ],
   "note": " Added cases copy entity.rs test_entity_default_relation_holds_object_rejected, _relation_id_string_or_absent_accepted, _many_relation_empty_array_accepted, _many_relation_id_array_accepted, _many_relation_row_in_array_rejected, _many_relation_bare_object_rejected, _one_relation_array_rejected, _number_string_mismatch_rejected, _boolean_number_mismatch_rejected, _enum_non_string_rejected, _enum_unknown_string_member_not_double_reported, _null_on_optional_field_of_any_type_accepted, _null_on_required_field_still_checked and _incomplete_struct_literal_accepted_required_members_deferred_to_persist; the other cases follow config_type.rs check_field_def_shape (nested members, array elements, brief rendering). Union, tuple and event-typed cases follow config_type.rs check_field_def_shape and select_union_variant (types.rs); an int field is checked as a number. Not ported: the known-operator part of the computed-value deferral (an array whose head is a namespaced operator or a binding string is deferred, a bare operator name is not). The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it). The spec-orbital control follows validate_all_entities, which skips `orbital.is_spec()`. The array-default control copies the ui-tanks-board field shape (a default list of object rows): the fold's container result must not reach a flatten."

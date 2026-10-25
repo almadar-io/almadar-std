@@ -51,7 +51,9 @@ orbital OrbValidateOrbital {
 
     state ready {
       INIT -> ready
-      VALIDATE_CALLED -> parsing
+      VALIDATE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit VALIDATE_ANSWERED { status: 500, body: "", stderr: "Error: orb validate: the command arguments could not be read" })
+      VALIDATE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
         (emit VALIDATE_ARGS_PARSE { stage: "validate" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "deny-warnings" aliases: [] takesValue: false repeatable: false }, { name: "final" aliases: [] takesValue: false repeatable: false }, { name: "patterns" aliases: [] takesValue: true repeatable: false }, { name: "services" aliases: [] takesValue: true repeatable: false }] })
     }

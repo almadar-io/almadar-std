@@ -986,6 +986,59 @@
           }
         }
       ]
+    },
+    {
+      "id": "a call whose arguments cannot be read answers 500",
+      "entity": {
+        "prefix": "almadar",
+        "count": 2,
+        "index": 1,
+        "urlPath": "almadar-io",
+        "scope": "orgs/almadar-io",
+        "pat": "tok",
+        "image": "almadar-runner:2.337.0-r5",
+        "rtok": "reg",
+        "runnerDir": "/Users/x/actions-runner-mac",
+        "runnerVersion": "2.337.0",
+        "labels": "self-hosted,macos,arm64,almadar-mac",
+        "host": "mbp",
+        "pid": "42"
+      },
+      "steps": [
+        {
+          "event": "RN_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "from": "ready",
+          "expect": {
+            "emits": [
+              {
+                "event": "RN_ARGS_UNREAD",
+                "payload": {}
+              }
+            ],
+            "state": "parsing"
+          }
+        },
+        {
+          "event": "RN_ARGS_UNREAD",
+          "payload": {},
+          "from": "parsing",
+          "expect": {
+            "emits": [
+              {
+                "event": "RUNNERS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: the call's arguments could not be read"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,441 @@
+{
+  "atom": "connect/atoms/std-os-serial.lolo",
+  "trait": "SerialPort",
+  "cases": [
+    {
+      "id": "start enables the UART with RX and TX",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "SERIAL_START",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "starting",
+            "effects": [
+              {
+                "type": "os/mmio-write",
+                "arg1": 48,
+                "arg0": 150994944,
+                "arg2": 4,
+                "arg3": 769
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "once enabled the RX interrupt is unmasked",
+      "steps": [
+        {
+          "from": "starting",
+          "event": "SERIAL_ENABLED",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "unmasking",
+            "effects": [
+              {
+                "type": "os/mmio-write",
+                "arg1": 56,
+                "arg2": 4,
+                "arg3": 80
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "once unmasked the driver waits for its irq line",
+      "steps": [
+        {
+          "from": "unmasking",
+          "event": "SERIAL_UNMASKED",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "effects": [
+              {
+                "type": "os/irq-wait",
+                "key": "serial-rx",
+                "arg0": 33,
+                "optionsAt": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an interrupt reads the flag register",
+      "steps": [
+        {
+          "from": "running",
+          "event": "SERIAL_IRQ",
+          "payload": {
+            "irq": 33
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "effects": [
+              {
+                "type": "os/mmio-read",
+                "arg1": 24,
+                "arg2": 4
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a non-empty receive FIFO reads the data register",
+      "steps": [
+        {
+          "from": "running",
+          "event": "SERIAL_RX_FLAGS",
+          "payload": {
+            "value": 128
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "effects": [
+              {
+                "type": "os/mmio-read",
+                "arg1": 0,
+                "arg2": 4
+              }
+            ],
+            "neverEmits": [
+              "INPUT_BYTES"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an empty receive FIFO clears the interrupt and reads nothing",
+      "steps": [
+        {
+          "from": "running",
+          "event": "SERIAL_RX_FLAGS",
+          "payload": {
+            "value": 16
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "effects": [
+              {
+                "type": "os/mmio-write",
+                "arg1": 68,
+                "arg2": 4,
+                "arg3": 2047
+              }
+            ],
+            "neverEmits": [
+              "INPUT_BYTES"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a received byte is delivered and the FIFO is read again",
+      "steps": [
+        {
+          "from": "running",
+          "event": "SERIAL_RX_BYTE",
+          "payload": {
+            "value": 97
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "emits": [
+              {
+                "event": "INPUT_BYTES",
+                "payload": {
+                  "data": "YQ=="
+                }
+              }
+            ],
+            "effects": [
+              {
+                "type": "os/mmio-read",
+                "arg1": 24,
+                "arg2": 4
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge: only the low byte of the data register is the character",
+      "steps": [
+        {
+          "from": "running",
+          "event": "SERIAL_RX_BYTE",
+          "payload": {
+            "value": 1121
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "INPUT_BYTES",
+                "payload": {
+                  "data": "YQ=="
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a cleared interrupt is acknowledged",
+      "steps": [
+        {
+          "from": "running",
+          "event": "SERIAL_CLEARED",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "effects": [
+              {
+                "type": "os/irq-ack",
+                "arg0": 33
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an acknowledged interrupt re-arms the wait",
+      "steps": [
+        {
+          "from": "running",
+          "event": "SERIAL_ACKED",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "effects": [
+              {
+                "type": "os/irq-wait",
+                "key": "serial-rx",
+                "optionsAt": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "bytes to write while idle start the transmit pump",
+      "steps": [
+        {
+          "from": "running",
+          "event": "WRITE_BYTES",
+          "payload": {
+            "data": "b2s="
+          },
+          "entity": {
+            "id": "s",
+            "txQueue": "",
+            "txBusy": false
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "emits": [
+              {
+                "event": "SERIAL_TX_PUMP",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: bytes to write while transmitting only queue",
+      "steps": [
+        {
+          "from": "running",
+          "event": "WRITE_BYTES",
+          "payload": {
+            "data": "b2s="
+          },
+          "entity": {
+            "id": "s",
+            "txQueue": "YQ==",
+            "txBusy": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "neverEmits": [
+              "SERIAL_TX_PUMP"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a pump with queued bytes reads the flag register",
+      "steps": [
+        {
+          "from": "running",
+          "event": "SERIAL_TX_PUMP",
+          "payload": {},
+          "entity": {
+            "id": "s",
+            "txQueue": "b2s=",
+            "txBusy": true
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "os/mmio-read",
+                "arg1": 24,
+                "arg2": 4
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a pump with nothing queued stops transmitting",
+      "steps": [
+        {
+          "from": "running",
+          "event": "SERIAL_TX_PUMP",
+          "payload": {},
+          "entity": {
+            "id": "s",
+            "txQueue": "",
+            "txBusy": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "running",
+            "effects": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "room in the transmit FIFO writes the next byte",
+      "steps": [
+        {
+          "from": "running",
+          "event": "SERIAL_TX_FLAGS",
+          "payload": {
+            "value": 128
+          },
+          "entity": {
+            "id": "s",
+            "txQueue": "b2s=",
+            "txBusy": true
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "let"
+              },
+              {
+                "type": "set",
+                "arg0": "@entity.txQueue"
+              }
+            ]
+          }
+        }
+      ],
+      "note": "The register write sits inside the let that binds the queued byte; replay records a let as one item (G-ORB-498), so the write's arguments are not asserted here."
+    },
+    {
+      "id": "control: a full transmit FIFO polls the flags again without writing",
+      "steps": [
+        {
+          "from": "running",
+          "event": "SERIAL_TX_FLAGS",
+          "payload": {
+            "value": 32
+          },
+          "entity": {
+            "id": "s",
+            "txQueue": "b2s=",
+            "txBusy": true
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "os/mmio-read",
+                "arg1": 24,
+                "arg2": 4
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a written byte pumps the next",
+      "steps": [
+        {
+          "from": "running",
+          "event": "SERIAL_TX_WRITTEN",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "SERIAL_TX_PUMP",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a failed device call reports and stops the driver",
+      "steps": [
+        {
+          "from": "running",
+          "event": "SERIAL_FAILED",
+          "payload": {
+            "error": "denied",
+            "kind": "denied"
+          },
+          "expect": {
+            "fired": true,
+            "state": "failed",
+            "emits": [
+              {
+                "event": "SERIAL_ERROR",
+                "payload": {
+                  "error": "denied"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

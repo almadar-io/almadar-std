@@ -155,12 +155,18 @@ orbital CliOrbital {
         (set @entity.pid 0)
       CLI_EXITED -> idle when (not @config.binaryOutput)
         (set @entity.exitCode (if (== @payload.code null) -1 @payload.code))
-        (emit CLI_DONE { stage: @entity.stage exitCode: (if (== @payload.code null) -1 @payload.code) signal: (or @payload.signal 0) stdout: (bytes/to-string @entity.out) stdoutBytes: @entity.out stderr: (bytes/to-string @entity.err) })
+        (let ((text (bytes/to-string @entity.out)) (errText (bytes/to-string @entity.err)))
+          (if (or (== @text null) (== @errText null))
+            (emit CLI_FAILED { stage: @entity.stage error: "the child wrote output that is not valid UTF-8 text" code: "cli_output_undecodable" })
+            (emit CLI_DONE { stage: @entity.stage exitCode: (if (== @payload.code null) -1 @payload.code) signal: (or @payload.signal 0) stdout: @text stdoutBytes: @entity.out stderr: @errText })))
         (set @entity.stage "")
         (set @entity.pid 0)
       CLI_EXITED -> idle when @config.binaryOutput
         (set @entity.exitCode (if (== @payload.code null) -1 @payload.code))
-        (emit CLI_DONE { stage: @entity.stage exitCode: (if (== @payload.code null) -1 @payload.code) signal: (or @payload.signal 0) stdout: "" stdoutBytes: @entity.out stderr: (bytes/to-string @entity.err) })
+        (let ((errText (bytes/to-string @entity.err)))
+          (if (== @errText null)
+            (emit CLI_FAILED { stage: @entity.stage error: "the child wrote output that is not valid UTF-8 text" code: "cli_output_undecodable" })
+            (emit CLI_DONE { stage: @entity.stage exitCode: (if (== @payload.code null) -1 @payload.code) signal: (or @payload.signal 0) stdout: "" stdoutBytes: @entity.out stderr: @errText })))
         (set @entity.stage "")
         (set @entity.pid 0)
     }
@@ -182,7 +188,7 @@ orbital CliOrbital {
         error : string!
         code : string!
       }
-        @description "The run could not be made: cli_spawn_failed (the child did not start), cli_host_failed (a read, close, kill or wait failed) cli_busy (another run is in flight) or cli_idle (a cancel with nothing running)."
+        @description "The run could not be made: cli_spawn_failed (the child did not start), cli_host_failed (a read, close, kill or wait failed) cli_output_undecodable (stdout or stderr was not valid UTF-8 text; run with binaryOutput to read stdout as bytes) cli_busy (another run is in flight) or cli_idle (a cancel with nothing running)."
         @synonyms "command error, spawn failed, busy"
         @tier "domain"
       CLI_SPAWNED -> internal {

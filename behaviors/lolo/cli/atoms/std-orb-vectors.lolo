@@ -300,7 +300,9 @@ orbital OrbVectorsOrbital {
 
     state ready {
       INIT -> ready
-      SNAPSHOT_CALLED -> parsing
+      SNAPSHOT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit VECTORS_CMD_ANSWERED { status: 500, body: "Error: orb behaviors vectors: the command arguments could not be read" })
+      SNAPSHOT_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit VECTORS_ARGS_PARSE { stage: "vectors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "package" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }] })
     }
 

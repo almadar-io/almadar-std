@@ -272,22 +272,27 @@ orbital Http1Orbital {
         (emit DELIVER { sock: @payload.sock })
       BODY_DECODED -> serving when (not (array/includes ["more", "done"] (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "dstate")))
         (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.sock) (object/merge @c { phase: "pending", keepAlive: false }) @c))))
-        (emit SEND_RESPONSE { requestId: @payload.sock, status: (str/to-number (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "dstate")), headers: [], body: (bytes/from-string "") })
+        (emit SEND_RESPONSE { requestId: @payload.sock, status: (or (str/to-number (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "dstate")) 400), headers: [], body: (bytes/from-string "") })
 
       WANT_MORE -> serving when (!= (array/find @entity.conns (fn c (= @c.sock @payload.sock))) null)
         (os/recv @payload.sock @config.recvBytes { key: (str/concat "conn-" @payload.sock) emit: { success: CHUNK_READ failure: CONN_FAILED } })
 
       DELIVER -> serving
         (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.sock) (object/merge @c { phase: "pending" }) @c))))
-        (emit REQUEST_RECEIVED {
-          requestId: @payload.sock,
-          method: (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "method"),
-          path: (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "path"),
-          query: (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "query"),
-          headers: (object/fromEntries (array/map (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "headers") (fn h [@h.name, (str/join (array/map (array/filter (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "headers") (fn g (= @g.name @h.name))) (fn g @g.value)) ", ")]))),
-          body: (if (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "te") (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "dec") (bytes/slice (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "buf") (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "headLen") (+ (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "headLen") (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "need")))),
-          peer: (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "peer")
-        })
+        (let ((hdrs (object/fromEntries (array/map (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "headers") (fn h [@h.name, (str/join (array/map (array/filter (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "headers") (fn g (= @g.name @h.name))) (fn g @g.value)) ", ")])))))
+          (if (== @hdrs null)
+            (do
+              (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.sock) (object/merge @c { phase: "pending", keepAlive: false }) @c))))
+              (emit SEND_RESPONSE { requestId: @payload.sock, status: 400, headers: [], body: (bytes/from-string "") }))
+            (emit REQUEST_RECEIVED {
+              requestId: @payload.sock,
+              method: (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "method"),
+              path: (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "path"),
+              query: (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "query"),
+              headers: @hdrs,
+              body: (if (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "te") (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "dec") (bytes/slice (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "buf") (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "headLen") (+ (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "headLen") (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "need")))),
+              peer: (object/get (array/find @entity.conns (fn k (= @k.sock @payload.sock))) "peer")
+            })))
 
       SEND_RESPONSE -> serving when (!= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "pending")
         (emit RESPOND_REFUSED { requestId: @payload.requestId, kind: "closed", error: "no pending request has this id" })

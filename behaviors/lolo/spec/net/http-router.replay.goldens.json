@@ -1,1363 +1,1409 @@
 {
- "atom": "net/atoms/std-http-router.lolo",
- "trait": "HttpRouter",
- "note": "Design contract spec/net/http-router.lolo. Each case seeds the pending request the event refers to; bodies are asserted through REQUEST_ANSWERED (text).",
- "cases": [
-  {
-   "id": "request-received-asks-the-policy-with-the-content-length",
-   "entity": {
-    "pending": [],
-    "vapidKey": "",
-    "tickInvoker": ""
-   },
-   "steps": [
+  "atom": "net/atoms/std-http-router.lolo",
+  "trait": "HttpRouter",
+  "note": "Design contract spec/net/http-router.lolo. Each case seeds the pending request the event refers to; bodies are asserted through REQUEST_ANSWERED (text).",
+  "cases": [
     {
-     "from": "routing",
-     "event": "REQUEST_RECEIVED",
-     "payload": {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/x",
-      "query": "",
-      "headers": {
-       "content-length": "12"
+      "id": "request-received-asks-the-policy-with-the-content-length",
+      "entity": {
+        "pending": [],
+        "vapidKey": "",
+        "tickInvoker": ""
       },
-      "peer": "1.2.3.4:5000"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "HTTP_DECIDE",
-        "payload": {
-         "requestId": 7,
-         "method": "POST",
-         "path": "/api/x",
-         "headers": [
-          {
-           "name": "content-length",
-           "value": "12"
-          }
-         ],
-         "contentLength": 12
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-request-without-content-length-asks-with-zero",
-   "entity": {
-    "pending": [],
-    "vapidKey": "",
-    "tickInvoker": ""
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "REQUEST_RECEIVED",
-     "payload": {
-      "requestId": 7,
-      "method": "GET",
-      "path": "/api/x",
-      "query": "",
-      "headers": {},
-      "peer": "1.2.3.4:5000"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "HTTP_DECIDE",
-        "payload": {
-         "requestId": 7,
-         "method": "GET",
-         "path": "/api/x",
-         "headers": [],
-         "contentLength": 0
-        }
-       }
-      ],
-      "neverEmits": [
-       "REQUEST_ANSWERED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "preflight-is-answered-at-once-with-the-policy-status-and-an-empty-body",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "OPTIONS",
-      "path": "/api/x",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "vapidKey": "",
-    "tickInvoker": ""
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "HTTP_DECIDED",
-     "payload": {
-      "requestId": 7,
-      "verdict": "preflight",
-      "status": 200,
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ],
-      "compress": "none"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "REQUEST_ANSWERED",
-        "payload": {
-         "requestId": 7,
-         "status": 200,
-         "headers": [
-          {
-           "name": "vary",
-           "value": "origin"
-          }
-         ],
-         "body": ""
-        }
-       }
-      ],
-      "neverEmits": [
-       "RATE_REQUEST",
-       "ROUTE_REQUEST"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "payload-too-large-is-answered-413-json",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/x",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "vapidKey": "",
-    "tickInvoker": ""
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "HTTP_DECIDED",
-     "payload": {
-      "requestId": 7,
-      "verdict": "payload-too-large",
-      "status": 413,
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ],
-      "compress": "none"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "REQUEST_ANSWERED",
-        "payload": {
-         "requestId": 7,
-         "status": 413,
-         "headers": [
-          {
-           "name": "vary",
-           "value": "origin"
-          },
-          {
-           "name": "content-type",
-           "value": "application/json"
-          }
-         ],
-         "body": "{\"code\":\"PAYLOAD_TOO_LARGE\",\"error\":\"Payload too large\"}"
-        }
-       }
-      ],
-      "neverEmits": [
-       "RATE_REQUEST",
-       "ROUTE_REQUEST"
-      ]
-     }
-    }
-   ],
-   "note": "canonical JSON key order"
-  },
-  {
-   "id": "ok-api-request-is-counted-before-routing",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "GET",
-      "path": "/api/x",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "vapidKey": "",
-    "tickInvoker": ""
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "HTTP_DECIDED",
-     "payload": {
-      "requestId": 7,
-      "verdict": "ok",
-      "status": 200,
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ],
-      "compress": "none"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "RATE_REQUEST",
-        "payload": {
-         "requestId": 7,
-         "ip": "1.2.3.4"
-        }
-       }
-      ],
-      "neverEmits": [
-       "ROUTE_REQUEST",
-       "REQUEST_ANSWERED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-ok-page-request-goes-straight-to-routing",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "GET",
-      "path": "/page",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "vapidKey": "",
-    "tickInvoker": ""
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "HTTP_DECIDED",
-     "payload": {
-      "requestId": 7,
-      "verdict": "ok",
-      "status": 200,
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ],
-      "compress": "none"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "ROUTE_REQUEST",
-        "payload": {
-         "requestId": 7,
-         "rateHeaders": []
-        }
-       }
-      ],
-      "neverEmits": [
-       "RATE_REQUEST"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "admitted-carries-the-ratelimit-headers-to-routing",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "GET",
-      "path": "/api/health",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "vapidKey": "",
-    "tickInvoker": ""
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "ADMITTED",
-     "payload": {
-      "requestId": 7,
-      "limit": 100,
-      "window": 60,
-      "remaining": 99,
-      "resetIn": 30,
-      "counted": true
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "ROUTE_REQUEST",
-        "payload": {
-         "requestId": 7,
-         "rateHeaders": [
-          {
-           "name": "ratelimit-policy",
-           "value": "100;w=60"
-          },
-          {
-           "name": "ratelimit-limit",
-           "value": "100"
-          },
-          {
-           "name": "ratelimit-remaining",
-           "value": "99"
-          },
-          {
-           "name": "ratelimit-reset",
-           "value": "30"
-          }
-         ]
-        }
-       },
-       {
-        "event": "REQUEST_ANSWERED",
-        "payload": {
-         "requestId": 7,
-         "status": 200,
-         "headers": [
-          {
-           "name": "vary",
-           "value": "origin"
-          },
-          {
-           "name": "ratelimit-policy",
-           "value": "100;w=60"
-          },
-          {
-           "name": "ratelimit-limit",
-           "value": "100"
-          },
-          {
-           "name": "ratelimit-remaining",
-           "value": "99"
-          },
-          {
-           "name": "ratelimit-reset",
-           "value": "30"
-          },
-          {
-           "name": "content-type",
-           "value": "application/json"
-          }
-         ],
-         "body": "{\"status\":\"healthy\",\"version\":\"0.0.0\"}"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "note": "the cascade routes the pending /api/health request, whose answer carries the ratelimit headers"
-  },
-  {
-   "id": "control-uncounted-admission-carries-no-headers",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "GET",
-      "path": "/api/health",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "vapidKey": "",
-    "tickInvoker": ""
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "ADMITTED",
-     "payload": {
-      "requestId": 7,
-      "counted": false,
-      "limit": 0,
-      "window": 0,
-      "remaining": 0,
-      "resetIn": 0
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "ROUTE_REQUEST",
-        "payload": {
-         "requestId": 7,
-         "rateHeaders": []
-        }
-       },
-       {
-        "event": "REQUEST_ANSWERED",
-        "payload": {
-         "requestId": 7,
-         "status": 200,
-         "headers": [
-          {
-           "name": "vary",
-           "value": "origin"
-          },
-          {
-           "name": "content-type",
-           "value": "application/json"
-          }
-         ],
-         "body": "{\"status\":\"healthy\",\"version\":\"0.0.0\"}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "throttled-is-answered-429-plain-text-with-ratelimit-headers",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "GET",
-      "path": "/api/x",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "vapidKey": "",
-    "tickInvoker": ""
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "THROTTLED",
-     "payload": {
-      "requestId": 7,
-      "limit": 100,
-      "window": 60,
-      "resetIn": 30
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "REQUEST_RATE_LIMITED",
-        "payload": {
-         "requestId": 7,
-         "resetSeconds": 30
-        }
-       },
-       {
-        "event": "REQUEST_ANSWERED",
-        "payload": {
-         "requestId": 7,
-         "status": 429,
-         "headers": [
-          {
-           "name": "vary",
-           "value": "origin"
-          },
-          {
-           "name": "ratelimit-policy",
-           "value": "100;w=60"
-          },
-          {
-           "name": "ratelimit-limit",
-           "value": "100"
-          },
-          {
-           "name": "ratelimit-remaining",
-           "value": "0"
-          },
-          {
-           "name": "ratelimit-reset",
-           "value": "30"
-          },
-          {
-           "name": "content-type",
-           "value": "text/plain; charset=utf-8"
-          }
-         ],
-         "body": "Too many requests, please try again later."
-        }
-       }
-      ],
-      "neverEmits": [
-       "ROUTE_REQUEST"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "get-health-answers-200-status-and-version",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "GET",
-      "path": "/api/health",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "vapidKey": "",
-    "tickInvoker": ""
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "ROUTE_REQUEST",
-     "payload": {
-      "requestId": 7,
-      "rateHeaders": []
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "ROUTE_HEALTH",
-        "payload": {
-         "requestId": 7
-        }
-       },
-       {
-        "event": "REQUEST_ANSWERED",
-        "payload": {
-         "requestId": 7,
-         "status": 200,
-         "headers": [
-          {
-           "name": "vary",
-           "value": "origin"
-          },
-          {
-           "name": "content-type",
-           "value": "application/json"
-          }
-         ],
-         "body": "{\"status\":\"healthy\",\"version\":\"0.0.0\"}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-post-to-the-health-path-is-not-found",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/health",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "vapidKey": "",
-    "tickInvoker": ""
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "ROUTE_REQUEST",
-     "payload": {
-      "requestId": 7,
-      "rateHeaders": []
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "REQUEST_ANSWERED",
-        "payload": {
-         "requestId": 7,
-         "status": 404,
-         "headers": [
-          {
-           "name": "vary",
-           "value": "origin"
-          },
-          {
-           "name": "content-type",
-           "value": "application/json"
-          }
-         ],
-         "body": "{\"code\":\"NOT_FOUND\",\"error\":\"Not found\"}"
-        }
-       }
-      ],
-      "neverEmits": [
-       "ROUTE_HEALTH"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "unknown-path-answers-404-not-found-carrying-rate-headers",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "GET",
-      "path": "/api/nope",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "vapidKey": "",
-    "tickInvoker": ""
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "ROUTE_REQUEST",
-     "payload": {
-      "requestId": 7,
-      "rateHeaders": [
-       {
-        "name": "ratelimit-policy",
-        "value": "100;w=60"
-       },
-       {
-        "name": "ratelimit-limit",
-        "value": "100"
-       },
-       {
-        "name": "ratelimit-remaining",
-        "value": "99"
-       },
-       {
-        "name": "ratelimit-reset",
-        "value": "30"
-       }
-      ]
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "ROUTE_REFUSED",
-        "payload": {
-         "requestId": 7
-        }
-       },
-       {
-        "event": "REQUEST_ANSWERED",
-        "payload": {
-         "requestId": 7,
-         "status": 404,
-         "headers": [
-          {
-           "name": "vary",
-           "value": "origin"
-          },
-          {
-           "name": "ratelimit-policy",
-           "value": "100;w=60"
-          },
-          {
-           "name": "ratelimit-limit",
-           "value": "100"
-          },
-          {
-           "name": "ratelimit-remaining",
-           "value": "99"
-          },
-          {
-           "name": "ratelimit-reset",
-           "value": "30"
-          },
-          {
-           "name": "content-type",
-           "value": "application/json"
-          }
-         ],
-         "body": "{\"code\":\"NOT_FOUND\",\"error\":\"Not found\"}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "vapid-key-set-answers-200-public-key",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "GET",
-      "path": "/api/push/vapid-public-key",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "vapidKey": "BKEY",
-    "tickInvoker": ""
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "ROUTE_REQUEST",
-     "payload": {
-      "requestId": 7,
-      "rateHeaders": []
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "REQUEST_ANSWERED",
-        "payload": {
-         "requestId": 7,
-         "status": 200,
-         "headers": [
-          {
-           "name": "vary",
-           "value": "origin"
-          },
-          {
-           "name": "content-type",
-           "value": "application/json"
-          }
-         ],
-         "body": "{\"publicKey\":\"BKEY\"}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-vapid-key-unset-answers-404",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "GET",
-      "path": "/api/push/vapid-public-key",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "vapidKey": "",
-    "tickInvoker": ""
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "ROUTE_REQUEST",
-     "payload": {
-      "requestId": 7,
-      "rateHeaders": []
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "REQUEST_ANSWERED",
-        "payload": {
-         "requestId": 7,
-         "status": 404,
-         "headers": [
-          {
-           "name": "vary",
-           "value": "origin"
-          },
-          {
-           "name": "content-type",
-           "value": "application/json"
-          }
-         ],
-         "body": "{\"error\":\"Push is not configured (VAPID_PUBLIC_KEY unset)\"}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "tick-with-no-invoker-configured-answers-404",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/tick",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "vapidKey": "",
-    "tickInvoker": ""
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "ROUTE_REQUEST",
-     "payload": {
-      "requestId": 7,
-      "rateHeaders": []
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "REQUEST_ANSWERED",
-        "payload": {
-         "requestId": 7,
-         "status": 404,
-         "headers": [
-          {
-           "name": "vary",
-           "value": "origin"
-          },
-          {
-           "name": "content-type",
-           "value": "application/json"
-          }
-         ],
-         "body": "{\"code\":\"NOT_FOUND\",\"error\":\"no tick invoker is configured (ORB_TICK_INVOKER)\"}"
-        }
-       }
-      ],
-      "neverEmits": [
-       "BEARER_VERIFY"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-tick-with-an-invoker-asks-for-the-bearer",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/tick",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "vapidKey": "",
-    "tickInvoker": "ci@x.io"
-   },
-   "steps": [
-    {
-     "from": "routing",
-     "event": "ROUTE_REQUEST",
-     "payload": {
-      "requestId": 7,
-      "rateHeaders": []
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "BEARER_VERIFY",
-        "payload": {
-         "requestId": 7,
-         "authorization": ""
-        }
-       }
-      ],
-      "neverEmits": [
-       "REQUEST_ANSWERED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "verified-invoker-tick",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/tick",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "tickInvoker": "ci@x.io",
-    "ticks": [
-     7
-    ]
-   },
-   "steps": [
-    {
-     "event": "BEARER_VERIFIED",
-     "payload": {
-      "requestId": 7,
-      "viewer": {
-       "id": "scheduler",
-       "email": "ci@x.io",
-       "role": "service",
-       "permissions": [],
-       "claims": [
+      "steps": [
         {
-         "name": "email_verified",
-         "value": true
+          "from": "routing",
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/x",
+            "query": "",
+            "headers": {
+              "content-length": "12"
+            },
+            "peer": "1.2.3.4:5000"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "HTTP_DECIDE",
+                "payload": {
+                  "requestId": 7,
+                  "method": "POST",
+                  "path": "/api/x",
+                  "headers": [
+                    {
+                      "name": "content-length",
+                      "value": "12"
+                    }
+                  ],
+                  "contentLength": 12
+                }
+              }
+            ]
+          }
         }
-       ]
-      }
-     },
-     "expect": {
-      "effects": [
-       {
-        "key": [
-         "str/concat",
-         "tick-",
-         "@payload.requestId"
+      ]
+    },
+    {
+      "id": "control-request-without-content-length-asks-with-zero",
+      "entity": {
+        "pending": [],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 7,
+            "method": "GET",
+            "path": "/api/x",
+            "query": "",
+            "headers": {},
+            "peer": "1.2.3.4:5000"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "HTTP_DECIDE",
+                "payload": {
+                  "requestId": 7,
+                  "method": "GET",
+                  "path": "/api/x",
+                  "headers": [],
+                  "contentLength": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "REQUEST_ANSWERED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "preflight-is-answered-at-once-with-the-policy-status-and-an-empty-body",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "OPTIONS",
+            "path": "/api/x",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
         ],
-        "optionsAt": 0,
-        "type": "program/tick"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "unverified-invoker-tick",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/tick",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "tickInvoker": "ci@x.io",
-    "ticks": [
-     7
-    ]
-   },
-   "steps": [
-    {
-     "event": "BEARER_VERIFIED",
-     "payload": {
-      "requestId": 7,
-      "viewer": {
-       "id": "scheduler",
-       "email": "ci@x.io",
-       "role": "service",
-       "permissions": [],
-       "claims": []
-      }
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RESPOND",
-        "payload": {
-         "requestId": 7,
-         "status": 401
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "wrong-invoker-tick",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/tick",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "tickInvoker": "ci@x.io",
-    "ticks": [
-     7
-    ]
-   },
-   "steps": [
-    {
-     "event": "BEARER_VERIFIED",
-     "payload": {
-      "requestId": 7,
-      "viewer": {
-       "id": "scheduler",
-       "email": "other@x.io",
-       "role": "service",
-       "permissions": [],
-       "claims": [
-        {
-         "name": "email_verified",
-         "value": true
-        }
-       ]
-      }
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RESPOND",
-        "payload": {
-         "requestId": 7,
-         "status": 401
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "tick_answered-preserves-request",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/tick",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     },
-     {
-      "requestId": 8,
-      "method": "POST",
-      "path": "/api/tick",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "tickInvoker": "ci@x.io",
-    "ticks": [
-     7,
-     8
-    ]
-   },
-   "steps": [
-    {
-     "event": "TICK_ANSWERED",
-     "payload": {
-      "result": {
-       "ran": [
-        {
-         "trait": "Pulse",
-         "tick": "beat"
-        }
-       ]
+        "vapidKey": "",
+        "tickInvoker": ""
       },
-      "key": "tick-7"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RESPOND",
-        "payload": {
-         "requestId": 7,
-         "status": 200
+      "steps": [
+        {
+          "from": "routing",
+          "event": "HTTP_DECIDED",
+          "payload": {
+            "requestId": 7,
+            "verdict": "preflight",
+            "status": 200,
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ],
+            "compress": "none"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "REQUEST_ANSWERED",
+                "payload": {
+                  "requestId": 7,
+                  "status": 200,
+                  "headers": [
+                    {
+                      "name": "vary",
+                      "value": "origin"
+                    }
+                  ],
+                  "body": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "RATE_REQUEST",
+              "ROUTE_REQUEST"
+            ]
+          }
         }
-       },
-       {
-        "event": "REQUEST_ANSWERED",
-        "payload": {
-         "requestId": 7,
-         "status": 200
-        }
-       }
       ]
-     }
     },
     {
-     "event": "TICK_ANSWERED",
-     "payload": {
-      "result": {
-       "ran": [
-        {
-         "trait": "Pulse",
-         "tick": "beat"
-        }
-       ]
+      "id": "payload-too-large-is-answered-413-json",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/x",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "vapidKey": "",
+        "tickInvoker": ""
       },
-      "key": "tick-7"
-     },
-     "expect": {
-      "fired": false,
-      "neverEmits": [
-       "RESPOND"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "tick_failed-preserves-request",
-   "entity": {
-    "pending": [
-     {
-      "requestId": 7,
-      "method": "POST",
-      "path": "/api/tick",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     },
-     {
-      "requestId": 8,
-      "method": "POST",
-      "path": "/api/tick",
-      "query": "",
-      "authorization": "",
-      "ip": "1.2.3.4",
-      "responseHeaders": [
-       {
-        "name": "vary",
-        "value": "origin"
-       }
-      ]
-     }
-    ],
-    "tickInvoker": "ci@x.io",
-    "ticks": [
-     7,
-     8
-    ]
-   },
-   "steps": [
-    {
-     "event": "TICK_FAILED",
-     "payload": {
-      "error": "scheduler failed",
-      "key": "tick-7"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RESPOND",
-        "payload": {
-         "requestId": 7,
-         "status": 500
+      "steps": [
+        {
+          "from": "routing",
+          "event": "HTTP_DECIDED",
+          "payload": {
+            "requestId": 7,
+            "verdict": "payload-too-large",
+            "status": 413,
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ],
+            "compress": "none"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "REQUEST_ANSWERED",
+                "payload": {
+                  "requestId": 7,
+                  "status": 413,
+                  "headers": [
+                    {
+                      "name": "vary",
+                      "value": "origin"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\"code\":\"PAYLOAD_TOO_LARGE\",\"error\":\"Payload too large\"}"
+                }
+              }
+            ],
+            "neverEmits": [
+              "RATE_REQUEST",
+              "ROUTE_REQUEST"
+            ]
+          }
         }
-       },
-       {
-        "event": "REQUEST_ANSWERED",
-        "payload": {
-         "requestId": 7,
-         "status": 500
-        }
-       }
-      ]
-     }
+      ],
+      "note": "canonical JSON key order"
     },
     {
-     "event": "TICK_FAILED",
-     "payload": {
-      "error": "scheduler failed",
-      "key": "tick-7"
-     },
-     "expect": {
-      "fired": false,
-      "neverEmits": [
-       "RESPOND"
+      "id": "ok-api-request-is-counted-before-routing",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "GET",
+            "path": "/api/x",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "HTTP_DECIDED",
+          "payload": {
+            "requestId": 7,
+            "verdict": "ok",
+            "status": 200,
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ],
+            "compress": "none"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RATE_REQUEST",
+                "payload": {
+                  "requestId": 7,
+                  "ip": "1.2.3.4"
+                }
+              }
+            ],
+            "neverEmits": [
+              "ROUTE_REQUEST",
+              "REQUEST_ANSWERED"
+            ]
+          }
+        }
       ]
-     }
+    },
+    {
+      "id": "control-ok-page-request-goes-straight-to-routing",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "GET",
+            "path": "/page",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "HTTP_DECIDED",
+          "payload": {
+            "requestId": 7,
+            "verdict": "ok",
+            "status": 200,
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ],
+            "compress": "none"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "ROUTE_REQUEST",
+                "payload": {
+                  "requestId": 7,
+                  "rateHeaders": []
+                }
+              }
+            ],
+            "neverEmits": [
+              "RATE_REQUEST"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "admitted-carries-the-ratelimit-headers-to-routing",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "GET",
+            "path": "/api/health",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "ADMITTED",
+          "payload": {
+            "requestId": 7,
+            "limit": 100,
+            "window": 60,
+            "remaining": 99,
+            "resetIn": 30,
+            "counted": true
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "ROUTE_REQUEST",
+                "payload": {
+                  "requestId": 7,
+                  "rateHeaders": [
+                    {
+                      "name": "ratelimit-policy",
+                      "value": "100;w=60"
+                    },
+                    {
+                      "name": "ratelimit-limit",
+                      "value": "100"
+                    },
+                    {
+                      "name": "ratelimit-remaining",
+                      "value": "99"
+                    },
+                    {
+                      "name": "ratelimit-reset",
+                      "value": "30"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "REQUEST_ANSWERED",
+                "payload": {
+                  "requestId": 7,
+                  "status": 200,
+                  "headers": [
+                    {
+                      "name": "vary",
+                      "value": "origin"
+                    },
+                    {
+                      "name": "ratelimit-policy",
+                      "value": "100;w=60"
+                    },
+                    {
+                      "name": "ratelimit-limit",
+                      "value": "100"
+                    },
+                    {
+                      "name": "ratelimit-remaining",
+                      "value": "99"
+                    },
+                    {
+                      "name": "ratelimit-reset",
+                      "value": "30"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\"status\":\"healthy\",\"version\":\"0.0.0\"}"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "the cascade routes the pending /api/health request, whose answer carries the ratelimit headers"
+    },
+    {
+      "id": "control-uncounted-admission-carries-no-headers",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "GET",
+            "path": "/api/health",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "ADMITTED",
+          "payload": {
+            "requestId": 7,
+            "counted": false,
+            "limit": 0,
+            "window": 0,
+            "remaining": 0,
+            "resetIn": 0
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "ROUTE_REQUEST",
+                "payload": {
+                  "requestId": 7,
+                  "rateHeaders": []
+                }
+              },
+              {
+                "event": "REQUEST_ANSWERED",
+                "payload": {
+                  "requestId": 7,
+                  "status": 200,
+                  "headers": [
+                    {
+                      "name": "vary",
+                      "value": "origin"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\"status\":\"healthy\",\"version\":\"0.0.0\"}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "throttled-is-answered-429-plain-text-with-ratelimit-headers",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "GET",
+            "path": "/api/x",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "THROTTLED",
+          "payload": {
+            "requestId": 7,
+            "limit": 100,
+            "window": 60,
+            "resetIn": 30
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "REQUEST_RATE_LIMITED",
+                "payload": {
+                  "requestId": 7,
+                  "resetSeconds": 30
+                }
+              },
+              {
+                "event": "REQUEST_ANSWERED",
+                "payload": {
+                  "requestId": 7,
+                  "status": 429,
+                  "headers": [
+                    {
+                      "name": "vary",
+                      "value": "origin"
+                    },
+                    {
+                      "name": "ratelimit-policy",
+                      "value": "100;w=60"
+                    },
+                    {
+                      "name": "ratelimit-limit",
+                      "value": "100"
+                    },
+                    {
+                      "name": "ratelimit-remaining",
+                      "value": "0"
+                    },
+                    {
+                      "name": "ratelimit-reset",
+                      "value": "30"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "text/plain; charset=utf-8"
+                    }
+                  ],
+                  "body": "Too many requests, please try again later."
+                }
+              }
+            ],
+            "neverEmits": [
+              "ROUTE_REQUEST"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "get-health-answers-200-status-and-version",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "GET",
+            "path": "/api/health",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "ROUTE_REQUEST",
+          "payload": {
+            "requestId": 7,
+            "rateHeaders": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "ROUTE_HEALTH",
+                "payload": {
+                  "requestId": 7
+                }
+              },
+              {
+                "event": "REQUEST_ANSWERED",
+                "payload": {
+                  "requestId": 7,
+                  "status": 200,
+                  "headers": [
+                    {
+                      "name": "vary",
+                      "value": "origin"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\"status\":\"healthy\",\"version\":\"0.0.0\"}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-post-to-the-health-path-is-not-found",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/health",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "ROUTE_REQUEST",
+          "payload": {
+            "requestId": 7,
+            "rateHeaders": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "REQUEST_ANSWERED",
+                "payload": {
+                  "requestId": 7,
+                  "status": 404,
+                  "headers": [
+                    {
+                      "name": "vary",
+                      "value": "origin"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\"code\":\"NOT_FOUND\",\"error\":\"Not found\"}"
+                }
+              }
+            ],
+            "neverEmits": [
+              "ROUTE_HEALTH"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-path-answers-404-not-found-carrying-rate-headers",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "GET",
+            "path": "/api/nope",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "ROUTE_REQUEST",
+          "payload": {
+            "requestId": 7,
+            "rateHeaders": [
+              {
+                "name": "ratelimit-policy",
+                "value": "100;w=60"
+              },
+              {
+                "name": "ratelimit-limit",
+                "value": "100"
+              },
+              {
+                "name": "ratelimit-remaining",
+                "value": "99"
+              },
+              {
+                "name": "ratelimit-reset",
+                "value": "30"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "ROUTE_REFUSED",
+                "payload": {
+                  "requestId": 7
+                }
+              },
+              {
+                "event": "REQUEST_ANSWERED",
+                "payload": {
+                  "requestId": 7,
+                  "status": 404,
+                  "headers": [
+                    {
+                      "name": "vary",
+                      "value": "origin"
+                    },
+                    {
+                      "name": "ratelimit-policy",
+                      "value": "100;w=60"
+                    },
+                    {
+                      "name": "ratelimit-limit",
+                      "value": "100"
+                    },
+                    {
+                      "name": "ratelimit-remaining",
+                      "value": "99"
+                    },
+                    {
+                      "name": "ratelimit-reset",
+                      "value": "30"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\"code\":\"NOT_FOUND\",\"error\":\"Not found\"}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "vapid-key-set-answers-200-public-key",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "GET",
+            "path": "/api/push/vapid-public-key",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "vapidKey": "BKEY",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "ROUTE_REQUEST",
+          "payload": {
+            "requestId": 7,
+            "rateHeaders": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "REQUEST_ANSWERED",
+                "payload": {
+                  "requestId": 7,
+                  "status": 200,
+                  "headers": [
+                    {
+                      "name": "vary",
+                      "value": "origin"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\"publicKey\":\"BKEY\"}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-vapid-key-unset-answers-404",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "GET",
+            "path": "/api/push/vapid-public-key",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "ROUTE_REQUEST",
+          "payload": {
+            "requestId": 7,
+            "rateHeaders": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "REQUEST_ANSWERED",
+                "payload": {
+                  "requestId": 7,
+                  "status": 404,
+                  "headers": [
+                    {
+                      "name": "vary",
+                      "value": "origin"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\"error\":\"Push is not configured (VAPID_PUBLIC_KEY unset)\"}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tick-with-no-invoker-configured-answers-404",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/tick",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "ROUTE_REQUEST",
+          "payload": {
+            "requestId": 7,
+            "rateHeaders": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "REQUEST_ANSWERED",
+                "payload": {
+                  "requestId": 7,
+                  "status": 404,
+                  "headers": [
+                    {
+                      "name": "vary",
+                      "value": "origin"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\"code\":\"NOT_FOUND\",\"error\":\"no tick invoker is configured (ORB_TICK_INVOKER)\"}"
+                }
+              }
+            ],
+            "neverEmits": [
+              "BEARER_VERIFY"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-tick-with-an-invoker-asks-for-the-bearer",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/tick",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "vapidKey": "",
+        "tickInvoker": "ci@x.io"
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "ROUTE_REQUEST",
+          "payload": {
+            "requestId": 7,
+            "rateHeaders": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "BEARER_VERIFY",
+                "payload": {
+                  "requestId": 7,
+                  "authorization": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "REQUEST_ANSWERED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "verified-invoker-tick",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/tick",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "tickInvoker": "ci@x.io",
+        "ticks": [
+          7
+        ]
+      },
+      "steps": [
+        {
+          "event": "BEARER_VERIFIED",
+          "payload": {
+            "requestId": 7,
+            "viewer": {
+              "id": "scheduler",
+              "email": "ci@x.io",
+              "role": "service",
+              "permissions": [],
+              "claims": [
+                {
+                  "name": "email_verified",
+                  "value": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "key": [
+                  "str/concat",
+                  "tick-",
+                  "@payload.requestId"
+                ],
+                "optionsAt": 0,
+                "type": "program/tick"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unverified-invoker-tick",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/tick",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "tickInvoker": "ci@x.io",
+        "ticks": [
+          7
+        ]
+      },
+      "steps": [
+        {
+          "event": "BEARER_VERIFIED",
+          "payload": {
+            "requestId": 7,
+            "viewer": {
+              "id": "scheduler",
+              "email": "ci@x.io",
+              "role": "service",
+              "permissions": [],
+              "claims": []
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 401
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "wrong-invoker-tick",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/tick",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "tickInvoker": "ci@x.io",
+        "ticks": [
+          7
+        ]
+      },
+      "steps": [
+        {
+          "event": "BEARER_VERIFIED",
+          "payload": {
+            "requestId": 7,
+            "viewer": {
+              "id": "scheduler",
+              "email": "other@x.io",
+              "role": "service",
+              "permissions": [],
+              "claims": [
+                {
+                  "name": "email_verified",
+                  "value": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 401
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tick_answered-preserves-request",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/tick",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          },
+          {
+            "requestId": 8,
+            "method": "POST",
+            "path": "/api/tick",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "tickInvoker": "ci@x.io",
+        "ticks": [
+          7,
+          8
+        ]
+      },
+      "steps": [
+        {
+          "event": "TICK_ANSWERED",
+          "payload": {
+            "result": {
+              "ran": [
+                {
+                  "trait": "Pulse",
+                  "tick": "beat"
+                }
+              ]
+            },
+            "key": "tick-7"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 200
+                }
+              },
+              {
+                "event": "REQUEST_ANSWERED",
+                "payload": {
+                  "requestId": 7,
+                  "status": 200
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "TICK_ANSWERED",
+          "payload": {
+            "result": {
+              "ran": [
+                {
+                  "trait": "Pulse",
+                  "tick": "beat"
+                }
+              ]
+            },
+            "key": "tick-7"
+          },
+          "expect": {
+            "fired": false,
+            "neverEmits": [
+              "RESPOND"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tick_failed-preserves-request",
+      "entity": {
+        "pending": [
+          {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/tick",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          },
+          {
+            "requestId": 8,
+            "method": "POST",
+            "path": "/api/tick",
+            "query": "",
+            "authorization": "",
+            "ip": "1.2.3.4",
+            "responseHeaders": [
+              {
+                "name": "vary",
+                "value": "origin"
+              }
+            ]
+          }
+        ],
+        "tickInvoker": "ci@x.io",
+        "ticks": [
+          7,
+          8
+        ]
+      },
+      "steps": [
+        {
+          "event": "TICK_FAILED",
+          "payload": {
+            "error": "scheduler failed",
+            "key": "tick-7"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RESPOND",
+                "payload": {
+                  "requestId": 7,
+                  "status": 500
+                }
+              },
+              {
+                "event": "REQUEST_ANSWERED",
+                "payload": {
+                  "requestId": 7,
+                  "status": 500
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "TICK_FAILED",
+          "payload": {
+            "error": "scheduler failed",
+            "key": "tick-7"
+          },
+          "expect": {
+            "fired": false,
+            "neverEmits": [
+              "RESPOND"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-content-length-that-is-not-a-number-is-answered-400-json",
+      "entity": {
+        "pending": [],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 7,
+            "method": "POST",
+            "path": "/api/x",
+            "query": "",
+            "headers": {
+              "content-length": "abc"
+            },
+            "peer": "1.2.3.4:5000"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "REQUEST_ANSWERED",
+                "payload": {
+                  "requestId": 7,
+                  "status": 400,
+                  "headers": [
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "{\"error\":\"Invalid Content-Length\",\"code\":\"BAD_CONTENT_LENGTH\"}"
+                }
+              }
+            ],
+            "neverEmits": [
+              "HTTP_DECIDE"
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

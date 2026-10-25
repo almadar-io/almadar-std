@@ -1,135 +1,161 @@
 {
- "atom": "cli/atoms/std-orb-lint-shared-types.lolo",
- "trait": "OrbLintSharedTypes",
- "note": "No Rust twin: std guard for the shared-types-are-copies ruling. Every finding is an OrbFinding rendered as [code] path: message with its suggestion.",
- "cases": [
-  {
-   "id": "copies-that-agree-are-consistent",
-   "steps": [
+  "atom": "cli/atoms/std-orb-lint-shared-types.lolo",
+  "trait": "OrbLintSharedTypes",
+  "note": "No Rust twin: std guard for the shared-types-are-copies ruling. Every finding is an OrbFinding rendered as [code] path: message with its suggestion.",
+  "cases": [
     {
-     "trait": "OrbLintSharedTypes",
-     "from": "ready",
-     "event": "LINT_FINISH",
-     "payload": {},
-     "entity": {
-      "drift": [],
-      "unread": [],
-      "copies": [
-       {
-        "name": "A",
-        "file": "x.lolo",
-        "definition": "{a:string}",
-        "fields": [
-         "a"
-        ]
-       },
-       {
-        "name": "A",
-        "file": "y.lolo",
-        "definition": "{a:string}",
-        "fields": [
-         "a"
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "shared-types: consistent"
+      "id": "copies-that-agree-are-consistent",
+      "steps": [
+        {
+          "trait": "OrbLintSharedTypes",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "entity": {
+            "drift": [],
+            "unread": [],
+            "copies": [
+              {
+                "name": "A",
+                "file": "x.lolo",
+                "definition": "{a:string}",
+                "fields": [
+                  "a"
+                ]
+              },
+              {
+                "name": "A",
+                "file": "y.lolo",
+                "definition": "{a:string}",
+                "fields": [
+                  "a"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "shared-types: consistent"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-name-with-two-definitions-is-reported-with-the-differing-fields",
-   "steps": [
+    },
     {
-     "trait": "OrbLintSharedTypes",
-     "from": "ready",
-     "event": "LINT_FINISH",
-     "payload": {},
-     "entity": {
-      "drift": [
-       "A"
-      ],
-      "unread": [],
-      "copies": [
-       {
-        "name": "A",
-        "file": "x.lolo",
-        "definition": "{a:string}",
-        "fields": [
-         "a"
-        ]
-       },
-       {
-        "name": "A",
-        "file": "y.lolo",
-        "definition": "{a:string,b:number}",
-        "fields": [
-         "a",
-         "b"
-        ]
-       },
-       {
-        "name": "A",
-        "file": "z.lolo",
-        "definition": "{a:string}",
-        "fields": [
-         "a"
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "[shared-type-drift] A: 2 definitions differ\n  variant 1 (2 file(s)): x.lolo, z.lolo\n  variant 2 (1 file(s)): y.lolo\n  variant 2 adds  b\n  suggestion: keep the declared copies identical in every file"
+      "id": "a-name-with-two-definitions-is-reported-with-the-differing-fields",
+      "steps": [
+        {
+          "trait": "OrbLintSharedTypes",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "entity": {
+            "drift": [
+              "A"
+            ],
+            "unread": [],
+            "copies": [
+              {
+                "name": "A",
+                "file": "x.lolo",
+                "definition": "{a:string}",
+                "fields": [
+                  "a"
+                ]
+              },
+              {
+                "name": "A",
+                "file": "y.lolo",
+                "definition": "{a:string,b:number}",
+                "fields": [
+                  "a",
+                  "b"
+                ]
+              },
+              {
+                "name": "A",
+                "file": "z.lolo",
+                "definition": "{a:string}",
+                "fields": [
+                  "a"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "[shared-type-drift] A: 2 definitions differ\n  variant 1 (2 file(s)): x.lolo, z.lolo\n  variant 2 (1 file(s)): y.lolo\n  variant 2 adds  b\n  suggestion: keep the declared copies identical in every file"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an-unread-file-fails-the-run",
-   "steps": [
+    },
     {
-     "trait": "OrbLintSharedTypes",
-     "from": "ready",
-     "event": "LINT_FINISH",
-     "payload": {},
-     "entity": {
-      "drift": [],
-      "unread": [
-       "q.lolo"
-      ],
-      "copies": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "[unread] q.lolo: the file could not be read or listed"
+      "id": "an-unread-file-fails-the-run",
+      "steps": [
+        {
+          "trait": "OrbLintSharedTypes",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "entity": {
+            "drift": [],
+            "unread": [
+              "q.lolo"
+            ],
+            "copies": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "[unread] q.lolo: the file could not be read or listed"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintSharedTypes",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint shared-types"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

@@ -58,7 +58,7 @@ orbital WebhookOrbital {
       WEBHOOK_ATTEMPT -> sending when (!= @entity.secret "")
         (set @entity.startedAt @now)
         (set @entity.attempts (+ @entity.attempts 1))
-        (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format @now "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z\"}")))
+        (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format (time/now) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z\"}")))
           (http POST (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)) (if (= (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)))) "") "/" (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2))))) {
             headers: { Accept: "*/*", Content-Type: "application/json", X-Almadar-Event: @entity.event, X-Almadar-Signature: (str/concat "sha256=" (hmac/sha256 @entity.secret @body "hex")) },
             text: @body,
@@ -67,7 +67,7 @@ orbital WebhookOrbital {
       WEBHOOK_ATTEMPT -> sending when (and (= @entity.secret "") @config.signed)
         (set @entity.startedAt @now)
         (set @entity.attempts (+ @entity.attempts 1))
-        (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format @now "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z\"}")))
+        (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format (time/now) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z\"}")))
           (http POST (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)) (if (= (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)))) "") "/" (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2))))) {
             headers: { Accept: "*/*", Content-Type: "application/json", X-Almadar-Event: @entity.event },
             text: @body,
@@ -77,7 +77,7 @@ orbital WebhookOrbital {
       WEBHOOK_ATTEMPT -> sending when (and (= @entity.secret "") (not @config.signed))
         (set @entity.startedAt @now)
         (set @entity.attempts (+ @entity.attempts 1))
-        (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format @now "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z\"}")))
+        (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format (time/now) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @now 1000)) 3 "0") "Z\"}")))
           (http POST (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)) (if (= (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2)))) "") "/" (str/slice @entity.url (str/len (str/concat (array/nth (str/split @entity.url "/") 0) "//" (array/nth (str/split @entity.url "/") 2))))) {
             headers: { Accept: "*/*", Content-Type: "application/json", X-Almadar-Event: @entity.event },
             text: @body,

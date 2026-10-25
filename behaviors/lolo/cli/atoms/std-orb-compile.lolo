@@ -70,7 +70,9 @@ orbital OrbCompileOrbital {
 
     state ready {
       INIT -> ready
-      COMPILE_CALLED -> parsing
+      COMPILE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit COMPILE_ANSWERED { status: 400, body: "", stderr: "usage: orb compile <FILE> [-o|--output DIR] [-s|--shell SHELL] [-m|--mode MODE] [--frontend SHELL] [--backend SHELL] [--backend-url URL] [--patterns PATH] [--dev-logs] [--host HOST] [--emit-orb PATH]" })
+      COMPILE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
         (emit COMPILE_ARGS_PARSE { stage: "compile" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "output" aliases: ["-o"] takesValue: true repeatable: false }, { name: "shell" aliases: ["-s"] takesValue: true repeatable: false }, { name: "mode" aliases: ["-m"] takesValue: true repeatable: false }, { name: "frontend" aliases: [] takesValue: true repeatable: false }, { name: "backend" aliases: [] takesValue: true repeatable: false }, { name: "backend-url" aliases: [] takesValue: true repeatable: false }, { name: "patterns" aliases: [] takesValue: true repeatable: false }, { name: "dev-logs" aliases: [] takesValue: false repeatable: false }, { name: "host" aliases: [] takesValue: true repeatable: false }, { name: "emit-orb" aliases: [] takesValue: true repeatable: false }] })
     }

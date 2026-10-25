@@ -35,7 +35,10 @@ def case(label, stores, previous, viewer, changes, after, stamped=None, deferred
         expected_journal['stamped'] = stamped
     if deferred is not None:
         expected_journal['deferred'] = deferred
-    cases.append({'id': label, 'payload': {'program': program, 'stores': stores, 'journal': previous, 'viewer': viewer},
+    payload = {'program': program, 'stores': stores, 'journal': previous}
+    if viewer is not None:
+        payload['viewer'] = viewer
+    cases.append({'id': label, 'payload': payload,
                   'changes': changes, 'stores': after, 'journal': expected_journal})
 
 new = {'id': 'new', 'role': 'reader', 'name': 'New viewer'}
@@ -90,17 +93,19 @@ try:
     for entry in cases:
         step = {'trait': 'MockSeed', 'from': 'ready', 'event': 'RESTAMP_INPUT', 'entity': {'id': 'host'}, 'payload': dict(entry['payload'], firstOwner=True)}
         repeated = {'trait': 'MockSeed', 'from': 'ready', 'event': 'RESTAMP_INPUT', 'payload': dict(entry['payload'], stores=entry['stores'], journal=entry['journal'], firstOwner=True)}
-        played = subprocess.run([orb, 'execute', str(path), '--steps', json.dumps([step, repeated])], capture_output=True, text=True)
+        names = {o['entity']['collection']: o['entity']['name'] for o in entry['payload']['program']['orbitals']}
+        seed = {'trait': 'MockSeed', 'from': 'ready', 'event': 'DS_WRITE_CHUNK', 'viewer': {'id': 'agent', 'role': 'agent'}, 'payload': {'ops': [['create', names[store], row] for store, rows in entry['payload']['stores'].items() if store != 'people' for row in rows]}}
+        played = subprocess.run([orb, 'execute', str(path), '--steps', json.dumps([seed, step, repeated])], capture_output=True, text=True)
         assert played.returncode == 0, played.stdout + played.stderr
         report = json.loads(played.stdout)
         assert report.get('success') is True, report
-        result = report['steps'][0]
+        result = report['steps'][1]
         outputs = [event['payload'] for outcome in result['outcomes'] for event in outcome['emits'] if event['event'] == 'RESTAMP_DONE']
-        assert outputs == [{'journal': entry['journal'], 'changes': entry['changes']}], {'case': entry['id'], 'actual': outputs, 'expectedJournal': entry['journal'], 'expectedChanges': entry['changes']}
+        assert outputs == [{'journal': entry['journal'], 'changes': entry['changes']}], {'case': entry['id'], 'seedEmits': [e for o in report['steps'][0]['outcomes'] for e in o['emits']], 'emits': [e for o in result['outcomes'] for e in o['emits'] if e['event'].endswith('FAILED')], 'actual': outputs, 'expectedJournal': entry['journal'], 'expectedChanges': entry['changes']}
         assert result['entityAfter']['dsStores'] == entry['stores'], {'case': entry['id'], 'actualStores': result['entityAfter']['dsStores'], 'expectedStores': entry['stores']}
-        repeated_result = report['steps'][1]
+        repeated_result = report['steps'][2]
         repeated_outputs = [event['payload'] for outcome in repeated_result['outcomes'] for event in outcome['emits'] if event['event'] == 'RESTAMP_DONE']
-        assert repeated_outputs == [{'journal': entry['journal'], 'changes': []}], {'case': entry['id'], 'repeatedOutputs': repeated_outputs}
+        assert repeated_outputs == [{'journal': entry['journal'], 'changes': []}], {'case': entry['id'], 'repeatedOutputs': repeated_outputs, 'emits': [e for o in repeated_result['outcomes'] for e in o['emits'] if e['event'] == 'DS_WRITE_FAILED'], 'fired': repeated_result.get('fired')}
         assert repeated_result['entityAfter']['dsStores'] == entry['stores'], {'case': entry['id'], 'repeatedStores': repeated_result['entityAfter']['dsStores']}
         print('pass: ' + entry['id'] + ' + repeat reset', flush=True)
 finally:

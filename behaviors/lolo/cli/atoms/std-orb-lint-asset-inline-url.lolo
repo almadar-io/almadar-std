@@ -7,7 +7,6 @@ app std-orb-lint-asset-inline-url [
   description: "std-orb-lint-asset-inline-url — the `orb lint asset-inline-url <file>` command, the prevention rung of G-BEHAVIORS-101. It lowers the file with program/read and, for every orbital that composes std-asset-pack (a trait whose ref names an alias that the orbital's uses binds to std/behaviors/std-asset-pack, or any trait declaring the pack's assetPack config knob), reports each literal http:// or https:// string in the config defaults of its other traits and in its entity seed rows (instances), walked at any depth with tree/fold. The trait composed from the atom is skipped, the origin knob of a trait that declares assetPack is exempt, and the app egress entries are never read. One finding per url with its path (status 500, exit 1). Clean answers `lint asset-inline-url: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-asset-inline-url"
-type UrlText = { v : string }
 type AssetDocValue = string | number | boolean | [AssetDocValue] | Map string AssetDocValue
 type AssetKnob = { default : AssetDocValue }
 type AssetUse = { from : string, as : string }
@@ -55,7 +54,7 @@ orbital OrbLintAssetInlineUrlOrbital {
                               []))))
                       (array/flatten (array/map @units (fn u
                         (let ((v (if (= (object/get @u "ti") -1) (object/get (object/get @orb "entity") "instances" null) (let ((cf (object/get (array/nth @trs (object/get @u "ti")) "config"))) (if (validate/object (object/get @cf (object/get @u "kn") null)) (object/get (object/get @cf (object/get @u "kn")) "default" null) null)))) (p (object/get @u "path")))
-(let ((dq "\"")) (array/map (array/filter (if (= @v null) [] (json/nodes [@v])) (fn y (let ((t (json/stringify @y))) (or (str/startsWith @t (str/concat @dq "https://")) (str/startsWith @t (str/concat @dq "http://")))))) (fn y { code: "ORB_ASSET_INLINE_URL", path: @p, message: (str/concat "Orbital '" @oname "' composes std-asset-pack but carries the literal asset url '" (object/get (json/parse (str/concat "{" @dq "v" @dq ":" (json/stringify @y) "}") UrlText) "v") "'"), suggestion: "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs", severity: "error" })))))))))))))))))
+(let ((dq "\"")) (array/map (array/filter (if (= @v null) [] (json/nodes [@v])) (fn y (let ((t (json/stringify @y))) (or (str/startsWith @t (str/concat @dq "https://")) (str/startsWith @t (str/concat @dq "http://")))))) (fn y { code: "ORB_ASSET_INLINE_URL", path: @p, message: (str/concat "Orbital '" @oname "' composes std-asset-pack but carries the literal asset url '" @y "'"), suggestion: "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs", severity: "error" })))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "asset-inline-url", scope: @entity.scope, findings: @entity.findings })
@@ -82,9 +81,11 @@ orbital OrbLintAssetInlineUrlOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit LINT_ANSWERED { status: 500, body: "Error: orb lint asset-inline-url: the command arguments could not be read" })
+      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint asset-inline-url <file>" })
-      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
     }
 

@@ -5394,6 +5394,59 @@
           }
         }
       ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbComplete",
+          "from": "ready",
+          "event": "COMPLETE_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "COMPLETE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb complete <file.lolo> --offset <n>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-patterns-registry-that-is-not-a-registry-fails",
+      "entity": {},
+      "steps": [
+        {
+          "trait": "CompleteEngine",
+          "from": "loading",
+          "event": "COMPLETE_PATTERNS",
+          "payload": {
+            "data": "bm90IGpzb24="
+          },
+          "expect": {
+            "fired": true,
+            "state": "loading",
+            "emits": [
+              {
+                "event": "COMPLETE_FAILED",
+                "payload": {
+                  "error": "the installed @almadar/core patterns registry is not a patterns registry"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

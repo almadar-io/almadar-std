@@ -65,7 +65,9 @@ orbital SidecarFetchOrbital {
       INIT -> idle
       SIDECAR_RESOLVE -> fetching
         (emit SIDECAR_REFUSED { requestId: @payload.requestId, code: "busy", error: (str/concat "the sidecar store is fetching " @entity.declared) })
-      SIDECAR_FETCHED -> verifying when (= @payload.status 200)
+      SIDECAR_FETCHED -> idle when (and (= @payload.status 200) (= (bytes/from-base64 @payload.body) null))
+        (emit SIDECAR_REFUSED { requestId: @entity.requestId, code: "fetch-failed", error: (str/concat "ORB_SIDECAR_FETCH_FAILED: " @entity.name (quote "@") @entity.version " " @entity.declared " from " @config.origin ": the body is not valid base64") })
+      SIDECAR_FETCHED -> verifying when (and (= @payload.status 200) (!= (bytes/from-base64 @payload.body) null))
         (set @entity.body @payload.body)
         (emit SC_HASH { requestId: @entity.requestId, data: (bytes/from-base64 @payload.body), encoding: "hex" })
       SIDECAR_FETCHED -> idle when (!= @payload.status 200)

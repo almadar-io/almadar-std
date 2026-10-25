@@ -76,6 +76,7 @@ orbital OrbTestOrbital {
     listens {
       TestEngine.TEST_WALK_CALL -> VERIFY_WALK_START
       TestMachine.MACHINE_ANSWERED -> WALK_MACHINE_ANSWERED
+      TestMachine.MACHINE_UNREAD -> WALK_MACHINE_UNREAD
       TestPlan.PLAN_ANSWERED -> WALK_PLAN_ANSWERED
       TestJudge.JUDGE_ANSWERED -> WALK_JUDGE_ANSWERED
       TestCreditor.CREDIT_ANSWERED -> WALK_CREDIT_ANSWERED
@@ -91,7 +92,7 @@ orbital OrbTestOrbital {
         (emit TEST_ANSWERED { status: @payload.status, body: @payload.body })
       TEST_CALLED -> parsing
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit TEST_ARGS_PARSE { stage: "test" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "orbital" aliases: [] takesValue: true repeatable: false }, { name: "report" aliases: [] takesValue: true repeatable: false }, { name: "execute" aliases: [] takesValue: false repeatable: false }] })
+        (emit TEST_ARGS_PARSE { stage: "test" argv: (or (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") []) flags: [{ name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "orbital" aliases: [] takesValue: true repeatable: false }, { name: "report" aliases: [] takesValue: true repeatable: false }, { name: "execute" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {

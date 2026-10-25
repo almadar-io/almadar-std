@@ -10,7 +10,7 @@ type OrbFinding = { code : string!, path : string!, message : string!, suggestio
 type LintHook = { name : string!, file : string! }
 type LintEntry = { name : string!, kind : string! }
 type LintFile = { root : number!, rel : string! }
-type DupHookInbound = { name : string }
+type DupHookInbound = { name : string! }
 type DupHookEvent = { inbound : DupHookInbound }
 type DupHookMachine = { events : [DupHookEvent] }
 type DupHookTrait = { stateMachine : DupHookMachine }
@@ -33,9 +33,11 @@ orbital OrbLintDuplicateInboundHookOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0)
+      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit LINT_ANSWERED { status: 500, body: "Error: orb lint duplicate-inbound-hook: the command arguments could not be read" })
+      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint duplicate-inbound-hook" })
-      LINT_CALLED -> walking when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0)
+      LINT_CALLED -> walking when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0))
         (set @entity.paths [])
         (set @entity.queue [{ root: 0, rel: "" }, { root: 1, rel: "" }])
         (set @entity.hooks [])
@@ -88,7 +90,7 @@ orbital OrbLintDuplicateInboundHookOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LINT_READ { })
       LINT_PROGRAM_READ -> reading
-        (set @entity.hooks (array/concat @entity.hooks (array/map (array/unique (array/flatten (array/map (object/get @payload.result "orbitals" []) (fn o (array/flatten (array/map (object/get @o "traits" []) (fn t (array/map (array/filter (object/get (object/get @t "stateMachine" {}) "events" []) (fn e (validate/object (object/get @e "inbound" null)))) (fn e (object/get (object/get @e "inbound") "name")))))))))) (fn n { name: @n, file: (object/get (array/nth @entity.paths @entity.cursor) "rel") }))))
+        (set @entity.hooks (array/concat @entity.hooks (array/map (array/unique (array/flatten (array/map (object/get @payload.result "orbitals" []) (fn o (array/flatten (array/map (object/get @o "traits" []) (fn t (array/flatten (array/map (object/get (object/get @t "stateMachine" {}) "events" []) (fn e (let ((ib (object/get @e "inbound" null))) (if (= @ib null) [] [(object/get @ib "name")])))))))))))) (fn n { name: @n, file: (object/get (array/nth @entity.paths @entity.cursor) "rel") }))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LINT_READ { })
       LINT_FILE_UNREAD -> reading

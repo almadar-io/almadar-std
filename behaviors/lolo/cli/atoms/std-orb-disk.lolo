@@ -13,6 +13,7 @@ type DiskSpec = { id : string!, label : string!, category : string!, note : stri
 type DiskSize = { path : string!, kb : number! }
 type DiskGroup = { id : string!, paths : [string]! }
 type DiskGroupSize = { id : string!, kb : number!, paths : [string]! }
+type DiskResolved = { id : string!, label : string!, category : string!, note : string!, batch : boolean!, clearable : boolean!, danger : boolean!, sizeless : boolean!, paths : [string]!, walk : string!, act : string!, cmd : [string]!, os : string!, linuxPaths : [string]!, abs : [string]! }
 type DiskItem = { id : string!, label : string!, category : string!, note : string!, batch : boolean!, clearable : boolean!, danger : boolean!, sizeless : boolean!, paths : [string]!, walk : string!, act : string!, cmd : [string]!, os : string!, linuxPaths : [string]!, abs : [string]!, exist : [string]!, bytes : number! }
 type ClearPlan = { id : string!, act : string!, note : string!, cmd : [string]!, bytes : number!, dir : string!, paths : [string]!, safe : [string]!, unsafe : [string]! }
 type ClearFailure = { id : string!, error : string! }
@@ -51,7 +52,7 @@ orbital OrbDiskOrbital {
     afterUsed : number = 0
     afterFree : number = 0
     afterPct : number = 0
-    specs : [DiskItem] = []
+    specs : [DiskResolved] = []
     sizes : [DiskSize] = []
     walkLines : [string] = []
     tmpLines : [string] = []
@@ -175,11 +176,13 @@ orbital OrbDiskOrbital {
       INIT -> ready
       DISK_CALLED -> parsing
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit DISK_ARGS_PARSE { stage: "disk" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: true }, { name: "yes" aliases: [] takesValue: false repeatable: true }, { name: "safe" aliases: [] takesValue: false repeatable: true }, { name: "clear" aliases: [] takesValue: true repeatable: false }] })
+        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))) (if (= @argv null) (emit DISK_ARGS_UNREAD { }) (emit DISK_ARGS_PARSE { stage: "disk" argv: @argv flags: [{ name: "json" aliases: [] takesValue: false repeatable: true }, { name: "yes" aliases: [] takesValue: false repeatable: true }, { name: "safe" aliases: [] takesValue: false repeatable: true }, { name: "clear" aliases: [] takesValue: true repeatable: false }] })))
     }
 
     state parsing {
       INIT -> parsing
+      DISK_ARGS_UNREAD -> ready
+        (emit DISK_ANSWERED { status: 500, body: "Error: the call's arguments could not be read" })
       DISK_ARGS_DONE -> parsing
         (set @entity.json (!= (object/get @payload.flags "json") null))
         (set @entity.yes (!= (object/get @payload.flags "yes") null))
@@ -440,6 +443,9 @@ orbital OrbDiskOrbital {
         @tier "internal"
       DISK_HOST_FAILED { error : string }
         @description "Internal: HOME could not be read."
+        @tier "internal"
+      DISK_ARGS_UNREAD {  }
+        @description "Internal: the call's arguments could not be read."
         @tier "internal"
       DISK_ARGS_PARSE {
         stage : string!

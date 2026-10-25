@@ -6,7 +6,7 @@ orbital MigrationAdapterAsanaOrbital {
   type ImportFieldValue = string | number | boolean
   type ImportRawDocument = { ref : string!, raw : string! }
   type ImportSkip = { ref : string!, reason : string! }
-  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string, content : string, parentRef : string, metadata : Map string ImportFieldValue, source : string!, span : string }
+  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string, content : string?, parentRef : string, metadata : Map string ImportFieldValue, source : string!, span : string }
   type AsanaSection = { name : string }
   type AsanaMembership = { section : AsanaSection }
   type AsanaAssignee = { name : string }
@@ -14,7 +14,7 @@ orbital MigrationAdapterAsanaOrbital {
   type AsanaTasks = [AsanaTask]
   type AsanaEnvelope = { data : [AsanaTask], name : string }
   type AsanaDocument = { ref : string!, ok : boolean!, valid : boolean!, projectName : string!, tasks : [AsanaTask] }
-  type AsanaFrame = { task : AsanaTask, index : number!, parentRef : string!, kind : "root" | "section", docRef : string!, key : string! }
+  type AsanaFrame = { task : AsanaTask, index : number!, parentRef : string!, kind : "root" | "section"!, docRef : string!, key : string! }
   type AsanaRow = { key : string!, unit : ExtractedUnit }
   type AsanaSkipRow = { key : string!, skip : ImportSkip }
 
@@ -153,7 +153,7 @@ orbital MigrationAdapterAsanaOrbital {
                                      (object/get (object/get @f task) gid)
                                      (str/concat "task-" (object/get @f index)))),
                             kind: (object/get @f kind),
-                            title: (object/get @t name),
+                            title: (object/get @t name ""),
                             content: (if
                                        (and
                                          (validate/required (object/get @t notes ""))
@@ -183,7 +183,7 @@ orbital MigrationAdapterAsanaOrbital {
                                               ]
                                               (fn q
                                                 (and (!= (object/get @q v) null) (!= (object/get @q v) ""))))
-                                            (fn q [(object/get @q k), (object/get @q v)]))))) (object/merge @fixed (or @extra @none))))
+                                            (fn q [(object/get @q k), (object/get @q v)]))))) (or (object/merge @fixed (or @extra @none)) @fixed)))
                           }
                   })))))
         (set

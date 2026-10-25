@@ -48,11 +48,13 @@ orbital OrbMcpInstallOrbital {
       INIT -> ready
       MCP_CALLED -> parsing
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit MCP_ARGS_PARSE { stage: "mcp" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "client" aliases: [] takesValue: true repeatable: false }] })
+        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))) (if (= @argv null) (emit MCP_ARGS_UNREAD { }) (emit MCP_ARGS_PARSE { stage: "mcp" argv: @argv flags: [{ name: "client" aliases: [] takesValue: true repeatable: false }] })))
     }
 
     state parsing {
       INIT -> parsing
+      MCP_ARGS_UNREAD -> ready
+        (emit MCP_INSTALL_ANSWERED { status: 500, body: "Error: the call's arguments could not be read" })
       MCP_ARGS_DONE -> ready when (not (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (array/includes ["claude", "cursor", "vscode"] (array/first (or (object/get @payload.flags "client") [])))))
         (emit MCP_INSTALL_ANSWERED { status: 400, body: "usage: orb mcp install --client <claude|cursor|vscode>" })
       MCP_ARGS_DONE -> probing when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (array/includes ["claude", "cursor", "vscode"] (array/first (or (object/get @payload.flags "client") []))))
@@ -141,6 +143,9 @@ orbital OrbMcpInstallOrbital {
         @tier "internal"
       MCP_DIR_READY { }
         @description "Internal: the config's parent directory exists."
+        @tier "internal"
+      MCP_ARGS_UNREAD {  }
+        @description "Internal: the call's arguments could not be read."
         @tier "internal"
       MCP_ARGS_PARSE {
         stage : string!

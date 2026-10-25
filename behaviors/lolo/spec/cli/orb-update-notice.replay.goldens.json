@@ -299,7 +299,7 @@
         "payload": {
          "status": 200,
          "body": "",
-         "stderr": "orb: updates available (@almadar/core 1.2.0 \u2192 1.10.0, @almadar/std 3.0.0 \u2192 3.1.4); run `orb update --global`"
+         "stderr": "orb: updates available (@almadar/core 1.2.0 → 1.10.0, @almadar/std 3.0.0 → 3.1.4); run `orb update --global`"
         }
        }
       ],
@@ -1200,7 +1200,7 @@
         "payload": {
          "status": 200,
          "body": "",
-         "stderr": "orb: updates available (@almadar/core 1.2.0 \u2192 1.10.0); run `orb update --global`"
+         "stderr": "orb: updates available (@almadar/core 1.2.0 → 1.10.0); run `orb update --global`"
         }
        }
       ]
@@ -1503,6 +1503,33 @@
        {
         "type": "os/write-file",
         "key": "cache"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an unreadable command body answers 500",
+   "steps": [
+    {
+     "trait": "OrbUpdateNotice",
+     "from": "ready",
+     "event": "UPDATE_NOTICE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "not json"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "UPDATE_NOTICE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: orb update-notice: the command arguments could not be read"
+        }
        }
       ]
      }

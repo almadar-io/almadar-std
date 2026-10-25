@@ -109,11 +109,13 @@ orbital OrbRunnersOrbital {
     state ready {
       INIT -> ready
       RN_CALLED -> parsing
-        (emit RN_ARGS_PARSE { stage: "runners" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "mac" aliases: [] takesValue: false repeatable: false }] })
+        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))) (if (= @argv null) (emit RN_ARGS_UNREAD { }) (emit RN_ARGS_PARSE { stage: "runners" argv: @argv flags: [{ name: "mac" aliases: [] takesValue: false repeatable: false }] })))
     }
 
     state parsing {
       INIT -> parsing
+      RN_ARGS_UNREAD -> ready
+        (emit RUNNERS_ANSWERED { status: 500, body: "Error: the call's arguments could not be read" })
       RN_ARGS_DONE -> ready when (not (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (array/includes ["up", "once", "down"] (array/first @payload.positionals))))
         (emit RUNNERS_ANSWERED { status: 400, body: "usage: orb runners up|once|down [--mac]" })
       RN_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (array/includes ["up", "once", "down"] (array/first @payload.positionals)))
@@ -377,6 +379,9 @@ orbital OrbRunnersOrbital {
         @tier "internal"
       RN_SLEEP {  }
         @description "Internal: wait five seconds, then reconcile again."
+        @tier "internal"
+      RN_ARGS_UNREAD {  }
+        @description "Internal: the call's arguments could not be read."
         @tier "internal"
       RN_ARGS_PARSE {
         stage : string!

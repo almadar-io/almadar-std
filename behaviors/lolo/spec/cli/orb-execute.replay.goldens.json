@@ -1,1382 +1,1409 @@
 {
- "atom": "cli/atoms/std-orb-execute.lolo",
- "trait": "OrbExecute",
- "cases": [
-  {
-   "id": "a call parses its words against the six flags",
-   "steps": [
+  "atom": "cli/atoms/std-orb-execute.lolo",
+  "trait": "OrbExecute",
+  "cases": [
     {
-     "trait": "OrbExecute",
-     "from": "ready",
-     "event": "EXEC_CALLED",
-     "payload": {
-      "rawBody": "{\"argv\": [\"a.lolo\", \"--steps\", \"[]\"], \"cwd\": \"/w\"}"
-     },
-     "expect": {
-      "fired": true,
-      "state": "parsing",
-      "emits": [
-       {
-        "event": "EXEC_ARGS_PARSE",
-        "payload": {
-         "stage": "execute",
-         "argv": [
-          "a.lolo",
-          "--steps",
-          "[]"
-         ],
-         "flags": [
-          {
-           "name": "steps",
-           "aliases": [],
-           "takesValue": true,
-           "repeatable": false
-          },
-          {
-           "name": "live",
-           "aliases": [],
-           "takesValue": false,
-           "repeatable": false
-          },
-          {
-           "name": "event",
-           "aliases": [],
-           "takesValue": true,
-           "repeatable": false
-          },
-          {
-           "name": "trait",
-           "aliases": [],
-           "takesValue": true,
-           "repeatable": false
-          },
-          {
-           "name": "payload",
-           "aliases": [],
-           "takesValue": true,
-           "repeatable": false
-          },
-          {
-           "name": "cascade",
-           "aliases": [],
-           "takesValue": false,
-           "repeatable": false
-          }
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "--steps with a file is checked",
-   "entity": {
-    "cwd": "/w"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {
-       "steps": [
-        "[{\"trait\":\"T\",\"event\":\"E\"}]"
-       ]
-      },
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "fired": true,
-      "state": "checking",
-      "emits": [
-       {
-        "event": "EXEC_CHECK",
-        "payload": {}
-       }
-      ],
-      "neverEmits": [
-       "EXEC_ANSWERED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: --steps --live is checked too",
-   "entity": {
-    "cwd": "/w"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {
-       "steps": [
-        "[{\"trait\":\"T\",\"event\":\"E\"}]"
-       ],
-       "live": []
-      },
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "checking",
-      "neverEmits": [
-       "EXEC_ANSWERED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "--event with --trait is checked",
-   "entity": {
-    "cwd": "/w"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {
-       "event": [
-        "GO"
-       ],
-       "trait": [
-        "Sender"
-       ]
-      },
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "fired": true,
-      "state": "checking",
-      "neverEmits": [
-       "EXEC_ANSWERED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: --cascade and --payload join --event and --trait",
-   "entity": {
-    "cwd": "/w"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {
-       "event": [
-        "GO"
-       ],
-       "trait": [
-        "Sender"
-       ],
-       "cascade": [],
-       "payload": [
-        "{\"a\":1}"
-       ]
-      },
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "checking",
-      "neverEmits": [
-       "EXEC_ANSWERED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "no file is a usage error",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {
-       "steps": [
-        "[{\"trait\":\"T\",\"event\":\"E\"}]"
-       ]
-      },
-      "positionals": [],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a second word is a usage error",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {
-       "steps": [
-        "[{\"trait\":\"T\",\"event\":\"E\"}]"
-       ]
-      },
-      "positionals": [
-       "a.lolo",
-       "b.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an unknown flag is a usage error",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {
-       "steps": [
-        "[{\"trait\":\"T\",\"event\":\"E\"}]"
-       ]
-      },
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [
-       "unknown flag --bogus"
-      ],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "neither --steps nor --event is a usage error",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {},
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "--trait alone is a usage error",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {
-       "trait": [
-        "Sender"
-       ]
-      },
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "--steps with --event is a usage error",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {
-       "steps": [
-        "[{\"trait\":\"T\",\"event\":\"E\"}]"
-       ],
-       "event": [
-        "GO"
-       ],
-       "trait": [
-        "Sender"
-       ]
-      },
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "--steps with --trait is a usage error",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {
-       "steps": [
-        "[{\"trait\":\"T\",\"event\":\"E\"}]"
-       ],
-       "trait": [
-        "Sender"
-       ]
-      },
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "--steps with --payload is a usage error",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {
-       "steps": [
-        "[{\"trait\":\"T\",\"event\":\"E\"}]"
-       ],
-       "payload": [
-        "{}"
-       ]
-      },
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "--steps with --cascade is a usage error",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {
-       "steps": [
-        "[{\"trait\":\"T\",\"event\":\"E\"}]"
-       ],
-       "cascade": []
-      },
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "--event without --trait is a usage error",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {
-       "event": [
-        "GO"
-       ]
-      },
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "--live without --steps is a usage error",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "parsing",
-     "event": "EXEC_ARGS_DONE",
-     "payload": {
-      "stage": "execute",
-      "flags": {
-       "event": [
-        "GO"
-       ],
-       "trait": [
-        "Sender"
-       ],
-       "live": []
-      },
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "steps that are not JSON answer success false",
-   "entity": {
-    "argText": "bad",
-    "stepsText": "bad",
-    "mode": "steps"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "checking",
-     "event": "EXEC_CHECK",
-     "payload": {},
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"success\": false,\n  \"error\": \"Invalid JSON: bad\"\n}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: steps that are JSON go on to read the program",
-   "entity": {
-    "argText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
-    "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
-    "mode": "steps",
-    "path": "a.lolo"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "checking",
-     "event": "EXEC_CHECK",
-     "payload": {},
-     "expect": {
-      "state": "reading",
-      "neverEmits": [
-       "EXEC_ANSWERED"
-      ],
-      "effects": [
-       {
-        "type": "os/read-file",
-        "key": "program",
-        "optionsAt": 1
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "JSON that is not an array answers --steps must be a JSON array",
-   "entity": {
-    "argText": "{\"trait\":\"Sender\"}",
-    "stepsText": "{\"trait\":\"Sender\"}",
-    "mode": "steps"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "checking",
-     "event": "EXEC_CHECK",
-     "payload": {},
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"success\": false,\n  \"error\": \"--steps must be a JSON array\"\n}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: an empty array is a list of steps",
-   "entity": {
-    "argText": "[]",
-    "stepsText": "[]",
-    "mode": "steps",
-    "path": "a.lolo"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "checking",
-     "event": "EXEC_CHECK",
-     "payload": {},
-     "expect": {
-      "state": "reading",
-      "effects": [
-       {
-        "type": "os/read-file"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a payload that is not JSON answers success false",
-   "entity": {
-    "argText": "notjson",
-    "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\",\"payload\":notjson}]",
-    "mode": "event"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "checking",
-     "event": "EXEC_CHECK",
-     "payload": {},
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"success\": false,\n  \"error\": \"Invalid JSON: notjson\"\n}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a payload that is JSON is read",
-   "entity": {
-    "argText": "{\"a\":1}",
-    "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\",\"payload\":{\"a\":1}}]",
-    "mode": "event",
-    "path": "a.lolo"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "checking",
-     "event": "EXEC_CHECK",
-     "payload": {},
-     "expect": {
-      "state": "reading",
-      "effects": [
-       {
-        "type": "os/read-file"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a program that cannot be read answers success false with its name",
-   "entity": {
-    "file": "a.lolo"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "reading",
-     "event": "EXEC_READ_FAILED",
-     "payload": {
-      "error": "no such file"
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"success\": false,\n  \"error\": \"Failed to read a.lolo: no such file\"\n}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a program read is parsed",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "reading",
-     "event": "EXEC_READ",
-     "payload": {
-      "data": "YXBwIHg="
-     },
-     "expect": {
-      "state": "reading",
-      "effects": [
-       {
-        "type": "program/read",
-        "key": "program",
-        "optionsAt": 1
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a program that cannot be parsed answers success false",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "reading",
-     "event": "EXEC_PROGRAM_FAILED",
-     "payload": {
-      "error": "Parse error"
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"success\": false,\n  \"error\": \"Parse error\"\n}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a parsed program is stepped",
-   "entity": {
-    "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
-    "live": false
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "reading",
-     "event": "EXEC_PROGRAM",
-     "payload": {
-      "result": {
-       "name": "x"
-      }
-     },
-     "expect": {
-      "state": "stepping",
-      "effects": [
-       {
-        "type": "program/step"
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a failed run drops the host's program/step prefix",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "stepping",
-     "event": "EXEC_STEP_FAILED",
-     "payload": {
-      "error": "program/step: step 0: no trait"
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"success\": false,\n  \"error\": \"step 0: no trait\"\n}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a failure without the prefix is kept whole",
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "stepping",
-     "event": "EXEC_STEP_FAILED",
-     "payload": {
-      "error": "each request needs a trait"
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"success\": false,\n  \"error\": \"each request needs a trait\"\n}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a steps run answers the report as it came, re-indented",
-   "entity": {
-    "mode": "steps"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "stepping",
-     "event": "EXEC_STEPPED",
-     "payload": {
-      "result": {
-       "success": true,
-       "steps": [
+      "id": "a call parses its words against the six flags",
+      "steps": [
         {
-         "outcomes": [
-          {
-           "trait": "Sender",
-           "newState": "sent"
+          "trait": "OrbExecute",
+          "from": "ready",
+          "event": "EXEC_CALLED",
+          "payload": {
+            "rawBody": "{\"argv\": [\"a.lolo\", \"--steps\", \"[]\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "parsing",
+            "emits": [
+              {
+                "event": "EXEC_ARGS_PARSE",
+                "payload": {
+                  "stage": "execute",
+                  "argv": [
+                    "a.lolo",
+                    "--steps",
+                    "[]"
+                  ],
+                  "flags": [
+                    {
+                      "name": "steps",
+                      "aliases": [],
+                      "takesValue": true,
+                      "repeatable": false
+                    },
+                    {
+                      "name": "live",
+                      "aliases": [],
+                      "takesValue": false,
+                      "repeatable": false
+                    },
+                    {
+                      "name": "event",
+                      "aliases": [],
+                      "takesValue": true,
+                      "repeatable": false
+                    },
+                    {
+                      "name": "trait",
+                      "aliases": [],
+                      "takesValue": true,
+                      "repeatable": false
+                    },
+                    {
+                      "name": "payload",
+                      "aliases": [],
+                      "takesValue": true,
+                      "repeatable": false
+                    },
+                    {
+                      "name": "cascade",
+                      "aliases": [],
+                      "takesValue": false,
+                      "repeatable": false
+                    }
+                  ]
+                }
+              }
+            ]
           }
-         ],
-         "states": {
-          "Sender": "sent"
-         }
         }
-       ],
-       "dispatchModes": {
-        "Sender": "hybridClientOnly"
-       }
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"success\": true,\n  \"steps\": [\n    {\n      \"outcomes\": [\n        {\n          \"trait\": \"Sender\",\n          \"newState\": \"sent\"\n        }\n      ],\n      \"states\": {\n        \"Sender\": \"sent\"\n      }\n    }\n  ],\n  \"dispatchModes\": {\n    \"Sender\": \"hybridClientOnly\"\n  }\n}"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an event run also hoists steps[0].outcomes to the top level",
-   "entity": {
-    "mode": "event"
-   },
-   "steps": [
+    },
     {
-     "trait": "OrbExecute",
-     "from": "stepping",
-     "event": "EXEC_STEPPED",
-     "payload": {
-      "result": {
-       "success": true,
-       "steps": [
+      "id": "--steps with a file is checked",
+      "entity": {
+        "cwd": "/w"
+      },
+      "steps": [
         {
-         "outcomes": [
-          {
-           "trait": "Sender",
-           "newState": "sent"
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "steps": [
+                "[{\"trait\":\"T\",\"event\":\"E\"}]"
+              ]
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "checking",
+            "emits": [
+              {
+                "event": "EXEC_CHECK",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "EXEC_ANSWERED"
+            ]
           }
-         ],
-         "states": {
-          "Sender": "sent"
-         }
         }
-       ],
-       "dispatchModes": {
-        "Sender": "hybridClientOnly"
-       }
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"success\": true,\n  \"steps\": [\n    {\n      \"outcomes\": [\n        {\n          \"trait\": \"Sender\",\n          \"newState\": \"sent\"\n        }\n      ],\n      \"states\": {\n        \"Sender\": \"sent\"\n      }\n    }\n  ],\n  \"dispatchModes\": {\n    \"Sender\": \"hybridClientOnly\"\n  },\n  \"outcomes\": [\n    {\n      \"trait\": \"Sender\",\n      \"newState\": \"sent\"\n    }\n  ]\n}"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: an event run with no step has nothing to hoist",
-   "entity": {
-    "mode": "event"
-   },
-   "steps": [
+    },
     {
-     "trait": "OrbExecute",
-     "from": "stepping",
-     "event": "EXEC_STEPPED",
-     "payload": {
-      "result": {
-       "success": true,
-       "steps": [],
-       "dispatchModes": {}
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"success\": true,\n  \"steps\": [],\n  \"dispatchModes\": {}\n}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: an event run whose step has no outcomes hoists nothing",
-   "entity": {
-    "mode": "event"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "stepping",
-     "event": "EXEC_STEPPED",
-     "payload": {
-      "result": {
-       "success": true,
-       "steps": [
+      "id": "control: --steps --live is checked too",
+      "entity": {
+        "cwd": "/w"
+      },
+      "steps": [
         {
-         "states": {}
-        }
-       ],
-       "dispatchModes": {}
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"success\": true,\n  \"steps\": [\n    {\n      \"states\": {}\n    }\n  ],\n  \"dispatchModes\": {}\n}"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pretty: nesting indents two spaces per level",
-   "entity": {
-    "mode": "steps"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "stepping",
-     "event": "EXEC_STEPPED",
-     "payload": {
-      "result": {
-       "a": {
-        "b": {
-         "c": [
-          1,
-          [
-           2,
-           3
-          ],
-          {
-           "d": 4
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "steps": [
+                "[{\"trait\":\"T\",\"event\":\"E\"}]"
+              ],
+              "live": []
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "checking",
+            "neverEmits": [
+              "EXEC_ANSWERED"
+            ]
           }
-         ]
         }
-       }
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"a\": {\n    \"b\": {\n      \"c\": [\n        1,\n        [\n          2,\n          3\n        ],\n        {\n          \"d\": 4\n        }\n      ]\n    }\n  }\n}"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pretty: empty arrays and objects stay on one line",
-   "entity": {
-    "mode": "steps"
-   },
-   "steps": [
+    },
     {
-     "trait": "OrbExecute",
-     "from": "stepping",
-     "event": "EXEC_STEPPED",
-     "payload": {
-      "result": {
-       "a": [],
-       "b": {},
-       "c": [
-        [],
-        {}
-       ],
-       "d": [
+      "id": "--event with --trait is checked",
+      "entity": {
+        "cwd": "/w"
+      },
+      "steps": [
         {
-         "e": []
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "event": [
+                "GO"
+              ],
+              "trait": [
+                "Sender"
+              ]
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "checking",
+            "neverEmits": [
+              "EXEC_ANSWERED"
+            ]
+          }
         }
-       ]
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"a\": [],\n  \"b\": {},\n  \"c\": [\n    [],\n    {}\n  ],\n  \"d\": [\n    {\n      \"e\": []\n    }\n  ]\n}"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pretty: scalars null booleans negatives and fractions",
-   "entity": {
-    "mode": "steps"
-   },
-   "steps": [
+    },
     {
-     "trait": "OrbExecute",
-     "from": "stepping",
-     "event": "EXEC_STEPPED",
-     "payload": {
-      "result": {
-       "n": null,
-       "t": true,
-       "f": false,
-       "neg": -3,
-       "frac": 2.5,
-       "zero": 0
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"n\": null,\n  \"t\": true,\n  \"f\": false,\n  \"neg\": -3,\n  \"frac\": 2.5,\n  \"zero\": 0\n}"
+      "id": "control: --cascade and --payload join --event and --trait",
+      "entity": {
+        "cwd": "/w"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "event": [
+                "GO"
+              ],
+              "trait": [
+                "Sender"
+              ],
+              "cascade": [],
+              "payload": [
+                "{\"a\":1}"
+              ]
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "checking",
+            "neverEmits": [
+              "EXEC_ANSWERED"
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pretty: structural characters inside strings are untouched",
-   "entity": {
-    "mode": "steps"
-   },
-   "steps": [
+    },
     {
-     "trait": "OrbExecute",
-     "from": "stepping",
-     "event": "EXEC_STEPPED",
-     "payload": {
-      "result": {
-       "s": "a, b: {c} [d] \"q\" \\ e",
-       "k,:{}[]": "v"
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"s\": \"a, b: {c} [d] \\\"q\\\" \\\\ e\",\n  \"k,:{}[]\": \"v\"\n}"
+      "id": "no file is a usage error",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "steps": [
+                "[{\"trait\":\"T\",\"event\":\"E\"}]"
+              ]
+            },
+            "positionals": [],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "pretty: unicode and escapes inside strings",
-   "entity": {
-    "mode": "steps"
-   },
-   "steps": [
+    },
     {
-     "trait": "OrbExecute",
-     "from": "stepping",
-     "event": "EXEC_STEPPED",
-     "payload": {
-      "result": {
-       "u": "é ✓ 日本",
-       "nl": "line\nbreak\ttab",
-       "quote": "\"",
-       "slash": "a\\"
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"u\": \"é ✓ 日本\",\n  \"nl\": \"line\\nbreak\\ttab\",\n  \"quote\": \"\\\"\",\n  \"slash\": \"a\\\\\"\n}"
+      "id": "a second word is a usage error",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "steps": [
+                "[{\"trait\":\"T\",\"event\":\"E\"}]"
+              ]
+            },
+            "positionals": [
+              "a.lolo",
+              "b.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a single scalar object",
-   "entity": {
-    "mode": "steps"
-   },
-   "steps": [
+    },
     {
-     "trait": "OrbExecute",
-     "from": "stepping",
-     "event": "EXEC_STEPPED",
-     "payload": {
-      "result": {
-       "k": "v"
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "exactEmits": [
-       {
-        "event": "EXEC_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{\n  \"k\": \"v\"\n}"
+      "id": "an unknown flag is a usage error",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "steps": [
+                "[{\"trait\":\"T\",\"event\":\"E\"}]"
+              ]
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [
+              "unknown flag --bogus"
+            ],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an absolute program file is read without the cwd anchor",
-   "entity": {
-    "argText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
-    "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
-    "mode": "steps",
-    "path": "/tmp/a.lolo",
-    "file": "/tmp/a.lolo"
-   },
-   "steps": [
+    },
     {
-     "trait": "OrbExecute",
-     "from": "checking",
-     "event": "EXEC_CHECK",
-     "payload": {},
-     "expect": {
-      "state": "reading",
-      "effects": [
-       {
-        "type": "os/read-file",
-        "key": "program",
-        "optionsAt": 1,
-        "arg0": [
-         "str/concat",
-         "/",
-         [
-          "str/slice",
-          "@entity.path",
-          1,
-          [
-           "str/len",
-           "@entity.path"
-          ]
-         ]
-        ]
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a relative program file is read under the cwd anchor",
-   "entity": {
-    "argText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
-    "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
-    "mode": "steps",
-    "path": "a.lolo",
-    "file": "a.lolo"
-   },
-   "steps": [
-    {
-     "trait": "OrbExecute",
-     "from": "checking",
-     "event": "EXEC_CHECK",
-     "payload": {},
-     "expect": {
-      "state": "reading",
-      "effects": [
-       {
-        "type": "os/read-file",
-        "key": "program",
-        "optionsAt": 1,
-        "arg0": {
-         "anchor": "cwd",
-         "path": "@entity.path"
+      "id": "neither --steps nor --event is a usage error",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {},
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
+                }
+              }
+            ]
+          }
         }
-       }
       ]
-     }
+    },
+    {
+      "id": "--trait alone is a usage error",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "trait": [
+                "Sender"
+              ]
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "--steps with --event is a usage error",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "steps": [
+                "[{\"trait\":\"T\",\"event\":\"E\"}]"
+              ],
+              "event": [
+                "GO"
+              ],
+              "trait": [
+                "Sender"
+              ]
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "--steps with --trait is a usage error",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "steps": [
+                "[{\"trait\":\"T\",\"event\":\"E\"}]"
+              ],
+              "trait": [
+                "Sender"
+              ]
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "--steps with --payload is a usage error",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "steps": [
+                "[{\"trait\":\"T\",\"event\":\"E\"}]"
+              ],
+              "payload": [
+                "{}"
+              ]
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "--steps with --cascade is a usage error",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "steps": [
+                "[{\"trait\":\"T\",\"event\":\"E\"}]"
+              ],
+              "cascade": []
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "--event without --trait is a usage error",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "event": [
+                "GO"
+              ]
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "--live without --steps is a usage error",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "event": [
+                "GO"
+              ],
+              "trait": [
+                "Sender"
+              ],
+              "live": []
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "steps that are not JSON answer success false",
+      "entity": {
+        "argText": "bad",
+        "stepsText": "bad",
+        "mode": "steps"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "checking",
+          "event": "EXEC_CHECK",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"success\": false,\n  \"error\": \"Invalid JSON: bad\"\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: steps that are JSON go on to read the program",
+      "entity": {
+        "argText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+        "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+        "mode": "steps",
+        "path": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "checking",
+          "event": "EXEC_CHECK",
+          "payload": {},
+          "expect": {
+            "state": "reading",
+            "neverEmits": [
+              "EXEC_ANSWERED"
+            ],
+            "effects": [
+              {
+                "type": "os/read-file",
+                "key": "program",
+                "optionsAt": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "JSON that is not an array answers --steps must be a JSON array",
+      "entity": {
+        "argText": "{\"trait\":\"Sender\"}",
+        "stepsText": "{\"trait\":\"Sender\"}",
+        "mode": "steps"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "checking",
+          "event": "EXEC_CHECK",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"success\": false,\n  \"error\": \"--steps must be a JSON array\"\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an empty array is a list of steps",
+      "entity": {
+        "argText": "[]",
+        "stepsText": "[]",
+        "mode": "steps",
+        "path": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "checking",
+          "event": "EXEC_CHECK",
+          "payload": {},
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a payload that is not JSON answers success false",
+      "entity": {
+        "argText": "notjson",
+        "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\",\"payload\":notjson}]",
+        "mode": "event"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "checking",
+          "event": "EXEC_CHECK",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"success\": false,\n  \"error\": \"Invalid JSON: notjson\"\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a payload that is JSON is read",
+      "entity": {
+        "argText": "{\"a\":1}",
+        "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\",\"payload\":{\"a\":1}}]",
+        "mode": "event",
+        "path": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "checking",
+          "event": "EXEC_CHECK",
+          "payload": {},
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a program that cannot be read answers success false with its name",
+      "entity": {
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "reading",
+          "event": "EXEC_READ_FAILED",
+          "payload": {
+            "error": "no such file"
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"success\": false,\n  \"error\": \"Failed to read a.lolo: no such file\"\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a program read is parsed",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "reading",
+          "event": "EXEC_READ",
+          "payload": {
+            "data": "YXBwIHg="
+          },
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "program/read",
+                "key": "program",
+                "optionsAt": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a program that cannot be parsed answers success false",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "reading",
+          "event": "EXEC_PROGRAM_FAILED",
+          "payload": {
+            "error": "Parse error"
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"success\": false,\n  \"error\": \"Parse error\"\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a parsed program is stepped",
+      "entity": {
+        "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+        "live": false
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "reading",
+          "event": "EXEC_PROGRAM",
+          "payload": {
+            "result": {
+              "name": "x"
+            }
+          },
+          "expect": {
+            "state": "stepping",
+            "effects": [
+              {
+                "type": "program/step"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a failed run drops the host's program/step prefix",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "stepping",
+          "event": "EXEC_STEP_FAILED",
+          "payload": {
+            "error": "program/step: step 0: no trait"
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"success\": false,\n  \"error\": \"step 0: no trait\"\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a failure without the prefix is kept whole",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "stepping",
+          "event": "EXEC_STEP_FAILED",
+          "payload": {
+            "error": "each request needs a trait"
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"success\": false,\n  \"error\": \"each request needs a trait\"\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a steps run answers the report as it came, re-indented",
+      "entity": {
+        "mode": "steps"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "stepping",
+          "event": "EXEC_STEPPED",
+          "payload": {
+            "result": {
+              "success": true,
+              "steps": [
+                {
+                  "outcomes": [
+                    {
+                      "trait": "Sender",
+                      "newState": "sent"
+                    }
+                  ],
+                  "states": {
+                    "Sender": "sent"
+                  }
+                }
+              ],
+              "dispatchModes": {
+                "Sender": "hybridClientOnly"
+              }
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"success\": true,\n  \"steps\": [\n    {\n      \"outcomes\": [\n        {\n          \"trait\": \"Sender\",\n          \"newState\": \"sent\"\n        }\n      ],\n      \"states\": {\n        \"Sender\": \"sent\"\n      }\n    }\n  ],\n  \"dispatchModes\": {\n    \"Sender\": \"hybridClientOnly\"\n  }\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an event run also hoists steps[0].outcomes to the top level",
+      "entity": {
+        "mode": "event"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "stepping",
+          "event": "EXEC_STEPPED",
+          "payload": {
+            "result": {
+              "success": true,
+              "steps": [
+                {
+                  "outcomes": [
+                    {
+                      "trait": "Sender",
+                      "newState": "sent"
+                    }
+                  ],
+                  "states": {
+                    "Sender": "sent"
+                  }
+                }
+              ],
+              "dispatchModes": {
+                "Sender": "hybridClientOnly"
+              }
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"success\": true,\n  \"steps\": [\n    {\n      \"outcomes\": [\n        {\n          \"trait\": \"Sender\",\n          \"newState\": \"sent\"\n        }\n      ],\n      \"states\": {\n        \"Sender\": \"sent\"\n      }\n    }\n  ],\n  \"dispatchModes\": {\n    \"Sender\": \"hybridClientOnly\"\n  },\n  \"outcomes\": [\n    {\n      \"trait\": \"Sender\",\n      \"newState\": \"sent\"\n    }\n  ]\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an event run with no step has nothing to hoist",
+      "entity": {
+        "mode": "event"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "stepping",
+          "event": "EXEC_STEPPED",
+          "payload": {
+            "result": {
+              "success": true,
+              "steps": [],
+              "dispatchModes": {}
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"success\": true,\n  \"steps\": [],\n  \"dispatchModes\": {}\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: an event run whose step has no outcomes hoists nothing",
+      "entity": {
+        "mode": "event"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "stepping",
+          "event": "EXEC_STEPPED",
+          "payload": {
+            "result": {
+              "success": true,
+              "steps": [
+                {
+                  "states": {}
+                }
+              ],
+              "dispatchModes": {}
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"success\": true,\n  \"steps\": [\n    {\n      \"states\": {}\n    }\n  ],\n  \"dispatchModes\": {}\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pretty: nesting indents two spaces per level",
+      "entity": {
+        "mode": "steps"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "stepping",
+          "event": "EXEC_STEPPED",
+          "payload": {
+            "result": {
+              "a": {
+                "b": {
+                  "c": [
+                    1,
+                    [
+                      2,
+                      3
+                    ],
+                    {
+                      "d": 4
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"a\": {\n    \"b\": {\n      \"c\": [\n        1,\n        [\n          2,\n          3\n        ],\n        {\n          \"d\": 4\n        }\n      ]\n    }\n  }\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pretty: empty arrays and objects stay on one line",
+      "entity": {
+        "mode": "steps"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "stepping",
+          "event": "EXEC_STEPPED",
+          "payload": {
+            "result": {
+              "a": [],
+              "b": {},
+              "c": [
+                [],
+                {}
+              ],
+              "d": [
+                {
+                  "e": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"a\": [],\n  \"b\": {},\n  \"c\": [\n    [],\n    {}\n  ],\n  \"d\": [\n    {\n      \"e\": []\n    }\n  ]\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pretty: scalars null booleans negatives and fractions",
+      "entity": {
+        "mode": "steps"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "stepping",
+          "event": "EXEC_STEPPED",
+          "payload": {
+            "result": {
+              "n": null,
+              "t": true,
+              "f": false,
+              "neg": -3,
+              "frac": 2.5,
+              "zero": 0
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"n\": null,\n  \"t\": true,\n  \"f\": false,\n  \"neg\": -3,\n  \"frac\": 2.5,\n  \"zero\": 0\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pretty: structural characters inside strings are untouched",
+      "entity": {
+        "mode": "steps"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "stepping",
+          "event": "EXEC_STEPPED",
+          "payload": {
+            "result": {
+              "s": "a, b: {c} [d] \"q\" \\ e",
+              "k,:{}[]": "v"
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"s\": \"a, b: {c} [d] \\\"q\\\" \\\\ e\",\n  \"k,:{}[]\": \"v\"\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pretty: unicode and escapes inside strings",
+      "entity": {
+        "mode": "steps"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "stepping",
+          "event": "EXEC_STEPPED",
+          "payload": {
+            "result": {
+              "u": "é ✓ 日本",
+              "nl": "line\nbreak\ttab",
+              "quote": "\"",
+              "slash": "a\\"
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"u\": \"é ✓ 日本\",\n  \"nl\": \"line\\nbreak\\ttab\",\n  \"quote\": \"\\\"\",\n  \"slash\": \"a\\\\\"\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a single scalar object",
+      "entity": {
+        "mode": "steps"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "stepping",
+          "event": "EXEC_STEPPED",
+          "payload": {
+            "result": {
+              "k": "v"
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "exactEmits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"k\": \"v\"\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an absolute program file is read without the cwd anchor",
+      "entity": {
+        "argText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+        "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+        "mode": "steps",
+        "path": "/tmp/a.lolo",
+        "file": "/tmp/a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "checking",
+          "event": "EXEC_CHECK",
+          "payload": {},
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "os/read-file",
+                "key": "program",
+                "optionsAt": 1,
+                "arg0": [
+                  "str/concat",
+                  "/",
+                  [
+                    "str/slice",
+                    "@entity.path",
+                    1,
+                    [
+                      "str/len",
+                      "@entity.path"
+                    ]
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a relative program file is read under the cwd anchor",
+      "entity": {
+        "argText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+        "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+        "mode": "steps",
+        "path": "a.lolo",
+        "file": "a.lolo"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "checking",
+          "event": "EXEC_CHECK",
+          "payload": {},
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "os/read-file",
+                "key": "program",
+                "optionsAt": 1,
+                "arg0": {
+                  "anchor": "cwd",
+                  "path": "@entity.path"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "ready",
+          "event": "EXEC_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

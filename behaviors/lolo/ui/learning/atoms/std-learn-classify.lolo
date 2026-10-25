@@ -160,7 +160,7 @@ orbital LearnClassifyOrbital {
               { type: stack, direction: vertical, gap: xs, children: (array/map @entity.categoryStats (fn s { type: typography, variant: body, content: (str/concat (object/get @s label) ": " (str/concat "" (object/get @s correct)) "/" (str/concat "" (object/get @s attempted))) })) },
               { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: primary }
             ])
-            (itemView [
+            (itemHead : [node] [
               { type: card, variant: bordered, padding: md, children: (array/concat [
                   { type: typography, variant: body, content: @entity.itemText }
                 ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
@@ -171,16 +171,20 @@ orbital LearnClassifyOrbital {
                   ) (if (> (array/len @itemOptions) 0)
                     (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), size: lg, disabled: @locked, variant: (if (not @locked) "secondary" (if (== (object/get @o category) @entity.correctCategory) "success" (if (== (object/get @o category) @entity.selectedCategory) "danger" "ghost"))) }))
                     (array/map (array/reverse @entity.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), size: lg, disabled: @locked, variant: (if (not @locked) "secondary" (if (== (object/get @c value) @entity.correctCategory) "success" (if (== (object/get @c value) @entity.selectedCategory) "danger" "ghost"))) })))) },
-              (if (== @entity.verdict "") null { type: stack, direction: vertical, gap: xs, children: [
+            ])
+            (itemVerdict : [node] (if (== @entity.verdict "") [] [
+              { type: stack, direction: vertical, gap: xs, children: [
                   { type: badge, variant: (if (== @entity.verdict "correct") "success" "error"), label: (if (== @entity.verdict "correct") "Correct" "Incorrect") },
                   { type: typography, variant: body, content: @entity.feedback }
-                ] }),
+                ] } ]))
+            (itemFoot : [node] [
               { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                   { type: button, action: ADVANCE, label: @config.advanceLabel, icon: "chevron-right", variant: primary, disabled: (== @entity.selectedCategory "") },
                   (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: ghost, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Auto", icon: "play", variant: ghost, aria-pressed: "false" }),
                   (if (> @config.passScore 0) { type: typography, variant: caption, color: muted, content: (str/concat "Pass at " @config.passScore) } null)
                 ] }
             ])
+            (itemView (array/concat @itemHead @itemVerdict @itemFoot))
           )
           (do
             (set @entity.backdropShapes @backdropShapes)
@@ -387,7 +391,7 @@ orbital LearnClassifyOrbital {
               { type: stack, direction: vertical, gap: xs, children: (array/map @entity.categoryStats (fn s { type: typography, variant: body, content: (str/concat (object/get @s label) ": " (str/concat "" (object/get @s correct)) "/" (str/concat "" (object/get @s attempted))) })) },
               { type: button, action: RETRY, label: @config.retryLabel, icon: "rotate-ccw", variant: primary }
             ])
-            (itemView [
+            (itemHead : [node] [
               { type: card, variant: bordered, padding: md, children: (array/concat [
                   { type: typography, variant: body, content: @entity.itemText }
                 ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
@@ -398,16 +402,20 @@ orbital LearnClassifyOrbital {
                   ) (if (> (array/len @itemOptions) 0)
                     (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), size: lg, disabled: @locked, variant: (if (not @locked) "secondary" (if (== (object/get @o category) @entity.correctCategory) "success" (if (== (object/get @o category) @entity.selectedCategory) "danger" "ghost"))) }))
                     (array/map (array/reverse @entity.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), size: lg, disabled: @locked, variant: (if (not @locked) "secondary" (if (== (object/get @c value) @entity.correctCategory) "success" (if (== (object/get @c value) @entity.selectedCategory) "danger" "ghost"))) })))) },
-              (if (== @entity.verdict "") null { type: stack, direction: vertical, gap: xs, children: [
+            ])
+            (itemVerdict : [node] (if (== @entity.verdict "") [] [
+              { type: stack, direction: vertical, gap: xs, children: [
                   { type: badge, variant: (if (== @entity.verdict "correct") "success" "error"), label: (if (== @entity.verdict "correct") "Correct" "Incorrect") },
                   { type: typography, variant: body, content: @entity.feedback }
-                ] }),
+                ] } ]))
+            (itemFoot : [node] [
               { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                   { type: button, action: ADVANCE, label: @config.advanceLabel, icon: "chevron-right", variant: primary, disabled: (== @entity.selectedCategory "") },
                   (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: ghost, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Auto", icon: "play", variant: ghost, aria-pressed: "false" }),
                   (if (> @config.passScore 0) { type: typography, variant: caption, color: muted, content: (str/concat "Pass at " @config.passScore) } null)
                 ] }
             ])
+            (itemView (array/concat @itemHead @itemVerdict @itemFoot))
           )
           (do
             (set @entity.backdropShapes @backdropShapes)

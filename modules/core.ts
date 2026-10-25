@@ -226,6 +226,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: null,
     description: 'Add numbers',
     hasSideEffects: false,
+    sign: 'sum',
     returnType: 'number',
     returnSemantics: 'integer-closed',
     params: [{ name: '...nums', type: NUMBER, description: 'Numbers to sum' }],
@@ -253,6 +254,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: null,
     description: 'Multiply numbers',
     hasSideEffects: false,
+    sign: 'product',
     returnType: 'number',
     returnSemantics: 'integer-closed',
     params: [{ name: '...nums', type: NUMBER, description: 'Numbers to multiply' }],
@@ -265,7 +267,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Divide numbers',
     hasSideEffects: false,
-    failable: { unlessLiteral: [1] },
+    failable: { unlessNonZero: [1] },
     returnType: nullable('number'),
     params: [
       { name: 'a', type: NUMBER, description: 'Numerator' },
@@ -280,7 +282,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Modulo (remainder)',
     hasSideEffects: false,
-    failable: { unlessLiteral: [1] },
+    failable: { unlessNonZero: [1] },
     returnType: nullable('number'),
     returnSemantics: 'integer-closed',
     params: [

@@ -1,321 +1,349 @@
 {
- "atom": "cli/atoms/std-orb-parse.lolo",
- "trait": "ParseEngine",
- "cases": [
-  {
-   "id": "the call asks std-args to parse with no flags",
-   "steps": [
+  "atom": "cli/atoms/std-orb-parse.lolo",
+  "trait": "ParseEngine",
+  "cases": [
     {
-     "trait": "OrbParse",
-     "from": "ready",
-     "event": "PARSE_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
-     },
-     "expect": {
-      "state": "parsing",
-      "emits": [
-       {
-        "event": "PARSE_ARGS_PARSE",
-        "payload": {
-         "stage": "parse",
-         "argv": [
-          "a.lolo"
-         ],
-         "flags": []
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "one file starts the summary",
-   "steps": [
-    {
-     "trait": "OrbParse",
-     "from": "parsing",
-     "event": "PARSE_ARGS_DONE",
-     "payload": {
-      "stage": "parse",
-      "flags": {},
-      "positionals": [
-       "a.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "PARSE_START",
-        "payload": {
-         "path": "a.lolo"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: no file is the usage",
-   "steps": [
-    {
-     "trait": "OrbParse",
-     "from": "parsing",
-     "event": "PARSE_ARGS_DONE",
-     "payload": {
-      "stage": "parse",
-      "flags": {},
-      "positionals": [],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "PARSE_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "error: the following required arguments were not provided:\n  <FILE>\n\nUsage: orb parse <FILE>\n\nFor more information, try '--help'."
-        }
-       }
-      ],
-      "neverEmits": [
-       "PARSE_START"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a second file is an unexpected argument",
-   "steps": [
-    {
-     "trait": "OrbParse",
-     "from": "parsing",
-     "event": "PARSE_ARGS_DONE",
-     "payload": {
-      "stage": "parse",
-      "flags": {},
-      "positionals": [
-       "a.lolo",
-       "b.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "PARSE_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "",
-         "stderr": "error: unexpected argument 'b.lolo' found\n\nUsage: orb parse <FILE>\n\nFor more information, try '--help'."
-        }
-       }
-      ],
-      "neverEmits": [
-       "PARSE_START"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a relative file is read from the working directory",
-   "steps": [
-    {
-     "trait": "ParseEngine",
-     "from": "idle",
-     "event": "PARSE_START",
-     "payload": {
-      "path": "a.lolo"
-     },
-     "expect": {
-      "state": "reading"
-     }
-    }
-   ]
-  },
-  {
-   "id": "the lowered program is summarized as Rust printed it",
-   "steps": [
-    {
-     "trait": "ParseEngine",
-     "from": "reading",
-     "event": "PARSE_READ",
-     "payload": {
-      "result": {
-       "name": "B",
-       "version": "2.0.0",
-       "description": "two orbitals",
-       "orbitals": [
+      "id": "the call asks std-args to parse with no flags",
+      "steps": [
         {
-         "name": "O1",
-         "entity": {
-          "name": "E1",
-          "fields": [
-           {
-            "name": "id"
-           },
-           {
-            "name": "n"
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "T1"
+          "trait": "OrbParse",
+          "from": "ready",
+          "event": "PARSE_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "state": "parsing",
+            "emits": [
+              {
+                "event": "PARSE_ARGS_PARSE",
+                "payload": {
+                  "stage": "parse",
+                  "argv": [
+                    "a.lolo"
+                  ],
+                  "flags": []
+                }
+              }
+            ]
           }
-         ],
-         "pages": [
-          {
-           "name": "P1"
-          }
-         ]
-        },
+        }
+      ]
+    },
+    {
+      "id": "one file starts the summary",
+      "steps": [
         {
-         "name": "O2",
-         "entity": {
-          "name": "E2",
-          "fields": [
-           {
-            "name": "id"
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "T2"
+          "trait": "OrbParse",
+          "from": "parsing",
+          "event": "PARSE_ARGS_DONE",
+          "payload": {
+            "stage": "parse",
+            "flags": {},
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "PARSE_START",
+                "payload": {
+                  "path": "a.lolo"
+                }
+              }
+            ]
           }
-         ]
         }
-       ]
-      }
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "PARSE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "Parsing schema: /w/b.lolo\n\nSchema: B\nVersion: 2.0.0\nDescription: two orbitals\n\nOrbitals (2):\n  - O1 (entity: E1)\n    Fields: 2\n    Traits: 1\n    Pages: 1\n  - O2 (entity: E2)\n    Fields: 1\n    Traits: 1"
-        }
-       }
       ]
-     }
-    }
-   ],
-   "entity": {
-    "path": "/w/b.lolo"
-   }
-  },
-  {
-   "id": "control: a program with neither version nor description and no orbitals",
-   "steps": [
+    },
     {
-     "trait": "ParseEngine",
-     "from": "reading",
-     "event": "PARSE_READ",
-     "payload": {
-      "result": {
-       "name": "E",
-       "orbitals": []
-      }
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "PARSE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "Parsing schema: e.lolo\n\nSchema: E\n\nOrbitals (0):"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "entity": {
-    "path": "e.lolo"
-   }
-  },
-  {
-   "id": "control: an entity that is a bare reference counts no fields",
-   "steps": [
-    {
-     "trait": "ParseEngine",
-     "from": "reading",
-     "event": "PARSE_READ",
-     "payload": {
-      "result": {
-       "name": "R",
-       "orbitals": [
+      "id": "control: no file is the usage",
+      "steps": [
         {
-         "name": "O",
-         "entity": "Shared",
-         "traits": []
+          "trait": "OrbParse",
+          "from": "parsing",
+          "event": "PARSE_ARGS_DONE",
+          "payload": {
+            "stage": "parse",
+            "flags": {},
+            "positionals": [],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "PARSE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "error: the following required arguments were not provided:\n  <FILE>\n\nUsage: orb parse <FILE>\n\nFor more information, try '--help'."
+                }
+              }
+            ],
+            "neverEmits": [
+              "PARSE_START"
+            ]
+          }
         }
-       ]
-      }
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "PARSE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "Parsing schema: r.lolo\n\nSchema: R\n\nOrbitals (1):\n  - O (entity: Shared)\n    Fields: 0\n    Traits: 0"
-        }
-       }
       ]
-     }
-    }
-   ],
-   "entity": {
-    "path": "r.lolo"
-   }
-  },
-  {
-   "id": "control: an unreadable file still prints the first line and answers the error on stderr",
-   "steps": [
+    },
     {
-     "trait": "ParseEngine",
-     "from": "reading",
-     "event": "PARSE_UNREAD",
-     "payload": {
-      "error": "No such file or directory (os error 2)"
-     },
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "PARSE_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "Parsing schema: gone.lolo",
-         "stderr": "Error: No such file or directory (os error 2)"
+      "id": "control: a second file is an unexpected argument",
+      "steps": [
+        {
+          "trait": "OrbParse",
+          "from": "parsing",
+          "event": "PARSE_ARGS_DONE",
+          "payload": {
+            "stage": "parse",
+            "flags": {},
+            "positionals": [
+              "a.lolo",
+              "b.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "PARSE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "error: unexpected argument 'b.lolo' found\n\nUsage: orb parse <FILE>\n\nFor more information, try '--help'."
+                }
+              }
+            ],
+            "neverEmits": [
+              "PARSE_START"
+            ]
+          }
         }
-       }
       ]
-     }
+    },
+    {
+      "id": "a relative file is read from the working directory",
+      "steps": [
+        {
+          "trait": "ParseEngine",
+          "from": "idle",
+          "event": "PARSE_START",
+          "payload": {
+            "path": "a.lolo"
+          },
+          "expect": {
+            "state": "reading"
+          }
+        }
+      ]
+    },
+    {
+      "id": "the lowered program is summarized as Rust printed it",
+      "steps": [
+        {
+          "trait": "ParseEngine",
+          "from": "reading",
+          "event": "PARSE_READ",
+          "payload": {
+            "result": {
+              "name": "B",
+              "version": "2.0.0",
+              "description": "two orbitals",
+              "orbitals": [
+                {
+                  "name": "O1",
+                  "entity": {
+                    "name": "E1",
+                    "fields": [
+                      {
+                        "name": "id"
+                      },
+                      {
+                        "name": "n"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T1"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P1"
+                    }
+                  ]
+                },
+                {
+                  "name": "O2",
+                  "entity": {
+                    "name": "E2",
+                    "fields": [
+                      {
+                        "name": "id"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T2"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "PARSE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "Parsing schema: /w/b.lolo\n\nSchema: B\nVersion: 2.0.0\nDescription: two orbitals\n\nOrbitals (2):\n  - O1 (entity: E1)\n    Fields: 2\n    Traits: 1\n    Pages: 1\n  - O2 (entity: E2)\n    Fields: 1\n    Traits: 1"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "path": "/w/b.lolo"
+      }
+    },
+    {
+      "id": "control: a program with neither version nor description and no orbitals",
+      "steps": [
+        {
+          "trait": "ParseEngine",
+          "from": "reading",
+          "event": "PARSE_READ",
+          "payload": {
+            "result": {
+              "name": "E",
+              "orbitals": []
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "PARSE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "Parsing schema: e.lolo\n\nSchema: E\n\nOrbitals (0):"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "path": "e.lolo"
+      }
+    },
+    {
+      "id": "control: an entity that is a bare reference counts no fields",
+      "steps": [
+        {
+          "trait": "ParseEngine",
+          "from": "reading",
+          "event": "PARSE_READ",
+          "payload": {
+            "result": {
+              "name": "R",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": "Shared",
+                  "traits": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "PARSE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "Parsing schema: r.lolo\n\nSchema: R\n\nOrbitals (1):\n  - O (entity: Shared)\n    Fields: 0\n    Traits: 0"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "path": "r.lolo"
+      }
+    },
+    {
+      "id": "control: an unreadable file still prints the first line and answers the error on stderr",
+      "steps": [
+        {
+          "trait": "ParseEngine",
+          "from": "reading",
+          "event": "PARSE_UNREAD",
+          "payload": {
+            "error": "No such file or directory (os error 2)"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "PARSE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Parsing schema: gone.lolo",
+                  "stderr": "Error: No such file or directory (os error 2)"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "path": "gone.lolo"
+      }
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbParse",
+          "from": "ready",
+          "event": "PARSE_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "PARSE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "error: the following required arguments were not provided:\n  <FILE>\n\nUsage: orb parse <FILE>\n\nFor more information, try '--help'."
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
-   ],
-   "entity": {
-    "path": "gone.lolo"
-   }
-  }
- ]
+  ]
 }

@@ -1866,6 +1866,98 @@
           }
         }
       ]
+    },
+    {
+      "id": "control-complete-tool-answer-200-that-is-not-json-is-a-tool-error",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "working",
+          "event": "MCP_COMPLETE_ANSWERED",
+          "payload": {
+            "status": 200,
+            "body": "not json"
+          },
+          "entity": {
+            "tool": "complete"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MCP_TOOL_FAILED",
+                "payload": {
+                  "error": "not json"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-reference-tool-answer-200-that-is-not-json-is-a-tool-error",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "working",
+          "event": "MCP_REFERENCE_ANSWERED",
+          "payload": {
+            "status": 200,
+            "body": "not json"
+          },
+          "entity": {
+            "tool": "reference"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MCP_TOOL_FAILED",
+                "payload": {
+                  "error": "not json"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-call-whose-arguments-cannot-be-read-answers-500",
+      "steps": [
+        {
+          "trait": "McpServer",
+          "from": "starting",
+          "event": "MCP_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MCP_ARGS_UNREAD",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "McpServer",
+          "from": "parsing",
+          "event": "MCP_ARGS_UNREAD",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "MCP_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: the call's arguments could not be read"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

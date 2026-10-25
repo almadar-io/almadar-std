@@ -1344,6 +1344,32 @@
           "trait": "OrbLintEntityEmptyEnum"
         }
       ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintEntityEmptyEnumCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint entity-empty-enum <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

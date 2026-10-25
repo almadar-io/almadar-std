@@ -1977,6 +1977,32 @@
           }
         }
       ]
+    },
+    {
+      "id": "an unreadable command body answers 500",
+      "steps": [
+        {
+          "trait": "OrbLintAssetInlineUrlCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: orb lint asset-inline-url: the command arguments could not be read"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ],
   "note": " The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it)."

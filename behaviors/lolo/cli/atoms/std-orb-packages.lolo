@@ -74,11 +74,13 @@ orbital OrbPackagesOrbital {
       INIT -> ready
       PACKAGES_CALLED -> parsing
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit PKG_ARGS_PARSE { stage: "packages" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "global" aliases: [] takesValue: false repeatable: false }] })
+        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))) (if (= @argv null) (emit PKG_ARGS_UNREAD { }) (emit PKG_ARGS_PARSE { stage: "packages" argv: @argv flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "global" aliases: [] takesValue: false repeatable: false }] })))
     }
 
     state parsing {
       INIT -> parsing
+      PKG_ARGS_UNREAD -> ready
+        (emit PACKAGES_ANSWERED { status: 500, body: "", stderr: "Error: the call's arguments could not be read" })
       PKG_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (not (array/includes ["list", "add", "update", "remove"] (array/first @payload.positionals))))
         (emit PACKAGES_ANSWERED { status: 400, body: "usage: orb list|add|update|remove [--json] [--global] [<package>…]", stderr: "" })
       PKG_ARGS_DONE -> locating when (and (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (array/includes ["list", "add", "update", "remove"] (array/first @payload.positionals)))
@@ -318,7 +320,7 @@ orbital OrbPackagesOrbital {
       PKG_TARGET_NEXT -> resolving when (and (< @entity.cursor (array/len @entity.targets)) (= (object/get (array/nth @entity.targets @entity.cursor) "url") ""))
         (http GET @config.registry (str/concat "/packages/" (str/encode-uri-component (object/get (array/nth @entity.targets @entity.cursor) "name")) "/" (object/get (array/nth @entity.targets @entity.cursor) "version")) { headers: { "accept": "application/json" } } { key: "resolve" emit: { success: PKG_RESOLVED, failure: PKG_RESOLVE_FAILED } })
       PKG_RESOLVED -> downloading when (and (= @payload.status 200) (!= (json/parse @payload.body Resolved) null))
-        (set @entity.targets (let ((resolved (json/parse @payload.body Resolved))) (array/map (array/range 0 (array/len @entity.targets)) (fn i (if (= @i @entity.cursor) { name: (object/get (array/nth @entity.targets @i) "name"), version: (object/get (array/nth @entity.targets @i) "version"), url: (object/get @resolved "url"), integrity: (object/get @resolved "integrity") } (array/nth @entity.targets @i))))))
+        (set @entity.targets (let ((resolved (json/parse @payload.body Resolved))) (if (= @resolved null) @entity.targets (array/map (array/range 0 (array/len @entity.targets)) (fn i (if (= @i @entity.cursor) { name: (object/get (array/nth @entity.targets @i) "name"), version: (object/get (array/nth @entity.targets @i) "version"), url: (object/get @resolved "url"), integrity: (object/get @resolved "integrity") } (array/nth @entity.targets @i)))))))
         (emit PKG_DOWNLOAD { url: (object/get (json/parse @payload.body Resolved) "url") })
       PKG_RESOLVED -> resolving when (or (!= @payload.status 200) (= (json/parse @payload.body Resolved) null))
         (set @entity.refused (array/append @entity.refused (str/concat (object/get (array/nth @entity.targets @entity.cursor) "name") " version " (object/get (array/nth @entity.targets @entity.cursor) "version") ": ORB_PACKAGE_NOT_FOUND (registry answered " @payload.status ")")))
@@ -341,10 +343,10 @@ orbital OrbPackagesOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit PKG_TARGET_NEXT { })
       PKG_DOWNLOADED -> verifying when (= @payload.status 200)
-        (set @entity.tarballSize (bytes/length @payload.body))
+        (set @entity.tarballSize (let ((t (bytes/from-base64 @payload.body))) (if (= @t null) 0 (bytes/length @t))))
         (set @entity.digest "")
         (set @entity.unpacked false)
-        (emit PKG_HASH { requestId: "tarball", data: (bytes/from-base64 @payload.body), encoding: "hex" })
+        (let ((tarball (bytes/from-base64 @payload.body))) (if (= @tarball null) (emit PKG_VERIFY { }) (emit PKG_HASH { requestId: "tarball", data: @tarball, encoding: "hex" })))
       PKG_DOWNLOADED -> resolving when (!= @payload.status 200)
         (set @entity.refused (array/append @entity.refused (str/concat (object/get (array/nth @entity.targets @entity.cursor) "name") ": ORB_PACKAGE_DOWNLOAD (the tarball url answered " @payload.status ")")))
         (emit PACKAGE_REFUSED { name: (object/get (array/nth @entity.targets @entity.cursor) "name"), problem: "ORB_PACKAGE_DOWNLOAD" })
@@ -402,6 +404,9 @@ orbital OrbPackagesOrbital {
         @description "A package passed its integrity check and was installed (not yet reachable: integrity is pending)."
       PACKAGE_REFUSED -> external { name : string!  problem : string! }
         @description "A package was refused; integrity-unavailable until std-sha256 lands."
+      PKG_ARGS_UNREAD {  }
+        @description "Internal: the call's arguments could not be read."
+        @tier "internal"
       PKG_ARGS_PARSE {
         stage : string!
         argv : [string]!

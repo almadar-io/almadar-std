@@ -16,6 +16,7 @@ orbital MigrationAdapterMarkdownOrbital {
   type MarkdownSlugItem = { k : number!, slug : string!, ref : string!, parentRef : string! }
   type MarkdownSlugItems = [MarkdownSlugItem]
   type MarkdownSlugBases = [string]
+  type MarkdownSlugAcc = { items : MarkdownSlugItems!, bases : MarkdownSlugBases! }
   type MarkdownDocument = { ref : string!, lineCount : number!, title : string!, titleFromHeading : boolean!, preamble : string!, titleBody : string!, titleBodyStart : number!, folderParent : string?, newFolders : [MarkdownFolder], preQa : MarkdownQa, bodyQa : MarkdownQa, sections : [MarkdownSection]! }
 
   entity MigrationAdapterMarkdownRun [runtime] {
@@ -100,7 +101,7 @@ orbital MigrationAdapterMarkdownOrbital {
                     (preRaw (str/join (array/slice @lines 0 (- @firstHeadingLine 1)) "\n"))
                     (secs (array/reduce
                            (array/range @startK @m)
-                           { items: (json/parse "[]" MarkdownSlugItems), bases: (json/parse "[]" MarkdownSlugBases) }
+                           (let ((seed : MarkdownSlugAcc { items: [], bases: [] })) @seed)
                            (fn acc k
                              (let ((base (let ((s1 (str/replace-pattern
                                                    (str/lower (object/get (array/nth @heads @k) "heading"))

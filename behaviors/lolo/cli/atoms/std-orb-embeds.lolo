@@ -28,7 +28,9 @@ orbital OrbEmbedsOrbital {
 
     state ready {
       INIT -> ready
-      EMBEDS_CALLED -> parsing
+      EMBEDS_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit EMBEDS_ANSWERED { status: 400, body: "", stderr: "usage: orb embeds <file.lolo> | --stdin" })
+      EMBEDS_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit EMBEDS_ARGS_PARSE { stage: "embeds" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "stdin" aliases: [] takesValue: false repeatable: false }] })
     }
 

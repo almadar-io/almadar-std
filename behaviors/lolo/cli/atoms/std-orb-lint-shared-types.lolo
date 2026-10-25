@@ -31,9 +31,9 @@ orbital OrbLintSharedTypesOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0)
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint shared-types" })
-      LINT_CALLED -> walking when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0)
+      LINT_CALLED -> walking when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 0))
         (set @entity.paths [])
         (set @entity.queue [{ root: 0, rel: "" }, { root: 1, rel: "" }])
         (set @entity.copies [])

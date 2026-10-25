@@ -23,7 +23,7 @@ orbital ParamExplorerOrbital {
     paramALabel : string
     paramBLabel : string
     xMid : number
-    yMid : number
+    yMid : number?
     yMin : number
     yMax : number
     curves : [ParamExplorerCurve]
@@ -39,22 +39,22 @@ orbital ParamExplorerOrbital {
             (B @config.paramBDefault)
             (kind @config.curveKind)
             (span (- @config.xMax @config.xMin))
-            (samples (array/map (array/range 0 81) (fn (i)
+            (samples (array/flatten (array/map (array/range 0 81) (fn (i)
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @A (or (math/pow @x @B) 0))
+                          (let ((pw (math/pow @x @B))) (if (== @pw null) null (* @A @pw)))
                           (if (== @kind "linear")
                             (+ @A (* @B @x))
                             (* @A (math/sin (* @B @x))))))
                 )
-                { x: @x, y: @yVal }))))
-            (yMinRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
-            (yMaxRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+                (if (== @yVal null) [] [{ x: @x, y: @yVal }]))))))
+            (yMinRaw (if (== (array/len @samples) 0) 0 (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
+            (yMaxRaw (if (== (array/len @samples) 0) 0 (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/max @acc (object/get @s y))))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
             (xMidV (/ (+ @config.xMin @config.xMax) 2))
             (yMidV (if (== @kind "power")
-                     (* @A (or (math/pow @xMidV @B) 0))
+                     (let ((pw (math/pow @xMidV @B))) (if (== @pw null) null (* @A @pw)))
                      (if (== @kind "linear")
                        (+ @A (* @B @xMidV))
                        (* @A (math/sin (* @B @xMidV))))))
@@ -95,7 +95,7 @@ orbital ParamExplorerOrbital {
                         { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
                       ] }
                   ] },
-                { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (math/round @entity.yMid 3)) }
+                { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (if (== @entity.yMid null) "n/a" (str/concat "" (math/round @entity.yMid 3)))) }
               ] }
           ]
         })
@@ -110,22 +110,22 @@ orbital ParamExplorerOrbital {
             (B @config.paramBDefault)
             (kind @config.curveKind)
             (span (- @config.xMax @config.xMin))
-            (samples (array/map (array/range 0 81) (fn (i)
+            (samples (array/flatten (array/map (array/range 0 81) (fn (i)
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @A (or (math/pow @x @B) 0))
+                          (let ((pw (math/pow @x @B))) (if (== @pw null) null (* @A @pw)))
                           (if (== @kind "linear")
                             (+ @A (* @B @x))
                             (* @A (math/sin (* @B @x))))))
                 )
-                { x: @x, y: @yVal }))))
-            (yMinRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
-            (yMaxRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+                (if (== @yVal null) [] [{ x: @x, y: @yVal }]))))))
+            (yMinRaw (if (== (array/len @samples) 0) 0 (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
+            (yMaxRaw (if (== (array/len @samples) 0) 0 (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/max @acc (object/get @s y))))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
             (xMidV (/ (+ @config.xMin @config.xMax) 2))
             (yMidV (if (== @kind "power")
-                     (* @A (or (math/pow @xMidV @B) 0))
+                     (let ((pw (math/pow @xMidV @B))) (if (== @pw null) null (* @A @pw)))
                      (if (== @kind "linear")
                        (+ @A (* @B @xMidV))
                        (* @A (math/sin (* @B @xMidV))))))
@@ -166,7 +166,7 @@ orbital ParamExplorerOrbital {
                         { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
                       ] }
                   ] },
-                { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (math/round @entity.yMid 3)) }
+                { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (if (== @entity.yMid null) "n/a" (str/concat "" (math/round @entity.yMid 3)))) }
               ] }
           ]
         })
@@ -177,21 +177,21 @@ orbital ParamExplorerOrbital {
             (B @entity.paramB)
             (kind @entity.curveKind)
             (span (- @config.xMax @config.xMin))
-            (samples (array/map (array/range 0 81) (fn (i)
+            (samples (array/flatten (array/map (array/range 0 81) (fn (i)
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @A (or (math/pow @x @B) 0))
+                          (let ((pw (math/pow @x @B))) (if (== @pw null) null (* @A @pw)))
                           (if (== @kind "linear")
                             (+ @A (* @B @x))
                             (* @A (math/sin (* @B @x))))))
                 )
-                { x: @x, y: @yVal }))))
-            (yMinRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
-            (yMaxRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+                (if (== @yVal null) [] [{ x: @x, y: @yVal }]))))))
+            (yMinRaw (if (== (array/len @samples) 0) 0 (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
+            (yMaxRaw (if (== (array/len @samples) 0) 0 (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/max @acc (object/get @s y))))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
             (yMidV (if (== @kind "power")
-                     (* @A (or (math/pow @entity.xMid @B) 0))
+                     (let ((pw (math/pow @entity.xMid @B))) (if (== @pw null) null (* @A @pw)))
                      (if (== @kind "linear")
                        (+ @A (* @B @entity.xMid))
                        (* @A (math/sin (* @B @entity.xMid))))))
@@ -225,7 +225,7 @@ orbital ParamExplorerOrbital {
                         { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
                       ] }
                   ] },
-                { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (math/round @entity.yMid 3)) }
+                { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (if (== @entity.yMid null) "n/a" (str/concat "" (math/round @entity.yMid 3)))) }
               ] }
           ]
         })
@@ -237,21 +237,21 @@ orbital ParamExplorerOrbital {
             (B (math/clamp ?value @config.paramBMin @config.paramBMax))
             (kind @entity.curveKind)
             (span (- @config.xMax @config.xMin))
-            (samples (array/map (array/range 0 81) (fn (i)
+            (samples (array/flatten (array/map (array/range 0 81) (fn (i)
               (let (
                   (x (+ @config.xMin (* @i (/ @span 80))))
                   (yVal (if (== @kind "power")
-                          (* @A (or (math/pow @x @B) 0))
+                          (let ((pw (math/pow @x @B))) (if (== @pw null) null (* @A @pw)))
                           (if (== @kind "linear")
                             (+ @A (* @B @x))
                             (* @A (math/sin (* @B @x))))))
                 )
-                { x: @x, y: @yVal }))))
-            (yMinRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
-            (yMaxRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+                (if (== @yVal null) [] [{ x: @x, y: @yVal }]))))))
+            (yMinRaw (if (== (array/len @samples) 0) 0 (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/min @acc (object/get @s y))))))
+            (yMaxRaw (if (== (array/len @samples) 0) 0 (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/max @acc (object/get @s y))))))
             (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
             (yMidV (if (== @kind "power")
-                     (* @A (or (math/pow @entity.xMid @B) 0))
+                     (let ((pw (math/pow @entity.xMid @B))) (if (== @pw null) null (* @A @pw)))
                      (if (== @kind "linear")
                        (+ @A (* @B @entity.xMid))
                        (* @A (math/sin (* @B @entity.xMid))))))
@@ -285,7 +285,7 @@ orbital ParamExplorerOrbital {
                         { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
                       ] }
                   ] },
-                { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (math/round @entity.yMid 3)) }
+                { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (if (== @entity.yMid null) "n/a" (str/concat "" (math/round @entity.yMid 3)))) }
               ] }
           ]
         })

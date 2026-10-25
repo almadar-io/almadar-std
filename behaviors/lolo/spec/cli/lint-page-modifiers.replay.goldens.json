@@ -4510,6 +4510,32 @@
           "trait": "OrbLintPageModifiers"
         }
       ]
+    },
+    {
+      "id": "an unreadable command body answers 500",
+      "steps": [
+        {
+          "trait": "OrbLintPageModifiersCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: orb lint page-modifiers: the command arguments could not be read"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

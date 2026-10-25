@@ -60,6 +60,14 @@ orbital HttpServerOrbital {
       @description "The port the HTTP endpoint binds; the PORT environment variable replaces it at LISTEN while portFromEnv is on."
       @synonyms "listen port"
       @tier "policy"
+    portFromEnv : boolean = true
+      @label "Port from environment"
+      @description "At LISTEN the PORT environment variable replaces port (granted by the env PORT listen grant)."
+      @tier "domain"
+    clientDir : string = "dist/client"
+      @label "Client directory"
+      @description "The built web client the server serves, relative to the working directory."
+      @tier "domain"
     rateLimit : boolean = true
       @label "Rate limit"
       @description "Whether /api requests are counted against the per-client window and throttled; off takes the limiter out of the request path (replaces ORB_DISABLE_RATE_LIMIT)."
@@ -79,6 +87,7 @@ orbital HttpServerOrbital {
     config {
       host: @config.host
       port: @config.port
+      portFromEnv: @config.portFromEnv
     }
     listens {
       BootGuard.BOOT_CLEARED -> LISTEN
@@ -202,6 +211,9 @@ orbital HttpServerOrbital {
   }
 
   trait ServerStatic = Static.traits.StaticFiles {
+    config {
+      clientDir: @config.clientDir
+    }
     listens {
       ServerRouter.ROUTE_CLIENT -> ROUTE_CLIENT
     }

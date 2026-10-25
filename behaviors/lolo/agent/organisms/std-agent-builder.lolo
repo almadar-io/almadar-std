@@ -264,7 +264,7 @@ orbital AgentBuilderOrbital {
         (set @entity.status failed)
         (emit BUILD_REJECTED { error: "No tier of the ladder could serve the request", errors: [] })
       CATALOG_LISTED -> searching
-        (set @entity.ranked (array/sort (array/map (array/filter ?result (fn e (> (array/len (object/get @e.vectors description)) 0))) (fn e { behavior: @e.behavior, value: @e.value, trait: (array/first @e.traits), description: (object/get @e description ""), fields: {}, score: (array/cosine (object/get @e.vectors description []) @entity.queryVector) })) score desc))
+        (set @entity.ranked (array/sort (array/flatten (array/map (array/filter ?result (fn e (> (array/len (object/get @e.vectors description)) 0))) (fn e (let ((s (array/cosine (object/get @e.vectors description []) @entity.queryVector))) (if (= @s null) [] [{ behavior: @e.behavior, value: @e.value, trait: (array/first @e.traits), description: (object/get @e description ""), fields: {}, score: @s }]))))) score desc))
         (emit RANKED {})
       POOL_FOUND -> searching
         (set @entity.ranked (array/map ?hits (fn h { behavior: @h.behavior, value: @h.value, description: (object/get @h description ""), fields: (object/get @h fields {}), score: @h.score })))

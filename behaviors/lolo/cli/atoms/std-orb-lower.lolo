@@ -30,7 +30,9 @@ orbital OrbLowerOrbital {
 
     state ready {
       INIT -> ready
-      LOWER_CALLED -> parsing
+      LOWER_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit LOWER_ANSWERED { status: 500, body: "", stderr: "Error: orb lower: the command arguments could not be read" })
+      LOWER_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
         (emit LOWER_ARGS_PARSE { stage: "lower" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [] })
     }

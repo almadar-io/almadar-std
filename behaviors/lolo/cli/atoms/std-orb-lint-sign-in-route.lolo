@@ -34,7 +34,7 @@ orbital OrbLintSignInRouteOrbital {
         (lazyp (object/get @payload.program "lazyPages" [])))
           (array/flatten [
             (array/flatten (array/map (array/filter (array/concat @allp @lazyp) (fn pg (or (= (object/get @pg "path" "") "/login") (= (object/get @pg "path" "") "/login/")))) (fn pg
-              [{ code: "ORB_P_HOST_RESERVED_ROUTE", path: (object/get @pg "path"), message: (str/concat "'" (object/get @pg "path") "' is the host's own sign-in route; no page may be declared on it"), suggestion: "move this page to another route; name `signIn: \"/login\"` to send viewers to the host's sign-in", severity: "error" }])))
+              [{ code: "ORB_P_HOST_RESERVED_ROUTE", path: (object/get @pg "path" ""), message: (str/concat "'" (object/get @pg "path" "") "' is the host's own sign-in route; no page may be declared on it"), suggestion: "move this page to another route; name `signIn: \"/login\"` to send viewers to the host's sign-in", severity: "error" }])))
             (if (or (= @sgi "") (= @sgi "/login") (= @sgi "/login/"))
               []
               (let ((tgt (str/join (array/map (str/split @sgi "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/")))
@@ -70,9 +70,9 @@ orbital OrbLintSignInRouteOrbital {
 
     state ready {
       INIT -> ready
-      LINT_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint sign-in-route <file>" })
-      LINT_CALLED -> waiting when (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
     }
 

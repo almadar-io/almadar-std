@@ -44,6 +44,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'String length',
     hasSideEffects: false,
+    sign: 'nonNegative',
     returnType: 'number',
     params: [{ name: 's', type: 'string', description: 'The string' }],
     example: '["str/len", "hello"] // => 5',

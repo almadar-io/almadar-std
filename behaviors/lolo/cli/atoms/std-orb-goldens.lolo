@@ -11,8 +11,8 @@ type GoldenPayload = Map string GoldenValue?
 type GoldenEmit = { event : string!, payload : GoldenPayload, optionsAt : number }
 type GoldenEmitted = { type : string!, payload : GoldenPayload }
 type GoldenExpect = { fired : boolean, state : string, emits : [GoldenEmit], neverEmits : [string], exactEmits : [GoldenEmit], emitCounts : Map string number, effects : [GoldenPayload], entity : GoldenPayload }
-type GoldenStep = { keep : string, keepField : string, now : number, viewer : GoldenPayload, entity : GoldenPayload, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, expect : GoldenExpect }
-type GoldenCase = { note : string, golden : string, skip : string, entity : GoldenPayload, config : GoldenPayload, now : number, id : string!, steps : [GoldenStep]! }
+type GoldenStep = { keep : string, keepField : string, now : number | string, viewer : GoldenPayload, entity : GoldenPayload, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, expect : GoldenExpect }
+type GoldenCase = { note : string, golden : string, skip : string, entity : GoldenPayload, config : GoldenPayload, now : number | string, id : string!, steps : [GoldenStep]! }
 type GoldenFile = { atom : string!, trait : string!, orbital : string, cases : [GoldenCase]! }
 type GoldenEntry = { name : string!, kind : string! }
 type GoldenFull = { orbitals : [orbital] }
@@ -32,12 +32,12 @@ orbital GoldensOrbital {
     dir : string = ""
     files : [string]! = []
     fileCursor : number! = 0
-    golden : string = ""
+    golden : GoldenFile = { atom: "", trait: "", cases: [] }
     program : string = ""
     cursor : number! = 0
     lines : [string]! = []
     fails : [string]! = []
-    curCase : string = ""
+    curCase : GoldenCase = { id: "", steps: [] }
     upto : number! = 0
     vars : Map string GoldenValue = {}
     skipped : number! = 0
@@ -50,18 +50,18 @@ orbital GoldensOrbital {
 
     state ready {
       INIT -> ready
-      GOLDENS_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+      GOLDENS_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit GOLDENS_ANSWERED { status: 400, body: "usage: orb goldens <file.goldens.json>" })
-      GOLDENS_CALLED -> reading when (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (str/endsWith (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ".goldens.json"))
+      GOLDENS_CALLED -> reading when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (str/endsWith (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ".goldens.json"))
         (set @entity.files [(array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))])
         (set @entity.fileCursor 0)
         (set @entity.lines [])
         (emit GOLDENS_FILE_NEXT {})
-      GOLDENS_CALLED -> listing when (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (not (str/endsWith (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ".goldens.json")) (not (os/path-is-absolute (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))))
+      GOLDENS_CALLED -> listing when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (not (str/endsWith (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ".goldens.json")) (not (os/path-is-absolute (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))))
         (set @entity.dir (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))
         (set @entity.lines [])
         (os/list-dir { anchor: "cwd" path: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) } { key: "dir" emit: { success: GOLDENS_LISTED, failure: GOLDENS_FAILED } })
-      GOLDENS_CALLED -> listing when (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (not (str/endsWith (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ".goldens.json")) (os/path-is-absolute (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))))
+      GOLDENS_CALLED -> listing when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (not (str/endsWith (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ".goldens.json")) (os/path-is-absolute (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))))
         (set @entity.dir (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))
         (set @entity.lines [])
         (os/list-dir (str/concat "/" (str/slice (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1 (str/len (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))))) { key: "dir" emit: { success: GOLDENS_LISTED, failure: GOLDENS_FAILED } })
@@ -98,10 +98,10 @@ orbital GoldensOrbital {
       GOLDENS_FILE_READ -> ready when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (== (json/parse @text GoldenFile) null)))
         (emit GOLDENS_ANSWERED { status: 500, body: (str/concat "goldens: goldens file does not match GoldenFile: " @entity.file) })
       GOLDENS_FILE_READ -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text GoldenFile) null) (not (os/path-is-absolute @entity.file))))
-        (set @entity.golden (let ((text (bytes/to-string @payload.data))) (if (= @text null) @entity.golden @text)))
+        (set @entity.golden (json/parse (bytes/to-string @payload.data) GoldenFile))
         (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit GOLDENS_ANSWERED { status: 500, body: (str/concat "goldens: goldens file is not valid text: " @entity.file) }) (os/read-file { anchor: "cwd" path: (os/path-normalize (os/path-join @entity.file ".." ".." ".." (object/get (json/parse @text GoldenFile) "atom"))) } { key: "atom" emit: { success: GOLDENS_ATOM_READ, failure: GOLDENS_FAILED } })))
       GOLDENS_FILE_READ -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text GoldenFile) null) (os/path-is-absolute @entity.file)))
-        (set @entity.golden (let ((text (bytes/to-string @payload.data))) (if (= @text null) @entity.golden @text)))
+        (set @entity.golden (json/parse (bytes/to-string @payload.data) GoldenFile))
         (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit GOLDENS_ANSWERED { status: 500, body: (str/concat "goldens: goldens file is not valid text: " @entity.file) }) (os/read-file (str/concat "/" (str/slice (os/path-normalize (os/path-join @entity.file ".." ".." ".." (object/get (json/parse @text GoldenFile) "atom"))) 1 (str/len (os/path-normalize (os/path-join @entity.file ".." ".." ".." (object/get (json/parse @text GoldenFile) "atom")))))) { key: "atom" emit: { success: GOLDENS_ATOM_READ, failure: GOLDENS_FAILED } })))
       GOLDENS_ATOM_READ -> ready when (= (bytes/to-string @payload.data) null)
         (emit GOLDENS_ANSWERED { status: 500, body: "goldens: the atom file is not valid text" })
@@ -116,30 +116,30 @@ orbital GoldensOrbital {
 
     state running {
       INIT -> running
-      GOLDENS_NEXT -> running when (and (< @entity.cursor (array/len (object/get (json/parse @entity.golden GoldenFile) "cases"))) (object/has (array/nth (object/get (json/parse @entity.golden GoldenFile) "cases") @entity.cursor) "skip"))
+      GOLDENS_NEXT -> running when (and (< @entity.cursor (array/len (object/get @entity.golden "cases"))) (object/has (array/nth (object/get @entity.golden "cases") @entity.cursor) "skip"))
         (set @entity.skipped (+ @entity.skipped 1))
-        (set @entity.lines (array/append @entity.lines (str/concat "skip  " (object/get (array/nth (object/get (json/parse @entity.golden GoldenFile) "cases") @entity.cursor) "id") "  (" (object/get (array/nth (object/get (json/parse @entity.golden GoldenFile) "cases") @entity.cursor) "skip") ")")))
+        (set @entity.lines (array/append @entity.lines (str/concat "skip  " (object/get (array/nth (object/get @entity.golden "cases") @entity.cursor) "id") "  (" (object/get (array/nth (object/get @entity.golden "cases") @entity.cursor) "skip") ")")))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit GOLDENS_NEXT { at: @entity.cursor })
-      GOLDENS_NEXT -> running when (and (< @entity.cursor (array/len (object/get (json/parse @entity.golden GoldenFile) "cases"))) (not (object/has (array/nth (object/get (json/parse @entity.golden GoldenFile) "cases") @entity.cursor) "skip")))
-        (set @entity.curCase (json/stringify (array/nth (object/get (json/parse @entity.golden GoldenFile) "cases") @entity.cursor)))
-        (set @entity.fails (let ((cc (json/parse @entity.curCase GoldenCase))) (if (= @cc null) ["the case does not match GoldenCase"] (array/concat
+      GOLDENS_NEXT -> running when (and (< @entity.cursor (array/len (object/get @entity.golden "cases"))) (not (object/has (array/nth (object/get @entity.golden "cases") @entity.cursor) "skip")))
+        (set @entity.curCase (array/nth (object/get @entity.golden "cases") @entity.cursor))
+        (set @entity.fails (let ((cc @entity.curCase)) (array/concat
           (array/map (array/filter (object/keys @cc) (fn k (not (array/includes ["skip", "entity", "config", "now", "id", "steps", "note", "golden"] @k)))) (fn k (str/concat "unknown case key: " @k)))
           (if (object/has @cc "config") [(str/concat "case config is unsupported until G-ORB-460 lands: the case cannot be played")] [])
           (array/flatten (array/reduce (object/get @cc "steps") [] (fn acc s
             (array/append @acc (array/concat
               (array/map (array/filter (object/keys @s) (fn k (not (array/includes ["keep", "keepField", "now", "viewer", "entity", "trait", "orbital", "from", "event", "payload", "expect"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown step key: " @k)))
               (array/map (array/filter (object/keys (object/get @s "expect" {})) (fn k (not (array/includes ["fired", "state", "emits", "neverEmits", "exactEmits", "emitCounts", "effects", "entity"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown expect key: " @k)))
-              (if (object/has (object/get @s "expect" {}) "entity") [(str/concat "step " (array/len @acc) ": expect.entity cannot be checked: program/step answers no post-step entity row")] []))))))))))
+              (if (object/has (object/get @s "expect" {}) "entity") [(str/concat "step " (array/len @acc) ": expect.entity cannot be checked: program/step answers no post-step entity row")] [])))))))))
         (emit GOLDENS_PREFLIGHT {})
       GOLDENS_PREFLIGHT -> running when (> (array/len @entity.fails) 0)
-        (set @entity.lines (array/concat @entity.lines [(str/concat "fail  " (object/get (json/parse @entity.curCase GoldenCase) "id"))] (array/map @entity.fails (fn m (str/concat "  " @m)))))
+        (set @entity.lines (array/concat @entity.lines [(str/concat "fail  " (object/get @entity.curCase "id"))] (array/map @entity.fails (fn m (str/concat "  " @m)))))
         (set @entity.fails [])
         (set @entity.cursor (+ @entity.cursor 1))
         (emit GOLDENS_NEXT { at: @entity.cursor })
       GOLDENS_PREFLIGHT -> running when (= (array/len @entity.fails) 0)
         (program/step (json/parse @entity.program GoldenFull)
-          (let ((cc (json/parse @entity.curCase GoldenCase)) (gf (json/parse @entity.golden GoldenFile)) (pr (json/parse @entity.program GoldenProgramRef))) (array/reduce (array/take (object/get @cc "steps") (if (array/some (object/get @cc "steps") (fn s (object/has @s "keep"))) (+ @entity.upto 1) (array/len (object/get @cc "steps")))) [] (fn acc s
+          (let ((cc @entity.curCase) (gf @entity.golden) (pr (json/parse @entity.program GoldenProgramRef))) (array/reduce (array/take (object/get @cc "steps") (if (array/some (object/get @cc "steps") (fn s (object/has @s "keep"))) (+ @entity.upto 1) (array/len (object/get @cc "steps")))) [] (fn acc s
             (array/append @acc (object/merge
               { orbital: (object/get @s "orbital" (object/get @gf "orbital" (object/get (array/find (object/get @pr "orbitals") (fn o (array/some (object/get @o "traits" []) (fn t (= (object/get @t "name") (object/get @s "trait" (object/get @gf "trait")))))) ) "name"))),
                 trait: (object/get @s "trait" (object/get @gf "trait")),
@@ -154,18 +154,18 @@ orbital GoldensOrbital {
               (if (object/has @s "now") { now: (object/get @s "now") } (if (object/has @cc "now") { now: (object/get @cc "now") } {}))
               (if (object/has @s "viewer") { viewer: (object/get @s "viewer") } {}))))))
           { key: "steps" emit: { success: GOLDENS_STEPPED, failure: GOLDENS_CASE_FAILED } })
-      GOLDENS_STEPPED -> running when (and (array/some (object/get (json/parse @entity.curCase GoldenCase) "steps") (fn s (object/has @s "keep"))) (< (+ @entity.upto 1) (array/len (object/get (json/parse @entity.curCase GoldenCase) "steps"))))
-        (set @entity.vars (let ((st (array/nth (object/get (json/parse @entity.curCase GoldenCase) "steps") @entity.upto))) (if (object/has @st "keep")
+      GOLDENS_STEPPED -> running when (and (array/some (object/get @entity.curCase "steps") (fn s (object/has @s "keep"))) (< (+ @entity.upto 1) (array/len (object/get @entity.curCase "steps"))))
+        (set @entity.vars (let ((st (array/nth (object/get @entity.curCase "steps") @entity.upto))) (if (object/has @st "keep")
           (object/set @entity.vars (object/get @st "keep")
             (object/get (array/find (array/reduce (object/get (object/get (array/nth @payload.result @entity.upto) "result") "emitted") [] (fn l em (array/append @l (object/get @em "payload" {}))))
               (fn pl (object/has @pl (object/get @st "keepField")))) (object/get @st "keepField")))
           @entity.vars)))
         (set @entity.upto (+ @entity.upto 1))
         (emit GOLDENS_NEXT {})
-      GOLDENS_STEPPED -> running when (not (and (array/some (object/get (json/parse @entity.curCase GoldenCase) "steps") (fn s (object/has @s "keep"))) (< (+ @entity.upto 1) (array/len (object/get (json/parse @entity.curCase GoldenCase) "steps")))))
+      GOLDENS_STEPPED -> running when (not (and (array/some (object/get @entity.curCase "steps") (fn s (object/has @s "keep"))) (< (+ @entity.upto 1) (array/len (object/get @entity.curCase "steps")))))
         (set @entity.upto 0)
         (set @entity.vars {})
-        (set @entity.fails (array/filter (array/flatten (array/reduce (object/get (array/nth (object/get (json/parse @entity.golden GoldenFile) "cases") @entity.cursor) "steps") [] (fn acc s
+        (set @entity.fails (array/filter (array/flatten (array/reduce (object/get (array/nth (object/get @entity.golden "cases") @entity.cursor) "steps") [] (fn acc s
           (array/append @acc
             (let ((pp (array/nth @payload.result (array/len @acc))) (ex (object/get @s "expect" {})))
             (let ((rr (object/get @pp "result")) (outs (object/get (object/get @pp "result") "outcomes" (object/get @pp "outcomes" null))))
@@ -190,16 +190,16 @@ orbital GoldensOrbital {
                         (array/filter (array/range 0 (array/len @wantX)) (fn i (let ((a (array/nth @allEm @i)) (x (array/nth @wantX @i))) (not (and (!= @a null) (= (object/get @a "type") (object/get @x "event")) (array/every (object/keys (object/get @x "payload" {})) (fn key (let ((av (object/get (object/get @a "payload" {}) @key)) (xv (object/get (object/get @x "payload" {}) @key))) (or (= (json/stringify @av) (json/stringify @xv)) (and (str/startsWith (json/stringify @av) "{") (str/startsWith (json/stringify @xv) "{") (= @av @xv)) (and (str/startsWith (json/stringify @av) "[") (str/startsWith (json/stringify @xv) "[") (= @av @xv))))))))))) 
                         (fn i (str/concat "step " (array/len @acc) ": exactEmits entry " @i " expected " (object/get (array/nth @wantX @i) "event") " " (json/stringify (object/get (array/nth @wantX @i) "payload" {})) " got " (if (== (array/nth @allEm @i) null) "nothing" (str/concat (object/get (array/nth @allEm @i) "type") " " (json/stringify (object/get (array/nth @allEm @i) "payload" {}))))))))))
                 (array/map (array/filter (object/get @ex "neverEmits" []) (fn n (array/some @allEm (fn em (= (object/get @em "type") @n))))) (fn n (str/concat "step " (array/len @acc) ": emitted " @n " in " (str/join (array/map @allEm (fn a (str/concat (object/get @a "type") " " (json/stringify (object/get @a "payload" {}))))) "; ")))))))))))) (fn m (!= @m ""))))
-        (set @entity.lines (array/concat @entity.lines [(str/concat (if (= (array/len @entity.fails) 0) "pass" "fail") "  " (object/get (array/nth (object/get (json/parse @entity.golden GoldenFile) "cases") @entity.cursor) "id"))] (array/map @entity.fails (fn m (str/concat "  " @m)))))
+        (set @entity.lines (array/concat @entity.lines [(str/concat (if (= (array/len @entity.fails) 0) "pass" "fail") "  " (object/get (array/nth (object/get @entity.golden "cases") @entity.cursor) "id"))] (array/map @entity.fails (fn m (str/concat "  " @m)))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit GOLDENS_NEXT {})
       GOLDENS_CASE_FAILED -> running
         (set @entity.upto 0)
         (set @entity.vars {})
-        (set @entity.lines (array/append @entity.lines (str/concat "fail  " (object/get (array/nth (object/get (json/parse @entity.golden GoldenFile) "cases") @entity.cursor) "id") "\n  step error: " (if (str/startsWith (json/stringify @payload.error) "\"") @payload.error (json/stringify @payload.error)))))
+        (set @entity.lines (array/append @entity.lines (str/concat "fail  " (object/get (array/nth (object/get @entity.golden "cases") @entity.cursor) "id") "\n  step error: " (if (str/startsWith (json/stringify @payload.error) "\"") @payload.error (json/stringify @payload.error)))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit GOLDENS_NEXT {})
-      GOLDENS_NEXT -> reading when (>= @entity.cursor (array/len (object/get (json/parse @entity.golden GoldenFile) "cases")))
+      GOLDENS_NEXT -> reading when (>= @entity.cursor (array/len (object/get @entity.golden "cases")))
         (set @entity.fileCursor (+ @entity.fileCursor 1))
         (emit GOLDENS_FILE_NEXT {})
       GOLDENS_FAILED -> ready

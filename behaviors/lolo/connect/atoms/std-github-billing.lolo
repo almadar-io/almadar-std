@@ -26,7 +26,7 @@ orbital GithubBillingOrbital {
     loading : boolean @description "Whether a read is in flight." = false
     collected : [GhBillingAccount] @description "The accounts the read in flight has answered so far." = []
     cursor : number @description "Index of the account being read." = 0
-    startedAt : number @description "Epoch milliseconds at which the read in flight began." = 0
+    startedAt : instant @description "Epoch milliseconds at which the read in flight began." = 0
   }
 
   trait BillingGithub = Github.traits.GithubClient {
@@ -49,13 +49,13 @@ orbital GithubBillingOrbital {
         (set @entity.loading true)
         (set @entity.collected [])
         (set @entity.cursor 0)
-        (set @entity.startedAt @now)
+        (set @entity.startedAt (time/now))
         (emit BILLING_NEXT { })
       BILLING_REFRESH -> reading
         (set @entity.loading true)
         (set @entity.collected [])
         (set @entity.cursor 0)
-        (set @entity.startedAt @now)
+        (set @entity.startedAt (time/now))
         (emit BILLING_NEXT { })
     }
 

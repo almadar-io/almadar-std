@@ -53,7 +53,7 @@ orbital LearnFxCuesOrbital {
             [])) })
         (set @entity.cueSeq (+ @entity.cueSeq 1))
       TAP_JUDGED -> active when @config.running
-        (emit BURST { particles: (array/map [ (if ?correct @config.correctCue @config.wrongCue) ] (fn c { id: (str/concat "cue-" (+ @entity.cueSeq 1)), type: (object/get @c type), x: (object/get @c x), z: (object/get @c z), ttl: (object/get @c ttl), space: (object/get @c space), effect: (object/get @c effect), color: (object/get @c color), size: (object/get @c size), particleCount: (object/get @c particleCount), message: (object/get @c message) })) })
+        (emit BURST { particles: [ (object/merge (if ?correct @config.correctCue @config.wrongCue) { id: (str/concat "cue-" (+ @entity.cueSeq 1)) }) ] })
         (set @entity.cueSeq (+ @entity.cueSeq 1))
       ESTIMATE_JUDGED -> active when @config.running
         (let ((matched (array/filter @config.bandCues (fn b (== (object/get @b band) ?band)))))
@@ -78,10 +78,10 @@ orbital LearnFxCuesOrbital {
           null)
         (set @entity.cueSeq (+ @entity.cueSeq 1))
       LEARN_ROUND_COMPLETE -> active when @config.running
-        (emit BURST { particles: (array/map [ @config.celebrationCue ] (fn c { id: (str/concat "cue-" (+ @entity.cueSeq 1)), type: (object/get @c type), x: (object/get @c x), z: (object/get @c z), ttl: (object/get @c ttl), space: (object/get @c space), effect: (object/get @c effect), color: (object/get @c color), size: (object/get @c size), particleCount: (object/get @c particleCount), message: (object/get @c message) })) })
+        (emit BURST { particles: [ (object/merge @config.celebrationCue { id: (str/concat "cue-" (+ @entity.cueSeq 1)) }) ] })
         (set @entity.cueSeq (+ @entity.cueSeq 1))
       TRACE_DONE -> active when @config.running
-        (emit BURST { particles: (array/map [ @config.celebrationCue ] (fn c { id: (str/concat "cue-" (+ @entity.cueSeq 1)), type: (object/get @c type), x: (object/get @c x), z: (object/get @c z), ttl: (object/get @c ttl), space: (object/get @c space), effect: (object/get @c effect), color: (object/get @c color), size: (object/get @c size), particleCount: (object/get @c particleCount), message: (object/get @c message) })) })
+        (emit BURST { particles: [ (object/merge @config.celebrationCue { id: (str/concat "cue-" (+ @entity.cueSeq 1)) }) ] })
         (set @entity.cueSeq (+ @entity.cueSeq 1))
     }
 

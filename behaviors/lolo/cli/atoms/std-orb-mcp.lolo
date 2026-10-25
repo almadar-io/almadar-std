@@ -110,6 +110,7 @@ orbital OrbMcpOrbital {
     listens {
       TestEngine.TEST_WALK_CALL -> VERIFY_WALK_START
       TestMachine.MACHINE_ANSWERED -> WALK_MACHINE_ANSWERED
+      TestMachine.MACHINE_UNREAD -> WALK_MACHINE_UNREAD
       TestPlan.PLAN_ANSWERED -> WALK_PLAN_ANSWERED
       TestJudge.JUDGE_ANSWERED -> WALK_JUDGE_ANSWERED
       TestCreditor.CREDIT_ANSWERED -> WALK_CREDIT_ANSWERED
@@ -148,11 +149,13 @@ orbital OrbMcpOrbital {
       INIT -> starting
       MCP_CALLED -> parsing
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit MCP_ARGS_PARSE { stage: "mcp" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "program" aliases: [] takesValue: true repeatable: false }] })
+        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))) (if (= @argv null) (emit MCP_ARGS_UNREAD { }) (emit MCP_ARGS_PARSE { stage: "mcp" argv: @argv flags: [{ name: "program" aliases: [] takesValue: true repeatable: false }] })))
     }
 
     state parsing {
       INIT -> parsing
+      MCP_ARGS_UNREAD -> starting
+        (emit MCP_ANSWERED { status: 500, body: "Error: the call's arguments could not be read" })
       MCP_ARGS_DONE -> starting when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0))
         (emit MCP_ANSWERED { status: 400, body: "usage: orb mcp [--program <file>]" })
       MCP_ARGS_DONE -> versioning when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
@@ -351,21 +354,19 @@ orbital OrbMcpOrbital {
       MCP_RUN -> working when (= @entity.tool "complete")
         (emit MCP_COMPLETE_START { file: (object/get @entity.args "path"), offset: (object/get @entity.args "offset"), cwd: @entity.cwd })
       MCP_COMPLETE_ANSWERED -> working when (= @payload.status 200)
-        (emit MCP_TOOL_DONE { result: (json/parse @payload.body McpJson) })
+        (let ((r (json/parse @payload.body McpJson))) (if (= @r null) (emit MCP_TOOL_FAILED { error: @payload.body }) (emit MCP_TOOL_DONE { result: @r })))
       MCP_COMPLETE_ANSWERED -> working when (!= @payload.status 200)
         (emit MCP_TOOL_FAILED { error: @payload.body })
       MCP_RUN -> working when (= @entity.tool "reference")
         (emit MCP_REFERENCE_START { topic: (or (object/get @entity.args "topic") ""), cwd: @entity.cwd })
       MCP_REFERENCE_ANSWERED -> working when (= @payload.status 200)
-        (emit MCP_TOOL_DONE { result: (json/parse @payload.body McpJson) })
+        (let ((r (json/parse @payload.body McpJson))) (if (= @r null) (emit MCP_TOOL_FAILED { error: @payload.body }) (emit MCP_TOOL_DONE { result: @r })))
       MCP_REFERENCE_ANSWERED -> working when (!= @payload.status 200)
         (emit MCP_TOOL_FAILED { error: @payload.body })
       MCP_RUN -> working when (= @entity.tool "test")
         (emit MCP_TEST_START { cwd: @entity.cwd, file: (object/get @entity.args "path"), traitFilter: "", report: "json" })
-      MCP_TEST_ANSWERED -> working when (and (json/valid @payload.body) (str/startsWith (str/trim @payload.body) "{"))
-        (emit MCP_TOOL_DONE { result: (json/parse @payload.body McpJson) })
-      MCP_TEST_ANSWERED -> working when (not (and (json/valid @payload.body) (str/startsWith (str/trim @payload.body) "{")))
-        (emit MCP_TOOL_FAILED { error: @payload.body })
+      MCP_TEST_ANSWERED -> working
+        (let ((r (json/parse @payload.body McpJson))) (if (= @r null) (emit MCP_TOOL_FAILED { error: @payload.body }) (if (str/startsWith (str/trim @payload.body) "{") (emit MCP_TOOL_DONE { result: @r }) (emit MCP_TOOL_FAILED { error: @payload.body }))))
       MCP_RUN -> working when (= @entity.tool "operators")
         (set @entity.file "node_modules/@almadar/std/canonical-operators.json")
         (os/read-file { anchor: "cwd" path: @entity.file } { key: "table" emit: { success: MCP_TABLE, failure: MCP_TABLE_FAILED } })
@@ -383,10 +384,11 @@ orbital OrbMcpOrbital {
         (emit MCP_TABLE_READ { table: (object/get (json/parse (str/default (bytes/to-string @payload.data) "") McpJson) (if (= @entity.tool "operators") "operators" "patterns")) })
       MCP_TABLE -> working when (and (!= (json/parse (str/default (bytes/to-string @payload.data) "") McpJson) null) (= (object/get @entity.args "name") null))
         (emit MCP_TABLE_READ { table: (object/get (json/parse (str/default (bytes/to-string @payload.data) "") McpJson) (if (= @entity.tool "operators") "operators" "patterns")) })
-      MCP_TABLE_READ -> working when (and (!= (object/get @entity.args "name") null) (object/has @payload.table (object/get @entity.args "name")))
-        (emit MCP_TOOL_DONE { result: { name: (object/get @entity.args "name" "") entry: (object/get @payload.table (object/get @entity.args "name")) } })
-      MCP_TABLE_READ -> working when (and (!= (object/get @entity.args "name") null) (not (object/has @payload.table (object/get @entity.args "name"))))
-        (emit MCP_TOOL_FAILED { error: (str/concat "no " @entity.tool " entry named `" (object/get @entity.args "name") "`") })
+      MCP_TABLE_READ -> working when (!= (object/get @entity.args "name") null)
+        (let ((entry (object/get @payload.table (object/get @entity.args "name"))))
+          (if (= @entry null)
+            (emit MCP_TOOL_FAILED { error: (str/concat "no " @entity.tool " entry named `" (object/get @entity.args "name") "`") })
+            (emit MCP_TOOL_DONE { result: { name: (object/get @entity.args "name" "") entry: @entry } })))
       MCP_TABLE_READ -> working when (= (object/get @entity.args "name") null)
         (emit MCP_TOOL_DONE { result: (object/set (json/parse "{}" McpJson) @entity.tool (array/map (array/filter (object/keys @payload.table) (fn k (or (= (object/get @entity.args "category") null) (= (object/get (object/get @payload.table @k) "category") (object/get @entity.args "category"))))) (fn k { name: @k category: (object/get (object/get @payload.table @k) "category") description: (object/get (object/get @payload.table @k) "description") }))) })
       MCP_RUN -> working when (array/includes @entity.hookNames @entity.tool)
@@ -425,6 +427,9 @@ orbital OrbMcpOrbital {
         @tier "internal"
       MCP_RUN { }
         @description "Internal: run the tool call held in the entity."
+        @tier "internal"
+      MCP_ARGS_UNREAD {  }
+        @description "Internal: the call's arguments could not be read."
         @tier "internal"
       MCP_ARGS_PARSE {
         stage : string!

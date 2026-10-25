@@ -1,1374 +1,1401 @@
 {
- "atom": "cli/atoms/std-orb-simulate.lolo",
- "trait": "OrbSimulate",
- "cases": [
-  {
-   "id": "states render fetch clear and a guard-free page",
-   "steps": [
+  "atom": "cli/atoms/std-orb-simulate.lolo",
+  "trait": "OrbSimulate",
+  "cases": [
     {
-     "event": "SIMULATE_PROGRAM_READ",
-     "from": "reading",
-     "payload": {
-      "result": {
-       "name": "simtest",
-       "version": "1.0.0",
-       "description": "x",
-       "orbitals": [
+      "id": "states render fetch clear and a guard-free page",
+      "steps": [
         {
-         "name": "Todo",
-         "id": "orb_CVBG56QQYAVZ50ZB6QC73BNEMM",
-         "entity": {
-          "name": "Task",
-          "id": "ent_NA785GHRW7WE3HKCZ5PD9D2ZC6",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "title",
-            "type": "string",
-            "default": ""
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "Board",
-           "id": "trt_2R00RGNAAAN55DJ697A279GWBW",
-           "effectRow": [
-            {
-             "kind": "fetch",
-             "resource": "Task"
-            },
-            {
-             "kind": "render-ui",
-             "resource": "main"
+          "event": "SIMULATE_PROGRAM_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "name": "simtest",
+              "version": "1.0.0",
+              "description": "x",
+              "orbitals": [
+                {
+                  "name": "Todo",
+                  "id": "orb_CVBG56QQYAVZ50ZB6QC73BNEMM",
+                  "entity": {
+                    "name": "Task",
+                    "id": "ent_NA785GHRW7WE3HKCZ5PD9D2ZC6",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string",
+                        "default": ""
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "id": "trt_2R00RGNAAAN55DJ697A279GWBW",
+                      "effectRow": [
+                        {
+                          "kind": "fetch",
+                          "resource": "Task"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "main"
+                        }
+                      ],
+                      "category": "integration",
+                      "linkedEntity": "Task",
+                      "linkedEntityId": "ent_NA785GHRW7WE3HKCZ5PD9D2ZC6",
+                      "entityRefIds": {
+                        "Task": "ent_NA785GHRW7WE3HKCZ5PD9D2ZC6"
+                      },
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "open"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "id": "evt_GQ78RXSSHAWRN56845TN9Z15YS",
+                            "name": "Initialize"
+                          },
+                          {
+                            "key": "OPEN",
+                            "id": "evt_NE9536NKQSSVWGNDAF89B89ZX6",
+                            "name": "Open"
+                          },
+                          {
+                            "key": "CLEAR",
+                            "id": "evt_V8QKETYT4FD27H33J3FETQ5DQM",
+                            "name": "Clear"
+                          },
+                          {
+                            "key": "CLOSE",
+                            "id": "evt_H7BADX45KX2SYY621KFWRZG5QY",
+                            "name": "Close"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "eventId": "evt_GQ78RXSSHAWRN56845TN9Z15YS",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Task"
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "page-header",
+                                  "title": "x"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "open",
+                            "event": "OPEN",
+                            "eventId": "evt_NE9536NKQSSVWGNDAF89B89ZX6",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "page-header",
+                                  "title": "y",
+                                  "subtitle": "z"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "CLEAR",
+                            "eventId": "evt_V8QKETYT4FD27H33J3FETQ5DQM",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                null
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "open",
+                            "to": "open",
+                            "event": "INIT",
+                            "eventId": "evt_GQ78RXSSHAWRN56845TN9Z15YS"
+                          },
+                          {
+                            "from": "open",
+                            "to": "idle",
+                            "event": "CLOSE",
+                            "eventId": "evt_H7BADX45KX2SYY621KFWRZG5QY",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "page-header",
+                                  "title": "x"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "scope": "instance"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "BoardPage",
+                      "id": "pag_8RZERJRXB2ENH4ZJXR8KKJRAET",
+                      "path": "/board",
+                      "traits": [
+                        {
+                          "ref": "Board",
+                          "refId": "trt_2R00RGNAAAN55DJ697A279GWBW"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
             }
-           ],
-           "category": "integration",
-           "linkedEntity": "Task",
-           "linkedEntityId": "ent_NA785GHRW7WE3HKCZ5PD9D2ZC6",
-           "entityRefIds": {
-            "Task": "ent_NA785GHRW7WE3HKCZ5PD9D2ZC6"
-           },
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             },
-             {
-              "name": "open"
-             }
-            ],
-            "events": [
-             {
-              "key": "INIT",
-              "id": "evt_GQ78RXSSHAWRN56845TN9Z15YS",
-              "name": "Initialize"
-             },
-             {
-              "key": "OPEN",
-              "id": "evt_NE9536NKQSSVWGNDAF89B89ZX6",
-              "name": "Open"
-             },
-             {
-              "key": "CLEAR",
-              "id": "evt_V8QKETYT4FD27H33J3FETQ5DQM",
-              "name": "Clear"
-             },
-             {
-              "key": "CLOSE",
-              "id": "evt_H7BADX45KX2SYY621KFWRZG5QY",
-              "name": "Close"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "INIT",
-              "eventId": "evt_GQ78RXSSHAWRN56845TN9Z15YS",
-              "effects": [
-               [
-                "fetch",
-                "Task"
-               ],
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "page-header",
-                 "title": "x"
-                }
-               ]
-              ]
-             },
-             {
-              "from": "idle",
-              "to": "open",
-              "event": "OPEN",
-              "eventId": "evt_NE9536NKQSSVWGNDAF89B89ZX6",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "page-header",
-                 "title": "y",
-                 "subtitle": "z"
-                }
-               ]
-              ]
-             },
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "CLEAR",
-              "eventId": "evt_V8QKETYT4FD27H33J3FETQ5DQM",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                null
-               ]
-              ]
-             },
-             {
-              "from": "open",
-              "to": "open",
-              "event": "INIT",
-              "eventId": "evt_GQ78RXSSHAWRN56845TN9Z15YS"
-             },
-             {
-              "from": "open",
-              "to": "idle",
-              "event": "CLOSE",
-              "eventId": "evt_H7BADX45KX2SYY621KFWRZG5QY",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "page-header",
-                 "title": "x"
-                }
-               ]
-              ]
-             }
-            ]
-           },
-           "scope": "instance"
-          }
-         ],
-         "pages": [
-          {
-           "name": "BoardPage",
-           "id": "pag_8RZERJRXB2ENH4ZJXR8KKJRAET",
-           "path": "/board",
-           "traits": [
-            {
-             "ref": "Board",
-             "refId": "trt_2R00RGNAAAN55DJ697A279GWBW"
-            }
-           ]
-          }
-         ]
-        }
-       ]
-      }
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIMULATE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "\n🔍 Render Simulation\n============================================================\n\nPage: BoardPage (/board)\n  State: idle (initial)\n    INIT transition:\n      📦 fetch \"Task\"\n      ✅ Slot \"main\" ← [page-header] (title)\n    OPEN transition:\n      ✅ Slot \"main\" ← [page-header] (title, subtitle)\n    CLEAR transition:\n      🗑️ Slot \"main\" ← [null (clear)]\n  State: open\n    INIT transition:\n      (no render-ui effects)\n    CLOSE transition:\n      ✅ Slot \"main\" ← [page-header] (title)\n\n============================================================\nSimulation complete.\n"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "guarded transition fetch-only arm and a null clear in a second slot",
-   "steps": [
-    {
-     "event": "SIMULATE_PROGRAM_READ",
-     "from": "reading",
-     "payload": {
-      "result": {
-       "name": "simtest2",
-       "version": "1.0.0",
-       "description": "x",
-       "orbitals": [
-        {
-         "name": "Todo",
-         "id": "orb_48R48CG1900MGCNRRR245FJC9S",
-         "entity": {
-          "name": "Task",
-          "id": "ent_RBWX0JD093G4HV31DGBM39NHMY",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true
-           },
-           {
-            "name": "title",
-            "type": "string",
-            "default": ""
-           },
-           {
-            "name": "n",
-            "type": "number",
-            "default": 0
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "Board",
-           "id": "trt_5FCQ0G7T0SX0CQ1HND3F4E4QVZ",
-           "effectRow": [
-            {
-             "kind": "fetch",
-             "resource": "Task"
-            },
-            {
-             "kind": "render-ui",
-             "resource": "main"
-            },
-            {
-             "kind": "render-ui",
-             "resource": "modal"
-            }
-           ],
-           "category": "integration",
-           "linkedEntity": "Task",
-           "linkedEntityId": "ent_RBWX0JD093G4HV31DGBM39NHMY",
-           "entityRefIds": {
-            "Task": "ent_RBWX0JD093G4HV31DGBM39NHMY"
-           },
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             },
-             {
-              "name": "busy"
-             }
-            ],
-            "events": [
-             {
-              "key": "INIT",
-              "id": "evt_PZW40A73RBHW5W32136XF9W4VA",
-              "name": "Initialize"
-             },
-             {
-              "key": "GO",
-              "id": "evt_7B81VSB89QM4VSHW50B0CC8TEW",
-              "name": "Go"
-             },
-             {
-              "key": "LOOP",
-              "id": "evt_AQZHH2MMTRADCF2ZJYE57VXNBZ",
-              "name": "Loop"
-             },
-             {
-              "key": "DONE",
-              "id": "evt_9XFMZT1JHDS8PRXPTGCCCXBPMB",
-              "name": "Done"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "INIT",
-              "eventId": "evt_PZW40A73RBHW5W32136XF9W4VA",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "page-header",
-                 "title": "x"
-                }
-               ]
-              ]
-             },
-             {
-              "from": "idle",
-              "to": "busy",
-              "event": "GO",
-              "eventId": "evt_7B81VSB89QM4VSHW50B0CC8TEW",
-              "guard": [
-               ">",
-               2,
-               1
-              ],
-              "effects": [
-               [
-                "fetch",
-                "Task"
-               ]
-              ]
-             },
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "LOOP",
-              "eventId": "evt_AQZHH2MMTRADCF2ZJYE57VXNBZ"
-             },
-             {
-              "from": "busy",
-              "to": "busy",
-              "event": "INIT",
-              "eventId": "evt_PZW40A73RBHW5W32136XF9W4VA"
-             },
-             {
-              "from": "busy",
-              "to": "idle",
-              "event": "DONE",
-              "eventId": "evt_9XFMZT1JHDS8PRXPTGCCCXBPMB",
-              "effects": [
-               [
-                "fetch",
-                "Task"
-               ],
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "page-header",
-                 "title": "d"
-                }
-               ],
-               [
-                "render-ui",
-                "modal",
-                null
-               ]
-              ]
-             }
-            ]
-           },
-           "scope": "instance"
-          }
-         ],
-         "pages": [
-          {
-           "name": "BoardPage",
-           "id": "pag_Q13VZPBZS8ZWM51VE0Q1PQR97J",
-           "path": "/board",
-           "traits": [
-            {
-             "ref": "Board",
-             "refId": "trt_5FCQ0G7T0SX0CQ1HND3F4E4QVZ"
-            }
-           ]
-          }
-         ]
-        }
-       ]
-      }
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIMULATE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "\n🔍 Render Simulation\n============================================================\n\nPage: BoardPage (/board)\n  State: idle (initial)\n    INIT transition:\n      ✅ Slot \"main\" ← [page-header] (title)\n    GO transition (guarded):\n      📦 fetch \"Task\"\n    LOOP transition:\n      (no render-ui effects)\n  State: busy\n    INIT transition:\n      (no render-ui effects)\n    DONE transition:\n      📦 fetch \"Task\"\n      ✅ Slot \"main\" ← [page-header] (title)\n      🗑️ Slot \"modal\" ← [null (clear)]\n\n============================================================\nSimulation complete.\n"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an entity prop on a render with no fetch in the arm warns",
-   "steps": [
-    {
-     "event": "SIMULATE_PROGRAM_READ",
-     "from": "reading",
-     "payload": {
-      "result": {
-       "name": "app",
-       "orbitals": [
-        {
-         "name": "O",
-         "traits": [
-          {
-           "name": "T",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "a",
-              "isInitial": true
-             }
-            ],
-            "transitions": [
-             {
-              "from": "a",
-              "to": "a",
-              "event": "INIT",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "entity-table",
-                 "entity": "Task",
-                 "columns": [
-                  "x"
-                 ]
-                }
-               ]
-              ]
-             }
-            ]
-           }
-          }
-         ],
-         "pages": [
-          {
-           "name": "P",
-           "path": "/p",
-           "traits": [
-            {
-             "ref": "T"
-            }
-           ]
-          }
-         ]
-        }
-       ]
-      }
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIMULATE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    INIT transition:\n      ✅ Slot \"main\" ← [entity-table] (entity, columns)\n         ⚠️  WARNING: entity prop present but no fetch in this transition\n\n============================================================\nSimulation complete.\n"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: the same render with a fetch in the arm does not warn",
-   "steps": [
-    {
-     "event": "SIMULATE_PROGRAM_READ",
-     "from": "reading",
-     "payload": {
-      "result": {
-       "name": "app",
-       "orbitals": [
-        {
-         "name": "O",
-         "traits": [
-          {
-           "name": "T",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "a",
-              "isInitial": true
-             }
-            ],
-            "transitions": [
-             {
-              "from": "a",
-              "to": "a",
-              "event": "INIT",
-              "effects": [
-               [
-                "fetch",
-                "Task"
-               ],
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "entity-table",
-                 "entity": "Task",
-                 "columns": [
-                  "x"
-                 ]
-                }
-               ]
-              ]
-             }
-            ]
-           }
-          }
-         ],
-         "pages": [
-          {
-           "name": "P",
-           "path": "/p",
-           "traits": [
-            {
-             "ref": "T"
-            }
-           ]
-          }
-         ]
-        }
-       ]
-      }
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIMULATE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    INIT transition:\n      📦 fetch \"Task\"\n      ✅ Slot \"main\" ← [entity-table] (entity, columns)\n\n============================================================\nSimulation complete.\n"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a declared state no transition reaches is reported unreachable",
-   "steps": [
-    {
-     "event": "SIMULATE_PROGRAM_READ",
-     "from": "reading",
-     "payload": {
-      "result": {
-       "name": "app",
-       "orbitals": [
-        {
-         "name": "O",
-         "traits": [
-          {
-           "name": "T",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "a",
-              "isInitial": true
-             },
-             {
-              "name": "orphan"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "a",
-              "to": "a",
-              "event": "INIT",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "x"
-                }
-               ]
-              ]
-             }
-            ]
-           }
-          }
-         ],
-         "pages": [
-          {
-           "name": "P",
-           "path": "/p",
-           "traits": [
-            {
-             "ref": "T"
-            }
-           ]
-          }
-         ]
-        }
-       ]
-      }
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIMULATE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    INIT transition:\n      ✅ Slot \"main\" ← [x]\n  ⚠️  Unreachable states: [\"orphan\"]\n\n============================================================\nSimulation complete.\n"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: every state reached reports no unreachable line",
-   "steps": [
-    {
-     "event": "SIMULATE_PROGRAM_READ",
-     "from": "reading",
-     "payload": {
-      "result": {
-       "name": "app",
-       "orbitals": [
-        {
-         "name": "O",
-         "traits": [
-          {
-           "name": "T",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "a",
-              "isInitial": true
-             },
-             {
-              "name": "b"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "a",
-              "to": "b",
-              "event": "GO",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "x"
-                }
-               ]
-              ]
-             },
-             {
-              "from": "b",
-              "to": "a",
-              "event": "BACK",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "y"
-                }
-               ]
-              ]
-             }
-            ]
-           }
-          }
-         ],
-         "pages": [
-          {
-           "name": "P",
-           "path": "/p",
-           "traits": [
-            {
-             "ref": "T"
-            }
-           ]
-          }
-         ]
-        }
-       ]
-      }
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIMULATE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    GO transition:\n      ✅ Slot \"main\" ← [x]\n  State: b\n    BACK transition:\n      ✅ Slot \"main\" ← [y]\n\n============================================================\nSimulation complete.\n"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a from array leaves every listed state and the walk is breadth first",
-   "steps": [
-    {
-     "event": "SIMULATE_PROGRAM_READ",
-     "from": "reading",
-     "payload": {
-      "result": {
-       "name": "app",
-       "orbitals": [
-        {
-         "name": "O",
-         "traits": [
-          {
-           "name": "T",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "a",
-              "isInitial": true
-             },
-             {
-              "name": "b"
-             },
-             {
-              "name": "c"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "a",
-              "to": "b",
-              "event": "GO",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "x"
-                }
-               ]
-              ]
-             },
-             {
-              "from": "a",
-              "to": "c",
-              "event": "SKIP",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "x"
-                }
-               ]
-              ]
-             },
-             {
-              "from": [
-               "b",
-               "c"
-              ],
-              "to": "a",
-              "event": "BACK",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "y"
-                }
-               ]
-              ]
-             }
-            ]
-           }
-          }
-         ],
-         "pages": [
-          {
-           "name": "P",
-           "path": "/p",
-           "traits": [
-            {
-             "ref": "T"
-            }
-           ]
-          }
-         ]
-        }
-       ]
-      }
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIMULATE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    GO transition:\n      ✅ Slot \"main\" ← [x]\n    SKIP transition:\n      ✅ Slot \"main\" ← [x]\n  State: b\n    BACK transition:\n      ✅ Slot \"main\" ← [y]\n  State: c\n    BACK transition:\n      ✅ Slot \"main\" ← [y]\n\n============================================================\nSimulation complete.\n"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a trait the page does not name is not walked",
-   "steps": [
-    {
-     "event": "SIMULATE_PROGRAM_READ",
-     "from": "reading",
-     "payload": {
-      "result": {
-       "name": "app",
-       "orbitals": [
-        {
-         "name": "O",
-         "traits": [
-          {
-           "name": "T",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "a",
-              "isInitial": true
-             }
-            ],
-            "transitions": [
-             {
-              "from": "a",
-              "to": "a",
-              "event": "INIT",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "x"
-                }
-               ]
-              ]
-             }
-            ]
-           }
           },
-          {
-           "name": "U",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "u",
-              "isInitial": true
-             }
-            ],
-            "transitions": [
-             {
-              "from": "u",
-              "to": "u",
-              "event": "INIT",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "z"
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "\n🔍 Render Simulation\n============================================================\n\nPage: BoardPage (/board)\n  State: idle (initial)\n    INIT transition:\n      📦 fetch \"Task\"\n      ✅ Slot \"main\" ← [page-header] (title)\n    OPEN transition:\n      ✅ Slot \"main\" ← [page-header] (title, subtitle)\n    CLEAR transition:\n      🗑️ Slot \"main\" ← [null (clear)]\n  State: open\n    INIT transition:\n      (no render-ui effects)\n    CLOSE transition:\n      ✅ Slot \"main\" ← [page-header] (title)\n\n============================================================\nSimulation complete.\n"
                 }
-               ]
-              ]
-             }
+              }
             ]
-           }
           }
-         ],
-         "pages": [
-          {
-           "name": "P",
-           "path": "/p",
-           "traits": [
-            {
-             "ref": "T"
-            }
-           ]
-          }
-         ]
         }
-       ]
-      }
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIMULATE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    INIT transition:\n      ✅ Slot \"main\" ← [x]\n\n============================================================\nSimulation complete.\n"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control: a trait named by a second page is walked under that page",
-   "steps": [
+    },
     {
-     "event": "SIMULATE_PROGRAM_READ",
-     "from": "reading",
-     "payload": {
-      "result": {
-       "name": "app",
-       "orbitals": [
+      "id": "guarded transition fetch-only arm and a null clear in a second slot",
+      "steps": [
         {
-         "name": "O",
-         "traits": [
-          {
-           "name": "T",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "a",
-              "isInitial": true
-             }
-            ],
-            "transitions": [
-             {
-              "from": "a",
-              "to": "a",
-              "event": "INIT",
-              "effects": [
-               [
-                "render-ui",
-                "main",
+          "event": "SIMULATE_PROGRAM_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "name": "simtest2",
+              "version": "1.0.0",
+              "description": "x",
+              "orbitals": [
                 {
-                 "type": "x"
+                  "name": "Todo",
+                  "id": "orb_48R48CG1900MGCNRRR245FJC9S",
+                  "entity": {
+                    "name": "Task",
+                    "id": "ent_RBWX0JD093G4HV31DGBM39NHMY",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string",
+                        "default": ""
+                      },
+                      {
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "id": "trt_5FCQ0G7T0SX0CQ1HND3F4E4QVZ",
+                      "effectRow": [
+                        {
+                          "kind": "fetch",
+                          "resource": "Task"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "main"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "modal"
+                        }
+                      ],
+                      "category": "integration",
+                      "linkedEntity": "Task",
+                      "linkedEntityId": "ent_RBWX0JD093G4HV31DGBM39NHMY",
+                      "entityRefIds": {
+                        "Task": "ent_RBWX0JD093G4HV31DGBM39NHMY"
+                      },
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "busy"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "id": "evt_PZW40A73RBHW5W32136XF9W4VA",
+                            "name": "Initialize"
+                          },
+                          {
+                            "key": "GO",
+                            "id": "evt_7B81VSB89QM4VSHW50B0CC8TEW",
+                            "name": "Go"
+                          },
+                          {
+                            "key": "LOOP",
+                            "id": "evt_AQZHH2MMTRADCF2ZJYE57VXNBZ",
+                            "name": "Loop"
+                          },
+                          {
+                            "key": "DONE",
+                            "id": "evt_9XFMZT1JHDS8PRXPTGCCCXBPMB",
+                            "name": "Done"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "eventId": "evt_PZW40A73RBHW5W32136XF9W4VA",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "page-header",
+                                  "title": "x"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "busy",
+                            "event": "GO",
+                            "eventId": "evt_7B81VSB89QM4VSHW50B0CC8TEW",
+                            "guard": [
+                              ">",
+                              2,
+                              1
+                            ],
+                            "effects": [
+                              [
+                                "fetch",
+                                "Task"
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "LOOP",
+                            "eventId": "evt_AQZHH2MMTRADCF2ZJYE57VXNBZ"
+                          },
+                          {
+                            "from": "busy",
+                            "to": "busy",
+                            "event": "INIT",
+                            "eventId": "evt_PZW40A73RBHW5W32136XF9W4VA"
+                          },
+                          {
+                            "from": "busy",
+                            "to": "idle",
+                            "event": "DONE",
+                            "eventId": "evt_9XFMZT1JHDS8PRXPTGCCCXBPMB",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Task"
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "page-header",
+                                  "title": "d"
+                                }
+                              ],
+                              [
+                                "render-ui",
+                                "modal",
+                                null
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "scope": "instance"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "BoardPage",
+                      "id": "pag_Q13VZPBZS8ZWM51VE0Q1PQR97J",
+                      "path": "/board",
+                      "traits": [
+                        {
+                          "ref": "Board",
+                          "refId": "trt_5FCQ0G7T0SX0CQ1HND3F4E4QVZ"
+                        }
+                      ]
+                    }
+                  ]
                 }
-               ]
               ]
-             }
-            ]
-           }
+            }
           },
-          {
-           "name": "U",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "u",
-              "isInitial": true
-             }
-            ],
-            "transitions": [
-             {
-              "from": "u",
-              "to": "u",
-              "event": "INIT",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "z"
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "\n🔍 Render Simulation\n============================================================\n\nPage: BoardPage (/board)\n  State: idle (initial)\n    INIT transition:\n      ✅ Slot \"main\" ← [page-header] (title)\n    GO transition (guarded):\n      📦 fetch \"Task\"\n    LOOP transition:\n      (no render-ui effects)\n  State: busy\n    INIT transition:\n      (no render-ui effects)\n    DONE transition:\n      📦 fetch \"Task\"\n      ✅ Slot \"main\" ← [page-header] (title)\n      🗑️ Slot \"modal\" ← [null (clear)]\n\n============================================================\nSimulation complete.\n"
                 }
-               ]
-              ]
-             }
+              }
             ]
-           }
           }
-         ],
-         "pages": [
-          {
-           "name": "P",
-           "path": "/p",
-           "traits": [
-            {
-             "ref": "T"
+        }
+      ]
+    },
+    {
+      "id": "an entity prop on a render with no fetch in the arm warns",
+      "steps": [
+        {
+          "event": "SIMULATE_PROGRAM_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "a",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "a",
+                            "to": "a",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "entity-table",
+                                  "entity": "Task",
+                                  "columns": [
+                                    "x"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
             }
-           ]
           },
-          {
-           "name": "Q",
-           "path": "/q",
-           "traits": [
-            {
-             "ref": "U"
-            }
-           ]
-          }
-         ]
-        }
-       ]
-      }
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIMULATE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    INIT transition:\n      ✅ Slot \"main\" ← [x]\n\nPage: Q (/q)\n  State: u (initial)\n    INIT transition:\n      ✅ Slot \"main\" ← [z]\n\n============================================================\nSimulation complete.\n"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a trait with no initial state starts at (unknown) and walks nothing",
-   "steps": [
-    {
-     "event": "SIMULATE_PROGRAM_READ",
-     "from": "reading",
-     "payload": {
-      "result": {
-       "name": "app",
-       "orbitals": [
-        {
-         "name": "O",
-         "traits": [
-          {
-           "name": "T",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "a"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "a",
-              "to": "a",
-              "event": "INIT",
-              "effects": [
-               [
-                "render-ui",
-                "main",
-                {
-                 "type": "x"
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    INIT transition:\n      ✅ Slot \"main\" ← [entity-table] (entity, columns)\n         ⚠️  WARNING: entity prop present but no fetch in this transition\n\n============================================================\nSimulation complete.\n"
                 }
-               ]
-              ]
-             }
+              }
             ]
-           }
           }
-         ],
-         "pages": [
-          {
-           "name": "P",
-           "path": "/p",
-           "traits": [
-            {
-             "ref": "T"
-            }
-           ]
-          }
-         ]
         }
-       ]
-      }
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIMULATE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: (unknown) (initial)\n  ⚠️  Unreachable states: [\"a\"]\n\n============================================================\nSimulation complete.\n"
-        }
-       }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a render without a slot or a type prints ?",
-   "steps": [
+    },
     {
-     "event": "SIMULATE_PROGRAM_READ",
-     "from": "reading",
-     "payload": {
-      "result": {
-       "name": "app",
-       "orbitals": [
+      "id": "control: the same render with a fetch in the arm does not warn",
+      "steps": [
         {
-         "name": "O",
-         "traits": [
-          {
-           "name": "T",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "a",
-              "isInitial": true
-             }
-            ],
-            "transitions": [
-             {
-              "from": "a",
-              "to": "a",
-              "event": "INIT",
-              "effects": [
-               [
-                "render-ui",
-                5,
+          "event": "SIMULATE_PROGRAM_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "name": "app",
+              "orbitals": [
                 {
-                 "title": "t"
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "a",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "a",
+                            "to": "a",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Task"
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "entity-table",
+                                  "entity": "Task",
+                                  "columns": [
+                                    "x"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
                 }
-               ]
               ]
-             }
-            ]
-           }
-          }
-         ],
-         "pages": [
-          {
-           "name": "P",
-           "path": "/p",
-           "traits": [
-            {
-             "ref": "T"
             }
-           ]
-          }
-         ]
-        }
-       ]
-      }
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIMULATE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    INIT transition:\n      ✅ Slot \"?\" ← [?] (title)\n\n============================================================\nSimulation complete.\n"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an orbital with no pages prints nothing but the frame",
-   "steps": [
-    {
-     "event": "SIMULATE_PROGRAM_READ",
-     "from": "reading",
-     "payload": {
-      "result": {
-       "name": "app",
-       "orbitals": [
-        {
-         "name": "O",
-         "traits": [
-          {
-           "name": "T",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "a",
-              "isInitial": true
-             }
-            ],
-            "transitions": []
-           }
-          }
-         ]
-        }
-       ]
-      }
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIMULATE_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "\n🔍 Render Simulation\n============================================================\n\n============================================================\nSimulation complete.\n"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "two arguments are the usage",
-   "steps": [
-    {
-     "event": "SIMULATE_CALLED",
-     "from": "ready",
-     "payload": {
-      "rawBody": "{\"argv\":[\"a.lolo\",\"b.lolo\"],\"cwd\":\"/x\"}"
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIMULATE_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb simulate <file>"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an unreadable file answers 500",
-   "steps": [
-    {
-     "event": "SIMULATE_UNREAD",
-     "from": "reading",
-     "payload": {
-      "error": "no such file"
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SIMULATE_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "simulate: the file could not be read or lowered"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "an absolute file is read without the cwd anchor",
-   "steps": [
-    {
-     "from": "ready",
-     "event": "SIMULATE_CALLED",
-     "payload": {
-      "rawBody": "{\"argv\": [\"/tmp/a.lolo\"], \"cwd\": \"/w\"}"
-     },
-     "expect": {
-      "state": "reading",
-      "effects": [
-       {
-        "type": "os/read-file",
-        "key": "file",
-        "arg0": [
-         "str/concat",
-         "/",
-         [
-          "str/slice",
-          [
-           "array/first",
-           [
-            "object/get",
-            [
-             "json/parse",
-             "@payload.rawBody",
-             "{\"version\":1,\"name\":\"OrbCommandArgs\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"argv\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]},{\"name\":\"cwd\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]}]}}"
-            ],
-            "argv"
-           ]
-          ],
-          1,
-          [
-           "str/len",
-           [
-            "array/first",
-            [
-             "object/get",
-             [
-              "json/parse",
-              "@payload.rawBody",
-              "{\"version\":1,\"name\":\"OrbCommandArgs\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"argv\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]},{\"name\":\"cwd\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]}]}}"
-             ],
-             "argv"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    INIT transition:\n      📦 fetch \"Task\"\n      ✅ Slot \"main\" ← [entity-table] (entity, columns)\n\n============================================================\nSimulation complete.\n"
+                }
+              }
             ]
-           ]
-          ]
-         ]
-        ],
-        "optionsAt": 1
-       }
+          }
+        }
       ]
-     },
-     "trait": "OrbSimulate"
-    }
-   ]
-  },
-  {
-   "id": "control: a relative file is read under the cwd anchor",
-   "steps": [
+    },
     {
-     "from": "ready",
-     "event": "SIMULATE_CALLED",
-     "payload": {
-      "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
-     },
-     "expect": {
-      "state": "reading",
-      "effects": [
-       {
-        "type": "os/read-file",
-        "key": "file",
-        "arg0": {
-         "anchor": "cwd",
-         "path": [
-          "array/first",
-          [
-           "object/get",
-           [
-            "json/parse",
-            "@payload.rawBody",
-            "{\"version\":1,\"name\":\"OrbCommandArgs\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"argv\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]},{\"name\":\"cwd\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]}]}}"
-           ],
-           "argv"
-          ]
-         ]
-        },
-        "optionsAt": 1
-       }
+      "id": "a declared state no transition reaches is reported unreachable",
+      "steps": [
+        {
+          "event": "SIMULATE_PROGRAM_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "a",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "orphan"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "a",
+                            "to": "a",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "x"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    INIT transition:\n      ✅ Slot \"main\" ← [x]\n  ⚠️  Unreachable states: [\"orphan\"]\n\n============================================================\nSimulation complete.\n"
+                }
+              }
+            ]
+          }
+        }
       ]
-     },
-     "trait": "OrbSimulate"
+    },
+    {
+      "id": "control: every state reached reports no unreachable line",
+      "steps": [
+        {
+          "event": "SIMULATE_PROGRAM_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "a",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "b"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "a",
+                            "to": "b",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "x"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "b",
+                            "to": "a",
+                            "event": "BACK",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "y"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    GO transition:\n      ✅ Slot \"main\" ← [x]\n  State: b\n    BACK transition:\n      ✅ Slot \"main\" ← [y]\n\n============================================================\nSimulation complete.\n"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a from array leaves every listed state and the walk is breadth first",
+      "steps": [
+        {
+          "event": "SIMULATE_PROGRAM_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "a",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "b"
+                          },
+                          {
+                            "name": "c"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "a",
+                            "to": "b",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "x"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "a",
+                            "to": "c",
+                            "event": "SKIP",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "x"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": [
+                              "b",
+                              "c"
+                            ],
+                            "to": "a",
+                            "event": "BACK",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "y"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    GO transition:\n      ✅ Slot \"main\" ← [x]\n    SKIP transition:\n      ✅ Slot \"main\" ← [x]\n  State: b\n    BACK transition:\n      ✅ Slot \"main\" ← [y]\n  State: c\n    BACK transition:\n      ✅ Slot \"main\" ← [y]\n\n============================================================\nSimulation complete.\n"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a trait the page does not name is not walked",
+      "steps": [
+        {
+          "event": "SIMULATE_PROGRAM_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "a",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "a",
+                            "to": "a",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "x"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "U",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "u",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "u",
+                            "to": "u",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "z"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    INIT transition:\n      ✅ Slot \"main\" ← [x]\n\n============================================================\nSimulation complete.\n"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a trait named by a second page is walked under that page",
+      "steps": [
+        {
+          "event": "SIMULATE_PROGRAM_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "a",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "a",
+                            "to": "a",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "x"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "U",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "u",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "u",
+                            "to": "u",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "z"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Q",
+                      "path": "/q",
+                      "traits": [
+                        {
+                          "ref": "U"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    INIT transition:\n      ✅ Slot \"main\" ← [x]\n\nPage: Q (/q)\n  State: u (initial)\n    INIT transition:\n      ✅ Slot \"main\" ← [z]\n\n============================================================\nSimulation complete.\n"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a trait with no initial state starts at (unknown) and walks nothing",
+      "steps": [
+        {
+          "event": "SIMULATE_PROGRAM_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "a"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "a",
+                            "to": "a",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "x"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: (unknown) (initial)\n  ⚠️  Unreachable states: [\"a\"]\n\n============================================================\nSimulation complete.\n"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a render without a slot or a type prints ?",
+      "steps": [
+        {
+          "event": "SIMULATE_PROGRAM_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "a",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "a",
+                            "to": "a",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                5,
+                                {
+                                  "title": "t"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "\n🔍 Render Simulation\n============================================================\n\nPage: P (/p)\n  State: a (initial)\n    INIT transition:\n      ✅ Slot \"?\" ← [?] (title)\n\n============================================================\nSimulation complete.\n"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an orbital with no pages prints nothing but the frame",
+      "steps": [
+        {
+          "event": "SIMULATE_PROGRAM_READ",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "a",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "\n🔍 Render Simulation\n============================================================\n\n============================================================\nSimulation complete.\n"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two arguments are the usage",
+      "steps": [
+        {
+          "event": "SIMULATE_CALLED",
+          "from": "ready",
+          "payload": {
+            "rawBody": "{\"argv\":[\"a.lolo\",\"b.lolo\"],\"cwd\":\"/x\"}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb simulate <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an unreadable file answers 500",
+      "steps": [
+        {
+          "event": "SIMULATE_UNREAD",
+          "from": "reading",
+          "payload": {
+            "error": "no such file"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "simulate: the file could not be read or lowered"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an absolute file is read without the cwd anchor",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SIMULATE_CALLED",
+          "payload": {
+            "rawBody": "{\"argv\": [\"/tmp/a.lolo\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "os/read-file",
+                "key": "file",
+                "arg0": [
+                  "str/concat",
+                  "/",
+                  [
+                    "str/slice",
+                    [
+                      "array/first",
+                      [
+                        "object/get",
+                        [
+                          "json/parse",
+                          "@payload.rawBody",
+                          "{\"version\":1,\"name\":\"OrbCommandArgs\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"argv\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]},{\"name\":\"cwd\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]}]}}"
+                        ],
+                        "argv"
+                      ]
+                    ],
+                    1,
+                    [
+                      "str/len",
+                      [
+                        "array/first",
+                        [
+                          "object/get",
+                          [
+                            "json/parse",
+                            "@payload.rawBody",
+                            "{\"version\":1,\"name\":\"OrbCommandArgs\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"argv\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]},{\"name\":\"cwd\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]}]}}"
+                          ],
+                          "argv"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "optionsAt": 1
+              }
+            ]
+          },
+          "trait": "OrbSimulate"
+        }
+      ]
+    },
+    {
+      "id": "control: a relative file is read under the cwd anchor",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "SIMULATE_CALLED",
+          "payload": {
+            "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "os/read-file",
+                "key": "file",
+                "arg0": {
+                  "anchor": "cwd",
+                  "path": [
+                    "array/first",
+                    [
+                      "object/get",
+                      [
+                        "json/parse",
+                        "@payload.rawBody",
+                        "{\"version\":1,\"name\":\"OrbCommandArgs\",\"type\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"argv\",\"fieldType\":{\"kind\":\"array\",\"inner\":{\"kind\":\"string\"}},\"required\":true,\"constraints\":[]},{\"name\":\"cwd\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[]}]}}"
+                      ],
+                      "argv"
+                    ]
+                  ]
+                },
+                "optionsAt": 1
+              }
+            ]
+          },
+          "trait": "OrbSimulate"
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbSimulate",
+          "from": "ready",
+          "event": "SIMULATE_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "SIMULATE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb simulate <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

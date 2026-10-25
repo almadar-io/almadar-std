@@ -1680,6 +1680,70 @@
    ]
   },
   {
+   "id": "good-query-hasElement-null-is-array-contains-null",
+   "steps": [
+    {
+     "event": "ROWS_QUERY",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "query": {
+       "filter": {
+        "kind": "hasElement",
+        "field": "tags",
+        "value": null
+       },
+       "order": {
+        "field": "id",
+        "direction": "asc"
+       }
+      },
+      "project": "rows"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "query",
+         "path": ":runQuery",
+         "body": {
+          "structuredQuery": {
+           "from": [
+            {
+             "collectionId": "Task"
+            }
+           ],
+           "where": {
+            "fieldFilter": {
+             "field": {
+              "fieldPath": "tags"
+             },
+             "op": "ARRAY_CONTAINS",
+             "value": {
+              "nullValue": null
+             }
+            }
+           },
+           "orderBy": [
+            {
+             "field": {
+              "fieldPath": "__name__"
+             },
+             "direction": "ASCENDING"
+            }
+           ]
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
    "id": "good-query-any-over-one-field-is-an-in-clause",
    "steps": [
     {

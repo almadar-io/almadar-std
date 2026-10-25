@@ -132,6 +132,86 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-call-whose-arguments-cannot-be-read-answers-500",
+   "steps": [
+    {
+     "trait": "VerifyWalkCli",
+     "from": "ready",
+     "event": "VERIFY_WALK_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "not json"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VERIFY_WALK_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "Error: the call's arguments could not be read"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-stored-program-that-cannot-be-read-back-fails-the-walk",
+   "entity": {
+    "program": "not json"
+   },
+   "steps": [
+    {
+     "from": "machine",
+     "event": "WALK_MACHINE_ANSWERED",
+     "payload": {
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WALK_FAILED",
+        "payload": {
+         "error": "the program could not be read back"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-unreadable-machine-fails-the-walk",
+   "steps": [
+    {
+     "from": "machine",
+     "event": "WALK_MACHINE_UNREAD",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "WALK_FAILED",
+        "payload": {
+         "error": "the program could not be read as a machine"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

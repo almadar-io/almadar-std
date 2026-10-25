@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-24T20:22:01.872Z",
+  "generated": "2026-10-25T08:21:00.759Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -288,12 +288,21 @@
       "category": "arithmetic",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Modulo (remainder)",
       "module": "core",
       "returnSemantics": "integer-closed",
       "failable": {
-        "unlessLiteral": [
+        "unlessNonZero": [
           1
         ]
       },
@@ -307,8 +316,7 @@
         {
           "name": "b",
           "type": "number",
-          "description": "Divisor",
-          "rejectsNull": true
+          "description": "Divisor"
         }
       ],
       "examples": [
@@ -324,6 +332,7 @@
       "description": "Multiply numbers",
       "module": "core",
       "returnSemantics": "integer-closed",
+      "sign": "product",
       "title": "Multiply",
       "params": [
         {
@@ -345,6 +354,7 @@
       "description": "Add numbers",
       "module": "core",
       "returnSemantics": "integer-closed",
+      "sign": "sum",
       "title": "Add",
       "params": [
         {
@@ -389,11 +399,20 @@
       "category": "arithmetic",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Divide numbers",
       "module": "core",
       "failable": {
-        "unlessLiteral": [
+        "unlessNonZero": [
           1
         ]
       },
@@ -407,8 +426,7 @@
         {
           "name": "b",
           "type": "number",
-          "description": "Denominator",
-          "rejectsNull": true
+          "description": "Denominator"
         }
       ],
       "examples": [
@@ -936,9 +954,19 @@
       "category": "std-array",
       "minArity": 1,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Average of values (optionally by field)",
       "module": "array",
+      "failable": {},
       "title": "Avg",
       "params": [
         {
@@ -1006,7 +1034,16 @@
       "category": "std-array",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Cosine similarity between two numeric vectors, in [-1, 1] (1 = identical direction). The building block for \"is this answer semantically the reference answer\" checks over embeddings. Pure math — usable in guards and value position, unlike the async llm/* substrate operators.",
       "module": "array",
       "failable": {},
@@ -1043,6 +1080,7 @@
       "returnType": "number",
       "description": "Count elements (optionally matching predicate)",
       "module": "array",
+      "sign": "nonNegative",
       "lambdaArgPosition": 1,
       "title": "Count",
       "params": [
@@ -1616,6 +1654,7 @@
       "returnType": "number",
       "description": "Array length",
       "module": "array",
+      "sign": "nonNegative",
       "title": "Length",
       "params": [
         {
@@ -1784,12 +1823,21 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": {
-        "kind": "object",
-        "fields": {
-          "index": "number",
-          "score": "number",
-          "margin": "number"
-        }
+        "kind": "union",
+        "of": [
+          {
+            "kind": "object",
+            "fields": {
+              "index": "number",
+              "score": "number",
+              "margin": "number"
+            }
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
       },
       "description": "Find the candidate vector nearest a query vector by cosine similarity. Returns { index, score, margin } — index/score of the best match, and margin (best score minus second-best), which is what makes an abstaining gate possible: a small margin means the top match is not confidently distinguished from the runner-up.",
       "module": "array",
@@ -2666,7 +2714,16 @@
       "category": "std-codec",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "string",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Decode standard base64 (RFC 4648) to a UTF-8 string; invalid base64 or non-UTF-8 bytes are an evaluation error",
       "module": "base64",
       "failable": {},
@@ -3407,7 +3464,16 @@
       "category": "std-math",
       "minArity": 2,
       "maxArity": null,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Bitwise AND of two or more 32-bit words, folded left. Each operand must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. The result is a whole number 0..4294967295.",
       "module": "bit",
       "failable": {},
@@ -3428,7 +3494,16 @@
       "category": "std-math",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Bitwise NOT over 32 bits (4294967295 - a). The operand must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. The result is a whole number 0..4294967295.",
       "module": "bit",
       "failable": {},
@@ -3449,7 +3524,16 @@
       "category": "std-math",
       "minArity": 2,
       "maxArity": null,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Bitwise OR of two or more 32-bit words, folded left. Each operand must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. The result is a whole number 0..4294967295.",
       "module": "bit",
       "failable": {},
@@ -3470,7 +3554,16 @@
       "category": "std-math",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Rotate left by n bits within 32 bits. The word must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. A count outside the whole numbers 0..31 (32 included) fails with kind invalid; nothing is masked. The result is a whole number 0..4294967295.",
       "module": "bit",
       "failable": {},
@@ -3497,7 +3590,16 @@
       "category": "std-math",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Rotate right by n bits within 32 bits. The word must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. A count outside the whole numbers 0..31 (32 included) fails with kind invalid; nothing is masked. The result is a whole number 0..4294967295.",
       "module": "bit",
       "failable": {},
@@ -3524,7 +3626,16 @@
       "category": "std-math",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Left shift by n bits; bits shifted past bit 31 are discarded. The word must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. A count outside the whole numbers 0..31 (32 included) fails with kind invalid; nothing is masked. The result is a whole number 0..4294967295.",
       "module": "bit",
       "failable": {},
@@ -3551,7 +3662,16 @@
       "category": "std-math",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Logical (zero-fill) right shift by n bits. The word must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. A count outside the whole numbers 0..31 (32 included) fails with kind invalid; nothing is masked. The result is a whole number 0..4294967295.",
       "module": "bit",
       "failable": {},
@@ -3578,7 +3698,16 @@
       "category": "std-math",
       "minArity": 2,
       "maxArity": null,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Bitwise XOR of two or more 32-bit words, folded left. Each operand must be a whole number 0..4294967295 (an unsigned 32-bit word). An operand that is negative, not whole, not finite, 2^32 or above, or not a number fails with kind invalid; nothing is wrapped. The result is a whole number 0..4294967295.",
       "module": "bit",
       "failable": {},
@@ -3602,86 +3731,95 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "bytes",
           {
-            "kind": "object",
-            "fields": {
-              "ok": "boolean",
-              "data": {
-                "kind": "union",
-                "of": [
-                  "bytes",
-                  {
-                    "kind": "literal",
-                    "value": null
-                  }
-                ]
-              },
-              "crc": {
-                "kind": "union",
-                "of": [
-                  "number",
-                  {
-                    "kind": "literal",
-                    "value": null
-                  }
-                ]
-              },
-              "code": {
-                "kind": "union",
-                "of": [
-                  {
+            "kind": "union",
+            "of": [
+              "bytes",
+              {
+                "kind": "object",
+                "fields": {
+                  "ok": "boolean",
+                  "data": {
                     "kind": "union",
                     "of": [
+                      "bytes",
                       {
                         "kind": "literal",
-                        "value": "magic"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "method"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "flags"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "header-crc"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "truncated"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "block"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "crc"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "size"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "trailing"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "output-limit"
+                        "value": null
                       }
                     ]
                   },
-                  {
-                    "kind": "literal",
-                    "value": null
+                  "crc": {
+                    "kind": "union",
+                    "of": [
+                      "number",
+                      {
+                        "kind": "literal",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "code": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "union",
+                        "of": [
+                          {
+                            "kind": "literal",
+                            "value": "magic"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "method"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "flags"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "header-crc"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "truncated"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "block"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "crc"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "size"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "trailing"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "output-limit"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "literal",
+                        "value": null
+                      }
+                    ]
                   }
-                ]
+                }
               }
-            }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": null
           }
         ]
       },
@@ -3727,86 +3865,95 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "bytes",
           {
-            "kind": "object",
-            "fields": {
-              "ok": "boolean",
-              "data": {
-                "kind": "union",
-                "of": [
-                  "bytes",
-                  {
-                    "kind": "literal",
-                    "value": null
-                  }
-                ]
-              },
-              "crc": {
-                "kind": "union",
-                "of": [
-                  "number",
-                  {
-                    "kind": "literal",
-                    "value": null
-                  }
-                ]
-              },
-              "code": {
-                "kind": "union",
-                "of": [
-                  {
+            "kind": "union",
+            "of": [
+              "bytes",
+              {
+                "kind": "object",
+                "fields": {
+                  "ok": "boolean",
+                  "data": {
                     "kind": "union",
                     "of": [
+                      "bytes",
                       {
                         "kind": "literal",
-                        "value": "magic"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "method"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "flags"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "header-crc"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "truncated"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "block"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "crc"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "size"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "trailing"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "output-limit"
+                        "value": null
                       }
                     ]
                   },
-                  {
-                    "kind": "literal",
-                    "value": null
+                  "crc": {
+                    "kind": "union",
+                    "of": [
+                      "number",
+                      {
+                        "kind": "literal",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "code": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "union",
+                        "of": [
+                          {
+                            "kind": "literal",
+                            "value": "magic"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "method"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "flags"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "header-crc"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "truncated"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "block"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "crc"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "size"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "trailing"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "output-limit"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "literal",
+                        "value": null
+                      }
+                    ]
                   }
-                ]
+                }
               }
-            }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": null
           }
         ]
       },
@@ -5780,7 +5927,16 @@
       "category": "std-codec",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "bytes",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "bytes",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "The bytes a standard padded base64 text (RFC 4648) encodes, unchanged at run time; other text fails with kind invalid. A bytes value is a standard padded base64 string at run time.",
       "module": "bytes",
       "failable": {},
@@ -6022,7 +6178,16 @@
       "category": "std-codec",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "string",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Decode bytes as UTF-8 text; bytes that are not valid UTF-8 fail with kind invalid. A bytes value is a standard padded base64 string at run time.",
       "module": "bytes",
       "failable": {},
@@ -6043,7 +6208,16 @@
       "category": "std-codec",
       "minArity": 3,
       "maxArity": 3,
-      "returnType": "bytes",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "bytes",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "A whole number as width unsigned bytes, big-endian (be) or little-endian (le). A value that is negative, not whole, too large for the width, or above 2^53 - 1 fails with kind invalid. A bytes value is a standard padded base64 string at run time.",
       "module": "bytes",
       "failable": {},
@@ -7176,7 +7350,16 @@
       "category": "std-format",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "string",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Format bytes as human-readable size (1024 steps, B to PB); a negative or non-finite size is an error",
       "module": "format",
       "failable": {},
@@ -7217,7 +7400,16 @@
       "category": "std-format",
       "minArity": 2,
       "maxArity": 3,
-      "returnType": "string",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Format as currency, written as English writes it (symbol before the amount, the currency's own minor units). Supported currencies: USD EUR GBP JPY CNY INR KRW CAD AUD CHF MXN BRL SEK NOK DKK PLN CZK ZAR NZD SGD HKD AED SAR ILS TRY RUB KWD BHD CLP VND; another currency is an error",
       "module": "format",
       "failable": {},
@@ -7231,8 +7423,7 @@
         {
           "name": "currency",
           "type": "string",
-          "description": "Currency code (USD, EUR, etc.)",
-          "rejectsNull": true
+          "description": "Currency code (USD, EUR, etc.)"
         },
         {
           "name": "locale",
@@ -7290,7 +7481,16 @@
       "category": "std-format",
       "minArity": 1,
       "maxArity": 2,
-      "returnType": "string",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Format number with locale grouping and decimal separators. Supported locales: en, en-US, en-GB, en-CA, en-AU, ja, de, pt, pt-BR, nl, fr, es, it, sl, ar, ru (and their -DE/-FR/-ES/-IT/-SI/-NL/-RU/-JP forms); another locale is an error. Rounds half away from zero; with no options the fraction is 0 to 3 digits",
       "module": "format",
       "failable": {},
@@ -7345,7 +7545,16 @@
       "category": "std-format",
       "minArity": 1,
       "maxArity": 2,
-      "returnType": "string",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Format as percentage (en-US conventions): the value times 100 with `decimals` fraction digits and a percent sign",
       "module": "format",
       "failable": {},
@@ -7893,86 +8102,95 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "bytes",
           {
-            "kind": "object",
-            "fields": {
-              "ok": "boolean",
-              "data": {
-                "kind": "union",
-                "of": [
-                  "bytes",
-                  {
-                    "kind": "literal",
-                    "value": null
-                  }
-                ]
-              },
-              "crc": {
-                "kind": "union",
-                "of": [
-                  "number",
-                  {
-                    "kind": "literal",
-                    "value": null
-                  }
-                ]
-              },
-              "code": {
-                "kind": "union",
-                "of": [
-                  {
+            "kind": "union",
+            "of": [
+              "bytes",
+              {
+                "kind": "object",
+                "fields": {
+                  "ok": "boolean",
+                  "data": {
                     "kind": "union",
                     "of": [
+                      "bytes",
                       {
                         "kind": "literal",
-                        "value": "magic"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "method"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "flags"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "header-crc"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "truncated"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "block"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "crc"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "size"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "trailing"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "output-limit"
+                        "value": null
                       }
                     ]
                   },
-                  {
-                    "kind": "literal",
-                    "value": null
+                  "crc": {
+                    "kind": "union",
+                    "of": [
+                      "number",
+                      {
+                        "kind": "literal",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "code": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "union",
+                        "of": [
+                          {
+                            "kind": "literal",
+                            "value": "magic"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "method"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "flags"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "header-crc"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "truncated"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "block"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "crc"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "size"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "trailing"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "output-limit"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "literal",
+                        "value": null
+                      }
+                    ]
                   }
-                ]
+                }
               }
-            }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": null
           }
         ]
       },
@@ -8016,86 +8234,95 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "bytes",
           {
-            "kind": "object",
-            "fields": {
-              "ok": "boolean",
-              "data": {
-                "kind": "union",
-                "of": [
-                  "bytes",
-                  {
-                    "kind": "literal",
-                    "value": null
-                  }
-                ]
-              },
-              "crc": {
-                "kind": "union",
-                "of": [
-                  "number",
-                  {
-                    "kind": "literal",
-                    "value": null
-                  }
-                ]
-              },
-              "code": {
-                "kind": "union",
-                "of": [
-                  {
+            "kind": "union",
+            "of": [
+              "bytes",
+              {
+                "kind": "object",
+                "fields": {
+                  "ok": "boolean",
+                  "data": {
                     "kind": "union",
                     "of": [
+                      "bytes",
                       {
                         "kind": "literal",
-                        "value": "magic"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "method"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "flags"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "header-crc"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "truncated"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "block"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "crc"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "size"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "trailing"
-                      },
-                      {
-                        "kind": "literal",
-                        "value": "output-limit"
+                        "value": null
                       }
                     ]
                   },
-                  {
-                    "kind": "literal",
-                    "value": null
+                  "crc": {
+                    "kind": "union",
+                    "of": [
+                      "number",
+                      {
+                        "kind": "literal",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "code": {
+                    "kind": "union",
+                    "of": [
+                      {
+                        "kind": "union",
+                        "of": [
+                          {
+                            "kind": "literal",
+                            "value": "magic"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "method"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "flags"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "header-crc"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "truncated"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "block"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "crc"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "size"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "trailing"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "output-limit"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "literal",
+                        "value": null
+                      }
+                    ]
                   }
-                ]
+                }
               }
-            }
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": null
           }
         ]
       },
@@ -8140,7 +8367,16 @@
       "category": "std-codec",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "string",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "MD5 digest of binary data given as standard padded base64 (decoded once, hashed as bytes), as lower-case hex or standard base64 (RFC 1321)",
       "module": "hash",
       "failable": {},
@@ -8179,7 +8415,16 @@
       "category": "std-codec",
       "minArity": 4,
       "maxArity": 4,
-      "returnType": "bytes",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "bytes",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "PBKDF2 with HMAC-SHA256 (RFC 8018) over bytes, answering length derived bytes (a bytes value is a standard padded base64 string at run time). Iterations and length are whole numbers from 1; anything else fails with kind invalid",
       "module": "hash",
       "failable": {},
@@ -8251,7 +8496,16 @@
       "category": "std-codec",
       "minArity": 2,
       "maxArity": 3,
-      "returnType": "string",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "SHA-256 digest (FIPS 180-2) as lower-case hex or standard base64. Input \"text\" (the default) hashes a string's UTF-8 bytes; \"bytes\" hashes a bytes value (standard padded base64, decoded once, as hash/md5 reads it). Invalid base64 or another input kind fails with kind invalid",
       "module": "hash",
       "failable": {},
@@ -9311,7 +9565,16 @@
       "category": "std-i18n",
       "minArity": 1,
       "maxArity": 2,
-      "returnType": "string",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "The active locale's message for a catalog key, with {{placeholders}} filled from params",
       "module": "i18n",
       "failable": {
@@ -9420,10 +9683,20 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": {
-        "kind": "shape"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "shape"
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
       },
       "description": "Parse a JSON string into a value of the declared shape (the second argument names a type); invalid JSON or non-string input returns null (never throws)",
       "module": "json",
+      "failable": {},
       "params": [
         {
           "name": "s",
@@ -10132,6 +10405,7 @@
       "description": "Absolute value",
       "module": "math",
       "returnSemantics": "integer-closed",
+      "sign": "nonNegative",
       "title": "Absolute Value",
       "params": [
         {
@@ -10149,9 +10423,19 @@
       "category": "std-math",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Arccosine (inverse cosine) in radians",
       "module": "math",
+      "failable": {},
       "title": "Arccosine",
       "params": [
         {
@@ -10199,9 +10483,19 @@
       "category": "std-math",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Arcsine (inverse sine) in radians",
       "module": "math",
+      "failable": {},
       "title": "Arcsine",
       "params": [
         {
@@ -10466,9 +10760,23 @@
       "category": "std-math",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Natural logarithm (base e)",
       "module": "math",
+      "failable": {
+        "unlessPositive": [
+          0
+        ]
+      },
       "title": "Ln",
       "params": [
         {
@@ -10486,9 +10794,23 @@
       "category": "std-math",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Base-10 logarithm",
       "module": "math",
+      "failable": {
+        "unlessPositive": [
+          0
+        ]
+      },
       "title": "Log10",
       "params": [
         {
@@ -10550,6 +10872,7 @@
       "description": "Maximum of values",
       "module": "math",
       "returnSemantics": "integer-closed",
+      "sign": "max",
       "title": "Max",
       "params": [
         {
@@ -10571,6 +10894,7 @@
       "description": "Minimum of values",
       "module": "math",
       "returnSemantics": "integer-closed",
+      "sign": "min",
       "title": "Min",
       "params": [
         {
@@ -10588,12 +10912,21 @@
       "category": "std-math",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Modulo (remainder)",
       "module": "math",
       "returnSemantics": "integer-closed",
       "failable": {
-        "unlessLiteral": [
+        "unlessNonZero": [
           1
         ]
       },
@@ -10607,8 +10940,7 @@
         {
           "name": "b",
           "type": "number",
-          "description": "Divisor",
-          "rejectsNull": true
+          "description": "Divisor"
         }
       ],
       "examples": [
@@ -10620,9 +10952,19 @@
       "category": "std-math",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Exponentiation (base^exp)",
       "module": "math",
+      "failable": {},
       "title": "Pow",
       "params": [
         {
@@ -10678,7 +11020,16 @@
       "category": "std-math",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Random integer in range [min, max] (inclusive)",
       "module": "math",
       "failable": {},
@@ -10692,8 +11043,7 @@
         {
           "name": "max",
           "type": "number",
-          "description": "Maximum (inclusive)",
-          "rejectsNull": true
+          "description": "Maximum (inclusive)"
         }
       ],
       "examples": [
@@ -10773,9 +11123,24 @@
       "category": "std-math",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Square root",
       "module": "math",
+      "failable": {
+        "unlessNonNegative": [
+          0
+        ]
+      },
+      "sign": "nonNegative",
       "title": "Sqrt",
       "params": [
         {
@@ -11558,8 +11923,17 @@
       "minArity": 2,
       "maxArity": null,
       "returnType": {
-        "kind": "mergeOf",
-        "of": "R"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "mergeOf",
+            "of": "R"
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
       },
       "description": "Deep merge objects (later wins). A `__proto__` key (or path segment) is refused with an error",
       "module": "object",
@@ -11731,15 +12105,24 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": {
-        "kind": "map",
-        "key": {
-          "kind": "var",
-          "name": "K"
-        },
-        "value": {
-          "kind": "var",
-          "name": "V"
-        }
+        "kind": "union",
+        "of": [
+          {
+            "kind": "map",
+            "key": {
+              "kind": "var",
+              "name": "K"
+            },
+            "value": {
+              "kind": "var",
+              "name": "V"
+            }
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
       },
       "description": "Create object from [key, value] pairs. A `__proto__` key (or path segment) is refused with an error",
       "module": "object",
@@ -11901,15 +12284,24 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": {
-        "kind": "map",
-        "key": {
-          "kind": "var",
-          "name": "J"
-        },
-        "value": {
-          "kind": "var",
-          "name": "V"
-        }
+        "kind": "union",
+        "of": [
+          {
+            "kind": "map",
+            "key": {
+              "kind": "var",
+              "name": "J"
+            },
+            "value": {
+              "kind": "var",
+              "name": "V"
+            }
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
       },
       "description": "Transform all keys. A `__proto__` key (or path segment) is refused with an error",
       "module": "object",
@@ -12022,8 +12414,17 @@
       "minArity": 2,
       "maxArity": null,
       "returnType": {
-        "kind": "mergeOf",
-        "of": "R"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "mergeOf",
+            "of": "R"
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
       },
       "description": "Shallow merge objects (later wins). A `__proto__` key (or path segment) is refused with an error",
       "module": "object",
@@ -12137,8 +12538,17 @@
       "minArity": 3,
       "maxArity": 3,
       "returnType": {
-        "kind": "var",
-        "name": "R"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "var",
+            "name": "R"
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
       },
       "description": "Set nested value by path (returns new object). A `__proto__` key (or path segment) is refused with an error",
       "module": "object",
@@ -13903,6 +14313,104 @@
       ],
       "docsSource": "generated"
     },
+    "os/irq-ack": {
+      "category": "std-os",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Acknowledge the interrupt last delivered on an irq line so the next one can arrive (grant dev: { \"irq:<line>\": [ack] }). Success payload: {}. A host with no devices answers unsupported.",
+      "module": "os",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "os",
+      "params": [
+        {
+          "name": "irq",
+          "type": "number",
+          "description": "Interrupt line"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(os/irq-ack 33 {\"emit\":{\"failure\":\"DEVICE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "os/irq-wait": {
+      "category": "std-os",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Wait for the next interrupt on an irq line (grant dev: { \"irq:<line>\": [wait] }). A keyed call completes later through its success route, once per call. Success payload: { irq }. A host with no devices answers unsupported.",
+      "module": "os",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "os",
+      "params": [
+        {
+          "name": "irq",
+          "type": "number",
+          "description": "Interrupt line"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(os/irq-wait 33 {\"key\":\"uart-rx\",\"emit\":{\"success\":\"RX_IRQ\",\"failure\":\"DEVICE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "os/isatty": {
       "category": "std-os",
       "minArity": 1,
@@ -14579,6 +15087,129 @@
       ],
       "examples": [
         "(os/mktemp \"job-\" \"/data/tmp\" {\"emit\":{\"success\":\"TEMP_MADE\",\"failure\":\"DIR_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "os/mmio-read": {
+      "category": "std-os",
+      "minArity": 3,
+      "maxArity": 4,
+      "returnType": "void",
+      "description": "Read a device register: width bytes at offset into the register window based at base (grant dev: { \"mmio:<base>+<length>\": [read] }; the window must hold offset + width). Success payload: { value }. A host with no devices answers unsupported.",
+      "module": "os",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "os",
+      "params": [
+        {
+          "name": "base",
+          "type": "number",
+          "description": "Base address of the granted register window"
+        },
+        {
+          "name": "offset",
+          "type": "number",
+          "description": "Byte offset of the register inside the window"
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "description": "Register width in bytes: 1, 2, 4 or 8"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(os/mmio-read 150994944 24 4 {\"emit\":{\"success\":\"FLAGS_READ\",\"failure\":\"DEVICE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "os/mmio-write": {
+      "category": "std-os",
+      "minArity": 4,
+      "maxArity": 5,
+      "returnType": "void",
+      "description": "Write a device register: value as width bytes at offset into the register window based at base (grant dev: { \"mmio:<base>+<length>\": [write] }). Success payload: {}. A host with no devices answers unsupported.",
+      "module": "os",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "os",
+      "params": [
+        {
+          "name": "base",
+          "type": "number",
+          "description": "Base address of the granted register window"
+        },
+        {
+          "name": "offset",
+          "type": "number",
+          "description": "Byte offset of the register inside the window"
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "description": "Register width in bytes: 1, 2, 4 or 8"
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "description": "Value to write"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(os/mmio-write 150994944 0 1 65 {\"emit\":{\"failure\":\"DEVICE_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -19229,10 +19860,19 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": {
-        "kind": "tuple",
-        "items": [
-          "number",
-          "number"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "tuple",
+            "items": [
+              "number",
+              "number"
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
         ]
       },
       "description": "Compute symmetric credible interval from samples",
@@ -19334,17 +19974,26 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": {
-        "kind": "object",
-        "fields": {
-          "binEdges": {
-            "kind": "array",
-            "of": "number"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "object",
+            "fields": {
+              "binEdges": {
+                "kind": "array",
+                "of": "number"
+              },
+              "counts": {
+                "kind": "array",
+                "of": "number"
+              }
+            }
           },
-          "counts": {
-            "kind": "array",
-            "of": "number"
+          {
+            "kind": "literal",
+            "value": null
           }
-        }
+        ]
       },
       "description": "Bin numeric samples into a histogram",
       "module": "prob",
@@ -19363,8 +20012,7 @@
         {
           "name": "bins",
           "type": "number",
-          "description": "Number of bins",
-          "rejectsNull": true
+          "description": "Number of bins"
         }
       ],
       "examples": [
@@ -19422,7 +20070,16 @@
       "category": "std-prob",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Get the p-th percentile (0-100) from samples",
       "module": "prob",
       "failable": {},
@@ -21351,7 +22008,16 @@
       "category": "std-object",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "boolean",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "boolean",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Whether the row satisfies the typed RowPredicate, decided by the kernel's one predicate evaluator (the one every store runs a compiled where/filter through); an absent predicate or row is an absent result",
       "module": "object",
       "failable": {},
@@ -21858,7 +22524,16 @@
       "category": "std-str",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "string",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Decode a percent-encoded URI component (JavaScript decodeURIComponent; %XX sequences as UTF-8, + is not a space, malformed input is an evaluation error, null yields null)",
       "module": "str",
       "failable": {},
@@ -22052,6 +22727,7 @@
       "returnType": "number",
       "description": "String length",
       "module": "str",
+      "sign": "nonNegative",
       "title": "Length",
       "params": [
         {
@@ -22208,7 +22884,16 @@
       "category": "std-str",
       "minArity": 3,
       "maxArity": 3,
-      "returnType": "string",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Replace every match of a regex pattern of the shared dialect (see validate/pattern; Unicode mode, so \\p{L} and \\p{N} work). The replacement is literal: $ has no meaning. An invalid or unsupported pattern is an error",
       "module": "str",
       "failable": {
@@ -22480,9 +23165,19 @@
       "category": "std-str",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Convert a string using JavaScript Number semantics; malformed text returns NaN",
       "module": "str",
+      "failable": {},
       "params": [
         {
           "name": "s",
@@ -22661,14 +23356,22 @@
       "category": "std-time",
       "minArity": 3,
       "maxArity": 3,
-      "returnType": "number",
+      "returnType": {
+        "kind": "var",
+        "name": "T",
+        "bound": "number"
+      },
       "description": "Add time to timestamp (calendar units in UTC)",
       "module": "time",
       "title": "Add",
       "params": [
         {
           "name": "date",
-          "type": "number",
+          "type": {
+            "kind": "var",
+            "name": "T",
+            "bound": "number"
+          },
           "description": "Timestamp"
         },
         {
@@ -22965,14 +23668,22 @@
       "category": "std-time",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": {
+        "kind": "var",
+        "name": "T",
+        "bound": "number"
+      },
       "description": "Get end of time period (UTC)",
       "module": "time",
       "title": "End Of",
       "params": [
         {
           "name": "date",
-          "type": "number",
+          "type": {
+            "kind": "var",
+            "name": "T",
+            "bound": "number"
+          },
           "description": "Timestamp"
         },
         {
@@ -23091,9 +23802,26 @@
       "category": "std-time",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "string",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
       "description": "Format timestamp to string, in UTC",
       "module": "time",
+      "failable": {
+        "unlessTyped": [
+          {
+            "arg": 0,
+            "type": "instant"
+          }
+        ]
+      },
       "title": "Format",
       "params": [
         {
@@ -23448,7 +24176,7 @@
       "category": "std-time",
       "minArity": 0,
       "maxArity": 0,
-      "returnType": "number",
+      "returnType": "instant",
       "description": "Current timestamp",
       "module": "time",
       "title": "Now",
@@ -23461,16 +24189,32 @@
       "category": "std-time",
       "minArity": 1,
       "maxArity": 1,
-      "returnType": "number",
-      "description": "Parse an ISO 8601 / RFC 3339 date or date-time to epoch ms (a date is midnight UTC; no offset reads as UTC); an unparsable string is an error",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "number",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "Parse an ISO 8601 / RFC 3339 date or date-time to epoch ms (a date is midnight UTC; no offset reads as UTC); a date or datetime value already held as epoch ms is that number; anything else answers null",
       "module": "time",
       "failable": {},
       "title": "Parse",
       "params": [
         {
           "name": "str",
-          "type": "string",
-          "description": "ISO 8601 date or date-time, e.g. 2024-01-18 or 2024-01-18T09:30:00+02:00",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              "date",
+              "datetime"
+            ]
+          },
+          "description": "ISO 8601 date or date-time (e.g. 2024-01-18 or 2024-01-18T09:30:00+02:00), or a date/datetime value",
           "rejectsNull": true
         }
       ],
@@ -23523,14 +24267,22 @@
       "category": "std-time",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": "number",
+      "returnType": {
+        "kind": "var",
+        "name": "T",
+        "bound": "number"
+      },
       "description": "Get start of time period (UTC)",
       "module": "time",
       "title": "Start Of",
       "params": [
         {
           "name": "date",
-          "type": "number",
+          "type": {
+            "kind": "var",
+            "name": "T",
+            "bound": "number"
+          },
           "description": "Timestamp"
         },
         {
@@ -23649,14 +24401,22 @@
       "category": "std-time",
       "minArity": 3,
       "maxArity": 3,
-      "returnType": "number",
+      "returnType": {
+        "kind": "var",
+        "name": "T",
+        "bound": "number"
+      },
       "description": "Subtract time from timestamp (calendar units in UTC)",
       "module": "time",
       "title": "Subtract",
       "params": [
         {
           "name": "date",
-          "type": "number",
+          "type": {
+            "kind": "var",
+            "name": "T",
+            "bound": "number"
+          },
           "description": "Timestamp"
         },
         {
@@ -23780,7 +24540,7 @@
       "category": "std-time",
       "minArity": 0,
       "maxArity": 0,
-      "returnType": "number",
+      "returnType": "instant",
       "description": "Today at midnight UTC (the host timezone is never read)",
       "module": "time",
       "title": "Today",
@@ -23934,8 +24694,17 @@
       "minArity": 3,
       "maxArity": 4,
       "returnType": {
-        "kind": "var",
-        "name": "R"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "var",
+            "name": "R"
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
       },
       "description": "The structural bottom-up fold over a value of a recursive type (the third argument names it). The children of a node are its fields whose declared type is the type itself, a list of it or a Map of it, read from the type, never from names or the value's shape; a union node is read through the variant it belongs to. The step is called once per node with (node childResults), childResults holding one entry per child field present, in its position: a field holds the child's result, a list the list of results, a map the map of results; a leaf gets {}. Every call works on a strict subterm of a finite value, so the fold terminates. An absent value folds to null",
       "module": "json",
@@ -25335,7 +26104,16 @@
       "minArity": 2,
       "maxArity": 3,
       "returnType": {
-        "kind": "shape"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "shape"
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
       },
       "description": "Parse XML text into a value of the declared shape (the second argument names a type): namespaces are ignored by local name, an attribute is the field \"@name\" (declare it in the shape as a quoted field, `{ \"@href\" : string }`, and read it with `(object/get @x (quote \"@href\"))`), a repeated child element is a list (a field the shape declares as a list is one even with a single child), an element with no attributes or children is its text (whitespace collapsed, trimmed), other elements are objects with \"#text\" for their own text; malformed XML is an evaluation error, a null input is null",
       "module": "xml",

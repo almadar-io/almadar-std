@@ -10,13 +10,13 @@ type StripeErrorReply = { error : StripeApiError }
 type StripeOauthErrorReply = { error : string, error_description : string }
 type StripePaymentIntent = { id : string!, object : string, amount : number, currency : string, status : string, client_secret : string, metadata : Map string string }
 type StripeRefund = { id : string!, object : string, amount : number, status : string }
-type StripeCustomer = { id : string, email : string, metadata : Map string string }
+type StripeCustomer = { id : string!, email : string, metadata : Map string string }
 type StripeIdRef = { id : string }
-type StripeSessionWithCustomer = { id : string, url : string, customer : StripeIdRef }
+type StripeSessionWithCustomer = { id : string!, url : string, customer : StripeIdRef }
 type StripeSessionWithCustomerId = { id : string, url : string, customer : string }
 type StripeSubscriptionItem = { id : string, quantity : number, price : StripeIdRef }
 type StripeSubscriptionItems = { data : [StripeSubscriptionItem] }
-type StripeSubscription = { id : string, customer : StripeIdRef, status : string, cancel_at_period_end : boolean, current_period_start : number, current_period_end : number, items : StripeSubscriptionItems }
+type StripeSubscription = { id : string!, customer : StripeIdRef, status : string, cancel_at_period_end : boolean, current_period_start : number, current_period_end : number, items : StripeSubscriptionItems }
 type StripeSubscriptionRef = { id : string, customer : string, status : string, cancel_at_period_end : boolean, current_period_start : number, current_period_end : number, items : StripeSubscriptionItems }
 orbital StripeOrbital {
   entity StripeCall [runtime] {
@@ -104,21 +104,35 @@ orbital StripeOrbital {
         (emit STRIPE_OK { key: @payload.key, body: @payload.body })
       STRIPE_HTTP_FAILED -> idle
         (emit STRIPE_FAILED { code: null, message: @payload.error })
-      STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "createPaymentIntent")
+      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createPaymentIntent") (= (json/parse @payload.body StripePaymentIntent) null))
+        (emit STRIPE_FAILED { code: null, message: "Stripe answered a payment intent that could not be read" })
+      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createPaymentIntent") (!= (json/parse @payload.body StripePaymentIntent) null))
         (emit STRIPE_CREATE_PAYMENT_INTENT_RESULT { id: (object/get (json/parse @payload.body StripePaymentIntent) id null), object: (object/get (json/parse @payload.body StripePaymentIntent) object null), amount: (object/get (json/parse @payload.body StripePaymentIntent) amount null), currency: (object/get (json/parse @payload.body StripePaymentIntent) currency null), status: (object/get (json/parse @payload.body StripePaymentIntent) status null), client_secret: (object/get (json/parse @payload.body StripePaymentIntent) client_secret null), metadata: (object/get (json/parse @payload.body StripePaymentIntent) metadata null) })
-      STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "confirmPayment")
+      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "confirmPayment") (= (json/parse @payload.body StripePaymentIntent) null))
+        (emit STRIPE_FAILED { code: null, message: "Stripe answered a payment intent that could not be read" })
+      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "confirmPayment") (!= (json/parse @payload.body StripePaymentIntent) null))
         (emit STRIPE_CONFIRM_PAYMENT_RESULT { id: (object/get (json/parse @payload.body StripePaymentIntent) id null), object: (object/get (json/parse @payload.body StripePaymentIntent) object null), amount: (object/get (json/parse @payload.body StripePaymentIntent) amount null), currency: (object/get (json/parse @payload.body StripePaymentIntent) currency null), status: (object/get (json/parse @payload.body StripePaymentIntent) status null), client_secret: (object/get (json/parse @payload.body StripePaymentIntent) client_secret null), metadata: (object/get (json/parse @payload.body StripePaymentIntent) metadata null) })
-      STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "refund")
+      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "refund") (= (json/parse @payload.body StripeRefund) null))
+        (emit STRIPE_FAILED { code: null, message: "Stripe answered a refund that could not be read" })
+      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "refund") (!= (json/parse @payload.body StripeRefund) null))
         (emit STRIPE_REFUND_RESULT { id: (object/get (json/parse @payload.body StripeRefund) id null), object: (object/get (json/parse @payload.body StripeRefund) object null), amount: (object/get (json/parse @payload.body StripeRefund) amount null), status: (object/get (json/parse @payload.body StripeRefund) status null) })
-      STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "createCustomer")
+      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createCustomer") (= (json/parse @payload.body StripeCustomer) null))
+        (emit STRIPE_FAILED { code: null, message: "Stripe answered a customer that could not be read" })
+      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createCustomer") (!= (json/parse @payload.body StripeCustomer) null))
         (emit STRIPE_CREATE_CUSTOMER_RESULT { customerId: (object/get (json/parse @payload.body StripeCustomer) id null), email: (if (validate/string (object/get (json/parse @payload.body StripeCustomer) email null)) (object/get (json/parse @payload.body StripeCustomer) email null) ""), almadarUid: (if (validate/string (object/get (json/parse @payload.body StripeCustomer) "metadata.almadarUid" null)) (object/get (json/parse @payload.body StripeCustomer) "metadata.almadarUid" null) "") })
-      STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "createCheckoutSession")
+      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createCheckoutSession") (= (json/parse @payload.body StripeSessionWithCustomer) null))
+        (emit STRIPE_FAILED { code: null, message: "Stripe answered a checkout session that could not be read" })
+      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createCheckoutSession") (!= (json/parse @payload.body StripeSessionWithCustomer) null))
         (emit STRIPE_CREATE_CHECKOUT_SESSION_RESULT { url: (if (validate/string (object/get (json/parse @payload.body StripeSessionWithCustomer) url null)) (object/get (json/parse @payload.body StripeSessionWithCustomer) url null) ""), sessionId: (object/get (json/parse @payload.body StripeSessionWithCustomer) id null), customerId: (if (validate/string (object/get (json/parse @payload.body StripeSessionWithCustomerId) customer null)) (object/get (json/parse @payload.body StripeSessionWithCustomerId) customer "") (object/get (json/parse @payload.body StripeSessionWithCustomer) "customer.id" "")) })
-      STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "createPortalSession")
+      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createPortalSession") (= (json/parse @payload.body StripeSessionWithCustomer) null))
+        (emit STRIPE_FAILED { code: null, message: "Stripe answered a portal session that could not be read" })
+      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "createPortalSession") (!= (json/parse @payload.body StripeSessionWithCustomer) null))
         (emit STRIPE_CREATE_PORTAL_SESSION_RESULT { url: (object/get (json/parse @payload.body StripeSessionWithCustomer) url null), customerId: (object/get (json/parse @payload.key StripeKey) customerId "") })
-      STRIPE_OK -> idle when (and (or (= (object/get (json/parse @payload.key StripeKey) action "") "getSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "createSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "cancelSubscription")) (or (not (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_start null))) (not (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_end null)))))
+      STRIPE_OK -> idle when (and (or (= (object/get (json/parse @payload.key StripeKey) action "") "getSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "createSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "cancelSubscription")) (= (json/parse @payload.body StripeSubscription) null))
+        (emit STRIPE_FAILED { code: null, message: "Stripe answered a subscription that could not be read" })
+      STRIPE_OK -> idle when (and (or (= (object/get (json/parse @payload.key StripeKey) action "") "getSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "createSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "cancelSubscription")) (!= (json/parse @payload.body StripeSubscription) null) (or (not (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_start null))) (not (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_end null)))))
         (emit STRIPE_FAILED { code: null, message: "Invalid time value" })
-      STRIPE_OK -> idle when (and (or (= (object/get (json/parse @payload.key StripeKey) action "") "getSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "createSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "cancelSubscription")) (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_start null)) (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_end null)))
+      STRIPE_OK -> idle when (and (or (= (object/get (json/parse @payload.key StripeKey) action "") "getSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "createSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription") (= (object/get (json/parse @payload.key StripeKey) action "") "cancelSubscription")) (!= (json/parse @payload.body StripeSubscription) null) (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_start null)) (validate/number (object/get (json/parse @payload.body StripeSubscription) current_period_end null)))
         (emit STRIPE_SUBSCRIPTION_SHAPED {
           action: (object/get (json/parse @payload.key StripeKey) action ""),
           subscriptionId: (object/get (json/parse @payload.body StripeSubscription) id null),
@@ -131,7 +145,9 @@ orbital StripeOrbital {
           cancelAtPeriodEnd: (object/get (json/parse @payload.body StripeSubscription) cancel_at_period_end null),
           tier: (if (= (object/get (json/parse @payload.body StripeSubscription) "items.data.0.price.id" "") @config.priceSolo) "solo" (if (= (object/get (json/parse @payload.body StripeSubscription) "items.data.0.price.id" "") @config.priceTeams) "teams" ""))
         })
-      STRIPE_OK -> idle when (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription.fetch")
+      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription.fetch") (or (= (json/parse @payload.key StripeKey) null) (= (json/parse @payload.body StripeSubscription) null)))
+        (emit STRIPE_FAILED { code: null, message: "Stripe answered a subscription that could not be read" })
+      STRIPE_OK -> idle when (and (= (object/get (json/parse @payload.key StripeKey) action "") "updateSubscription.fetch") (!= (json/parse @payload.key StripeKey) null) (!= (json/parse @payload.body StripeSubscription) null))
         (emit STRIPE_UPDATE_READY { subscriptionId: (object/get (json/parse @payload.key StripeKey) subscriptionId ""), quantity: (object/get (json/parse @payload.key StripeKey) quantity null), cancelAtPeriodEnd: (object/get (json/parse @payload.key StripeKey) cancelAtPeriodEnd null), itemId: (object/get (json/parse @payload.body StripeSubscription) "items.data.0.id" null) })
       STRIPE_SUBSCRIPTION_SHAPED -> idle when (= @payload.action "getSubscription")
         (emit STRIPE_GET_SUBSCRIPTION_RESULT { subscriptionId: @payload.subscriptionId, customerId: @payload.customerId, status: @payload.status, priceId: @payload.priceId, quantity: @payload.quantity, currentPeriodStart: @payload.currentPeriodStart, currentPeriodEnd: @payload.currentPeriodEnd, cancelAtPeriodEnd: @payload.cancelAtPeriodEnd, tier: @payload.tier })

@@ -30,7 +30,9 @@ orbital OrbParseOrbital {
 
     state ready {
       INIT -> ready
-      PARSE_CALLED -> parsing
+      PARSE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit PARSE_ANSWERED { status: 400, body: "", stderr: "error: the following required arguments were not provided:\n  <FILE>\n\nUsage: orb parse <FILE>\n\nFor more information, try '--help'." })
+      PARSE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit PARSE_ARGS_PARSE { stage: "parse" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [] })
     }
 

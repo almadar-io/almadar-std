@@ -10,6 +10,12 @@ type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, rep
 type IconGlyph = { sfSymbol : string!, materialSymbol : string! }
 type IconTable = { fallback : IconGlyph!, map : Map string IconGlyph! }
 type IconMembers = [string]
+type Breakpoints = { sm : number!, md : number!, lg : number!, xl : number!, xxl : number! }
+type NativeIdPrefix = { pattern : string!, row : string!, field : string!, slot : string! }
+type SwiftKt = { swift : string!, kt : string! }
+type PlatformStrings = { ios : [string]!, android : [string]! }
+type PlatformTokenRules = { ios : [TokenRule]!, android : [TokenRule]! }
+type PlatformAtomRules = { ios : [AtomRule]!, android : [AtomRule]! }
 type PropDef = { required : boolean, kind : string }
 type PatEntry = { tier : string!, propsSchema : Map string PropDef }
 type TokenRule = { re : string!, rule : string! }
@@ -19,17 +25,17 @@ type MapEntry = { component : string!, importPath : string }
 type MapReg = { mappings : Map string MapEntry! }
 type RsRec = { tier : string!, module : string!, structName : string!, prune : boolean!, fallback : boolean! }
 type RsOut = { name : string, tier : string!, module : string!, structName : string!, alias : string }
-type GateLists = { rustKeywords : [string]!, actionCalls : [ActionCall]!, chrome : Map string [string]!, accessor : string!, tokenRules : Map string [TokenRule]!, atomOwned : Map string [AtomRule]!, subcomposeRoots : string!, localDecl : string! }
+type GateLists = { rustKeywords : [string]!, actionCalls : [ActionCall]!, chrome : PlatformStrings!, accessor : string!, tokenRules : PlatformTokenRules!, atomOwned : PlatformAtomRules!, subcomposeRoots : string!, localDecl : string! }
 type PatReg = { patterns : Map string PatEntry! }
-type PatRef = { name : string!, tier : string! }
+type PatRef = { name : string!, tier : string!, props : Map string PropDef }
 type NativeLists = { deferred : [string]!, canvas : [string]!, fixedSize : [string]!, families : Map string string! }
 type CoreVersion = { version : string! }
 type PackManifest = { name : string!, version : string!, description : string! }
 type DirEntry = { name : string!, kind : string! }
 type SizeEntry = { key : string!, value : number! }
 type SizeScales = { maxWidth : [SizeEntry]!, width : [SizeEntry]!, minWidth : [SizeEntry]! }
-type CoreIds = { actionPrefix : string!, overflowKey : string!, gestureEventProps : Map string string!, nativeIdPrefix : Map string string!, nativeIdSeparator : string! }
-type NativeTokens = { breakpoints : Map string number!, sizes : SizeScales!, gestureTpl : Map string string!, sizeLine : Map string string! }
+type CoreIds = { actionPrefix : string!, overflowKey : string!, gestureEventProps : Map string string!, nativeIdPrefix : NativeIdPrefix!, nativeIdSeparator : string! }
+type NativeTokens = { breakpoints : Breakpoints!, sizes : SizeScales!, gestureTpl : SwiftKt!, sizeLine : SwiftKt! }
 type RenderFile = { path : string!, text : string! }
 
 orbital OrbShellRenderersOrbital {
@@ -108,7 +114,9 @@ orbital OrbShellRenderersOrbital {
 
     state ready {
       INIT -> ready
-      SHELL_CALLED -> ready
+      SHELL_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit SHELL_RENDERERS_ANSWERED { status: 500, body: "Error: orb shell-renderers: the command arguments could not be read" })
+      SHELL_CALLED -> ready when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
         (set @entity.target (str/default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))
         (emit SHELL_ARGS_PARSE { stage: "shell-renderers" argv: (array/drop (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) flags: [{ name: "table" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }, { name: "members" aliases: [] takesValue: true repeatable: false }, { name: "registry" aliases: [] takesValue: true repeatable: false }, { name: "lists" aliases: [] takesValue: true repeatable: false }, { name: "mapping" aliases: [] takesValue: true repeatable: false }, { name: "tokens" aliases: [] takesValue: true repeatable: false }, { name: "ids" aliases: [] takesValue: true repeatable: false }] })
@@ -155,33 +163,37 @@ orbital OrbShellRenderersOrbital {
         (emit SHELL_RENDERERS_ANSWERED { status: 500, body: (str/concat "error: cannot read " @entity.membersPath) })
       SHELL_MEMBERS_READ -> reading when (or (= (bytes/to-string @payload.data) null) (= (json/parse (str/default (bytes/to-string @payload.data) "") IconMembers) null))
         (emit SHELL_MEMBERS_FAIL { })
-      SHELL_MEMBERS_READ -> reading when (and (!= (bytes/to-string @payload.data) null) (!= (json/parse (str/default (bytes/to-string @payload.data) "") IconMembers) null))
+      SHELL_MEMBERS_READ -> reading when (and (!= (bytes/to-string @payload.data) null) (!= (json/parse (str/default (bytes/to-string @payload.data) "") IconMembers) null) (= (json/parse @entity.tableText IconTable) null))
+        (emit SHELL_TABLE_FAIL { })
+      SHELL_MEMBERS_READ -> reading when (and (!= (bytes/to-string @payload.data) null) (!= (json/parse (str/default (bytes/to-string @payload.data) "") IconMembers) null) (!= (json/parse @entity.tableText IconTable) null))
         (let ((tbl (json/parse @entity.tableText IconTable))
               (known (or (json/parse (str/default (bytes/to-string @payload.data) "") IconMembers) (array/take [""] 0))))
           (let ((bad (array/filter
                        (array/concat
-                         (array/map (array/sort (object/keys (object/get @tbl "map"))) (fn nm (object/get (object/get (object/get @tbl "map") @nm) "materialSymbol")))
+                         (array/map (array/sort (array/map (object/entries (object/get @tbl "map")) (fn en { k: (array/nth @en 0), g: (array/nth @en 1) })) "k") (fn r (object/get (object/get @r "g") "materialSymbol")))
                          [(object/get (object/get @tbl "fallback") "materialSymbol")])
                        (fn sy (not (array/includes @known (str/join (array/map (array/filter (str/split @sy "_") (fn seg (> (str/len @seg) 0))) (fn seg (str/concat (str/upper (str/slice @seg 0 1)) (str/slice @seg 1)))) "")))))))
             (set @entity.badMembers (array/filter @bad (fn sy (= (array/indexOf @bad @sy) @index))))))
         (emit SHELL_CHECKED { })
       SHELL_CHECKED -> ready when (> (array/len @entity.badMembers) 0)
         (emit SHELL_RENDERERS_ANSWERED { status: 500, body: (str/concat "error: " (array/len @entity.badMembers) " materialSymbol value(s) have no Icons.Filled.* member: " (str/join @entity.badMembers ", ")) })
-      SHELL_CHECKED -> writing when (= (array/len @entity.badMembers) 0)
+      SHELL_CHECKED -> writing when (and (= (array/len @entity.badMembers) 0) (= (json/parse @entity.tableText IconTable) null))
+        (emit SHELL_TABLE_FAIL { })
+      SHELL_CHECKED -> writing when (and (= (array/len @entity.badMembers) 0) (!= (json/parse @entity.tableText IconTable) null))
         (let ((tbl (json/parse @entity.tableText IconTable))
-              (names (array/sort (object/keys (object/get (json/parse @entity.tableText IconTable) "map")))))
+              (ents (array/sort (array/map (object/entries (object/get @tbl "map")) (fn en { k: (array/nth @en 0), g: (array/nth @en 1) })) "k")))
           (do
-          (set @entity.summary (str/concat "icon-map: " (array/len @names) " icons, 2 files"))
+          (set @entity.summary (str/concat "icon-map: " (array/len @ents) " icons, 2 files"))
           (set @entity.outFiles (array/concat
             [{ path: (if (= @entity.outDir "") "orbital-rust/crates/orbital-shell-ios/renderers/swiftui/renderers/IconMap.swift" (str/concat @entity.outDir "/IconMap.swift")),
                text: (str/concat "// generated by almadar-sync icon-map from packages/almadar-ui/lib/iconNativeMap.ts\nimport Foundation\n\nenum IconMap {\n    static let table: [String: String] = [\n"
-                 (str/join (array/map @names (fn n (str/concat "        " (json/stringify @n) ": " (json/stringify (object/get (object/get (object/get @tbl "map") @n) "sfSymbol")) ","))) "\n")
+                 (str/join (array/map @ents (fn en (let ((n (object/get @en "k")) (g (object/get @en "g"))) (str/concat "        " (json/stringify @n) ": " (json/stringify (object/get @g "sfSymbol")) ",")))) "\n")
                  "\n    ]\n\n    static let fallback: String = " (json/stringify (object/get (object/get @tbl "fallback") "sfSymbol")) "\n\n    static func resolve(_ name: String) -> String {\n        table[name] ?? fallback\n    }\n}\n") }]
             [{ path: (if (= @entity.outDir "") "orbital-rust/crates/orbital-shell-android/renderers/compose/renderers/IconMap.kt" (str/concat @entity.outDir "/IconMap.kt")),
                text: (str/concat "// generated by almadar-sync icon-map from packages/almadar-ui/lib/iconNativeMap.ts\npackage generated.patterns.core\n\nimport androidx.compose.material.icons.Icons\nimport androidx.compose.material.icons.filled.*\nimport androidx.compose.ui.graphics.vector.ImageVector\n\n// `table`/`resolve` give the Material Symbols glyph NAME (e.g. " (json/stringify "add") ");\n// `vectors`/`resolveVector` give the real Compose ImageVector — every\n// `materialSymbol` deterministically converted to `Icons.Filled.<Member>`\n// (arrow_back -> ArrowBack) and verified against the resolved\n// material-icons-core + material-icons-extended classpath at generation\n// time (wave C5) — a name with no real member is a generation error, not\n// a silent per-icon fallback.\nobject IconMap {\n    val table: Map<String, String> = mapOf(\n"
-                 (str/join (array/map @names (fn n (str/concat "        " (json/stringify @n) " to " (json/stringify (object/get (object/get (object/get @tbl "map") @n) "materialSymbol")) ","))) "\n")
+                 (str/join (array/map @ents (fn en (let ((n (object/get @en "k")) (g (object/get @en "g"))) (str/concat "        " (json/stringify @n) " to " (json/stringify (object/get @g "materialSymbol")) ",")))) "\n")
                  "\n    )\n\n    val fallback: String = " (json/stringify (object/get (object/get @tbl "fallback") "materialSymbol")) "\n\n    fun resolve(name: String): String = table[name] ?: fallback\n\n    val vectors: Map<String, ImageVector> = mapOf(\n"
-                 (str/join (array/map @names (fn n (str/concat "        " (json/stringify @n) " to Icons.Filled." (str/join (array/map (array/filter (str/split (object/get (object/get (object/get @tbl "map") @n) "materialSymbol") "_") (fn seg (> (str/len @seg) 0))) (fn seg (str/concat (str/upper (str/slice @seg 0 1)) (str/slice @seg 1)))) "") ","))) "\n")
+                 (str/join (array/map @ents (fn en (let ((n (object/get @en "k")) (g (object/get @en "g"))) (str/concat "        " (json/stringify @n) " to Icons.Filled." (str/join (array/map (array/filter (str/split (object/get @g "materialSymbol") "_") (fn seg (> (str/len @seg) 0))) (fn seg (str/concat (str/upper (str/slice @seg 0 1)) (str/slice @seg 1)))) "") ",")))) "\n")
                  "\n    )\n\n    val fallbackVector: ImageVector = Icons.Filled." (str/join (array/map (array/filter (str/split (object/get (object/get @tbl "fallback") "materialSymbol") "_") (fn seg (> (str/len @seg) 0))) (fn seg (str/concat (str/upper (str/slice @seg 0 1)) (str/slice @seg 1)))) "") "\n\n    fun resolveVector(name: String): ImageVector = vectors[name] ?: fallbackVector\n}\n") }]))
           (set @entity.wcur 0)
           (emit SHELL_W_NEXT { })))
@@ -191,9 +203,9 @@ orbital OrbShellRenderersOrbital {
 
     state planning {
       INIT -> planning
-      NS_LISTS_READ -> planning when (or (= (bytes/to-string @payload.data) null) (and (= @entity.platform "android") (= (str/replace-pattern "" (object/get (json/parse (str/default (bytes/to-string @payload.data) "") GateLists) "subcomposeRoots") "") null)))
+      NS_LISTS_READ -> planning when (or (= (bytes/to-string @payload.data) null) (let ((gl (json/parse (str/default (bytes/to-string @payload.data) "") GateLists))) (or (= @gl null) (and (= @entity.platform "android") (= (str/replace-pattern "" (object/get @gl "subcomposeRoots") "") null)))))
         (emit NS_READ_FAIL { })
-      NS_LISTS_READ -> planning when (and (!= (bytes/to-string @payload.data) null) (or (!= @entity.platform "android") (!= (str/replace-pattern "" (object/get (json/parse (str/default (bytes/to-string @payload.data) "") GateLists) "subcomposeRoots") "") null)))
+      NS_LISTS_READ -> planning when (and (!= (bytes/to-string @payload.data) null) (let ((gl (json/parse (str/default (bytes/to-string @payload.data) "") GateLists))) (and (!= @gl null) (or (!= @entity.platform "android") (!= (str/replace-pattern "" (object/get @gl "subcomposeRoots") "") null)))))
         (set @entity.listsText (str/default (bytes/to-string @payload.data) ""))
         (set @entity.curPath @entity.registryPath)
         (os/read-file { anchor: "cwd" path: @entity.registryPath } { key: "registry", emit: { success: NS_REG_READ, failure: NS_READ_FAIL } })
@@ -253,16 +265,18 @@ orbital OrbShellRenderersOrbital {
         (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/verification-ids.tpl") } { key: "vidtpl", emit: { success: NS_VID_READ, failure: NS_READ_FAIL } })
       NS_VID_READ -> planning when (= (bytes/to-string @payload.data) null)
         (emit NS_READ_FAIL { })
-      NS_VID_READ -> planning when (!= (bytes/to-string @payload.data) null)
+      NS_VID_READ -> planning when (and (!= (bytes/to-string @payload.data) null) (or (= (json/parse @entity.regText PatReg) null) (= (json/parse @entity.listsText NativeLists) null)))
+        (set @entity.curPath (if (= (json/parse @entity.regText PatReg) null) @entity.registryPath @entity.listsPath))
+        (emit NS_READ_FAIL { })
+      NS_VID_READ -> planning when (and (!= (bytes/to-string @payload.data) null) (!= (json/parse @entity.regText PatReg) null) (!= (json/parse @entity.listsText NativeLists) null))
         (set @entity.vidTpl (str/default (bytes/to-string @payload.data) ""))
         (set @entity.pats (let ((reg (json/parse @entity.regText PatReg)) (nl (json/parse @entity.listsText NativeLists))) (array/map
           (array/filter
-            (array/map (array/map (array/sort (array/map (object/keys (object/get @reg "patterns")) (fn nm { sort: (str/collate-key @nm), name: @nm })) "sort") (fn k (object/get @k "name")))
-              (fn nm { name: @nm, tier: (object/get (object/get (object/get @reg "patterns") @nm) "tier") }))
+            (array/sort (array/map (object/entries (object/get @reg "patterns")) (fn e { sort: (str/collate-key (array/nth @e 0)), name: (array/nth @e 0), tier: (object/get (array/nth @e 1) "tier"), props: (object/get (array/nth @e 1) "propsSchema" {}) })) "sort")
             (fn pr (and (array/includes (str/split "atoms|molecules|organisms|templates" "|") (object/get @pr "tier"))
                         (not (array/includes (object/get @nl "deferred") (object/get @pr "name")))
                         (not (array/includes (object/get @nl "canvas") (object/get @pr "name"))))))
-          (fn pr { name: (object/get @pr "name"), tier: (object/get @pr "tier") }))))
+          (fn pr { name: (object/get @pr "name"), tier: (object/get @pr "tier"), props: (object/get @pr "props") }))))
         (set @entity.keys (array/map @entity.pats (fn pr (str/concat (object/get @pr "tier") "/" (str/replaceAll (object/get @pr "name") "-" "_") "." @entity.ext))))
         (set @entity.tcur 0)
         (emit NS_LIST { })
@@ -284,7 +298,10 @@ orbital OrbShellRenderersOrbital {
         (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/renderers/" (array/nth @entity.have @entity.hcur)) } { key: "body", emit: { success: NS_FILE_READ, failure: NS_FILE_FAIL } })
       NS_FILE_READ -> planning when (= (bytes/to-string @payload.data) null)
         (emit NS_FILE_FAIL { })
-      NS_FILE_READ -> planning when (and (!= (bytes/to-string @payload.data) null) (str/includes (str/default (bytes/to-string @payload.data) "") "🔧"))
+      NS_FILE_READ -> planning when (and (!= (bytes/to-string @payload.data) null) (= (json/parse @entity.listsText GateLists) null))
+        (set @entity.curPath @entity.listsPath)
+        (emit NS_READ_FAIL { })
+      NS_FILE_READ -> planning when (and (!= (bytes/to-string @payload.data) null) (!= (json/parse @entity.listsText GateLists) null) (str/includes (str/default (bytes/to-string @payload.data) "") "🔧"))
         (set @entity.stubbed (array/append @entity.stubbed (array/nth @entity.have @entity.hcur)))
         (set @entity.violations (array/concat @entity.violations (let ((tx (str/default (bytes/to-string @payload.data) "")) (ix (array/indexOf @entity.keys (array/nth @entity.have @entity.hcur))))
           (if (< @ix 0) (array/take @entity.violations 0)
@@ -300,7 +317,7 @@ orbital OrbShellRenderersOrbital {
                     (if (> @roots @declared) (array/append (array/take @entity.violations 0) (str/concat "[flex-basis] " @nm ": body has " @roots " subcompose root(s) (Lazy*, Pager, BoxWithConstraints) but declares " @declared " .almadarFlexFill() — an undeclared root throws when a flex row asks its intrinsic width")) (array/take @entity.violations 0)))
                   (let ((decl (array/find (str/split (array/last (str/split @tx ") -> AnyView {\n")) "\n") (fn ln (validate/pattern @ln (object/get @gl "localDecl"))))))
                     (if (!= @decl null) (array/append (array/take @entity.violations 0) (str/concat "[body-declarations] " @nm ": body declares " (json/stringify (str/trim @decl)) " — move it to the pattern header or AtomKit")) (array/take @entity.violations 0))))
-                (let ((pd (object/get (object/get (object/get (json/parse @entity.regText PatReg) "patterns") @nm) "propsSchema")))
+                (let ((pd (object/get (array/nth @entity.pats @ix) "props")))
                   (array/map (array/filter (if (= @pd null) (array/take @entity.violations 0) (array/filter (object/keys @pd) (fn pk (or (= (object/get (object/get @pd @pk) "required") true) (array/includes (str/split "event-ref|event" "|") (str/default (object/get (object/get @pd @pk) "kind") "")))))) (fn pk (and (not (str/includes @tx (json/stringify @pk))) (not (and (= @pk "children") (str/includes @tx ".children()"))))))
                     (fn pk (str/concat "[props-contract] " @nm ": declared prop " (json/stringify @pk) " is not referenced by the body"))))))))))
         (set @entity.violations (array/concat @entity.violations (let ((tx (str/default (bytes/to-string @payload.data) "")) (ix (array/indexOf @entity.keys (array/nth @entity.have @entity.hcur))) (qc (str/slice (json/stringify "x") 0 1)))
@@ -335,7 +352,7 @@ orbital OrbShellRenderersOrbital {
                     (str/concat "[action-id-literal] " @nm ": " (object/get @r "name") "(" (str/trim (object/get @r "lit")) ") takes a string literal — the action id must be the exact bus event key from props or an event constant"))))))))))
         (set @entity.hcur (+ @entity.hcur 1))
         (emit NS_FREAD { })
-      NS_FILE_READ -> planning when (and (!= (bytes/to-string @payload.data) null) (not (str/includes (str/default (bytes/to-string @payload.data) "") "🔧")))
+      NS_FILE_READ -> planning when (and (!= (bytes/to-string @payload.data) null) (!= (json/parse @entity.listsText GateLists) null) (not (str/includes (str/default (bytes/to-string @payload.data) "") "🔧")))
         (set @entity.violations (array/concat @entity.violations (let ((tx (str/default (bytes/to-string @payload.data) "")) (ix (array/indexOf @entity.keys (array/nth @entity.have @entity.hcur))))
           (if (< @ix 0) (array/take @entity.violations 0)
             (let ((nm (object/get (array/nth @entity.pats @ix) "name")) (tr (object/get (array/nth @entity.pats @ix) "tier")) (gl (json/parse @entity.listsText GateLists)))
@@ -350,7 +367,7 @@ orbital OrbShellRenderersOrbital {
                     (if (> @roots @declared) (array/append (array/take @entity.violations 0) (str/concat "[flex-basis] " @nm ": body has " @roots " subcompose root(s) (Lazy*, Pager, BoxWithConstraints) but declares " @declared " .almadarFlexFill() — an undeclared root throws when a flex row asks its intrinsic width")) (array/take @entity.violations 0)))
                   (let ((decl (array/find (str/split (array/last (str/split @tx ") -> AnyView {\n")) "\n") (fn ln (validate/pattern @ln (object/get @gl "localDecl"))))))
                     (if (!= @decl null) (array/append (array/take @entity.violations 0) (str/concat "[body-declarations] " @nm ": body declares " (json/stringify (str/trim @decl)) " — move it to the pattern header or AtomKit")) (array/take @entity.violations 0))))
-                (let ((pd (object/get (object/get (object/get (json/parse @entity.regText PatReg) "patterns") @nm) "propsSchema")))
+                (let ((pd (object/get (array/nth @entity.pats @ix) "props")))
                   (array/map (array/filter (if (= @pd null) (array/take @entity.violations 0) (array/filter (object/keys @pd) (fn pk (or (= (object/get (object/get @pd @pk) "required") true) (array/includes (str/split "event-ref|event" "|") (str/default (object/get (object/get @pd @pk) "kind") "")))))) (fn pk (and (not (str/includes @tx (json/stringify @pk))) (not (and (= @pk "children") (str/includes @tx ".children()"))))))
                     (fn pk (str/concat "[props-contract] " @nm ": declared prop " (json/stringify @pk) " is not referenced by the body"))))))))))
         (set @entity.violations (array/concat @entity.violations (let ((tx (str/default (bytes/to-string @payload.data) "")) (ix (array/indexOf @entity.keys (array/nth @entity.have @entity.hcur))) (qc (str/slice (json/stringify "x") 0 1)))
@@ -396,7 +413,10 @@ orbital OrbShellRenderersOrbital {
         (set @entity.bad (array/map (array/filter @entity.pats (fn pr (not (array/includes @entity.natives (object/get @pr "name"))))) (fn pr (object/get @pr "name"))))
         (set @entity.removals (if (= @entity.outDir "") @entity.orphans (array/take @entity.orphans 0)))
         (emit NS_BUILD { })
-      NS_BUILD -> pruning
+      NS_BUILD -> planning when (not (let ((nl (json/parse @entity.listsText NativeLists))) (and (!= @nl null) (!= (json/parse @entity.manText PackManifest) null) (!= (json/parse @entity.tokText NativeTokens) null) (!= (json/parse @entity.idsText CoreIds) null) (array/every @entity.missing (fn pr (object/has (object/get @nl "families") (str/concat @entity.platform "/" (object/get @pr "tier"))))))))
+        (set @entity.curPath (if (= (json/parse @entity.listsText NativeLists) null) @entity.listsPath (if (= (json/parse @entity.manText PackManifest) null) (str/concat @entity.pack "/package.json") (if (= (json/parse @entity.tokText NativeTokens) null) @entity.tokensPath (if (= (json/parse @entity.idsText CoreIds) null) @entity.idsPath @entity.listsPath)))))
+        (emit NS_READ_FAIL { })
+      NS_BUILD -> pruning when (let ((nl (json/parse @entity.listsText NativeLists))) (and (!= @nl null) (!= (json/parse @entity.manText PackManifest) null) (!= (json/parse @entity.tokText NativeTokens) null) (!= (json/parse @entity.idsText CoreIds) null) (array/every @entity.missing (fn pr (object/has (object/get @nl "families") (str/concat @entity.platform "/" (object/get @pr "tier")))))))
         (set @entity.summary (str/concat @entity.platform ": " (array/len @entity.natives) " native, " (array/len @entity.missing) " stub(s) written, " (array/len @entity.orphans) " orphan(s) " (if (= @entity.outDir "") "pruned" "found") (if (> (array/len @entity.bad) 0) (str/concat "\nerror: placeholder renderer(s), add a body: " (str/join @entity.bad ", ")) "") (if (> (array/len @entity.violations) 0) (str/concat "\nerror: " (array/len @entity.violations) " gate violation(s):\n" (str/join (array/map @entity.violations (fn vl (str/concat "  - " @vl))) "\n")) "")))
         (set @entity.outFiles (let ((nl (json/parse @entity.listsText NativeLists))) (array/concat
           (array/map @entity.missing (fn pr { path: (str/concat (if (= @entity.outDir "") (str/concat @entity.pack "/renderers") (str/concat @entity.outDir "/renderers")) "/" (object/get @pr "tier") "/" (str/replaceAll (object/get @pr "name") "-" "_") "." @entity.ext),
@@ -429,15 +449,17 @@ orbital OrbShellRenderersOrbital {
 
     state rscan {
       INIT -> rscan
+      NS_READ_FAIL -> ready
+        (emit SHELL_RENDERERS_ANSWERED { status: 500, body: (str/concat "error: cannot read " @entity.curPath) })
       RS_LISTS_READ -> rscan when (= (bytes/to-string @payload.data) null)
         (emit NS_READ_FAIL { })
       RS_LISTS_READ -> rscan when (!= (bytes/to-string @payload.data) null)
         (set @entity.listsText (str/default (bytes/to-string @payload.data) ""))
         (set @entity.curPath @entity.registryPath)
         (os/read-file { anchor: "cwd" path: @entity.registryPath } { key: "registry", emit: { success: RS_REG_READ, failure: NS_READ_FAIL } })
-      RS_REG_READ -> rscan when (= (bytes/to-string @payload.data) null)
+      RS_REG_READ -> rscan when (or (= (bytes/to-string @payload.data) null) (= (json/parse (str/default (bytes/to-string @payload.data) "") PatReg) null))
         (emit NS_READ_FAIL { })
-      RS_REG_READ -> rscan when (!= (bytes/to-string @payload.data) null)
+      RS_REG_READ -> rscan when (and (!= (bytes/to-string @payload.data) null) (!= (json/parse (str/default (bytes/to-string @payload.data) "") PatReg) null))
         (set @entity.liveNames (object/keys (object/get (json/parse (str/default (bytes/to-string @payload.data) "") PatReg) "patterns")))
         (set @entity.regText (str/default (bytes/to-string @payload.data) ""))
         (set @entity.curPath @entity.mappingPath)
@@ -507,20 +529,24 @@ orbital OrbShellRenderersOrbital {
         (emit RS_FREAD { })
       RS_FREAD -> rscan when (>= @entity.hcur (array/len @entity.rfiles))
         (emit RS_BUILD { })
-      RS_BUILD -> rscan
+      RS_BUILD -> rscan when (or (= (json/parse @entity.mapText MapReg) null) (= (json/parse @entity.regText PatReg) null))
+        (set @entity.curPath (if (= (json/parse @entity.mapText MapReg) null) @entity.mappingPath @entity.registryPath))
+        (emit NS_READ_FAIL { })
+      RS_BUILD -> rscan when (and (!= (json/parse @entity.mapText MapReg) null) (!= (json/parse @entity.regText PatReg) null))
         (let ((dm (json/parse @entity.mapText MapReg)) (rg (json/parse @entity.regText PatReg)))
           (do
             (set @entity.rlive (array/filter @entity.rrecs (fn rc (and (not (object/get @rc "prune")) (!= (object/get @rc "structName") "")))))
             (set @entity.removals (array/concat @entity.removals (if (= @entity.outDir "") (array/map (array/filter @entity.rrecs (fn rc (object/get @rc "prune"))) (fn rc (str/concat @entity.curDomain "/" (object/get @rc "tier") "/" (object/get @rc "module") ".rs"))) (array/take @entity.removals 0))))
             (set @entity.rkeys (array/map @entity.rlive (fn rc (str/concat (object/get @rc "tier") "/" (object/get @rc "module")))))
             (set @entity.rstubs (if (= @entity.platform "tui")
-              (array/map
-                (array/filter (object/keys (object/get @dm "mappings"))
-                  (fn nm (and (array/includes @entity.liveNames @nm)
-                              (or (str/includes (str/default (object/get (object/get (object/get @dm "mappings") @nm) "importPath") "") (str/concat "/components/" @entity.curDomain "/"))
-                                  (and (= @entity.curDomain "core") (str/includes (str/default (object/get (object/get (object/get @dm "mappings") @nm) "importPath") "") "/components/avl/")))
-                              (not (array/includes @entity.rkeys (str/concat (object/get (object/get (object/get @rg "patterns") @nm) "tier") "/" (str/replaceAll @nm "-" "_")))))))
-                (fn nm { name: @nm, tier: (object/get (object/get (object/get @rg "patterns") @nm) "tier"), module: (str/replaceAll @nm "-" "_"), structName: (str/concat (object/get (object/get (object/get @dm "mappings") @nm) "component") "Renderer") }))
+              (array/flatten (array/map (object/entries (object/get @dm "mappings"))
+                (fn me (let ((nm (array/nth @me 0)) (mp (array/nth @me 1)) (pe (object/get (object/get @rg "patterns") (array/nth @me 0))))
+                  (if (and (!= @pe null)
+                           (or (str/includes (str/default (object/get @mp "importPath") "") (str/concat "/components/" @entity.curDomain "/"))
+                               (and (= @entity.curDomain "core") (str/includes (str/default (object/get @mp "importPath") "") "/components/avl/")))
+                           (not (array/includes @entity.rkeys (str/concat (object/get @pe "tier") "/" (str/replaceAll @nm "-" "_")))))
+                    [{ name: @nm, tier: (object/get @pe "tier"), module: (str/replaceAll @nm "-" "_"), structName: (str/concat (object/get @mp "component") "Renderer") }]
+                    [])))))
               (array/take @entity.rstubs 0)))
             (emit RS_BUILD2 { })))
       RS_BUILD2 -> rscan
@@ -529,7 +555,10 @@ orbital OrbShellRenderersOrbital {
             (let ((al (if (array/includes (object/get @a "used") @al0) (str/concat (str/join (array/map (array/filter (str/split (object/get @e "tier") "_") (fn sg (> (str/len @sg) 0))) (fn sg (str/concat (str/upper (str/slice @sg 0 1)) (str/slice @sg 1)))) "") (str/join (array/map (array/filter (str/split (object/get @e "module") "_") (fn sg (> (str/len @sg) 0))) (fn sg (str/concat (str/upper (str/slice @sg 0 1)) (str/slice @sg 1)))) "") "Renderer") @al0)))
               { used: (array/append (object/get @a "used") @al), out: (array/append (object/get @a "out") { tier: (object/get @e "tier"), module: (object/get @e "module"), structName: (object/get @e "structName"), alias: @al }) })))) "out"))
         (emit RS_BUILD3 { })
-      RS_BUILD3 -> rscan
+      RS_BUILD3 -> rscan when (= (json/parse @entity.listsText GateLists) null)
+        (set @entity.curPath @entity.listsPath)
+        (emit NS_READ_FAIL { })
+      RS_BUILD3 -> rscan when (!= (json/parse @entity.listsText GateLists) null)
         (do
           (set @entity.outFiles (let ((gl (json/parse @entity.listsText GateLists))) (array/concat @entity.outFiles
             (array/map (str/split "atoms|molecules|organisms|templates" "|") (fn tr { path: (str/concat (str/concat (if (= @entity.outDir "") @entity.pack @entity.outDir) "/src/components/" @entity.curDomain "/") @tr "/mod.rs"),

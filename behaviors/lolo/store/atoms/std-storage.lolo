@@ -152,7 +152,7 @@ orbital StorageOrbital {
           retry: { max: 2, on: [500, 502, 503, 504, 429, "timeout", "failed"], backoffMs: 100 }
         } { emit: { success: STORAGE_DOWNLOAD_REPLIED, failure: STORAGE_HTTP_FAILED } })
       STORAGE_DOWNLOAD_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit STORAGE_DOWNLOADED { content: @payload.body, contentType: (object/get @payload.headers "content-type" "application/octet-stream"), size: (- (math/floor (/ (* (str/len @payload.body) 3) 4)) (if (str/endsWith @payload.body "==") 2 (if (str/endsWith @payload.body "=") 1 0))), metadata: (json/parse "{}" StorageMetadata) })
+        (emit STORAGE_DOWNLOADED { content: @payload.body, contentType: (object/get @payload.headers "content-type" "application/octet-stream"), size: (- (math/floor (/ (* (str/len @payload.body) 3) 4)) (if (str/endsWith @payload.body "==") 2 (if (str/endsWith @payload.body "=") 1 0))), metadata: (object/merge { } { }) })
       STORAGE_DOWNLOAD_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit STORAGE_HTTP_ERROR { text: (if (base64/valid @payload.body) (base64/decode @payload.body) "x") })
 

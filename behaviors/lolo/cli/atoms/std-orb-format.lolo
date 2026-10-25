@@ -30,7 +30,9 @@ orbital OrbFormatOrbital {
 
     state ready {
       INIT -> ready
-      FORMAT_CALLED -> parsing
+      FORMAT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit FORMAT_ANSWERED { status: 400, body: "usage: orb format <file> [--write]" })
+      FORMAT_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
         (emit FORMAT_ARGS_PARSE { stage: "format" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "write" aliases: [] takesValue: false repeatable: false }] })
     }

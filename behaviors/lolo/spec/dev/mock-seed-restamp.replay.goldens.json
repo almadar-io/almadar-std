@@ -23,6 +23,27 @@
      }
     },
     {
+     "event": "DS_WRITE_CHUNK",
+     "payload": {
+      "ops": [
+       [
+        "create",
+        "Task",
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "DS_CHUNK_REFUSED"
+      ]
+     }
+    },
+    {
      "event": "RESTAMP_INPUT",
      "payload": {
       "program": {
@@ -159,6 +180,27 @@
         "event": "CORPUS_IS",
         "payload": {}
        }
+      ]
+     }
+    },
+    {
+     "event": "DS_WRITE_CHUNK",
+     "payload": {
+      "ops": [
+       [
+        "create",
+        "Task",
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "DS_CHUNK_REFUSED"
       ]
      }
     },
@@ -303,6 +345,27 @@
      }
     },
     {
+     "event": "DS_WRITE_CHUNK",
+     "payload": {
+      "ops": [
+       [
+        "create",
+        "Task",
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "DS_CHUNK_REFUSED"
+      ]
+     }
+    },
+    {
      "event": "RESTAMP_INPUT",
      "payload": {
       "program": {
@@ -443,6 +506,27 @@
      }
     },
     {
+     "event": "DS_WRITE_CHUNK",
+     "payload": {
+      "ops": [
+       [
+        "create",
+        "Task",
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "DS_CHUNK_REFUSED"
+      ]
+     }
+    },
+    {
      "event": "RESTAMP_INPUT",
      "payload": {
       "program": {
@@ -579,6 +663,27 @@
         "event": "CORPUS_IS",
         "payload": {}
        }
+      ]
+     }
+    },
+    {
+     "event": "DS_WRITE_CHUNK",
+     "payload": {
+      "ops": [
+       [
+        "create",
+        "Task",
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "DS_CHUNK_REFUSED"
       ]
      }
     },
@@ -743,6 +848,27 @@
      }
     },
     {
+     "event": "DS_WRITE_CHUNK",
+     "payload": {
+      "ops": [
+       [
+        "create",
+        "Task",
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "DS_CHUNK_REFUSED"
+      ]
+     }
+    },
+    {
      "event": "RESTAMP_INPUT",
      "payload": {
       "program": {
@@ -900,6 +1026,35 @@
         "event": "CORPUS_IS",
         "payload": {}
        }
+      ]
+     }
+    },
+    {
+     "event": "DS_WRITE_CHUNK",
+     "payload": {
+      "ops": [
+       [
+        "create",
+        "Task",
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ],
+       [
+        "create",
+        "Doc",
+        {
+         "id": "d1",
+         "authorId": "agent"
+        }
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "DS_CHUNK_REFUSED"
       ]
      }
     },
@@ -1077,6 +1232,356 @@
    ]
   },
   {
+   "id": "restamp-rekey-onto-a-held-key-replaces-that-row-destination-last",
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "CORPUS_ASK",
+        "payload": {}
+       },
+       {
+        "event": "CORPUS_IS",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "DS_WRITE_CHUNK",
+     "payload": {
+      "ops": [
+       [
+        "create",
+        "Task",
+        {
+         "id": "old-row",
+         "title": "old"
+        }
+       ],
+       [
+        "create",
+        "Task",
+        {
+         "id": "middle",
+         "title": "middle"
+        }
+       ],
+       [
+        "create",
+        "Task",
+        {
+         "id": "new",
+         "title": "destination"
+        }
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "DS_CHUNK_REFUSED"
+      ]
+     }
+    },
+    {
+     "event": "RESTAMP_INPUT",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "string"
+           }
+          ]
+         }
+        },
+        {
+         "entity": {
+          "name": "Task",
+          "collection": "tasks",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "ownerRef",
+            "type": "string"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "stores": {
+       "tasks": [
+        {
+         "id": "old-row",
+         "title": "old"
+        },
+        {
+         "id": "middle",
+         "title": "middle"
+        },
+        {
+         "id": "new",
+         "title": "destination"
+        }
+       ]
+      },
+      "journal": {
+       "viewerId": "old",
+       "stamped": [
+        {
+         "store": "tasks",
+         "id": "old-row",
+         "column": "id"
+        }
+       ],
+       "deferred": []
+      },
+      "viewer": {
+       "id": "new",
+       "role": "reader",
+       "name": "New viewer"
+      },
+      "firstOwner": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESTAMP_DONE",
+        "payload": {
+         "journal": {
+          "viewerId": "new",
+          "stamped": [
+           {
+            "store": "tasks",
+            "id": "new",
+            "column": "id"
+           }
+          ],
+          "deferred": []
+         },
+         "changes": [
+          {
+           "kind": "rekey",
+           "store": "tasks",
+           "id": "old-row",
+           "column": "id",
+           "ownerId": "new",
+           "target": {
+            "kind": "key",
+            "key": "old-row"
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "emitCounts": {
+       "RESTAMP_DONE": 1
+      },
+      "neverEmits": [
+       "DATASET_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "restamp-rekey-onto-a-held-key-replaces-that-row-old-last",
+   "steps": [
+    {
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "CORPUS_ASK",
+        "payload": {}
+       },
+       {
+        "event": "CORPUS_IS",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "DS_WRITE_CHUNK",
+     "payload": {
+      "ops": [
+       [
+        "create",
+        "Task",
+        {
+         "id": "new",
+         "title": "destination"
+        }
+       ],
+       [
+        "create",
+        "Task",
+        {
+         "id": "middle",
+         "title": "middle"
+        }
+       ],
+       [
+        "create",
+        "Task",
+        {
+         "id": "old-row",
+         "title": "old"
+        }
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "DS_CHUNK_REFUSED"
+      ]
+     }
+    },
+    {
+     "event": "RESTAMP_INPUT",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "string"
+           }
+          ]
+         }
+        },
+        {
+         "entity": {
+          "name": "Task",
+          "collection": "tasks",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "ownerRef",
+            "type": "string"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "stores": {
+       "tasks": [
+        {
+         "id": "new",
+         "title": "destination"
+        },
+        {
+         "id": "middle",
+         "title": "middle"
+        },
+        {
+         "id": "old-row",
+         "title": "old"
+        }
+       ]
+      },
+      "journal": {
+       "viewerId": "old",
+       "stamped": [
+        {
+         "store": "tasks",
+         "id": "old-row",
+         "column": "id"
+        }
+       ],
+       "deferred": []
+      },
+      "viewer": {
+       "id": "new",
+       "role": "reader",
+       "name": "New viewer"
+      },
+      "firstOwner": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESTAMP_DONE",
+        "payload": {
+         "journal": {
+          "viewerId": "new",
+          "stamped": [
+           {
+            "store": "tasks",
+            "id": "new",
+            "column": "id"
+           }
+          ],
+          "deferred": []
+         },
+         "changes": [
+          {
+           "kind": "rekey",
+           "store": "tasks",
+           "id": "old-row",
+           "column": "id",
+           "ownerId": "new",
+           "target": {
+            "kind": "key",
+            "key": "old-row"
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "emitCounts": {
+       "RESTAMP_DONE": 1
+      },
+      "neverEmits": [
+       "DATASET_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
    "id": "persona-switch-without-restamp-on-persona-changes-nothing",
    "steps": [
     {
@@ -1092,6 +1597,27 @@
         "event": "CORPUS_IS",
         "payload": {}
        }
+      ]
+     }
+    },
+    {
+     "event": "DS_WRITE_CHUNK",
+     "payload": {
+      "ops": [
+       [
+        "create",
+        "Task",
+        {
+         "id": "t1",
+         "ownerRef": "old"
+        }
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "DS_CHUNK_REFUSED"
       ]
      }
     },

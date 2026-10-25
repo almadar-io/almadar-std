@@ -38,7 +38,7 @@ orbital FileDropOrbital {
       FILE_DELIVERED -> ready when (let ((b (json/parse @payload.rawBody FileDropBody))) (if (== @b null) false (validate/pattern (object/get @b "name") "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$")))
         (set @entity.name (object/get (json/parse @payload.rawBody FileDropBody) "name"))
         (set @entity.data (object/get (json/parse @payload.rawBody FileDropBody) "data"))
-        (os/mkdir (str/concat @config.dir (os/path-dir (object/get (json/parse @payload.rawBody FileDropBody) "name"))) true { emit: { success: DROP_DIR_READY, failure: DROP_WRITE_FAILED } })
+        (os/mkdir (str/concat @config.dir (os/path-dir @entity.name)) true { emit: { success: DROP_DIR_READY, failure: DROP_WRITE_FAILED } })
       DROP_DIR_READY -> ready
         (os/write-file (str/concat @config.dir @entity.name "." @config.extension) @entity.data { emit: { success: DROP_WRITTEN, failure: DROP_WRITE_FAILED } })
       DROP_WRITTEN -> ready

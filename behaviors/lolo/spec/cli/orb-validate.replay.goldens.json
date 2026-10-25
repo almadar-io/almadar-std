@@ -928,6 +928,33 @@
           }
         }
       ]
+    },
+    {
+      "id": "an unreadable command body answers 500",
+      "steps": [
+        {
+          "trait": "OrbValidate",
+          "from": "ready",
+          "event": "VALIDATE_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "VALIDATE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: orb validate: the command arguments could not be read"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

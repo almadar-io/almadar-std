@@ -130,7 +130,7 @@ orbital TomlOrbital {
       TOML_STRUCTURED -> idle when (!= @entity.doc.err "")
         (emit TOML_REFUSED { requestId: @entity.requestId, code: @entity.doc.err, line: @entity.doc.eline, detail: @entity.doc.edet })
       TOML_STRUCTURED -> idle when (== @entity.doc.err "")
-        (set @entity.value (let ((maxd (array/reduce @entity.doc.rows 0 (fn m r (math/max @m @r.d))))) (let ((fin (array/reduce (array/range 0 @maxd) @entity.doc.rows (fn acc s (let ((dd (- @maxd @s))) (array/map @acc (fn r (if (and (== @r.d @dd) (!= @r.kind "V")) { p: @r.p, par: @r.par, seg: @r.seg, d: @r.d, kind: @r.kind, n: @r.n, leaf: (let ((kids (array/filter @acc (fn k (== @k.par @r.p)))) (lv : TomlValue (if (or (== @r.kind "S") (== @r.kind "A")) (array/map @kids (fn k @k.leaf)) (object/fromEntries (array/map @kids (fn k [@k.seg, @k.leaf])))))) @lv) } @r)))))))) (object/fromEntries (array/map (array/filter @fin (fn r (== @r.par ""))) (fn r [@r.seg, @r.leaf]))))))
+        (set @entity.value (let ((maxd (array/reduce @entity.doc.rows 0 (fn m r (math/max @m @r.d))))) (let ((fin (array/reduce (array/range 0 @maxd) @entity.doc.rows (fn acc s (let ((dd (- @maxd @s))) (array/map @acc (fn r (if (and (== @r.d @dd) (!= @r.kind "V")) { p: @r.p, par: @r.par, seg: @r.seg, d: @r.d, kind: @r.kind, n: @r.n, leaf: (let ((kids (array/filter @acc (fn k (== @k.par @r.p)))) (lv : TomlValue (if (or (== @r.kind "S") (== @r.kind "A")) (array/map @kids (fn k @k.leaf)) (or (object/fromEntries (array/map @kids (fn k [@k.seg, @k.leaf]))) {})))) @lv) } @r)))))))) (object/fromEntries (array/map (array/filter @fin (fn r (== @r.par ""))) (fn r [@r.seg, @r.leaf]))))))
         (emit TOML_PARSED { requestId: @entity.requestId, value: @entity.value })
     }
 

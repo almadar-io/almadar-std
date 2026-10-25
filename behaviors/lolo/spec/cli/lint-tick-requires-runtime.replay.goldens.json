@@ -4536,6 +4536,32 @@
           }
         }
       ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintTickRequiresRuntimeCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint tick-requires-runtime <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ],
   "note": " Added cases copy entity_mutation.rs tick_async_effect_warns, tick_async_effect_exempt_on_cron (a '1s' string interval is non-cron, a 5-field expression is cron), tick_requires_runtime_warns_on_persistent_non_cron with the Rust fixture's string interval '100ms', and follow find_async_operator_call (any depth, std-llm category operators) and is_valid_cron_expression. The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it)."

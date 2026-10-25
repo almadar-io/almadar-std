@@ -5,7 +5,6 @@ app std-verify-judge [
 ;; @capabilities "verify judge, verdicts, effects fired, proposition held, verifier verdict"
 uses Spec from "almadar-std/verify-judge"
 
-type JudgeText = { v : string }
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
 type PlannedStep = { trait : string!, linkedEntity : string, from : string!, event : string!, to : string!, toStates : [string]!, variant : string!, payload : Map string JsonValue, guarded : boolean!, arm : number, solved : boolean!, payloadCase : string!, guardCase : string, unplanned : string }
 type PlayedEffect = { type : string!, args : [JsonValue]!, status : string!, error : string, routed : string }
@@ -36,7 +35,7 @@ orbital VerifyJudgeOrbital {
       JUDGE_REQUEST -> ready
         (let ((evidence (not (object/has @payload.step "unplanned")))
               (failed (array/filter (object/get @payload.played "effects" []) (fn e (and (= (object/get @e "status") "failed") (not (object/has @e "routed")))))))
-          (let ((offenders (array/map (array/filter @failed (fn e @evidence)) (fn e (str/concat (object/get @payload.played "trait") ":" (object/get @payload.played "event") " " (object/get @e "type") "(" (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth (object/get @e "args" []) (if (= (object/get @e "type") "persist") 1 0))) "}") JudgeText) "v") ") failed: " (object/get @e "error" "?")))))
+          (let ((offenders (array/map (array/filter @failed (fn e @evidence)) (fn e (str/concat (object/get @payload.played "trait") ":" (object/get @payload.played "event") " " (object/get @e "type") "(" (let ((a (array/nth (object/get @e "args" []) (if (= (object/get @e "type") "persist") 1 0)))) (if (validate/string @a) @a (json/stringify @a))) ") failed: " (object/get @e "error" "?")))))
                 (ens (object/get @payload.played "ensures" []))
                 (nodes (object/get @payload "rendered" [])))
             (let ((brokenEns (array/filter @ens (fn x (= (object/get @x "verdict") "broken"))))

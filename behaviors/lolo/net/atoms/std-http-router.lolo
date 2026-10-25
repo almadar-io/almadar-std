@@ -85,13 +85,16 @@ orbital HttpRouterOrbital {
         (set @entity.tickInvoker (or @payload.value ""))
       INVOKER_UNREAD -> routing
         (set @entity.tickInvoker "")
-      REQUEST_RECEIVED -> routing
+      REQUEST_RECEIVED -> routing when (= (str/to-number (or (object/get @payload.headers "content-length") "0")) null)
+        (emit RESPOND { requestId: @payload.requestId, status: 400, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Invalid Content-Length", code: "BAD_CONTENT_LENGTH" })) })
+        (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 400, headers: [{ name: "content-type", value: "application/json" }], body: (json/stringify { error: "Invalid Content-Length", code: "BAD_CONTENT_LENGTH" }) })
+      REQUEST_RECEIVED -> routing when (!= (str/to-number (or (object/get @payload.headers "content-length") "0")) null)
         (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, method: @payload.method, path: @payload.path, query: (or @payload.query ""), authorization: (or (object/get @payload.headers "authorization") ""), ip: (str/join (array/slice (str/split @payload.peer ":") 0 (- (array/len (str/split @payload.peer ":")) 1)) ":"), responseHeaders: [] }))
         (emit HTTP_DECIDE {
           requestId: @payload.requestId,
           method: @payload.method,
           path: @payload.path,
-          headers: (array/map (object/keys @payload.headers) (fn k { name: @k, value: (object/get @payload.headers @k) })),
+          headers: (array/map (object/entries @payload.headers) (fn e { name: (array/first @e), value: (array/nth @e 1) })),
           contentLength: (str/to-number (or (object/get @payload.headers "content-length") "0"))
         })
       HTTP_DECIDED -> routing when (= @payload.verdict "preflight")

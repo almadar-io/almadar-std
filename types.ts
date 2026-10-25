@@ -103,7 +103,16 @@ export type RunsOn = 'client' | 'server' | 'any';
 /** How a failable operator fails (see {@link OperatorMeta.failable}). */
 export interface FailableMeta {
   unlessLiteral?: number[];
+  /** Argument positions whose value of the named type cannot make the call fail (an `instant` at `time/format`'s timestamp). */
+  unlessTyped?: { arg: number; type: OperatorTypeRef }[];
+  /** Argument positions where a value proved nonzero / at least zero / above zero cannot make the call fail. */
+  unlessNonZero?: number[];
+  unlessNonNegative?: number[];
+  unlessPositive?: number[];
 }
+
+/** What the sign of a numeric result is: always at least zero, or derived from the arguments' signs. */
+export type ResultSign = 'nonNegative' | 'sum' | 'product' | 'max' | 'min';
 
 /** A host outside the runtime that executes an effect. */
 export type EffectHost = 'program' | 'os' | 'kv';
@@ -136,6 +145,8 @@ export interface OperatorMeta {
    * positions whose bad value is the only way to fail: with a literal at every one the result is not optional.
    */
   failable?: FailableMeta;
+  /** The sign of the result, which the checker uses to prove a divisor nonzero or a root's argument non-negative. */
+  sign?: ResultSign;
   /** Execution site of an effect operator; set on every `hasSideEffects` operator, absent on pure ones. */
   runsOn?: RunsOn;
   /** The host that executes this effect: `program` = the shared program host (`@almadar/runtime` `host/program` `runProgramEffect`), on both execution paths. `os` = the `os/` family, executed by the OS host under a declared grant. Absent for effects the runtime executes itself. */

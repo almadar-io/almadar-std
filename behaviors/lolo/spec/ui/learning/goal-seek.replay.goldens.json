@@ -1,0 +1,140 @@
+{
+ "atom": "../ui/learning/atoms/std-learn-goal-seek.lolo",
+ "trait": "GoalSeekSim",
+ "cases": [
+  {
+   "id": "the distance pairs samples by x, so a target missing at some x is skipped, not mismatched by index",
+   "entity": {
+    "active": true,
+    "solved": false,
+    "curveKind": "power",
+    "paramA": 1,
+    "paramB": 1,
+    "distance": 0,
+    "targetSamples": [
+     {
+      "x": 0.25,
+      "y": 1
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "SET_PARAM_B",
+     "payload": {
+      "value": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PARAMS_CHANGED",
+        "payload": {
+         "paramA": 1,
+         "paramB": 1,
+         "distance": 0.75
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a learner curve that shares no defined point with the target has no distance",
+   "entity": {
+    "active": true,
+    "solved": false,
+    "curveKind": "power",
+    "paramA": 1,
+    "paramB": 1,
+    "distance": 0,
+    "targetSamples": [
+     {
+      "x": 100,
+      "y": 1
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "SET_PARAM_B",
+     "payload": {
+      "value": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PARAMS_CHANGED",
+        "payload": {
+         "paramA": 1,
+         "paramB": 1,
+         "distance": null
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "Check on a curve with no distance is not a match",
+   "entity": {
+    "active": true,
+    "solved": false,
+    "distance": null,
+    "attempts": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "CHECK",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "GOAL_CHECKED",
+        "payload": {
+         "matched": false,
+         "attempts": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "LEARN_ROUND_COMPLETE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL Check within tolerance is a match",
+   "entity": {
+    "active": true,
+    "solved": false,
+    "distance": 0.1,
+    "attempts": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "CHECK",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "GOAL_CHECKED",
+        "payload": {
+         "matched": true,
+         "distance": 0.1,
+         "attempts": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

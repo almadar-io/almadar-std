@@ -82,6 +82,51 @@
    "skip": "pending: rows-resolve viewer — POST /api/orbitals/resolve-rows resolving a row-set reference for the requesting viewer against the store is approved but unbuilt; the atom answers 501 NOT_IMPLEMENTED; also needs concurrent in-flight requests answered out of order (requestId correlation)",
    "steps": [],
    "note": "pending spec: {\"expected\": {\"answerOrder\": [2, 1], \"responses\": [{\"requestId\": 2, \"status\": 200}, {\"requestId\": 1, \"rowIds\": [\"a1\"], \"status\": 200}]}, \"fixture\": {\"rows\": [[\"a1\", \"alice\", \"open\"]], \"schema\": \"ResolveApp: orbital Notes, entity Note [persistent] (id, ownerId, status), trait NoteBrowse\"}, \"request\": {\"concurrent\": [{\"body\": {\"ref\": {\"entityType\": \"Note\", \"ids\": [\"a1\"], \"query\": {}, \"total\": 3}}, \"method\": \"POST\", \"path\": \"/api/orbitals/resolve-rows\", \"requestId\": 1, \"storeReadDelayMs\": 400}, {\"method\": \"GET\", \"path\": \"/api/orbitals/inputs\", \"requestId\": 2}]}}"
+  },
+  {
+   "id": "resolve-rows-body-without-a-ref-answers-400",
+   "entity": {
+    "inflight": 0,
+    "waiting": [],
+    "frames": [],
+    "pending": []
+   },
+   "steps": [
+    {
+     "event": "REQUEST_RECEIVED",
+     "payload": {
+      "requestId": 1,
+      "method": "POST",
+      "path": "/api/orbitals/resolve-rows",
+      "query": "",
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "e30=",
+      "peer": "127.0.0.1:5000"
+     }
+    },
+    {
+     "event": "DISPATCH_ADMITTED",
+     "payload": {
+      "requestId": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 1,
+         "status": 400
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESOLVE_ROWS_REQUESTED"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

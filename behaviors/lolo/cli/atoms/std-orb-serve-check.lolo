@@ -82,11 +82,13 @@ orbital OrbServeCheckOrbital {
       INIT -> ready
       SC_CALLED -> parsing
         (set @entity.invokeCwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit SC_ARGS_PARSE { stage: "serve-check" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "port" aliases: [] takesValue: true repeatable: false }, { name: "cwd" aliases: [] takesValue: true repeatable: false }] })
+        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))) (if (= @argv null) (emit SC_ARGS_UNREAD { }) (emit SC_ARGS_PARSE { stage: "serve-check" argv: @argv flags: [{ name: "port" aliases: [] takesValue: true repeatable: false }, { name: "cwd" aliases: [] takesValue: true repeatable: false }] })))
     }
 
     state parsing {
       INIT -> parsing
+      SC_ARGS_UNREAD -> ready
+        (emit SERVE_CHECK_ANSWERED { status: 500, body: "Error: the call's arguments could not be read" })
       SC_ARGS_DONE -> ready when (not (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1)))
         (emit SERVE_CHECK_ANSWERED { status: 400, body: "usage: orb serve-check PROGRAM [--port N] [--cwd DIR]" })
       SC_ARGS_DONE -> starting when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
@@ -230,6 +232,9 @@ orbital OrbServeCheckOrbital {
         @tier "internal"
       SC_FINISH { }
         @description "Internal: the checks are done; print the log if any failed and stop the server."
+        @tier "internal"
+      SC_ARGS_UNREAD {  }
+        @description "Internal: the call's arguments could not be read."
         @tier "internal"
       SC_ARGS_PARSE {
         stage : string!

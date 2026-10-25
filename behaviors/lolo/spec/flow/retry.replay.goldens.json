@@ -225,6 +225,44 @@
      }
     }
    ]
+  },
+  {
+   "id": "overflowing backoff caps at maxDelayMs",
+   "config": {
+    "maxAttempts": 2000,
+    "multiplier": 2,
+    "baseDelayMs": 500,
+    "maxDelayMs": 30000
+   },
+   "entity": {
+    "key": "k1",
+    "attempt": 1500
+   },
+   "steps": [
+    {
+     "from": "running",
+     "event": "FAILED",
+     "payload": {
+      "key": "k1",
+      "error": "x"
+     },
+     "expect": {
+      "state": "backoff",
+      "emits": [
+       {
+        "event": "RETRY_SCHEDULED",
+        "payload": {
+         "key": "k1",
+         "attempt": 1500,
+         "delayMs": 30000,
+         "error": "x"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "skip": "needs config override (G-ORB-460)"
   }
  ]
 }

@@ -58,7 +58,9 @@ orbital OrbSandboxOrbital {
 
     state ready {
       INIT -> ready
-      SB_CALLED -> parsing
+      SB_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit SANDBOX_ANSWERED { status: 400, body: "usage: orb sandbox smoke [all|build|up|check|down] [--deploy DIR] [--src DIR]" })
+      SB_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.deploy (str/concat (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd") "/tools/orbital-sandbox"))
         (set @entity.src (str/concat (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd") "/orbital-rust"))
         (emit SB_ARGS_PARSE { stage: "sandbox" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "deploy" aliases: [] takesValue: true repeatable: false }, { name: "src" aliases: [] takesValue: true repeatable: false }] })

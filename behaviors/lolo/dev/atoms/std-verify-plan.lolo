@@ -11,7 +11,7 @@ type PlanRow = { orbital : string!, trait : string!, from : string!, event : str
 type PlanText = { v : string }
 type PlanFroms = { v : [string] }
 type PlanForm = [SExpr]
-type PlanArm = { event : string!, from : (string | [string]), to : string!, guard : SExpr, effects : [SExpr] }
+type PlanArm = { event : string!, from : (string | [string])!, to : string!, guard : SExpr, effects : [SExpr] }
 type PlanTick = { effects : [SExpr] }
 type PlanEmit = { success : string, cancelled : string, onMessage : string, failure : string }
 type PlanRoute = { emitter : string!, event : string!, kind : string! }
@@ -26,7 +26,7 @@ type PlanTrait = { name : string!, orbital : string, linkedEntity : string, stat
 type PlanEntField = { name : string!, default : SExpr }
 type PlanEntity = { name : string, fields : [PlanEntField] }
 type PlanOrbital = { name : string!, entity : PlanEntity, traits : [PlanTrait] }
-type PlanProgram = { orbitals : [PlanOrbital] }
+type PlanProgram = { orbitals : [PlanOrbital]! }
 type PlanFull = { orbitals : [orbital] }
 type PlanProbe = { idx : number!, r : PlanRow! }
 type PlanProbes = [PlanProbe]
@@ -81,7 +81,10 @@ orbital VerifyPlanOrbital {
 
     state ready {
       INIT -> ready
-      PLAN_REQUEST -> ready
+      PLAN_REQUEST -> ready when (= (json/parse (json/stringify @payload.program) PlanProgram) null)
+        (set @entity.steps [])
+        (emit PLAN_FAILED { error: "verify-plan: the program to plan is not a program" })
+      PLAN_REQUEST -> ready when (!= (json/parse (json/stringify @payload.program) PlanProgram) null)
         (set @entity.program (json/stringify @payload.program))
         (set @entity.viewer (object/get @payload "viewer" null))
         (set @entity.owners (object/get @payload "owners" {}))
@@ -90,13 +93,14 @@ orbital VerifyPlanOrbital {
             (set @entity.seedIds (object/fromEntries (array/map @names (fn name [@name, (if (and (object/has @entity.viewer "id") (array/includes (object/get @entity.owners (str/lower @name) []) "id")) (str/template "{{v}}" { v: (object/get @entity.viewer "id") }) (str/concat @name "-verify-seed-1"))]))))
             (set @entity.newIds (object/fromEntries (array/map @names (fn name [@name, (if (and (object/has @entity.viewer "id") (array/includes (object/get @entity.owners (str/lower @name) []) "id")) (str/template "{{v}}" { v: (object/get @entity.viewer "id") }) (str/concat @name "-verify-new-1"))]))))))
         (let ((noForm : PlanForm []) (progTraits (array/flatten (array/map (object/get (json/parse (json/stringify @payload.program) PlanProgram) "orbitals") (fn o (array/map (object/get @o "traits" []) (fn t (object/set @t "orbital" (object/get @o "name")))))))))
-          (do (set @entity.steps (array/map @payload.rows (fn r
+          (do (set @entity.steps (array/flatten (array/map @payload.rows (fn r
             (let ((tr (array/find @progTraits (fn t (and (= (object/get @t "name") (object/get @r "trait")) (= (object/get @t "orbital") (object/get @r "orbital")))))))
               (let ((ent (object/get @tr "linkedEntity" "")))
                 (let ((seed (if (= @ent "") "" (object/get @entity.seedIds @ent (str/concat @ent "-verify-seed-1"))))
-                      (keys (array/map (array/filter (array/map (array/filter (array/reduce (array/filter (object/get (object/get @tr "stateMachine") "transitions" []) (fn a (= (object/get @a "event") (object/get @r "event")))) [] (fn (acc a) (array/concat @acc (array/reduce (object/get @a "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e))))))) (fn n (str/startsWith (json/stringify @n) "["))) (fn n (or (json/parse (json/stringify @n) PlanForm) @noForm)))
-                                         (fn f (and (> (array/len @f) 2) (= (json/stringify (array/take @f 2)) (json/stringify (quote ["set", "@entity.id"]))) (str/startsWith (json/stringify (array/nth @f 2)) (str/concat "\"" (quote "@payload."))))))
-                                       (fn f (str/slice (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth @f 2)) "}") PlanText) "v") 9)))))
+                      (keyNodes (array/filter (array/map (array/filter (array/reduce (array/filter (object/get (object/get @tr "stateMachine") "transitions" []) (fn a (= (object/get @a "event") (object/get @r "event")))) [] (fn (acc a) (array/concat @acc (array/reduce (object/get @a "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e))))))) (fn n (str/startsWith (json/stringify @n) "["))) (fn n (or (json/parse (json/stringify @n) PlanForm) @noForm)))
+                                         (fn f (and (> (array/len @f) 2) (= (json/stringify (array/take @f 2)) (json/stringify (quote ["set", "@entity.id"]))) (str/startsWith (json/stringify (array/nth @f 2)) (str/concat "\"" (quote "@payload."))))))))
+                  (let ((keys (array/flatten (array/map @keyNodes (fn f (let ((k (array/nth @f 2))) (if (validate/string @k) [(str/slice @k 9)] [])))))))
+                  (let ((keysShort (!= (array/len @keys) (array/len @keyNodes))))
                   (let ((planned (array/reduce (object/get @r "payload") {}
                                    (fn (acc s)
                                      (let ((pv (json/parse
@@ -113,7 +117,7 @@ orbital VerifyPlanOrbital {
                         (objectSlot (array/some (object/get @r "payload") (fn s (array/includes ["object" "[object]"] (object/get @s "type"))))))
                     (let ((arms (object/get (object/get @tr "stateMachine") "transitions" []))
                           (guarded (object/get @r "guarded")))
-                      (let ((arm (array/find @arms (fn a (and (= (object/get @a "event") (object/get @r "event")) (= (object/get @a "to") (object/get @r "to")) (= (object/has @a "guard") @guarded) (array/includes (object/get (json/parse (str/concat "{\"v\":" (if (str/startsWith (json/stringify (object/get @a "from")) "[") (json/stringify (object/get @a "from")) (str/concat "[" (json/stringify (object/get @a "from")) "]")) "}") PlanFroms) "v") (object/get @r "from")))))))
+                      (let ((arm (array/find @arms (fn a (and (= (object/get @a "event") (object/get @r "event")) (= (object/get @a "to") (object/get @r "to")) (= (object/has @a "guard") @guarded) (array/includes (let ((fr (object/get @a "from"))) (if (validate/string @fr) [@fr] @fr)) (object/get @r "from")))))))
                         (let ((bindTexts (if @guarded (array/map (array/filter (json/nodes (object/get @arm "guard")) (fn n (str/startsWith (json/stringify @n) "\"@"))) (fn n (object/get (json/parse (str/concat "{\"v\":" (json/stringify @n) "}") PlanText) "v"))) [])))
                           (let ((payloadBinds (array/filter @bindTexts (fn b (str/startsWith (str/slice @b 1) "payload."))))
                                 (entityFields (array/unique (array/map (array/filter @bindTexts (fn b (and (str/startsWith (str/slice @b 1) "entity.") (!= (str/slice @b 1) "entity.id")))) (fn b (str/slice @b 8)))))
@@ -130,7 +134,7 @@ orbital VerifyPlanOrbital {
 (let ((allMode (or (not @comb) (= (= @h2 "and") @w2))) (forms (if @comb (array/map (array/drop @g2 1) (fn e (if (str/startsWith (json/stringify @e) "[") (or (json/parse (json/stringify @e) PlanForm) @noForm) []))) [@g2])))
 (let ((units (array/map @forms (fn f (if (and (= (array/len @f) 2) (= (if (and (> (array/len @f) 0) (str/startsWith (json/stringify (array/nth @f 0)) "\"")) (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth @f 0)) "}") PlanText) "v") "") "not")) { f: (if (str/startsWith (json/stringify (array/nth @f 1)) "[") (or (json/parse (json/stringify (array/nth @f 1)) PlanForm) @noForm) []), w: (not @w2) } { f: @f, w: @w2 })))))
 (let ((descs (array/map @units (fn u (let ((f (object/get @u "f")) (w (object/get @u "w"))) (let ((n (array/len @f)) (fh (if (and (> (array/len @f) 0) (str/startsWith (json/stringify (array/nth @f 0)) "\"")) (object/get (json/parse (str/concat "{\"v\":" (json/stringify (array/nth @f 0)) "}") PlanText) "v") "")))
-  (let ((sa (if (= @n 3) (json/stringify (array/nth @f 1)) "")) (sb (if (= @n 3) (json/stringify (array/nth @f 2)) "")))
+  (let ((sa (if (= @n 3) (json/stringify (array/nth @f 1)) "")) (sb (if (= @n 3) (json/stringify (array/nth @f 2)) "")) (na (array/nth @f 1)) (nb (array/nth @f 2)))
     (let ((ka (if (= @sa "") "none" (if (str/startsWith @sa "\"@payload.") (if (> (str/len @sa) 11) "path" "bind") (if (str/startsWith @sa "\"@") "bind" (if (str/startsWith @sa "\"") "string" (if (or (= @sa "true") (= @sa "false")) "bool" (if (= @sa "null") "null" (if (or (str/startsWith @sa "[") (str/startsWith @sa "{")) "struct" "number")))))))) (kb (if (= @sb "") "none" (if (str/startsWith @sb "\"@payload.") (if (> (str/len @sb) 11) "path" "bind") (if (str/startsWith @sb "\"@") "bind" (if (str/startsWith @sb "\"") "string" (if (or (= @sb "true") (= @sb "false")) "bool" (if (= @sb "null") "null" (if (or (str/startsWith @sb "[") (str/startsWith @sb "{")) "struct" "number")))))))))
       (let ((isCmp (and (= @n 3) (array/includes ["=","==","!=","<","<=",">",">="] @fh))) (isInc (and (= @n 3) (= @fh "array/includes"))) (litA (array/includes ["string","bool","null","number"] @ka)) (litB (array/includes ["string","bool","null","number"] @kb)))
         (let ((cmpA (and @isCmp (= @ka "path") @litB)) (cmpB (and @isCmp (= @kb "path") @litA)) (incA (and @isInc (= @ka "path") (str/startsWith @sb "["))) (incB (and @isInc (= @kb "path") (str/startsWith @sa "["))))
@@ -139,12 +143,13 @@ orbital VerifyPlanOrbital {
                   (firstS (if (> (array/len @list) 0) (json/stringify (array/nth @list 0)) "")))
               (let ((op3 (if @cmpB (if (= @op2 "<") ">" (if (= @op2 "<=") ">=" (if (= @op2 ">") "<" (if (= @op2 ">=") "<=" @op2)))) @op2))
                     (fk (if (= @firstS "") "none" (if (str/startsWith @firstS "\"@payload.") (if (> (str/len @firstS) 11) "path" "bind") (if (str/startsWith @firstS "\"@") "bind" (if (str/startsWith @firstS "\"") "string" (if (or (= @firstS "true") (= @firstS "false")) "bool" (if (= @firstS "null") "null" (if (or (str/startsWith @firstS "[") (str/startsWith @firstS "{")) "struct" "number")))))))))
-                (let ((cvt (if (array/includes ["=","<=",">="] @op3) @litS (if (= @op3 "<") (if (= @litKind "number") (json/stringify (- (or (str/to-number @litS) 0) 1)) "") (if (= @op3 ">") (if (= @litKind "number") (json/stringify (+ (or (str/to-number @litS) 0) 1)) "") (if (= @litKind "number") (json/stringify (+ (or (str/to-number @litS) 0) 1)) (if (= @litKind "bool") (if (= @litS "true") "false" "true") (if (= @litKind "string") (json/stringify (str/concat (object/get (json/parse (str/concat "{\"v\":" @litS "}") PlanText) "v") "-other")) (if (= @litKind "null") "true" ""))))))))
-                      (incV (if (array/includes ["string","bool","null","number"] @fk) (if @w @firstS (if (= @fk "string") (json/stringify (str/concat (object/get (json/parse (str/concat "{\"v\":" @firstS "}") PlanText) "v") "-not-in-list")) "\"not-in-list\"")) "")))
+                (let ((cvt (if (array/includes ["=","<=",">="] @op3) @litS (if (= @op3 "<") (if (= @litKind "number") (json/stringify (- (or (str/to-number @litS) 0) 1)) "") (if (= @op3 ">") (if (= @litKind "number") (json/stringify (+ (or (str/to-number @litS) 0) 1)) "") (if (= @litKind "number") (json/stringify (+ (or (str/to-number @litS) 0) 1)) (if (= @litKind "bool") (if (= @litS "true") "false" "true") (if (= @litKind "string") (let ((ln (if @cmpA @nb @na))) (if (validate/string @ln) (json/stringify (str/concat @ln "-other")) "")) (if (= @litKind "null") "true" ""))))))))
+                      (incV (if (array/includes ["string","bool","null","number"] @fk) (if @w @firstS (if (= @fk "string") (let ((f0 (array/nth @list 0))) (if (validate/string @f0) (json/stringify (str/concat @f0 "-not-in-list")) "")) "\"not-in-list\"")) ""))
+                      (short (or (and (or @cmpA @incA) (not (validate/string @na))) (and (not (or @cmpA @incA)) (or @cmpB @incB) (not (validate/string @nb))) (and (or @cmpA @cmpB) (= @op3 "!=") (= @litKind "string") (not (validate/string (if @cmpA @nb @na)))) (and (or @incA @incB) (not @w) (= @fk "string") (not (validate/string (array/nth @list 0)))))))
                   (let ((vt (if (or @cmpA @cmpB) @cvt (if (or @incA @incB) @incV "")))
-                        (key (if (or @cmpA @incA) (str/slice (object/get (json/parse (str/concat "{\"v\":" @sa "}") PlanText) "v") 9) (if (or @cmpB @incB) (str/slice (object/get (json/parse (str/concat "{\"v\":" @sb "}") PlanText) "v") 9) ""))))
+                        (key (if (or @cmpA @incA) (if (validate/string @na) (str/slice @na 9) "") (if (or @cmpB @incB) (if (validate/string @nb) (str/slice @nb 9) "") ""))))
                     (let ((cv (if (= @fh "!=") (not (= @sa @sb)) (= @sa @sb))))
-                      { kind: (if @constCmp "const" (if (and (!= @vt "") (!= @key "")) "set" "bad")), key: @key, vt: @vt, cv: @cv, w: @w, ck: (if (and (= @fh "=") @cmpA (= @litKind "string") @w) @key (if (and (array/includes ["=","=="] @fh) @cmpB (= @litKind "string") @w) @key (if (and (= @fh "==") @cmpA (= @litKind "string") @w) @key ""))), cl: (if @cmpA @sb @sa) }))))))))))))))))
+                      { kind: (if @constCmp "const" (if (and (!= @vt "") (!= @key "")) "set" "bad")), key: @key, vt: @vt, cv: @cv, w: @w, ck: (if (and (= @fh "=") @cmpA (= @litKind "string") @w) @key (if (and (array/includes ["=","=="] @fh) @cmpB (= @litKind "string") @w) @key (if (and (= @fh "==") @cmpA (= @litKind "string") @w) @key ""))), cl: (if @cmpA @sb @sa), short: @short }))))))))))))))))
 (let ((constHit (array/some @descs (fn d (and (= (object/get @d "kind") "const") (= (object/get @d "cv") (object/get @d "w")))))))
 (let ((res (array/reduce @descs { ok: (and @allMode (> (array/len @descs) 0)), p: @planned } (fn (acc d) (if @allMode (if (and (object/get @acc "ok") (= (object/get @d "kind") "set")) (let ((v (json/parse (object/get @d "vt") JsonValue))) (if (= @v null) { ok: false, p: (object/get @acc "p") } { ok: true, p: (object/set (object/get @acc "p") (object/get @d "key") @v) })) { ok: false, p: (object/get @acc "p") }) (if (or (object/get @acc "ok") (!= (object/get @d "kind") "set")) @acc (let ((v (json/parse (object/get @d "vt") JsonValue))) (if (= @v null) { ok: false, p: (object/get @acc "p") } { ok: true, p: (object/set (object/get @acc "p") (object/get @d "key") @v) }))))))))
 (let ((sol0 (if (and (not @allMode) @constHit) { ok: true, p: @planned } @res)) (cks (array/unique (array/filter (array/map @descs (fn d (object/get @d "ck"))) (fn k (!= @k ""))))))
@@ -160,7 +165,7 @@ orbital VerifyPlanOrbital {
                                           (let ((withEntity (if (= @ent "") @step (object/set @step "linkedEntity" @ent))))
                                             (let ((withGuard (if @guarded (object/set @withEntity "guardCase" "pass") @withEntity)))
                                               (let ((withPre (if (= (object/get @pre "kind") "none") @withGuard (object/set @withGuard "precondition" @pre))))
-                                                (if (= @why "") @withPre (object/set @withPre "unplanned" @why))))))))))))))))))))))))))))))))))))
+                                                (if (or @keysShort (array/some @descs (fn d (object/get @d "short")))) [] [(if (= @why "") @withPre (object/set @withPre "unplanned" @why))]))))))))))))))))))))))))))))))))))))))
         (let ((noForm : PlanForm []) (noEmit : PlanEmit {}) (noRoutes : PlanRoutes []) (noSrc : PlanListenSource {}))
           (set @entity.steps (let ((routes (array/reduce @progTraits @noRoutes (fn (ra t)
             (let ((forms (array/map (array/filter (array/reduce (object/get (object/get @t "stateMachine") "transitions" []) [] (fn (a2 arm) (array/concat @a2 (array/reduce (object/get @arm "effects" []) [] (fn (a3 e) (array/concat @a3 (json/nodes @e))))))) (fn n (or (str/startsWith (json/stringify @n) "[\"http\"") (str/startsWith (json/stringify @n) "[\"redis\"") (str/startsWith (json/stringify @n) "[\"postgres\"")))) (fn n (or (json/parse (json/stringify @n) PlanForm) @noForm)))))
@@ -202,7 +207,10 @@ orbital VerifyPlanOrbital {
                       (let ((withCard (if (object/has @f "relation") (object/set @base "relation" (object/get @f "relation")) @base)))
                         (let ((withValues (if (object/has @f "values") (object/set @withCard "values" (object/get @f "values")) @withCard)))
                           (if (object/has @f "default") (object/set @withValues "default" (object/get @f "default")) @withValues)))))) }])))))))
-        (emit PLAN_COMPUTED { count: (array/len @entity.steps) })))
+        (if (!= (array/len @entity.steps) (array/len @payload.rows))
+          (do (set @entity.steps [])
+            (emit PLAN_FAILED { error: "verify-plan: a guard or set node the plan reads as text is not text" }))
+          (emit PLAN_COMPUTED { count: (array/len @entity.steps) }))))
       PLAN_COMPUTED -> ready when (> (array/len @entity.rowJobs) 0)
         (emit SAMPLE_ROWS { fields: (object/get (array/first @entity.rowJobs) "fields"), name: (object/get (array/first @entity.rowJobs) "entity"), count: 1, runtime: (object/get (array/first @entity.rowJobs) "runtime"), identity: (object/get (array/first @entity.rowJobs) "identity") })
       ROWS_DONE -> ready
@@ -228,7 +236,7 @@ orbital VerifyPlanOrbital {
                   (let ((inits (array/filter (object/get (object/get @tr "stateMachine") "transitions" []) (fn a (= (object/get @a "event") "INIT"))))
                         (fields (object/get (object/get (array/nth @entity.steps (object/get @p "idx")) "precondition") "fields" [])))
                     (let ((hasInit (> (array/len @inits) 0)))
-                      (let ((initFrom (if @hasInit (array/nth (object/get (json/parse (str/concat "{\"v\":" (if (str/startsWith (json/stringify (object/get (array/nth @inits 0) "from")) "[") (json/stringify (object/get (array/nth @inits 0) "from")) (str/concat "[" (json/stringify (object/get (array/nth @inits 0) "from")) "]")) "}") PlanFroms) "v") 0) ""))
+                      (let ((initFrom (if @hasInit (array/nth (let ((fr (object/get (array/nth @inits 0) "from"))) (if (validate/string @fr) [@fr] @fr)) 0) ""))
                             (entFields (object/get (object/get @o "entity" {}) "fields" []))
                             (initSet (and @hasInit (array/some (array/map (array/filter (array/reduce (object/get (array/nth @inits 0) "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e)))) (fn n (str/startsWith (json/stringify @n) "["))) (fn n (or (json/parse (json/stringify @n) PlanForm) @noForm))) (fn f (array/some @fields (fn fld (= (json/stringify (array/take @f 2)) (json/stringify ["set", (str/concat (quote "@entity.") @fld)])))))))))
                         (let ((baseNE (or @initSet (array/some @fields (fn fld (array/some @entFields (fn e (and (= (object/get @e "name") @fld) (object/has @e "default")))))))))

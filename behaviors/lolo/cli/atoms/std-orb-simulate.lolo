@@ -28,11 +28,11 @@ orbital OrbSimulateOrbital {
 
     state ready {
       INIT -> ready
-      SIMULATE_CALLED -> ready when (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1)
+      SIMULATE_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit SIMULATE_ANSWERED { status: 400, body: "usage: orb simulate <file>" })
-      SIMULATE_CALLED -> reading when (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (not (os/path-is-absolute (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))))
+      SIMULATE_CALLED -> reading when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (not (os/path-is-absolute (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))))
         (os/read-file { anchor: "cwd" path: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) } { key: "file" emit: { success: SIMULATE_FILE_READ, failure: SIMULATE_UNREAD } })
-      SIMULATE_CALLED -> reading when (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (os/path-is-absolute (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))))
+      SIMULATE_CALLED -> reading when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (os/path-is-absolute (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))))
         (os/read-file (str/concat "/" (str/slice (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1 (str/len (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv"))))) { key: "file" emit: { success: SIMULATE_FILE_READ, failure: SIMULATE_UNREAD } })
     }
 

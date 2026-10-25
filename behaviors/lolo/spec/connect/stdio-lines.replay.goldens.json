@@ -163,7 +163,7 @@
        {
         "event": "INPUT_LINE",
         "payload": {
-         "line": "\u00e9"
+         "line": "é"
         }
        }
       ]
@@ -279,6 +279,64 @@
      "expect": {
       "fired": true,
       "emits": [],
+      "state": "active"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a line that is not valid UTF-8 closes the session with an error",
+   "steps": [
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "STDIO_READ",
+     "payload": {
+      "data": "/wo=",
+      "eof": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STDIO_PUMP",
+        "payload": {}
+       },
+       {
+        "event": "STDIO_ERROR",
+        "payload": {
+         "error": "standard input line is not valid UTF-8"
+        }
+       }
+      ],
+      "state": "active"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a last line without LF that is not valid UTF-8 closes the session with an error",
+   "steps": [
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "STDIO_READ",
+     "payload": {
+      "data": "/w==",
+      "eof": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STDIO_PUMP",
+        "payload": {}
+       },
+       {
+        "event": "STDIO_ERROR",
+        "payload": {
+         "error": "standard input line is not valid UTF-8"
+        }
+       }
+      ],
       "state": "active"
      }
     }

@@ -8,7 +8,7 @@ orbital KnowledgeTracingOrbital {
   uses LabelCap from "std/behaviors/std-ml-label-capture"
 
   type ObservationLabelInput = { skillId : string! }
-  type ObservationLabelVerdict = { status : string!, mean : float!, intervalLow : float!, intervalHigh : float! }
+  type ObservationLabelVerdict = { status : string!, mean : float!, intervalLow : float?, intervalHigh : float? }
 
   entity KnowledgeState [runtime, shared] {
     skillId : string = ""
@@ -16,8 +16,8 @@ orbital KnowledgeTracingOrbital {
     alpha : float = 1
     beta : float = 1
     mean : float = 0
-    intervalLow : float = 0
-    intervalHigh : float = 0
+    intervalLow : float? = null
+    intervalHigh : float? = null
     observations : number = 0
     status : "idle" | "insufficient" | "mastered" | "remediate" = idle
     input : string = ""
@@ -83,8 +83,8 @@ orbital KnowledgeTracingOrbital {
       VERDICT_REACHED {
         status : string!
         mean : float!
-        intervalLow : float!
-        intervalHigh : float!
+        intervalLow : float?
+        intervalHigh : float?
       }
         @description "Any posterior verdict, tagged with which one it was."
         @tier "secondary"

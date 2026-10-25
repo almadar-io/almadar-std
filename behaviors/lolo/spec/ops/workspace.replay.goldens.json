@@ -8756,6 +8756,70 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-file-that-is-not-utf8-text-fails-as-not-text",
+   "steps": [
+    {
+     "event": "WS_R_DONE",
+     "payload": {},
+     "from": "working",
+     "entity": {
+      "rstage": "read",
+      "rdata": [
+       "/w=="
+      ],
+      "path": "a.bin",
+      "workspace": "w"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WS_FAIL",
+        "payload": {
+         "code": "not-text",
+         "message": "not valid UTF-8 text: a.bin"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-utf8-file-is-read",
+   "steps": [
+    {
+     "event": "WS_R_DONE",
+     "payload": {},
+     "from": "working",
+     "entity": {
+      "rstage": "read",
+      "rdata": [
+       "aGk="
+      ],
+      "path": "a.bin",
+      "workspace": "w"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WORKSPACE_FILE_READ",
+        "payload": {
+         "workspace": "w",
+         "path": "a.bin",
+         "exists": true,
+         "content": "hi"
+        }
+       },
+       {
+        "event": "WS_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }
