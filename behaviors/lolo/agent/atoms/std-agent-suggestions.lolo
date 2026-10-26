@@ -116,14 +116,14 @@ orbital AgentSuggestionsOrbital {
   uses Loop from "std/behaviors/std-agent-tool-loop"
   uses Llm from "std/behaviors/std-llm"
 
-  type SuggestionsLoaded = Event { data : [SuggestionRow]! } "Fired when the person's suggestions finish loading"
+  type SuggestionsLoaded = Event { data : [SuggestionRow]!, totalCount : number } "Fired when the person's suggestions finish loading"
   type SuggestionsLoadFailed = Event { error : string, code : string } "Fired when the suggestions fail to load"
   type SuggestionResolveFailed = Event { error : string, code : string } "Fired when a suggestion cannot be accepted or dismissed"
-  type SuggestionsForPropose = Event { data : [SuggestionRow]! } "Fired when the person's suggestions are loaded for a proposal's duplicate check"
+  type SuggestionsForPropose = Event { data : [SuggestionRow]!, totalCount : number! } "Fired when the person's suggestions are loaded for a proposal's duplicate check"
   type SuggestionCheckFailed = Event { error : string, code : string } "Fired when a proposal's duplicate check cannot load the person's suggestions"
   type SuggestionSaveFailed = Event { error : string, code : string } "Fired when a proposed suggestion cannot be stored"
-  type SuggestionForAccept = Event { data : [SuggestionRow]! } "Fired when the suggestion being accepted is loaded"
-  type SuggestionForDismiss = Event { data : [SuggestionRow]! } "Fired when the suggestion being dismissed is loaded"
+  type SuggestionForAccept = Event { data : [SuggestionRow]!, totalCount : number! } "Fired when the suggestion being accepted is loaded"
+  type SuggestionForDismiss = Event { data : [SuggestionRow]!, totalCount : number! } "Fired when the suggestion being dismissed is loaded"
   type SuggestionAccepted = Event SuggestionRow "Fired after a suggestion is stored as accepted"
   type SuggestionDismissed = Event SuggestionRow "Fired after a suggestion is stored as dismissed"
   type RunsForTrigger = Event { data : [RunRow]! } "Fired when the person's earlier runs are loaded for the cooldown check"
@@ -211,6 +211,11 @@ orbital AgentSuggestionsOrbital {
 
   trait AgentSuggestionProposer -> @rebindable AgentSuggestion {
     config {
+      maxRows : number = 1000
+        @label "Earlier suggestions checked per proposal"
+        @description "Most of the person's suggestions one proposal reads for its duplicate and pending-limit checks. Both checks need every earlier suggestion, so a partial read could store a repeat; a person with more is refused through SUGGESTION_REJECTED instead."
+        @synonyms "history cap, duplicate check limit"
+        @tier "policy"
       pendingLimit : number = @config.maxPending
         @label "How many suggestions may wait at once?"
         @description "A proposal is refused (SUGGESTION_LIMIT_REACHED) while this many are pending."
@@ -248,8 +253,11 @@ orbital AgentSuggestionsOrbital {
         })
         (fetch AgentSuggestion {
           filter: (= (object/get @entity ownerId) @user.id)
+          limit: @config.maxRows
           emit: { failure: SuggestionCheckFailed, success: SuggestionsForPropose }
         })
+      SuggestionsForPropose -> ready when (> ?totalCount (array/len ?data))
+        (emit SuggestionCheckFailed { error: (str/concat "AgentSuggestion has " ?totalCount " rows for one person, over the maxRows cap of " @config.maxRows), code: "SUGGESTIONS_OVER_CAP" })
       SuggestionsForPropose -> ready when (array/some ?data (fn item (= @item.signature @entity.pendingProposal.signature)))
         (emit SUGGESTION_DUPLICATE { signature: @entity.pendingProposal.signature })
       SuggestionsForPropose -> ready when (and (not (array/some ?data (fn item (= @item.signature @entity.pendingProposal.signature)))) (>= (array/count ?data (fn item (= @item.status "pending"))) @config.pendingLimit))
@@ -325,6 +333,7 @@ orbital AgentSuggestionsOrbital {
         @tier "domain"
       SuggestionsForPropose -> internal {
         data : [SuggestionRow]!
+        totalCount : number!
       }
         @tier "internal"
       SuggestionCheckFailed -> internal {
@@ -356,6 +365,16 @@ orbital AgentSuggestionsOrbital {
 
   trait AgentSuggestionInbox -> @rebindable AgentSuggestion {
     config {
+      pageSize : number = 20
+        @label "How many suggestions per page?"
+        @description "Pending suggestions fetched per page request, newest first; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
+      maxRows : number = 1
+        @label "Rows per suggestion lookup"
+        @description "Most rows the lookup of the suggestion being accepted or dismissed may read. The lookup is by id, which matches at most one row; more means duplicate ids and the action is refused instead of acting on an arbitrary row."
+        @synonyms "lookup cap, id lookup limit"
+        @tier "policy"
       heading : string = @config.title
         @label "Inbox heading"
         @description "Heading at the top of the inbox."
@@ -411,25 +430,37 @@ orbital AgentSuggestionsOrbital {
 
     state closed {
       INIT -> open when @config.showOnMount
+        (set @entity.page 1)
         (fetch AgentSuggestion {
-          filter: (= (object/get @entity ownerId) @user.id)
+          filter: (and (= (object/get @entity ownerId) @user.id) (= (object/get @entity status) pending))
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "createdAt:desc"
         })
       INIT -> closed when (not @config.showOnMount)
         (render-ui @config.inboxSlot null)
       OPEN -> open
+        (set @entity.page 1)
         (fetch AgentSuggestion {
-          filter: (= (object/get @entity ownerId) @user.id)
+          filter: (and (= (object/get @entity ownerId) @user.id) (= (object/get @entity status) pending))
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "createdAt:desc"
         })
     }
 
     state open {
       INIT -> open when @config.showOnMount
         (render-ui @config.inboxSlot null)
+        (set @entity.page 1)
         (fetch AgentSuggestion {
-          filter: (= (object/get @entity ownerId) @user.id)
+          filter: (and (= (object/get @entity ownerId) @user.id) (= (object/get @entity status) pending))
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "createdAt:desc"
         })
       INIT -> closed when (not @config.showOnMount)
         (render-ui @config.inboxSlot null)
@@ -490,7 +521,7 @@ orbital AgentSuggestionsOrbital {
             }]
             type: data-list
             variant: card
-          }, (if (not (= @config.historyLink "")) {
+          }, <Pagination currentPage={@entity.page} totalPages={(math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))} pageChangeEvent={REFETCH_PAGE} showPageSize={false} />, (if (not (= @config.historyLink "")) {
             href: @config.historyLink
             label: @config.historyLinkLabel
             size: sm
@@ -514,15 +545,32 @@ orbital AgentSuggestionsOrbital {
           type: alert
           variant: error
         })
-      REFRESH -> open
+      REFETCH_PAGE -> open
+        (set @entity.page ?page)
         (fetch AgentSuggestion {
-          filter: (= (object/get @entity ownerId) @user.id)
+          filter: (and (= (object/get @entity ownerId) @user.id) (= (object/get @entity status) pending))
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+          orderBy: "createdAt:desc"
+        })
+      REFRESH -> open
+        (set @entity.page 1)
+        (fetch AgentSuggestion {
+          filter: (and (= (object/get @entity ownerId) @user.id) (= (object/get @entity status) pending))
+          emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "createdAt:desc"
         })
       OPEN -> open
+        (set @entity.page 1)
         (fetch AgentSuggestion {
-          filter: (= (object/get @entity ownerId) @user.id)
+          filter: (and (= (object/get @entity ownerId) @user.id) (= (object/get @entity status) pending))
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "createdAt:desc"
         })
       ANALYZE -> open
         (emit SUGGESTIONS_ANALYZE_REQUESTED {})
@@ -530,7 +578,10 @@ orbital AgentSuggestionsOrbital {
         (fetch AgentSuggestion {
           emit: { failure: SuggestionResolveFailed, success: SuggestionForAccept }
           filter: (= (object/get @entity id) ?id)
+          limit: @config.maxRows
         })
+      SuggestionForAccept -> open when (> ?totalCount (array/len ?data))
+        (emit SuggestionResolveFailed { error: (str/concat "AgentSuggestion has " ?totalCount " rows for one id, over the maxRows cap of " @config.maxRows), code: "SUGGESTION_OVER_CAP" })
       SuggestionForAccept -> open when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) status) "pending"))
         (persist update AgentSuggestion {
           id: (object/get (array/first ?data) id)
@@ -551,22 +602,33 @@ orbital AgentSuggestionsOrbital {
         })
       SuggestionAccepted -> open when (= (str/default ?href "") "")
         (emit SUGGESTION_ACCEPTED { id: ?id, kind: ?kind, action: ?action, href: ?href, subject: ?subject, payload: ?payload })
+        (set @entity.page 1)
         (fetch AgentSuggestion {
-          filter: (= (object/get @entity ownerId) @user.id)
+          filter: (and (= (object/get @entity ownerId) @user.id) (= (object/get @entity status) pending))
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "createdAt:desc"
         })
       SuggestionAccepted -> open when (not (= (str/default ?href "") ""))
         (emit SUGGESTION_ACCEPTED { id: ?id, kind: ?kind, action: ?action, href: ?href, subject: ?subject, payload: ?payload })
+        (set @entity.page 1)
         (fetch AgentSuggestion {
-          filter: (= (object/get @entity ownerId) @user.id)
+          filter: (and (= (object/get @entity ownerId) @user.id) (= (object/get @entity status) pending))
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "createdAt:desc"
         })
         (navigate ?href)
       DISMISS -> open
         (fetch AgentSuggestion {
           emit: { failure: SuggestionResolveFailed, success: SuggestionForDismiss }
           filter: (= (object/get @entity id) ?id)
+          limit: @config.maxRows
         })
+      SuggestionForDismiss -> open when (> ?totalCount (array/len ?data))
+        (emit SuggestionResolveFailed { error: (str/concat "AgentSuggestion has " ?totalCount " rows for one id, over the maxRows cap of " @config.maxRows), code: "SUGGESTION_OVER_CAP" })
       SuggestionForDismiss -> open when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) status) "pending"))
         (persist update AgentSuggestion {
           id: (object/get (array/first ?data) id)
@@ -587,9 +649,13 @@ orbital AgentSuggestionsOrbital {
         })
       SuggestionDismissed -> open
         (emit SUGGESTION_DISMISSED { id: ?id, kind: ?kind, action: ?action, subject: ?subject })
+        (set @entity.page 1)
         (fetch AgentSuggestion {
-          filter: (= (object/get @entity ownerId) @user.id)
+          filter: (and (= (object/get @entity ownerId) @user.id) (= (object/get @entity status) pending))
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "createdAt:desc"
         })
       CLOSE -> closed
         (render-ui @config.inboxSlot null)
@@ -623,6 +689,7 @@ orbital AgentSuggestionsOrbital {
         @tier "domain"
       SuggestionsLoaded -> internal {
         data : [SuggestionRow]!
+        totalCount : number
       }
         @tier "internal"
       SuggestionsLoadFailed -> internal {
@@ -637,10 +704,12 @@ orbital AgentSuggestionsOrbital {
         @tier "internal"
       SuggestionForAccept -> internal {
         data : [SuggestionRow]!
+        totalCount : number!
       }
         @tier "internal"
       SuggestionForDismiss -> internal {
         data : [SuggestionRow]!
+        totalCount : number!
       }
         @tier "internal"
       SuggestionAccepted -> internal
@@ -667,6 +736,12 @@ orbital AgentSuggestionsOrbital {
       REFRESH {
       }
         @description "Reload the pending suggestions."
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a pending suggestions page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       ANALYZE {
       }
         @description "Ask the agent to look for suggestions again."
@@ -699,6 +774,8 @@ orbital AgentSuggestionsOrbital {
       TRIGGERED -> ready
         (fetch AgentSuggestionRun {
           filter: (= (object/get @entity ownerId) @user.id)
+          limit: 1
+          orderBy: "ranAt:desc"
           emit: { failure: RunsLoadFailed, success: RunsForTrigger }
         })
       RunsForTrigger -> ready when (>= (- @now (if (= (array/len ?data) 0) 0 (array/max ?data ranAt))) (* @config.gapMinutes 60000))
@@ -897,6 +974,7 @@ orbital AgentSuggestionRecordsOrbital {
     createdAt : number @description "When it was proposed (ms)." @synonyms "time, timestamp" = 0
     resolvedAt : number @description "When it was accepted or dismissed (ms)." = 0
     pendingProposal : SuggestionProposal @intrinsic @description "The proposal being checked for a duplicate." = { kind: "", title: "", body: "", action: "", href: "", subject: "", signature: "", payload: {} }
+    page : number @intrinsic @description "The page the list shows." = 1
   }
 
   entity AgentSuggestionRun [persistent: agentSuggestionRuns] {
@@ -907,6 +985,11 @@ orbital AgentSuggestionRecordsOrbital {
 
   trait AgentSuggestionHistory -> @rebindable AgentSuggestion {
     config {
+      pageSize : number = 25
+        @label "How many suggestions per page?"
+        @description "Suggestions fetched per page request, newest first; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       emptyHeading : string = "Nothing suggested yet"
         @label "What shows when nothing was ever suggested?"
         @tier "presentation"
@@ -915,31 +998,49 @@ orbital AgentSuggestionRecordsOrbital {
 
     state browsing {
       INIT -> browsing
+        (set @entity.page 1)
         (fetch AgentSuggestion {
           filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "createdAt:desc"
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
+      REFETCH_PAGE -> browsing
+        (set @entity.page ?page)
+        (fetch AgentSuggestion {
+          filter: (= (object/get @entity ownerId) @user.id)
+          emit: { failure: SuggestionsLoadFailed, success: SuggestionsLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+          orderBy: "createdAt:desc"
+        })
       SuggestionsLoaded -> browsing
         (render-ui main {
-          emptyTitle: @config.emptyHeading
-          entity: (array/sort ?data createdAt desc)
-          fields: [{
-            label: Status
-            name: status
-            variant: badge
-          }, {
-            label: Suggestion
-            name: title
-            variant: h4
-          }, {
-            label: Why
-            name: body
-            variant: body
-          }]
-          gap: sm
-          type: data-list
-          variant: card
+          children: [{
+            emptyTitle: @config.emptyHeading
+            entity: (array/sort ?data createdAt desc)
+            fields: [{
+              label: Status
+              name: status
+              variant: badge
+            }, {
+              label: Suggestion
+              name: title
+              variant: h4
+            }, {
+              label: Why
+              name: body
+              variant: body
+            }]
+            gap: sm
+            type: data-list
+            variant: card
+          }, <Pagination currentPage={@entity.page} totalPages={(math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))} pageChangeEvent={REFETCH_PAGE} showPageSize={false} />]
+          direction: vertical
+          gap: md
+          type: stack
         })
       SuggestionsLoadFailed -> browsing
         (render-ui main {
@@ -952,6 +1053,7 @@ orbital AgentSuggestionRecordsOrbital {
     emits {
       SuggestionsLoaded -> internal {
         data : [SuggestionRow]!
+        totalCount : number
       }
         @tier "internal"
       SuggestionsLoadFailed -> internal {
@@ -959,6 +1061,15 @@ orbital AgentSuggestionRecordsOrbital {
         code : string
       }
         @tier "internal"
+    }
+
+    listens {
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a suggestion history page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
     }
   }
 

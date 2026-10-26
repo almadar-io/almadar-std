@@ -1,0 +1,303 @@
+{
+ "atom": "spec/flow/lifecycle-fixture.lolo",
+ "trait": "StatusSweep",
+ "note": "Runs std-lifecycle through spec/flow/lifecycle-fixture.lolo (the runner does not apply per-case config). The scan's fetch filter is store-side and the replay store holds no rows, so which rows a sweep selects is the filter expressions' job, not here (selection was checked by evaluating the filters on aged, fresh, other-status and undated rows); these cases play the host's answer (the fetched rows) as a step.",
+ "cases": [
+  {
+   "id": "status-aged-row-transitions",
+   "steps": [
+    {
+     "trait": "StatusSweep",
+     "event": "ScanRecordsLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "status": "open",
+        "createdAt": 1
+       },
+       {
+        "id": "j2",
+        "status": "open",
+        "createdAt": 2
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "state": "scanning",
+      "emits": [
+       {
+        "event": "LifecycleTransitioned",
+        "payload": {
+         "entityId": "j1",
+         "status": "expired"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LifecycleDeleted"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "status-empty-scan-drains-to-idle",
+   "steps": [
+    {
+     "trait": "StatusSweep",
+     "event": "ScanRecordsLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "status": "open",
+        "createdAt": 1
+       },
+       {
+        "id": "j2",
+        "status": "open",
+        "createdAt": 2
+       }
+      ]
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "StatusSweep",
+     "event": "ScanRecordsLoaded",
+     "payload": {
+      "data": []
+     },
+     "from": "scanning",
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "LifecycleTransitioned",
+       "LifecycleDeleted"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "delete-aged-row-is-deleted-not-transitioned",
+   "steps": [
+    {
+     "trait": "DeleteSweep",
+     "event": "ScanRecordsLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "status": "open",
+        "createdAt": 1
+       },
+       {
+        "id": "j2",
+        "status": "open",
+        "createdAt": 2
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "state": "scanning",
+      "emits": [
+       {
+        "event": "LifecycleDeleted",
+        "payload": {
+         "entityId": "j1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LifecycleTransitioned"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "delete-loop-takes-the-next-row-then-drains",
+   "steps": [
+    {
+     "trait": "DeleteSweep",
+     "event": "ScanRecordsLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "status": "open",
+        "createdAt": 1
+       },
+       {
+        "id": "j2",
+        "status": "open",
+        "createdAt": 2
+       }
+      ]
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "DeleteSweep",
+     "event": "ScanRecordsLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j2",
+        "status": "open",
+        "createdAt": 2
+       }
+      ]
+     },
+     "from": "scanning",
+     "expect": {
+      "state": "scanning",
+      "emits": [
+       {
+        "event": "LifecycleDeleted",
+        "payload": {
+         "entityId": "j2"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LifecycleTransitioned"
+      ]
+     }
+    },
+    {
+     "trait": "DeleteSweep",
+     "event": "ScanRecordsLoaded",
+     "payload": {
+      "data": []
+     },
+     "from": "scanning",
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "LifecycleDeleted",
+       "LifecycleTransitioned"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-delete-with-nothing-aged-deletes-nothing",
+   "steps": [
+    {
+     "trait": "DeleteSweep",
+     "event": "ScanRecordsLoaded",
+     "payload": {
+      "data": []
+     },
+     "from": "idle",
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "LifecycleDeleted",
+       "LifecycleTransitioned"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-delete-disabled-deletes-nothing",
+   "steps": [
+    {
+     "trait": "DeleteOff",
+     "event": "ScanRecordsLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "status": "open",
+        "createdAt": 1
+       },
+       {
+        "id": "j2",
+        "status": "open",
+        "createdAt": 2
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "LifecycleDeleted",
+       "LifecycleTransitioned"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-delete-dry-run-deletes-nothing",
+   "steps": [
+    {
+     "trait": "DeleteDry",
+     "event": "ScanRecordsLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "status": "open",
+        "createdAt": 1
+       },
+       {
+        "id": "j2",
+        "status": "open",
+        "createdAt": 2
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "LifecycleDeleted",
+       "LifecycleTransitioned"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-delete-zero-days-is-off-not-delete-everything",
+   "steps": [
+    {
+     "trait": "DeleteZero",
+     "event": "ScanRecordsLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "status": "open",
+        "createdAt": 1
+       },
+       {
+        "id": "j2",
+        "status": "open",
+        "createdAt": 2
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "LifecycleDeleted",
+       "LifecycleTransitioned"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

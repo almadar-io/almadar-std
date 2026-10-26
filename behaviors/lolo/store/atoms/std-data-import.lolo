@@ -3,8 +3,16 @@ app std-data-import [
   description: "std-data-import — staged CSV import run, source-agnostic: upload → staged review → confirm → parse+map → handoff. UPLOAD_CSV opens a run and persists an ImportBatch row (status uploaded, fieldMappingJson recorded verbatim for provenance); once the batch row is persisted the atom parses the picked file's text with csv/parse and stages it itself with STAGE_ROWS, one JSON string per raw row (a host that parses elsewhere may still answer STAGE_ROWS directly), which the atom bulk-persists into import_rows against the batch id and presents as a staged review (row/error counts + Confirm/Discard). CONFIRM_IMPORT marks the batch confirmed, emits IMPORT_CONFIRMED { batchId, sourceName, rowCount }, and fetches the batch's staged rows; on fetch success the atom parses each rowJson via json/parse, remaps keys through the batch's mappingJson, and emits IMPORT_ROWS_PARSED { batchId, rows, failed } — the persist half is the CONSUMER organism's: it listens for IMPORT_ROWS_PARSED and persists the mapped rows into its own target entity (cross-atom persist into a consumer's entity is not expressible from here). This is deliberately the CSV-file path: the atom never calls a source service — sourceName/fieldMappingJson/targetEntity are consumer configs, and any persist failure marks the batch row failed and fires IMPORT_FAILED, never a silent swallow. Compose with std-import for the file-picker menu."
 ]
 uses Spec from "almadar-std/data-import"
+uses Lifecycle from "std/behaviors/std-lifecycle"
 
 orbital DataImportOrbital {
+  config {
+    keepDays : number = 7
+      @label "Days to keep staged import rows"
+      @description "Staged import rows still awaiting confirmation after this many days are deleted. 0 turns the clean-up off and keeps them all."
+      @synonyms "retention, retention days, ttl, expire staged rows, delete old imports, keep staged rows for"
+      @tier "policy"
+  }
 
   type ImportCells = Map string string
 
@@ -26,6 +34,26 @@ orbital DataImportOrbital {
     batchId : string @description "ImportBatch id this staged row belongs to." @synonyms "batch, import run, parent batch" = ""
     rowJson : string @description "The raw parsed CSV row as a JSON string (source shape, pre-mapping). The consumer maps it into its own entity shape after confirm." @synonyms "row, raw row, staged row, record json" = "{}"
     status : "staged" | "imported" | "failed" @description "staged = awaiting confirm; imported = the consumer persisted it into the target entity; failed = rejected." = staged
+    createdAt : number @description "When the row was staged, in epoch milliseconds; 0 for rows staged before this field existed, which the retention sweep never ages." @synonyms "staged at, staged time" = 0
+  }
+
+  entity ImportRetentionLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+    createdAt : number = 0
+  }
+
+  trait ImportRowRetention = Lifecycle.traits.LifecycleScheduler -> ImportRetentionLog {
+    config {
+      enabled: true
+      action: delete
+      targetEntity: ImportRow
+      fromStatus: "staged"
+      dateField: createdAt
+      ageDays: @config.keepDays
+    }
   }
 
   trait DataImportLifecycle -> @rebindable ImportBatch {
@@ -122,7 +150,7 @@ orbital DataImportOrbital {
         (set @entity.rowCount (array/len ?rows))
         (set @entity.errorCount (or ?errorCount 0))
         (set @entity.status staged)
-        (persist create ImportRow (array/map ?rows (fn r { batchId: @entity.id, rowJson: @r, status: staged })) {
+        (persist create ImportRow (array/map ?rows (fn r { batchId: @entity.id, rowJson: @r, status: staged, createdAt: @now })) {
           emit: { failure: IMPORT_PERSIST_FAILED, success: ROWS_STAGED }
         })
         (persist update ImportBatch {
@@ -236,6 +264,8 @@ orbital DataImportOrbital {
         })
         (emit IMPORT_CONFIRMED { batchId: @entity.id, rowCount: @entity.rowCount, sourceName: @entity.sourceName })
         (fetch ImportRow {
+          filter: { batchId: @entity.id }
+          limit: @config.maxRows
           emit: { failure: IMPORT_PERSIST_FAILED, success: IMPORT_ROWS_FETCHED }
         })
       ;; Same transient-failure self-loop as in `uploaded`.
@@ -291,6 +321,8 @@ orbital DataImportOrbital {
       ;; mapped rows + a failed count (failed rows surface, never drop
       ;; silently). json/parse yields null on invalid JSON: such a row counts
       ;; as failed, and an invalid mappingJson fails the whole import.
+      IMPORT_ROWS_FETCHED -> confirmed when (> ?totalCount (array/len ?data))
+        (emit IMPORT_PERSIST_FAILED { error: (str/concat "ImportRow has " ?totalCount " staged rows for this batch, over the maxRows cap of " @config.maxRows ", nothing was imported") })
       IMPORT_ROWS_FETCHED -> confirmed
         (let ((mapping (json/parse @entity.mappingJson ImportCells)))
           (if (= @mapping null)
@@ -398,6 +430,7 @@ orbital DataImportOrbital {
         @tier "domain"
       IMPORT_ROWS_FETCHED {
         data : [ImportRow]!
+        totalCount : number!
       }
         @description "import_rows collection-fetch success on confirm — payload carries every staged row flat; the atom filters to @entity.id by batchId in the IMPORT_ROWS_PARSED arm (self-loop only)"
         @tier "secondary"
@@ -447,6 +480,11 @@ orbital DataImportOrbital {
     }
 
     config {
+      maxRows : number = 10000
+        @label "Staged rows per import"
+        @description "Most staged rows one confirmed batch may hand to IMPORT_ROWS_PARSED. The consumer receives the batch's mapped rows in one event, so a partial read would import part of the file; a batch with more staged rows is refused through IMPORT_FAILED and marked failed instead."
+        @synonyms "import row limit, batch cap, csv row cap"
+        @tier "policy"
       sourceName : string = ""
         @label "Source name"
         @description "Free-form name of the upstream source this import pulls from — whatever tool or file export the user names. Recorded on the batch row for provenance and echoed on IMPORT_CONFIRMED."
@@ -465,5 +503,5 @@ orbital DataImportOrbital {
     }
   }
 
-  page "/data-import" as DataImportPage -> DataImportLifecycle
+  page "/data-import" as DataImportPage -> DataImportLifecycle, ImportRowRetention
 }

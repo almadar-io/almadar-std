@@ -76,6 +76,14 @@ orbital EvalRunOrbital {
       READ_CASES -> idle
         (fetch EvalCase {
           emit: { failure: CASES_FAILED, success: CASES_READ }
+          limit: @config.pageSize
+          offset: 0
+        })
+      REFETCH_PAGE -> idle
+        (fetch EvalCase {
+          emit: { failure: CASES_FAILED, success: CASES_READ }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
         })
       CASES_READ -> idle
       CASES_FAILED -> idle
@@ -94,6 +102,11 @@ orbital EvalRunOrbital {
     }
 
     config {
+      pageSize : number = 100
+        @label "Cases read per request"
+        @description "Recorded cases READ_CASES returns per request; each run adds one row per case in the list, so ten runs of the default set fit one page. totalCount in CASES_READ says how many are stored, and REFETCH_PAGE reads a later page."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       cases : [EvalCaseSpec] = [
           { id: "sort-animals", request: "A quick game sorting animals into mammals, birds and reptiles", expectTier: "instrument" },
           { id: "sort-animals-again", request: "Sort some animals into mammals, birds and reptiles", expectTier: "pool" },
@@ -113,8 +126,9 @@ orbital EvalRunOrbital {
     emits {
       CASES_READ -> external {
         data : [EvalCase]!
+        totalCount : number
       }
-        @description "Every case recorded so far."
+        @description "One page of the cases recorded so far, with the total stored."
         @tier "domain"
       CASES_FAILED {
         error : string!
@@ -143,7 +157,11 @@ orbital EvalRunOrbital {
         @description "Run one case of the eval."
       READ_CASES -> input {
       }
-        @description "Read back every case recorded so far."
+        @description "Read back the first page of the cases recorded so far."
+      REFETCH_PAGE -> input {
+        page : number!
+      }
+        @description "Read back one later page of the recorded cases."
       EvalBuilderOrbital.BuilderPipeline.BUILD_COMPLETE -> BUILD_DONE
       BUILD_DONE {
         orbitalName : string!

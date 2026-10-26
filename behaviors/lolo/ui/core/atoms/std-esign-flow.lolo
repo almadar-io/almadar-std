@@ -15,7 +15,7 @@ orbital SignatureSessionOrbital {
 
   uses Confirmation from "std/behaviors/std-confirmation"
 
-    type SignatureSessionLoaded = Event { data : [SignatureSession] } "Fired when the SignatureSession collection finishes loading"
+    type SignatureSessionLoaded = Event { data : [SignatureSession], totalCount : number } "Fired when the SignatureSession collection finishes loading"
 
     type SignatureSessionLoadFailed = Event { error : string, code : string } "Fired when the SignatureSession collection fails to load"
 
@@ -31,6 +31,7 @@ orbital SignatureSessionOrbital {
     signedAt : datetime @description "The date and time the signature was applied." @synonyms "signed date, completion date, signature time"
     envelopeId : string @description "Provider envelope id stamped when the real e-sign dispatch succeeds; blank = never dispatched. Written by EnvelopeDispatcher, not user-facing." @synonyms "docusign id, provider reference" = ""
     pendingId : string @description "Unique identifier for a pending action or task." @synonyms "taskId, pendingKey, referenceId" = ""
+    page : number @intrinsic @description "The page the list shows." = 1
   }
 
   trait SignatureSessionBrowse -> SignatureSession {
@@ -38,8 +39,11 @@ orbital SignatureSessionOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.page 1)
         (fetch SignatureSession {
           emit: { failure: SignatureSessionLoadFailed, success: SignatureSessionLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -96,6 +100,12 @@ orbital SignatureSessionOrbital {
             }]
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             type: data-grid
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: lg
@@ -133,9 +143,19 @@ orbital SignatureSessionOrbital {
     }
 
     state browsing {
-      INIT -> loading
+      REFETCH_PAGE -> loading
+        (set @entity.page ?page)
         (fetch SignatureSession {
           emit: { failure: SignatureSessionLoadFailed, success: SignatureSessionLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+        })
+      INIT -> loading
+        (set @entity.page 1)
+        (fetch SignatureSession {
+          emit: { failure: SignatureSessionLoadFailed, success: SignatureSessionLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -147,8 +167,11 @@ orbital SignatureSessionOrbital {
 
     state error {
       INIT -> loading
+        (set @entity.page 1)
         (fetch SignatureSession {
           emit: { failure: SignatureSessionLoadFailed, success: SignatureSessionLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -159,8 +182,11 @@ orbital SignatureSessionOrbital {
       ;; the error screen's Retry button: INIT is lifecycle-only and the bus never
       ;; delivers it, so the affordance must target a first-class user event
       RETRY -> loading
+        (set @entity.page 1)
         (fetch SignatureSession {
           emit: { failure: SignatureSessionLoadFailed, success: SignatureSessionLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -203,7 +229,10 @@ orbital SignatureSessionOrbital {
         @description "Signals a signature request has been removed."
         @synonyms "remove, purge, discard"
         @tier "presentation"
-      SignatureSessionLoaded
+      SignatureSessionLoaded {
+        data : [SignatureSession]
+        totalCount : number
+      }
         @description "Signals that a signature session has been successfully loaded."
         @synonyms "loaded, initialized, ready"
         @tier "internal"
@@ -224,9 +253,20 @@ orbital SignatureSessionOrbital {
       SignatureSessionPersistor.SESSION_CREATED -> INIT
       SignatureSessionPersistor.SESSION_RESENT -> INIT
       SignatureSessionPersistor.SESSION_DELETED -> INIT
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a signature request list page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
     }
 
     config {
+      pageSize : number = 50
+        @label "How many signature requests to fetch per page?"
+        @description "Signature requests fetched from the server per page request; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       itemActions : [ItemAction] = [{
         event: SEND_FOR_SIGNATURE
         label: "Send for signature"

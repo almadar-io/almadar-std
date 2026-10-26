@@ -31,6 +31,8 @@ orbital OrbLintFilterFieldNeverWrittenOrbital {
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
+    heads : Map string [string] = {}
+    roots : Map string [string] = {}
   }
 
   trait OrbLintFilterFieldNeverWritten -> OrbLintFilterFieldNeverWrittenRun [optimistic] {
@@ -38,6 +40,9 @@ orbital OrbLintFilterFieldNeverWrittenOrbital {
 
     state ready {
       INIT -> ready
+      INDEX_HEARD -> ready
+        (set @entity.heads @payload.heads)
+        (set @entity.roots @payload.roots)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbs (object/get @payload.program "orbitals" [])))
@@ -69,16 +74,19 @@ orbital OrbLintFilterFieldNeverWrittenOrbital {
      { e: (object/get @w "e"), c: (array/includes ["create", "upsert"] (object/get @w "a")),
        any: (and (object/get @w "has") (= @dobj null) (= @def null)),
        k: (if (not (object/get @w "has")) [] (if (!= @dobj null) (object/keys @dobj) (if (= @def null) [] (array/filter (array/map (object/get @def "fields" []) (fn f (object/get @f "name" ""))) (fn s (!= @s ""))))))})))))
-     (array/flatten (array/map @orbs (fn o
-      (let ((inl (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine")))))
-       (let ((kids (array/map @inl (fn t { n: (object/get @t "name" ""), ch: (array/unique (array/filter (array/map (array/concat (let ((src (array/map (object/values (object/get @t "config" {})) (fn f (object/get (or @f {}) "default" null))))) (if (str/includes (json/stringify @src) (str/concat "\"" (quote "@") "trait.")) (let ((nn (json/parse (json/stringify (json/nodes (array/map (object/values (object/get @t "config" {})) (fn f (object/get (or @f {}) "default" null))))) LNodes))) (if (= @nn null) [] @nn)) [])) (array/concat (let ((src (array/map (object/get (object/get @t "stateMachine") "transitions" []) (fn x [(object/get @x "guard" null), (object/get @x "effects" [])])))) (if (str/includes (json/stringify @src) (str/concat "\"" (quote "@") "trait.")) (let ((nn (json/parse (json/stringify (json/nodes (array/map (object/get (object/get @t "stateMachine") "transitions" []) (fn x [(object/get @x "guard" null), (object/get @x "effects" [])])))) LNodes))) (if (= @nn null) [] @nn)) [])) (let ((src (array/map (object/get @t "ticks" []) (fn x [(object/get @x "guard" null), (object/get @x "effects" [])])))) (if (str/includes (json/stringify @src) (str/concat "\"" (quote "@") "trait.")) (let ((nn (json/parse (json/stringify (json/nodes (array/map (object/get @t "ticks" []) (fn x [(object/get @x "guard" null), (object/get @x "effects" [])])))) LNodes))) (if (= @nn null) [] @nn)) [])))) (fn n (let ((s (or (json/parse (json/stringify @n) LStr) ""))) (if (str/startsWith @s (str/concat (quote "@") "trait.")) (array/first (str/split (array/first (str/split (str/slice @s 7 (str/len @s)) ".")) "[")) "")))) (fn c (and (!= @c "") (!= @c (object/get @t "name" "")))))) }))))
+     (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+      (let ((o (array/nth @orbs @oi)))
+       (let ((trs0 (object/get @o "traits" [])))
+       (let ((inlK (array/filter (array/range 0 (array/len @trs0)) (fn i (object/has (array/nth @trs0 @i) "stateMachine")))))
+       (let ((inl (array/map @inlK (fn i (array/nth @trs0 @i)))))
+       (let ((kids (array/map (array/range 0 (array/len @inl)) (fn kx (let ((t (array/nth @inl @kx)) (tix (str/concat @oi "-" (array/nth @inlK @kx)))) { n: (object/get @t "name" ""), ch: (array/unique (array/filter (array/map (array/concat (if (array/includes (object/get @entity.roots @tix []) (quote "@trait")) (let ((nn (json/parse (json/stringify (json/nodes (array/map (object/values (object/get @t "config" {})) (fn f (object/get (or @f {}) "default" null))))) LNodes))) (if (= @nn null) [] @nn)) []) (array/concat (if (array/includes (object/get @entity.roots @tix []) (quote "@trait")) (let ((nn (json/parse (json/stringify (json/nodes (array/map (object/get (object/get @t "stateMachine") "transitions" []) (fn x [(object/get @x "guard" null), (object/get @x "effects" [])])))) LNodes))) (if (= @nn null) [] @nn)) []) (if (array/includes (object/get @entity.roots @tix []) (quote "@trait")) (let ((nn (json/parse (json/stringify (json/nodes (array/map (object/get @t "ticks" []) (fn x [(object/get @x "guard" null), (object/get @x "effects" [])])))) LNodes))) (if (= @nn null) [] @nn)) []))) (fn n (let ((s (or (json/parse (json/stringify @n) LStr) ""))) (if (str/startsWith @s (str/concat (quote "@") "trait.")) (array/first (str/split (array/first (str/split (str/slice @s 7 (str/len @s)) ".")) "[")) "")))) (fn c (and (!= @c "") (!= @c (object/get @t "name" "")))))) })))))
         (let ((seeds (array/flatten (array/map (array/filter (object/get @o "pages" []) (fn p (= (object/get @p "protocol" "") ""))) (fn p (array/map (object/get @p "traits" []) (fn r (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" ""))))))))) 
          (let ((bound (array/reduce (array/range 0 (+ (array/len @inl) 1)) (array/unique @seeds) (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map (array/filter @kids (fn k (array/includes @acc (object/get @k "n")))) (fn k (object/get @k "ch")))))))))) 
-          (array/flatten (array/map (array/filter @inl (fn t (array/includes @bound (object/get @t "name" ""))))
-           (fn t (let ((tn (object/get @t "name" "")) (trs (object/get (object/get @t "stateMachine") "transitions" [])))
+          (array/flatten (array/map (array/filter (array/range 0 (array/len @inl)) (fn kx (array/includes @bound (object/get (array/nth @inl @kx) "name" ""))))
+           (fn kx (let ((t (array/nth @inl @kx)) (tix (str/concat @oi "-" (array/nth @inlK @kx)))) (let ((tn (object/get @t "name" "")) (trs (object/get (object/get @t "stateMachine") "transitions" [])))
             (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
              (let ((effs (object/get (array/nth @trs @ti) "effects" [])))
-              (array/flatten (array/map (array/flatten (array/map (let ((src @effs)) (if (str/includes (json/stringify @src) "\"fetch\"") (let ((nn (json/parse (json/stringify (json/nodes @effs)) LNodes))) (if (= @nn null) [] @nn)) []))
+              (array/flatten (array/map (array/flatten (array/map (if (array/includes (object/get @entity.heads (str/concat @tix "-" @ti) []) "fetch") (let ((nn (json/parse (json/stringify (json/nodes @effs)) LNodes))) (if (= @nn null) [] @nn)) [])
   (fn n (let ((l (or (json/parse (json/stringify @n) LNodes) [])))
     (let ((fe (or (json/parse (json/stringify (if (> (array/len @l) 1) (array/nth @l 1) null)) LStr) "")) (opts (json/parse (json/stringify (if (> (array/len @l) 2) (array/nth @l 2) null)) LObj)))
       (if (and (= (or (json/parse (json/stringify (if (> (array/len @l) 0) (array/nth @l 0) null)) LStr) "") "fetch") (!= @fe "") (!= @opts null) (object/has @opts "filter")) [{ ent: @fe, nodes: (let ((nn (json/parse (json/stringify (json/nodes (object/get @opts "filter"))) LNodes))) (if (= @nn null) [] @nn)) }] []))))))
@@ -115,7 +123,7 @@ orbital OrbLintFilterFieldNeverWrittenOrbital {
                           (if (and (!= @declared null) (!= @dflt null)
                                    (or (= (array/len @cmps) 0) (array/some @folds (fn f (= (array/len @f) 0))) (array/some @folds (fn f (and (= (array/len @f) 1) (= (array/first @f) @dflt))))))
                             []
-                            [{ code: "ORB_X_FILTER_FIELD_NEVER_WRITTEN", path: (str/concat "orbitals." (object/get @o "name" "") ".traits." @tn ".stateMachine.transitions[" @ti "].effects"), message: (str/concat @tn " fetches " @fent " filtered on `" @field "`, but no `persist create`/`update` of " @fent " anywhere in the schema supplies `" @field "`" (if (= @declared null) " (not even a declared field)" "") " — the filter can never match a real row, so the fetch always returns empty"), suggestion: (str/concat "Supply `" @field "` in the `persist create`/`update " @fent "` data that produces the rows this filter targets, or drop `" @field "` from the filter if it is dead."), severity: "error" }])))))))))))))))))))))))))))))))))))))
+                            [{ code: "ORB_X_FILTER_FIELD_NEVER_WRITTEN", path: (str/concat "orbitals." (object/get @o "name" "") ".traits." @tn ".stateMachine.transitions[" @ti "].effects"), message: (str/concat @tn " fetches " @fent " filtered on `" @field "`, but no `persist create`/`update` of " @fent " anywhere in the schema supplies `" @field "`" (if (= @declared null) " (not even a declared field)" "") " — the filter can never match a real row, so the fetch always returns empty"), suggestion: (str/concat "Supply `" @field "` in the `persist create`/`update " @fent "` data that produces the rows this filter targets, or drop `" @field "` from the filter if it is dead."), severity: "error" }])))))))))))))))))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "filter-field-never-written", scope: @entity.scope, findings: @entity.findings })
@@ -133,7 +141,10 @@ orbital OrbLintFilterFieldNeverWrittenOrbital {
     listens {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : FfProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
+      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait and transition effect list uses; the embed closure gates on a trait's roots holding @trait and the fetch scan on a transition's heads holding fetch."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbLintInput.LINT_INDEX -> INDEX_HEARD
     }
   }
 

@@ -49,6 +49,11 @@ orbital PackageRegistryOrbital {
         @label "Base URL"
         @description "Prepended to the tarball url the registry answers."
         @tier "infra"
+      maxRows : number = 1000
+        @label "Versions per package"
+        @description "Most versions one GET /packages/:name listing may read. The answer names every version, so a partial read would be a wrong answer; a package with more versions is refused through the store-unavailable answer instead of listing a cut set."
+        @synonyms "version cap, listing limit"
+        @tier "policy"
     }
 
     state serving {
@@ -126,7 +131,7 @@ orbital PackageRegistryOrbital {
         (fetch PackageVersion { id: (str/concat @payload.name (str/slice "a@b" 1 2) @payload.version), emit: { success: REGISTRY_FOUND, failure: REGISTRY_MISSING } })
       PACKAGE_VERSIONS -> serving
         (set @entity.current { requestId: @payload.requestId, op: "versions", name: @payload.name, version: "", integrity: "" })
-        (fetch PackageVersion { filter: (= (object/get @entity name) @payload.name), emit: { success: REGISTRY_LISTED, failure: REGISTRY_STORE_REFUSED } })
+        (fetch PackageVersion { filter: (= (object/get @entity name) @payload.name), limit: @config.maxRows, emit: { success: REGISTRY_LISTED, failure: REGISTRY_STORE_REFUSED } })
       REGISTRY_FOUND -> serving when (= @entity.current.op "publish")
         (emit RESPOND { requestId: @entity.current.requestId, status: 409, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Version already published", code: "VERSION_EXISTS" })) })
         (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 409, code: "VERSION_EXISTS", error: "Version already published" })
@@ -173,6 +178,8 @@ orbital PackageRegistryOrbital {
         (emit RESPOND { requestId: @entity.current.requestId, status: 503, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Package store unavailable", code: "STORE_UNAVAILABLE" })) })
         (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 503, code: "STORE_UNAVAILABLE", error: "Package store unavailable" })
         (emit REGISTRY_DONE {})
+      REGISTRY_LISTED -> serving when (> @payload.totalCount (array/len @payload.data))
+        (emit REGISTRY_STORE_REFUSED { error: (str/concat "PackageVersion has " @payload.totalCount " versions for one package, over the maxRows cap of " @config.maxRows), code: "VERSIONS_OVER_CAP" })
       REGISTRY_LISTED -> serving when (= (array/len @payload.data) 0)
         (emit RESPOND { requestId: @entity.current.requestId, status: 404, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Not found", code: "NOT_FOUND" })) })
         (emit PACKAGE_REFUSED { requestId: @entity.current.requestId, status: 404, code: "NOT_FOUND", error: "Not found" })
@@ -284,6 +291,7 @@ orbital PackageRegistryOrbital {
         @tier "secondary"
       REGISTRY_LISTED -> internal {
         data : [PackageVersion]!
+        totalCount : number!
       }
         @description "Internal: a store result."
         @tier "secondary"

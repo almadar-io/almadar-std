@@ -6,11 +6,11 @@ app std-tag-strip [
 orbital TagStripOrbital {
     type TagRef = { id : string! }
 
-    type TagStripOptions = Event { data : [StripTag]! } "The shared tag store loaded for the strip's display pass"
+    type TagStripOptions = Event { data : [StripTag]!, totalCount : number! } "The shared tag store loaded for the strip's display pass"
 
-    type TagStripAddOptions = Event { data : [StripTag]! } "The shared tag store loaded to resolve a typed tag name on add"
+    type TagStripAddOptions = Event { data : [StripTag]!, totalCount : number! } "The shared tag store loaded to resolve a typed tag name on add"
 
-    type TagStripRemoveOptions = Event { data : [StripTag]! } "The shared tag store loaded to resolve the remaining names on remove"
+    type TagStripRemoveOptions = Event { data : [StripTag]!, totalCount : number! } "The shared tag store loaded to resolve the remaining names on remove"
 
     type TagStripTagCreated = Event StripTag "A typed tag name had no existing row; one was created in the shared taxonomy"
 
@@ -35,6 +35,7 @@ orbital TagStripOrbital {
       INIT -> idle
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+          limit: @config.maxRows
         })
       ;; Pre-scope paint: the store is warm but no record is open yet.
       TagStripOptions -> idle
@@ -45,6 +46,7 @@ orbital TagStripOrbital {
         (set @entity.docTagIds (array/map ?tagIds (fn t (if (validate/string @t) @t (object/get @t id)))))
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+          limit: @config.maxRows
         })
     }
 
@@ -52,13 +54,17 @@ orbital TagStripOrbital {
       INIT -> idle
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+          limit: @config.maxRows
         })
       SHOW_TAG_STRIP -> loading
         (set @entity.docId ?id)
         (set @entity.docTagIds (array/map ?tagIds (fn t (if (validate/string @t) @t (object/get @t id)))))
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+          limit: @config.maxRows
         })
+      TagStripOptions -> loading when (> ?totalCount (array/len ?data))
+        (emit TagStripLoadFailed { error: (str/concat "StripTag has " ?totalCount " tags, over the maxRows cap of " @config.maxRows), code: "TAG_STORE_OVER_CAP" })
       TagStripOptions -> ready
         (render-ui main {
           children: [(if (or @config.readOnly (= @config.title "")) null {
@@ -105,17 +111,20 @@ orbital TagStripOrbital {
       INIT -> idle
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+          limit: @config.maxRows
         })
       SHOW_TAG_STRIP -> loading
         (set @entity.docId ?id)
         (set @entity.docTagIds (array/map ?tagIds (fn t (if (validate/string @t) @t (object/get @t id)))))
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+          limit: @config.maxRows
         })
       ADD_TAG -> adding
         (set @entity.pendingTagName ?tag)
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripAddOptions }
+          limit: @config.maxRows
         })
         (render-ui main {
           align: center
@@ -128,6 +137,7 @@ orbital TagStripOrbital {
         (set @entity.pendingNames ?value)
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripRemoveOptions }
+          limit: @config.maxRows
         })
         (render-ui main {
           align: center
@@ -143,13 +153,17 @@ orbital TagStripOrbital {
       INIT -> idle
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+          limit: @config.maxRows
         })
       SHOW_TAG_STRIP -> loading
         (set @entity.docId ?id)
         (set @entity.docTagIds (array/map ?tagIds (fn t (if (validate/string @t) @t (object/get @t id)))))
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+          limit: @config.maxRows
         })
+      TagStripAddOptions -> adding when (> ?totalCount (array/len ?data))
+        (emit TagStripLoadFailed { error: (str/concat "StripTag has " ?totalCount " tags, over the maxRows cap of " @config.maxRows), code: "TAG_STORE_OVER_CAP" })
       ;; The typed name matches an existing tag — attach its id.
       TagStripAddOptions -> ready when (array/includes (array/map ?data (fn t (object/get @t name))) @entity.pendingTagName)
         (emit TAGS_CHANGED {
@@ -173,12 +187,14 @@ orbital TagStripOrbital {
       INIT -> idle
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+          limit: @config.maxRows
         })
       SHOW_TAG_STRIP -> loading
         (set @entity.docId ?id)
         (set @entity.docTagIds (array/map ?tagIds (fn t (if (validate/string @t) @t (object/get @t id)))))
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+          limit: @config.maxRows
         })
       TagStripTagCreated -> ready when (!= (str/default ?id "") "")
         (emit TAGS_CHANGED {
@@ -197,15 +213,19 @@ orbital TagStripOrbital {
       INIT -> idle
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+          limit: @config.maxRows
         })
       SHOW_TAG_STRIP -> loading
         (set @entity.docId ?id)
         (set @entity.docTagIds (array/map ?tagIds (fn t (if (validate/string @t) @t (object/get @t id)))))
         (fetch StripTag {
           emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+          limit: @config.maxRows
         })
       ;; The remaining chip names map back to ids — every kept name exists
       ;; by construction (chips only render attached, existing tags).
+      TagStripRemoveOptions -> removing when (> ?totalCount (array/len ?data))
+        (emit TagStripLoadFailed { error: (str/concat "StripTag has " ?totalCount " tags, over the maxRows cap of " @config.maxRows), code: "TAG_STORE_OVER_CAP" })
       TagStripRemoveOptions -> ready
         (emit TAGS_CHANGED {
           id: @entity.docId
@@ -244,16 +264,19 @@ orbital TagStripOrbital {
         @tier "presentation"
       TagStripOptions {
         data : [StripTag]!
+        totalCount : number!
       }
         @description "The shared tag store loaded for the display pass."
         @tier "internal"
       TagStripAddOptions {
         data : [StripTag]!
+        totalCount : number!
       }
         @description "The shared tag store loaded to resolve a typed name on add."
         @tier "internal"
       TagStripRemoveOptions {
         data : [StripTag]!
+        totalCount : number!
       }
         @description "The shared tag store loaded to resolve the remaining names on remove."
         @tier "internal"
@@ -293,16 +316,19 @@ orbital TagStripOrbital {
         @tier "presentation"
       TagStripOptions {
         data : [StripTag]!
+        totalCount : number!
       }
         @description "Display-pass fetch resolved."
         @tier "internal"
       TagStripAddOptions {
         data : [StripTag]!
+        totalCount : number!
       }
         @description "Add-resolve fetch resolved."
         @tier "internal"
       TagStripRemoveOptions {
         data : [StripTag]!
+        totalCount : number!
       }
         @description "Remove-resolve fetch resolved."
         @tier "internal"
@@ -331,6 +357,11 @@ orbital TagStripOrbital {
         @label "Input placeholder"
         @description "Placeholder in the type-to-add input"
         @tier "presentation"
+      maxRows : number = 500
+        @label "Tag store cap"
+        @description "Most tags one read of the shared tag store may return. The strip lists every unattached tag as a suggestion chip and resolves typed and kept names against the whole taxonomy, so a partial read would misresolve names; 500 is far above a hand-curated taxonomy. A store holding more is refused with the strip's load error instead of showing a partial list."
+        @synonyms "tag limit, taxonomy cap, max tags"
+        @tier "policy"
       helperText : string = ""
         @label "Helper text"
         @description "Optional helper line under the input"

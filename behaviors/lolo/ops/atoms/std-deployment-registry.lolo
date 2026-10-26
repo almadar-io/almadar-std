@@ -42,6 +42,11 @@ orbital DeploymentRegistryOrbital {
     initial: idle
 
     config {
+      maxRows : number = 1000
+        @label "Deployments per history"
+        @description "Most deployments one HISTORY read may return for an artifact; a history is answered whole and oldest first, so an artifact with more recorded deployments is refused through HISTORY_FAILED with code over-cap instead of answering a partial history."
+        @synonyms "history limit, deployment cap"
+        @tier "infra"
       maxRetries : number = 3
         @label "Retries after a lost race"
         @description "How many times a deploy that lost a race for a version number tries the next one."
@@ -144,7 +149,9 @@ orbital DeploymentRegistryOrbital {
 
       HISTORY -> idle
         (set @entity.artifact @payload.artifact)
-        (fetch Deployment { filter: (= (object/get @entity artifact) @payload.artifact), emit: { success: HISTORY_LOADED, failure: HISTORY_UNREADABLE } })
+        (fetch Deployment { filter: (= (object/get @entity artifact) @payload.artifact), limit: @config.maxRows, emit: { success: HISTORY_LOADED, failure: HISTORY_UNREADABLE } })
+      HISTORY_LOADED -> idle when (> @payload.totalCount (array/len @payload.data))
+        (emit HISTORY_FAILED { artifact: @entity.artifact, code: "over-cap", message: (str/concat "Deployment has " @payload.totalCount " rows for " @entity.artifact ", over the maxRows cap of " @config.maxRows) })
       HISTORY_LOADED -> idle
         (emit HISTORY_ANSWERED { artifact: @entity.artifact, deployments: (array/sort @payload.data "version") })
       HISTORY_UNREADABLE -> idle when (= @payload.code "not-found")
@@ -286,6 +293,7 @@ orbital DeploymentRegistryOrbital {
       }
       HISTORY_LOADED {
         data : [Deployment]!
+        totalCount : number!
       }
       HISTORY_UNREADABLE {
         error : string

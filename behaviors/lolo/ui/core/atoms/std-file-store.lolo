@@ -6,7 +6,7 @@ type FileStoreFieldSpec = { name : string!, label : string, variant : "h3" | "h4
 type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
 type TreeNode = { name : string!, path : string!, type : "file" | "dir"!, children : [TreeNode] }
 orbital StoredFileOrbital {
-    type StoredFileLoaded = Event { data : [StoredFile] } "Fired when the collection finishes loading"
+    type StoredFileLoaded = Event { data : [StoredFile], totalCount : number } "Fired when the collection finishes loading"
 
     type StoredFileLoadFailed = Event { error : string, code : string } "Fired when the collection fails to load"
 
@@ -21,6 +21,7 @@ orbital StoredFileOrbital {
     folder : string @description "The path to the containing directory." @synonyms "parent, directory, location" = ""
     uploadedAt : datetime @description "Timestamp indicating when the file was uploaded." @synonyms "upload date, date uploaded, upload time"
     isArchived : boolean @description "Indicates whether the file is archived." @synonyms "archived, status, state" = false
+    page : number @intrinsic @description "The page the list shows." = 1
   }
 
   trait StoredFileStore -> @rebindable StoredFile {
@@ -28,8 +29,11 @@ orbital StoredFileOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.page 1)
         (fetch StoredFile {
           emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -46,7 +50,7 @@ orbital StoredFileOrbital {
               type: typography
               variant: h3
             }, {
-              label: (array/len ?data)
+              label: ?totalCount
               size: sm
               type: badge
               variant: neutral
@@ -64,6 +68,12 @@ orbital StoredFileOrbital {
             reorderEvent: REORDER
             reorderable: @config.reorderable
             type: data-list
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -79,8 +89,11 @@ orbital StoredFileOrbital {
 
     state browsing {
       INIT -> loading
+        (set @entity.page 1)
         (fetch StoredFile {
           emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -160,10 +173,26 @@ orbital StoredFileOrbital {
           gap: md
           type: stack
         })
-      REORDER -> loading
-        (set @entity.id ?row.id)
+      REFETCH_PAGE -> loading
+        (set @entity.page ?page)
         (fetch StoredFile {
           emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
+        })
+      REORDER -> loading
+        (set @entity.id ?row.id)
+        (set @entity.page 1)
+        (fetch StoredFile {
+          emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -173,8 +202,11 @@ orbital StoredFileOrbital {
         })
       ARCHIVE_FILE -> loading
         (set @entity.id ?id)
+        (set @entity.page 1)
         (fetch StoredFile {
           emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -186,8 +218,11 @@ orbital StoredFileOrbital {
 
     state viewing_single {
       INIT -> loading
+        (set @entity.page 1)
         (fetch StoredFile {
           emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -196,8 +231,11 @@ orbital StoredFileOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
         })
       CLOSE_VIEW -> loading
+        (set @entity.page 1)
         (fetch StoredFile {
           emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -207,8 +245,11 @@ orbital StoredFileOrbital {
         })
       DOWNLOAD_FILE -> loading
         (set @entity.id ?id)
+        (set @entity.page 1)
         (fetch StoredFile {
           emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -218,8 +259,11 @@ orbital StoredFileOrbital {
         })
       ARCHIVE_FILE -> loading
         (set @entity.id ?id)
+        (set @entity.page 1)
         (fetch StoredFile {
           emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -231,8 +275,11 @@ orbital StoredFileOrbital {
 
     state error {
       INIT -> loading
+        (set @entity.page 1)
         (fetch StoredFile {
           emit: { failure: StoredFileLoadFailed, success: StoredFileLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -275,6 +322,7 @@ orbital StoredFileOrbital {
         @tier "presentation"
       StoredFileLoaded {
         data : [StoredFile]
+        totalCount : number
       }
         @description "Indicates a file has been successfully retrieved and is ready."
         @synonyms "loaded, fetched, retrieved, ready"
@@ -289,6 +337,12 @@ orbital StoredFileOrbital {
     }
 
     listens {
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a file list page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       OPEN_FILE {
         id : string!
         row : StoredFile
@@ -321,6 +375,7 @@ orbital StoredFileOrbital {
         @tier "presentation"
       StoredFileLoaded {
         data : [StoredFile]
+        totalCount : number
       }
         @description "Indicates a file has been successfully retrieved and is ready for display."
         @synonyms "loaded, fetched, retrieved, ready"
@@ -335,6 +390,11 @@ orbital StoredFileOrbital {
     }
 
     config {
+      pageSize : number = 50
+        @label "How many files to fetch per page?"
+        @description "Files fetched from the server per page request; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       title : string = Files
         @label "Section title"
         @description "Heading shown above the browser"

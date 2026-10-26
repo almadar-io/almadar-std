@@ -102,7 +102,7 @@ orbital SocialGraphOrbital {
         (set @entity.reqMember ?memberId)
         (set @entity.reqKey ?nodeKey)
         (set @entity.reqStats (if (= ?memberStats null) (json/parse "[]" SocialMemberStats) ?memberStats))
-        (fetch NodePresence { filter: (and (= (object/get @entity nodeKey) ?nodeKey) (>= (object/get @entity lastSeenOnNode) (- @now (* @config.peerWindowDays 86400000)))), emit: { success: PresenceLoaded, failure: PeerFailed } })
+        (fetch NodePresence { filter: (and (= (object/get @entity nodeKey) ?nodeKey) (>= (object/get @entity lastSeenOnNode) (- @now (* @config.peerWindowDays 86400000)))), limit: @config.maxPeerRows, emit: { success: PresenceLoaded, failure: PeerFailed } })
       SOCIAL_PEERS -> idle when (not (array/some @config.nodeKinds (fn k (and (str/startsWith ?nodeKey (str/concat @k ":")) (> (str/len ?nodeKey) (+ (str/len @k) 1))))))
         (emit SOCIAL_REJECTED { reason: "bad-node-key" })
     }
@@ -117,6 +117,8 @@ orbital SocialGraphOrbital {
 
     state loadingMembers {
       INIT -> idle
+      PresenceLoaded -> loadingMembers when (> ?totalCount (array/len ?data))
+        (emit PeerFailed { error: (str/concat "NodePresence has " ?totalCount " members active on this node, over the maxPeerRows cap of " @config.maxPeerRows) })
       PresenceLoaded -> idle when (= (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqMember)))) 0)
         (emit SOCIAL_PEERS_LISTED { peers: [] })
       PresenceLoaded -> drawing when (> (array/len (array/filter ?data (fn m (!= (object/get @m memberId "") @entity.reqMember)))) 0)
@@ -186,6 +188,7 @@ orbital SocialGraphOrbital {
         @tier "internal"
       PresenceLoaded {
         data : [NodePresence]!
+        totalCount : number!
       }
         @tier "internal"
       TokensDrawn {
@@ -219,6 +222,7 @@ orbital SocialGraphOrbital {
       PresenceStored
       PresenceLoaded {
         data : [NodePresence]!
+        totalCount : number!
       }
       TokensDrawn {
         value : string!
@@ -250,6 +254,11 @@ orbital SocialGraphOrbital {
         @description "How long a peer token works after it is issued."
         @synonyms "token expiry, ttl"
         @tier "domain"
+      maxPeerRows : number = 500
+        @label "Peers read per node"
+        @description "Most members active on one node a SOCIAL_PEERS read may return; every one gets a token and a rank, so a node with more active members is refused through SOCIAL_FAILED instead of ranking a partial set."
+        @synonyms "peer cap, peer read limit"
+        @tier "infra"
       tokenBytes : number = 18
         @label "Peer token size in bytes"
         @description "Random bytes per token; must be a multiple of 3 so the token is 4/3 of that many characters with no padding."
@@ -269,20 +278,20 @@ orbital SocialGraphOrbital {
         (set @entity.reqPeerRef ?peerRef)
         (set @entity.reqOriginKind ?originKind)
         (set @entity.reqOriginId ?originId)
-        (fetch PeerToken { filter: (= (object/get @entity id) ?peerRef), emit: { success: TokenLoaded, failure: ConnFailed } })
+        (fetch PeerToken { filter: (= (object/get @entity id) ?peerRef), limit: 1, emit: { success: TokenLoaded, failure: ConnFailed } })
 
       SOCIAL_VIEW -> loadingConn
         (set @entity.reqOp "view")
         (set @entity.reqMember ?memberId)
         (set @entity.reqConnection ?connectionId)
-        (fetch SocialConnection { filter: (= (object/get @entity id) ?connectionId), emit: { success: ConnLoaded, failure: ConnFailed } })
+        (fetch SocialConnection { filter: (= (object/get @entity id) ?connectionId), limit: 1, emit: { success: ConnLoaded, failure: ConnFailed } })
 
       SOCIAL_SET_BADGE -> loadingConn
         (set @entity.reqOp "badge")
         (set @entity.reqMember ?memberId)
         (set @entity.reqConnection ?connectionId)
         (set @entity.reqBadge ?badgeId)
-        (fetch SocialConnection { filter: (= (object/get @entity id) ?connectionId), emit: { success: ConnLoaded, failure: ConnFailed } })
+        (fetch SocialConnection { filter: (= (object/get @entity id) ?connectionId), limit: 1, emit: { success: ConnLoaded, failure: ConnFailed } })
 
       SOCIAL_SEND -> loadingConn when (> (str/len (str/trim ?content)) 0)
         (set @entity.reqOp "send")
@@ -290,26 +299,29 @@ orbital SocialGraphOrbital {
         (set @entity.reqConnection ?connectionId)
         (set @entity.reqContent ?content)
         (set @entity.reqBadge (if (= ?badgeId null) "" ?badgeId))
-        (fetch SocialConnection { filter: (= (object/get @entity id) ?connectionId), emit: { success: ConnLoaded, failure: ConnFailed } })
+        (fetch SocialConnection { filter: (= (object/get @entity id) ?connectionId), limit: 1, emit: { success: ConnLoaded, failure: ConnFailed } })
       SOCIAL_SEND -> idle when (= (str/len (str/trim ?content)) 0)
         (emit SOCIAL_CONNECTION_REJECTED { reason: "content-required" })
+
+      REFETCH_PAGE -> loadingMessages when (!= @entity.reqConnection "")
+        (fetch SocialMessage { filter: (= (object/get @entity connectionId) @entity.reqConnection), orderBy: "sentAt:desc", limit: @config.pageSize, offset: (* (- ?page 1) @config.pageSize), emit: { success: MessagesLoaded, failure: ConnFailed } })
 
       SOCIAL_BADGES_PROVIDED -> loadingPending
         (set @entity.reqOp "badges")
         (set @entity.reqLabels ?labels)
-        (fetch SocialPending { filter: (= (object/get @entity id) ?key), emit: { success: PendingLoaded, failure: ConnFailed } })
+        (fetch SocialPending { filter: (= (object/get @entity id) ?key), limit: 1, emit: { success: PendingLoaded, failure: ConnFailed } })
       SOCIAL_BADGES_FAILED -> loadingPending
         (set @entity.reqOp "badges")
         (set @entity.reqLabels (json/parse "[]" SocialStrings))
-        (fetch SocialPending { filter: (= (object/get @entity id) ?key), emit: { success: PendingLoaded, failure: ConnFailed } })
+        (fetch SocialPending { filter: (= (object/get @entity id) ?key), limit: 1, emit: { success: PendingLoaded, failure: ConnFailed } })
       SOCIAL_MODERATION_SCORED -> loadingPending
         (set @entity.reqOp "scored")
         (set @entity.reqScore (math/max 0 (math/min 1 ?score)))
         (set @entity.reqReason (if (= ?reason null) "" ?reason))
-        (fetch SocialPending { filter: (= (object/get @entity id) ?key), emit: { success: PendingLoaded, failure: ConnFailed } })
+        (fetch SocialPending { filter: (= (object/get @entity id) ?key), limit: 1, emit: { success: PendingLoaded, failure: ConnFailed } })
       SOCIAL_MODERATION_FAILED -> loadingPending
         (set @entity.reqOp "modFailed")
-        (fetch SocialPending { filter: (= (object/get @entity id) ?key), emit: { success: PendingLoaded, failure: ConnFailed } })
+        (fetch SocialPending { filter: (= (object/get @entity id) ?key), limit: 1, emit: { success: PendingLoaded, failure: ConnFailed } })
       PendingDeleted -> idle
       TokenDeleted -> idle
       PendingStored -> idle when (= ?kind "badges")
@@ -416,7 +428,7 @@ orbital SocialGraphOrbital {
     state routing {
       INIT -> idle
       ConnReady -> loadingMessages when (= @entity.reqOp "view")
-        (fetch SocialMessage { filter: (= (object/get @entity connectionId) @entity.reqConnection), orderBy: "sentAt:asc", emit: { success: MessagesLoaded, failure: ConnFailed } })
+        (fetch SocialMessage { filter: (= (object/get @entity connectionId) @entity.reqConnection), orderBy: "sentAt:desc", limit: @config.pageSize, offset: 0, emit: { success: MessagesLoaded, failure: ConnFailed } })
       ConnReady -> idle when (and (!= @entity.reqOp "view") (= @entity.scratchStatus "archived"))
         (emit SOCIAL_CONNECTION_REJECTED { reason: "archived" })
       ConnReady -> idle when (and (= @entity.reqOp "badge") (!= @entity.scratchStatus "archived") (not (array/some (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge)))))
@@ -453,7 +465,8 @@ orbital SocialGraphOrbital {
             originKind: (object/get @vconn originKind "")
             originLabel: (object/get @vconn originId "")
             badges: (array/map (object/get @vconn badges (json/parse "[]" SocialBadges)) (fn b { id: (object/get @b id ""), label: (object/get @b label ""), kind: (object/get @b kind ""), active: (= (object/get @b id "") (object/get @vconn activeBadgeId "")) }))
-            messages: (array/map ?data (fn m { id: (object/get @m id ""), fromViewer: (= (object/get @m senderId "") @entity.reqMember), content: (object/get @m content ""), createdAt: (object/get @m sentAt 0), flagged: (object/get @m flagged false), moderationReason: (object/get @m moderationReason "") }))
+            totalCount: ?totalCount
+            messages: (array/map (array/sort ?data "sentAt" "asc") (fn m { id: (object/get @m id ""), fromViewer: (= (object/get @m senderId "") @entity.reqMember), content: (object/get @m content ""), createdAt: (object/get @m sentAt 0), flagged: (object/get @m flagged false), moderationReason: (object/get @m moderationReason "") }))
           }))
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
@@ -495,8 +508,9 @@ orbital SocialGraphOrbital {
         originLabel : string!
         badges : [SocialViewBadge]!
         messages : [SocialViewMessage]!
+        totalCount : number
       }
-        @description "A connection as the viewer sees it: its status (a connection idle for the dormant window is archived by this read), the peer's anonymous handle, badges with the active one marked, and the messages oldest first."
+        @description "A connection as the viewer sees it: its status (a connection idle for the dormant window is archived by this read), the peer's anonymous handle, badges with the active one marked, and the newest page of the messages shown oldest first with the total stored."
         @synonyms "conversation, connection view, thread"
         @tier "primary"
       SOCIAL_BADGE_SET -> external {
@@ -580,6 +594,7 @@ orbital SocialGraphOrbital {
         @tier "internal"
       MessagesLoaded {
         data : [SocialMessage]!
+        totalCount : number
       }
         @tier "internal"
       BadgeStored
@@ -622,6 +637,12 @@ orbital SocialGraphOrbital {
       }
         @description "Read a connection and its messages; only a participant may."
         @synonyms "open conversation, read thread"
+        @tier "domain"
+      REFETCH_PAGE -> input {
+        page : number!
+      }
+        @description "Read one older page of the messages (page 2 is the next older) of the connection last viewed."
+        @synonyms "reload, refresh, paginate"
         @tier "domain"
       SOCIAL_SET_BADGE -> input {
         memberId : string!
@@ -685,6 +706,7 @@ orbital SocialGraphOrbital {
       ConnReady
       MessagesLoaded {
         data : [SocialMessage]!
+        totalCount : number
       }
       BadgeStored
       MessageCreated {
@@ -698,6 +720,11 @@ orbital SocialGraphOrbital {
     }
 
     config {
+      pageSize : number = 100
+        @label "Messages per page"
+        @description "Newest messages one SOCIAL_VIEW returns (shown oldest first); totalCount in SOCIAL_VIEWED says how many are stored, and a composed std-pagination reads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       dormantDays : number = 7
         @label "Dormant days"
         @description "A connection with no activity for this many days archives the next time it is read."

@@ -119,13 +119,15 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (fetch NotificationPreference { emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PREFS_LOADED } })))
+        }) (fetch NotificationPreference { limit: @config.maxPreferenceRows, emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PREFS_LOADED } })))
         (emit NotificationDispatched {
           channel: @entity.channel
           message: @entity.message
           recipient: @entity.recipient
           severity: @entity.severity
         })
+      NOTIFY_PREFS_LOADED -> idle when (> ?totalCount (array/len ?data))
+        (emit NOTIFY_LOOKUP_FAILED { error: (str/concat "NotificationPreference has " ?totalCount " rows, over the maxPreferenceRows cap of " @config.maxPreferenceRows) })
       NOTIFY_PREFS_LOADED -> idle
         (set @entity.prefMode (if (= (array/len (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) 0) "instant" (object/get (array/first (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) mode)))
         (set @entity.prefChannel (if (= (array/len (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) 0) "" (object/get (array/first (array/filter ?data (fn p (and (= (object/get @p personId) @entity.recipient) (or (= (object/get @p eventKey) "") (= (object/get @p eventKey) @config.eventKey)))))) channel)))
@@ -157,8 +159,11 @@ orbital NotifyOnEventOrbital {
           severity: @entity.severity
         }) (if (or (= @entity.channel in-app) (= @entity.channel in_app)) (do (set @entity.dispatched true) (notify @config.severity @config.template)) (fetch NotificationRecord {
           emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_CAP_LOADED }
+          limit: @config.maxRecordRows
           filter: (> (object/get @entity recordedAt) (- @now 604800000))
         })))))
+      NOTIFY_CAP_LOADED -> idle when (> ?totalCount (array/len ?data))
+        (emit NOTIFY_LOOKUP_FAILED { error: (str/concat "NotificationRecord has " ?totalCount " rows in the 7-day window, over the maxRecordRows cap of " @config.maxRecordRows) })
       NOTIFY_CAP_LOADED -> idle
         (if (and (> @config.frequencyCapPerWeek 0) (>= (array/len (array/filter ?data (fn r (and (= (object/get @r recipient) @entity.recipient) (= (object/get @r channel) @entity.channel) (= (object/get @r dispatched) true))))) @config.frequencyCapPerWeek)) (persist create NotificationRecord {
           channel: @entity.channel
@@ -175,12 +180,14 @@ orbital NotifyOnEventOrbital {
         }) (if (= @entity.channel sms) (emit TWILIO_SEND_SMS {
           body: @entity.message
           to: @entity.recipient
-        }) (if (= @entity.channel push) (fetch PushSubscription { emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PUSH_SUBS } }) (emit WEBHOOK_SEND {
+        }) (if (= @entity.channel push) (fetch PushSubscription { limit: @config.maxSubscriptionRows, emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PUSH_SUBS } }) (emit WEBHOOK_SEND {
           event: @entity.message
           payload: { message: @entity.message, recipient: @entity.recipient, severity: @entity.severity }
           secret: @config.webhookSecret
           url: @config.webhookUrl
         })))))
+      NOTIFY_PUSH_SUBS -> idle when (> ?totalCount (array/len ?data))
+        (emit NOTIFY_LOOKUP_FAILED { error: (str/concat "PushSubscription has " ?totalCount " rows, over the maxSubscriptionRows cap of " @config.maxSubscriptionRows) })
       NOTIFY_PUSH_SUBS -> idle
         (set @entity.pushEndpoint (if (= (array/len (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) 0) "" (object/get (array/first (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) endpoint)))
         (set @entity.pushP256dh (if (= (array/len (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) 0) "" (object/get (array/first (array/filter ?data (fn s (= (object/get @s userId) @entity.recipient)))) p256dh)))
@@ -325,16 +332,19 @@ orbital NotifyOnEventOrbital {
       }
       NOTIFY_PREFS_LOADED {
         data : [PrefRow]!
+        totalCount : number!
       }
         @description "NotificationPreference rows loaded; the arm resolves the recipient's effective mode/channel/quiet-hours"
         @tier "secondary"
       NOTIFY_CAP_LOADED {
         data : [AuditRow]!
+        totalCount : number!
       }
         @description "Rolling 7-day NotificationRecord window loaded; the arm enforces frequencyCapPerWeek then dispatches"
         @tier "secondary"
       NOTIFY_PUSH_SUBS {
         data : [SubRow]!
+        totalCount : number!
       }
         @description "PushSubscription rows loaded; the arm picks the recipient's subscription and dispatches push.send"
         @tier "secondary"
@@ -426,12 +436,15 @@ orbital NotifyOnEventOrbital {
       }
       NOTIFY_PREFS_LOADED {
         data : [PrefRow]!
+        totalCount : number!
       }
       NOTIFY_CAP_LOADED {
         data : [AuditRow]!
+        totalCount : number!
       }
       NOTIFY_PUSH_SUBS {
         data : [SubRow]!
+        totalCount : number!
       }
     }
 
@@ -550,6 +563,21 @@ orbital NotifyOnEventOrbital {
         @label "Frequency cap (per week)"
         @description "Max dispatched sends per (channel, recipient) per rolling 7-day window, counted against dispatched NotificationRecord audit rows. 0 = uncapped. Applies to the persisted channels (email/sms/push/webhook); in-app toasts are not audited and not capped. A capped dispatch persists an audit row (`error: frequency-cap`, dispatched:false)."
         @synonyms "rate limit, cap, max per week, throttle, send limit"
+        @tier "policy"
+      maxPreferenceRows : number = 10000
+        @label "Preference rows per lookup"
+        @description "Most NotificationPreference rows one dispatch may read. The recipient's row is picked from the whole table in memory, so a partial read could miss it and send a muted notification; a table with more rows refuses the dispatch through the lookup-failed record instead."
+        @synonyms "preference read limit, preference cap"
+        @tier "policy"
+      maxRecordRows : number = 50000
+        @label "Audit rows per cap window"
+        @description "Most NotificationRecord rows from the last 7 days one dispatch may read to enforce the frequency cap. The window covers every recipient and channel, and a partial count could let a capped recipient through; a window with more rows refuses the dispatch through the lookup-failed record instead."
+        @synonyms "cap window limit, audit window cap"
+        @tier "policy"
+      maxSubscriptionRows : number = 10000
+        @label "Push subscription rows per lookup"
+        @description "Most PushSubscription rows one push dispatch may read. The recipient's subscription is picked from the whole table in memory, so a partial read could report no subscription; a table with more rows refuses the dispatch through the lookup-failed record instead."
+        @synonyms "subscription read limit, subscription cap"
         @tier "policy"
     }
   }

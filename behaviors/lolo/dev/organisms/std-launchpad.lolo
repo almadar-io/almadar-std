@@ -6,8 +6,8 @@ app std-launchpad [
   env: ["PATH", "HOME", "NODE_ENV", "AUTH_PROVIDER", "OIDC_ISSUER_URL", "OIDC_AUDIENCE", "FIREBASE_PROJECT_ID", "FIREBASE_SERVICE_ACCOUNT_PATH", "FIREBASE_AUTH_EMULATOR_HOST", "FIRESTORE_EMULATOR_HOST", "ALMADAR_INTEGRATIONS_MODE"],
   sys: [memory, cpu],
   fs: { "~/.almadar/launchpad": [create], "~/.almadar/launchpad/**": [read, write, create] },
-  description: "std-launchpad — the dashboard of orb's own operations that bare `orb` (orb launchpad) opens in the browser, always on production credentials. It composes its apps statically: the ops boards std-ci-status, std-aws-board, std-ci-run-logs, std-app-hosting-board, std-cloud-run-board and std-training-board, and the dev playground std-behavior-playground, each with every trait of its page, so each board's server traits run on the launchpad's own server under the launchpad's grants. Its tab bar is Home (the dashboard) plus one tab per opened app: Open on a tile or a recent adds the tab and shows the board's own view in it, with `@trait.X` embedding; switching tabs switches the view and every open board keeps its state; closing a tab removes the board's view (its trait keeps its state, as any trait does when its view is not shown). A board is inert until its Load is pressed: its INIT only draws its view (the loadOnInit knobs stay false), so opening the launchpad reads nothing from GitHub, AWS or Google. No program is spawned and no port is taken. Home holds Recent (the opens remembered per machine in ~/.almadar/launchpad/recents.json by std-launchpad-recents, each reopening its tab), Open now (the tabs, with Open and Close), the tiles of the boards knob (id, label, topic and a one-line description, in the sections the sections knob names), the Orb view (std-launchpad-orb: this machine as one orb with its CPU and memory, one star of the same size for each open tab, coloured by its topic, the recent ones not open dimmed on an outer ring; a click on a star opens, closes or reopens its tab), the machine's memory, CPU, load and uptime (std-system-stats) and the orb's own version, uptime and kernel counters (std-orb-stats). The top bar holds AUTH_PROVIDER and the problems std-boot-env-check reports for this machine. The app header grants exactly what the composed boards and the stats use, one line per key: exec is orb (the version) and the CLIs the boards run (aws and ssh for the AWS and training boards, gcloud and bq for Cloud Run and App Hosting, gh for CI run logs); env is the variables the boot gate reads (std-http-boot-gate reads ALMADAR_INTEGRATIONS_MODE too, and the launchpad ignores a mock value there) with PATH and HOME for the CLIs; egress lists the GitHub, App Hosting, Cloud Monitoring, OpenAI and OpenRouter hosts the boards and the playground call. std-analytics-collector and std-llm-spend-board are not composed: they own persistent entities that a trait-level compose does not carry. Serve it with `orb launchpad`.",
-  egress: ["https://api.github.com", "https://firebaseapphosting.googleapis.com", "https://monitoring.googleapis.com", "https://openrouter.ai", "https://api.openai.com"]
+  description: "std-launchpad — the dashboard of orb's own operations that bare `orb` (orb launchpad) opens in the browser, always on production credentials. It composes its apps statically: the ops boards std-ci-status, std-aws-board, std-ci-run-logs, std-app-hosting-board, std-cloud-run-board, std-training-board and std-llm-spend-board, and the dev playground std-behavior-playground, each with every trait of its page, so each board's server traits run on the launchpad's own server under the launchpad's grants. Its tab bar is Home (the dashboard) plus one tab per opened app: Open on a tile or a recent adds the tab and shows the board's own view in it, with `@trait.X` embedding; switching tabs switches the view and every open board keeps its state; closing a tab removes the board's view (its trait keeps its state, as any trait does when its view is not shown). A board is inert until its Load is pressed: its INIT only draws its view (the loadOnInit knobs stay false), so opening the launchpad reads nothing from GitHub, AWS or Google. No program is spawned and no port is taken. Home holds Recent (the opens remembered per machine in ~/.almadar/launchpad/recents.json by std-launchpad-recents, each reopening its tab), Open now (the tabs, with Open and Close), the tiles of the boards knob (id, label, topic and a one-line description, in the sections the sections knob names), the Orb view (std-launchpad-orb: this machine as one orb with its CPU and memory, one star of the same size for each open tab, coloured by its topic, the recent ones not open dimmed on an outer ring; a click on a star opens, closes or reopens its tab), the machine's memory, CPU, load and uptime (std-system-stats) and the orb's own version, uptime and kernel counters (std-orb-stats). The top bar holds AUTH_PROVIDER and the problems std-boot-env-check reports for this machine. The app header grants exactly what the composed boards and the stats use, one line per key: exec is orb (the version) and the CLIs the boards run (aws and ssh for the AWS and training boards, gcloud and bq for Cloud Run and App Hosting, gh for CI run logs); env is the variables the boot gate reads (std-http-boot-gate reads ALMADAR_INTEGRATIONS_MODE too, and the launchpad ignores a mock value there) with PATH and HOME for the CLIs; egress lists the GitHub, App Hosting, Cloud Monitoring, OpenRouter, DeepSeek, Moonshot, local kernel-server (127.0.0.1:3000) and OpenAI hosts the boards and the playground call, the LLM spend board's four taken from its own header. std-analytics-collector is deliberately not composed: it would add an unauthenticated `analytics` beacon endpoint to the launchpad's server. Serve it with `orb launchpad`.",
+  egress: ["https://api.github.com", "https://firebaseapphosting.googleapis.com", "https://monitoring.googleapis.com", "https://openrouter.ai", "https://api.deepseek.com", "https://api.moonshot.ai", "http://127.0.0.1:3000", "https://api.openai.com"]
 ]
 ;; @capabilities "open an orb operations board or the behavior playground as a tab and run it live, switch between open apps, close an app, see the memory and cpu of this machine, see the orb's version and kernel counters, remember recent opens"
 
@@ -24,6 +24,7 @@ uses Logs from "std/behaviors/std-ci-run-logs"
 uses Ah from "std/behaviors/std-app-hosting-board"
 uses Cr from "std/behaviors/std-cloud-run-board"
 uses Tr from "std/behaviors/std-training-board"
+uses Llm from "std/behaviors/std-llm-spend-board"
 uses Play from "std/behaviors/std-behavior-playground"
 
 type LaunchpadSection = { topic : string!, title : string!, run : string! }
@@ -66,7 +67,7 @@ orbital Launchpad {
   }
 
   config {
-    boards : [LaunchpadBoard] = [{ id: "almadar-std/std-ci-status", label: "std-ci-status", topic: "ops", description: "The latest GitHub Actions run of every repository of an organization, as one board; Load reads it from GitHub." }, { id: "almadar-std/std-aws-board", label: "std-aws-board", topic: "ops", description: "One AWS region at a glance: instances, volumes, buckets, quotas and cost, read through the aws CLI." }, { id: "almadar-std/std-ci-run-logs", label: "std-ci-run-logs", topic: "ops", description: "The failed-job log of one GitHub Actions run, read through the gh CLI." }, { id: "almadar-std/std-app-hosting-board", label: "std-app-hosting-board", topic: "ops", description: "A Firebase App Hosting project's backends, rollouts and logs, read through the App Hosting API and the gcloud CLI." }, { id: "almadar-std/std-cloud-run-board", label: "std-cloud-run-board", topic: "ops", description: "A Google Cloud project's Cloud Run services and this month's cost, read through the gcloud and bq CLIs." }, { id: "almadar-std/std-training-board", label: "std-training-board", topic: "ops", description: "The model-training instances of one AWS region, read through the aws and ssh CLIs." }, { id: "almadar-std/std-behavior-playground", label: "std-behavior-playground", topic: "dev", description: "Browse every installed behavior by package and topic, run one live, explore its state machines and read its source." }]
+    boards : [LaunchpadBoard] = [{ id: "almadar-std/std-ci-status", label: "std-ci-status", topic: "ops", description: "The latest GitHub Actions run of every repository of an organization, as one board; Load reads it from GitHub." }, { id: "almadar-std/std-aws-board", label: "std-aws-board", topic: "ops", description: "One AWS region at a glance: instances, volumes, buckets, quotas and cost, read through the aws CLI." }, { id: "almadar-std/std-ci-run-logs", label: "std-ci-run-logs", topic: "ops", description: "The failed-job log of one GitHub Actions run, read through the gh CLI." }, { id: "almadar-std/std-app-hosting-board", label: "std-app-hosting-board", topic: "ops", description: "A Firebase App Hosting project's backends, rollouts and logs, read through the App Hosting API and the gcloud CLI." }, { id: "almadar-std/std-cloud-run-board", label: "std-cloud-run-board", topic: "ops", description: "A Google Cloud project's Cloud Run services and this month's cost, read through the gcloud and bq CLIs." }, { id: "almadar-std/std-training-board", label: "std-training-board", topic: "ops", description: "The model-training instances of one AWS region, read through the aws and ssh CLIs." }, { id: "almadar-std/std-llm-spend-board", label: "std-llm-spend-board", topic: "ops", description: "What LLM providers cost: the OpenRouter key's usage and limit, the DeepSeek and Moonshot balances, and the token spend a kernel server reports." }, { id: "almadar-std/std-behavior-playground", label: "std-behavior-playground", topic: "dev", description: "Browse every installed behavior by package and topic, run one live, explore its state machines and read its source." }]
       @label "Boards"
       @description "The composed apps the launchpad offers, in order: id (the behavior name), label, topic and a one-line description. Each id must be one of the apps the launchpad composes; an id not composed has no view to show."
     sections : [LaunchpadSection] = [{ topic: "ops", title: "Ops", run: "Open" }, { topic: "dev", title: "Tools", run: "Open" }]
@@ -86,7 +87,11 @@ orbital Launchpad {
       topBarTrait: @trait.LaunchpadTopBar
     }
   }
-  trait CiStatus = Ci.traits.CiStatus {}
+  trait CiStatus = Ci.traits.CiStatus {
+    config {
+      org: "almadar-io"
+    }
+  }
   trait CiGithub = Ci.traits.CiGithub {}
   trait CiRetry = Ci.traits.CiRetry {}
   trait AwsStatus = Aws.traits.AwsStatus {}
@@ -101,8 +106,13 @@ orbital Launchpad {
   trait TrainingStatus = Tr.traits.TrainingStatus {}
   trait TrAws = Tr.traits.TrAws {}
   trait TrSsh = Tr.traits.TrSsh {}
+  trait LlmSpend = Llm.traits.LlmSpend {}
   trait PlaygroundFrame = Play.traits.PlaygroundFrame {}
-  trait PlaygroundTopBar = Play.traits.PlaygroundTopBar {}
+  trait PlaygroundTopBar = Play.traits.PlaygroundTopBar {
+    config {
+      heading: "Behavior playground"
+    }
+  }
   trait PlaygroundTopics = Play.traits.PlaygroundTopics {}
   trait PlaygroundStage = Play.traits.PlaygroundStage {}
   trait PlaygroundLoader = Play.traits.PlaygroundLoader {}
@@ -255,6 +265,7 @@ orbital Launchpad {
           { type: box, className: (if (= @entity.active "almadar-std/std-app-hosting-board") "flex-1 min-h-0 overflow-auto" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-app-hosting-board"))) [@trait.AppHostingStatus] []) },
           { type: box, className: (if (= @entity.active "almadar-std/std-cloud-run-board") "flex-1 min-h-0 overflow-auto" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-cloud-run-board"))) [@trait.CloudRunStatus] []) },
           { type: box, className: (if (= @entity.active "almadar-std/std-training-board") "flex-1 min-h-0 overflow-auto" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-training-board"))) [@trait.TrainingStatus] []) },
+          { type: box, className: (if (= @entity.active "almadar-std/std-llm-spend-board") "flex-1 min-h-0 overflow-auto" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-llm-spend-board"))) [@trait.LlmSpend] []) },
           { type: box, className: (if (= @entity.active "almadar-std/std-behavior-playground") "flex-1 min-h-0 overflow-auto" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-behavior-playground"))) [@trait.PlaygroundFrame] []) }
         ] })
       TAB_OPEN -> ready when (array/some @entity.tabs (fn t (= @t.id ?behavior)))
@@ -605,5 +616,5 @@ orbital Launchpad {
     }
   }
 
-  page "/" as LaunchpadPage -> LaunchpadFrame, LaunchpadTopBar, LaunchpadStage, LaunchpadHome, RecentsStore, BootGuard, BootCheck, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, CiStatus, CiGithub, CiRetry, AwsStatus, AwsCli, CiRunLogs, CiLogsGh, AppHostingStatus, AhGcloud, CloudRunStatus, CrGcloud, CrBq, TrainingStatus, TrAws, TrSsh, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, BehaviorCatalog, BehaviorCatalogLlm, PlaygroundCosmic, PlaygroundInspector, PlaygroundStatus, PlaygroundRuntime
+  page "/" as LaunchpadPage -> LaunchpadFrame, LaunchpadTopBar, LaunchpadStage, LaunchpadHome, RecentsStore, BootGuard, BootCheck, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, CiStatus, CiGithub, CiRetry, AwsStatus, AwsCli, CiRunLogs, CiLogsGh, AppHostingStatus, AhGcloud, CloudRunStatus, CrGcloud, CrBq, TrainingStatus, TrAws, TrSsh, LlmSpend, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, BehaviorCatalog, BehaviorCatalogLlm, PlaygroundCosmic, PlaygroundInspector, PlaygroundStatus, PlaygroundRuntime
 }

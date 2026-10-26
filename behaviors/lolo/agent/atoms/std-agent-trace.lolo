@@ -51,7 +51,7 @@ type AgentUsage = {
 }
 
 orbital AgentTraceOrbital {
-  type AgentRunsLoaded = Event { data : [AgentRun]! } "Fired when the run record finishes loading"
+  type AgentRunsLoaded = Event { data : [AgentRun]!, totalCount : number } "Fired when the run record finishes loading"
   type AgentRunsLoadFailed = Event { error : string, code : string } "Fired when the run record fails to load"
 
   entity AgentRun [persistent: agentRuns] {
@@ -66,6 +66,7 @@ orbital AgentTraceOrbital {
     totalTokens : number @description "All tokens for the run." = 0
     modelCalls : number @description "Model round-trips." @synonyms "turns, calls" = 0
     recordedAt : number @description "When the run finished (ms)." @synonyms "time, timestamp" = 0
+    page : number @intrinsic @description "The page the list shows." = 1
   }
 
   trait AgentTraceRecorder -> @rebindable AgentRun {
@@ -127,40 +128,55 @@ orbital AgentTraceOrbital {
 
     state browsing {
       INIT -> browsing
+        (set @entity.page 1)
         (fetch AgentRun {
           emit: { failure: AgentRunsLoadFailed, success: AgentRunsLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "recordedAt:desc"
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
       AgentRunsLoaded -> browsing
         (render-ui main {
-          emptyTitle: "No runs yet"
-          entity: (array/sort ?data recordedAt desc)
-          fields: []
-          gap: sm
-          renderItem: (fn item {
-            children: [{
-              label: @item.outcome
-              size: sm
-              type: badge
-              variant: neutral
-            }, {
-              content: @item.reply
-              type: typography
-              variant: body
-            }, {
-              content: (str/concat @item.modelCalls " model calls, " @item.totalTokens " tokens")
-              type: typography
-              variant: caption
-            }, {
-              activities: @item.steps
-              followLatest: false
-              type: agent-activity-feed
-            }]
-            direction: vertical
-            gap: xs
-            type: stack
-          })
-          type: data-list
+          type: stack
+          direction: vertical
+          gap: md
+          children: [{
+              emptyTitle: "No runs yet"
+              entity: (array/sort ?data recordedAt desc)
+              fields: []
+              gap: sm
+              renderItem: (fn item {
+                children: [{
+                  label: @item.outcome
+                  size: sm
+                  type: badge
+                  variant: neutral
+                }, {
+                  content: @item.reply
+                  type: typography
+                  variant: body
+                }, {
+                  content: (str/concat @item.modelCalls " model calls, " @item.totalTokens " tokens")
+                  type: typography
+                  variant: caption
+                }, {
+                  activities: @item.steps
+                  followLatest: false
+                  type: agent-activity-feed
+                }]
+                direction: vertical
+                gap: xs
+                type: stack
+              })
+              type: data-list
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
+          }]
         })
       AgentRunsLoadFailed -> browsing
         (render-ui main {
@@ -169,14 +185,27 @@ orbital AgentTraceOrbital {
           variant: error
         })
       RUN_RECORDED -> browsing
+        (set @entity.page 1)
         (fetch AgentRun {
           emit: { failure: AgentRunsLoadFailed, success: AgentRunsLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "recordedAt:desc"
+        })
+      REFETCH_PAGE -> browsing
+        (set @entity.page ?page)
+        (fetch AgentRun {
+          emit: { failure: AgentRunsLoadFailed, success: AgentRunsLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+          orderBy: "recordedAt:desc"
         })
     }
 
     emits {
       AgentRunsLoaded {
         data : [AgentRun]!
+        totalCount : number
       }
         @description "The run record finished loading."
         @tier "internal"
@@ -189,9 +218,23 @@ orbital AgentTraceOrbital {
 
     listens {
       AgentTraceRecorder.RUN_RECORDED -> RUN_RECORDED
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a run list page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       RUN_RECORDED
         @description "A run was recorded; the history reloads. The importer routes its assistant's recorder here."
         @tier "domain"
+    }
+
+    config {
+      pageSize : number = 25
+        @label "How many runs per page?"
+        @description "Runs fetched per page request, newest first; each row renders the full step feed, so the page stays small. The list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
     }
   }
 

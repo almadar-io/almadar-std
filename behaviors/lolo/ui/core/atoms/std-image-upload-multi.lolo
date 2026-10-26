@@ -9,7 +9,7 @@ orbital UploadedImageOrbital {
 
     type StoredImageItem = { id : string!, key : string, url : string, name : string, sizeBytes : number, mimeType : string }
 
-    type UploadedImageLoaded = Event { data : [UploadedImage] } "Fired when the uploaded-image collection finishes loading"
+    type UploadedImageLoaded = Event { data : [UploadedImage], totalCount : number } "Fired when the uploaded-image collection finishes loading"
 
     type UploadedImageLoadFailed = Event { error : string, code : string } "Fired when the uploaded-image collection fails to load"
 
@@ -27,6 +27,7 @@ orbital UploadedImageOrbital {
     height : number @description "The vertical dimension of the image, in pixels." @synonyms "vertical, y, dimension"
     parentId : string @description "Identifier of the parent resource this image belongs to." @synonyms "parent, reference, source"
     parentType : string @description "Identifies the type of the parent entity." @synonyms "parent, type, category"
+    page : number @intrinsic @description "The page the list shows." = 1
     uploadedAt : datetime @description "Timestamp indicating when the image was uploaded." @synonyms "date, timestamp, upload time"
   }
 
@@ -35,8 +36,11 @@ orbital UploadedImageOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.page 1)
         (fetch UploadedImage {
           emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -65,7 +69,13 @@ orbital UploadedImageOrbital {
             maxFiles: @config.maxImages
             maxSize: @config.maxBytesPerImage
             type: upload-drop-zone
-          }, { captionField: name, entity: ?data, srcField: url, type: media-gallery }]
+          }, { captionField: name, entity: ?data, srcField: url, type: media-gallery }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
+          }]
           direction: vertical
           gap: md
           type: stack
@@ -80,8 +90,11 @@ orbital UploadedImageOrbital {
 
     state browsing {
       INIT -> loading
+        (set @entity.page 1)
         (fetch UploadedImage {
           emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -117,9 +130,25 @@ orbital UploadedImageOrbital {
         (persist delete UploadedImage ?id {
           emit: { failure: UploadedImageDeleteFailed, success: UploadedImageDeleted }
         })
-      UploadedImageDeleted -> loading
+      REFETCH_PAGE -> loading
+        (set @entity.page ?page)
         (fetch UploadedImage {
           emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
+        })
+      UploadedImageDeleted -> loading
+        (set @entity.page 1)
+        (fetch UploadedImage {
+          emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       UploadedImageDeleteFailed -> error
         (render-ui main {
@@ -133,8 +162,11 @@ orbital UploadedImageOrbital {
       UploadedImageStorageFailed -> uploading
         (emit UploadedImageUploadFailed { error: ?message, code: ?code })
       INIT -> loading
+        (set @entity.page 1)
         (fetch UploadedImage {
           emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -149,8 +181,11 @@ orbital UploadedImageOrbital {
           emit: { failure: UploadedImageUploadFailed, success: UploadedImageCreated }
         })
       UploadedImageCreated -> loading
+        (set @entity.page 1)
         (fetch UploadedImage {
           emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           align: center
@@ -179,8 +214,11 @@ orbital UploadedImageOrbital {
 
     state error {
       INIT -> loading
+        (set @entity.page 1)
         (fetch UploadedImage {
           emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -209,7 +247,13 @@ orbital UploadedImageOrbital {
             maxFiles: @config.maxImages
             maxSize: @config.maxBytesPerImage
             type: upload-drop-zone
-          }, { captionField: name, entity: ?data, srcField: url, type: media-gallery }]
+          }, { captionField: name, entity: ?data, srcField: url, type: media-gallery }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
+          }]
           direction: vertical
           gap: md
           type: stack
@@ -233,6 +277,7 @@ orbital UploadedImageOrbital {
         @tier "domain"
       UploadedImageLoaded {
         data : [UploadedImage]
+        totalCount : number
       }
         @description "Signals a single image has finished loading."
         @synonyms "loaded, received, parsed"
@@ -271,6 +316,12 @@ orbital UploadedImageOrbital {
     }
 
     listens {
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers an image gallery page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       UploadedImageStorage.STORAGE_UPLOADED_MANY -> UploadedImageStored
       UploadedImageStorageFailed {
         message : string
@@ -291,6 +342,7 @@ orbital UploadedImageOrbital {
         @tier "presentation"
       UploadedImageLoaded {
         data : [UploadedImage]
+        totalCount : number
       }
         @description "Indicates a single image has been successfully loaded."
         @synonyms "loaded, received, processed"
@@ -336,6 +388,11 @@ orbital UploadedImageOrbital {
     }
 
     config {
+      pageSize : number = 50
+        @label "How many images to fetch per page?"
+        @description "Images fetched from the server per page request; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       title : string = "Upload Images"
         @label "Section title"
         @description "Heading shown above the upload zone"

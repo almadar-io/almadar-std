@@ -4,7 +4,7 @@ app std-saved-search [
 ]
 type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
 orbital SavedSearchOrbital {
-    type SavedSearchLoaded = Event { data : [SavedSearch] } "Fired when the saved-search collection finishes loading"
+    type SavedSearchLoaded = Event { data : [SavedSearch], totalCount : number } "Fired when the saved-search collection finishes loading"
 
     type SavedSearchLoadFailed = Event { error : string, code : string } "Fired when the saved-search collection fails to load"
 
@@ -24,6 +24,7 @@ orbital SavedSearchOrbital {
     userId : string @description "Identifier of the user who created the saved search." @synonyms "creator, owner, user_id"
     lastNotifiedAt : datetime @description "Timestamp of the last notification sent." @synonyms "last_notification, notified_at, last_alert"
     createdAt : string
+    page : number @intrinsic @description "The page the list shows." = 1
   }
 
   trait SavedSearchManage -> SavedSearch {
@@ -31,8 +32,11 @@ orbital SavedSearchOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.page 1)
         (fetch SavedSearch {
           emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -76,6 +80,12 @@ orbital SavedSearchOrbital {
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             type: data-grid
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -90,9 +100,19 @@ orbital SavedSearchOrbital {
     }
 
     state browsing {
-      INIT -> loading
+      REFETCH_PAGE -> loading
+        (set @entity.page ?page)
         (fetch SavedSearch {
           emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+        })
+      INIT -> loading
+        (set @entity.page 1)
+        (fetch SavedSearch {
+          emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -184,16 +204,25 @@ orbital SavedSearchOrbital {
           type: stack
         })
       SavedSearchUpdated -> loading
+        (set @entity.page 1)
         (fetch SavedSearch {
           emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       SavedSearchDeleted -> loading
+        (set @entity.page 1)
         (fetch SavedSearch {
           emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       SavedSearchCreated -> loading
+        (set @entity.page 1)
         (fetch SavedSearch {
           emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       ;; editing.SAVE -> browsing lands here before the persist resolves; a
       ;; failure must be caught here too, not just by loading's twin arm.
@@ -207,8 +236,11 @@ orbital SavedSearchOrbital {
 
     state editing {
       INIT -> loading
+        (set @entity.page 1)
         (fetch SavedSearch {
           emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -225,15 +257,21 @@ orbital SavedSearchOrbital {
           emit: { failure: SavedSearchLoadFailed, success: SavedSearchUpdated }
         })
       CANCEL -> loading
+        (set @entity.page 1)
         (fetch SavedSearch {
           emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
     }
 
     state error {
       INIT -> loading
+        (set @entity.page 1)
         (fetch SavedSearch {
           emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -286,6 +324,7 @@ orbital SavedSearchOrbital {
         @tier "domain"
       SavedSearchLoaded {
         data : [SavedSearch]
+        totalCount : number
       }
         @description "Signals that a saved search has been successfully retrieved."
         @synonyms "loaded, retrieved, fetched"
@@ -376,6 +415,7 @@ orbital SavedSearchOrbital {
         @tier "presentation"
       SavedSearchLoaded {
         data : [SavedSearch]
+        totalCount : number
       }
         @description "Indicates that saved search data has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved, initialized"
@@ -397,9 +437,20 @@ orbital SavedSearchOrbital {
         @description "Indicates a saved search has been removed from the system."
         @synonyms "removed, purged, discarded"
         @tier "internal"
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a saved-search list page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
     }
 
     config {
+      pageSize : number = 50
+        @label "How many saved searches to fetch per page?"
+        @description "Saved searches fetched from the server per page request; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       title : string = "Saved Searches"
         @label "Section title"
         @description "Heading shown above the saved-search list"

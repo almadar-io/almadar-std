@@ -141,9 +141,14 @@ orbital AgentSessionOrbital {
         (emit AgentMessagesLoaded { data: [] })
       OPEN_CHAT -> ready when (not (= (str/default ?chatId "") ""))
         (fetch AgentMessage {
-          emit: { failure: AgentMessagesLoadFailed, success: AgentMessagesLoaded }
+          emit: { failure: AgentMessagesLoadFailed, success: AgentThreadOpened }
           filter: (= (object/get @entity chatId) ?chatId)
+          limit: @config.maxRows
         })
+      AgentThreadOpened -> ready when (> ?totalCount (array/len ?data))
+        (emit AgentMessagesLoadFailed { error: (str/concat "AgentMessage has " ?totalCount " messages in one conversation, over the maxRows cap of " @config.maxRows), code: "THREAD_OVER_CAP" })
+      AgentThreadOpened -> ready
+        (emit AgentMessagesLoaded { data: ?data })
       SEND_IN_CHAT -> ready when (not (= (str/default ?message "") ""))
         (persist create AgentMessage {
           ownerId: @user.id
@@ -158,7 +163,10 @@ orbital AgentSessionOrbital {
         (fetch AgentMessage {
           emit: { failure: AgentMessagesLoadFailed, success: AgentConversationLoaded }
           filter: (= (object/get @entity chatId) ?chatId)
+          limit: @config.maxRows
         })
+      AgentConversationLoaded -> ready when (> ?totalCount (array/len ?data))
+        (emit AgentMessagesLoadFailed { error: (str/concat "AgentMessage has " ?totalCount " messages in one conversation, over the maxRows cap of " @config.maxRows), code: "THREAD_OVER_CAP" })
       AgentConversationLoaded -> ready
         (emit CONVERSE {
           messages: (array/map (array/sort ?data createdAt asc) (fn item { role: @item.role, content: @item.content }))
@@ -213,7 +221,14 @@ orbital AgentSessionOrbital {
         @tier "internal"
       AgentConversationLoaded -> internal {
         data : [AgentMessage]!
+        totalCount : number!
       }
+        @tier "internal"
+      AgentThreadOpened -> internal {
+        data : [AgentMessage]!
+        totalCount : number!
+      }
+        @description "Internal: the opened conversation's messages, checked against the cap before AgentMessagesLoaded announces them."
         @tier "internal"
       AgentMessageSaved
         @description "A message persisted — payload is the created AgentMessage row itself."
@@ -224,6 +239,14 @@ orbital AgentSessionOrbital {
       }
         @description "The message could not be stored."
         @tier "internal"
+    }
+
+    config {
+      maxRows : number = 500
+        @label "Messages per conversation"
+        @description "Most messages one conversation read may return. The assistant answers from the whole conversation and the view shows it whole, so a partial read would answer from a cut history; a longer conversation is refused through ASSISTANT_THREAD_FAILED instead."
+        @synonyms "conversation length cap, history limit, message cap"
+        @tier "policy"
     }
 
     listens {
@@ -1394,6 +1417,7 @@ orbital AgentChatsOrbital {
     lastActiveAt : number @description "When the conversation was last used (ms). The most recent one is the current conversation." @synonyms "last used, updated, recent" = 0
     pendingMessage : string @intrinsic = ""
     pendingReply : string @intrinsic = ""
+    page : number @intrinsic @description "The page the list shows." = 1
   }
 
   ;; Which conversation is current: each person's most recently used AgentChat.
@@ -1401,6 +1425,18 @@ orbital AgentChatsOrbital {
   ;; one a request belongs to, so only this trait (bound to AgentChat) touches
   ;; conversation rows.
   trait AgentChatKeeper -> @rebindable AgentChat {
+    config {
+      pageSize : number = 50
+        @label "How many conversations per page?"
+        @description "Conversations sent to the conversation list per page request, most recently used first; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
+      maxRows : number = 500
+        @label "Rows per conversation select lookup"
+        @description "Most rows the select lookup may read. It matches by id, which matches at most one row; more means duplicate ids and the reopen is refused through the load-failed toast instead of acting on an arbitrary row."
+        @synonyms "conversation cap, history limit"
+        @tier "policy"
+    }
     initial: ready
 
     state ready {
@@ -1408,6 +1444,8 @@ orbital AgentChatsOrbital {
       LOAD_HISTORY -> ready
         (fetch AgentChat {
           emit: { failure: AgentChatsLoadFailed, success: ChatsForHistory }
+          limit: 1
+          orderBy: "lastActiveAt:desc"
         })
       ChatsForHistory -> ready
         (emit ASSISTANT_CHAT_OPENED { chatId: (if (> (array/len ?data) 0) (object/get (array/first (array/sort ?data lastActiveAt desc)) id) "") })
@@ -1415,6 +1453,8 @@ orbital AgentChatsOrbital {
         (set @entity.pendingMessage ?message)
         (fetch AgentChat {
           emit: { failure: AgentChatsLoadFailed, success: ChatsForSend }
+          limit: 1
+          orderBy: "lastActiveAt:desc"
         })
       ChatsForSend -> ready when (= (array/len ?data) 0)
         (persist create AgentChat {
@@ -1442,6 +1482,8 @@ orbital AgentChatsOrbital {
         (set @entity.pendingReply ?reply)
         (fetch AgentChat {
           emit: { failure: AgentChatsLoadFailed, success: ChatsForReply }
+          limit: 1
+          orderBy: "lastActiveAt:desc"
         })
       ChatsForReply -> ready
         (emit ASSISTANT_REPLY_IN_CHAT { chatId: (if (> (array/len ?data) 0) (object/get (array/first (array/sort ?data lastActiveAt desc)) id) ""), reply: @entity.pendingReply })
@@ -1461,7 +1503,10 @@ orbital AgentChatsOrbital {
         (fetch AgentChat {
           emit: { failure: AgentChatsLoadFailed, success: ChatsForSelect }
           filter: (= (object/get @entity id) ?chatId)
+          limit: @config.maxRows
         })
+      ChatsForSelect -> ready when (> ?totalCount (array/len ?data))
+        (emit AgentChatsLoadFailed { error: (str/concat "AgentChat has " ?totalCount " conversations for one person, over the maxRows cap of " @config.maxRows), code: "CHATS_OVER_CAP" })
       ChatsForSelect -> ready when (> (array/len ?data) 0)
         (persist update AgentChat {
           id: (object/get (array/first ?data) id)
@@ -1476,8 +1521,20 @@ orbital AgentChatsOrbital {
         (emit ASSISTANT_CHAT_OPENED { chatId: ?id })
         (emit ASSISTANT_CHATS_CHANGED {})
       LIST_CHATS -> ready
+        (set @entity.page 1)
         (fetch AgentChat {
           emit: { failure: AgentChatsLoadFailed, success: ChatsForList }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "lastActiveAt:desc"
+        })
+      REFETCH_PAGE -> ready
+        (set @entity.page ?page)
+        (fetch AgentChat {
+          emit: { failure: AgentChatsLoadFailed, success: ChatsForList }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+          orderBy: "lastActiveAt:desc"
         })
       ChatsForList -> ready
         (emit ASSISTANT_CHATS_LOADED { data: (array/map (array/sort ?data lastActiveAt desc) (fn item { id: @item.id, title: @item.title, lastActiveAt: @item.lastActiveAt })) })
@@ -1526,6 +1583,7 @@ orbital AgentChatsOrbital {
         @tier "domain"
       ChatsForList -> internal {
         data : [AgentChat]
+        totalCount : number
       }
         @tier "internal"
       ChatsForHistory -> internal {
@@ -1542,6 +1600,7 @@ orbital AgentChatsOrbital {
         @tier "internal"
       ChatsForSelect -> internal {
         data : [AgentChat]
+        totalCount : number!
       }
         @tier "internal"
       ChatReadyForSend
@@ -1570,6 +1629,12 @@ orbital AgentChatsOrbital {
       LIST_CHATS {
       }
         @description "Send the person's conversations to the conversation list."
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a conversation list page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       SEND {
         message : string!
       }
@@ -1594,6 +1659,11 @@ orbital AgentChatsOrbital {
 
   trait AgentChatList -> @rebindable AgentChat {
     config {
+      pageSize : number = 50
+        @label "How many conversations per page?"
+        @description "Conversations fetched per page request, most recently used first; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       newChatLabel : string = "New conversation"
         @label "New conversation button"
         @tier "presentation"
@@ -1605,8 +1675,12 @@ orbital AgentChatsOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.page 1)
         (fetch AgentChat {
           emit: { failure: AgentChatsLoadFailed, success: AgentChatsLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "lastActiveAt:desc"
         })
         (render-ui main { type: skeleton, variant: list, rows: 4 })
       AgentChatsLoaded -> browsing
@@ -1638,6 +1712,12 @@ orbital AgentChatsOrbital {
             })
             type: data-list
             variant: compact
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           className: "h-full min-h-0 overflow-y-auto"
           direction: vertical
@@ -1650,13 +1730,21 @@ orbital AgentChatsOrbital {
 
     state browsing {
       INIT -> loading
+        (set @entity.page 1)
         (fetch AgentChat {
           emit: { failure: AgentChatsLoadFailed, success: AgentChatsLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "lastActiveAt:desc"
         })
         (render-ui main { type: skeleton, variant: list, rows: 4 })
       CHATS_CHANGED -> browsing
+        (set @entity.page 1)
         (fetch AgentChat {
           emit: { failure: AgentChatsLoadFailed, success: AgentChatsLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "lastActiveAt:desc"
         })
       AgentChatsLoaded -> browsing
         (render-ui main {
@@ -1687,11 +1775,25 @@ orbital AgentChatsOrbital {
             })
             type: data-list
             variant: compact
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           className: "h-full min-h-0 overflow-y-auto"
           direction: vertical
           gap: sm
           type: stack
+        })
+      REFETCH_PAGE -> browsing
+        (set @entity.page ?page)
+        (fetch AgentChat {
+          emit: { failure: AgentChatsLoadFailed, success: AgentChatsLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+          orderBy: "lastActiveAt:desc"
         })
       AgentChatsLoadFailed -> browsing
         (render-ui main { message: ?error, title: "Couldn't load your conversations", type: alert, variant: error })
@@ -1715,6 +1817,7 @@ orbital AgentChatsOrbital {
         @tier "domain"
       AgentChatsLoaded -> external {
         data : [AgentChat]
+        totalCount : number
       }
         @tier "internal"
       AgentChatsLoadFailed -> external {
@@ -1729,6 +1832,12 @@ orbital AgentChatsOrbital {
       CHATS_CHANGED {
       }
         @description "A conversation was started, used or reopened."
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a conversation list page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       OPEN_CHAT {
         id : string!
         row : AgentChat

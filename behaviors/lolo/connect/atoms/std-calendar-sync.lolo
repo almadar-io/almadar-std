@@ -92,6 +92,8 @@ orbital CalendarSyncOrbital {
         (set @entity.syncToken (str/default ?nextSyncToken ""))
         (fetch CalendarEvent {
           emit: { failure: CAL_SYNC_FAILED, success: PULL_TARGET_LOADED }
+          filter: (= (object/get @entity externalEventId) (object/get (array/first ?events) id))
+          limit: @config.maxRows
         })
       CAL_REMOTE_LISTED -> idle when (= (array/len ?events) 0)
         (set @entity.syncToken (str/default ?nextSyncToken ""))
@@ -142,6 +144,8 @@ orbital CalendarSyncOrbital {
 
     state pulling {
       INIT -> idle
+      PULL_TARGET_LOADED -> pulling when (> ?totalCount (array/len ?data))
+        (emit CAL_SYNC_FAILED { error: (str/concat "CalendarEvent has " ?totalCount " rows for one remote event id, over the maxRows cap of " @config.maxRows) })
       PULL_TARGET_LOADED -> pulling
         (set @entity.headId (object/get (array/first @entity.pending) id))
         (if (= (array/len (array/filter ?data (fn r (= (object/get @r externalEventId) @entity.headId)))) 0) (persist create CalendarEvent {
@@ -171,6 +175,8 @@ orbital CalendarSyncOrbital {
       PULL_NEXT -> pulling when (> ?remaining 0)
         (fetch CalendarEvent {
           emit: { failure: CAL_SYNC_FAILED, success: PULL_TARGET_LOADED }
+          filter: (= (object/get @entity externalEventId) (object/get (array/first @entity.pending) id))
+          limit: @config.maxRows
         })
       PULL_NEXT -> idle when (= ?remaining 0)
         (set @entity.lastSyncedAt @now)
@@ -222,6 +228,7 @@ orbital CalendarSyncOrbital {
         @tier "secondary"
       PULL_TARGET_LOADED {
         data : [TargetRow]!
+        totalCount : number!
       }
         @description "CalendarEvent rows loaded for externalEventId matching in the pull-upsert."
         @tier "secondary"
@@ -271,6 +278,7 @@ orbital CalendarSyncOrbital {
       }
       PULL_TARGET_LOADED {
         data : [TargetRow]!
+        totalCount : number!
       }
       PULL_STEPPED {
         id : string!
@@ -290,6 +298,11 @@ orbital CalendarSyncOrbital {
     }
 
     config {
+      maxRows : number = 50
+        @label "Rows matched per remote event"
+        @description "Most CalendarEvent rows one pull-upsert lookup may read for a single remote event id. A remote id matches at most one mirrored row, so 50 is generous; a lookup matching more is refused through CAL_SYNC_FAILED rather than upserting against a partial set."
+        @synonyms "match limit, lookup cap"
+        @tier "infra"
       enabled : boolean = false
         @label "Sync with Google Calendar"
         @description "Push local records to Google Calendar and pull remote events into the CalendarEvent store. Off by default; needs the calendar service credentials (GOOGLE_CALENDAR_SA_KEY)."

@@ -28,7 +28,9 @@ orbital DevPersonasOrbital {
       PERSONAS_HOST -> ready when (!= (or @payload.value "") @config.authEmulatorHost)
         (emit PERSONAS_ANSWERED { status: 404, body: (json/stringify { success: false, error: "no dev personas: the Auth emulator is not configured" }) })
       PERSONAS_HOST -> ready when (= (or @payload.value "") @config.authEmulatorHost)
-        (fetch DevPersona { emit: { success: PERSONAS_ROWS failure: PERSONAS_FAILED } })
+        (fetch DevPersona { limit: @config.maxRows emit: { success: PERSONAS_ROWS failure: PERSONAS_FAILED } })
+      PERSONAS_ROWS -> ready when (> @payload.totalCount (array/len @payload.data))
+        (emit PERSONAS_FAILED { error: (str/concat "DevPersona has " @payload.totalCount " rows, over the maxRows cap of " @config.maxRows) })
       PERSONAS_ROWS -> ready
         (let ((rows (array/filter @payload.data (fn r (!= (or @r.id "") "")))))
           (emit PERSONAS_ANSWERED { status: 200, body: (json/stringify { success: true, personas: @rows, source: (if (> (array/len @rows) 0) "identity-entity" "none") }) }))
@@ -93,6 +95,7 @@ orbital DevPersonasOrbital {
         @tier "internal"
       PERSONAS_ROWS -> internal {
         data : [DevPersona]!
+        totalCount : number!
       }
         @description "Internal: the identity rows."
         @tier "internal"
@@ -145,6 +148,11 @@ orbital DevPersonasOrbital {
     }
 
     config {
+      maxRows : number = 200
+        @label "Personas listed"
+        @description "Most persona rows the personas hook may read. The hook answers the whole list for the switcher, so a partial list would hide personas; an identity entity with more rows is refused with a 500 instead of listing part of it."
+        @synonyms "persona limit, list cap"
+        @tier "policy"
       authEmulatorHost : string = "127.0.0.1:9099"
         @label "Auth emulator host"
         @description "The host:port FIREBASE_AUTH_EMULATOR_HOST must name for the hooks to answer; anything else, or unset, answers 404."

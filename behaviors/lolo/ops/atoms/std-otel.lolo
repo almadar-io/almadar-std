@@ -11,7 +11,16 @@ type OtelEventView = { name : string!, timestamp : number!, attributes : Map str
 type OtelSpanView = { spanId : string!, traceId : string!, name : string!, startTime : number!, endTime : number, status : string, attributes : Map string OtelAttrValue, events : [OtelEventView] }
 type OtelMetricView = { name : string!, metricType : string!, value : number!, values : [number], labels : Map string OtelAttrValue }
 type OtelSendKey = { signal : string, spanIds : [string], eventIds : [string], metricId : string }
+uses Lifecycle from "std/behaviors/std-lifecycle"
 orbital OtelOrbital {
+  config {
+    keepDays : number = 30
+      @label "Days to keep telemetry"
+      @description "Metric samples, exported spans and span events older than this many days are deleted. 0 turns the clean-up off and keeps them all."
+      @synonyms "retention, retention days, ttl, expire telemetry, delete old telemetry, keep telemetry for"
+      @tier "policy"
+  }
+
   entity OtelSpan [persistent: otel_spans] {
     id : string!
     traceId : string!
@@ -47,9 +56,35 @@ orbital OtelOrbital {
     exported : boolean = false
   }
 
+  entity OtelMetricRetentionLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+    timestamp : number = 0
+  }
+
+  entity OtelSpanRetentionLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+    state : string = ""
+    endTime : number = 0
+  }
+
+  entity OtelSpanEventRetentionLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+    timestamp : number = 0
+  }
+
   entity OtelExport [runtime] {
     id : string!
     spans : [OtelSpan] = []
+    moreSpans : boolean = false
   }
 
   trait OtelExporter -> OtelExport [optimistic] {
@@ -106,11 +141,14 @@ orbital OtelOrbital {
         (emit END_SPAN_RESULT { ended: false, error: @payload.error })
       OTEL_SPAN_STAMPED -> idle
         (emit END_SPAN_RESULT { ended: true })
-        (fetch OtelSpan { filter: { state: "ending" }, orderBy: "startTime", emit: { success: OTEL_ENDING_LOADED, failure: OTEL_READ_FAILED } })
+        (fetch OtelSpan { filter: { state: "ending" }, orderBy: "startTime", limit: @config.batchSize, emit: { success: OTEL_ENDING_LOADED, failure: OTEL_READ_FAILED } })
       OTEL_ENDING_LOADED -> idle when (> (array/count @payload.data) 0)
         (set @entity.spans @payload.data)
-        (fetch OtelSpanEvent { filter: { shipped: false }, orderBy: "timestamp", emit: { success: OTEL_EVENTS_LOADED, failure: OTEL_READ_FAILED } })
+        (set @entity.moreSpans (> @payload.totalCount (array/count @payload.data)))
+        (fetch OtelSpanEvent { filter: (and (= (object/get @entity shipped) false) (array/includes (array/map @payload.data (fn s (object/get @s id ""))) (object/get @entity spanId))), orderBy: "timestamp", limit: @config.maxBatchEvents, emit: { success: OTEL_EVENTS_LOADED, failure: OTEL_READ_FAILED } })
       OTEL_ENDING_LOADED -> idle when (= (array/count @payload.data) 0)
+      OTEL_EVENTS_LOADED -> idle when (> @payload.totalCount (array/count @payload.data))
+        (emit OTEL_READ_FAILED { error: (str/concat "OtelSpanEvent has " @payload.totalCount " unshipped events for one export batch, over the maxBatchEvents cap of " @config.maxBatchEvents ", so the batch is not exported; lower batchSize"), code: "OTEL_OVER_CAP" })
       OTEL_EVENTS_LOADED -> idle
         (let ((evs (array/filter @payload.data (fn ev (array/some @entity.spans (fn s (= @s.id @ev.spanId)))))))
           (emit OTEL_SEND {
@@ -206,12 +244,14 @@ orbital OtelOrbital {
         (persist batch (array/map (object/get (json/parse @payload.key OtelSendKey) spanIds []) (fn id ["update", "OtelSpan", @id, { state: "exported" }])) { emit: { success: OTEL_TRACES_MARKED, failure: OTEL_MARK_FAILED } })
         (emit OTEL_EXPORTED { signal: "traces", count: (array/count (object/get (json/parse @payload.key OtelSendKey) spanIds [])) })
       OTEL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (json/parse @payload.key OtelSendKey) signal "") "traces") (> (array/count (object/get (json/parse @payload.key OtelSendKey) eventIds [])) 0))
-        (persist batch (array/map (object/get (json/parse @payload.key OtelSendKey) spanIds []) (fn id ["update", "OtelSpan", @id, { state: "exported" }])) { emit: { success: OTEL_TRACES_MARKED, failure: OTEL_MARK_FAILED } })
-        (persist batch (array/map (object/get (json/parse @payload.key OtelSendKey) eventIds []) (fn id ["update", "OtelSpanEvent", @id, { shipped: true }])) { emit: { success: OTEL_TRACES_MARKED, failure: OTEL_MARK_FAILED } })
+        (persist batch (array/concat (array/map (object/get (json/parse @payload.key OtelSendKey) spanIds []) (fn id ["update", "OtelSpan", @id, { state: "exported" }])) (array/map (object/get (json/parse @payload.key OtelSendKey) eventIds []) (fn id ["update", "OtelSpanEvent", @id, { shipped: true }]))) { emit: { success: OTEL_TRACES_MARKED, failure: OTEL_MARK_FAILED } })
         (emit OTEL_EXPORTED { signal: "traces", count: (array/count (object/get (json/parse @payload.key OtelSendKey) spanIds [])) })
       OTEL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (json/parse @payload.key OtelSendKey) signal "") "metrics"))
         (persist update OtelMetric { id: (object/get (json/parse @payload.key OtelSendKey) metricId ""), exported: true } { emit: { success: OTEL_METRIC_MARKED, failure: OTEL_MARK_FAILED } })
         (emit OTEL_EXPORTED { signal: "metrics", count: 1 })
+      OTEL_TRACES_MARKED -> idle when @entity.moreSpans
+        (set @entity.moreSpans false)
+        (fetch OtelSpan { filter: { state: "ending" }, orderBy: "startTime", limit: @config.batchSize, emit: { success: OTEL_ENDING_LOADED, failure: OTEL_READ_FAILED } })
       OTEL_TRACES_MARKED -> idle
       OTEL_METRIC_MARKED -> idle
       OTEL_MARK_FAILED -> idle
@@ -223,7 +263,9 @@ orbital OtelOrbital {
         (emit GET_SPAN_RESULT { found: false })
       OTEL_SPAN_LOADED -> idle
         (set @entity.spans [@payload.data])
-        (fetch OtelSpanEvent { filter: { spanId: (object/get @payload.data id "") }, orderBy: "timestamp", emit: { success: OTEL_SPAN_EVENTS_LOADED, failure: OTEL_READ_FAILED } })
+        (fetch OtelSpanEvent { filter: { spanId: (object/get @payload.data id "") }, orderBy: "timestamp", limit: @config.maxRows, emit: { success: OTEL_SPAN_EVENTS_LOADED, failure: OTEL_READ_FAILED } })
+      OTEL_SPAN_EVENTS_LOADED -> idle when (> @payload.totalCount (array/count @payload.data))
+        (emit OTEL_READ_FAILED { error: (str/concat "OtelSpanEvent has " @payload.totalCount " events for one span, over the maxRows cap of " @config.maxRows), code: "OTEL_OVER_CAP" })
       OTEL_SPAN_EVENTS_LOADED -> idle
         (let ((s (array/first @entity.spans))
               (evs (array/map @payload.data (fn ev { name: @ev.name, timestamp: @ev.timestamp, attributes: @ev.attributes }))))
@@ -236,7 +278,9 @@ orbital OtelOrbital {
               (emit GET_SPAN_RESULT { found: true, span: { spanId: @s.id, traceId: @s.traceId, name: @s.name, startTime: @s.startTime, attributes: @s.attributes, events: @evs } }))))
 
       GET_METRICS -> idle
-        (fetch OtelMetric { orderBy: "timestamp", emit: { success: OTEL_METRICS_LOADED, failure: OTEL_READ_FAILED } })
+        (fetch OtelMetric { orderBy: "timestamp", limit: @config.maxMetricRows, emit: { success: OTEL_METRICS_LOADED, failure: OTEL_READ_FAILED } })
+      OTEL_METRICS_LOADED -> idle when (> @payload.totalCount (array/count @payload.data))
+        (emit OTEL_READ_FAILED { error: (str/concat "OtelMetric has " @payload.totalCount " stored samples, over the maxMetricRows cap of " @config.maxMetricRows), code: "OTEL_OVER_CAP" })
       OTEL_METRICS_LOADED -> idle
         (emit GET_METRICS_RESULT { metrics: (array/map (array/unique (array/map @payload.data (fn m (object/get @m name "")))) (fn n
           (let ((rows (array/filter @payload.data (fn m (= (object/get @m name "") @n)))))
@@ -361,11 +405,13 @@ orbital OtelOrbital {
         @tier "secondary"
       OTEL_ENDING_LOADED {
         data : [OtelSpan]!
+        totalCount : number!
       }
         @description "Internal: the ended, unexported spans."
         @tier "secondary"
       OTEL_EVENTS_LOADED {
         data : [OtelSpanEvent]!
+        totalCount : number!
       }
         @description "Internal: the unshipped span events."
         @tier "secondary"
@@ -434,11 +480,13 @@ orbital OtelOrbital {
         @tier "secondary"
       OTEL_SPAN_EVENTS_LOADED {
         data : [OtelSpanEvent]!
+        totalCount : number!
       }
         @description "Internal: the events of the span GET_SPAN asked for."
         @tier "secondary"
       OTEL_METRICS_LOADED {
         data : [OtelMetric]!
+        totalCount : number!
       }
         @description "Internal: every stored metric sample."
         @tier "secondary"
@@ -528,9 +576,11 @@ orbital OtelOrbital {
       }
       OTEL_ENDING_LOADED {
         data : [OtelSpan]!
+        totalCount : number!
       }
       OTEL_EVENTS_LOADED {
         data : [OtelSpanEvent]!
+        totalCount : number!
       }
       OTEL_METRIC_STORED {
         id : string
@@ -577,9 +627,11 @@ orbital OtelOrbital {
       }
       OTEL_SPAN_EVENTS_LOADED {
         data : [OtelSpanEvent]!
+        totalCount : number!
       }
       OTEL_METRICS_LOADED {
         data : [OtelMetric]!
+        totalCount : number!
       }
       OTEL_READ_FAILED {
         error : string!
@@ -618,6 +670,26 @@ orbital OtelOrbital {
         @description "The instrumentation scope name on every exported span and metric."
         @synonyms "scope name, instrumentation library"
         @tier "domain"
+      batchSize : number = 500
+        @label "Export batch size"
+        @description "Most ended spans one export pass reads and sends in a single OTLP request, together with all of their unshipped events. A larger backlog drains in successive batches, each read after the previous one is marked exported."
+        @synonyms "export batch, backlog batch, drain size"
+        @tier "infra"
+      maxBatchEvents : number = 10000
+        @label "Event cap per export batch"
+        @description "Most unshipped events one export batch may read, for exactly the spans in that batch. The batch's events must all be read before its spans are marked exported, or the missing events would never ship; a batch over the cap is refused through OTEL_READ_FAILED and stays unexported until batchSize is lowered."
+        @synonyms "batch event cap, export event limit"
+        @tier "infra"
+      maxRows : number = 1000
+        @label "Row cap per read"
+        @description "Most events of one span GET_SPAN may return. 1000 is a generous event count for a single span; a span with more is refused with OTEL_EXPORT_FAILED instead of returning a partial span."
+        @synonyms "read limit, span event cap"
+        @tier "infra"
+      maxMetricRows : number = 10000
+        @label "Metric sample cap"
+        @description "Most stored metric samples GET_METRICS may aggregate. Samples are small and accumulate with every RECORD_METRIC, so the cap is ten times maxRows; a store holding more is refused with OTEL_EXPORT_FAILED instead of returning partial totals."
+        @synonyms "metrics read limit, sample cap"
+        @tier "infra"
       timeoutMs : number = 6000
         @label "Request timeout (ms)"
         @description "Milliseconds each OTLP request may take before it counts as failed."
@@ -626,5 +698,39 @@ orbital OtelOrbital {
     }
   }
 
+  trait OtelMetricRetention = Lifecycle.traits.LifecycleScheduler -> OtelMetricRetentionLog {
+    config {
+      enabled: true
+      action: delete
+      targetEntity: OtelMetric
+      dateField: timestamp
+      ageDays: @config.keepDays
+    }
+  }
+
+  trait OtelSpanRetention = Lifecycle.traits.LifecycleScheduler -> OtelSpanRetentionLog {
+    config {
+      enabled: true
+      action: delete
+      targetEntity: OtelSpan
+      statusField: "state"
+      fromStatus: "exported"
+      dateField: endTime
+      ageDays: @config.keepDays
+    }
+  }
+
+  trait OtelSpanEventRetention = Lifecycle.traits.LifecycleScheduler -> OtelSpanEventRetentionLog {
+    config {
+      enabled: true
+      action: delete
+      targetEntity: OtelSpanEvent
+      dateField: timestamp
+      ageDays: @config.keepDays
+    }
+  }
+
   page boot as OtelPage -> OtelExporter
+
+  page "/otel/retention" as OtelRetentionPage -> OtelMetricRetention, OtelSpanRetention, OtelSpanEventRetention
 }

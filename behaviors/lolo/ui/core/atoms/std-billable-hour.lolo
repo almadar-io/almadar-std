@@ -12,7 +12,7 @@ orbital BillableHourOrbital {
 
   uses TableView from "std/behaviors/ui-table-view"
 
-    type BillableHourLoaded = Event { data : [BillableHour] } "Fired when the billable-hour collection finishes loading"
+    type BillableHourLoaded = Event { data : [BillableHour], totalCount : number } "Fired when the billable-hour collection finishes loading"
 
     type BillableHourLoadFailed = Event { error : string, code : string } "Fired when the billable-hour collection fails to load"
 
@@ -28,6 +28,7 @@ orbital BillableHourOrbital {
     description : string @description "A textual explanation of the hour entry." @synonyms "explanation, notes, details, comment" = ""
     isBillable : boolean @description "Indicates whether the hour is eligible for billing." @synonyms "billable flag, billing status, billable indicator" = true
     invoiceStatus : "unbilled" | "invoiced" | "paid" | "written_off" @description "The current billing status of the hour entry." @synonyms "status, billing status, payment status" = unbilled
+    page : number @intrinsic @description "The page the list shows." = 1
   }
 
   trait DenseHoursTable = TableView.traits.TableViewRender -> BillableHour {
@@ -51,8 +52,11 @@ orbital BillableHourOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.page 1)
         (fetch BillableHour {
           emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -87,6 +91,12 @@ orbital BillableHourOrbital {
             direction: vertical
             gap: none
             type: stack
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -101,9 +111,19 @@ orbital BillableHourOrbital {
     }
 
     state browsing {
-      INIT -> loading
+      REFETCH_PAGE -> loading
+        (set @entity.page ?page)
         (fetch BillableHour {
           emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+        })
+      INIT -> loading
+        (set @entity.page 1)
+        (fetch BillableHour {
+          emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main { rows: 4, type: skeleton })
       OPEN_HOURS -> viewing_single
@@ -220,8 +240,11 @@ orbital BillableHourOrbital {
         })
       WRITE_OFF_HOURS -> loading
         (set @entity.id ?id)
+        (set @entity.page 1)
         (fetch BillableHour {
           emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           align: center
@@ -240,8 +263,11 @@ orbital BillableHourOrbital {
 
     state viewing_single {
       INIT -> loading
+        (set @entity.page 1)
         (fetch BillableHour {
           emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -250,8 +276,11 @@ orbital BillableHourOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: table, rows: 6 }]
         })
       CLOSE_VIEW -> loading
+        (set @entity.page 1)
         (fetch BillableHour {
           emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -261,8 +290,11 @@ orbital BillableHourOrbital {
         })
       INVOICE_HOURS -> loading
         (set @entity.id ?id)
+        (set @entity.page 1)
         (fetch BillableHour {
           emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           align: center
@@ -279,8 +311,11 @@ orbital BillableHourOrbital {
         })
       WRITE_OFF_HOURS -> loading
         (set @entity.id ?id)
+        (set @entity.page 1)
         (fetch BillableHour {
           emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           align: center
@@ -299,8 +334,11 @@ orbital BillableHourOrbital {
 
     state error {
       INIT -> loading
+        (set @entity.page 1)
         (fetch BillableHour {
           emit: { failure: BillableHourLoadFailed, success: BillableHourLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -336,6 +374,7 @@ orbital BillableHourOrbital {
         @tier "presentation"
       BillableHourLoaded {
         data : [BillableHour]
+        totalCount : number
       }
         @description "Signals that a billable hour data set has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved, populated"
@@ -350,6 +389,12 @@ orbital BillableHourOrbital {
     }
 
     listens {
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a time entry page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       OPEN_HOURS {
         id : string!
         row : BillableHour
@@ -375,6 +420,7 @@ orbital BillableHourOrbital {
         @tier "presentation"
       BillableHourLoaded {
         data : [BillableHour]
+        totalCount : number
       }
         @description "Indicates that billable hour data has been successfully retrieved."
         @synonyms "loaded, fetched, received, populated"
@@ -389,6 +435,11 @@ orbital BillableHourOrbital {
     }
 
     config {
+      pageSize : number = 50
+        @label "How many time entry rows to fetch per page?"
+        @description "Time entry rows fetched from the server per page request; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       showHeader : boolean = true
         @label "Show the list's own title row?"
         @description "Off when the page already carries a page header naming the same thing, so the page shows one title."

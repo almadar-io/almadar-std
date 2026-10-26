@@ -110,7 +110,7 @@ orbital GraphOrbital {
         (set @entity.reqDirection (if (= ?direction null) "directed" ?direction))
         (set @entity.reqStrength (if (= ?strength null) 0 ?strength))
         (set @entity.reqMetadata (if (= ?metadata null) {} ?metadata))
-        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), limit: @config.maxNodes, emit: { success: GraphNodesLoaded, failure: GraphFailed } })
 
       GRAPH_REMOVE_EDGE -> loadingNodes
         (set @entity.reqOp "removeEdge")
@@ -118,23 +118,23 @@ orbital GraphOrbital {
         (set @entity.reqSource ?source)
         (set @entity.reqTarget ?target)
         (set @entity.reqEdgeType ?edgeType)
-        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), limit: @config.maxNodes, emit: { success: GraphNodesLoaded, failure: GraphFailed } })
 
       GRAPH_REMOVE_NODE -> loadingNodes
         (set @entity.reqOp "removeNode")
         (set @entity.reqGraphId ?graphId)
         (set @entity.reqNodeId ?nodeId)
-        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), limit: @config.maxNodes, emit: { success: GraphNodesLoaded, failure: GraphFailed } })
 
       GRAPH_RECOMPUTE -> loadingNodes
         (set @entity.reqOp "recompute")
         (set @entity.reqGraphId ?graphId)
-        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), limit: @config.maxNodes, emit: { success: GraphNodesLoaded, failure: GraphFailed } })
 
       GRAPH_ORDER -> loadingNodes
         (set @entity.reqOp "order")
         (set @entity.reqGraphId ?graphId)
-        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), limit: @config.maxNodes, emit: { success: GraphNodesLoaded, failure: GraphFailed } })
 
       GRAPH_REACH -> loadingNodes
         (set @entity.reqOp "reach")
@@ -142,20 +142,24 @@ orbital GraphOrbital {
         (set @entity.reqNodeId ?nodeId)
         (set @entity.reqDirection ?direction)
         (set @entity.reqEdgeTypes ?edgeTypes)
-        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), emit: { success: GraphNodesLoaded, failure: GraphFailed } })
+        (fetch GraphNode { filter: (= (object/get @entity graphId) ?graphId), limit: @config.maxNodes, emit: { success: GraphNodesLoaded, failure: GraphFailed } })
     }
 
     state loadingNodes {
       INIT -> idle
+      GraphNodesLoaded -> loadingNodes when (> ?totalCount (array/len ?data))
+        (emit GraphFailed { error: (str/concat "GraphNode has " ?totalCount " nodes in one graph, over the maxNodes cap of " @config.maxNodes), code: "GRAPH_NODES_OVER_CAP" })
       GraphNodesLoaded -> loadingEdges
         (set @entity.scratchNodes ?data)
-        (fetch GraphEdge { filter: (= (object/get @entity graphId) @entity.reqGraphId), emit: { success: GraphEdgesLoaded, failure: GraphFailed } })
+        (fetch GraphEdge { filter: (= (object/get @entity graphId) @entity.reqGraphId), limit: @config.maxEdges, emit: { success: GraphEdgesLoaded, failure: GraphFailed } })
       GraphFailed -> idle
         (emit GRAPH_FAILED { error: ?error, graphId: @entity.reqGraphId })
     }
 
     state loadingEdges {
       INIT -> idle
+      GraphEdgesLoaded -> loadingEdges when (> ?totalCount (array/len ?data))
+        (emit GraphFailed { error: (str/concat "GraphEdge has " ?totalCount " edges in one graph, over the maxEdges cap of " @config.maxEdges), code: "GRAPH_EDGES_OVER_CAP" })
       GraphEdgesLoaded -> computed when (= @entity.reqOp "reach")
         (set @entity.scratchEdges ?data)
         (let ((noStrs : GraphStrings []))
@@ -331,10 +335,12 @@ orbital GraphOrbital {
         @tier "primary"
       GraphNodesLoaded {
         data : [GraphNodeRow]!
+        totalCount : number!
       }
         @tier "internal"
       GraphEdgesLoaded {
         data : [GraphEdgeRow]!
+        totalCount : number!
       }
         @tier "internal"
       GraphComputed
@@ -423,9 +429,11 @@ orbital GraphOrbital {
         @tier "domain"
       GraphNodesLoaded {
         data : [GraphNodeRow]!
+        totalCount : number!
       }
       GraphEdgesLoaded {
         data : [GraphEdgeRow]!
+        totalCount : number!
       }
       GraphComputed
       GraphWritten
@@ -446,6 +454,16 @@ orbital GraphOrbital {
         @description "The edge type vocabulary; an edge of any other type is refused."
         @synonyms "relationship types, link kinds, relation types"
         @tier "domain"
+      maxNodes : number = 2000
+        @label "Nodes per graph"
+        @description "Most node rows one graph operation may read. Depth, closure, ordering and reach are computed over every node of the graph, so a partial read would store wrong depths; a graph with more nodes is refused through GRAPH_FAILED instead of being computed from a cut set."
+        @synonyms "node cap, graph size limit"
+        @tier "policy"
+      maxEdges : number = 10000
+        @label "Edges per graph"
+        @description "Most edge rows one graph operation may read. Edges outnumber nodes in a connected graph, so the cap is five times maxNodes; a graph with more edges is refused through GRAPH_FAILED instead of being computed from a cut set."
+        @synonyms "edge cap, relationship limit"
+        @tier "policy"
       orderEdgeTypes : [string] = ["depends-on"]
         @label "Order edge types"
         @description "The edge types that order the graph: an edge from A to B means A depends on B. They must stay acyclic, and they drive each node's depth and dependency closure."

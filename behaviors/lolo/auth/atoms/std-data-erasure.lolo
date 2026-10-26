@@ -11,7 +11,7 @@ orbital DataErasureOrbital {
     uses Divider from "std/behaviors/ui-divider"
     uses Alert from "std/behaviors/ui-alert"
 
-    type ErasureLoaded = Event { data : [ErasureRequest] } "Fired when the erasure queue finishes loading."
+    type ErasureLoaded = Event { data : [ErasureRequest], totalCount : number } "Fired when the erasure queue finishes loading."
 
     type ErasureLoadFailed = Event { error : string, code : string } "Fired when the erasure queue fails to load."
 
@@ -37,6 +37,7 @@ orbital DataErasureOrbital {
     executedAt : number @description "Timestamp indicating when the erasure process completed." @synonyms "completion time, finish time, end time" = 0
     cancelledAt : number @description "Timestamp when the erasure request was cancelled." @synonyms "cancellation time, cancelled timestamp, cancel date" = 0
     notes : string @description "Free-form text providing additional information or context." @synonyms "comment, remark, description, details" = ""
+    page : number @intrinsic @description "The page the list shows." = 1
   }
 
   trait LoadingSpinner = Spinner.traits.SpinnerRender -> ErasureRequest {
@@ -95,15 +96,21 @@ orbital DataErasureOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.page 1)
         (fetch ErasureRequest {
           emit: { failure: ErasureLoadFailed, success: ErasureLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       ErasureLoaded -> idle
       ErasureLoadFailed -> idle
         (notify error (str/concat "Couldn't load the erasure queue — " ?error))
       OPEN -> loading when @config.enabled
+        (set @entity.page 1)
         (fetch ErasureRequest {
           emit: { failure: ErasureLoadFailed, success: ErasureLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui @config.reviewSlot {
           align: center
@@ -139,6 +146,7 @@ orbital DataErasureOrbital {
       ExecStepped -> execScanning
         (fetch ErasureRequest {
           emit: { failure: ExecScanFailed, success: ExecScanLoaded }
+          limit: @config.batchSize
           filter: (and (= (object/get @entity status) grace) (< (object/get @entity executesAt) @now))
         })
       ExecScanLoaded -> execScanning when (> (array/len ?data) 0)
@@ -198,7 +206,7 @@ orbital DataErasureOrbital {
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             type: data-grid
-          }]
+          }, <Pagination currentPage={@entity.page} totalPages={(math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))} pageChangeEvent={REFETCH_PAGE} showPageSize={false} />]
           direction: vertical
           gap: md
           type: stack
@@ -224,8 +232,18 @@ orbital DataErasureOrbital {
           emit: { failure: ErasureSaveFailed, success: ErasureSaved }
         })
       ErasureSaved -> loading
+        (set @entity.page 1)
         (fetch ErasureRequest {
           emit: { failure: ErasureLoadFailed, success: ErasureLoaded }
+          limit: @config.pageSize
+          offset: 0
+        })
+      REFETCH_PAGE -> loading
+        (set @entity.page ?page)
+        (fetch ErasureRequest {
+          emit: { failure: ErasureLoadFailed, success: ErasureLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
         })
       ErasureSaveFailed -> browsing
         (render-ui @config.reviewSlot {
@@ -238,8 +256,11 @@ orbital DataErasureOrbital {
 
     state error {
       OPEN -> loading
+        (set @entity.page 1)
         (fetch ErasureRequest {
           emit: { failure: ErasureLoadFailed, success: ErasureLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui @config.reviewSlot {
           children: [@trait.ErrorSpinner]
@@ -263,6 +284,7 @@ orbital DataErasureOrbital {
         @tier "domain"
       ErasureLoaded {
         data : [ErasureRequest]
+        totalCount : number
       }
         @description "Indicates that erasure request data has been successfully loaded."
         @synonyms "loaded, fetched, retrieved"
@@ -351,6 +373,7 @@ orbital DataErasureOrbital {
         @tier "domain"
       ErasureLoaded {
         data : [ErasureRequest]
+        totalCount : number
       }
         @description "Data erasure request successfully loaded."
         @synonyms "loaded, retrieved, fetched"
@@ -366,6 +389,12 @@ orbital DataErasureOrbital {
         @description "A new erasure request has been successfully saved."
         @synonyms "created, added, persisted"
         @tier "domain"
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers an erasure queue page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       ErasureSaveFailed {
         error : string
         code : string
@@ -379,6 +408,7 @@ orbital DataErasureOrbital {
       executionScan every "0 * * * *" [background]
         (fetch ErasureRequest {
           emit: { failure: ExecScanFailed, success: ExecScanLoaded }
+          limit: @config.batchSize
           filter: (and (= (object/get @entity status) grace) (< (object/get @entity executesAt) @now))
         })
       
@@ -394,6 +424,16 @@ orbital DataErasureOrbital {
         @label "Target entity"
         @description "Entity name whose records erasure requests apply to (e.g. 'CustomerAccount')."
         @tier "internal"
+      pageSize : number = 50
+        @label "How many requests per page?"
+        @description "Erasure requests fetched per page request; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
+      batchSize : number = 1
+        @label "Requests per execution read"
+        @description "Rows read per execution scan. Each pass executes the first due request and its completion re-reads the due set, so the loop drains every due request one read at a time; one row is all a pass uses."
+        @synonyms "scan batch, execution batch, drain batch"
+        @tier "infra"
       tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Erasure queue table style"
         @description "Visual treatment for the erasure-requests data table."

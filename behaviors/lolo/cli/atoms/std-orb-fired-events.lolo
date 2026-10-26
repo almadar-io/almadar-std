@@ -3,8 +3,9 @@ app std-orb-fired-events [
   description: "std-orb-fired-events — the one place a lint run decides which event names a composition produces, the port of the compiler's collect_schema_fired_events. For every inline trait of the lowered program it walks the transition effects, the tick effects and the config defaults and answers FIRED_EVENTS { scope, byControl, byEffect }, each a map from trait name to its event names. byEffect holds the event of an `(emit EVENT)` effect and every string under an `emit` config of an operator call; byControl holds the string leaves of the event-bearing props of a rendered pattern (LINT_EVENT_PROPS names, the leaves read through the operators' declared returnSemantics) and the leaves of the values of an event-map prop, never a binding. A branch whose condition is provably false, folding the trait's literal config knobs into the condition, contributes nothing; the walk of a value's leaves skips a provably false branch without the knobs. The rules that ask whether something is fired compose this trait and read FIRED_EVENTS; they never walk effects themselves."
 ]
 uses Spec from "almadar-std/fired-events"
-type FiredFlags = { f : boolean!, t : boolean!, lit : boolean!, v : string! }
-type FiredRes = { ev : [string]!, ctl : [string]!, s : [string]!, ls : [string]!, vs : [string]!, fl : [FiredFlags]! }
+type FiredItem = [string]
+type FiredR = { h : string!, ok : boolean!, it : [[string]]! }
+type FiredS = { s : [string]!, ls : [string]! }
 type FiredRec = { trait : string!, ev : [string]!, ctl : [string]! }
 type FiredScalar = string | number | boolean
 type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
@@ -41,95 +42,187 @@ orbital OrbFiredEventsOrbital {
         (set @entity.busExcluded @payload.busExcluded)
         (set @entity.targetOptions @payload.targetOptions)
       FIRED_INPUT_HEARD -> ready
-        (let ((names @entity.names) (maps @entity.maps) (sem @entity.semantics) (fns @entity.functions) (bus @entity.busExcluded) (tgt @entity.targetOptions))
+        (let ((sem @entity.semantics) (names @entity.names) (maps @entity.maps) (nr : FiredR { h: "", ok: false, it: [] }) (ns : FiredS { s: [], ls: [] }) (busSet (or (object/fromEntries (array/map @entity.busExcluded (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (tgtSet (or (object/fromEntries (array/map @entity.targetOptions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (fnSet (or (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
           (let ((recs (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn o
                   (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t
                     (let ((cfg (object/get @t "config" {})))
                       (let ((kn (object/fromEntries (array/map (array/filter (object/keys @cfg) (fn key (let ((d (object/get (or (object/get @cfg @key null) {}) "default" null))) (or (validate/string @d) (validate/number @d) (validate/boolean @d))))) (fn key [@key, (object/get (object/get @cfg @key) "default")]))))
                             (roots (array/concat
                                      (array/concat
-                                       (array/flatten (array/map (object/get (object/get @t "stateMachine") "transitions" []) (fn x (object/get @x "effects" []))))
+                                       (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn x (object/get @x "effects" []))))
                                        (array/flatten (array/map (object/get @t "ticks" []) (fn x (object/get @x "effects" [])))))
                                      (array/filter (array/map (object/keys @cfg) (fn key (object/get (or (object/get @cfg @key null) {}) "default" null))) (fn d (!= @d null))))))
-                        (let ((res (array/map @roots (fn r (tree/fold @r (fn (n k)
-                            (let ((nr : FiredRes { ev: [], ctl: [], s: [], ls: [], vs: [], fl: [{ f: true, t: false, lit: true, v: "null" }, { f: true, t: false, lit: true, v: "null" }] }))
-                              (if (validate/array @n)
-                                (let ((len (array/len @n)) (kk (array/map @k (fn r (if (= @r null) @nr @r)))))
-                                  (let ((hasOp (and (> @len 0) (validate/string (array/nth @n 0)))) (argc (- @len 1)))
-                                  (let ((op (if (and (> @len 0) (validate/string (array/nth @n 0))) (array/nth @n 0) "")))
-                                    (let ((cond (and (= @op "if") (>= @len 3)))
-                                          (sm (let ((h (array/nth @n 0))) (if (and (> @len 0) (validate/string @h)) (object/get @sem @h "") "")))
-                                          (fl (array/map [0, 1] (fn j
-                                            (let ((af (array/map (array/drop @kk 1) (fn x (array/nth (object/get @x "fl") @j)))))
-                                              (if (= @len 0) { f: true, t: false, lit: false, v: "" }
-                                                (if (not @hasOp) { f: false, t: true, lit: false, v: "" }
-                                                  (if (= @op "and") { f: (array/some @af (fn x (object/get @x "f"))), t: (and (> @argc 0) (array/every @af (fn x (object/get @x "t")))), lit: false, v: "" }
-                                                    (if (= @op "or") { f: (and (> @argc 0) (array/every @af (fn x (object/get @x "f")))), t: (array/some @af (fn x (object/get @x "t"))), lit: false, v: "" }
-                                                      (if (= @op "not") { f: (and (= @argc 1) (object/get (array/nth @af 0) "t")), t: (and (= @argc 1) (object/get (array/nth @af 0) "f")), lit: false, v: "" }
-                                                        (if (array/includes ["=", "==", "!="] @op)
-                                                          (if (and (= @argc 2) (object/get (array/nth @af 0) "lit") (object/get (array/nth @af 1) "lit"))
-                                                            (let ((eq (= (object/get (array/nth @af 0) "v") (object/get (array/nth @af 1) "v")))) { f: (= @eq (= @op "!=")), t: (= @eq (!= @op "!=")), lit: false, v: "" })
-                                                            { f: false, t: false, lit: false, v: "" })
-                                                          { f: false, t: false, lit: false, v: "" })))))))))))
-                                      (let ((dead (and @cond (object/get (array/nth (object/get (array/nth @kk 1) "fl") 1) "f")))
-                                            (plainDead (and (= @sm "branch-union") (>= @argc 2) (object/get (array/nth (object/get (array/nth @kk 1) "fl") 0) "f")))
-                                            (lambdaIdx (array/filter (array/range 0 (if (> @argc 0) @argc 0)) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (validate/string (array/nth @a 0)) (array/includes @fns (array/nth @a 0)))))))
-                                            (picked (if (or (str/startsWith @sm "identity-of-arg<") (str/startsWith @sm "union-of-args<")) (array/map (str/split (str/replaceAll (array/nth (str/split @sm "<") 1) ">" "") ",") (fn x (let ((v (str/to-int (str/trim @x)))) (if (= @v null) -1 @v)))) [])))
-                                        (let ((s (if (= @sm "branch-union")
-                                                   (if (< @argc 2) [] (array/flatten (array/map (array/range (if @plainDead 2 1) @argc) (fn i (object/get (array/nth @kk (+ @i 1)) "s")))))
-                                                   (if (or (= @sm "union-of-args") (= @sm "coalesce"))
-                                                     (array/flatten (array/map (array/drop @kk 1) (fn x (object/get @x "s"))))
-                                                     (if (= @sm "last-of-args")
-                                                       (if (>= @argc 1) (object/get (array/last @kk) "s") [])
-                                                       (if (= @sm "lambda-result")
-                                                         (if (> (array/len @lambdaIdx) 0) (object/get (array/nth @kk (+ (array/last @lambdaIdx) 1)) "ls") [])
-                                                         (if (and (> (array/len @picked) 0) (not (array/some @picked (fn i (or (< @i 0) (>= @i @argc))))))
-                                                           (array/flatten (array/map @picked (fn i (object/get (array/nth @kk (+ @i 1)) "s"))))
-                                                           []))))))
-                                              (sel (if @cond (array/concat (array/concat [(array/nth @kk 1)] (if @dead [] [(array/nth @kk 2)])) (if (>= @len 4) [(array/nth @kk 3)] [])) @kk))
-                                              (dispatch (if (and (>= @len 4) (= @op "program/dispatch"))
-                                                   (let ((ad (array/nth @n 1)) (opt (array/nth @n 3)))
-                                                     (if (validate/string @ad)
-                                                       (if (validate/object @opt)
-                                                         (let ((keys (object/keys @opt)))
-                                                           (if (and (!= @ad "") (not (str/includes @ad ".")) (not (str/startsWith @ad (quote "@"))) (not (array/some @keys (fn k (array/includes @tgt @k)))) (array/some @keys (fn k (!= @k "schema"))))
-                                                             [@ad]
-                                                             []))
-                                                         [])
-                                                       []))
-                                                   []))
-                                              (local (array/concat
-                                                       (array/concat @dispatch
-                                                       (if (and (>= @len 2) (= @op "emit") (validate/string (array/nth @n 1))) [(array/nth @n 1)] []))
-                                                       (array/flatten (array/map @n (fn it (if (validate/object @it) (let ((em (object/get @it "emit" null))) (if (validate/object @em) (array/flatten (array/map (object/values @em) (fn v (if (validate/string @v) [@v] [])))) [])) [])))))))
-                                          { ev: (array/concat @local (array/flatten (array/map @sel (fn x (object/get @x "ev"))))), ctl: (array/flatten (array/map @sel (fn x (object/get @x "ctl")))), s: @s, ls: (if (> @len 0) (object/get (array/last @kk) "s") []), vs: [], fl: @fl }))))))
-                                (if (validate/object @n)
-                                  (let ((keys (object/keys @n)))
-                                    (let ((unused 0))
-                                      { ev: (array/flatten (array/map @keys (fn key (object/get (let ((r (object/get @k @key null))) (if (= @r null) @nr @r)) "ev")))),
-                                        ctl: (array/concat
-                                               (array/flatten (array/map @keys (fn key
-                                                 (let ((r (let ((r0 (object/get @k @key null))) (if (= @r0 null) @nr @r0))))
-                                                   (array/concat
-                                                     (if (array/includes @names @key) (array/filter (object/get @r "s") (fn x (and (not (str/startsWith @x (quote "@"))) (not (array/includes @bus @x))))) [])
-                                                     (if (and (array/includes @maps @key) (validate/object (object/get @n @key))) (array/filter (object/get @r "vs") (fn x (and (not (str/startsWith @x (quote "@"))) (not (array/includes @bus @x))))) []))))))
-                                               (array/flatten (array/map @keys (fn key (object/get (let ((r (object/get @k @key null))) (if (= @r null) @nr @r)) "ctl"))))),
-                                        s: [], ls: [],
-                                        vs: (array/flatten (array/map @keys (fn key (object/get (let ((r (object/get @k @key null))) (if (= @r null) @nr @r)) "s")))),
-                                        fl: [{ f: (= (array/len @keys) 0), t: (> (array/len @keys) 0), lit: false, v: "" }, { f: (= (array/len @keys) 0), t: (> (array/len @keys) 0), lit: false, v: "" }] }))
-                                  { ev: [], ctl: [], s: (if (validate/string @n) [@n] []), ls: [], vs: [],
-                                    fl: (array/map [0, 1] (fn j
-                                      (let ((sub (and (= @j 1) (validate/string @n) (str/startsWith @n (quote "@config.")) (object/has (or @kn {}) (str/slice @n 8)))))
-                                        (let ((tx (if @sub (json/stringify (object/get (or @kn {}) (str/slice @n 8) "")) (json/stringify @n))))
-                                          (if (str/startsWith @tx "\"") { f: (= @tx "\"\""), t: (and (!= @tx "\"\"") (not (str/startsWith @tx "\"@"))), lit: (not (str/startsWith @tx "\"@")), v: @tx }
-                                            (if (or (= @tx "true") (= @tx "false")) { f: (= @tx "false"), t: (= @tx "true"), lit: true, v: @tx }
-                                              { f: (= (str/to-number @tx) 0), t: (!= (str/to-number @tx) 0), lit: true, v: @tx })))))) })))) "FiredNode")))))
-                          { trait: (object/get @t "name" ""), ev: (array/flatten (array/map @res (fn x (object/get @x "ev" [])))), ctl: (array/flatten (array/map @res (fn x (object/get @x "ctl" [])))) }))))))))))
-            (let ((tnames (array/unique (array/map @recs (fn r (object/get @r "trait" ""))))))
+                        (let ((fr (tree/fold (array/map @roots (fn r { w: @r })) (fn (n k)
+  (if (validate/array @n)
+    (let ((len (array/len @k)))
+      (if (= @len 0) @nr
+        (let ((hr (let ((r0 (array/nth @k 0))) (if (= @r0 null) @nr @r0))))
+          (let ((op (if (object/get @hr "ok") (object/get @hr "h") "")))
+            (let ((cond (and (= @op "if") (>= @len 3)))
+                  (its (array/map @k (fn r (object/get (if (= @r null) @nr @r) "it")))))
+              (let ((flat (array/flatten @its)))
+                (if (and (not @cond) (= (array/len @flat) 0) (!= @op "emit") (!= @op "program/dispatch")) @nr
+                  (let ((dead (and @cond (let ((c1 (array/nth @n 1))) (if (= @c1 null) true (if (or (and (validate/array @c1) (> (array/len @c1) 0) (let ((e0 (array/nth @c1 0))) (and (validate/string @e0) (or (not (array/includes ["and", "or", "not", "=", "==", "!="] @e0)) (and (array/includes ["=", "==", "!="] @e0) (not (and (= (array/len @c1) 3) (let ((x1 (array/nth @c1 1)) (x2 (array/nth @c1 2))) (and (or (= @x1 null) (validate/number @x1) (validate/boolean @x1) (and (validate/string @x1) (or (not (str/startsWith @x1 (quote "@"))) (str/startsWith @x1 (quote "@config."))))) (or (= @x2 null) (validate/number @x2) (validate/boolean @x2) (and (validate/string @x2) (or (not (str/startsWith @x2 (quote "@"))) (str/startsWith @x2 (quote "@config.")))))))))))))) (and (validate/string @c1) (str/startsWith @c1 (quote "@")) (not (str/startsWith @c1 (quote "@config."))))) false (object/get (let ((jj 1)) (tree/fold @c1 (fn (m q)
+  (if (validate/array @m)
+    (let ((len2 (array/len @m)))
+      (if (= @len2 0) { f: true, t: false, lit: false, v: "" }
+        (let ((h2 (array/nth @m 0)))
+          (if (not (validate/string @h2)) { f: false, t: true, lit: false, v: "" }
+            (let ((argc2 (- @len2 1)) (af (array/map (array/drop @q 1) (fn x (if (= @x null) { f: true, t: false, lit: true, v: "null" } @x)))))
+              (if (= @h2 "and") { f: (array/some @af (fn x (object/get @x "f"))), t: (and (> @argc2 0) (array/every @af (fn x (object/get @x "t")))), lit: false, v: "" }
+                (if (= @h2 "or") { f: (and (> @argc2 0) (array/every @af (fn x (object/get @x "f")))), t: (array/some @af (fn x (object/get @x "t"))), lit: false, v: "" }
+                  (if (= @h2 "not") { f: (and (= @argc2 1) (object/get (array/nth @af 0) "t")), t: (and (= @argc2 1) (object/get (array/nth @af 0) "f")), lit: false, v: "" }
+                    (if (array/includes ["=", "==", "!="] @h2)
+                      (if (and (= @argc2 2) (object/get (array/nth @af 0) "lit") (object/get (array/nth @af 1) "lit"))
+                        (let ((eq (= (object/get (array/nth @af 0) "v") (object/get (array/nth @af 1) "v")))) { f: (= @eq (= @h2 "!=")), t: (= @eq (!= @h2 "!=")), lit: false, v: "" })
+                        { f: false, t: false, lit: false, v: "" })
+                      { f: false, t: false, lit: false, v: "" })))))))))
+    (if (validate/object @m)
+      (let ((nk (array/len (object/keys @m)))) { f: (= @nk 0), t: (> @nk 0), lit: false, v: "" })
+      (let ((sub (and (= @jj 1) (validate/string @m) (str/startsWith @m (quote "@config.")) (object/has (or @kn {}) (str/slice @m 8)))))
+        (let ((tx (if @sub (json/stringify (object/get (or @kn {}) (str/slice @m 8) "")) (json/stringify @m))))
+          (if (str/startsWith @tx "\"") { f: (= @tx "\"\""), t: (and (!= @tx "\"\"") (not (str/startsWith @tx "\"@"))), lit: (not (str/startsWith @tx "\"@")), v: @tx }
+            (if (or (= @tx "true") (= @tx "false")) { f: (= @tx "false"), t: (= @tx "true"), lit: true, v: @tx }
+              { f: (= (str/to-number @tx) 0), t: (!= (str/to-number @tx) 0), lit: true, v: @tx }))))))) "FiredNode")) "f")))))))
+                    (let ((local (array/concat
+                                   (if (and (>= @len 4) (= @op "program/dispatch"))
+                                     (let ((r1 (let ((q1 (array/nth @k 1))) (if (= @q1 null) @nr @q1))) (opt (array/nth @n 3)))
+                                       (if (object/get @r1 "ok")
+                                         (if (validate/object @opt)
+                                           (let ((keys (object/keys @opt)) (ad (object/get @r1 "h")))
+                                             (if (and (!= @ad "") (not (str/includes @ad ".")) (not (str/startsWith @ad (quote "@"))) (not (array/some @keys (fn kq (object/has @tgtSet (str/replaceAll (str/replaceAll @kq "~" "~t") "." "~d"))))) (array/some @keys (fn kq (!= @kq "schema"))))
+                                               [["e", @ad]]
+                                               []))
+                                           [])
+                                         []))
+                                     [])
+                                   (if (and (>= @len 2) (= @op "emit")) (let ((r1 (let ((q1 (array/nth @k 1))) (if (= @q1 null) @nr @q1)))) (if (object/get @r1 "ok") [["e", (object/get @r1 "h")]] [])) []))))
+                      (let ((all (array/flatten (array/concat (array/concat [@local] (if @cond [(array/flatten (array/concat (array/concat [(array/nth @its 1)] (if @dead [] [(array/nth @its 2)])) (if (>= @len 4) [(array/nth @its 3)] [])))] [@flat]))
+                                                              (if @cond [(array/filter @flat (fn x (= (array/nth @x 0) "o")))] [])))))
+                        (if (= (array/len @all) 0) @nr
+                          { h: "", ok: false, it: (array/map @all (fn x (if (= (array/nth @x 0) "o") ["e", (array/nth @x 1)] @x))) })))))))))))
+    (if (validate/object @n)
+      (let ((kv (object/keys @k)))
+        (let ((kids0 (array/flatten (array/map (object/values @k) (fn r (object/get (if (= @r null) @nr @r) "it")))))
+              (evk (array/filter @kv (fn key (or (array/includes @names @key) (array/includes @maps @key)))))
+              (hasEm (object/has @k "emit")))
+          (if (and (= (array/len @kids0) 0) (= (array/len @evk) 0) (not @hasEm)) @nr
+            (let ((kids (if (str/includes (json/stringify @kv) ".")
+                          (array/flatten (array/map (array/filter @kv (fn key (not (str/includes @key ".")))) (fn key (let ((r (object/get @k @key null))) (object/get (if (= @r null) @nr @r) "it")))))
+                          @kids0))
+                  (pn (array/filter @evk (fn key (and (array/includes @names @key) (not (str/includes @key "."))))))
+                  (pm (array/filter @evk (fn key (and (array/includes @maps @key) (not (str/includes @key ".")))))))
+              (let ((own (array/concat
+                           (if (= (array/len @pn) 0) []
+                             (array/flatten (array/map @pn
+                               (fn key (let ((v (object/get @n @key null))) (array/map (array/filter (if (validate/string @v) [@v] (if (validate/array @v) (object/get (tree/fold @v (fn (n k)
+  (if (validate/array @n)
+    (let ((len (array/len @n)))
+      (if (= @len 0) @ns
+        (let ((h (array/nth @n 0)))
+          (let ((hasOp (validate/string @h)))
+            (let ((sm (if @hasOp (object/get @sem @h "") "")) (argc (- @len 1)))
+              (let ((kk (array/map @k (fn r (if (= @r null) @ns @r)))))
+                (let ((plainDead (and (= @sm "branch-union") (>= @argc 2) (let ((c1 (array/nth @n 1))) (object/get (if (= @c1 null) { f: true, t: false, lit: true, v: "null" } (let ((jj 0)) (tree/fold @c1 (fn (m q)
+  (if (validate/array @m)
+    (let ((len2 (array/len @m)))
+      (if (= @len2 0) { f: true, t: false, lit: false, v: "" }
+        (let ((h2 (array/nth @m 0)))
+          (if (not (validate/string @h2)) { f: false, t: true, lit: false, v: "" }
+            (let ((argc2 (- @len2 1)) (af (array/map (array/drop @q 1) (fn x (if (= @x null) { f: true, t: false, lit: true, v: "null" } @x)))))
+              (if (= @h2 "and") { f: (array/some @af (fn x (object/get @x "f"))), t: (and (> @argc2 0) (array/every @af (fn x (object/get @x "t")))), lit: false, v: "" }
+                (if (= @h2 "or") { f: (and (> @argc2 0) (array/every @af (fn x (object/get @x "f")))), t: (array/some @af (fn x (object/get @x "t"))), lit: false, v: "" }
+                  (if (= @h2 "not") { f: (and (= @argc2 1) (object/get (array/nth @af 0) "t")), t: (and (= @argc2 1) (object/get (array/nth @af 0) "f")), lit: false, v: "" }
+                    (if (array/includes ["=", "==", "!="] @h2)
+                      (if (and (= @argc2 2) (object/get (array/nth @af 0) "lit") (object/get (array/nth @af 1) "lit"))
+                        (let ((eq (= (object/get (array/nth @af 0) "v") (object/get (array/nth @af 1) "v")))) { f: (= @eq (= @h2 "!=")), t: (= @eq (!= @h2 "!=")), lit: false, v: "" })
+                        { f: false, t: false, lit: false, v: "" })
+                      { f: false, t: false, lit: false, v: "" })))))))))
+    (if (validate/object @m)
+      (let ((nk (array/len (object/keys @m)))) { f: (= @nk 0), t: (> @nk 0), lit: false, v: "" })
+      (let ((sub (and (= @jj 1) (validate/string @m) (str/startsWith @m (quote "@config.")) (object/has (or @kn {}) (str/slice @m 8)))))
+        (let ((tx (if @sub (json/stringify (object/get (or @kn {}) (str/slice @m 8) "")) (json/stringify @m))))
+          (if (str/startsWith @tx "\"") { f: (= @tx "\"\""), t: (and (!= @tx "\"\"") (not (str/startsWith @tx "\"@"))), lit: (not (str/startsWith @tx "\"@")), v: @tx }
+            (if (or (= @tx "true") (= @tx "false")) { f: (= @tx "false"), t: (= @tx "true"), lit: true, v: @tx }
+              { f: (= (str/to-number @tx) 0), t: (!= (str/to-number @tx) 0), lit: true, v: @tx }))))))) "FiredNode"))) "f")))))
+                  (let ((s (if (= @sm "branch-union")
+                             (if (< @argc 2) [] (array/flatten (array/map (array/drop @kk (if @plainDead 3 2)) (fn x (object/get @x "s" [])))))
+                             (if (or (= @sm "union-of-args") (= @sm "coalesce"))
+                               (array/flatten (array/map (array/drop @kk 1) (fn x (object/get @x "s" []))))
+                               (if (= @sm "last-of-args")
+                                 (if (>= @argc 1) (let ((lc (array/nth @kk @argc))) (object/get @lc "s" [])) [])
+                                 (if (= @sm "lambda-result")
+                                   (let ((li (array/filter (array/range 0 @argc) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d")))))))))) 
+                                     (if (> (array/len @li) 0) (let ((lc (array/nth @kk (+ (array/last @li) 1)))) (object/get @lc "ls" [])) []))
+                                   (if (or (str/startsWith @sm "identity-of-arg<") (str/startsWith @sm "union-of-args<"))
+                                     (let ((picked (array/map (str/split (str/replaceAll (array/nth (str/split @sm "<") 1) ">" "") ",") (fn x (let ((v (str/to-int (str/trim @x)))) (if (= @v null) -1 @v))))))
+                                       (if (and (> (array/len @picked) 0) (not (array/some @picked (fn i (or (< @i 0) (>= @i @argc))))))
+                                         (array/flatten (array/map @picked (fn i (let ((pc (array/nth @kk (+ @i 1)))) (object/get @pc "s" [])))))
+                                         []))
+                                     [])))))))
+                    { s: @s, ls: (let ((lc (array/nth @kk @argc))) (object/get @lc "s" [])) }))))))))
+    (if (validate/string @n) { s: [@n], ls: [] } @ns))) "FiredNode") "s" []) [])) (fn x (and (not (str/startsWith @x (quote "@"))) (not (object/has @busSet (str/replaceAll (str/replaceAll @x "~" "~t") "." "~d")))))) (fn x ["c", @x])))))))
+                           (if (= (array/len @pm) 0) []
+                             (array/flatten (array/map @pm
+                               (fn key (let ((co (object/get @n @key null))) (if (validate/object @co) (array/map (array/filter (array/flatten (array/map (array/filter (object/keys @co) (fn gk (not (str/includes @gk ".")))) (fn gk (let ((gv (object/get @co @gk null))) (if (validate/string @gv) [@gv] (if (validate/array @gv) (object/get (tree/fold @gv (fn (n k)
+  (if (validate/array @n)
+    (let ((len (array/len @n)))
+      (if (= @len 0) @ns
+        (let ((h (array/nth @n 0)))
+          (let ((hasOp (validate/string @h)))
+            (let ((sm (if @hasOp (object/get @sem @h "") "")) (argc (- @len 1)))
+              (let ((kk (array/map @k (fn r (if (= @r null) @ns @r)))))
+                (let ((plainDead (and (= @sm "branch-union") (>= @argc 2) (let ((c1 (array/nth @n 1))) (object/get (if (= @c1 null) { f: true, t: false, lit: true, v: "null" } (let ((jj 0)) (tree/fold @c1 (fn (m q)
+  (if (validate/array @m)
+    (let ((len2 (array/len @m)))
+      (if (= @len2 0) { f: true, t: false, lit: false, v: "" }
+        (let ((h2 (array/nth @m 0)))
+          (if (not (validate/string @h2)) { f: false, t: true, lit: false, v: "" }
+            (let ((argc2 (- @len2 1)) (af (array/map (array/drop @q 1) (fn x (if (= @x null) { f: true, t: false, lit: true, v: "null" } @x)))))
+              (if (= @h2 "and") { f: (array/some @af (fn x (object/get @x "f"))), t: (and (> @argc2 0) (array/every @af (fn x (object/get @x "t")))), lit: false, v: "" }
+                (if (= @h2 "or") { f: (and (> @argc2 0) (array/every @af (fn x (object/get @x "f")))), t: (array/some @af (fn x (object/get @x "t"))), lit: false, v: "" }
+                  (if (= @h2 "not") { f: (and (= @argc2 1) (object/get (array/nth @af 0) "t")), t: (and (= @argc2 1) (object/get (array/nth @af 0) "f")), lit: false, v: "" }
+                    (if (array/includes ["=", "==", "!="] @h2)
+                      (if (and (= @argc2 2) (object/get (array/nth @af 0) "lit") (object/get (array/nth @af 1) "lit"))
+                        (let ((eq (= (object/get (array/nth @af 0) "v") (object/get (array/nth @af 1) "v")))) { f: (= @eq (= @h2 "!=")), t: (= @eq (!= @h2 "!=")), lit: false, v: "" })
+                        { f: false, t: false, lit: false, v: "" })
+                      { f: false, t: false, lit: false, v: "" })))))))))
+    (if (validate/object @m)
+      (let ((nk (array/len (object/keys @m)))) { f: (= @nk 0), t: (> @nk 0), lit: false, v: "" })
+      (let ((sub (and (= @jj 1) (validate/string @m) (str/startsWith @m (quote "@config.")) (object/has (or @kn {}) (str/slice @m 8)))))
+        (let ((tx (if @sub (json/stringify (object/get (or @kn {}) (str/slice @m 8) "")) (json/stringify @m))))
+          (if (str/startsWith @tx "\"") { f: (= @tx "\"\""), t: (and (!= @tx "\"\"") (not (str/startsWith @tx "\"@"))), lit: (not (str/startsWith @tx "\"@")), v: @tx }
+            (if (or (= @tx "true") (= @tx "false")) { f: (= @tx "false"), t: (= @tx "true"), lit: true, v: @tx }
+              { f: (= (str/to-number @tx) 0), t: (!= (str/to-number @tx) 0), lit: true, v: @tx }))))))) "FiredNode"))) "f")))))
+                  (let ((s (if (= @sm "branch-union")
+                             (if (< @argc 2) [] (array/flatten (array/map (array/drop @kk (if @plainDead 3 2)) (fn x (object/get @x "s" [])))))
+                             (if (or (= @sm "union-of-args") (= @sm "coalesce"))
+                               (array/flatten (array/map (array/drop @kk 1) (fn x (object/get @x "s" []))))
+                               (if (= @sm "last-of-args")
+                                 (if (>= @argc 1) (let ((lc (array/nth @kk @argc))) (object/get @lc "s" [])) [])
+                                 (if (= @sm "lambda-result")
+                                   (let ((li (array/filter (array/range 0 @argc) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d")))))))))) 
+                                     (if (> (array/len @li) 0) (let ((lc (array/nth @kk (+ (array/last @li) 1)))) (object/get @lc "ls" [])) []))
+                                   (if (or (str/startsWith @sm "identity-of-arg<") (str/startsWith @sm "union-of-args<"))
+                                     (let ((picked (array/map (str/split (str/replaceAll (array/nth (str/split @sm "<") 1) ">" "") ",") (fn x (let ((v (str/to-int (str/trim @x)))) (if (= @v null) -1 @v))))))
+                                       (if (and (> (array/len @picked) 0) (not (array/some @picked (fn i (or (< @i 0) (>= @i @argc))))))
+                                         (array/flatten (array/map @picked (fn i (let ((pc (array/nth @kk (+ @i 1)))) (object/get @pc "s" [])))))
+                                         []))
+                                     [])))))))
+                    { s: @s, ls: (let ((lc (array/nth @kk @argc))) (object/get @lc "s" [])) }))))))))
+    (if (validate/string @n) { s: [@n], ls: [] } @ns))) "FiredNode") "s" []) [])))))) (fn x (and (not (str/startsWith @x (quote "@"))) (not (object/has @busSet (str/replaceAll (str/replaceAll @x "~" "~t") "." "~d")))))) (fn x ["c", @x])) []))))))))
+                    (eo (if @hasEm (let ((em (object/get @n "emit" null))) (if (validate/object @em) (array/flatten (array/map (object/values @em) (fn v (if (validate/string @v) [["o", @v]] [])))) [])) [])))
+                (let ((all (array/concat (if (= (array/len @kids) 0) [] (array/filter @kids (fn x (!= (array/nth @x 0) "o")))) (array/concat @own @eo))))
+                  (if (= (array/len @all) 0) @nr { h: "", ok: false, it: @all })))))))
+      (if (validate/string @n) { h: @n, ok: true, it: [] } @nr)))) "FiredNode")))
+                        (let ((items (array/filter (object/get @fr "it" []) (fn x (validate/array @x)))))
+                          { trait: (object/get @t "name" ""), ev: (array/map (array/filter @items (fn x (= (array/nth @x 0) "e"))) (fn x (array/nth @x 1))), ctl: (array/map (array/filter @items (fn x (= (array/nth @x 0) "c"))) (fn x (array/nth @x 1))) })))))))))))
+            (let ((tnames (array/unique (array/map @recs (fn r (object/get @r "trait" "")))))
+                  (g (array/groupBy @recs (fn r (str/replaceAll (str/replaceAll (object/get @r "trait" "") "~" "~t") "." "~d")))))
               (emit FIRED_EVENTS {
                 scope: @payload.scope,
-                byControl: (or (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (array/filter @recs (fn r (= (object/get @r "trait" "") @nm))) (fn r (object/get @r "ctl" [])))))) ]))) {}),
-                byEffect: (or (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (array/filter @recs (fn r (= (object/get @r "trait" "") @nm))) (fn r (object/get @r "ev" [])))))) ]))) {}) }))))
+                byControl: (or (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ctl" []))))))]))) {}),
+                byEffect: (or (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ev" []))))))]))) {}) }))))
     }
 
     emits {

@@ -38,7 +38,7 @@ type AgentMemoryRow = {
 uses Llm from "std/behaviors/std-llm"
 
 orbital AgentMemoryOrbital {
-  type AgentMemoriesLoaded = Event { data : [AgentMemory]! } "Fired when the stored memories finish loading"
+  type AgentMemoriesLoaded = Event { data : [AgentMemory]!, totalCount : number } "Fired when the stored memories finish loading"
   type AgentMemoriesLoadFailed = Event { error : string, code : string } "Fired when the stored memories fail to load"
   type MemoryEmbedded = Event { embeddings : [[number]]! } "Fired when a memory or query has been embedded"
   type MemoryEmbedFailed = Event { code : string, message : string! } "Fired when embedding fails"
@@ -52,6 +52,7 @@ orbital AgentMemoryOrbital {
     pendingMessages : [AgentChatMessage] @intrinsic @description "The conversation a recall is running for." = []
     pendingQuery : string @intrinsic @description "The turn a recall is running for." = ""
     pendingContent : string @intrinsic @description "The exchange being remembered." = ""
+    page : number @intrinsic @description "The page the list shows." = 1
     queryVector : [number] @intrinsic @description "The recall query's embedding." = []
   }
 
@@ -67,6 +68,16 @@ orbital AgentMemoryOrbital {
         @label "Memories recalled per request"
         @description "How many of the closest memories go to the model with each request."
         @tier "policy"
+      maxRows : number = 5000
+        @label "Memories ranked per recall"
+        @description "Most stored memories one recall may read to rank by similarity. Each row holds an embedding, so the cap bounds the scan; a store holding more is refused through AgentMemoriesLoadFailed and the assistant answers with an empty context instead of a ranking over a partial set."
+        @synonyms "recall scan limit, memory cap"
+        @tier "infra"
+      pageSize : number = 50
+        @label "Memories listed per request"
+        @description "Newest memories ASSISTANT_MEMORIES_LOADED carries per LIST request; totalCount in the payload says how many are stored."
+        @synonyms "list limit, records per page, page limit"
+        @tier "presentation"
     }
     initial: ready
 
@@ -78,9 +89,12 @@ orbital AgentMemoryOrbital {
       LIST -> ready
         (fetch AgentMemory {
           emit: { failure: MemoryListFailed, success: MemoriesForList }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "createdAt:desc"
         })
       MemoriesForList -> ready
-        (emit ASSISTANT_MEMORIES_LOADED { data: (array/map (array/sort ?data createdAt desc) (fn item { id: @item.id, content: @item.content, createdAt: @item.createdAt })) })
+        (emit ASSISTANT_MEMORIES_LOADED { data: (array/map (array/sort ?data createdAt desc) (fn item { id: @item.id, content: @item.content, createdAt: @item.createdAt })), totalCount: ?totalCount })
       MemoryListFailed -> ready
         (emit ASSISTANT_MEMORIES_LOADED { data: [] })
         (render-ui toast {
@@ -111,7 +125,10 @@ orbital AgentMemoryOrbital {
         (set @entity.queryVector (if (= (array/len ?embeddings) 0) [] (array/first ?embeddings)))
         (fetch AgentMemory {
           emit: { failure: AgentMemoriesLoadFailed, success: MemoriesForRecall }
+          limit: @config.maxRows
         })
+      MemoriesForRecall -> recalling when (> ?totalCount (array/len ?data))
+        (emit AgentMemoriesLoadFailed { error: (str/concat "AgentMemory has " ?totalCount " rows, over the maxRows cap of " @config.maxRows), code: "AGENT_MEMORY_OVER_CAP" })
       MemoriesForRecall -> ready
         (emit RECALLED {
           messages: @entity.pendingMessages
@@ -166,12 +183,14 @@ orbital AgentMemoryOrbital {
         @tier "domain"
       ASSISTANT_MEMORIES_LOADED -> external {
         data : [AgentMemoryRow]!
+        totalCount : number
       }
         @description "What the assistant remembers for this person, newest first (empty when nothing is, or the list could not load)."
         @synonyms "memories, what I remember"
         @tier "domain"
       MemoriesForList -> internal {
         data : [AgentMemory]
+        totalCount : number
       }
         @tier "internal"
       MemoryListFailed -> internal {
@@ -190,6 +209,7 @@ orbital AgentMemoryOrbital {
         @tier "internal"
       MemoriesForRecall -> internal {
         data : [AgentMemory]
+        totalCount : number!
       }
         @tier "internal"
       LLM_EMBED -> external {
@@ -231,24 +251,47 @@ orbital AgentMemoryOrbital {
   trait AgentMemoryBrowse -> @rebindable AgentMemory {
     initial: browsing
 
+    config {
+      pageSize : number = 50
+        @label "How many memories to fetch per page?"
+        @description "Memories fetched from the server per page request, newest first; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
+    }
+
     state browsing {
       INIT -> browsing
+        (set @entity.page 1)
         (fetch AgentMemory {
           emit: { failure: AgentMemoriesLoadFailed, success: AgentMemoriesLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "createdAt:desc"
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
       AgentMemoriesLoaded -> browsing
         (render-ui main {
-          emptyTitle: "Nothing remembered yet"
-          entity: (array/sort ?data createdAt desc)
-          fields: []
-          gap: sm
-          renderItem: (fn item {
-            content: @item.content
-            type: typography
-            variant: body
-          })
-          type: data-list
+          children: [{
+            emptyTitle: "Nothing remembered yet"
+            entity: (array/sort ?data createdAt desc)
+            fields: []
+            gap: sm
+            renderItem: (fn item {
+              content: @item.content
+              type: typography
+              variant: body
+            })
+            type: data-list
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
+          }]
+          direction: vertical
+          gap: md
+          type: stack
         })
       AgentMemoriesLoadFailed -> browsing
         (render-ui main {
@@ -257,14 +300,27 @@ orbital AgentMemoryOrbital {
           variant: error
         })
       MEMORY_STORED -> browsing
+        (set @entity.page 1)
         (fetch AgentMemory {
           emit: { failure: AgentMemoriesLoadFailed, success: AgentMemoriesLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "createdAt:desc"
+        })
+      REFETCH_PAGE -> browsing
+        (set @entity.page ?page)
+        (fetch AgentMemory {
+          emit: { failure: AgentMemoriesLoadFailed, success: AgentMemoriesLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+          orderBy: "createdAt:desc"
         })
     }
 
     emits {
       AgentMemoriesLoaded {
         data : [AgentMemory]!
+        totalCount : number
       }
         @description "The stored memories finished loading."
         @tier "internal"
@@ -277,6 +333,11 @@ orbital AgentMemoryOrbital {
 
     listens {
       AgentMemoryRecall.MEMORY_STORED -> MEMORY_STORED
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a memory list page refresh."
+        @synonyms "reload, refresh, update, paginate"
     }
   }
 

@@ -3,15 +3,20 @@ app std-orb-lint-input [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-input — the one place a lint run reads its file. For a LINT_REQUEST { file } it reads the file, scans the installed language packs (std-orb-language's engine, std-semver for the range check), decides from the raw text whether the program is in the English vocabulary (a .orb document by its top-level keys, a .lolo source by its first token), reads the installed @almadar/core component mapping (the root the language scan reports) and answers LINT_COMPONENTS { names }, reads the pattern registry the manifest declares at orbLanguage.patterns and answers LINT_EVENT_PROPS { names, maps, listens } (the event-bearing prop names), reads the installed @almadar/std operator table and answers LINT_OPERATORS { names } (the names with no namespace) and LINT_OPERATOR_SEMANTICS { semantics, functions } (each operator's declared returnSemantics, and the function-returning operators), resolves it with program/read { resolve } (the inlined program `orb resolve` prints, its `uses lazy` behaviors split off) and answers LINT_LAZY { orbitals } (the lazy children by orbital) and LINT_INPUT { file, raw, latin, program } to every rule trait that listens; a LINT_CHILD_REQUEST { index } answers LINT_INPUT again with that lazy child's program and its orbital as `scope` (empty for the program itself), which each rule echoes in LINT_FOUND; an unreadable or unlowerable file, or a failed pack scan, answers LINT_INPUT_UNREAD { file }. A rule trait only analyzes this input; the rule cli traits and the lint-all umbrella each issue one request."
+  description: "std-orb-lint-input — the one place a lint run reads its file. For a LINT_REQUEST { file } it reads the file, scans the installed language packs (std-orb-language's engine, std-semver for the range check), decides from the raw text whether the program is in the English vocabulary (a .orb document by its top-level keys, a .lolo source by its first token), reads the installed @almadar/core component mapping (the root the language scan reports) and answers LINT_COMPONENTS { names }, reads the pattern registry the manifest declares at orbLanguage.patterns and answers LINT_EVENT_PROPS { names, maps, listens } (the event-bearing prop names), reads the installed @almadar/std operator table and answers LINT_OPERATORS { names } (the names with no namespace) and LINT_OPERATOR_SEMANTICS { semantics, functions } (each operator's declared returnSemantics, and the function-returning operators), resolves it with program/read { resolve } (the inlined program `orb resolve` prints, its `uses lazy` behaviors split off) and answers LINT_LAZY { orbitals } (the lazy children by orbital) LINT_INDEX { scope, heads, roots } (the structural index of the pass: per inline trait and per transition effect list, the operator heads and the binding roots it uses, built by one tree/fold pass per unit) and LINT_INPUT { file, raw, latin, program } to every rule trait that listens, the index first; a LINT_CHILD_REQUEST { index } answers LINT_INPUT again with that lazy child's program and its orbital as `scope` (empty for the program itself), which each rule echoes in LINT_FOUND; an unreadable or unlowerable file, or a failed pack scan, answers LINT_INPUT_UNREAD { file }. A rule trait only analyzes this input; the rule cli traits and the lint-all umbrella each issue one request."
 ]
 uses Spec from "almadar-std/lint-input"
 uses Language from "std/behaviors/std-orb-language"
 type DocObject = Map string DocValue?
 type DocValue = string | number | boolean | [DocValue?] | Map string DocValue?
 type LintValue = string | number | boolean | [LintValue?] | Map string LintValue?
-type LazyChild = { orbital : string!, program : LintValue! }
-type ResolvedProgram = { program : LintValue!, lazy : [LazyChild]! }
+type LazyChild = { orbital : string!, program : NdxProgram! }
+type ResolvedProgram = { program : NdxProgram!, lazy : [LazyChild]! }
+type NdxTransition = { guard : LintValue, effects : [LintValue?] }
+type NdxMachine = { transitions : [NdxTransition] }
+type NdxTrait = { stateMachine : NdxMachine, config : LintValue, ticks : [LintValue?] }
+type NdxOrbital = { traits : [NdxTrait] }
+type NdxProgram = { orbitals : [NdxOrbital] }
 type PackText = { name : string!, text : string! }
 type PackMeta = { code : string! }
 type CoreLanguageBlock = { componentMapping : string, patterns : string, programTypes : string, bindingRules : string, vocabulary : string }
@@ -72,7 +77,7 @@ orbital OrbLintInputOrbital {
     tickSigils : [string] = []
     factsDone : boolean = true
     factsWaiting : boolean = false
-    pendingProgram : LintValue?
+    pendingProgram : NdxProgram?
   }
 
   trait Versions = Semver.traits.Semver {
@@ -105,7 +110,32 @@ orbital OrbLintInputOrbital {
         (set @entity.packs [])
         (os/realpath { anchor: "cwd" path: "." } { key: "lint-input-cwd" emit: { success: LINT_CWD, failure: LINT_FILE_UNREAD } })
       LINT_CHILD_REQUEST -> ready
-        (emit LINT_INPUT { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: (object/get (array/nth @entity.lazy @payload.index) "program"), scope: (object/get (array/nth @entity.lazy @payload.index) "orbital") })
+        (emit LINT_INPUT_OFFER { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: (object/get (array/nth @entity.lazy @payload.index) "program"), scope: (object/get (array/nth @entity.lazy @payload.index) "orbital") })
+      LINT_INPUT_OFFER -> ready
+        (let ((nov : [string] []))
+          (let ((rows (let ((orbs (object/get @payload.program "orbitals" [])))
+            (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+              (let ((trs (object/get (array/nth @orbs @oi) "traits" [])))
+                (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
+                  (let ((t (array/nth @trs @ti)))
+                    (if (object/has @t "stateMachine")
+                      (let ((tms (object/get @t "stateMachine.transitions" [])))
+                        (let ((rest : LintValue (object/merge @t { stateMachine: (object/merge (object/get @t "stateMachine") { transitions: (array/map @tms (fn x (object/merge @x { effects: [] }))) }) })))
+                          (let ((ix (array/map (array/range 0 (+ 1 (array/len @tms))) (fn u (array/unique (or (tree/fold (if (= @u 0) @rest (object/get (array/nth @tms (- @u 1)) "effects" [])) (fn (n k)
+                          (if (validate/string @n)
+                            (if (str/startsWith @n (quote "@")) [(str/concat "r:" (array/first (str/split @n ".")))] [])
+                            (if (validate/array @n)
+                              (array/concat
+                                (let ((o0 (array/nth @n 0))) (if (validate/string @o0) [(str/concat "h:" @o0)] []))
+                                (array/flatten @k))
+                              (if (validate/object @n) (array/flatten (object/values @k)) [])))) "LintValue") @nov))))))
+                            (let ((all (array/unique (array/flatten @ix))))
+                              (array/map (array/range 0 (+ 1 (array/len @tms))) (fn u
+                                (let ((tk (if (= @u 0) @all (array/nth @ix @u))))
+                                  { k: (if (= @u 0) (str/concat @oi "-" @ti) (str/concat @oi "-" @ti "-" (- @u 1))), h: (array/sort (array/map (array/filter @tk (fn s (str/startsWith @s "h:"))) (fn s (str/slice @s 2 (str/len @s))))), r: (array/sort (array/map (array/filter @tk (fn s (str/startsWith @s "r:"))) (fn s (str/slice @s 2 (str/len @s))))) })))))))
+                      []))))))))))))
+            (emit LINT_INDEX { scope: @payload.scope, heads: (or (object/fromEntries (array/map @rows (fn w [(object/get @w "k"), (object/get @w "h")]))) {}), roots: (or (object/fromEntries (array/map @rows (fn w [(object/get @w "k"), (object/get @w "r")]))) {}) })))
+        (emit LINT_INPUT { file: @payload.file, raw: @payload.raw, latin: @payload.latin, program: @payload.program, scope: @payload.scope })
     }
 
     state reading {
@@ -266,7 +296,7 @@ orbital OrbLintInputOrbital {
       LINT_PROGRAM_READ -> ready when @entity.factsDone
         (set @entity.lazy (object/get @payload.result "lazy" []))
         (emit LINT_LAZY { orbitals: (array/map (object/get @payload.result "lazy" []) (fn c (object/get @c "orbital"))) })
-        (emit LINT_INPUT { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: (object/get @payload.result "program"), scope: "" })
+        (emit LINT_INPUT_OFFER { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: (object/get @payload.result "program"), scope: "" })
       LINT_FACTS_READ -> reading when (or (= @entity.typesFile "") (= @entity.rulesFile "") (= @entity.vocabFile ""))
         (emit LINT_FACTS_FAILED { error: "the installed @almadar/core declares no orbLanguage.programTypes, bindingRules or vocabulary" })
       LINT_FACTS_READ -> reading when (and (!= @entity.typesFile "") (!= @entity.rulesFile "") (!= @entity.vocabFile ""))
@@ -295,7 +325,7 @@ orbital OrbLintInputOrbital {
         (set @entity.factsDone true)
         (set @entity.factsWaiting false)
         (emit LINT_LAZY { orbitals: (array/map @entity.lazy (fn c (object/get @c "orbital"))) })
-        (emit LINT_INPUT { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: @entity.pendingProgram, scope: "" })
+        (emit LINT_INPUT_OFFER { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: @entity.pendingProgram, scope: "" })
       LINT_FACTS_DONE -> reading when (not @entity.factsWaiting)
         (set @entity.factsDone true)
       LINT_FILE_UNREAD -> ready
@@ -305,6 +335,12 @@ orbital OrbLintInputOrbital {
     emits {
       LINT_INPUT -> external { file : string!  raw : string!  latin : boolean!  program : LintValue!  scope : string! }
         @description "The file read, its language decided and the program lowered, offered to every rule trait."
+        @tier "internal"
+      LINT_INPUT_OFFER { file : string!  raw : string!  latin : boolean!  program : NdxProgram!  scope : string! }
+        @description "Internal: the lowered program of one pass, on its way to LINT_INPUT; the offer sends LINT_INDEX first so every rule has the structural index before it hears the program."
+        @tier "internal"
+      LINT_INDEX -> external { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "The structural index of one pass, sent immediately before its LINT_INPUT. For every inline trait of the program and for every transition effect list, keyed `<orbital index>-<trait index>` for the trait (its guards, effects, ticks and config together) and `<orbital index>-<trait index>-<transition index>` for a transition's effects: `heads` holds the operator heads used (the first element of every array node whose first element is a string) and `roots` the binding roots used (every string starting with @, cut at the first `.`), both sorted. A rule gates on membership in these sets instead of searching the program's text."
         @tier "internal"
       LINT_COMPONENTS -> external { names : [string]! }
         @description "The UI component names of the installed @almadar/core component mapping (an entity named like one collides in compiled output); sent before LINT_INPUT."

@@ -772,7 +772,8 @@
         "version": 1,
         "activates": true
        }
-      ]
+      ],
+      "totalCount": 2
      },
      "expect": {
       "emits": [
@@ -796,6 +797,51 @@
          ]
         }
        }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "history-over-the-cap-fails-instead-of-answering-partial",
+   "steps": [
+    {
+     "event": "HISTORY",
+     "payload": {
+      "artifact": "acme/shop"
+     }
+    },
+    {
+     "event": "HISTORY_LOADED",
+     "payload": {
+      "data": [
+       {
+        "id": "acme/shop#2",
+        "artifact": "acme/shop",
+        "version": 2,
+        "activates": false
+       },
+       {
+        "id": "acme/shop#1",
+        "artifact": "acme/shop",
+        "version": 1,
+        "activates": true
+       }
+      ],
+      "totalCount": 1001
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HISTORY_FAILED",
+        "payload": {
+         "artifact": "acme/shop",
+         "code": "over-cap"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HISTORY_ANSWERED"
       ]
      }
     }

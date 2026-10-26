@@ -4,7 +4,7 @@ app std-version-history [
 ]
 type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
 orbital RevisionOrbital {
-    type RevisionLoaded = Event { data : [Revision]! } "Fired when the revision collection finishes loading"
+    type RevisionLoaded = Event { data : [Revision]!, totalCount : number } "Fired when the revision collection finishes loading"
 
     type RevisionLoadFailed = Event { error : string, code : string } "Fired when the revision collection fails to load"
 
@@ -21,6 +21,7 @@ orbital RevisionOrbital {
     summary : string @description "A brief explanation of the revision's changes." @synonyms "description, note, comment, explanation"
     searchTerm : string @intrinsic @description "The current search query the user submitted." @synonyms "query, term, q" = ""
     createdAt : string
+    page : number @intrinsic @description "The page the list shows." = 1
     scopeKey : string @intrinsic @description "The parent document id the feed is currently scoped to, set by SHOW_HISTORY. Empty when browsing the unfiltered global feed." @synonyms "scope, filter key, document scope" = ""
     revisions : [Revision] @intrinsic @description "The loaded revisions, newest first — what Compare diffs against." @synonyms "versions, history" = []
   }
@@ -31,9 +32,13 @@ orbital RevisionOrbital {
     state loading {
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
+        (set @entity.page 1)
         (fetch Revision {
           filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           type: stack
@@ -80,6 +85,12 @@ orbital RevisionOrbital {
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             type: data-grid
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -93,9 +104,13 @@ orbital RevisionOrbital {
         })
       SHOW_HISTORY -> loading
         (set @entity.scopeKey ?key)
+        (set @entity.page 1)
         (fetch Revision {
           filter: (= (object/get @entity @config.scopeField) ?key)
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           type: stack
@@ -106,11 +121,24 @@ orbital RevisionOrbital {
     }
 
     state browsing {
+      REFETCH_PAGE -> loading
+        (set @entity.page ?page)
+        (fetch Revision {
+          filter: (or (not (validate/required @config.scopeField)) (= @entity.scopeKey "") (= (object/get @entity @config.scopeField) @entity.scopeKey))
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+          orderBy: "versionNumber:desc"
+        })
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
+        (set @entity.page 1)
         (fetch Revision {
           filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           type: stack
@@ -247,9 +275,13 @@ orbital RevisionOrbital {
       ROLLBACK -> loading
         (emit RevisionRolledBack { row: ?row })
         (set @entity.scopeKey (object/get ?row @config.scopeField ""))
+        (set @entity.page 1)
         (fetch Revision {
           filter: (or (not (validate/required @config.scopeField)) (= (object/get ?row @config.scopeField "") "") (= (object/get @entity @config.scopeField) (object/get ?row @config.scopeField "")))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           align: center
@@ -266,9 +298,13 @@ orbital RevisionOrbital {
         })
       SHOW_HISTORY -> loading
         (set @entity.scopeKey ?key)
+        (set @entity.page 1)
         (fetch Revision {
           filter: (= (object/get @entity @config.scopeField) ?key)
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           type: stack
@@ -281,9 +317,13 @@ orbital RevisionOrbital {
     state viewing_single {
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
+        (set @entity.page 1)
         (fetch Revision {
           filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           type: stack
@@ -292,9 +332,13 @@ orbital RevisionOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
         })
       CLOSE_VIEW -> loading
+        (set @entity.page 1)
         (fetch Revision {
           filter: (or (not (validate/required @config.scopeField)) (= @entity.scopeKey "") (= (object/get @entity @config.scopeField) @entity.scopeKey))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           type: stack
@@ -346,9 +390,13 @@ orbital RevisionOrbital {
       ROLLBACK -> loading
         (emit RevisionRolledBack { row: ?row })
         (set @entity.scopeKey (object/get ?row @config.scopeField ""))
+        (set @entity.page 1)
         (fetch Revision {
           filter: (or (not (validate/required @config.scopeField)) (= (object/get ?row @config.scopeField "") "") (= (object/get @entity @config.scopeField) (object/get ?row @config.scopeField "")))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           align: center
@@ -365,9 +413,13 @@ orbital RevisionOrbital {
         })
       SHOW_HISTORY -> loading
         (set @entity.scopeKey ?key)
+        (set @entity.page 1)
         (fetch Revision {
           filter: (= (object/get @entity @config.scopeField) ?key)
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           type: stack
@@ -380,9 +432,13 @@ orbital RevisionOrbital {
     state comparing {
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
+        (set @entity.page 1)
         (fetch Revision {
           filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           type: stack
@@ -391,9 +447,13 @@ orbital RevisionOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
         })
       CLOSE_VIEW -> loading
+        (set @entity.page 1)
         (fetch Revision {
           filter: (or (not (validate/required @config.scopeField)) (= @entity.scopeKey "") (= (object/get @entity @config.scopeField) @entity.scopeKey))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           type: stack
@@ -404,9 +464,13 @@ orbital RevisionOrbital {
       ROLLBACK -> loading
         (emit RevisionRolledBack { row: ?row })
         (set @entity.scopeKey (object/get ?row @config.scopeField ""))
+        (set @entity.page 1)
         (fetch Revision {
           filter: (or (not (validate/required @config.scopeField)) (= (object/get ?row @config.scopeField "") "") (= (object/get @entity @config.scopeField) (object/get ?row @config.scopeField "")))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           align: center
@@ -423,9 +487,13 @@ orbital RevisionOrbital {
         })
       SHOW_HISTORY -> loading
         (set @entity.scopeKey ?key)
+        (set @entity.page 1)
         (fetch Revision {
           filter: (= (object/get @entity @config.scopeField) ?key)
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           type: stack
@@ -438,9 +506,13 @@ orbital RevisionOrbital {
     state error {
       INIT -> loading
         (set @entity.scopeKey (str/default ?id ""))
+        (set @entity.page 1)
         (fetch Revision {
           filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           type: stack
@@ -450,9 +522,13 @@ orbital RevisionOrbital {
         })
       SHOW_HISTORY -> loading
         (set @entity.scopeKey ?key)
+        (set @entity.page 1)
         (fetch Revision {
           filter: (= (object/get @entity @config.scopeField) ?key)
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: "versionNumber:desc"
         })
         (render-ui main {
           type: stack
@@ -488,6 +564,7 @@ orbital RevisionOrbital {
         @tier "domain"
       RevisionLoaded {
         data : [Revision]!
+        totalCount : number
       }
         @description "Signals a revision has been successfully retrieved and is ready."
         @synonyms "loaded, fetched, retrieved, available"
@@ -539,6 +616,7 @@ orbital RevisionOrbital {
         @tier "domain"
       RevisionLoaded {
         data : [Revision]!
+        totalCount : number
       }
         @description "Indicates a revision has been successfully retrieved and is ready."
         @synonyms "loaded, fetched, retrieved, available"
@@ -550,6 +628,12 @@ orbital RevisionOrbital {
         @description "Indicates a failure to retrieve revision data."
         @synonyms "error, failure, problem, fetch failed"
         @tier "internal"
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a revision list page refresh within the current scope."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       SHOW_HISTORY {
         key : string!
       }
@@ -559,6 +643,11 @@ orbital RevisionOrbital {
     }
 
     config {
+      pageSize : number = 50
+        @label "How many revisions to fetch per page?"
+        @description "Revisions fetched from the server per page request, newest version first; the list's own pager loads later pages through REFETCH_PAGE. Compare diffs against the newest revision of the loaded page."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       title : string = "Version History"
         @label "Section title"
         @description "Heading shown above the revision list"

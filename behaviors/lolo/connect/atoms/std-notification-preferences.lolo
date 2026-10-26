@@ -19,6 +19,7 @@ orbital NotificationPreferencesOrbital {
     quietHours : string @description "Quiet-hours window as \"HH:MM-HH:MM\" (e.g. 22:00-07:00); blank or equal start/end = disabled." @synonyms "do not disturb, quiet window, night mode" = ""
     createdAt : number @description "Timestamp indicating when this preference row was created." @synonyms "creation time, created" = 0
     updatedAt : number @description "Timestamp indicating when this preference row was last updated." @synonyms "modified, last updated" = 0
+    page : number @intrinsic @description "The page the list shows." = 1
   }
 
   entity GateView [runtime] {
@@ -41,8 +42,11 @@ orbital NotificationPreferencesOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.page 1)
         (fetch NotificationPreference {
           emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -102,6 +106,12 @@ orbital NotificationPreferencesOrbital {
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             type: data-grid
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -130,8 +140,11 @@ orbital NotificationPreferencesOrbital {
 
     state browsing {
       INIT -> loading
+        (set @entity.page 1)
         (fetch NotificationPreference {
           emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -161,16 +174,29 @@ orbital NotificationPreferencesOrbital {
         })
       PreferenceSaved -> loading
         (notify success "Notification preference saved")
+        (set @entity.page 1)
         (fetch NotificationPreference {
           emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       PreferenceDeleted -> loading
         (notify info "Notification preference removed")
+        (set @entity.page 1)
         (fetch NotificationPreference {
           emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       PreferenceSaveFailed -> browsing
         (notify warning "Could not save the notification preference")
+      REFETCH_PAGE -> loading
+        (set @entity.page ?page)
+        (fetch NotificationPreference {
+          emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+        })
       ;; A load failure lands on the error state (std-saved-search shape), not
       ;; a stay-in-browsing toast: `error` must be reachable from the stable
       ;; browsing state — `loading` is transient (the fetch cascade leaves it
@@ -199,8 +225,11 @@ orbital NotificationPreferencesOrbital {
 
     state error {
       INIT -> loading
+        (set @entity.page 1)
         (fetch NotificationPreference {
           emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -211,8 +240,11 @@ orbital NotificationPreferencesOrbital {
       ;; the error screen's Retry button: INIT is lifecycle-only and the bus
       ;; never delivers it, so the affordance must target a first-class event
       RETRY -> loading
+        (set @entity.page 1)
         (fetch NotificationPreference {
           emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -243,6 +275,7 @@ orbital NotificationPreferencesOrbital {
         @tier "domain"
       PreferencesLoaded {
         data : [NotificationPreference]!
+        totalCount : number
       }
         @description "The preference collection finished loading."
         @synonyms "loaded, fetched, retrieved"
@@ -297,12 +330,19 @@ orbital NotificationPreferencesOrbital {
         @description "Removes a preference row."
         @synonyms "remove, discard, clear"
         @tier "domain"
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a preference list page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       RETRY
         @description "Retries loading the preference collection after a failure."
         @synonyms "try again, reload"
         @tier "presentation"
       PreferencesLoaded {
         data : [NotificationPreference]!
+        totalCount : number
       }
         @description "The preference collection finished loading."
         @synonyms "loaded, fetched, retrieved"
@@ -336,6 +376,11 @@ orbital NotificationPreferencesOrbital {
     }
 
     config {
+      pageSize : number = 50
+        @label "How many preferences to fetch per page?"
+        @description "Preference rows fetched from the server per page request; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       title : string = "Notification preferences"
         @label "Section title"
         @description "Heading shown above the preference list"
@@ -461,8 +506,12 @@ orbital NotificationPreferencesOrbital {
         (set @entity.personId ?personId)
         (set @entity.eventKey (if (= ?eventKey "") @config.eventKey ?eventKey))
         (fetch NotificationPreference {
+          filter: { personId: ?personId }
+          limit: @config.maxRows
           emit: { failure: PREFERENCE_CHECK_FAILED, success: PREFERENCE_ROWS_LOADED }
         })
+      PREFERENCE_ROWS_LOADED -> idle when (> ?totalCount (array/len ?data))
+        (emit PREFERENCE_CHECK_FAILED { error: (str/concat "NotificationPreference has " ?totalCount " rows for one person, over the maxRows cap of " @config.maxRows) })
       PREFERENCE_ROWS_LOADED -> idle
         ;; Fail-open default policy: no matching row resolves channel in_app /
         ;; mode instant / suppressed false — absence of a preference never
@@ -507,6 +556,7 @@ orbital NotificationPreferencesOrbital {
         @tier "domain"
       PREFERENCE_ROWS_LOADED {
         data : [NotificationPreference]!
+        totalCount : number!
       }
         @description "NotificationPreference rows loaded; the arm filters to the (personId, eventKey) match and resolves the verdict"
         @tier "internal"
@@ -527,6 +577,7 @@ orbital NotificationPreferencesOrbital {
         @tier "domain"
       PREFERENCE_ROWS_LOADED {
         data : [NotificationPreference]!
+        totalCount : number!
       }
         @description "NotificationPreference rows loaded; the arm resolves the verdict"
         @tier "internal"
@@ -538,6 +589,11 @@ orbital NotificationPreferencesOrbital {
     }
 
     config {
+      maxRows : number = 200
+        @label "Preference rows per lookup"
+        @description "Most preference rows one gate lookup may read. The lookup reads one person's rows (one per event key) and picks the match, so a partial read could miss it; a person with more rows resolves through PREFERENCE_CHECK_FAILED, the fail-open verdict, instead of a guess from part of the set."
+        @synonyms "lookup limit, preference cap"
+        @tier "policy"
       eventKey : string = ""
         @label "Event key"
         @description "Stable key naming the event this gate checks preferences for (e.g. 'BudgetThreshold' — the std-finance-tracker NotifyOnEventListener convention). A blank CHECK_PREFERENCE payload eventKey falls back to this value. Preference rows whose eventKey is blank apply to every event."

@@ -19,7 +19,7 @@ orbital CrossReferenceOrbital {
 
     type LinkOpFailed = Event { error : string, code : string } "Fired when a junction persist or fetch fails."
 
-    type LinksFetched = Event { data : [CrossRefRow]! } "Internal: raw fetch result before filtering by leftId."
+    type LinksFetched = Event { data : [CrossRefRow]!, totalCount : number! } "Internal: raw fetch result before filtering by leftId."
 
   entity CrossRefLink [persistent: cross_ref_links] {
     id : string!
@@ -44,8 +44,12 @@ orbital CrossReferenceOrbital {
       FETCH_LINKS_FOR -> idle
         (set @entity.leftId ?leftId)
         (fetch CrossRefLink {
+          filter: { leftId: ?leftId }
+          limit: @config.maxRows
           emit: { failure: LinkOpFailed, success: LinksFetched }
         })
+      LinksFetched -> idle when (> ?totalCount (array/len ?data))
+        (emit LinkOpFailed { error: (str/concat "CrossRefLink has " ?totalCount " links for one leftId, over the maxRows cap of " @config.maxRows), code: "LINKS_OVER_CAP" })
       LinksFetched -> idle
         (set @entity.filteredLinks (array/filter ?data (fn row (= (object/get @row leftId) @entity.leftId))))
         (emit LinksLoaded { data: @entity.filteredLinks, leftId: @entity.leftId })
@@ -65,6 +69,7 @@ orbital CrossReferenceOrbital {
       }
       LinksFetched -> external {
         data : [CrossRefRow]!
+        totalCount : number!
       }
       LinkOpFailed -> external {
         error : string
@@ -86,10 +91,17 @@ orbital CrossReferenceOrbital {
       }
       LinksFetched {
         data : [CrossRefRow]!
+        totalCount : number!
       }
     }
 
-    config {}
+    config {
+      maxRows : number = 1000
+        @label "Links per left id"
+        @description "Most junction rows one FETCH_LINKS_FOR may read for a single leftId. The whole link set is joined and returned to consumers, so a left id with more links is refused through LinkOpFailed rather than answered from a partial set."
+        @synonyms "link limit, link cap"
+        @tier "policy"
+    }
   }
 
   page "/cross-reference" as CrossReferencePage -> CrossReferenceGate

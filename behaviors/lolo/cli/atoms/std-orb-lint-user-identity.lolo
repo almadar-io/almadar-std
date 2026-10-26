@@ -32,6 +32,7 @@ orbital OrbLintUserIdentityOrbital {
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
+    roots : Map string [string] = {}
   }
 
   trait OrbLintUserIdentity -> OrbLintUserIdentityRun [optimistic] {
@@ -39,6 +40,8 @@ orbital OrbLintUserIdentityOrbital {
 
     state ready {
       INIT -> ready
+      INDEX_HEARD -> ready
+        (set @entity.roots @payload.roots)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((nov : [string] []) (nos : [UidSlot] []) (nof : [OrbFinding] []) (orbs (object/get @payload.program "orbitals" [])))
@@ -64,7 +67,7 @@ orbital OrbLintUserIdentityOrbital {
            (let ((td (array/nth @trlist @ti)))
             (if (and (validate/object @td) (validate/object (object/get @td "stateMachine" null)) (not (and @skip (object/has @td "sourceBehavior"))))
              (let ((tp (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (let ((s25 (object/get @td "name" ""))) (if (validate/string @s25) @s25 "")) ")]"))
-                   (hs (tree/fold (if (str/includes (json/stringify @td) (quote "@user.")) @td {}) (fn (n k) (if (or (validate/array @n) (validate/object @n)) 
+                   (hs (tree/fold (if (array/includes (object/get @entity.roots (str/concat @oi "-" @ti) []) (quote "@user")) @td {}) (fn (n k) (if (or (validate/array @n) (validate/object @n)) 
  (if (validate/array @n)
   (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
    (array/concat
@@ -127,7 +130,7 @@ orbital OrbLintUserIdentityOrbital {
       (array/flatten (array/map (array/range 0 (array/len @trs)) (fn xi
        (let ((tr (array/nth @trs @xi)) (path (str/concat "orbitals[" @oi "].traits[" @ti "].stateMachine.transitions[" @xi "]")))
         (let ((g (object/get @tr "guard" null)))
-         (if (not (str/includes (json/stringify (object/get @tr "effects" [])) "\"@user\"")) @nof (if (and (not (= @g null)) (let ((p (tree/fold @g (fn (m j)
+         (if (not (array/includes (object/get @entity.roots (str/concat @oi "-" @ti "-" @xi) []) (quote "@user"))) @nof (if (and (not (= @g null)) (let ((p (tree/fold @g (fn (m j)
  (if (validate/array @m)
   (let ((ln (array/len @m)) (o (let ((o0 (if (> (array/len @m) 0) (array/nth @m 0) ""))) (if (validate/string @o0) @o0 ""))))
    (if (and (= @o "!=") (= @ln 3)) (or (and (and (validate/string (array/nth @m 1)) (= (array/nth @m 1) (quote "@user"))) (= (array/nth @m 2) null)) (and (and (validate/string (array/nth @m 2)) (= (array/nth @m 2) (quote "@user"))) (= (array/nth @m 1) null)))
@@ -196,7 +199,10 @@ orbital OrbLintUserIdentityOrbital {
     listens {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : UidProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
+      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait and transition effect list uses; a trait gates on its roots holding @user."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbLintInput.LINT_INDEX -> INDEX_HEARD
     }
   }
 

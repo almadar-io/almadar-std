@@ -3,7 +3,7 @@ app std-tag-taxonomy [
   description: "std-tag-taxonomy — hierarchical category tag tree (parent/child). TagBrowse fetches root-level Tag rows (parentId = \"\") on INIT and renders the active level via data-grid; SELECT_TAG drills into the chosen tag's children by fetching rows whose parentId matches it, binding @entity.id to that parent so the level is remembered; SHOW_ROOT resets back to the root level, surfaced as a back affordance while drilled in. Flat taxonomies (all parentId \"\") render exactly one level, unchanged. TagSelected is emitted on selection for consumers to filter content by tag."
 ]
 orbital TagTaxonomyOrbital {
-    type TagLoaded = Event { data : [Tag] } "Fired when the tag collection finishes loading"
+    type TagLoaded = Event { data : [Tag], totalCount : number } "Fired when the tag collection finishes loading"
 
     type TagLoadFailed = Event { error : string, code : string } "Fired when the tag collection fails to load"
 
@@ -21,6 +21,7 @@ orbital TagTaxonomyOrbital {
     color : string @description "A visual identifier, often used for categorization." @synonyms "hue, shade, tint, category color"
     count : number @description "The number of items associated with this entry." @synonyms "quantity, total, size, amount" = 0
     createdAt : string
+    page : number @intrinsic @description "The page the list shows." = 1
   }
 
   trait TagBrowse -> Tag {
@@ -28,16 +29,22 @@ orbital TagTaxonomyOrbital {
 
     state loading {
       LEVEL_RELOAD -> loading
+        (set @entity.page ?page)
         (fetch Tag {
           filter: (= (object/get @entity parentId) (str/default ?tagId ""))
           emit: { failure: TagLoadFailed, success: TagLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
         })
       INIT -> loading
         (set @entity.id "")
         (set @entity.parentId "")
+        (set @entity.page 1)
         (fetch Tag {
           filter: (= (object/get @entity parentId) "")
           emit: { failure: TagLoadFailed, success: TagLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -123,6 +130,12 @@ orbital TagTaxonomyOrbital {
             })
             look: @config.tableLook
             type: data-grid
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -140,9 +153,12 @@ orbital TagTaxonomyOrbital {
       INIT -> loading
         (set @entity.id "")
         (set @entity.parentId "")
+        (set @entity.page 1)
         (fetch Tag {
           filter: (= (object/get @entity parentId) "")
           emit: { failure: TagLoadFailed, success: TagLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -150,13 +166,18 @@ orbital TagTaxonomyOrbital {
           gap: lg
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
         })
+      REFETCH_PAGE -> loading
+        (emit LEVEL_RELOAD { tagId: @entity.id, page: ?page })
       SELECT_TAG -> editing
         (set @entity.id ?tagId)
         (set @entity.parentId ?tagId)
         (emit TagSelected { tagId: ?tagId })
+        (set @entity.page 1)
         (fetch Tag {
           filter: (= (object/get @entity parentId) ?tagId)
           emit: { failure: TagLoadFailed, success: TagLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -167,9 +188,12 @@ orbital TagTaxonomyOrbital {
       SHOW_ROOT -> loading
         (set @entity.id "")
         (set @entity.parentId "")
+        (set @entity.page 1)
         (fetch Tag {
           filter: (= (object/get @entity parentId) "")
           emit: { failure: TagLoadFailed, success: TagLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -255,6 +279,12 @@ orbital TagTaxonomyOrbital {
             })
             look: @config.tableLook
             type: data-grid
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -296,9 +326,12 @@ orbital TagTaxonomyOrbital {
         (render-ui modal null)
         (set @entity.id "")
         (set @entity.parentId "")
+        (set @entity.page 1)
         (fetch Tag {
           filter: (= (object/get @entity parentId) "")
           emit: { failure: TagLoadFailed, success: TagLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -324,7 +357,7 @@ orbital TagTaxonomyOrbital {
           gap: lg
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
         })
-        (emit LEVEL_RELOAD { tagId: @entity.id })
+        (emit LEVEL_RELOAD { tagId: @entity.id, page: 1 })
       CLOSE -> loading
         (render-ui modal null)
         (render-ui main {
@@ -333,7 +366,7 @@ orbital TagTaxonomyOrbital {
           gap: lg
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
         })
-        (emit LEVEL_RELOAD { tagId: @entity.id })
+        (emit LEVEL_RELOAD { tagId: @entity.id, page: 1 })
       ;; Refetch the level the new tag landed on — its own parentId names it.
       TagCreated -> loading
         (render-ui modal null)
@@ -350,9 +383,12 @@ orbital TagTaxonomyOrbital {
           gap: md
           type: stack
         })
+        (set @entity.page 1)
         (fetch Tag {
           filter: (= (object/get @entity parentId) (str/default ?parentId ""))
           emit: { failure: TagLoadFailed, success: TagLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       TagCreateFailed -> creating
         (render-ui modal {
@@ -366,9 +402,12 @@ orbital TagTaxonomyOrbital {
       INIT -> loading
         (set @entity.id "")
         (set @entity.parentId "")
+        (set @entity.page 1)
         (fetch Tag {
           filter: (= (object/get @entity parentId) "")
           emit: { failure: TagLoadFailed, success: TagLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -376,6 +415,8 @@ orbital TagTaxonomyOrbital {
           gap: lg
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: grid, rows: 6 }]
         })
+      REFETCH_PAGE -> loading
+        (emit LEVEL_RELOAD { tagId: @entity.id, page: ?page })
       SELECT_TAG -> editing
         (set @entity.id ?tagId)
         (set @entity.parentId ?tagId)
@@ -461,6 +502,12 @@ orbital TagTaxonomyOrbital {
             })
             look: @config.tableLook
             type: data-grid
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -478,9 +525,12 @@ orbital TagTaxonomyOrbital {
       INIT -> loading
         (set @entity.id "")
         (set @entity.parentId "")
+        (set @entity.page 1)
         (fetch Tag {
           filter: (= (object/get @entity parentId) "")
           emit: { failure: TagLoadFailed, success: TagLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -499,6 +549,7 @@ orbital TagTaxonomyOrbital {
         @tier "domain"
       TagLoaded {
         data : [Tag]
+        totalCount : number
       }
         @description "Signals that the tag data has been successfully retrieved."
         @synonyms "loaded, fetched, received, ready"
@@ -529,6 +580,7 @@ orbital TagTaxonomyOrbital {
         @tier "internal"
       LEVEL_RELOAD {
         tagId : Tag.id
+        page : number!
       }
         @description "Internal hop that refetches the open level after the new-category form closes (a fetch filter cannot read trait state, so the level travels by payload)."
         @synonyms "reload level, refresh"
@@ -547,6 +599,12 @@ orbital TagTaxonomyOrbital {
     }
 
     listens {
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a tag level page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       SELECT_TAG {
         tagId : Tag.id!
       }
@@ -555,6 +613,7 @@ orbital TagTaxonomyOrbital {
         @tier "domain"
       TagLoaded {
         data : [Tag]
+        totalCount : number
       }
         @description "Indicates tag data has been successfully retrieved."
         @synonyms "loaded, fetched, received"
@@ -588,6 +647,7 @@ orbital TagTaxonomyOrbital {
         @tier "internal"
       LEVEL_RELOAD {
         tagId : Tag.id
+        page : number!
       }
         @description "Refetch the open level."
         @synonyms "reload level, refresh"
@@ -623,6 +683,11 @@ orbital TagTaxonomyOrbital {
         @label "Back-to-root label"
         @description "Label on the back affordance that returns from a drilled-in level to the root — phrase it in this taxonomy's vocabulary (All tags, All categories)."
         @synonyms "back label, root caption, all label"
+        @tier "presentation"
+      pageSize : number = 100
+        @label "How many tags per page?"
+        @description "Tags fetched per level page request; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
         @tier "presentation"
       tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Table look"

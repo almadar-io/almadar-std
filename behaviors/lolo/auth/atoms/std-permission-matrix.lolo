@@ -11,7 +11,7 @@ orbital PermissionMatrixOrbital {
     uses Divider from "std/behaviors/ui-divider"
     uses Alert from "std/behaviors/ui-alert"
 
-    type PermissionGrantLoaded = Event { data : [PermissionGrant] } "Fired when the permission-grant collection finishes loading"
+    type PermissionGrantLoaded = Event { data : [PermissionGrant], totalCount : number } "Fired when the permission-grant collection finishes loading"
 
     type PermissionGrantLoadFailed = Event { error : string, code : string } "Fired when the permission-grant collection fails to load"
 
@@ -27,7 +27,7 @@ orbital PermissionMatrixOrbital {
 
     type PermissionGrantDeleteFailed = Event { error : string, code : string } "Fired when a grant delete fails"
 
-    type GrantCheckLoaded = Event { data : [PermissionGrant] } "Fired when the grant lookup for a CHECK_GRANT finishes loading"
+    type GrantCheckLoaded = Event { data : [PermissionGrant], totalCount : number! } "Fired when the grant lookup for a CHECK_GRANT finishes loading"
 
     type GrantCheckFailed = Event { error : string, code : string } "Fired when the grant lookup for a CHECK_GRANT fails"
 
@@ -45,6 +45,7 @@ orbital PermissionMatrixOrbital {
     canSeeOthersHours : boolean @description "Whether the role may see other people's logged hours in this module." @synonyms "see others hours, view team hours, timesheet visibility, other people's time" = false
     canSeeMargins : boolean @description "Whether the role may see margin / profit figures in this module." @synonyms "see margins, view profit, margin visibility, profitability" = false
     createdAt : number @description "Timestamp indicating when the grant was created." @synonyms "creation time, created, date added" = 0
+    page : number @intrinsic @description "The page the list shows." = 1
   }
 
   trait LoadingSpinner = Spinner.traits.SpinnerRender -> PermissionGrant {
@@ -100,8 +101,11 @@ orbital PermissionMatrixOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.page 1)
         (fetch PermissionGrant {
           emit: { failure: PermissionGrantLoadFailed, success: PermissionGrantLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           align: center
@@ -167,6 +171,12 @@ orbital PermissionMatrixOrbital {
             itemClickEvent: @config.itemClickEvent
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             type: data-grid
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -185,15 +195,28 @@ orbital PermissionMatrixOrbital {
       ;; Persist failures notify at the persistor itself — single notifier,
       ;; no duplicate toasts here.
       INIT -> loading
+        (set @entity.page 1)
         (fetch PermissionGrant {
           emit: { failure: PermissionGrantLoadFailed, success: PermissionGrantLoaded }
+          limit: @config.pageSize
+          offset: 0
+        })
+      REFETCH_PAGE -> loading
+        (set @entity.page ?page)
+        (fetch PermissionGrant {
+          emit: { failure: PermissionGrantLoadFailed, success: PermissionGrantLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
         })
     }
 
     state error {
       INIT -> loading
+        (set @entity.page 1)
         (fetch PermissionGrant {
           emit: { failure: PermissionGrantLoadFailed, success: PermissionGrantLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           align: center
@@ -223,6 +246,7 @@ orbital PermissionMatrixOrbital {
         @tier "domain"
       PermissionGrantLoaded {
         data : [PermissionGrant]
+        totalCount : number
       }
         @description "Indicates the permission-grant collection has been successfully loaded."
         @synonyms "loaded, fetched, retrieved"
@@ -244,6 +268,12 @@ orbital PermissionMatrixOrbital {
         @description "Indicates failure to load the permission-grant collection."
         @synonyms "load error, failed load"
         @tier "internal"
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a grant list page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       PermissionGrantPersistor.PermissionGrantSaved -> INIT
       PermissionGrantPersistor.PermissionGrantDeleted -> INIT
     }
@@ -251,6 +281,11 @@ orbital PermissionMatrixOrbital {
     config {}
 
     config {
+      pageSize : number = 50
+        @label "How many grants to fetch per page?"
+        @description "Grants fetched from the server per page request; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       itemClickEvent : event = EDIT
         @label "Row click"
         @description "Event emitted when a row is clicked; opens the grant for editing. Empty disables the row click."
@@ -460,11 +495,14 @@ orbital PermissionMatrixOrbital {
         (set @entity.module ?module)
         (fetch PermissionGrant {
           filter: (and (= (object/get @entity role) ?role) (= (object/get @entity module) ?module))
+          limit: @config.maxRows
           emit: { failure: GrantCheckFailed, success: GrantCheckLoaded }
         })
       ;; found: false = no matching row — whether that denies or permits is
       ;; the CONSUMER's choice (default-deny is the consumer's decision); this
       ;; atom reports, it never decides.
+      GrantCheckLoaded -> idle when (> ?totalCount (array/len ?data))
+        (emit GrantCheckFailed { error: (str/concat "PermissionGrant has " ?totalCount " rows for one role and module, over the maxRows cap of " @config.maxRows), code: "GRANT_OVER_CAP" })
       GrantCheckLoaded -> idle
         (emit GRANT_RESOLVED {
           role: @entity.role
@@ -492,6 +530,7 @@ orbital PermissionMatrixOrbital {
         @tier "domain"
       GrantCheckLoaded {
         data : [PermissionGrant]
+        totalCount : number!
       }
         @description "Indicates the grant lookup for a CHECK_GRANT has been successfully loaded."
         @synonyms "loaded, fetched, retrieved"
@@ -515,6 +554,7 @@ orbital PermissionMatrixOrbital {
         @tier "domain"
       GrantCheckLoaded {
         data : [PermissionGrant]
+        totalCount : number!
       }
         @description "Indicates the grant lookup has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved"
@@ -529,6 +569,11 @@ orbital PermissionMatrixOrbital {
     }
 
     config {
+      maxRows : number = 50
+        @label "Grant rows per lookup"
+        @description "Most grant rows one CHECK_GRANT lookup may read. A role and module match at most one grant per workspace, so 50 workspaces is generous; a lookup matching more is refused through GrantCheckFailed rather than answered from a partial set."
+        @synonyms "lookup limit, grant cap"
+        @tier "policy"
       enabled : boolean = false
         @label "Answer permission lookups"
         @description "Answer CHECK_GRANT lookups with GRANT_RESOLVED from the persisted grant table. Off by default."

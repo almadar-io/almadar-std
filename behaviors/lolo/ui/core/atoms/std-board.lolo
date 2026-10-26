@@ -12,7 +12,9 @@ orbital BoardOrbital {
 
     type BoardColumn = { key : string!, label : string!, icon : string, variant : "default" | "primary" | "success" | "warning" | "error" | "info", count : number, items : [BoardItem] }
 
-    type BoardItemsLoaded = Event { data : [@entity]! } "Fired when board items finish loading (from an upstream fetcher / persistor)"
+    type BoardItemsLoaded = Event { data : [@entity]!, totalCount : number! } "Fired when the whole board finishes loading (from an upstream fetcher / persistor)"
+
+    type BoardItemsPageLoaded = Event { data : [@entity]!, totalCount : number } "Fired when one page of board items finishes loading after REFETCH_PAGE"
 
     type BoardItemsLoadFailed = Event { error : string, code : string } "Fired when the upstream fetch fails"
 
@@ -49,8 +51,11 @@ orbital BoardOrbital {
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
+          limit: @config.maxRows
         })
         (render-ui main { type: skeleton, variant: card })
+      BoardItemsLoaded -> loading when (> ?totalCount (array/len ?data))
+        (emit BoardItemsLoadFailed { error: (str/concat "BoardView has " ?totalCount " cards, over the maxRows cap of " @config.maxRows), code: "BOARD_OVER_CAP" })
       BoardItemsLoaded -> viewing_board
         (set @entity.boards (array/map @config.columns (fn col {
           count: (array/len (array/filter ?data (fn item (= (object/get @item @config.groupByField) (object/get @col key)))))
@@ -77,6 +82,7 @@ orbital BoardOrbital {
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
+          limit: @config.maxRows
         })
         (render-ui main { type: skeleton, variant: card })
       ;; Same refresh, different contract: a delete emits { id, deleted }, not
@@ -85,6 +91,7 @@ orbital BoardOrbital {
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
+          limit: @config.maxRows
         })
       BoardItemsSaveFailed -> error
         (set @entity.errorMessage ?error)
@@ -100,6 +107,7 @@ orbital BoardOrbital {
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
+          limit: @config.maxRows
         })
         (render-ui main { type: skeleton, variant: card })
       OPEN_CARD -> viewing_card
@@ -229,6 +237,7 @@ orbital BoardOrbital {
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
+          limit: @config.maxRows
         })
       ;; REFETCH_* stay in viewing_board and issue no render-ui, matching
       ;; std-browse's REFETCH_QUERY/REFETCH_FILTER/REFETCH_PAGE: a render here
@@ -240,6 +249,7 @@ orbital BoardOrbital {
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
+          limit: @config.maxRows
           filter: (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm))
         })
       REFETCH_QUERY -> viewing_board when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
@@ -251,12 +261,14 @@ orbital BoardOrbital {
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
+          limit: @config.maxRows
           filter: (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))
         })
       REFETCH_FILTER -> viewing_board
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
+          limit: @config.maxRows
           filter: (or (= ?value "") (= (object/get @entity ?field) ?value))
         })
       ;; A board's columns are not a paged list — paging the underlying fetch
@@ -266,12 +278,23 @@ orbital BoardOrbital {
       ;; renders a pagination control (see bodyContent/kanbanClassicBodyContent).
       REFETCH_PAGE -> viewing_board
         (fetch BoardView {
-          emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsPageLoaded }
           include: @config.include
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)
         })
+      BoardItemsLoaded -> viewing_board when (> ?totalCount (array/len ?data))
+        (emit BoardItemsLoadFailed { error: (str/concat "BoardView has " ?totalCount " cards, over the maxRows cap of " @config.maxRows), code: "BOARD_OVER_CAP" })
       BoardItemsLoaded -> viewing_board
+        (set @entity.boards (array/map @config.columns (fn col {
+          count: (array/len (array/filter ?data (fn item (= (object/get @item @config.groupByField) (object/get @col key)))))
+          icon: (object/get @col icon circle)
+          items: (array/sort (array/filter ?data (fn item (= (object/get @item @config.groupByField) (object/get @col key)))) position)
+          key: (object/get @col key)
+          label: (object/get @col label)
+          variant: (object/get @col variant default)
+        })))
+      BoardItemsPageLoaded -> viewing_board
         (set @entity.boards (array/map @config.columns (fn col {
           count: (array/len (array/filter ?data (fn item (= (object/get @item @config.groupByField) (object/get @col key)))))
           icon: (object/get @col icon circle)
@@ -293,12 +316,14 @@ orbital BoardOrbital {
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
+          limit: @config.maxRows
         })
         (render-ui main { type: skeleton, variant: card })
       CLOSE_CARD -> loading
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
+          limit: @config.maxRows
         })
         (render-ui main { type: skeleton, variant: card })
       MOVE_CARD -> loading
@@ -320,6 +345,7 @@ orbital BoardOrbital {
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
+          limit: @config.maxRows
         })
         (render-ui main { type: skeleton, variant: card })
       SAVE_CARD -> loading
@@ -400,9 +426,17 @@ orbital BoardOrbital {
         @tier "domain"
       BoardItemsLoaded {
         data : [@entity]!
+        totalCount : number!
       }
         @description "Signals that board items have been successfully loaded."
         @synonyms "loaded, fetched, retrieved, populated"
+        @tier "internal"
+      BoardItemsPageLoaded {
+        data : [@entity]!
+        totalCount : number
+      }
+        @description "Signals that one page of board items has been loaded after REFETCH_PAGE."
+        @synonyms "page loaded, page fetched, paged"
         @tier "internal"
       BoardItemsLoadFailed {
         error : string
@@ -514,9 +548,17 @@ orbital BoardOrbital {
         @tier "domain"
       BoardItemsLoaded {
         data : [@entity]!
+        totalCount : number!
       }
         @description "Data for the board columns has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved, populated"
+        @tier "internal"
+      BoardItemsPageLoaded {
+        data : [@entity]!
+        totalCount : number
+      }
+        @description "One page of board items has been retrieved after REFETCH_PAGE."
+        @synonyms "page loaded, page fetched, paged"
         @tier "internal"
       BoardItemsLoadFailed {
         error : string
@@ -672,6 +714,11 @@ orbital BoardOrbital {
         @description "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty."
         @synonyms "filter bar style, facet style, chips, pills"
         @tier "presentation"
+      maxRows : number = 500
+        @label "Board card cap"
+        @description "Most cards one whole-board load may return. The columns are built from every card, so a partial read would hide cards; a board holding more is refused through BoardItemsLoadFailed instead of showing part of it. REFETCH_PAGE is the consumer's deliberate pager and uses pageSize."
+        @synonyms "board limit, card cap, max cards"
+        @tier "policy"
       pageSize : number = 10
         @label "Fetch page size"
         @description "Records fetched per REFETCH_PAGE request. std-board renders no pagination control itself — this only feeds the fetch limit/offset when a consumer wires a composed std-pagination to REFETCH_PAGE."

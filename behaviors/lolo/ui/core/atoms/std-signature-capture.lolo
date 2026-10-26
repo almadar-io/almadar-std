@@ -3,10 +3,6 @@ app std-signature-capture [
   description: "std-signature-capture — a drawn-signature pad. The signer draws, clears, or submits; on submit the signature persists and the atom emits SignatureSubmitted. One job: capture a signature and report when done."
 ]
 orbital SignatureCaptureOrbital {
-    type SignatureLoaded = Event { data : [Signature] } "Fired when the signer's prior signature (if any) loads"
-
-    type SignatureLoadFailed = Event { error : string, code : string } "Fired when the prior-signature load fails"
-
     type SignatureSubmitted = Event Signature "Fired after a signature persists successfully"
 
     type SignatureSubmitFailed = Event { error : string, code : string } "Fired when persisting a signature fails"
@@ -22,95 +18,45 @@ orbital SignatureCaptureOrbital {
   }
 
   trait SignatureCapture -> Signature {
-    initial: loading
-
-    state loading {
-      INIT -> loading
-        (fetch Signature {
-          emit: { failure: SignatureLoadFailed, success: SignatureLoaded }
-        })
-        (render-ui main { type: skeleton, variant: card })
-      SignatureLoaded -> idle
-        (render-ui main {
-          children: [{
-            content: @config.title
-            type: typography
-            variant: h3
-          }, {
-            color: muted
-            content: @config.instructions
-            type: typography
-            variant: caption
-          }, {
-            onChange: CHANGE
-            type: signature-pad
-            value: @entity.signatureDataUrl
-          }, {
-            children: [{
-              action: CLEAR
-              icon: trash
-              label: Clear
-              type: button
-              variant: secondary
-            }, {
-              action: SUBMIT
-              icon: send
-              label: Submit
-              type: button
-              variant: primary
-            }]
-            direction: horizontal
-            gap: sm
-            type: stack
-          }]
-          direction: vertical
-          gap: md
-          type: stack
-        })
-      SignatureLoadFailed -> idle
-        (render-ui main {
-          children: [{
-            content: @config.title
-            type: typography
-            variant: h3
-          }, {
-            color: muted
-            content: @config.instructions
-            type: typography
-            variant: caption
-          }, {
-            onChange: CHANGE
-            type: signature-pad
-            value: @entity.signatureDataUrl
-          }, {
-            children: [{
-              action: CLEAR
-              icon: trash
-              label: Clear
-              type: button
-              variant: secondary
-            }, {
-              action: SUBMIT
-              icon: send
-              label: Submit
-              type: button
-              variant: primary
-            }]
-            direction: horizontal
-            gap: sm
-            type: stack
-          }]
-          direction: vertical
-          gap: md
-          type: stack
-        })
-    }
+    initial: idle
 
     state idle {
-      ;; Revisit re-entry: refetch without repainting the already-drawn pad.
-      INIT -> loading
-        (fetch Signature {
-          emit: { failure: SignatureLoadFailed, success: SignatureLoaded }
+      INIT -> idle
+        (render-ui main {
+          children: [{
+            content: @config.title
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: @config.instructions
+            type: typography
+            variant: caption
+          }, {
+            onChange: CHANGE
+            type: signature-pad
+            value: @entity.signatureDataUrl
+          }, {
+            children: [{
+              action: CLEAR
+              icon: trash
+              label: Clear
+              type: button
+              variant: secondary
+            }, {
+              action: SUBMIT
+              icon: send
+              label: Submit
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
         })
       CHANGE -> idle
         (set @entity.signatureDataUrl ?dataUrl)
@@ -172,11 +118,43 @@ orbital SignatureCaptureOrbital {
     }
 
     state submitting {
-      INIT -> loading
-        (fetch Signature {
-          emit: { failure: SignatureLoadFailed, success: SignatureLoaded }
+      INIT -> idle
+        (render-ui main {
+          children: [{
+            content: @config.title
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: @config.instructions
+            type: typography
+            variant: caption
+          }, {
+            onChange: CHANGE
+            type: signature-pad
+            value: @entity.signatureDataUrl
+          }, {
+            children: [{
+              action: CLEAR
+              icon: trash
+              label: Clear
+              type: button
+              variant: secondary
+            }, {
+              action: SUBMIT
+              icon: send
+              label: Submit
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
         })
-        (render-ui main { type: skeleton, variant: card })
       SignatureSubmitted -> submitted
         (render-ui main {
           align: center
@@ -261,19 +239,6 @@ orbital SignatureCaptureOrbital {
         @description "Signals the signature pad has been cleared."
         @synonyms "reset, erase, remove"
         @tier "domain"
-      SignatureLoaded {
-        data : [Signature]
-      }
-        @description "Indicates the signature pad is ready for use."
-        @synonyms "ready, initialized, available"
-        @tier "internal"
-      SignatureLoadFailed {
-        error : string
-        code : string
-      }
-        @description "Indicates the signature data could not be loaded."
-        @synonyms "load error, failed load, data error"
-        @tier "internal"
       SignatureSubmitted
         @description "Indicates a signature has been successfully captured and submitted."
         @synonyms "signed, finalized, completed"
@@ -304,19 +269,6 @@ orbital SignatureCaptureOrbital {
         @description "Indicates the signature area has been cleared."
         @synonyms "reset, erase, delete"
         @tier "domain"
-      SignatureLoaded {
-        data : [Signature]
-      }
-        @description "Indicates the signature data has been successfully retrieved."
-        @synonyms "loaded, fetched, retrieved, initialized"
-        @tier "internal"
-      SignatureLoadFailed {
-        error : string
-        code : string
-      }
-        @description "Indicates the signature data could not be loaded."
-        @synonyms "error, failure, problem, unsuccessful"
-        @tier "internal"
       SignatureSubmitted
         @description "Indicates a signature has been successfully submitted."
         @synonyms "saved, finalized, confirmed"

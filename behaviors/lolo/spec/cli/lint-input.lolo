@@ -1,6 +1,6 @@
 app lint-input-spec [
   version: "1.0.0",
-  description: "Design contract for the lint input: for a LINT_REQUEST { file } it reads the file once, decides whether the program is in the English vocabulary, lowers it with program/read and answers LINT_LAZY { orbitals } (the resolved program's lazy children) and LINT_INPUT { file, raw, latin, program, scope: \"\" }; a LINT_CHILD_REQUEST { index } answers LINT_INPUT with that child's program and its orbital as scope; or LINT_INPUT_UNREAD { file } when the file cannot be read or lowered or the pack scan fails."
+  description: "Design contract for the lint input: for a LINT_REQUEST { file } it reads the file once, decides whether the program is in the English vocabulary, lowers it with program/read and answers LINT_LAZY { orbitals } (the resolved program's lazy children), LINT_INDEX { scope, heads, roots } (the structural index of the pass) and LINT_INPUT { file, raw, latin, program, scope: \"\" }; a LINT_CHILD_REQUEST { index } answers LINT_INDEX and LINT_INPUT with that child's program and its orbital as scope; or LINT_INPUT_UNREAD { file } when the file cannot be read or lowered or the pack scan fails."
 ]
 type LintValue = string | number | boolean | [LintValue?] | Map string LintValue?
 
@@ -9,6 +9,7 @@ orbital LintInputSpec {
     state ready
     emits {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LintValue!  scope : string! }
+      LINT_INDEX { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
       LINT_LAZY { orbitals : [string]! }
       LINT_INPUT_UNREAD { file : string! }
     }

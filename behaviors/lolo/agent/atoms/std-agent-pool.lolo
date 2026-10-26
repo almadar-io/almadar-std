@@ -340,6 +340,7 @@ orbital AgentPoolOrbital {
       SEARCH -> searching
         (fetch PoolEntry {
           filter: (and (= (object/get @entity pool) @config.poolName) (= (object/get @entity retired) false))
+          limit: @config.maxRows
           emit: { failure: SEARCH_FAILED, success: ENTRIES_LOADED }
         })
         (set @entity.queryVector ?vector)
@@ -350,6 +351,8 @@ orbital AgentPoolOrbital {
 
     state searching {
       INIT -> ready
+      ENTRIES_LOADED -> ready when (> ?totalCount (array/len ?data))
+        (emit SEARCH_FAILED { error: (str/concat "PoolEntry has " ?totalCount " live entries in this pool, over the maxRows cap of " @config.maxRows) })
       ENTRIES_LOADED -> ready
         (let ((found : [PoolHit] (array/take (array/sort (array/flatten (array/map (array/filter ?data (fn e (and (or (= (array/len @entity.queryKinds) 0) (array/includes @entity.queryKinds (object/get @e kind ""))) (not (array/includes @entity.queryExclude (object/get @e behavior "")))))) (fn e (let ((c (array/cosine (object/get @e vector []) @entity.queryVector))) (if (== @c null) [] [{ id: (object/get @e id), behavior: (object/get @e behavior ""), value: (object/get @e value), name: (object/get @e name ""), kind: (object/get @e kind ""), topic: (object/get @e topic ""), fields: (object/get @e fields {}), description: (object/get @e description ""), score: (+ (or @c 0) (* @config.weight (or (/ (- (+ (object/get @e likes 0) (object/get @e right 0)) (+ (object/get @e hides 0) (object/get @e wrong 0))) (+ 1 (object/get @e plays 0))) 0))) }]))))) score desc) @entity.queryTake))) (emit POOL_FOUND { hits: @found }))
       SEARCH_FAILED -> ready
@@ -364,6 +367,11 @@ orbital AgentPoolOrbital {
       weight : number = @config.qualityWeight
         @label "Quality weight"
         @tier "policy"
+      maxRows : number = 2000
+        @label "Live entries per search"
+        @description "Most live pool entries one SEARCH may rank. The search scores every live entry's vector against the query, so a partial read would drop the best match; a pool with more live entries is refused through SEARCH_FAILED (POOL_FOUND with no hits) instead of ranking part of it."
+        @synonyms "search limit, pool cap, ranking cap"
+        @tier "policy"
     }
 
     emits {
@@ -374,6 +382,7 @@ orbital AgentPoolOrbital {
         @tier "domain"
       ENTRIES_LOADED {
         data : [PoolEntry]!
+        totalCount : number!
       }
         @tier "internal"
       SEARCH_FAILED {

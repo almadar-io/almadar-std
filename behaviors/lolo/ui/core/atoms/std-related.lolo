@@ -15,7 +15,7 @@ app std-related [
 ;; Paired with std-browse via @trait.X this gives a one-line master-detail
 ;; layout: hstack [ @trait.ParentList, @trait.ParentRelated ].
 orbital RelatedItemOrbital {
-    type RelatedItemLoaded = Event { data : [RelatedItem] } "Fired when RelatedItem finishes loading; payload.data holds the list"
+    type RelatedItemLoaded = Event { data : [RelatedItem], totalCount : number } "Fired when RelatedItem finishes loading; payload.data holds the list"
 
     type RelatedItemLoadFailed = Event { error : string, code : string } "Fired when RelatedItem fails to load"
 
@@ -24,6 +24,7 @@ orbital RelatedItemOrbital {
   entity RelatedItem [persistent: relateditems] {
     id : string!
     name : string @description "The identifier or designation for the related item." @synonyms "title, label, identifier"
+    page : number @intrinsic @description "The page the list shows." = 1
   }
 
   trait RelatedItemList -> @rebindable RelatedItem {
@@ -31,8 +32,11 @@ orbital RelatedItemOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.page 1)
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -41,9 +45,12 @@ orbital RelatedItemOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
         })
       SHOW_RELATED -> loading
+        (set @entity.page 1)
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
           filter: (or (not (validate/required @config.relationField)) (= (object/get @entity @config.relationField) ?key))
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -88,6 +95,12 @@ orbital RelatedItemOrbital {
               type: stack
             })
             type: data-list
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -125,8 +138,11 @@ orbital RelatedItemOrbital {
 
     state loaded {
       INIT -> loading
+        (set @entity.page 1)
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -136,10 +152,21 @@ orbital RelatedItemOrbital {
         })
       SELECT_RELATED -> loaded
         (set @entity.id ?id)
-      SHOW_RELATED -> loading
+      REFETCH_PAGE -> loading
+        (set @entity.page ?page)
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
           filter: (or (not (validate/required @config.relationField)) (= (object/get @entity @config.relationField) ?key))
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+        })
+      SHOW_RELATED -> loading
+        (set @entity.page 1)
+        (fetch RelatedItem {
+          emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
+          filter: (or (not (validate/required @config.relationField)) (= (object/get @entity @config.relationField) ?key))
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -151,8 +178,11 @@ orbital RelatedItemOrbital {
 
     state error {
       INIT -> loading
+        (set @entity.page 1)
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -163,8 +193,11 @@ orbital RelatedItemOrbital {
       ;; the error screen's Retry button: INIT is lifecycle-only and the bus never
       ;; delivers it, so the affordance must target a first-class user event
       RETRY -> loading
+        (set @entity.page 1)
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -173,9 +206,12 @@ orbital RelatedItemOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
         })
       SHOW_RELATED -> loading
+        (set @entity.page 1)
         (fetch RelatedItem {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
           filter: (or (not (validate/required @config.relationField)) (= (object/get @entity @config.relationField) ?key))
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -186,7 +222,10 @@ orbital RelatedItemOrbital {
     }
 
     emits {
-      RelatedItemLoaded
+      RelatedItemLoaded {
+        data : [RelatedItem]
+        totalCount : number
+      }
         @description "Signals that related items have been successfully loaded."
         @synonyms "loaded, fetched, retrieved"
         @tier "internal"
@@ -224,9 +263,21 @@ orbital RelatedItemOrbital {
         @description "Scopes the related fetch to rows whose relationField equals key."
         @synonyms "scope, filter, focus, target"
         @tier "domain"
+      REFETCH_PAGE {
+        page : number!
+        key : string
+      }
+        @description "Triggers a related list page refresh; when relationField is set, key names the parent the page belongs to."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
     }
 
     config {
+      pageSize : number = 50
+        @label "How many related rows to fetch per page?"
+        @description "Related rows fetched from the server per page request; the list's own pager loads later pages through REFETCH_PAGE, passing key when relationField scopes the list."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       title : string = Related
         @label "Section title"
         @description "Heading shown above the related list."

@@ -117,7 +117,6 @@ orbital NotificationCenterOrbital {
 
     state idle {
       INIT -> idle
-        (fetch NotificationPreference)
         (render-ui main {
           type: stack
           direction: vertical
@@ -244,6 +243,7 @@ orbital NotificationCenterOrbital {
         (fetch NotificationRecord {
           emit: { failure: DIGEST_FAILED, success: DIGEST_ROWS_LOADED }
           filter: (and (= (object/get @entity dispatched) false) (or (= (object/get @entity error) "digest-deferred") (= (object/get @entity error) "quiet-hours")) (< (object/get @entity recordedAt) (- @now (* @config.minAgeHours 3600000))))
+          limit: @config.batchSize
         })
       DIGEST_ROWS_LOADED -> draining when (> (array/len ?data) 0)
         (set @entity.headId (object/get (array/first ?data) id))
@@ -262,6 +262,7 @@ orbital NotificationCenterOrbital {
     emits {
       DIGEST_ROWS_LOADED {
         data : [NotifRow]!
+        totalCount : number
       }
         @description "Undispatched digest/quiet-hours audit rows past minAgeHours, oldest batch first"
         @tier "secondary"
@@ -287,6 +288,7 @@ orbital NotificationCenterOrbital {
     listens {
       DIGEST_ROWS_LOADED {
         data : [NotifRow]!
+        totalCount : number
       }
       DigestMailer.EMAIL_SENT -> DIGEST_ITEM_SENT
       DigestMailer.EMAIL_SEND_FAILED -> DIGEST_MAIL_FAILED
@@ -310,6 +312,7 @@ orbital NotificationCenterOrbital {
         (fetch NotificationRecord {
           emit: { failure: DIGEST_FAILED, success: DIGEST_ROWS_LOADED }
           filter: (and (= (object/get @entity dispatched) false) (or (= (object/get @entity error) "digest-deferred") (= (object/get @entity error) "quiet-hours")) (< (object/get @entity recordedAt) (- @now (* @config.minAgeHours 3600000))))
+          limit: @config.batchSize
         })
 
     }
@@ -325,6 +328,11 @@ orbital NotificationCenterOrbital {
         @description "Subject line for drained digest deliveries."
         @synonyms "digest title, summary subject, email subject"
         @tier "presentation"
+      batchSize : number = 50
+        @label "Rows read per drain pass"
+        @description "Most suppressed audit rows one read returns. The drain delivers the first row, marks it dispatched and reads again, so the whole backlog still drains, one read at a time."
+        @synonyms "drain batch, read limit, backlog batch"
+        @tier "infra"
       minAgeHours : number = 1
         @label "Minimum age (hours)"
         @description "Only drain audit rows at least this many hours old, so quiet-hours suppressions are not redelivered inside their window."

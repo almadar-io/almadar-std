@@ -13,7 +13,7 @@ orbital ApprovalGateOrbital {
     uses Divider from "std/behaviors/ui-divider"
     uses Alert from "std/behaviors/ui-alert"
 
-    type ApprovalRequestLoaded = Event { data : [ApprovalRequest] } "Fired when the approval queue collection finishes loading"
+    type ApprovalRequestLoaded = Event { data : [ApprovalRequest], totalCount : number } "Fired when the approval queue collection finishes loading"
 
     type ApprovalRequestLoadFailed = Event { error : string, code : string } "Fired when the approval queue fails to load"
 
@@ -50,6 +50,7 @@ orbital ApprovalGateOrbital {
     escalatedAt : number @description "Timestamp indicating when the request was escalated." @synonyms "escalation time, escalation timestamp, escalated time" = 0
     notes : string @description "The reviewer's written reason, captured by the deny step." @synonyms "comments, remarks, explanation, reason, details" = ""
     payload : string @description "The held data of the gated action as JSON text, replayed by the downstream listener when the request is granted." @synonyms "request data, held payload, pending data, gated data" = ""
+    page : number @intrinsic @description "The page the list shows." = 1
   }
 
   trait LoadingSpinner = Spinner.traits.SpinnerRender -> ApprovalRequest {
@@ -126,9 +127,12 @@ orbital ApprovalGateOrbital {
     ;; with the ORIGINAL payload and replays a stale edit over current state.
     state idle {
       INIT -> idle
+        (set @entity.page 1)
         (fetch ApprovalRequest {
           filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       ApprovalRequestLoaded -> idle
       ApprovalRequestLoadFailed -> idle
@@ -146,9 +150,12 @@ orbital ApprovalGateOrbital {
       ApprovalRequestReviewFailed -> idle
         (notify error (str/concat "Couldn't reopen the approval request — " ?error))
       OPEN -> loading when @config.enabled
+        (set @entity.page 1)
         (fetch ApprovalRequest {
           filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui @config.reviewSlot {
           align: center
@@ -163,9 +170,12 @@ orbital ApprovalGateOrbital {
     state loading {
       INIT -> idle
         (render-ui @config.reviewSlot null)
+        (set @entity.page 1)
         (fetch ApprovalRequest {
           filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       ApprovalRequestLoaded -> reviewing
         (render-ui @config.reviewSlot {
@@ -208,6 +218,12 @@ orbital ApprovalGateOrbital {
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             type: data-grid
+          }, {
+            currentPage: @entity.page
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -223,11 +239,22 @@ orbital ApprovalGateOrbital {
     }
 
     state reviewing {
-      INIT -> idle
-        (render-ui @config.reviewSlot null)
+      REFETCH_PAGE -> loading
+        (set @entity.page ?page)
         (fetch ApprovalRequest {
           filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+        })
+      INIT -> idle
+        (render-ui @config.reviewSlot null)
+        (set @entity.page 1)
+        (fetch ApprovalRequest {
+          filter: (= (object/get @entity status) "pending")
+          emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       ;; The role guard IS the enforcement (both execution paths honor
       ;; transition guards, for the button and for a bus-delivered event
@@ -272,9 +299,12 @@ orbital ApprovalGateOrbital {
         })
       OPEN_SUBJECT -> reviewing
       ApprovalRequestReviewed -> loading
+        (set @entity.page 1)
         (fetch ApprovalRequest {
           filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       ApprovalRequestReviewFailed -> reviewing
         (render-ui @config.reviewSlot {
@@ -300,9 +330,12 @@ orbital ApprovalGateOrbital {
     state denying {
       INIT -> idle
         (render-ui @config.reviewSlot null)
+        (set @entity.page 1)
         (fetch ApprovalRequest {
           filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       CONFIRM_DENY -> reviewing
         (set @entity.id (object/get ?data id))
@@ -315,14 +348,20 @@ orbital ApprovalGateOrbital {
         })
         (emit ApprovalDenied { requestId: (object/get ?data id), reason: (str/default (object/get ?data notes) "") })
       CANCEL_DENY -> loading
+        (set @entity.page 1)
         (fetch ApprovalRequest {
           filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       ApprovalRequestReviewed -> loading
+        (set @entity.page 1)
         (fetch ApprovalRequest {
           filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       ApprovalRequestReviewFailed -> denying
         (render-ui @config.reviewSlot {
@@ -336,14 +375,20 @@ orbital ApprovalGateOrbital {
     state error {
       INIT -> idle
         (render-ui @config.reviewSlot null)
+        (set @entity.page 1)
         (fetch ApprovalRequest {
           filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
       OPEN -> loading
+        (set @entity.page 1)
         (fetch ApprovalRequest {
           filter: (= (object/get @entity status) "pending")
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui @config.reviewSlot {
           children: [@trait.ErrorSpinner]
@@ -407,6 +452,7 @@ orbital ApprovalGateOrbital {
         @tier "domain"
       ApprovalRequestLoaded {
         data : [ApprovalRequest]
+        totalCount : number
       }
         @description "Indicates an approval request has been successfully loaded."
         @synonyms "loaded, fetched, retrieved"
@@ -432,6 +478,12 @@ orbital ApprovalGateOrbital {
     }
 
     listens {
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a approval request page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       OPEN
         @description "Summons the review queue (host nav/affordance requests it)."
         @synonyms "open, show, review, view queue, open approvals"
@@ -481,6 +533,7 @@ orbital ApprovalGateOrbital {
         @tier "domain"
       ApprovalRequestLoaded {
         data : [ApprovalRequest]
+        totalCount : number
       }
         @description "Indicates an approval request has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved"
@@ -506,6 +559,11 @@ orbital ApprovalGateOrbital {
     }
 
     config {
+      pageSize : number = 25
+        @label "How many approval request rows to fetch per page?"
+        @description "Approval request rows fetched from the server per page request; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       enabled : boolean = false
         @label "Require approval"
         @description "Require sign-off before a record is finalized. Off by default."

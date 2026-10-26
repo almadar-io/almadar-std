@@ -13,15 +13,22 @@
     {
       "id": "list-filters-rows-without-id",
       "steps": [
-        { "event": "PERSONAS_ROWS", "payload": { "data": [ { "id": "ada", "name": "Ada" }, { "id": "", "name": "Ghost" } ] },
+        { "event": "PERSONAS_ROWS", "payload": { "data": [ { "id": "ada", "name": "Ada" }, { "id": "", "name": "Ghost" } ], "totalCount": 2 },
           "expect": { "emits": [ { "event": "PERSONAS_ANSWERED", "payload": { "status": 200 } } ] } }
       ]
     },
     {
       "id": "list-empty-source-none",
       "steps": [
-        { "event": "PERSONAS_ROWS", "payload": { "data": [] },
+        { "event": "PERSONAS_ROWS", "payload": { "data": [], "totalCount": 0 },
           "expect": { "emits": [ { "event": "PERSONAS_ANSWERED", "payload": { "status": 200 } } ] } }
+      ]
+    },
+    {
+      "id": "list-over-the-cap-is-500",
+      "steps": [
+        { "event": "PERSONAS_ROWS", "payload": { "data": [ { "id": "ada", "name": "Ada" } ], "totalCount": 201 },
+          "expect": { "emits": [ { "event": "PERSONAS_FAILED" } ] } }
       ]
     },
     {

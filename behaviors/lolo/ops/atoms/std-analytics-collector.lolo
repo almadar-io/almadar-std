@@ -4,11 +4,20 @@ app std-analytics-collector [
   description: "std-analytics-collector — the collector std-analytics reports to. A beacon (`{ n, d, u, r?, w?, p? }` JSON: event name, site, path, referrer, screen width, properties) arrives at the inbound hook analytics (/api/hooks/analytics) and is stored as an AnalyticsEvent whose visitorId is the SHA-256 of the day's salt, the client IP (the first x-forwarded-for address), the user agent and the site: stable within one UTC day, never reversible, and the IP itself is never stored. One random salt per UTC day lives in an AnalyticsSalt row created on the day's first beacon. The hook answers 202 for a stored beacon, 400 for one that is not a JSON object with a non-empty name, site and path (or whose site the domains knob does not list) and 500 when the store fails. ANALYTICS_STATS answers the pageviews, unique visitors and the top pages, countries and referrer hosts of a site and time window."
 ]
 uses Spec from "almadar-std/analytics-collector"
+uses Lifecycle from "std/behaviors/std-lifecycle"
 type AnalyticsProps = Map string (string | number | boolean)
 type AnalyticsBeacon = { n : string!, d : string!, u : string!, r : string, w : number, p : AnalyticsProps }
 type AnalyticsDraft = { ts : number!, name : string!, domain : string!, path : string!, referrer : string?, screenWidth : number?, props : AnalyticsProps?, ip : string!, ua : string! }
 type AnalyticsCount = { key : string!, count : number! }
 orbital AnalyticsCollectorOrbital {
+  config {
+    keepDays : number = 90
+      @label "Days to keep analytics events"
+      @description "Stored analytics events older than this many days are deleted. 0 turns the clean-up off and keeps them all."
+      @synonyms "retention, retention days, ttl, expire analytics, delete old analytics, keep events for"
+      @tier "policy"
+  }
+
   entity AnalyticsEvent [persistent: analyticsEvents] {
     id : string!
     ts : number! @description "When the beacon arrived, in epoch milliseconds."
@@ -25,6 +34,14 @@ orbital AnalyticsCollectorOrbital {
     id : string! @description "The UTC day, YYYY-MM-DD."
     salt : string! @description "The day's random salt."
     createdAt : number @description "When the salt was drawn, in epoch milliseconds."
+  }
+
+  entity AnalyticsRetentionLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+    ts : number = 0
   }
 
   entity AnalyticsCollector [runtime] {
@@ -199,7 +216,9 @@ orbital AnalyticsCollectorOrbital {
         (emit ANALYTICS_STATS { })
       ANALYTICS_STATS -> ready
         (set @entity.statsLimit (if (== @payload.limit null) 100 @payload.limit))
-        (fetch AnalyticsEvent { filter: (and (or (== @payload.domain null) (= @payload.domain "") (= (object/get @entity domain) @payload.domain)) (or (== @payload.from null) (>= (object/get @entity ts) @payload.from)) (or (== @payload.to null) (<= (object/get @entity ts) @payload.to))), emit: { success: STATS_LOADED, failure: STATS_UNREADABLE } })
+        (fetch AnalyticsEvent { filter: (and (or (== @payload.domain null) (= @payload.domain "") (= (object/get @entity domain) @payload.domain)) (or (== @payload.from null) (>= (object/get @entity ts) @payload.from)) (or (== @payload.to null) (<= (object/get @entity ts) @payload.to))), limit: @config.maxRows, emit: { success: STATS_LOADED, failure: STATS_UNREADABLE } })
+      STATS_LOADED -> ready when (> @payload.totalCount (array/len @payload.data))
+        (emit STATS_UNREADABLE { error: (str/concat "AnalyticsEvent has " @payload.totalCount " events in this window, over the maxRows cap of " @config.maxRows ": narrow the window with from and to"), code: "STATS_OVER_CAP" })
       STATS_LOADED -> ready
         (let ((views (array/filter @payload.data (fn e (= @e.name "pageview"))))
               (pageKeys (array/map (array/filter @payload.data (fn e (= @e.name "pageview"))) (fn e (str/concat @e.path " (" @e.domain ")"))))
@@ -260,6 +279,7 @@ orbital AnalyticsCollectorOrbital {
         @tier "internal"
       STATS_LOADED {
         data : [AnalyticsEvent]!
+        totalCount : number!
       }
         @description "Internal: the stored events of the window."
       STATS_UNREADABLE {
@@ -285,6 +305,11 @@ orbital AnalyticsCollectorOrbital {
         @label "Title"
         @description "The stats board's heading."
         @tier "presentation"
+      maxRows : number = 10000
+        @label "Events per stats read"
+        @description "Most stored events one stats read may aggregate. The pageview, visitor and top-page counts are computed over every event of the window, so a partial read would report wrong totals; a window holding more events is refused through ANALYTICS_STATS_FAILED, so narrow it with from and to."
+        @synonyms "stats read limit, event cap, aggregation cap"
+        @tier "policy"
       loadOnInit : boolean = false
         @label "Load when opened"
         @description "Read every site's stats as soon as the page opens."
@@ -292,5 +317,15 @@ orbital AnalyticsCollectorOrbital {
     }
   }
 
-  page "/analytics-collector" -> AnalyticsIntake, AnalyticsStats
+  trait AnalyticsRetention = Lifecycle.traits.LifecycleScheduler -> AnalyticsRetentionLog {
+    config {
+      enabled: true
+      action: delete
+      targetEntity: AnalyticsEvent
+      dateField: ts
+      ageDays: @config.keepDays
+    }
+  }
+
+  page "/analytics-collector" -> AnalyticsIntake, AnalyticsStats, AnalyticsRetention
 }

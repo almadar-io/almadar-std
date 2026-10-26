@@ -307,6 +307,7 @@ orbital QueueOrbital {
         (fetch QueueClaim {
           emit: { failure: DeqFailed, success: DeqSlotLoaded }
           filter: (= (object/get @entity id) (str/concat @entity.wantId ":" @entity.wantAttempt))
+          limit: 1
         })
       DeqSlotLoaded -> idle when (= (array/len ?data) 0)
         (set @entity.skipIds (array/append @entity.skipIds @entity.wantId))

@@ -1,0 +1,102 @@
+app lifecycle-fixture [
+  version: "1.0.0",
+  description: "Replay fixture for std-lifecycle: an enabled status sweep and delete sweeps (enabled, disabled, dry run, zero days) over one Job entity, so lifecycle.replay.goldens.json runs against real config."
+]
+orbital LifecycleFixtureOrbital {
+  uses Lifecycle from "std/behaviors/std-lifecycle"
+
+  entity Job [persistent: lifecycle_fixture_jobs] {
+    id : string!
+    status : string = ""
+    createdAt : number = 0
+  }
+
+  entity StatusSweepLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+  }
+
+  entity DeleteSweepLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+  }
+
+  entity DeleteOffLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+  }
+
+  entity DeleteDryLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+  }
+
+  entity DeleteZeroLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+  }
+
+  trait StatusSweep = Lifecycle.traits.LifecycleScheduler -> StatusSweepLog {
+    config {
+      enabled: true
+      targetEntity: Job
+      fromStatus: "open"
+      toStatus: "expired"
+      dateField: createdAt
+      ageDays: 30
+    }
+  }
+
+  trait DeleteSweep = Lifecycle.traits.LifecycleScheduler -> DeleteSweepLog {
+    config {
+      enabled: true
+      action: delete
+      targetEntity: Job
+      dateField: createdAt
+      ageDays: 30
+    }
+  }
+
+  trait DeleteOff = Lifecycle.traits.LifecycleScheduler -> DeleteOffLog {
+    config {
+      enabled: false
+      action: delete
+      targetEntity: Job
+      dateField: createdAt
+      ageDays: 30
+    }
+  }
+
+  trait DeleteDry = Lifecycle.traits.LifecycleScheduler -> DeleteDryLog {
+    config {
+      enabled: true
+      dryRun: true
+      action: delete
+      targetEntity: Job
+      dateField: createdAt
+      ageDays: 30
+    }
+  }
+
+  trait DeleteZero = Lifecycle.traits.LifecycleScheduler -> DeleteZeroLog {
+    config {
+      enabled: true
+      action: delete
+      targetEntity: Job
+      dateField: createdAt
+      ageDays: 0
+    }
+  }
+
+  page "/lifecycle-fixture" as LifecycleFixturePage -> StatusSweep, DeleteSweep, DeleteOff, DeleteDry, DeleteZero
+}

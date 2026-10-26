@@ -18,7 +18,7 @@ orbital ThreadPostOrbital {
   ;; Master-detail focus: SELECT sets this to the clicked row so split-pane
   ;; variants (email-threaded) can bind @entity.focusedRow.<field> in their
   ;; detail pane. Unused by list/bubble variants.
-    type ThreadPostLoaded = Event { data : [ThreadPost]! } "Fired when the thread-post collection finishes loading"
+    type ThreadPostLoaded = Event { data : [ThreadPost]!, totalCount : number } "Fired when the thread-post collection finishes loading"
 
     type ThreadPostLoadFailed = Event { error : string, code : string } "Fired when the thread-post collection fails to load"
 
@@ -54,6 +54,7 @@ orbital ThreadPostOrbital {
     replyParentId : string @intrinsic @description "Post the reply being composed answers." = ""
     replyRootId : string @intrinsic @description "Thread root the reply being composed belongs to." = ""
     lastReplyId : string @intrinsic @description "Reply just created, added to its parent post's replies." = ""
+    page : number @intrinsic @description "The page the list shows." = 1
   }
 
   trait ThreadPostBrowse -> @rebindable ThreadPost {
@@ -61,14 +62,20 @@ orbital ThreadPostOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.page 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
       ThreadPostLoaded -> browsing
-        (render-ui main @config.bodyContent)
+        (render-ui main <Stack direction={vertical} gap={md}>
+          {@config.bodyContent}
+          <Pagination currentPage={@entity.page} totalPages={(math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))} pageChangeEvent={REFETCH_PAGE} showPageSize={false} />
+        </Stack>)
       ThreadPostLoadFailed -> error
         (render-ui main {
           message: ?error
@@ -77,24 +84,42 @@ orbital ThreadPostOrbital {
         })
       SET_THREAD_ROOT -> loading
         (set @entity.replyRootId ?rootId)
+        (set @entity.page 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
     }
 
     state browsing {
-      INIT -> loading
+      REFETCH_PAGE -> loading
+        (set @entity.page ?page)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+        })
+      INIT -> loading
+        (set @entity.page 1)
+        (fetch ThreadPost {
+          emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
+          filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
+          include: (replies)
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
       ThreadPostLoaded -> browsing
-        (render-ui main @config.bodyContent)
+        (render-ui main <Stack direction={vertical} gap={md}>
+          {@config.bodyContent}
+          <Pagination currentPage={@entity.page} totalPages={(math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))} pageChangeEvent={REFETCH_PAGE} showPageSize={false} />
+        </Stack>)
       ;; Inline reply: when the event already carries the composed text (e.g.
       ;; reply-tree's inline composer), persist directly and stay in `browsing`
       ;; so the box stays inline instead of swapping to a full composer view.
@@ -162,10 +187,13 @@ orbital ThreadPostOrbital {
       ThreadPostCreated -> browsing when (= (str/default ?parentId "") "")
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
+        (set @entity.page 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
+          limit: @config.pageSize
+          offset: 0
         })
       ReplyParentLoaded -> browsing
         (persist update ThreadPost {
@@ -177,26 +205,35 @@ orbital ThreadPostOrbital {
         })
       ReplyParentLoadFailed -> browsing
         (notify error (str/concat "Couldn't attach the reply to its post — " ?error))
+        (set @entity.page 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
+          limit: @config.pageSize
+          offset: 0
         })
       ReplyParentUpdated -> browsing
+        (set @entity.page 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
+          limit: @config.pageSize
+          offset: 0
         })
       ;; SELECT's payload IS { id, row } (caller-constructed, unlike the
       ;; persist-auto-emitted ThreadPostCreated) — ?row.threadRootId is
       ;; correct here.
       SELECT -> loading
         (set @entity.focusedRow ?row)
+        (set @entity.page 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?row.threadRootId "") (= (object/get @entity threadRootId) ?row.threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
+          limit: @config.pageSize
+          offset: 0
         })
       ;; Inline composers (bodyContent overrides with their own textarea +
       ;; submit button) fire the composer triad while the trait sits in
@@ -235,20 +272,26 @@ orbital ThreadPostOrbital {
         })
       SET_THREAD_ROOT -> loading
         (set @entity.replyRootId ?rootId)
+        (set @entity.page 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
     }
 
     state replying {
       INIT -> loading
+        (set @entity.page 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
       EDIT_REPLY -> replying
@@ -280,10 +323,13 @@ orbital ThreadPostOrbital {
       ThreadPostCreated -> browsing when (= (str/default ?parentId "") "")
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
+        (set @entity.page 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
+          limit: @config.pageSize
+          offset: 0
         })
       ThreadPostCreateFailed -> replying
         (render-ui main {
@@ -293,28 +339,37 @@ orbital ThreadPostOrbital {
         })
       SET_THREAD_ROOT -> loading
         (set @entity.replyRootId ?rootId)
+        (set @entity.page 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
     }
 
     state error {
       INIT -> loading
+        (set @entity.page 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
       SET_THREAD_ROOT -> loading
         (set @entity.replyRootId ?rootId)
+        (set @entity.page 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
           include: (replies)
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main { type: skeleton, variant: list, rows: 6 })
     }
@@ -351,6 +406,7 @@ orbital ThreadPostOrbital {
         @tier "presentation"
       ThreadPostLoaded {
         data : [ThreadPost]!
+        totalCount : number
       }
         @description "Signals a thread post has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved"
@@ -386,6 +442,12 @@ orbital ThreadPostOrbital {
     }
 
     listens {
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a thread post page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       SELECT {
         id : string
         row : ThreadPostRow!
@@ -417,6 +479,7 @@ orbital ThreadPostOrbital {
         @tier "domain"
       ThreadPostLoaded {
         data : [ThreadPost]!
+        totalCount : number
       }
         @description "Indicates a thread post has been successfully retrieved."
         @synonyms "loaded, fetched, received, retrieved"
@@ -458,6 +521,11 @@ orbital ThreadPostOrbital {
     }
 
     config {
+      pageSize : number = 20
+        @label "How many thread post rows to fetch per page?"
+        @description "Thread post rows fetched from the server per page request; the list's own pager loads later pages through REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       threadRootId : string = ""
         @label "Root post id"
         @description "Top-level post whose descendants are loaded, filters every fetch and defaults new top-level replies' threadRootId (blank = all roots, unfiltered)"

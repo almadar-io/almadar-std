@@ -174,10 +174,12 @@ orbital LlmSpendBoardOrbital {
         (emit LS_PRICES { })
 
       LS_SNAPSHOT_SAVED -> reading
-        (fetch LlmBalanceSnapshot { filter: (= (object/get @entity provider) @entity.pendingSpendFor), emit: { success: LS_SNAPSHOTS_LOADED, failure: LS_SNAPSHOTS_UNREADABLE } })
+        (fetch LlmBalanceSnapshot { filter: (= (object/get @entity provider) @entity.pendingSpendFor), limit: @config.maxSnapshotRows, emit: { success: LS_SNAPSHOTS_LOADED, failure: LS_SNAPSHOTS_UNREADABLE } })
       LS_SNAPSHOT_NOT_SAVED -> reading
         (notify error (str/concat "A balance snapshot could not be kept: " @payload.error))
         (emit LS_SPEND_DONE { })
+      LS_SNAPSHOTS_LOADED -> reading when (> @payload.totalCount (array/len @payload.data))
+        (emit LS_SNAPSHOTS_UNREADABLE { error: (str/concat "LlmBalanceSnapshot has " @payload.totalCount " rows for " @entity.pendingSpendFor ", over the maxSnapshotRows cap of " @config.maxSnapshotRows), code: "LS_OVER_CAP" })
       LS_SNAPSHOTS_LOADED -> reading when (= @entity.pendingSpendFor "deepseek")
         (set @entity.deepseek (object/merge @entity.deepseek { actualSpend: (let ((rows (array/sort (array/map @payload.data (fn r { at: @r.timestamp, balance: @r.balance, id: @r.id })) "at" "asc"))) (if (< (array/len @rows) 2) (array/nth (object/values (object/pick @entity.noNumbers [(str/concat "x")])) 0) (let ((d (- (object/get (array/nth @rows 0) "balance" 0) (object/get (array/nth @rows (- (array/len @rows) 1)) "balance" 0)))) (if (> @d 0) (math/round @d 4) 0)))) }))
         (persist batch (let ((rows (array/sort (array/map @payload.data (fn r { at: @r.timestamp, id: @r.id })) "at" "asc"))) (array/map (array/take @rows (math/max 0 (- (array/len @rows) @config.snapshotsKept))) (fn r ["delete", "LlmBalanceSnapshot", @r.id]))) { emit: { success: LS_SPEND_DONE, failure: LS_TRIM_FAILED } })
@@ -202,7 +204,9 @@ orbital LlmSpendBoardOrbital {
         (emit LS_PRICES { })
 
       LS_PRICES -> reading
-        (fetch LlmPrice { emit: { success: LS_PRICES_LOADED, failure: LS_PRICES_UNREADABLE } })
+        (fetch LlmPrice { limit: @config.maxPriceRows, emit: { success: LS_PRICES_LOADED, failure: LS_PRICES_UNREADABLE } })
+      LS_PRICES_LOADED -> reading when (> @payload.totalCount (array/len @payload.data))
+        (emit LS_PRICES_UNREADABLE { error: (str/concat "LlmPrice has " @payload.totalCount " rows, over the maxPriceRows cap of " @config.maxPriceRows), code: "LS_OVER_CAP" })
       LS_PRICES_LOADED -> reading
         (set @entity.prices (array/sort (array/sort (array/map @payload.data (fn p { provider: @p.provider, model: @p.model, promptPer1K: @p.promptPer1K, completionPer1K: @p.completionPer1K })) "model" "asc") "provider" "asc"))
         (emit LS_TRACE { })
@@ -309,11 +313,11 @@ orbital LlmSpendBoardOrbital {
         @tier "internal"
       LS_SNAPSHOT_NOT_SAVED { error : string  code : string }
         @tier "internal"
-      LS_SNAPSHOTS_LOADED { data : [LlmBalanceSnapshot]! }
+      LS_SNAPSHOTS_LOADED { data : [LlmBalanceSnapshot]!  totalCount : number! }
         @tier "internal"
       LS_SNAPSHOTS_UNREADABLE { error : string  code : string }
         @tier "internal"
-      LS_PRICES_LOADED { data : [LlmPrice]! }
+      LS_PRICES_LOADED { data : [LlmPrice]!  totalCount : number! }
         @tier "internal"
       LS_PRICES_UNREADABLE { error : string  code : string }
         @tier "internal"
@@ -350,9 +354,9 @@ orbital LlmSpendBoardOrbital {
       LS_TRACE_FAILED { error : string!  kind : string! }
       LS_SNAPSHOT_SAVED { id : string!  provider : string!  timestamp : number!  balance : number!  currency : string }
       LS_SNAPSHOT_NOT_SAVED { error : string  code : string }
-      LS_SNAPSHOTS_LOADED { data : [LlmBalanceSnapshot]! }
+      LS_SNAPSHOTS_LOADED { data : [LlmBalanceSnapshot]!  totalCount : number! }
       LS_SNAPSHOTS_UNREADABLE { error : string  code : string }
-      LS_PRICES_LOADED { data : [LlmPrice]! }
+      LS_PRICES_LOADED { data : [LlmPrice]!  totalCount : number! }
       LS_PRICES_UNREADABLE { error : string  code : string }
       LS_PRICE_SAVED { id : string!  provider : string!  model : string!  promptPer1K : number!  completionPer1K : number! }
       LS_PRICE_NOT_SAVED { error : string  code : string }
@@ -396,6 +400,16 @@ orbital LlmSpendBoardOrbital {
       snapshotsKept : number = 1000
         @description "Balance snapshots kept per provider."
         @tier "domain"
+      maxSnapshotRows : number = 10000
+        @label "Snapshot rows per read"
+        @description "Most balance snapshots one provider read may return; the spend and the trim to snapshotsKept need the whole set, so ten times snapshotsKept leaves room for a lowered snapshotsKept to catch up, and a provider holding more is refused through LS_SNAPSHOTS_UNREADABLE instead of computing the spend from a partial set. Keep it above snapshotsKept."
+        @synonyms "snapshot read limit, snapshot cap"
+        @tier "infra"
+      maxPriceRows : number = 1000
+        @label "Price rows per read"
+        @description "Most LlmPrice rows one read may return to price the usage; a table holding more is refused through LS_PRICES_UNREADABLE instead of pricing from a partial list."
+        @synonyms "price read limit, price cap"
+        @tier "infra"
       timeoutMs : number = 30000
         @tier "infra"
       cacheTtlMs : number = 30000

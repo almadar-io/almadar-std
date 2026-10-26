@@ -700,7 +700,8 @@
      },
      "expect": {
       "neverEmits": [
-       "LINT_INPUT"
+       "LINT_INPUT",
+       "LINT_INPUT_OFFER"
       ]
      }
     }
@@ -736,7 +737,7 @@
         }
        },
        {
-        "event": "LINT_INPUT",
+        "event": "LINT_INPUT_OFFER",
         "payload": {
          "file": "a.lolo",
          "raw": "app x [\n]\n",
@@ -783,7 +784,7 @@
         }
        },
        {
-        "event": "LINT_INPUT",
+        "event": "LINT_INPUT_OFFER",
         "payload": {
          "file": "a.lolo",
          "raw": "app x [\n]\n",
@@ -874,7 +875,7 @@
         }
        },
        {
-        "event": "LINT_INPUT",
+        "event": "LINT_INPUT_OFFER",
         "payload": {
          "file": "a.lolo",
          "raw": "app x [\n]\n",
@@ -935,7 +936,7 @@
       "state": "ready",
       "emits": [
        {
-        "event": "LINT_INPUT",
+        "event": "LINT_INPUT_OFFER",
         "payload": {
          "file": "a.lolo",
          "raw": "app x [\n]\n",
@@ -1000,7 +1001,7 @@
       "state": "ready",
       "emits": [
        {
-        "event": "LINT_INPUT",
+        "event": "LINT_INPUT_OFFER",
         "payload": {
          "file": "a.lolo",
          "raw": "app x [\n]\n",
@@ -3400,6 +3401,7 @@
       "state": "reading",
       "neverEmits": [
        "LINT_INPUT",
+       "LINT_INPUT_OFFER",
        "LINT_LAZY"
       ]
      }
@@ -3439,7 +3441,7 @@
         }
        },
        {
-        "event": "LINT_INPUT",
+        "event": "LINT_INPUT_OFFER",
         "payload": {
          "file": "a.lolo",
          "raw": "app x [\n]\n",
@@ -3478,6 +3480,7 @@
       "state": "reading",
       "neverEmits": [
        "LINT_INPUT",
+       "LINT_INPUT_OFFER",
        "LINT_LAZY"
       ]
      }
@@ -3551,6 +3554,1165 @@
            }
           }
          }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-offer-sends-the-structural-index-before-the-program",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_INPUT_OFFER",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "app x [\n]\n",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E"
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "s",
+              "to": "s",
+              "event": "INIT",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "effects": [
+               [
+                "fetch",
+                "E",
+                {
+                 "filter": [
+                  "=",
+                  [
+                   "object/get",
+                   "@entity",
+                   "k"
+                  ],
+                  "@payload.q"
+                 ]
+                }
+               ],
+               [
+                "set",
+                "@entity.n",
+                1
+               ]
+              ]
+             },
+             {
+              "from": "s",
+              "to": "s",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "X",
+                {
+                 "who": "@user"
+                }
+               ],
+               [
+                [
+                 "nested"
+                ],
+                "@config.a"
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "default": "@trait.Child[0].x"
+            }
+           }
+          },
+          {
+           "name": "Ref",
+           "linkedEntity": "E"
+          },
+          {
+           "name": "Child",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": []
+           }
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "F"
+         },
+         "traits": [
+          {
+           "name": "Solo",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "s",
+              "to": "s",
+              "event": "E"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INDEX",
+        "payload": {
+         "scope": "",
+         "heads": {
+          "0-0": [
+           "=",
+           "emit",
+           "fetch",
+           "nested",
+           "object/get",
+           "set"
+          ],
+          "0-0-0": [
+           "=",
+           "fetch",
+           "object/get",
+           "set"
+          ],
+          "0-0-1": [
+           "emit",
+           "nested"
+          ],
+          "0-2": [],
+          "1-0": [],
+          "1-0-0": []
+         },
+         "roots": {
+          "0-0": [
+           "@config",
+           "@entity",
+           "@payload",
+           "@trait",
+           "@user"
+          ],
+          "0-0-0": [
+           "@entity",
+           "@payload"
+          ],
+          "0-0-1": [
+           "@config",
+           "@user"
+          ],
+          "0-2": [],
+          "1-0": [],
+          "1-0-0": []
+         }
+        }
+       },
+       {
+        "event": "LINT_INPUT",
+        "payload": {
+         "file": "a.lolo",
+         "raw": "app x [\n]\n",
+         "latin": true,
+         "program": {
+          "name": "app",
+          "orbitals": [
+           {
+            "name": "A",
+            "entity": {
+             "name": "E"
+            },
+            "traits": [
+             {
+              "name": "Host",
+              "stateMachine": {
+               "states": [
+                {
+                 "name": "s"
+                }
+               ],
+               "transitions": [
+                {
+                 "from": "s",
+                 "to": "s",
+                 "event": "INIT",
+                 "guard": [
+                  "=",
+                  "@user.role",
+                  "admin"
+                 ],
+                 "effects": [
+                  [
+                   "fetch",
+                   "E",
+                   {
+                    "filter": [
+                     "=",
+                     [
+                      "object/get",
+                      "@entity",
+                      "k"
+                     ],
+                     "@payload.q"
+                    ]
+                   }
+                  ],
+                  [
+                   "set",
+                   "@entity.n",
+                   1
+                  ]
+                 ]
+                },
+                {
+                 "from": "s",
+                 "to": "s",
+                 "event": "GO",
+                 "effects": [
+                  [
+                   "emit",
+                   "X",
+                   {
+                    "who": "@user"
+                   }
+                  ],
+                  [
+                   [
+                    "nested"
+                   ],
+                   "@config.a"
+                  ]
+                 ]
+                }
+               ]
+              },
+              "config": {
+               "body": {
+                "default": "@trait.Child[0].x"
+               }
+              }
+             },
+             {
+              "name": "Ref",
+              "linkedEntity": "E"
+             },
+             {
+              "name": "Child",
+              "stateMachine": {
+               "states": [
+                {
+                 "name": "s"
+                }
+               ],
+               "transitions": []
+              }
+             }
+            ]
+           },
+           {
+            "name": "B",
+            "entity": {
+             "name": "F"
+            },
+            "traits": [
+             {
+              "name": "Solo",
+              "stateMachine": {
+               "states": [
+                {
+                 "name": "s"
+                }
+               ],
+               "transitions": [
+                {
+                 "from": "s",
+                 "to": "s",
+                 "event": "E"
+                }
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         },
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-lazy-childs-offer-carries-its-scope-on-the-index",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_INPUT_OFFER",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "app x [\n]\n",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E"
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "s",
+              "to": "s",
+              "event": "INIT",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "effects": [
+               [
+                "fetch",
+                "E",
+                {
+                 "filter": [
+                  "=",
+                  [
+                   "object/get",
+                   "@entity",
+                   "k"
+                  ],
+                  "@payload.q"
+                 ]
+                }
+               ],
+               [
+                "set",
+                "@entity.n",
+                1
+               ]
+              ]
+             },
+             {
+              "from": "s",
+              "to": "s",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "X",
+                {
+                 "who": "@user"
+                }
+               ],
+               [
+                [
+                 "nested"
+                ],
+                "@config.a"
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "default": "@trait.Child[0].x"
+            }
+           }
+          },
+          {
+           "name": "Ref",
+           "linkedEntity": "E"
+          },
+          {
+           "name": "Child",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": []
+           }
+          }
+         ]
+        },
+        {
+         "name": "B",
+         "entity": {
+          "name": "F"
+         },
+         "traits": [
+          {
+           "name": "Solo",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "s",
+              "to": "s",
+              "event": "E"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": "Child"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INDEX",
+        "payload": {
+         "scope": "Child",
+         "heads": {
+          "0-0": [
+           "=",
+           "emit",
+           "fetch",
+           "nested",
+           "object/get",
+           "set"
+          ],
+          "0-0-0": [
+           "=",
+           "fetch",
+           "object/get",
+           "set"
+          ],
+          "0-0-1": [
+           "emit",
+           "nested"
+          ],
+          "0-2": [],
+          "1-0": [],
+          "1-0-0": []
+         },
+         "roots": {
+          "0-0": [
+           "@config",
+           "@entity",
+           "@payload",
+           "@trait",
+           "@user"
+          ],
+          "0-0-0": [
+           "@entity",
+           "@payload"
+          ],
+          "0-0-1": [
+           "@config",
+           "@user"
+          ],
+          "0-2": [],
+          "1-0": [],
+          "1-0-0": []
+         }
+        }
+       },
+       {
+        "event": "LINT_INPUT",
+        "payload": {
+         "file": "a.lolo",
+         "raw": "app x [\n]\n",
+         "latin": true,
+         "program": {
+          "name": "app",
+          "orbitals": [
+           {
+            "name": "A",
+            "entity": {
+             "name": "E"
+            },
+            "traits": [
+             {
+              "name": "Host",
+              "stateMachine": {
+               "states": [
+                {
+                 "name": "s"
+                }
+               ],
+               "transitions": [
+                {
+                 "from": "s",
+                 "to": "s",
+                 "event": "INIT",
+                 "guard": [
+                  "=",
+                  "@user.role",
+                  "admin"
+                 ],
+                 "effects": [
+                  [
+                   "fetch",
+                   "E",
+                   {
+                    "filter": [
+                     "=",
+                     [
+                      "object/get",
+                      "@entity",
+                      "k"
+                     ],
+                     "@payload.q"
+                    ]
+                   }
+                  ],
+                  [
+                   "set",
+                   "@entity.n",
+                   1
+                  ]
+                 ]
+                },
+                {
+                 "from": "s",
+                 "to": "s",
+                 "event": "GO",
+                 "effects": [
+                  [
+                   "emit",
+                   "X",
+                   {
+                    "who": "@user"
+                   }
+                  ],
+                  [
+                   [
+                    "nested"
+                   ],
+                   "@config.a"
+                  ]
+                 ]
+                }
+               ]
+              },
+              "config": {
+               "body": {
+                "default": "@trait.Child[0].x"
+               }
+              }
+             },
+             {
+              "name": "Ref",
+              "linkedEntity": "E"
+             },
+             {
+              "name": "Child",
+              "stateMachine": {
+               "states": [
+                {
+                 "name": "s"
+                }
+               ],
+               "transitions": []
+              }
+             }
+            ]
+           },
+           {
+            "name": "B",
+            "entity": {
+             "name": "F"
+            },
+            "traits": [
+             {
+              "name": "Solo",
+              "stateMachine": {
+               "states": [
+                {
+                 "name": "s"
+                }
+               ],
+               "transitions": [
+                {
+                 "from": "s",
+                 "to": "s",
+                 "event": "E"
+                }
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         },
+         "scope": "Child"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-program-with-no-inline-trait-has-an-empty-index",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_INPUT_OFFER",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "app x [\n]\n",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "Ref",
+           "linkedEntity": "E"
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INDEX",
+        "payload": {
+         "scope": "",
+         "heads": {},
+         "roots": {}
+        }
+       },
+       {
+        "event": "LINT_INPUT",
+        "payload": {
+         "file": "a.lolo",
+         "raw": "app x [\n]\n",
+         "latin": true,
+         "program": {
+          "name": "app",
+          "orbitals": [
+           {
+            "name": "A",
+            "traits": [
+             {
+              "name": "Ref",
+              "linkedEntity": "E"
+             }
+            ]
+           }
+          ]
+         },
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-program-with-no-orbitals-has-an-empty-index",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_INPUT_OFFER",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "app x [\n]\n",
+      "latin": true,
+      "program": {
+       "name": "app"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INDEX",
+        "payload": {
+         "scope": "",
+         "heads": {},
+         "roots": {}
+        }
+       },
+       {
+        "event": "LINT_INPUT",
+        "payload": {
+         "file": "a.lolo",
+         "raw": "app x [\n]\n",
+         "latin": true,
+         "program": {
+          "name": "app"
+         },
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-index-takes-heads-from-string-first-elements-and-roots-from-at-strings",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_INPUT_OFFER",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "app x [\n]\n",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "s",
+              "to": "s",
+              "event": "INIT",
+              "effects": [
+               [
+                [
+                 "array/map"
+                ],
+                "x"
+               ],
+               [
+                "if",
+                [
+                 "!=",
+                 "@user",
+                 null
+                ],
+                [
+                 "set",
+                 "@entity.a",
+                 "@user.id"
+                ],
+                [
+                 "navigate",
+                 "/p/@payload.id"
+                ]
+               ],
+               {
+                "k": [
+                 "fetch",
+                 "E"
+                ],
+                "@trait.Z": "@trait.Z.q"
+               },
+               [
+                1,
+                "@x"
+               ],
+               "@entity.a.b.c"
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INDEX",
+        "payload": {
+         "scope": "",
+         "heads": {
+          "0-0": [
+           "!=",
+           "array/map",
+           "fetch",
+           "if",
+           "navigate",
+           "set"
+          ],
+          "0-0-0": [
+           "!=",
+           "array/map",
+           "fetch",
+           "if",
+           "navigate",
+           "set"
+          ]
+         },
+         "roots": {
+          "0-0": [
+           "@entity",
+           "@trait",
+           "@user",
+           "@x"
+          ],
+          "0-0-0": [
+           "@entity",
+           "@trait",
+           "@user",
+           "@x"
+          ]
+         }
+        }
+       },
+       {
+        "event": "LINT_INPUT",
+        "payload": {
+         "file": "a.lolo",
+         "raw": "app x [\n]\n",
+         "latin": true,
+         "program": {
+          "name": "app",
+          "orbitals": [
+           {
+            "name": "A",
+            "traits": [
+             {
+              "name": "T",
+              "stateMachine": {
+               "states": [
+                {
+                 "name": "s"
+                }
+               ],
+               "transitions": [
+                {
+                 "from": "s",
+                 "to": "s",
+                 "event": "INIT",
+                 "effects": [
+                  [
+                   [
+                    "array/map"
+                   ],
+                   "x"
+                  ],
+                  [
+                   "if",
+                   [
+                    "!=",
+                    "@user",
+                    null
+                   ],
+                   [
+                    "set",
+                    "@entity.a",
+                    "@user.id"
+                   ],
+                   [
+                    "navigate",
+                    "/p/@payload.id"
+                   ]
+                  ],
+                  {
+                   "k": [
+                    "fetch",
+                    "E"
+                   ],
+                   "@trait.Z": "@trait.Z.q"
+                  },
+                  [
+                   1,
+                   "@x"
+                  ],
+                  "@entity.a.b.c"
+                 ]
+                }
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         },
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-trait-level-index-covers-every-field-of-the-trait-not-only-its-code",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_INPUT_OFFER",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "app x [\n]\n",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "s",
+              "to": "s",
+              "event": "INIT",
+              "effects": [
+               [
+                "set",
+                "@entity.a",
+                1
+               ]
+              ]
+             }
+            ]
+           },
+           "emits": [
+            {
+             "event": "X",
+             "payloadSchema": [
+              {
+               "name": "a",
+               "default": [
+                "=",
+                "@user.role",
+                "x"
+               ]
+              }
+             ]
+            }
+           ],
+           "sourceEntityDefinition": {
+            "name": "E",
+            "fields": [
+             {
+              "name": "f",
+              "default": "@trait.Q.z"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_INDEX",
+        "payload": {
+         "scope": "",
+         "heads": {
+          "0-0": [
+           "=",
+           "set"
+          ],
+          "0-0-0": [
+           "set"
+          ]
+         },
+         "roots": {
+          "0-0": [
+           "@entity",
+           "@trait",
+           "@user"
+          ],
+          "0-0-0": [
+           "@entity"
+          ]
+         }
+        }
+       },
+       {
+        "event": "LINT_INPUT",
+        "payload": {
+         "file": "a.lolo",
+         "raw": "app x [\n]\n",
+         "latin": true,
+         "program": {
+          "name": "app",
+          "orbitals": [
+           {
+            "name": "A",
+            "traits": [
+             {
+              "name": "T",
+              "stateMachine": {
+               "states": [
+                {
+                 "name": "s"
+                }
+               ],
+               "transitions": [
+                {
+                 "from": "s",
+                 "to": "s",
+                 "event": "INIT",
+                 "effects": [
+                  [
+                   "set",
+                   "@entity.a",
+                   1
+                  ]
+                 ]
+                }
+               ]
+              },
+              "emits": [
+               {
+                "event": "X",
+                "payloadSchema": [
+                 {
+                  "name": "a",
+                  "default": [
+                   "=",
+                   "@user.role",
+                   "x"
+                  ]
+                 }
+                ]
+               }
+              ],
+              "sourceEntityDefinition": {
+               "name": "E",
+               "fields": [
+                {
+                 "name": "f",
+                 "default": "@trait.Q.z"
+                }
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         },
+         "scope": ""
         }
        }
       ]

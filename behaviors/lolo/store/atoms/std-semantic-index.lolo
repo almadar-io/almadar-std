@@ -164,12 +164,12 @@ orbital SemanticIndexOrbital {
         (set @entity.semKey ?key)
         (set @entity.semModel (str/default ?model ""))
         (set @entity.semEmbeddings ?embeddings)
-        (fetch SemanticPending { filter: (= (object/get @entity id) ?key), emit: { success: SemanticPendingLoaded, failure: SemanticStoreFailed } })
+        (fetch SemanticPending { filter: (= (object/get @entity id) ?key), limit: 1, emit: { success: SemanticPendingLoaded, failure: SemanticStoreFailed } })
       SemanticEmbedFailed -> loadingPending
         (set @entity.semReply "failed")
         (set @entity.semKey ?key)
         (set @entity.semReplyMessage ?message)
-        (fetch SemanticPending { filter: (= (object/get @entity id) ?key), emit: { success: SemanticPendingLoaded, failure: SemanticStoreFailed } })
+        (fetch SemanticPending { filter: (= (object/get @entity id) ?key), limit: 1, emit: { success: SemanticPendingLoaded, failure: SemanticStoreFailed } })
       SemanticStoreFailed -> idle
         (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: ?error })
     }

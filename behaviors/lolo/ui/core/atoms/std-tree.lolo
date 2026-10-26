@@ -4,7 +4,7 @@ app std-tree [
 ]
 type FilterSpec = { field : string!, label : string, options : [string] }
 orbital TreeNodeOrbital {
-    type TreeNodeLoaded = Event { data : [TreeNode] } "Fired when the tree node collection finishes loading"
+    type TreeNodeLoaded = Event { data : [TreeNode], totalCount : number! } "Fired when the tree node collection finishes loading"
 
     type TreeNodeLoadFailed = Event { error : string, code : string } "Fired when the tree node collection fails to load"
 
@@ -24,11 +24,13 @@ orbital TreeNodeOrbital {
         (set @entity.id ?id)
         (fetch TreeNode {
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
+          limit: @config.maxRows
         })
       INIT -> loading
         (fetch TreeNode {
           filter: (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue))
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
+          limit: @config.maxRows
         })
         (render-ui main {
           type: stack
@@ -36,6 +38,8 @@ orbital TreeNodeOrbital {
           gap: lg
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
         })
+      TreeNodeLoaded -> loading when (> ?totalCount (array/len ?data))
+        (emit TreeNodeLoadFailed { error: (str/concat "TreeNode has " ?totalCount " rows, over the maxRows cap of " @config.maxRows), code: "TREE_OVER_CAP" })
       TreeNodeLoaded -> browsing
         (render-ui main {
           children: [(if (= @config.look "rail") {
@@ -147,6 +151,7 @@ orbital TreeNodeOrbital {
         (fetch TreeNode {
           filter: (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue))
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
+          limit: @config.maxRows
         })
         (render-ui main {
           type: stack
@@ -164,11 +169,13 @@ orbital TreeNodeOrbital {
         (fetch TreeNode {
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
           filter: (or (= ?searchTerm "") (str/includes (str/default (object/get @entity @config.labelField) "") ?searchTerm))
+          limit: @config.maxRows
         })
       REFETCH_FILTER -> browsing
         (fetch TreeNode {
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
           filter: (or (= ?value "") (= (object/get @entity ?field) ?value))
+          limit: @config.maxRows
         })
       OPEN_NODE -> browsing
         (set @entity.id ?id)
@@ -179,9 +186,12 @@ orbital TreeNodeOrbital {
         (set @entity.id ?id)
         (fetch TreeNode {
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
+          limit: @config.maxRows
         })
       ADD_CHILD -> browsing
         (emit CHILD_REQUESTED { parentId: ?id })
+      TreeNodeLoaded -> browsing when (> ?totalCount (array/len ?data))
+        (emit TreeNodeLoadFailed { error: (str/concat "TreeNode has " ?totalCount " rows, over the maxRows cap of " @config.maxRows), code: "TREE_OVER_CAP" })
       TreeNodeLoaded -> browsing
         (render-ui main {
           children: [(if (= @config.look "rail") {
@@ -293,6 +303,7 @@ orbital TreeNodeOrbital {
         (fetch TreeNode {
           filter: (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue))
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
+          limit: @config.maxRows
         })
         (render-ui main {
           type: stack
@@ -306,6 +317,7 @@ orbital TreeNodeOrbital {
         (fetch TreeNode {
           filter: (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue))
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
+          limit: @config.maxRows
         })
         (render-ui main {
           type: stack
@@ -330,6 +342,7 @@ orbital TreeNodeOrbital {
         @tier "domain"
       TreeNodeLoaded {
         data : [TreeNode]
+        totalCount : number!
       }
         @description "Indicates the tree node collection has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved, ready"
@@ -379,6 +392,7 @@ orbital TreeNodeOrbital {
         @tier "domain"
       TreeNodeLoaded {
         data : [TreeNode]
+        totalCount : number!
       }
         @description "Indicates the tree node collection has been successfully retrieved."
         @synonyms "loaded, fetched, retrieved, ready"
@@ -393,6 +407,11 @@ orbital TreeNodeOrbital {
     }
 
     config {
+      maxRows : number = 2000
+        @label "Nodes loaded at most"
+        @description "Most nodes one tree load may read. The tree is nested whole from the flat node set, so a page of it would sever children from parents; 2000 nodes is a large hierarchy, and a store holding more is refused through the load-failed alert rather than drawn from a partial set."
+        @synonyms "row cap, read limit"
+        @tier "policy"
       title : string = Tree
         @label "Section title"
         @description "Heading shown above the tree"

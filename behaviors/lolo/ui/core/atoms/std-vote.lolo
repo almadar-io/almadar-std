@@ -26,6 +26,7 @@ orbital VoteOrbital {
       INIT -> loading
         (fetch Vote {
           emit: { failure: VoteLoadFailed, success: VoteLoaded }
+          limit: @config.maxRows
         })
         (render-ui main { type: skeleton, variant: card })
       VoteLoaded -> idle
@@ -49,6 +50,7 @@ orbital VoteOrbital {
       INIT -> loading
         (fetch Vote {
           emit: { failure: VoteLoadFailed, success: VoteLoaded }
+          limit: @config.maxRows
         })
         (render-ui main { type: skeleton, variant: card })
       VOTE -> voting when (not (= ?next @entity.direction))
@@ -84,6 +86,7 @@ orbital VoteOrbital {
         (fetch Vote {
           emit: { failure: VoteLoadFailed, success: VoteLoaded }
           filter: (= @entity.targetId ?targetId)
+          limit: @config.maxRows
         })
       VoteLoaded -> idle
         (render-ui main {
@@ -106,6 +109,7 @@ orbital VoteOrbital {
       INIT -> loading
         (fetch Vote {
           emit: { failure: VoteLoadFailed, success: VoteLoaded }
+          limit: @config.maxRows
         })
         (render-ui main { type: skeleton, variant: card })
       VoteCasted -> idle
@@ -129,6 +133,7 @@ orbital VoteOrbital {
       INIT -> loading
         (fetch Vote {
           emit: { failure: VoteLoadFailed, success: VoteLoaded }
+          limit: @config.maxRows
         })
         (render-ui main { type: skeleton, variant: card })
     }
@@ -210,6 +215,11 @@ orbital VoteOrbital {
     }
 
     config {
+      maxRows : number = 1
+        @label "Vote rows read per load"
+        @description "Most Vote rows a load reads. The load only signals that the vote store answered; VoteLoaded renders the stack from the entity direction and never reads the rows, so one row proves the store and a larger read would only cost time."
+        @synonyms "read limit, load size"
+        @tier "infra"
     }
   }
 
