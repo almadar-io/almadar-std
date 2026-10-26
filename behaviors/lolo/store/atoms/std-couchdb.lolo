@@ -7,6 +7,7 @@ uses Spec from "almadar-std/couchdb"
 type RowCell = string | number | boolean | [RowCell?] | Map string RowCell?
 type Row = Map string RowCell?
 type CouchDoc = Map string RowCell?
+type IndexPath = { fields : [string]!, orderBy : string? }
 
 type CompareLeaf = { kind : "compare", field : string!, op : "==" | "!=" | "<" | "<=" | ">" | ">=", value : RowCell? }
 type MemberLeaf = { kind : "member", field : string!, values : [RowCell?]! }
@@ -82,6 +83,7 @@ orbital CouchdbOrbital {
     changes : CouchDoc @description "The caller's row (create, upsert) or merge (update)." = {}
     rev : string @description "The _rev the write is conditioned on; empty for a document not yet stored." = ""
     ensured : [string] @description "Databases already made this run." = []
+    paths : [IndexPath] @description "The index paths an ensureIndexes ask carries" = []
     selector : string = ""
     sort : string = ""
     skip : number = 0
@@ -113,6 +115,22 @@ orbital CouchdbOrbital {
         (set @entity.mode "list")
         (set @entity.db (let ((et @payload.entityType) (b (array/find (array/reverse @config.collections) (fn x (= (object/get @x "entityType" "") @et))))) (if (!= @b null) (object/get @b "collection" "") (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
         (emit COUCH_LIST { db: @entity.db })
+
+      ROWS_ENSURE_INDEXES -> idle when (= (array/len @payload.indexes) 0)
+        (emit ROWS_INDEXES_ENSURED { key: @payload.key })
+      ROWS_ENSURE_INDEXES -> indexing when (> (array/len @payload.indexes) 0)
+        (set @entity.key @payload.key)
+        (set @entity.entityType @payload.entityType)
+        (set @entity.mode "ensure")
+        (set @entity.op "ensure")
+        (set @entity.paths @payload.indexes)
+        (set @entity.at 0)
+        (set @entity.db (let ((et @payload.entityType) (b (array/find (array/reverse @config.collections) (fn x (= (object/get @x "entityType" "") @et))))) (if (!= @b null) (object/get @b "collection" "") (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+        (http PUT @config.origin (str/concat "/" (str/encode-uri-component @entity.db)) {
+          headers: { Accept: "application/json" },
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_IDX_DB_REPLIED, failure: COUCH_UNREACHABLE } })
 
       ROWS_QUERY -> idle
         (set @entity.key @payload.key)
@@ -396,6 +414,50 @@ orbital CouchdbOrbital {
         (emit COUCH_FAILED { op: "find", status: 0, message: "db is required" })
     }
 
+    state indexing {
+      INIT -> idle
+        (set @entity.op "")
+        (set @entity.mode "")
+      COUCH_IDX_DB_REPLIED -> indexing when (or (= @payload.status 201) (= @payload.status 202) (= @payload.status 409) (= @payload.status 412))
+        (set @entity.ensured (array/append @entity.ensured @entity.db))
+        (http POST @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/_index") {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (let ((p (array/nth @entity.paths @entity.at)))
+            (let ((ob (object/get @p "orderBy" "")) (fl (object/get @p "fields" [])))
+              (let ((os (str/split @ob ":")))
+                (let ((of (array/nth @os 0)) (desc (= (array/nth @os 1) "desc")))
+                  (let ((cols (array/concat @fl (if (= @of "") [] [@of]))))
+                    (json/stringify { index: { fields: (array/map @cols (fn c (if @desc (object/fromEntries [[@c, "desc"]]) @c))) }, name: (str/concat (str/join @cols "_") (if @desc "_desc" "") "_idx"), type: "json" })))))),
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_IDX_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_IDX_DB_REPLIED -> idle when (not (or (= @payload.status 201) (= @payload.status 202) (= @payload.status 409) (= @payload.status 412)))
+        (set @entity.mode "")
+        (emit STORE_FAILED { key: @entity.key, message: (str/concat "CouchDB create database answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+      COUCH_IDX_REPLIED -> indexing when (and (or (= @payload.status 200) (= @payload.status 201)) (< (+ @entity.at 1) (array/len @entity.paths)))
+        (set @entity.at (+ @entity.at 1))
+        (http POST @config.origin (str/concat "/" (str/encode-uri-component @entity.db) "/_index") {
+          headers: { Accept: "application/json", Content-Type: "application/json" },
+          text: (let ((p (array/nth @entity.paths @entity.at)))
+            (let ((ob (object/get @p "orderBy" "")) (fl (object/get @p "fields" [])))
+              (let ((os (str/split @ob ":")))
+                (let ((of (array/nth @os 0)) (desc (= (array/nth @os 1) "desc")))
+                  (let ((cols (array/concat @fl (if (= @of "") [] [@of]))))
+                    (json/stringify { index: { fields: (array/map @cols (fn c (if @desc (object/fromEntries [[@c, "desc"]]) @c))) }, name: (str/concat (str/join @cols "_") (if @desc "_desc" "") "_idx"), type: "json" })))))),
+          auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
+          timeoutMs: @config.timeoutMs
+        } { emit: { success: COUCH_IDX_REPLIED, failure: COUCH_UNREACHABLE } })
+      COUCH_IDX_REPLIED -> idle when (and (or (= @payload.status 200) (= @payload.status 201)) (>= (+ @entity.at 1) (array/len @entity.paths)))
+        (set @entity.mode "")
+        (emit ROWS_INDEXES_ENSURED { key: @entity.key })
+      COUCH_IDX_REPLIED -> idle when (not (or (= @payload.status 200) (= @payload.status 201)))
+        (set @entity.mode "")
+        (emit STORE_FAILED { key: @entity.key, message: (str/concat "CouchDB create index answered " @payload.status ": " (object/get (json/parse @payload.body CouchError) reason "")) })
+      COUCH_UNREACHABLE -> idle
+        (set @entity.mode "")
+        (emit STORE_FAILED { key: @entity.key, message: (str/concat "CouchDB request failed: " @payload.error) })
+    }
+
     state getting {
       INIT -> idle
         (set @entity.op "")
@@ -638,6 +700,10 @@ orbital CouchdbOrbital {
         outcomes : [RowWriteOutcome]!
       }
         @tier "internal"
+      ROWS_INDEXES_ENSURED -> external {
+        key : string!
+      }
+        @tier "internal"
       STORE_UNSUPPORTED -> external {
         key : string!
         reason : string!
@@ -700,6 +766,12 @@ orbital CouchdbOrbital {
       COUCH_ENSURE_REPLIED { status : number!  headers : Map string string  body : string!  key : string }
         @description "Internal: the create-database reply."
         @tier "secondary"
+      COUCH_IDX_DB_REPLIED { status : number!  headers : Map string string  body : string!  key : string }
+        @description "Internal: the create-database reply of an ensureIndexes ask."
+        @tier "secondary"
+      COUCH_IDX_REPLIED { status : number!  headers : Map string string  body : string!  key : string }
+        @description "Internal: the _index reply."
+        @tier "secondary"
       COUCH_READ_REPLIED { status : number!  headers : Map string string  body : string!  key : string }
         @description "Internal: the read-for-_rev reply."
         @tier "secondary"
@@ -742,6 +814,13 @@ orbital CouchdbOrbital {
       }
         @description "A query ask; the order, filter and window are translated to a Mango selector, or the ask is STORE_UNSUPPORTED."
         @tier "internal"
+      ROWS_ENSURE_INDEXES -> input {
+        key : string!
+        entityType : string!
+        indexes : [IndexPath]!
+      }
+        @description "Declare the index paths of an entity type: the database is made if missing, then one POST /_index per path (idempotent). The kernel sends it once before the first ask for the entity."
+        @tier "internal"
       ROWS_WRITE -> input {
         key : string!
         batch : RowWriteBatch!
@@ -750,6 +829,8 @@ orbital CouchdbOrbital {
         @tier "internal"
       COUCH_GET_REPLIED
       COUCH_ENSURE_REPLIED
+      COUCH_IDX_DB_REPLIED
+      COUCH_IDX_REPLIED
       COUCH_READ_REPLIED
       COUCH_WRITE_REPLIED
       COUCH_LIST_REPLIED

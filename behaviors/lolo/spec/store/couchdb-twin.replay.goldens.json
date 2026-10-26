@@ -8158,6 +8158,493 @@
      }
     }
    ]
+  },
+  {
+   "id": "ensure-indexes-makes-the-database-then-posts-one-index-per-path",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "indexes": [
+       {
+        "fields": [
+         "status"
+        ]
+       },
+       {
+        "fields": [
+         "status",
+         "priority"
+        ],
+        "orderBy": "title:desc"
+       }
+      ]
+     },
+     "from": "idle",
+     "entity": {
+      "id": "c",
+      "ensured": []
+     },
+     "expect": {
+      "state": "indexing",
+      "effects": [
+       {
+        "type": "http",
+        "optionsAt": 3
+       }
+      ]
+     }
+    },
+    {
+     "event": "COUCH_IDX_DB_REPLIED",
+     "payload": {
+      "status": 201,
+      "headers": {},
+      "body": "{\"ok\":true}"
+     },
+     "from": "indexing",
+     "entity": {
+      "id": "c",
+      "key": "k",
+      "entityType": "Ticket",
+      "db": "tickets",
+      "mode": "ensure",
+      "op": "ensure",
+      "paths": [
+       {
+        "fields": [
+         "status"
+        ]
+       },
+       {
+        "fields": [
+         "status",
+         "priority"
+        ],
+        "orderBy": "title:desc"
+       }
+      ],
+      "at": 0,
+      "ensured": []
+     },
+     "expect": {
+      "state": "indexing",
+      "effects": [
+       {
+        "type": "http",
+        "optionsAt": 3
+       }
+      ]
+     }
+    },
+    {
+     "event": "COUCH_IDX_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"result\":\"created\",\"id\":\"_design/x\",\"name\":\"x\"}"
+     },
+     "from": "indexing",
+     "entity": {
+      "id": "c",
+      "key": "k",
+      "entityType": "Ticket",
+      "db": "tickets",
+      "mode": "ensure",
+      "op": "ensure",
+      "paths": [
+       {
+        "fields": [
+         "status"
+        ]
+       },
+       {
+        "fields": [
+         "status",
+         "priority"
+        ],
+        "orderBy": "title:desc"
+       }
+      ],
+      "at": 0,
+      "ensured": [
+       "tickets"
+      ]
+     },
+     "expect": {
+      "state": "indexing",
+      "effects": [
+       {
+        "type": "http",
+        "optionsAt": 3
+       }
+      ]
+     }
+    },
+    {
+     "event": "COUCH_IDX_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"result\":\"created\",\"id\":\"_design/x\",\"name\":\"x\"}"
+     },
+     "from": "indexing",
+     "entity": {
+      "id": "c",
+      "key": "k",
+      "entityType": "Ticket",
+      "db": "tickets",
+      "mode": "ensure",
+      "op": "ensure",
+      "paths": [
+       {
+        "fields": [
+         "status"
+        ]
+       },
+       {
+        "fields": [
+         "status",
+         "priority"
+        ],
+        "orderBy": "title:desc"
+       }
+      ],
+      "at": 1,
+      "ensured": [
+       "tickets"
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ROWS_INDEXES_ENSURED",
+        "payload": {
+         "key": "k"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    }
+   ],
+   "note": "the database is made first (an existing one, 412 or 409, is fine), then POST /db/_index per path in order; the index is the equality fields then the order field, every field desc when the order is desc; the request bodies are pinned by the wire probe like the other requests"
+  },
+  {
+   "id": "ensure-indexes-with-no-paths-answers-at-once",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "indexes": []
+     },
+     "from": "idle",
+     "entity": {
+      "id": "c"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ROWS_INDEXES_ENSURED",
+        "payload": {
+         "key": "k"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ensure-indexes-existing-database-is-fine",
+   "steps": [
+    {
+     "event": "COUCH_IDX_DB_REPLIED",
+     "payload": {
+      "status": 412,
+      "headers": {},
+      "body": "{\"error\":\"file_exists\"}"
+     },
+     "from": "indexing",
+     "entity": {
+      "id": "c",
+      "key": "k",
+      "entityType": "Ticket",
+      "db": "tickets",
+      "mode": "ensure",
+      "op": "ensure",
+      "paths": [
+       {
+        "fields": [
+         "status"
+        ]
+       },
+       {
+        "fields": [
+         "status",
+         "priority"
+        ],
+        "orderBy": "title:desc"
+       }
+      ],
+      "at": 0,
+      "ensured": []
+     },
+     "expect": {
+      "state": "indexing",
+      "effects": [
+       {
+        "type": "http",
+        "optionsAt": 3
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-ensure-indexes-database-refused-is-store-failed",
+   "steps": [
+    {
+     "event": "COUCH_IDX_DB_REPLIED",
+     "payload": {
+      "status": 401,
+      "headers": {},
+      "body": "{\"error\":\"unauthorized\",\"reason\":\"Name or password is incorrect.\"}"
+     },
+     "from": "indexing",
+     "entity": {
+      "id": "c",
+      "key": "k",
+      "entityType": "Ticket",
+      "db": "tickets",
+      "mode": "ensure",
+      "op": "ensure",
+      "paths": [
+       {
+        "fields": [
+         "status"
+        ]
+       },
+       {
+        "fields": [
+         "status",
+         "priority"
+        ],
+        "orderBy": "title:desc"
+       }
+      ],
+      "at": 0,
+      "ensured": []
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "CouchDB create database answered 401: Name or password is incorrect."
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROWS_INDEXES_ENSURED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-ensure-indexes-index-refused-is-store-failed",
+   "steps": [
+    {
+     "event": "COUCH_IDX_REPLIED",
+     "payload": {
+      "status": 400,
+      "headers": {},
+      "body": "{\"error\":\"invalid_index\",\"reason\":\"Bad index\"}"
+     },
+     "from": "indexing",
+     "entity": {
+      "id": "c",
+      "key": "k",
+      "entityType": "Ticket",
+      "db": "tickets",
+      "mode": "ensure",
+      "op": "ensure",
+      "paths": [
+       {
+        "fields": [
+         "status"
+        ]
+       },
+       {
+        "fields": [
+         "status",
+         "priority"
+        ],
+        "orderBy": "title:desc"
+       }
+      ],
+      "at": 0,
+      "ensured": [
+       "tickets"
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "CouchDB create index answered 400: Bad index"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROWS_INDEXES_ENSURED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-ensure-indexes-unreachable-server-is-store-failed",
+   "steps": [
+    {
+     "event": "COUCH_UNREACHABLE",
+     "payload": {
+      "error": "connection refused",
+      "kind": "transport"
+     },
+     "from": "indexing",
+     "entity": {
+      "id": "c",
+      "key": "k",
+      "entityType": "Ticket",
+      "db": "tickets",
+      "mode": "ensure",
+      "op": "ensure",
+      "paths": [
+       {
+        "fields": [
+         "status"
+        ]
+       },
+       {
+        "fields": [
+         "status",
+         "priority"
+        ],
+        "orderBy": "title:desc"
+       }
+      ],
+      "at": 0,
+      "ensured": []
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "CouchDB request failed: connection refused"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rows-are-unchanged-by-an-ensure-the-read-after-it-asks-for-the-same-document",
+   "steps": [
+    {
+     "event": "COUCH_IDX_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"result\":\"created\",\"id\":\"_design/x\",\"name\":\"x\"}"
+     },
+     "from": "indexing",
+     "entity": {
+      "id": "c",
+      "key": "k",
+      "entityType": "Ticket",
+      "db": "tickets",
+      "mode": "ensure",
+      "op": "ensure",
+      "paths": [
+       {
+        "fields": [
+         "status"
+        ]
+       },
+       {
+        "fields": [
+         "status",
+         "priority"
+        ],
+        "orderBy": "title:desc"
+       }
+      ],
+      "at": 1,
+      "ensured": [
+       "tickets"
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ROWS_INDEXES_ENSURED",
+        "payload": {
+         "key": "k"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k2",
+      "entityType": "TimeEntry",
+      "id": "a b"
+     },
+     "from": "idle",
+     "entity": {
+      "id": "c"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "COUCH_GET",
+        "payload": {
+         "db": "time_entries",
+         "id": "a b"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "pair of typed-row-read-names-the-database-like-the-postgres-table: the same ask, the same document request"
   }
  ]
 }

@@ -59,6 +59,8 @@ orbital FirestoreSpec {
   type RowListVerb = { key : string!, entityType : string! }
   type RowsQueryVerb = { key : string!, entityType : string!, query : RowQuery!, project : "rows" | "ids" }
   type RowsWriteVerb = { key : string!, batch : RowWriteBatch! }
+  type IndexPath = { fields : [string]!, orderBy : string? }
+  type RowsEnsureIndexesVerb = { key : string!, entityType : string!, indexes : [IndexPath]! }
 
   type Collection = { entityType : string!, collection : string! }
   type FirestoreAuth = "emulator" | "token" | "service-account"
@@ -77,6 +79,7 @@ orbital FirestoreSpec {
       ROW_LIST -> busy
       ROWS_QUERY -> busy
       ROWS_WRITE -> busy
+      ROWS_ENSURE_INDEXES -> ready
     }
     state busy
     emits {
@@ -85,6 +88,7 @@ orbital FirestoreSpec {
       ROWS_PAGE { key : string!  rows : [Row]!  total : number! }
       ROWS_IDS { key : string!  ids : [string]!  total : number! }
       ROWS_WRITTEN { key : string!  outcomes : [RowWriteOutcome]! }
+      ROWS_INDEXES_ENSURED { key : string! }
       STORE_UNSUPPORTED { key : string!  reason : string! }
       STORE_FAILED { key : string!  message : string! }
     }

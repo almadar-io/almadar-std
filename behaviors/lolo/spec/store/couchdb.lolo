@@ -20,6 +20,7 @@ orbital CouchdbSpec {
       ROW_LIST -> idle
       ROWS_QUERY -> idle
       ROWS_WRITE -> idle
+      ROWS_ENSURE_INDEXES -> indexing
       COUCH_GET -> getting
       COUCH_CREATE -> ensuring
       COUCH_UPSERT -> ensuring
@@ -32,6 +33,7 @@ orbital CouchdbSpec {
     state reading @holds (>= @entity.attempt 1)
     state writing @holds (>= @entity.attempt 1)
     state finding
+    state indexing
     state reading { COUCH_READ_REPLIED -> idle }
     state writing { COUCH_WRITE_REPLIED -> idle }
     emits {
@@ -40,6 +42,7 @@ orbital CouchdbSpec {
       ROWS_PAGE { key : string!  total : number! }
       ROWS_IDS { key : string!  total : number! }
       ROWS_WRITTEN { key : string! }
+      ROWS_INDEXES_ENSURED { key : string! }
       STORE_UNSUPPORTED { key : string!  reason : string! }
       STORE_FAILED { key : string!  message : string! }
       COUCH_ROW { db : string!  id : string! }

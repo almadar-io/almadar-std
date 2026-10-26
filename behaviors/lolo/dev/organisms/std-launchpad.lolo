@@ -1,35 +1,36 @@
 app std-launchpad [
-  version: "2.0.0",
+  version: "4.0.0",
   theme: "linear-clean-light",
   themes: ["game-sci-fi-dark"],
-  exec: ["orb", "open", "ps"],
+  exec: ["orb", "aws", "bq", "gcloud", "gh", "ssh"],
   env: ["PATH", "HOME", "NODE_ENV", "AUTH_PROVIDER", "OIDC_ISSUER_URL", "OIDC_AUDIENCE", "FIREBASE_PROJECT_ID", "FIREBASE_SERVICE_ACCOUNT_PATH", "FIREBASE_AUTH_EMULATOR_HOST", "FIRESTORE_EMULATOR_HOST", "ALMADAR_INTEGRATIONS_MODE"],
   sys: [memory, cpu],
   fs: { "~/.almadar/launchpad": [create], "~/.almadar/launchpad/**": [read, write, create] },
-  description: "std-launchpad — the dashboard of orb's own operations that bare `orb` (orb launchpad) opens in the browser. It lists the route apps of the topics its apps knob names (the ops boards and the dev playground that hosts the behavior catalog), read with std-launchpad-kinds restricted to those package and topic pairs, as tiles under the title each section gives, each with Run (the app is started in the background with `orb serve <file> --port <port>` and the browser opened on it by std-launchpad-programs); the launchpad itself is left out by the exclude knob. Above them sit Recent, the launches remembered per machine in ~/.almadar/launchpad/recents.json (std-launchpad-recents) with how long ago, each relaunching or opening the app, and Running now: every program the launchpad holds with its port, mock or production, its resident memory (std-system-stats reading `ps` for the programs' pids), Open and Stop. Beside them the Orb view (std-launchpad-orb) draws this machine as one orb with its CPU and memory and the running programs as stars sized by memory and coloured mock or production, the stopped recent ones dimmed on an outer ring, and a click on a star opens, stops or relaunches it; under it the machine's memory, CPU, load and uptime (std-system-stats) and the orb's own version, the launchpad's uptime, the behaviors indexed per topic and the kernel's counters (std-orb-stats). The top bar holds the production/mock switch (mock starts every program with ALMADAR_INTEGRATIONS_MODE=mock; production leaves it unset) beside AUTH_PROVIDER and the problems std-http-boot-gate's environment check reports for this machine. Serve it with `orb launchpad`.",
-  egress: []
+  description: "std-launchpad — the dashboard of orb's own operations that bare `orb` (orb launchpad) opens in the browser, always on production credentials. It composes its apps statically: the ops boards std-ci-status, std-aws-board, std-ci-run-logs, std-app-hosting-board, std-cloud-run-board and std-training-board, and the dev playground std-behavior-playground, each with every trait of its page, so each board's server traits run on the launchpad's own server under the launchpad's grants. Its tab bar is Home (the dashboard) plus one tab per opened app: Open on a tile or a recent adds the tab and shows the board's own view in it, with `@trait.X` embedding; switching tabs switches the view and every open board keeps its state; closing a tab removes the board's view (its trait keeps its state, as any trait does when its view is not shown). A board is inert until its Load is pressed: its INIT only draws its view (the loadOnInit knobs stay false), so opening the launchpad reads nothing from GitHub, AWS or Google. No program is spawned and no port is taken. Home holds Recent (the opens remembered per machine in ~/.almadar/launchpad/recents.json by std-launchpad-recents, each reopening its tab), Open now (the tabs, with Open and Close), the tiles of the boards knob (id, label, topic and a one-line description, in the sections the sections knob names), the Orb view (std-launchpad-orb: this machine as one orb with its CPU and memory, one star of the same size for each open tab, coloured by its topic, the recent ones not open dimmed on an outer ring; a click on a star opens, closes or reopens its tab), the machine's memory, CPU, load and uptime (std-system-stats) and the orb's own version, uptime and kernel counters (std-orb-stats). The top bar holds AUTH_PROVIDER and the problems std-boot-env-check reports for this machine. The app header grants exactly what the composed boards and the stats use, one line per key: exec is orb (the version) and the CLIs the boards run (aws and ssh for the AWS and training boards, gcloud and bq for Cloud Run and App Hosting, gh for CI run logs); env is the variables the boot gate reads (std-http-boot-gate reads ALMADAR_INTEGRATIONS_MODE too, and the launchpad ignores a mock value there) with PATH and HOME for the CLIs; egress lists the GitHub, App Hosting, Cloud Monitoring, OpenAI and OpenRouter hosts the boards and the playground call. std-analytics-collector and std-llm-spend-board are not composed: they own persistent entities that a trait-level compose does not carry. Serve it with `orb launchpad`.",
+  egress: ["https://api.github.com", "https://firebaseapphosting.googleapis.com", "https://monitoring.googleapis.com", "https://openrouter.ai", "https://api.openai.com"]
 ]
-;; @capabilities "run an orb operations app in the background, stop a running program, open a running program, see the memory and cpu of this machine and of each running program, see the orb's version and kernel counters, switch integrations between production and mock, remember recent launches"
+;; @capabilities "open an orb operations board or the behavior playground as a tab and run it live, switch between open apps, close an app, see the memory and cpu of this machine, see the orb's version and kernel counters, remember recent opens"
 
 uses Layout from "std/behaviors/std-workspace-layout"
-uses Kinds from "std/behaviors/std-launchpad-kinds"
-uses Programs from "std/behaviors/std-launchpad-programs"
 uses Recents from "std/behaviors/std-launchpad-recents"
 uses Orb from "std/behaviors/std-launchpad-orb"
 uses Stats from "std/behaviors/std-system-stats"
 uses OrbStats from "std/behaviors/std-orb-stats"
 uses Gate from "std/behaviors/std-http-boot-gate"
 uses EnvCheck from "std/behaviors/std-boot-env-check"
+uses Ci from "std/behaviors/std-ci-status"
+uses Aws from "std/behaviors/std-aws-board"
+uses Logs from "std/behaviors/std-ci-run-logs"
+uses Ah from "std/behaviors/std-app-hosting-board"
+uses Cr from "std/behaviors/std-cloud-run-board"
+uses Tr from "std/behaviors/std-training-board"
+uses Play from "std/behaviors/std-behavior-playground"
 
-type LaunchpadScope = { package : string!, topic : string! }
 type LaunchpadSection = { topic : string!, title : string!, run : string! }
-type LaunchpadLeaf = { behavior : string!, kind : string!, description : string!, route : string! }
-type LaunchpadApp = { behavior : string!, label : string!, description : string!, topic : string!, kind : string!, route : string! }
+type LaunchpadBoard = { id : string!, label : string!, topic : string!, description : string! }
+type LaunchpadTab = { id : string!, label : string!, topic : string! }
 type LaunchpadProcess = { pid : number!, rssKb : number! }
-type LaunchpadRunning = { id : string!, behavior : string!, label : string!, kind : string!, verb : string!, file : string!, port : number!, url : string!, pid : number!, mock : boolean!, status : "starting" | "running"! }
 type LaunchpadRecent = { behavior : string!, label : string!, kind : string!, command : string!, route : string!, at : number! }
-type LaunchpadSkipped = { package : string!, error : string! }
-type LaunchpadTopicCount = { package : string!, topic : string!, count : number! }
 type LaunchpadGateEnv = { authProvider : string, oidcIssuerUrl : string, oidcAudience : string, firebaseProjectId : string, firebaseServiceAccountPath : string, firebaseAuthEmulatorHost : string, firestoreEmulatorHost : string, integrationsMock : boolean }
 type OrbMachine = { label : string!, detail : string! }
 type OrbStar = { id : string!, label : string!, kind : string!, state : "starting" | "running" | "stopped"!, weight : number!, detail : string! }
@@ -38,17 +39,14 @@ type OrbClicked = { id : string!, label : string, group : string, size : number,
 orbital Launchpad {
   entity LaunchpadView [runtime] {
     id : string!
-    apps : [LaunchpadApp] = []
-    appsStatus : "loading" | "ready" | "failed" = loading
-    appsError : string = ""
-    skipped : [LaunchpadSkipped] = []
-    indexed : [LaunchpadTopicCount] = []
-    running : [LaunchpadRunning] = []
+    tabs : [LaunchpadTab] = []
+    active : string @description "The id of the open tab in front; empty is Home." = ""
+    openTabs : [LaunchpadTab] = []
     recents : [LaunchpadRecent] = []
-    mock : boolean @description "Programs start with ALMADAR_INTEGRATIONS_MODE=mock when on; with it unset (production) when off." = false
     authProvider : string = ""
     problems : [string] = []
     envChecked : boolean = false
+    envMock : boolean = false
     orbUptimeMs : number = 0
     statsReady : boolean = false
     memoryTotal : number = 0
@@ -57,7 +55,6 @@ orbital Launchpad {
     cpuPercent : number = 0
     load1 : number = 0
     machineUptime : number = 0
-    procs : [LaunchpadProcess] = []
     statsUnavailable : [string] = []
     statsErrors : Map string string = {}
     orbVersion : string = ""
@@ -69,18 +66,12 @@ orbital Launchpad {
   }
 
   config {
-    apps : [LaunchpadScope] = [{ package: (quote "@almadar/std"), topic: "ops" }, { package: (quote "@almadar/std"), topic: "dev" }]
-      @label "Apps"
-      @description "The package and topic pairs whose apps the launchpad lists, in the order they are read; std-launchpad-kinds indexes only these."
-    appKind : string = "route"
-      @label "App kind"
-      @description "The kind of behavior listed: a route app serves a page of its own."
-    exclude : [string] = ["almadar-std/std-launchpad", "almadar-std/std-launchpad-orb"]
-      @label "Left out"
-      @description "Behaviors not listed even when they match: the launchpad itself and its Orb view, which has a page of its own."
-    sections : [LaunchpadSection] = [{ topic: "ops", title: "Ops", run: "Run" }, { topic: "dev", title: "Tools", run: "Open" }]
+    boards : [LaunchpadBoard] = [{ id: "almadar-std/std-ci-status", label: "std-ci-status", topic: "ops", description: "The latest GitHub Actions run of every repository of an organization, as one board; Load reads it from GitHub." }, { id: "almadar-std/std-aws-board", label: "std-aws-board", topic: "ops", description: "One AWS region at a glance: instances, volumes, buckets, quotas and cost, read through the aws CLI." }, { id: "almadar-std/std-ci-run-logs", label: "std-ci-run-logs", topic: "ops", description: "The failed-job log of one GitHub Actions run, read through the gh CLI." }, { id: "almadar-std/std-app-hosting-board", label: "std-app-hosting-board", topic: "ops", description: "A Firebase App Hosting project's backends, rollouts and logs, read through the App Hosting API and the gcloud CLI." }, { id: "almadar-std/std-cloud-run-board", label: "std-cloud-run-board", topic: "ops", description: "A Google Cloud project's Cloud Run services and this month's cost, read through the gcloud and bq CLIs." }, { id: "almadar-std/std-training-board", label: "std-training-board", topic: "ops", description: "The model-training instances of one AWS region, read through the aws and ssh CLIs." }, { id: "almadar-std/std-behavior-playground", label: "std-behavior-playground", topic: "dev", description: "Browse every installed behavior by package and topic, run one live, explore its state machines and read its source." }]
+      @label "Boards"
+      @description "The composed apps the launchpad offers, in order: id (the behavior name), label, topic and a one-line description. Each id must be one of the apps the launchpad composes; an id not composed has no view to show."
+    sections : [LaunchpadSection] = [{ topic: "ops", title: "Ops", run: "Open" }, { topic: "dev", title: "Tools", run: "Open" }]
       @label "Sections"
-      @description "The topics shown as tile sections, in order, with each section's heading and the text of its Run button."
+      @description "The topics shown as tile sections, in order, with each section's heading and the text of its Open button."
     title : string = "Orb"
       @label "Title"
   }
@@ -95,76 +86,49 @@ orbital Launchpad {
       topBarTrait: @trait.LaunchpadTopBar
     }
   }
-
-  trait KindsScopeLoader = Kinds.traits.KindsScopeLoader {
-    config {
-      scope: @config.apps
-    }
-    listens {
-      LaunchpadStage.KINDS_SCOPE_LOAD -> KINDS_SCOPE_LOAD
-      KindsRows.KINDS_LEAVES -> KINDS_LEAVES
-      KindsTopic.KINDS_FAILED -> KINDS_FAILED
-      KindsRows.KINDS_FAILED -> KINDS_FAILED
-    }
-  }
-  trait KindsTopic = Kinds.traits.KindsTopic {
-    listens {
-      KindsScopeLoader.KINDS_LOAD -> KINDS_LOAD
-      KindsClassifier.KINDS_CLASSIFIED -> KINDS_CLASSIFIED
-      KindsIndex.KINDS_ENTRIES -> KINDS_ENTRIES
-    }
-  }
-  trait KindsRows = Kinds.traits.KindsRows {
-    listens {
-      KindsTopic.KINDS_READY -> KINDS_READY
-    }
-  }
-  trait KindsIndex = Kinds.traits.KindsIndex {
-    config {
-      scope: @config.apps
-    }
-    listens {
-      KindsTopic.KINDS_REFRESH -> KINDS_REFRESH
-      KindsTopic.KINDS_REFRESH_FAILED -> KINDS_REFRESH_FAILED
-    }
-  }
-  trait KindsClassifier = Kinds.traits.KindsClassifier {
-    listens {
-      KindsTopic.KIND_CLASSIFY -> KIND_CLASSIFY
-    }
-  }
-
-  trait ProgramRunner = Programs.traits.ProgramRunner {
-    listens {
-      LaunchpadStage.PROGRAM_LAUNCH -> PROGRAM_LAUNCH
-      LaunchpadStage.PROGRAM_STOP -> PROGRAM_STOP
-      LaunchpadStage.PROGRAM_OPEN -> PROGRAM_OPEN
-      LaunchpadStage.PROGRAMS_LIST -> PROGRAMS_LIST
-      SystemOrb.ORB_OPEN -> PROGRAM_OPEN
-      SystemOrb.ORB_STOP -> PROGRAM_STOP
-    }
-  }
+  trait CiStatus = Ci.traits.CiStatus {}
+  trait CiGithub = Ci.traits.CiGithub {}
+  trait CiRetry = Ci.traits.CiRetry {}
+  trait AwsStatus = Aws.traits.AwsStatus {}
+  trait AwsCli = Aws.traits.AwsCli {}
+  trait CiRunLogs = Logs.traits.CiRunLogs {}
+  trait CiLogsGh = Logs.traits.CiLogsGh {}
+  trait AppHostingStatus = Ah.traits.AppHostingStatus {}
+  trait AhGcloud = Ah.traits.AhGcloud {}
+  trait CloudRunStatus = Cr.traits.CloudRunStatus {}
+  trait CrGcloud = Cr.traits.CrGcloud {}
+  trait CrBq = Cr.traits.CrBq {}
+  trait TrainingStatus = Tr.traits.TrainingStatus {}
+  trait TrAws = Tr.traits.TrAws {}
+  trait TrSsh = Tr.traits.TrSsh {}
+  trait PlaygroundFrame = Play.traits.PlaygroundFrame {}
+  trait PlaygroundTopBar = Play.traits.PlaygroundTopBar {}
+  trait PlaygroundTopics = Play.traits.PlaygroundTopics {}
+  trait PlaygroundStage = Play.traits.PlaygroundStage {}
+  trait PlaygroundLoader = Play.traits.PlaygroundLoader {}
+  trait BehaviorCatalog = Play.traits.BehaviorCatalog {}
+  trait BehaviorCatalogLlm = Play.traits.BehaviorCatalogLlm {}
+  trait PlaygroundCosmic = Play.traits.PlaygroundCosmic {}
+  trait PlaygroundInspector = Play.traits.PlaygroundInspector {}
+  trait PlaygroundStatus = Play.traits.PlaygroundStatus {}
+  trait PlaygroundRuntime = Play.traits.PlaygroundRuntime {}
 
   trait RecentsStore = Recents.traits.RecentsStore {
     listens {
-      LaunchpadStage.RECENTS_LOAD -> RECENTS_LOAD
-      LaunchpadStage.RECENT_ADD -> RECENT_ADD
+      LaunchpadHome.RECENTS_LOAD -> RECENTS_LOAD
+      LaunchpadHome.RECENT_ADD -> RECENT_ADD
     }
   }
 
   trait SystemStatsMeter = Stats.traits.SystemStatsMeter {
     listens {
-      LaunchpadStage.STATS_START -> STATS_START
-      StatsWatch.STATS_WATCH -> STATS_WATCH
-      ProcessReader.CLI_DONE -> PS_DONE
-      ProcessReader.CLI_FAILED -> PS_FAILED
+      LaunchpadHome.STATS_START -> STATS_START
     }
   }
-  trait ProcessReader = Stats.traits.ProcessReader {}
 
   trait OrbStatsReader = OrbStats.traits.OrbStatsReader {
     listens {
-      LaunchpadStage.ORB_STATS_ASK -> ORB_STATS_ASK
+      LaunchpadHome.ORB_STATS_ASK -> ORB_STATS_ASK
       SystemStatsMeter.STATS_READ -> ORB_STATS_ASK
       OrbVersionRunner.CLI_DONE -> ORB_VERSION_DONE
       OrbVersionRunner.CLI_FAILED -> ORB_VERSION_FAILED
@@ -173,8 +137,12 @@ orbital Launchpad {
   trait OrbVersionRunner = OrbStats.traits.OrbVersionRunner {}
 
   trait SystemOrb = Orb.traits.SystemOrb {
+    config {
+      hint: "Each star is an open app, coloured by its topic; all stars are the same size because nothing in-process measures an app honestly. Click one to open, close or reopen its tab."
+      colors: { ops: "var(--color-success)", dev: "var(--color-info)" }
+    }
     listens {
-      LaunchpadStage.ORB_STATE -> ORB_STATE
+      LaunchpadHome.ORB_STATE -> ORB_STATE
       NODE_CLICK {
         node : OrbClicked!
       }
@@ -186,30 +154,6 @@ orbital Launchpad {
       }
       STAR_RELAUNCH {
         id : string!
-      }
-    }
-  }
-
-  trait StatsWatch -> LaunchpadView {
-    initial: ready
-
-    state ready {
-      INIT -> ready
-      PROGRAMS_CHANGED -> ready
-        (emit STATS_WATCH { pids: (array/map (array/filter ?running (fn r (> @r.pid 0))) (fn r @r.pid)) })
-    }
-
-    emits {
-      STATS_WATCH -> external {
-        pids : [number]!
-      }
-        @description "The processes of the programs the launchpad holds, whose memory is read."
-    }
-
-    listens {
-      ProgramRunner.PROGRAMS_CHANGED -> PROGRAMS_CHANGED
-      PROGRAMS_CHANGED {
-        running : [LaunchpadRunning]!
       }
     }
   }
@@ -239,8 +183,8 @@ orbital Launchpad {
 
     state idle {
       INIT -> idle
-        (emit BAR_SHOWN {})
-      BAR_SHOWN -> idle
+        (emit LAUNCHPAD_BAR_SHOWN {})
+      LAUNCHPAD_BAR_SHOWN -> idle
         (render-ui main { type: stack, direction: horizontal, align: center, justify: between, gap: md, className: "px-4 py-2 flex-wrap", children: [
           { type: stack, direction: horizontal, align: center, gap: sm, children: [
             { type: icon, name: orbit, size: md },
@@ -248,34 +192,30 @@ orbital Launchpad {
           ] },
           { type: stack, direction: horizontal, align: center, gap: md, className: "flex-wrap", children: [
             { type: badge, label: (if (= @entity.authProvider "") "AUTH_PROVIDER not set" (str/concat "AUTH_PROVIDER " @entity.authProvider)), variant: (if (= @entity.authProvider "") warning default) },
-            { type: badge, label: (if (not @entity.envChecked) "Checking the environment" (if @entity.mock "Mock: no credentials needed" (if (= (array/len @entity.problems) 0) "Credentials present" (str/concat (array/len @entity.problems) " environment problems")))), variant: (if (not @entity.envChecked) default (if @entity.mock info (if (= (array/len @entity.problems) 0) success warning))) },
-            { type: switch, label: "Mock integrations", checked: @entity.mock, action: MODE_TOGGLED }
+            { type: badge, label: (if (not @entity.envChecked) "Checking the environment" (if @entity.envMock "ALMADAR_INTEGRATIONS_MODE=mock is set: the check is skipped" (if (= (array/len @entity.problems) 0) "Credentials present" (str/concat (array/len @entity.problems) " environment problems")))), variant: (if (not @entity.envChecked) default (if @entity.envMock warning (if (= (array/len @entity.problems) 0) success warning))) }
           ] }
         ] })
       GATE_ENV -> idle
         (set @entity.authProvider (or ?env.authProvider ""))
-        (emit BAR_SHOWN {})
-        (emit INTEGRATIONS_CHANGED { mock: @entity.mock, authProvider: @entity.authProvider, problems: @entity.problems, envChecked: @entity.envChecked })
+        (set @entity.envMock ?mock)
+        (emit LAUNCHPAD_BAR_SHOWN {})
+        (emit ENV_CHANGED { authProvider: @entity.authProvider, problems: @entity.problems, envChecked: @entity.envChecked, envMock: @entity.envMock })
       GATE_CHECKED -> idle
         (set @entity.problems ?problems)
         (set @entity.envChecked true)
-        (emit BAR_SHOWN {})
-        (emit INTEGRATIONS_CHANGED { mock: @entity.mock, authProvider: @entity.authProvider, problems: @entity.problems, envChecked: @entity.envChecked })
-      MODE_TOGGLED -> idle
-        (set @entity.mock ?checked)
-        (emit BAR_SHOWN {})
-        (emit INTEGRATIONS_CHANGED { mock: @entity.mock, authProvider: @entity.authProvider, problems: @entity.problems, envChecked: @entity.envChecked })
+        (emit LAUNCHPAD_BAR_SHOWN {})
+        (emit ENV_CHANGED { authProvider: @entity.authProvider, problems: @entity.problems, envChecked: @entity.envChecked, envMock: @entity.envMock })
     }
 
     emits {
-      BAR_SHOWN
-      INTEGRATIONS_CHANGED -> external {
-        mock : boolean!
+      LAUNCHPAD_BAR_SHOWN
+      ENV_CHANGED -> external {
         authProvider : string!
         problems : [string]!
         envChecked : boolean!
+        envMock : boolean!
       }
-        @description "The mock switch or the environment check changed."
+        @description "The environment check or the gate's variables changed."
     }
 
     listens {
@@ -293,19 +233,93 @@ orbital Launchpad {
         problems : [string]!
         ok : boolean!
       }
-      MODE_TOGGLED {
-        checked : boolean
-      }
     }
   }
 
   trait LaunchpadStage -> LaunchpadView [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (emit TABS_SHOWN {})
+      TABS_SHOWN -> ready
+        (render-ui main { type: stack, direction: vertical, gap: none, className: "h-full min-h-0", children: [
+          { type: stack, direction: horizontal, align: center, gap: sm, className: "px-4 py-2 border-b flex-nowrap overflow-x-auto", children: [
+            { type: button, label: "Home", icon: home, variant: (if (= @entity.active "") primary ghost), size: sm, action: TAB_HOME },
+            { type: stack, direction: horizontal, align: center, gap: sm, className: "flex-nowrap", children: (array/map @entity.tabs (fn t { type: stack, direction: horizontal, align: center, gap: none, children: [{ type: button, label: @t.label, variant: (if (= @t.id @entity.active) primary ghost), size: sm, className: "whitespace-nowrap", action: TAB_SELECT, actionPayload: { id: @t.id } }, { type: button, icon: x, variant: ghost, size: sm, aria-label: (str/concat "Close " @t.label), action: TAB_CLOSE, actionPayload: { id: @t.id } }] })) }
+          ] },
+          { type: box, className: (if (= @entity.active "") "flex-1 min-h-0" "hidden"), children: [@trait.LaunchpadHome] },
+          { type: box, className: (if (= @entity.active "almadar-std/std-ci-status") "flex-1 min-h-0 overflow-auto" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-ci-status"))) [@trait.CiStatus] []) },
+          { type: box, className: (if (= @entity.active "almadar-std/std-aws-board") "flex-1 min-h-0 overflow-auto" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-aws-board"))) [@trait.AwsStatus] []) },
+          { type: box, className: (if (= @entity.active "almadar-std/std-ci-run-logs") "flex-1 min-h-0 overflow-auto" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-ci-run-logs"))) [@trait.CiRunLogs] []) },
+          { type: box, className: (if (= @entity.active "almadar-std/std-app-hosting-board") "flex-1 min-h-0 overflow-auto" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-app-hosting-board"))) [@trait.AppHostingStatus] []) },
+          { type: box, className: (if (= @entity.active "almadar-std/std-cloud-run-board") "flex-1 min-h-0 overflow-auto" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-cloud-run-board"))) [@trait.CloudRunStatus] []) },
+          { type: box, className: (if (= @entity.active "almadar-std/std-training-board") "flex-1 min-h-0 overflow-auto" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-training-board"))) [@trait.TrainingStatus] []) },
+          { type: box, className: (if (= @entity.active "almadar-std/std-behavior-playground") "flex-1 min-h-0 overflow-auto" "hidden"), children: (if (array/some @entity.tabs (fn t (= @t.id "almadar-std/std-behavior-playground"))) [@trait.PlaygroundFrame] []) }
+        ] })
+      TAB_OPEN -> ready when (array/some @entity.tabs (fn t (= @t.id ?behavior)))
+        (set @entity.active ?behavior)
+        (emit TABS_PUSH {})
+        (emit TABS_SHOWN {})
+      TAB_OPEN -> ready when (not (array/some @entity.tabs (fn t (= @t.id ?behavior))))
+        (set @entity.tabs (array/append @entity.tabs { id: ?behavior, label: ?label, topic: ?topic }))
+        (set @entity.active ?behavior)
+        (emit TABS_PUSH {})
+        (emit TABS_SHOWN {})
+      TAB_HOME -> ready
+        (set @entity.active "")
+        (emit TABS_PUSH {})
+        (emit TABS_SHOWN {})
+      TAB_SELECT -> ready when (array/some @entity.tabs (fn t (= @t.id ?id)))
+        (set @entity.active ?id)
+        (emit TABS_PUSH {})
+        (emit TABS_SHOWN {})
+      TAB_CLOSE -> ready
+        (set @entity.tabs (array/filter @entity.tabs (fn t (!= @t.id ?id))))
+        (set @entity.active (if (= @entity.active ?id) "" @entity.active))
+        (emit TABS_PUSH {})
+        (emit TABS_SHOWN {})
+      TABS_PUSH -> ready
+        (emit TABS_CHANGED { tabs: @entity.tabs, active: @entity.active })
+    }
+
+    emits {
+      TABS_SHOWN
+      TABS_PUSH { }
+        @description "Internal: hand Home the tabs as they stand."
+        @tier "internal"
+      TABS_CHANGED -> external {
+        tabs : [LaunchpadTab]!
+        active : string!
+      }
+        @description "The open tabs and the one in front (empty is Home)."
+    }
+
+    listens {
+      LaunchpadHome.TAB_OPEN -> TAB_OPEN
+      LaunchpadHome.HOME_FOCUS -> TAB_SELECT
+      LaunchpadHome.HOME_CLOSE -> TAB_CLOSE
+      TABS_SHOWN { }
+      TABS_PUSH { }
+      TAB_OPEN {
+        behavior : string!
+        label : string!
+        topic : string!
+      }
+      TAB_HOME { }
+      TAB_SELECT {
+        id : string!
+      }
+      TAB_CLOSE {
+        id : string!
+      }
+    }
+  }
+
+  trait LaunchpadHome -> LaunchpadView [client] {
     config {
-      listedKind : string = @config.appKind
-        @label "App kind"
-        @tier "domain"
-      leftOut : [string] = @config.exclude
-        @label "Left out"
+      boardList : [LaunchpadBoard] = @config.boards
+        @label "Boards"
         @tier "domain"
       sectionList : [LaunchpadSection] = @config.sections
         @label "Sections"
@@ -315,54 +329,45 @@ orbital Launchpad {
 
     state ready {
       INIT -> ready
-        (set @entity.appsStatus loading)
-        (emit KINDS_SCOPE_LOAD {})
         (emit RECENTS_LOAD {})
-        (emit PROGRAMS_LIST {})
         (emit STATS_START {})
         (emit ORB_STATS_ASK {})
-        (emit STAGE_SHOWN {})
-      STAGE_SHOWN -> ready
+        (emit HOME_SHOWN {})
+      HOME_SHOWN -> ready
         (render-ui main { type: stack, direction: vertical, gap: lg, className: "h-full overflow-y-auto p-6", children: [
           { type: stack, direction: vertical, gap: xs, className: (if (= (array/len @entity.recents) 0) "hidden" ""), children: [
             { type: typography, content: "Recent", variant: overline, color: muted },
-            { type: stack, direction: horizontal, gap: sm, className: "flex-wrap", children: (array/map @entity.recents (fn r { type: button, label: (str/concat @r.label " · " (time/relative @r.at)), variant: secondary, size: sm, className: "rounded-full", action: RECENT_PICK, actionPayload: { behavior: @r.behavior } })) }
+            { type: stack, direction: horizontal, gap: sm, className: "flex-wrap", children: (array/map @entity.recents (fn r { type: button, label: (str/concat @r.label " · " (time/relative @r.at)), variant: secondary, size: sm, className: "rounded-full", action: APP_OPEN, actionPayload: { behavior: @r.behavior } })) }
           ] },
           { type: simple-grid, cols: 2, minChildWidth: 420, gap: lg, children: [
             { type: stack, direction: vertical, gap: lg, children: [
               { type: stack, direction: vertical, gap: xs, children: [
-                { type: typography, content: "Running now", variant: overline, color: muted },
-                { type: typography, content: "Nothing is running. Run an app below and it shows up here.", variant: body, color: muted, className: (if (= (array/len @entity.running) 0) "" hidden) },
-                { type: stack, direction: vertical, gap: xs, children: (array/map @entity.running (fn r { type: card, padding: sm, children: [
+                { type: typography, content: "Open now", variant: overline, color: muted },
+                { type: typography, content: "Nothing is open. Open an app below and it gets a tab.", variant: body, color: muted, className: (if (= (array/len @entity.openTabs) 0) "" hidden) },
+                { type: stack, direction: vertical, gap: xs, children: (array/map @entity.openTabs (fn t { type: card, padding: sm, children: [
                   { type: stack, direction: horizontal, align: center, justify: between, gap: md, className: "flex-wrap", children: [
                     { type: stack, direction: horizontal, align: center, gap: sm, className: "flex-wrap", children: [
-                      { type: typography, content: @r.label, variant: body, weight: medium },
-                      { type: badge, label: (if (> @r.port 0) (str/concat "port " @r.port) "port set in the program"), variant: default },
-                      { type: badge, label: (if @r.mock "mock" "production"), variant: (if @r.mock info success) },
-                      { type: badge, label: (if (array/some @entity.procs (fn q (= @q.pid @r.pid))) (format/bytes (* 1024 (object/get (array/find @entity.procs (fn q (= @q.pid @r.pid))) "rssKb" 0))) (if (= @r.status starting) "starting" "memory not read yet")), variant: (if (= @r.status starting) warning default) }
+                      { type: typography, content: @t.label, variant: body, weight: medium },
+                      { type: badge, label: @t.topic, variant: default }
                     ] },
                     { type: stack, direction: horizontal, align: center, gap: sm, children: [
-                      { type: button, label: "Open", variant: secondary, size: sm, action: RUNNING_OPEN, actionPayload: { id: @r.id }, className: (if (= @r.url "") hidden "") },
-                      { type: button, label: "Stop", variant: ghost, size: sm, action: RUNNING_STOP, actionPayload: { id: @r.id } }
+                      { type: button, label: "Open", variant: secondary, size: sm, action: TAB_FOCUS_PICK, actionPayload: { id: @t.id } },
+                      { type: button, label: "Close", variant: ghost, size: sm, action: TAB_CLOSE_PICK, actionPayload: { id: @t.id } }
                     ] }
                   ] }
                 ] })) }
               ] },
-              { type: skeleton, variant: list, rows: 3, className: (if (= @entity.appsStatus loading) "" hidden) },
-              { type: alert, variant: error, title: "The apps could not be listed", message: @entity.appsError, className: (if (= @entity.appsStatus failed) "" hidden) },
-              { type: alert, variant: warning, title: "Packages skipped", message: (str/join (array/map @entity.skipped (fn k (str/concat @k.package ": " @k.error))) "; "), className: (if (= (array/len @entity.skipped) 0) "hidden" "") },
               { type: stack, direction: vertical, gap: lg, children: (array/map @config.sectionList (fn sec { type: stack, direction: vertical, gap: xs, children: [
                 { type: typography, content: @sec.title, variant: overline, color: muted },
-                { type: typography, content: "Nothing to run here.", variant: body, color: muted, className: (if (and (= @entity.appsStatus ready) (= (array/count @entity.apps (fn a (= @a.topic @sec.topic))) 0)) "" hidden) },
-                { type: simple-grid, minChildWidth: 240, gap: md, children: (array/map (array/filter @entity.apps (fn a (= @a.topic @sec.topic))) (fn a { type: card, padding: md, children: [
+                { type: typography, content: "Nothing to open here.", variant: body, color: muted, className: (if (= (array/count @config.boardList (fn a (= @a.topic @sec.topic))) 0) "" hidden) },
+                { type: simple-grid, minChildWidth: 240, gap: md, children: (array/map (array/filter @config.boardList (fn a (= @a.topic @sec.topic))) (fn a { type: card, padding: md, children: [
                   { type: stack, direction: vertical, gap: sm, children: [
                     { type: typography, content: @a.label, variant: h5, weight: semibold },
                     { type: typography, content: @a.description, variant: caption, color: muted, overflow: clamp-3 },
                     { type: stack, direction: horizontal, align: center, gap: sm, children: [
-                      { type: button, label: @sec.run, variant: primary, size: sm, action: RUN_APP, actionPayload: { behavior: @a.behavior }, className: (if (array/some @entity.running (fn r (= @r.id @a.behavior))) hidden "") },
-                      { type: button, label: "Open", variant: secondary, size: sm, action: RUNNING_OPEN, actionPayload: { id: @a.behavior }, className: (if (array/some @entity.running (fn r (and (= @r.id @a.behavior) (!= @r.url "")))) "" hidden) },
-                      { type: button, label: "Stop", variant: ghost, size: sm, action: RUNNING_STOP, actionPayload: { id: @a.behavior }, className: (if (array/some @entity.running (fn r (= @r.id @a.behavior))) "" hidden) },
-                      { type: badge, label: "running", variant: success, className: (if (array/some @entity.running (fn r (= @r.id @a.behavior))) "" hidden) }
+                      { type: button, label: @sec.run, variant: primary, size: sm, action: APP_OPEN, actionPayload: { behavior: @a.id } },
+                      { type: button, label: "Close", variant: ghost, size: sm, action: TAB_CLOSE_PICK, actionPayload: { id: @a.id }, className: (if (array/some @entity.openTabs (fn t (= @t.id @a.id))) "" hidden) },
+                      { type: badge, label: "open", variant: success, className: (if (array/some @entity.openTabs (fn t (= @t.id @a.id))) "" hidden) }
                     ] }
                   ] }
                 ] })) }
@@ -385,61 +390,37 @@ orbital Launchpad {
                   { type: simple-grid, minChildWidth: 110, gap: sm, children: [
                     { type: stat-display, label: "Version", value: (if (= @entity.orbVersion "") "…" @entity.orbVersion), size: sm },
                     { type: stat-display, label: "Orb up", value: (if @entity.kernelReady (time/duration @entity.orbUptimeMs) "…"), size: sm },
-                    { type: stat-display, label: "Behaviors indexed", value: (array/sum (array/map @entity.indexed (fn t @t.count))), size: sm },
                     { type: stat-display, label: "Kernel traits", value: (if @entity.kernelReady @entity.registeredTraits "…"), size: sm },
                     { type: stat-display, label: "Kernel instances", value: (if @entity.kernelReady @entity.activeInstances "…"), size: sm }
                   ] },
-                  { type: typography, content: (str/join (array/map @entity.indexed (fn t (str/concat @t.topic " " @t.count))) " · "), variant: caption, color: muted, className: (if (= (array/len @entity.indexed) 0) "hidden" "") },
                   { type: typography, content: (str/concat "Not read: " (str/join (array/map (array/filter ["version", "kernel"] (fn k (object/has @entity.statsErrors @k))) (fn k (str/concat @k " (" (object/get @entity.statsErrors @k "") ")"))) "; ")), variant: caption, color: muted, className: (if (= (array/count ["version", "kernel"] (fn k (object/has @entity.statsErrors @k))) 0) "hidden" "") }
                 ] }
               ] }
             ] }
           ] },
-          { type: alert, variant: warning, title: "Environment problems", message: (str/join @entity.problems "; "), className: (if (or @entity.mock (not @entity.envChecked) (= (array/len @entity.problems) 0)) "hidden" "") },
-          { type: typography, content: (str/concat (if (= @entity.authProvider "") "AUTH_PROVIDER not set" (str/concat "AUTH_PROVIDER " @entity.authProvider)) " · " (if @entity.envChecked (str/concat (array/len @entity.problems) " environment problems") "checking the environment") (if @entity.mock " · integrations are mocked" "")), variant: caption, color: muted }
+          { type: alert, variant: warning, title: "Environment problems", message: (str/join @entity.problems "; "), className: (if (or @entity.envMock (not @entity.envChecked) (= (array/len @entity.problems) 0)) "hidden" "") },
+          { type: typography, content: (str/concat (if (= @entity.authProvider "") "AUTH_PROVIDER not set" (str/concat "AUTH_PROVIDER " @entity.authProvider)) " · " (if @entity.envChecked (str/concat (array/len @entity.problems) " environment problems") "checking the environment")), variant: caption, color: muted }
         ] })
-      KINDS_LEAVES -> ready
-        (set @entity.apps (array/concat @entity.apps (array/map (array/filter ?data (fn l (and (= @l.kind @config.listedKind) (not (array/includes @config.leftOut @l.behavior))))) (fn l { behavior: @l.behavior, label: (array/last (str/split @l.behavior "/")), description: @l.description, topic: ?topic, kind: @l.kind, route: @l.route }))))
-        (emit STAGE_SHOWN {})
-      KINDS_SCOPE_READY -> ready
-        (set @entity.appsStatus ready)
-        (emit STAGE_SHOWN {})
-      KINDS_FAILED -> ready
-        (set @entity.appsStatus failed)
-        (set @entity.appsError (str/concat ?package " / " ?topic " could not be read: " ?error))
-        (emit STAGE_SHOWN {})
-      INDEX_READY -> ready
-        (set @entity.skipped ?skipped)
-        (set @entity.indexed ?topics)
-        (emit STAGE_SHOWN {})
-      PROGRAMS_CHANGED -> ready
-        (set @entity.running ?running)
+      TABS_CHANGED -> ready
+        (set @entity.openTabs ?tabs)
         (emit ORB_PUSH {})
-        (emit STAGE_SHOWN {})
-      PROGRAM_STARTED -> ready
-        (render-ui toast { type: alert, variant: success, message: (str/concat ?id (if (> ?port 0) (str/concat " is starting on port " ?port) " is starting")) })
-      PROGRAM_ENDED -> ready when (= ?code 0)
-        (render-ui toast { type: alert, variant: info, message: (str/concat ?id " ended") })
-      PROGRAM_ENDED -> ready when (!= ?code 0)
-        (render-ui toast { type: alert, variant: error, message: (str/concat ?id " ended with code " ?code) })
-      PROGRAM_FAILED -> ready
-        (render-ui toast { type: alert, variant: error, message: (str/concat ?behavior ": " ?error) })
+        (emit HOME_SHOWN {})
       RECENTS_LOADED -> ready
         (set @entity.recents ?items)
         (emit ORB_PUSH {})
-        (emit STAGE_SHOWN {})
+        (emit HOME_SHOWN {})
       RECENTS_CHANGED -> ready
         (set @entity.recents ?items)
         (emit ORB_PUSH {})
-        (emit STAGE_SHOWN {})
+        (emit HOME_SHOWN {})
       RECENTS_FAILED -> ready
-        (render-ui toast { type: alert, variant: error, message: (str/concat "Recent launches: " ?error) })
-      INTEGRATIONS_CHANGED -> ready
-        (set @entity.mock ?mock)
+        (render-ui toast { type: alert, variant: error, message: (str/concat "Recent opens: " ?error) })
+      ENV_CHANGED -> ready
         (set @entity.authProvider ?authProvider)
         (set @entity.problems ?problems)
         (set @entity.envChecked ?envChecked)
-        (emit STAGE_SHOWN {})
+        (set @entity.envMock ?envMock)
+        (emit HOME_SHOWN {})
       STATS_READ -> ready
         (set @entity.statsReady true)
         (set @entity.memoryTotal ?memoryTotal)
@@ -448,10 +429,9 @@ orbital Launchpad {
         (set @entity.cpuPercent ?cpuPercent)
         (set @entity.load1 ?load1)
         (set @entity.machineUptime ?uptimeSeconds)
-        (set @entity.procs ?processes)
         (set @entity.statsUnavailable ?unavailable)
         (emit ORB_PUSH {})
-        (emit STAGE_SHOWN {})
+        (emit HOME_SHOWN {})
       STATS_FAILED -> ready
         (set @entity.statsErrors (object/set @entity.statsErrors ?stat (str/concat ?code ": " ?error)))
       ORB_KERNEL_READ -> ready
@@ -463,44 +443,42 @@ orbital Launchpad {
         (set @entity.orbUptimeMs ?uptimeMs)
       ORB_VERSION_READ -> ready
         (set @entity.orbVersion ?version)
-        (emit STAGE_SHOWN {})
+        (emit HOME_SHOWN {})
       ORB_STATS_FAILED -> ready
         (set @entity.statsErrors (object/set @entity.statsErrors ?stat (str/concat ?code ": " ?error)))
-        (emit STAGE_SHOWN {})
+        (emit HOME_SHOWN {})
       ORB_PUSH -> ready
-        (emit ORB_STATE { machine: { label: (if @entity.statsReady (str/concat "CPU " (math/round @entity.cpuPercent 0) "% · RAM " (math/round @entity.memoryPercent 0) "%") "This machine"), detail: (if @entity.statsReady (str/concat (format/bytes @entity.memoryUsed) " of " (format/bytes @entity.memoryTotal) " in use · load " (math/round @entity.load1 2)) "Reading the machine") }, stars: (array/concat (array/map @entity.running (fn r { id: @r.id, label: @r.label, kind: (if @r.mock "mock" "production"), state: @r.status, weight: (* 1024 (object/get (array/find @entity.procs (fn q (= @q.pid @r.pid))) "rssKb" 0)), detail: (str/concat (if (> @r.port 0) (str/concat "port " @r.port) "no port") " · " (if (array/some @entity.procs (fn q (= @q.pid @r.pid))) (format/bytes (* 1024 (object/get (array/find @entity.procs (fn q (= @q.pid @r.pid))) "rssKb" 0))) "memory not read yet")) })) (array/map (array/filter @entity.recents (fn c (not (array/some @entity.running (fn r (= @r.id @c.behavior)))))) (fn c { id: @c.behavior, label: @c.label, kind: "recent", state: "stopped", weight: 0, detail: (str/concat "stopped · last run " (time/relative @c.at)) }))) })
-      RUN_APP -> ready when (array/some @entity.apps (fn a (= @a.behavior ?behavior)))
-        (emit PROGRAM_LAUNCH { behavior: ?behavior, label: (object/get (array/find @entity.apps (fn a (= @a.behavior ?behavior))) "label" ""), kind: (object/get (array/find @entity.apps (fn a (= @a.behavior ?behavior))) "kind" ""), verb: (if (or (= (object/get (array/find @entity.apps (fn a (= @a.behavior ?behavior))) "kind" "") route) (= (object/get (array/find @entity.apps (fn a (= @a.behavior ?behavior))) "kind" "") http)) "serve" "run"), ported: (= (object/get (array/find @entity.apps (fn a (= @a.behavior ?behavior))) "kind" "") route), open: (= (object/get (array/find @entity.apps (fn a (= @a.behavior ?behavior))) "kind" "") route), route: (object/get (array/find @entity.apps (fn a (= @a.behavior ?behavior))) "route" ""), mock: @entity.mock })
-        (emit RECENT_ADD { behavior: ?behavior, label: (object/get (array/find @entity.apps (fn a (= @a.behavior ?behavior))) "label" ""), kind: (object/get (array/find @entity.apps (fn a (= @a.behavior ?behavior))) "kind" ""), command: "", route: (object/get (array/find @entity.apps (fn a (= @a.behavior ?behavior))) "route" "") })
-      RECENT_PICK -> ready when (array/some @entity.running (fn r (= @r.id ?behavior)))
-        (emit PROGRAM_OPEN { id: ?behavior })
-      RECENT_PICK -> ready when (and (not (array/some @entity.running (fn r (= @r.id ?behavior)))) (array/some @entity.recents (fn c (= @c.behavior ?behavior))))
-        (emit PROGRAM_LAUNCH { behavior: ?behavior, label: (object/get (array/find @entity.recents (fn c (= @c.behavior ?behavior))) "label" ""), kind: (object/get (array/find @entity.recents (fn c (= @c.behavior ?behavior))) "kind" ""), verb: (if (or (= (object/get (array/find @entity.recents (fn c (= @c.behavior ?behavior))) "kind" "") route) (= (object/get (array/find @entity.recents (fn c (= @c.behavior ?behavior))) "kind" "") http)) "serve" "run"), ported: (= (object/get (array/find @entity.recents (fn c (= @c.behavior ?behavior))) "kind" "") route), open: (= (object/get (array/find @entity.recents (fn c (= @c.behavior ?behavior))) "kind" "") route), route: (object/get (array/find @entity.recents (fn c (= @c.behavior ?behavior))) "route" ""), mock: @entity.mock })
-        (emit RECENT_ADD { behavior: ?behavior, label: (object/get (array/find @entity.recents (fn c (= @c.behavior ?behavior))) "label" ""), kind: (object/get (array/find @entity.recents (fn c (= @c.behavior ?behavior))) "kind" ""), command: (object/get (array/find @entity.recents (fn c (= @c.behavior ?behavior))) "command" ""), route: (object/get (array/find @entity.recents (fn c (= @c.behavior ?behavior))) "route" "") })
+        (emit ORB_STATE { machine: { label: (if @entity.statsReady (str/concat "CPU " (math/round @entity.cpuPercent 0) "% · RAM " (math/round @entity.memoryPercent 0) "%") "This machine"), detail: (if @entity.statsReady (str/concat (format/bytes @entity.memoryUsed) " of " (format/bytes @entity.memoryTotal) " in use · load " (math/round @entity.load1 2)) "Reading the machine") }, stars: (array/concat (array/map @entity.openTabs (fn t { id: @t.id, label: @t.label, kind: @t.topic, state: "running", weight: 0, detail: (str/concat @t.topic " · open") })) (array/map (array/filter @entity.recents (fn c (not (array/some @entity.openTabs (fn t (= @t.id @c.behavior)))))) (fn c { id: @c.behavior, label: @c.label, kind: "recent", state: "stopped", weight: 0, detail: (str/concat "not open · last opened " (time/relative @c.at)) }))) })
+      APP_OPEN -> ready when (and (array/some @config.boardList (fn a (= @a.id ?behavior))) (array/some @entity.openTabs (fn t (= @t.id ?behavior))))
+        (emit HOME_FOCUS { id: ?behavior })
+      APP_OPEN -> ready when (and (array/some @config.boardList (fn a (= @a.id ?behavior))) (not (array/some @entity.openTabs (fn t (= @t.id ?behavior)))))
+        (let ((a (array/find @config.boardList (fn x (= @x.id ?behavior))))) (emit TAB_OPEN { behavior: ?behavior, label: @a.label, topic: @a.topic }))
+        (let ((a (array/find @config.boardList (fn x (= @x.id ?behavior))))) (emit RECENT_ADD { behavior: ?behavior, label: @a.label, kind: "route", command: "", route: "" }))
+      TAB_FOCUS_PICK -> ready
+        (emit HOME_FOCUS { id: ?id })
+      TAB_CLOSE_PICK -> ready
+        (emit HOME_CLOSE { id: ?id })
+      ORB_OPENED -> ready
+        (emit HOME_FOCUS { id: ?id })
+      ORB_STOPPED -> ready
+        (emit HOME_CLOSE { id: ?id })
       ORB_RELAUNCHED -> ready
-        (emit RECENT_PICK { behavior: ?id })
-      RUNNING_OPEN -> ready
-        (emit PROGRAM_OPEN { id: ?id })
-      RUNNING_STOP -> ready
-        (emit PROGRAM_STOP { id: ?id })
+        (emit APP_OPEN { behavior: ?id })
     }
 
     emits {
-      STAGE_SHOWN
+      HOME_SHOWN
       ORB_PUSH { }
-        @description "Internal: hand the orb view the machine and the programs as they stand."
+        @description "Internal: hand the orb view the machine and the open tabs as they stand."
         @tier "internal"
-      RECENT_PICK {
+      APP_OPEN {
         behavior : string!
       }
-        @description "Internal: relaunch or open a remembered launch."
+        @description "Internal: open a listed app as a tab, or bring its tab to the front."
         @tier "internal"
-      KINDS_SCOPE_LOAD -> external {
-      }
-        @description "Read how the behaviors of every listed package and topic run."
       RECENTS_LOAD -> external {
       }
-        @description "Read the remembered launches."
+        @description "Read the remembered opens."
       RECENT_ADD -> external {
         behavior : string!
         label : string!
@@ -508,29 +486,21 @@ orbital Launchpad {
         command : string!
         route : string!
       }
-        @description "Remember a launch."
-      PROGRAMS_LIST -> external {
-      }
-        @description "Ask for the programs the launchpad holds."
-      PROGRAM_LAUNCH -> external {
+        @description "Remember an open."
+      TAB_OPEN -> external {
         behavior : string!
         label : string!
-        kind : string!
-        verb : "serve" | "run"!
-        ported : boolean!
-        open : boolean!
-        route : string!
-        mock : boolean!
+        topic : string!
       }
-        @description "Start a behavior as a background program."
-      PROGRAM_STOP -> external {
+        @description "Open an app as a tab."
+      HOME_FOCUS -> external {
         id : string!
       }
-        @description "Stop a running program."
-      PROGRAM_OPEN -> external {
+        @description "Bring an open tab to the front."
+      HOME_CLOSE -> external {
         id : string!
       }
-        @description "Open a running program in the browser."
+        @description "Close a tab, which unmounts the app."
       STATS_START -> external {
       }
         @description "Begin sampling the machine."
@@ -541,64 +511,28 @@ orbital Launchpad {
         machine : OrbMachine!
         stars : [OrbStar]!
       }
-        @description "The machine and the programs around it, for the orb view."
+        @description "The machine and the open tabs around it, for the orb view."
     }
 
     listens {
-      KindsRows.KINDS_LEAVES -> KINDS_LEAVES
-      KindsScopeLoader.KINDS_SCOPE_READY -> KINDS_SCOPE_READY
-      KindsTopic.KINDS_FAILED -> KINDS_FAILED
-      KindsRows.KINDS_FAILED -> KINDS_FAILED
-      KindsIndex.KINDS_INDEXED -> INDEX_READY
-      ProgramRunner.PROGRAMS_CHANGED -> PROGRAMS_CHANGED
-      ProgramRunner.PROGRAM_STARTED -> PROGRAM_STARTED
-      ProgramRunner.PROGRAM_ENDED -> PROGRAM_ENDED
-      ProgramRunner.PROGRAM_FAILED -> PROGRAM_FAILED
+      LaunchpadStage.TABS_CHANGED -> TABS_CHANGED
       RecentsStore.RECENTS_LOADED -> RECENTS_LOADED
       RecentsStore.RECENTS_CHANGED -> RECENTS_CHANGED
       RecentsStore.RECENTS_FAILED -> RECENTS_FAILED
+      LaunchpadTopBar.ENV_CHANGED -> ENV_CHANGED
       SystemStatsMeter.STATS_READ -> STATS_READ
       SystemStatsMeter.STATS_FAILED -> STATS_FAILED
       OrbStatsReader.ORB_KERNEL_READ -> ORB_KERNEL_READ
       OrbStatsReader.ORB_VERSION_READ -> ORB_VERSION_READ
       OrbStatsReader.ORB_STATS_FAILED -> ORB_STATS_FAILED
+      SystemOrb.ORB_OPEN -> ORB_OPENED
+      SystemOrb.ORB_STOP -> ORB_STOPPED
       SystemOrb.ORB_RELAUNCH -> ORB_RELAUNCHED
-      LaunchpadTopBar.INTEGRATIONS_CHANGED -> INTEGRATIONS_CHANGED
-      STAGE_SHOWN { }
+      HOME_SHOWN { }
       ORB_PUSH { }
-      KINDS_LEAVES {
-        package : string!
-        topic : string!
-        totalCount : number!
-        data : [LaunchpadLeaf]!
-      }
-      KINDS_SCOPE_READY { }
-      KINDS_FAILED {
-        package : string!
-        topic : string!
-        error : string!
-      }
-      INDEX_READY {
-        topics : [LaunchpadTopicCount]!
-        skipped : [LaunchpadSkipped]!
-      }
-      PROGRAMS_CHANGED {
-        running : [LaunchpadRunning]!
-      }
-      PROGRAM_STARTED {
-        id : string!
-        pid : number!
-        port : number!
-      }
-      PROGRAM_ENDED {
-        id : string!
-        code : number!
-        signal : number!
-      }
-      PROGRAM_FAILED {
-        behavior : string!
-        code : string!
-        error : string!
+      TABS_CHANGED {
+        tabs : [LaunchpadTab]!
+        active : string!
       }
       RECENTS_LOADED {
         items : [LaunchpadRecent]!
@@ -609,11 +543,11 @@ orbital Launchpad {
       RECENTS_FAILED {
         error : string!
       }
-      INTEGRATIONS_CHANGED {
-        mock : boolean!
+      ENV_CHANGED {
         authProvider : string!
         problems : [string]!
         envChecked : boolean!
+        envMock : boolean!
       }
       STATS_READ {
         memoryTotal : number!
@@ -650,23 +584,26 @@ orbital Launchpad {
         code : string!
         error : string!
       }
+      ORB_OPENED {
+        id : string!
+      }
+      ORB_STOPPED {
+        id : string!
+      }
       ORB_RELAUNCHED {
         id : string!
       }
-      RUN_APP {
+      APP_OPEN {
         behavior : string!
       }
-      RECENT_PICK {
-        behavior : string!
-      }
-      RUNNING_OPEN {
+      TAB_FOCUS_PICK {
         id : string!
       }
-      RUNNING_STOP {
+      TAB_CLOSE_PICK {
         id : string!
       }
     }
   }
 
-  page "/" as LaunchpadPage -> LaunchpadFrame, LaunchpadTopBar, LaunchpadStage, RecentsStore, BootGuard, BootCheck, SystemOrb, KindsTopic, KindsRows, KindsScopeLoader, KindsIndex, KindsClassifier, ProgramRunner, StatsWatch, SystemStatsMeter, ProcessReader, OrbStatsReader, OrbVersionRunner
+  page "/" as LaunchpadPage -> LaunchpadFrame, LaunchpadTopBar, LaunchpadStage, LaunchpadHome, RecentsStore, BootGuard, BootCheck, SystemOrb, SystemStatsMeter, OrbStatsReader, OrbVersionRunner, CiStatus, CiGithub, CiRetry, AwsStatus, AwsCli, CiRunLogs, CiLogsGh, AppHostingStatus, AhGcloud, CloudRunStatus, CrGcloud, CrBq, TrainingStatus, TrAws, TrSsh, PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, BehaviorCatalog, BehaviorCatalogLlm, PlaygroundCosmic, PlaygroundInspector, PlaygroundStatus, PlaygroundRuntime
 }

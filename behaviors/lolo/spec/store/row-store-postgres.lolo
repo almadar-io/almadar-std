@@ -59,6 +59,8 @@ orbital RowStorePostgresSpec {
   type RowListVerb = { key : string!, entityType : string! }
   type RowsQueryVerb = { key : string!, entityType : string!, query : RowQuery!, project : "rows" | "ids" }
   type RowsWriteVerb = { key : string!, batch : RowWriteBatch! }
+  type IndexPath = { fields : [string]!, orderBy : string? }
+  type RowsEnsureIndexesVerb = { key : string!, entityType : string!, indexes : [IndexPath]! }
 
   type PgNullParam = { kind : "null" }
   type PgTextParam = { kind : "text", text : string! }
@@ -94,6 +96,7 @@ orbital RowStorePostgresSpec {
       ROW_LIST -> running
       ROWS_QUERY -> running
       ROWS_WRITE -> running
+      ROWS_ENSURE_INDEXES -> running
     }
     state connecting { PG_CONNECTED -> negotiating }
     state negotiating { PG_RECEIVED -> startup }
@@ -110,6 +113,7 @@ orbital RowStorePostgresSpec {
       ROWS_PAGE { key : string!  rows : [Row]!  total : number! }
       ROWS_IDS { key : string!  ids : [string]!  total : number! }
       ROWS_WRITTEN { key : string!  outcomes : [RowWriteOutcome]! }
+      ROWS_INDEXES_ENSURED { key : string! }
       STORE_UNSUPPORTED { key : string!  reason : string! }
       STORE_FAILED { key : string!  message : string! }
       PG_WIRE_SENT { stage : string!  sql : string!  params : [PgParam]!  frame : bytes! }

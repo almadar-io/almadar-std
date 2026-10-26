@@ -63,6 +63,8 @@ orbital RowStorePostgresFixtureOrbital {
   type RowListVerb = { key : string!, entityType : string! }
   type RowsQueryVerb = { key : string!, entityType : string!, query : RowQuery!, project : "rows" | "ids" }
   type RowsWriteVerb = { key : string!, batch : RowWriteBatch! }
+  type IndexPath = { fields : [string]!, orderBy : string? }
+  type RowsEnsureIndexesVerb = { key : string!, entityType : string!, indexes : [IndexPath]! }
 
   type PgNullParam = { kind : "null" }
   type PgTextParam = { kind : "text", text : string! }
@@ -88,13 +90,15 @@ orbital RowStorePostgresFixtureOrbital {
     id : string!
     key : string @description "The kernel's key for the ask in flight; every reply carries it" = ""
     entityType : string @description "The entity type a read, list or query asks about" = ""
-    op : string @description "The ask in flight: read, list, query or write" = ""
+    op : string @description "The ask in flight: read, list, query, write or ensure" = ""
     rowId : string @description "The id a read asks for" = ""
     table : string @description "The table the statement in flight targets" = ""
     project : string @description "What a query answers: rows or ids" = ""
     query : RowQuery @description "The query a query ask carries" = {}
     batch : RowWriteBatch @description "The batch a write ask carries" = { ops: [], onFailure: "stop" }
-    opAt : number @description "The index of the batch op in flight" = 0
+    opAt : number @description "The index of the batch op or index statement in flight" = 0
+    paths : [IndexPath] @description "The index paths an ensureIndexes ask carries" = []
+    ddl : [string] @description "The CREATE INDEX statements an ensureIndexes ask runs, in order" = []
     outcomes : [RowWriteOutcome] @description "The outcomes of the ops that ran" = []
     sql : string @description "The SQL of the statement in flight" = ""
     params : [PgParam] @description "The binds of the statement in flight, as the diagnostic emits them" = []

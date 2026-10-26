@@ -89,7 +89,7 @@ orbital OrbLintCircularDependenciesOrbital {
                                 (let ((txt (json/stringify @re)))
                                 (if (not (str/includes @txt "\"emit\"")) @nos
                                 (if (and (str/startsWith @txt "[\"emit\"") (= (array/len (str/split @txt "\"emit\"")) 2))
-                                  (let ((m1 (if (>= (array/len @re) 2) (array/nth @re 1) null))) (if (validate/string @m1) [(str/concat @m1 "")] @nos))
+                                  (let ((fpa (json/parse @txt CycNodes))) (if (= @fpa null) @nos (if (< (array/len @fpa) 2) @nos (let ((m1 (array/nth @fpa 1))) (if (validate/string @m1) [(str/concat @m1 "")] @nos)))))
                                   (object/get (or (tree/fold @re (fn (tn fk)
                                     (let ((nr : CycOut { ev: [] }))
                                       (if (validate/array @tn)

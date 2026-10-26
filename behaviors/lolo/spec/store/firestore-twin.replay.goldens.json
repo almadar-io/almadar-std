@@ -6021,6 +6021,319 @@
     }
    ],
    "note": "integerValue past 2^53 reads as the nearest f64 like the Rust parse; geoPointValue and bytesValue read as null like from_wire"
+  },
+  {
+   "id": "ensure-indexes-makes-the-declared-order-field-orderable-for-that-entity-type",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k0",
+      "entityType": "Task",
+      "indexes": [
+       {
+        "fields": [
+         "status"
+        ],
+        "orderBy": "rank:desc"
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "ROWS_INDEXES_ENSURED",
+        "payload": {
+         "key": "k0"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED",
+       "FS_WIRE"
+      ]
+     }
+    },
+    {
+     "event": "ROWS_QUERY",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "query": {
+       "order": {
+        "field": "rank",
+        "direction": "asc"
+       }
+      },
+      "project": "rows"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "query"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "a path's order field is declared to be on every document, so the pushed-down query may order by it; the driver creates no index (the deployment does)"
+  },
+  {
+   "id": "control-ensure-indexes-does-not-widen-another-entity-type",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k0",
+      "entityType": "Task",
+      "indexes": [
+       {
+        "fields": [
+         "status"
+        ],
+        "orderBy": "rank:desc"
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "ROWS_INDEXES_ENSURED",
+        "payload": {
+         "key": "k0"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED",
+       "FS_WIRE"
+      ]
+     }
+    },
+    {
+     "event": "ROWS_QUERY",
+     "payload": {
+      "key": "k",
+      "entityType": "Other",
+      "query": {
+       "order": {
+        "field": "rank",
+        "direction": "asc"
+       }
+      },
+      "project": "rows"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "STORE_UNSUPPORTED",
+        "payload": {
+         "key": "k",
+         "reason": "order-field"
+        }
+       }
+      ],
+      "neverEmits": [
+       "FS_WIRE"
+      ]
+     }
+    }
+   ],
+   "note": "pair: the same order on an entity type that declared no path is still declined"
+  },
+  {
+   "id": "control-ensure-indexes-without-an-order-field-leaves-the-decline",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k0",
+      "entityType": "Task",
+      "indexes": [
+       {
+        "fields": [
+         "status"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "ROWS_INDEXES_ENSURED",
+        "payload": {
+         "key": "k0"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED",
+       "FS_WIRE"
+      ]
+     }
+    },
+    {
+     "event": "ROWS_QUERY",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "query": {
+       "order": {
+        "field": "rank",
+        "direction": "asc"
+       }
+      },
+      "project": "rows"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "STORE_UNSUPPORTED",
+        "payload": {
+         "key": "k",
+         "reason": "order-field"
+        }
+       }
+      ],
+      "neverEmits": [
+       "FS_WIRE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-ensure-indexes-with-no-paths-answers-and-changes-nothing",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k0",
+      "entityType": "Task",
+      "indexes": []
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "ROWS_INDEXES_ENSURED",
+        "payload": {
+         "key": "k0"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED",
+       "FS_WIRE"
+      ]
+     }
+    },
+    {
+     "event": "ROWS_QUERY",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "query": {
+       "order": {
+        "field": "rank",
+        "direction": "asc"
+       }
+      },
+      "project": "rows"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "STORE_UNSUPPORTED",
+        "payload": {
+         "key": "k",
+         "reason": "order-field"
+        }
+       }
+      ],
+      "neverEmits": [
+       "FS_WIRE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ensure-indexes-keeps-the-default-order-pushdown-unchanged",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k0",
+      "entityType": "Task",
+      "indexes": [
+       {
+        "fields": [
+         "status"
+        ],
+        "orderBy": "rank:desc"
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "ROWS_INDEXES_ENSURED",
+        "payload": {
+         "key": "k0"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED",
+       "FS_WIRE"
+      ]
+     }
+    },
+    {
+     "event": "ROWS_QUERY",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "query": {
+       "filter": {
+        "kind": "compare",
+        "field": "score",
+        "op": ">=",
+        "value": 10
+       },
+       "order": {
+        "field": "score",
+        "direction": "desc"
+       }
+      },
+      "project": "rows"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "query"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "pair of control-query-order-on-a-field-the-filter-requires-runs: a result is the same with or without a declared path"
   }
  ]
 }

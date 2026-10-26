@@ -1,0 +1,168 @@
+app std-orb-lint-derived-field-write [
+  version: "1.0.0",
+  inbound: ["cli-lint-derived-field-write"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-derived-field-write — the `orb lint derived-field-write <file>` command. A field declared `@derived <expr>` is computed by the kernel on every write, so a `(set @entity.<field> …)` in a trait bound to its entity, or a `persist create|update|upsert` (single or in a batch) whose data names it, is [ORB_DERIVED_FIELD_WRITTEN]. Clean answers `lint derived-field-write: clean` (status 200, exit 0); findings answer status 500 (exit 1). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-derived-field-write"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type IxVal = string | number | boolean | [IxVal?] | Map string IxVal?
+type IxNodes = [IxVal?]
+type IxStr = string
+type IxObj = Map string IxVal?
+type IxHit = { k : string, e : string, f : string }
+type IxHits = [IxHit]
+type IxField = { name : string }
+type IxEntity = { name : string, fields : [IxField] }
+type IxArm = { effects : [IxVal] }
+type IxMachine = { transitions : [IxArm] }
+type IxTrait = { name : string, linkedEntity : string, stateMachine : IxMachine }
+type IxOrbital = { name : string, entity : IxEntity, auxiliaryEntities : [IxEntity], traits : [IxTrait] }
+type IxProgram = { orbitals : [IxOrbital]! }
+
+orbital OrbLintDerivedFieldWriteOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintDerivedFieldWriteRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintDerivedFieldWrite -> OrbLintDerivedFieldWriteRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbs (object/get @payload.program "orbitals" [])))
+ (let ((ents (array/filter (array/flatten (array/map @orbs (fn o (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" []))))) (fn e (!= (object/get @e "name" "") ""))))
+       (anyDerived (array/some (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn o (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" []))))) (fn e (array/some (object/get @e "fields" []) (fn f (object/has @f "derived")))))))
+  (if (not @anyDerived) []
+  (let ((derivedOf (object/fromEntries (array/map @ents (fn e [(object/get @e "name"), (array/map (array/filter (object/get @e "fields" []) (fn f (object/has @f "derived"))) (fn f (object/get @f "name" "")))])))))
+   (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+    (let ((o (array/nth @orbs @oi)))
+     (let ((trs (object/get @o "traits" [])))
+      (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
+       (let ((t (array/nth @trs @ti)))
+        (let ((trans (object/get (object/get @t "stateMachine" {}) "transitions" []))
+              (lname (object/get @t "linkedEntity" "")))
+         (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ni
+          (let ((hits (or (json/parse (json/stringify (or (tree/fold (object/get (array/nth @trans @ni) "effects" []) (fn (n k)
+                 (if (validate/array @n)
+                  (let ((l (or (json/parse (json/stringify @n) IxNodes) [])))
+                   (let ((h (if (> (array/len @l) 0) (or (json/parse (json/stringify (array/nth @l 0)) IxStr) "") ""))
+                         (a1 (if (> (array/len @l) 1) (or (json/parse (json/stringify (array/nth @l 1)) IxStr) "") ""))
+                         (a2 (if (> (array/len @l) 2) (or (json/parse (json/stringify (array/nth @l 2)) IxStr) "") ""))
+                         (last (if (> (array/len @l) 0) (or (json/parse (json/stringify (array/last @l)) IxObj) {}) {})))
+                    (array/concat
+                     (if (and (= @h "set") (str/startsWith @a1 (quote "@entity.")) (array/includes (object/get @derivedOf @lname []) (str/slice @a1 8)))
+                      [{ k: "set", e: @lname, f: (str/slice @a1 8) }]
+                      [])
+                     (if (and (array/includes ["persist", "list"] @h) (array/includes ["create", "update", "upsert"] @a1) (!= @a2 ""))
+                      (array/map (array/filter (object/keys @last) (fn kf (array/includes (object/get @derivedOf @a2 []) @kf))) (fn kf { k: "persist", e: @a2, f: @kf }))
+                      [])
+                     (array/flatten (array/filter @k (fn c (!= @c null)))))))
+                  [])) IxVal) [])) IxHits) [])))
+           (array/map @hits (fn x { code: "ORB_DERIVED_FIELD_WRITTEN", path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" @ni "].effects"), message: (str/concat "`" (object/get @x "f" "") "` of entity " (object/get @x "e" "") " is `@derived`: the kernel computes it on every write, so a " (if (= (object/get @x "k" "") "set") "`set`" "`persist`") " may not write it"), suggestion: "Remove the write; change the fields it is derived from", severity: "error" })))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "derived-field-write", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IxProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintDerivedFieldWriteCli -> OrbLintDerivedFieldWriteRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit LINT_ANSWERED { status: 500, body: "Error: orb lint derived-field-write: the command arguments could not be read" })
+      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint derived-field-write <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "derived-field-write") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint derived-field-write: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "derived-field-write") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint derived-field-write: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-derived-field-write" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint derived-field-write` with its arguments and working directory."
+        @synonyms "orb lint derived-field-write, derived field, computed field"
+      OrbLintDerivedFieldWrite.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintDerivedFieldWriteCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintDerivedFieldWriteOrbitalStart -> OrbLintDerivedFieldWrite, OrbLintDerivedFieldWriteCli, OrbLintInput, Packs, Versions
+}

@@ -7417,6 +7417,689 @@
      }
     }
    ]
+  },
+  {
+   "id": "good-ensure-creates-one-index-per-path-in-order-then-answers",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "indexes": [
+       {
+        "fields": [
+         "status"
+        ]
+       },
+       {
+        "fields": [
+         "status",
+         "priority"
+        ],
+        "orderBy": "title:desc"
+       }
+      ]
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "CREATE INDEX IF NOT EXISTS \"tickets_status_idx\" ON \"tickets\" (\"status\", \"created_at\" ASC NULLS LAST, \"id\" COLLATE \"C\" ASC)",
+         "params": [],
+         "frame": "UAAAAIIAQ1JFQVRFIElOREVYIElGIE5PVCBFWElTVFMgInRpY2tldHNfc3RhdHVzX2lkeCIgT04gInRpY2tldHMiICgic3RhdHVzIiwgImNyZWF0ZWRfYXQiIEFTQyBOVUxMUyBMQVNULCAiaWQiIENPTExBVEUgIkMiIEFTQykAAABCAAAADAAAAAAAAAAARAAAAAZQAEUAAAAJAAAAAABTAAAABA=="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "set"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABG4AAAAEQwAAABFDUkVBVEUgSU5ERVgAWgAAAAVJ",
+      "eof": false
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "CREATE INDEX IF NOT EXISTS \"tickets_status_priority_by_title_desc_idx\" ON \"tickets\" (\"status\", \"priority\", \"title\" COLLATE \"C\" DESC NULLS LAST, \"id\" COLLATE \"C\" ASC)",
+         "params": [],
+         "frame": "UAAAAK0AQ1JFQVRFIElOREVYIElGIE5PVCBFWElTVFMgInRpY2tldHNfc3RhdHVzX3ByaW9yaXR5X2J5X3RpdGxlX2Rlc2NfaWR4IiBPTiAidGlja2V0cyIgKCJzdGF0dXMiLCAicHJpb3JpdHkiLCAidGl0bGUiIENPTExBVEUgIkMiIERFU0MgTlVMTFMgTEFTVCwgImlkIiBDT0xMQVRFICJDIiBBU0MpAAAAQgAAAAwAAAAAAAAAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROWS_INDEXES_ENSURED",
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABG4AAAAEQwAAABFDUkVBVEUgSU5ERVgAWgAAAAVJ",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROWS_INDEXES_ENSURED",
+        "payload": {
+         "key": "k"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    }
+   ],
+   "note": "path = equality fields, the order column (default createdAt) with the C collation and NULLS LAST the query uses, then id; the name is table_fields[_by_orderfield_dir]_idx so two paths over the same fields never share a name"
+  },
+  {
+   "id": "good-ensure-reads-the-column-kinds-first-when-they-are-not-cached",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "indexes": [
+       {
+        "fields": [
+         "status"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "discover",
+         "sql": "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "tickets"
+          }
+         ],
+         "frame": "UAAAAH8AU0VMRUNUIGNvbHVtbl9uYW1lLCBkYXRhX3R5cGUgRlJPTSBpbmZvcm1hdGlvbl9zY2hlbWEuY29sdW1ucyBXSEVSRSB0YWJsZV9zY2hlbWEgPSBjdXJyZW50X3NjaGVtYSgpIEFORCB0YWJsZV9uYW1lID0gJDEAAABCAAAAFwAAAAAAAQAAAAd0aWNrZXRzAABEAAAABlAARQAAAAkAAAAAAFMAAAAE"
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "set"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABFQAAABAAAJjb2x1bW5fbmFtZQAAAAAAAAAAAAAT////////AABkYXRhX3R5cGUAAAAAAAAAAAAEE////////wAARAAAABQAAgAAAAJpZAAAAAR0ZXh0RAAAADAAAgAAAApjcmVhdGVkX2F0AAAAGHRpbWVzdGFtcCB3aXRoIHRpbWUgem9uZUQAAAAwAAIAAAAKdXBkYXRlZF9hdAAAABh0aW1lc3RhbXAgd2l0aCB0aW1lIHpvbmVEAAAAFwACAAAABXRpdGxlAAAABHRleHREAAAAGAACAAAABnN0YXR1cwAAAAR0ZXh0RAAAAB0AAgAAAAhwcmlvcml0eQAAAAdpbnRlZ2VyRAAAABcAAgAAAAR0YWdzAAAABWpzb25iQwAAAA1TRUxFQ1QgNwBaAAAABUk=",
+      "eof": false
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "CREATE INDEX IF NOT EXISTS \"tickets_status_idx\" ON \"tickets\" (\"status\", \"created_at\" ASC NULLS LAST, \"id\" COLLATE \"C\" ASC)",
+         "params": [],
+         "frame": "UAAAAIIAQ1JFQVRFIElOREVYIElGIE5PVCBFWElTVFMgInRpY2tldHNfc3RhdHVzX2lkeCIgT04gInRpY2tldHMiICgic3RhdHVzIiwgImNyZWF0ZWRfYXQiIEFTQyBOVUxMUyBMQVNULCAiaWQiIENPTExBVEUgIkMiIEFTQykAAABCAAAADAAAAAAAAAAARAAAAAZQAEUAAAAJAAAAAABTAAAABA=="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABG4AAAAEQwAAABFDUkVBVEUgSU5ERVgAWgAAAAVJ",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROWS_INDEXES_ENSURED",
+        "payload": {
+         "key": "k"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    }
+   ],
+   "note": "the schema-cache read that every query uses; control: the cached case above sends no discovery"
+  },
+  {
+   "id": "good-ensure-order-by-without-a-direction-is-ascending",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "indexes": [
+       {
+        "fields": [
+         "status"
+        ],
+        "orderBy": "title"
+       }
+      ]
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "CREATE INDEX IF NOT EXISTS \"tickets_status_by_title_idx\" ON \"tickets\" (\"status\", \"title\" COLLATE \"C\" ASC NULLS LAST, \"id\" COLLATE \"C\" ASC)",
+         "params": [],
+         "frame": "UAAAAJIAQ1JFQVRFIElOREVYIElGIE5PVCBFWElTVFMgInRpY2tldHNfc3RhdHVzX2J5X3RpdGxlX2lkeCIgT04gInRpY2tldHMiICgic3RhdHVzIiwgInRpdGxlIiBDT0xMQVRFICJDIiBBU0MgTlVMTFMgTEFTVCwgImlkIiBDT0xMQVRFICJDIiBBU0MpAAAAQgAAAAwAAAAAAAAAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "set"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABG4AAAAEQwAAABFDUkVBVEUgSU5ERVgAWgAAAAVJ",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROWS_INDEXES_ENSURED",
+        "payload": {
+         "key": "k"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-ensure-with-no-paths-answers-at-once",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "indexes": []
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROWS_INDEXES_ENSURED",
+        "payload": {
+         "key": "k"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    }
+   ],
+   "note": "control: no statement is sent"
+  },
+  {
+   "id": "bad-ensure-path-naming-a-missing-column-fails-without-creating-anything",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "indexes": [
+       {
+        "fields": [
+         "nope"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "discover",
+         "sql": "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "tickets"
+          }
+         ],
+         "frame": "UAAAAH8AU0VMRUNUIGNvbHVtbl9uYW1lLCBkYXRhX3R5cGUgRlJPTSBpbmZvcm1hdGlvbl9zY2hlbWEuY29sdW1ucyBXSEVSRSB0YWJsZV9zY2hlbWEgPSBjdXJyZW50X3NjaGVtYSgpIEFORCB0YWJsZV9uYW1lID0gJDEAAABCAAAAFwAAAAAAAQAAAAd0aWNrZXRzAABEAAAABlAARQAAAAkAAAAAAFMAAAAE"
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "set"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABFQAAABAAAJjb2x1bW5fbmFtZQAAAAAAAAAAAAAT////////AABkYXRhX3R5cGUAAAAAAAAAAAAEE////////wAARAAAABQAAgAAAAJpZAAAAAR0ZXh0RAAAADAAAgAAAApjcmVhdGVkX2F0AAAAGHRpbWVzdGFtcCB3aXRoIHRpbWUgem9uZUQAAAAwAAIAAAAKdXBkYXRlZF9hdAAAABh0aW1lc3RhbXAgd2l0aCB0aW1lIHpvbmVEAAAAFwACAAAABXRpdGxlAAAABHRleHREAAAAGAACAAAABnN0YXR1cwAAAAR0ZXh0RAAAAB0AAgAAAAhwcmlvcml0eQAAAAdpbnRlZ2VyRAAAABcAAgAAAAR0YWdzAAAABWpzb25iQwAAAA1TRUxFQ1QgNwBaAAAABUk=",
+      "eof": false
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "an index path names a column the table does not have"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROWS_INDEXES_ENSURED"
+      ]
+     }
+    }
+   ],
+   "note": "the column kinds are read once more because the cache does not know the field; the table has no such column, so no CREATE INDEX is sent"
+  },
+  {
+   "id": "bad-ensure-server-error-is-store-failed",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "indexes": [
+       {
+        "fields": [
+         "status"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "CREATE INDEX IF NOT EXISTS \"tickets_status_idx\" ON \"tickets\" (\"status\", \"created_at\" ASC NULLS LAST, \"id\" COLLATE \"C\" ASC)",
+         "params": [],
+         "frame": "UAAAAIIAQ1JFQVRFIElOREVYIElGIE5PVCBFWElTVFMgInRpY2tldHNfc3RhdHVzX2lkeCIgT04gInRpY2tldHMiICgic3RhdHVzIiwgImNyZWF0ZWRfYXQiIEFTQyBOVUxMUyBMQVNULCAiaWQiIENPTExBVEUgIkMiIEFTQykAAABCAAAADAAAAAAAAAAARAAAAAZQAEUAAAAJAAAAAABTAAAABA=="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "set"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "RQAAADpTRVJST1IAVkVSUk9SAEM0MjUwMQBNbXVzdCBiZSBvd25lciBvZiB0YWJsZSB0aWNrZXRzAABaAAAABUk=",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "must be owner of table tickets"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROWS_INDEXES_ENSURED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-cold-ensure-connects-first",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "indexes": [
+       {
+        "fields": [
+         "status"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "postgres.example.test",
+        "arg1": 5432
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED",
+       "ROWS_INDEXES_ENSURED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-rows-are-unchanged-by-an-ensure-the-read-after-it-answers-the-same-row",
+   "steps": [
+    {
+     "event": "ROWS_ENSURE_INDEXES",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "indexes": [
+       {
+        "fields": [
+         "status"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "CREATE INDEX IF NOT EXISTS \"tickets_status_idx\" ON \"tickets\" (\"status\", \"created_at\" ASC NULLS LAST, \"id\" COLLATE \"C\" ASC)",
+         "params": [],
+         "frame": "UAAAAIIAQ1JFQVRFIElOREVYIElGIE5PVCBFWElTVFMgInRpY2tldHNfc3RhdHVzX2lkeCIgT04gInRpY2tldHMiICgic3RhdHVzIiwgImNyZWF0ZWRfYXQiIEFTQyBOVUxMUyBMQVNULCAiaWQiIENPTExBVEUgIkMiIEFTQykAAABCAAAADAAAAAAAAAAARAAAAAZQAEUAAAAJAAAAAABTAAAABA=="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "set"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABG4AAAAEQwAAABFDUkVBVEUgSU5ERVgAWgAAAAVJ",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROWS_INDEXES_ENSURED",
+        "payload": {
+         "key": "k"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k2",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "PG_RECEIVED",
+     "payload": {
+      "data": "MQAAAAQyAAAABFQAAAC4AAdpZAAAAAAAAAAAAAAZ////////AABjcmVhdGVkX2F0AAAAAAAAAAAABKD///////8AAHVwZGF0ZWRfYXQAAAAAAAAAAAAEoP///////wAAdGl0bGUAAAAAAAAAAAAAGf///////wAAc3RhdHVzAAAAAAAAAAAAABn///////8AAHByaW9yaXR5AAAAAAAAAAAAABf///////8AAHRhZ3MAAAAAAAAAAAAO2v///////wAARAAAAG4ABwAAAAJ0MQAAAB0yMDI2LTAzLTA1IDEwOjAwOjAwLjEyMzQ1NiswMAAAABYyMDI2LTAzLTA2IDExOjAwOjAwKzAwAAAACUZpeCBsb2dpbgAAAARvcGVuAAAAATMAAAAJWyJhIiwiYiJdQwAAAA1TRUxFQ1QgMQBaAAAABUk=",
+      "eof": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ROW_FOUND",
+        "payload": {
+         "key": "k2",
+         "row": {
+          "id": "t1",
+          "title": "Fix login",
+          "status": "open",
+          "priority": 3,
+          "tags": [
+           "a",
+           "b"
+          ],
+          "createdAt": "2026-03-05T10:00:00.123Z",
+          "updatedAt": "2026-03-06T11:00:00.000Z"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "pair of the read case: same SQL, same row; an index changes cost, never a result"
   }
  ]
 }

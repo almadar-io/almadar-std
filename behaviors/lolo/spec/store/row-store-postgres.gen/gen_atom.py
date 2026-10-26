@@ -615,6 +615,8 @@ P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"query"')), [
     SET('preds', '(array/filter [(object/get @entity.query "policy" null), (object/get @entity.query "filter" null)] (fn pq (!= @pq null)))'),
     SET('extra', '["id", (object/get (object/get @entity.query "order" { field: "createdAt", direction: "asc" }) "field" "createdAt")]'),
     SET('written', '[]'), SET('needKinds', 'true'), EMIT('PG_KINDS')]))
+PATH_FIELDS = '(array/filter (array/unique (array/concat ["id", "createdAt"] (array/flatten (array/map @entity.paths (fn xp (array/concat (object/get @xp "fields" []) [(array/nth (str/split (object/get @xp "orderBy" "") ":") 0)])))))) (fn xf (!= @xf "")))'
+P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"ensure"')), [SET('preds', '[]'), SET('extra', PATH_FIELDS), SET('written', '[]'), SET('needKinds', 'true'), EMIT('PG_KINDS')]))
 P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"write"'), EQ('@entity.batch.onFailure', '"atomic"')), send_stmt('begin', S('BEGIN'))))
 P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"write"'), NE('@entity.batch.onFailure', '"atomic"')), [EMIT('PG_OP')]))
 # ---- discovery
@@ -634,6 +636,7 @@ NO_WINDOW_TOTAL = AND(QUERY_OK, NOT(TOTAL_MODE_NONE), NOT(HAS_WINDOW_TOTAL))
 LIMIT_NZ = NE('(object/get @entity.query "limit" null)', '0')
 P(tr('PG_PLAN', 'running', AND(ST, EQ('@entity.op', '"query"')), [PAGE] + send_stmt('count', '@entity.countSql', '@entity.countBinds')))
 P(tr('PG_PLAN', 'running', AND(ST, EQ('@entity.op', '"write"')), [EMIT('PG_OUTCOME')]))
+P(tr('PG_PLAN', 'running', AND(ST, EQ('@entity.op', '"ensure"')), [SET('opAt', '(+ @entity.opAt 1)')] + send_stmt('statement', '(array/nth @entity.ddl @entity.opAt)')))
 # ---- count
 CN = stg('count')
 # ---- commit / rollback
@@ -649,6 +652,16 @@ P(tr('PG_KINDED', 'running', WANT_DISCOVER, send_stmt('discover', S(DISCOVERY_SQ
 P(tr('PG_KINDED', 'running', NOT(WANT_DISCOVER), [EMIT('PG_BUILD')]))
 P(tr('PG_BUILD', 'running', None, [SET('kinds', KINDS_NOW), SET('where', WHERE_OF_PREDS), EMIT('PG_COMPOSE')]))
 P(tr('PG_COMPOSE', 'running', EQ('@entity.op', '"query"'), compose_effects(QUERY_COMPOSE)))
+
+ENS_COL = lambda f, v: col_for(f, v)
+ENS_ONE = T('(let ((fl (object/get @xp "fields" [])) (ob (object/get @xp "orderBy" ""))) (let ((os (str/split @ob ":"))) (let ((of (let ((o0 (array/nth @os 0))) (if (= @o0 "") "createdAt" @o0))) (dn (if (= (array/nth @os 1) "desc") "DESC" "ASC"))) (let ((ocol §oc§) (ecols (array/map @fl (fn xf §ec§)))) (if (or (array/some @ecols (fn xc (= §xk§ "absent"))) (= §ok§ "absent")) null { name: (str/concat @entity.table "_" (str/join @fl "_") (if (= @ob "") "" (str/concat "_by_" (str/join @os "_"))) "_idx"), sql: (str/concat "CREATE INDEX IF NOT EXISTS " §qn§ " ON " §qt§ " (" (str/join (array/concat (array/map @ecols (fn xq §qq§)) [(str/concat §qo§ (if (= §ok§ "text") " COLLATE \\"C\\"" "") " " @dn " NULLS LAST"), (str/concat "\\"id\\"" (if (= §ik§ "text") " COLLATE \\"C\\"" "") " ASC")]) ", ") ")") })))))',
+    oc=col_for('@of', 'oc'), ec=col_for('@xf', 'ec'), xk=kind_of('@xc'), ok=kind_of('@ocol'), ik=kind_of('"id"'), qq=quote_ident('@xq'), qo=quote_ident('@ocol'), qt=Q_TABLE,
+    qn=quote_ident('(str/concat @entity.table "_" (str/join @fl "_") (if (= @ob "") "" (str/concat "_by_" (str/join @os "_"))) "_idx")'))
+ENS_BUILT = '(array/map @entity.paths (fn xp ' + ENS_ONE + '))'
+ENSURE_COMPOSE = [G('ens', ENS_BUILT, 'an index path names a column the table does not have'),
+                  G('ensd', '(if (array/some @ens (fn xe (= @xe null))) null (array/map @ens (fn xs @xs.sql)))', 'an index path names a column the table does not have'),
+                  SET('ddl', '@ensd'), SET('sql', '(array/nth @entity.ddl 0)'), SET('binds', '[]'), SET('bindBase', '0'), SET('countSql', '""'), SET('countBinds', '[]'), SET('stage', '"statement"'), EMIT('PG_FRAME')]
+P(tr('PG_COMPOSE', 'running', EQ('@entity.op', '"ensure"'), ENSURE_COMPOSE))
 P(tr('PG_COMPOSE', 'running', AND(EQ('@entity.op', '"write"'), EQ(CUR_KIND, '"create"')), compose_effects(CREATE_COMPOSE)))
 P(tr('PG_COMPOSE', 'running', AND(EQ('@entity.op', '"write"'), EQ(CUR_KIND, '"upsert"')), compose_effects(UPSERT_COMPOSE)))
 P(tr('PG_COMPOSE', 'running', AND(EQ('@entity.op', '"write"'), EQ(CUR_KIND, '"update"')), compose_effects(modify_compose('update'))))
@@ -750,7 +763,7 @@ DISCOVER_NOW = send_now('discover', S(DISCOVERY_SQL), '[' + TEXT_BIND('@entity.t
 
 RESET_ASK = [SET('stage', '"start"'), SET('opAt', '0'), SET('outcomes', '[]'), SET('fresh', 'false'), SET('halt', '{ kind: "", message: "" }'),
              SET('rows', '[]'), SET('raw', '[]'), SET('cols', '[]'), SET('err', '{ present: false, code: "", message: "" }'),
-             SET('sql', '""'), SET('params', '[]'), SET('binds', '[]'), SET('inbox', EMPTY_BYTES)]
+             SET('sql', '""'), SET('params', '[]'), SET('binds', '[]'), SET('inbox', EMPTY_BYTES), SET('ddl', '[]')]
 TABLE_SET = SET('table', TABLE_OF('@entity.entityType', 'ta'))
 
 QUERY_PREP = [SET('preds', '(array/filter [(object/get @entity.query "policy" null), (object/get @entity.query "filter" null)] (fn pq (!= @pq null)))'),
@@ -843,8 +856,9 @@ ASK = {
     'list': [SET('key', '@payload.key'), SET('entityType', '@payload.entityType'), SET('op', '"list"')],
     'query': [SET('key', '@payload.key'), SET('entityType', '@payload.entityType'), SET('query', QUERY_COPY), SET('project', '@payload.project'), SET('op', '"query"')],
     'write': [SET('key', '@payload.key'), SET('batch', BATCH_COPY), SET('entityType', '""'), SET('op', '"write"')],
+    'ensure': [SET('key', '@payload.key'), SET('entityType', '@payload.entityType'), SET('paths', '@payload.indexes'), SET('op', '"ensure"')],
 }
-VERB = {'read': 'ROW_READ', 'list': 'ROW_LIST', 'query': 'ROWS_QUERY', 'write': 'ROWS_WRITE'}
+VERB = {'read': 'ROW_READ', 'list': 'ROW_LIST', 'query': 'ROWS_QUERY', 'write': 'ROWS_WRITE', 'ensure': 'ROWS_ENSURE_INDEXES'}
 
 
 def pre(verb):
@@ -868,9 +882,11 @@ RD(tr('ROWS_WRITE', 'ready', AND(EQ('@payload.batch.onFailure', '"stop"'), NOT('
 RD(tr('ROWS_WRITE', 'ready', HAS_REKEY, [EMIT('STORE_FAILED', '{ key: @payload.key, message: "rekey is unsupported by this store" }')]))
 RD(tr('ROWS_WRITE', 'ready', AND(NOT(HAS_REKEY), EQ('(array/len @payload.batch.ops)', '0')), [EMIT('ROWS_WRITTEN', '{ key: @payload.key, outcomes: [] }')]))
 QUERY_OK_P = OR(NOT(NEARBY), NEAR_OK)
+ENS_OK = '(> (array/len @payload.indexes) 0)'
+RD(tr('ROWS_ENSURE_INDEXES', 'ready', EQ('(array/len @payload.indexes)', '0'), [EMIT('ROWS_INDEXES_ENSURED', '{ key: @payload.key }')]))
 # ---- cold: refuse a bad url / sslmode, otherwise open the socket
-for verb in ['read', 'list', 'query', 'write']:
-    ok = {'read': 'true', 'list': 'true', 'query': QUERY_OK_P, 'write': WRITE_OK}[verb]
+for verb in ['read', 'list', 'query', 'write', 'ensure']:
+    ok = {'read': 'true', 'list': 'true', 'query': QUERY_OK_P, 'write': WRITE_OK, 'ensure': ENS_OK}[verb]
     RD(tr(VERB[verb], 'ready', AND(ok, COLD_BAD), [EMIT('STORE_FAILED', '{ key: @payload.key, message: ' + BAD_MSG + ' }')]))
     RD(tr(VERB[verb], 'connecting', AND(ok, COLD_OK), pre(verb) + URL_SETS + [CONNECT]))
 # ---- warm
@@ -881,6 +897,7 @@ RD(tr('ROWS_QUERY', 'discovering', AND(WARM, QUERY_OK_P, Q_WANT), pre('query') +
 RD(tr('ROWS_QUERY', 'running', AND(WARM, QUERY_OK_P, NOT(Q_WANT)),
       pre('query') + QUERY_PREP + KINDS_SETS + BUILD_SETS + COMPOSE_SETS(QUERY_COMPOSE) + FRAME_EFFECTS + SENT()))
 RD(tr('ROWS_WRITE', 'beginning', AND(WARM, WRITE_OK, ATOMIC_P), pre('write') + send_now('begin', S('BEGIN'))))
+RD(tr('ROWS_ENSURE_INDEXES', 'running', AND(WARM, ENS_OK), pre('ensure') + [EMIT('PG_PLAN')]))
 OP0_SET = SET('cur', OPVIEW_OF('(array/nth @entity.batch.ops 0)'))
 STOP_P = NOT(ATOMIC_P)
 for kind in ['create', 'upsert', 'update', 'delete']:
@@ -900,6 +917,8 @@ FIN = lambda *conds: AND(*conds)
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"read"'), IS_ERR), FAIL_KEEP(ERR_MSG)))
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"read"'), NOT(IS_ERR), EQ('(array/len @entity.rows)', '0')), [EMIT('ROW_FOUND', '{ key: @entity.key }')]))
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"read"'), NOT(IS_ERR), '(> (array/len @entity.rows) 0)'), [EMIT('ROW_FOUND', '{ key: @entity.key, row: (array/nth @entity.rows 0) }')]))
+RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"ensure"'), IS_ERR), FAIL_KEEP(ERR_MSG)))
+RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"ensure"'), NOT(IS_ERR)), [EMIT('ROWS_INDEXES_ENSURED', '{ key: @entity.key }')]))
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"list"'), IS_ERR), FAIL_KEEP(ERR_MSG)))
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"list"'), NOT(IS_ERR)), [EMIT('ROWS_LISTED', '{ key: @entity.key, rows: @entity.rows }')]))
 RD(tr('PG_FINISH', 'ready', AND(OR(ST, stg('count')), EQ('@entity.op', '"query"'), IS_ERR, MISMATCH), DECLINE('"a compared value does not fit its column type"')))
@@ -1048,10 +1067,11 @@ QUERY_FIN = '(or @sm.err ' + TOT_NONE + ' (> @sm.nd 0) (and ' + OFF0 + ' ' + LIM
 FINISH_C = '(or ' + stg('count') + ' (and ' + STMT + ' (or ' + OPQ('read') + ' ' + OPQ('list') + ' (and ' + OPQ('query') + ' ' + QUERY_FIN + ') (and ' + OPQ('write') + ' (not ' + ATOM + ') (or (not ' + APPLIED_S + ') (not ' + MORE_S + '))))))'
 COMMIT_C = AND(STMT, OPQ('write'), ATOM, APPLIED_S, NOT(MORE_S))
 ROLLBACK_C = AND(STMT, OPQ('write'), ATOM, NOT(APPLIED_S))
-CONT_C = AND(STMT, OR(AND(OPQ('query'), NOT(QUERY_FIN)), AND(OPQ('write'), APPLIED_S, MORE_S)))
+CONT_C = AND(STMT, OR(AND(OPQ('query'), NOT(QUERY_FIN)), AND(OPQ('write'), APPLIED_S, MORE_S), AND(OPQ('ensure'), NOT('@sm.err'), '(< (+ @entity.opAt 1) (array/len @entity.ddl))')))
 RECORD_APPEND = SET('outcomes', '(if (= @entity.halt.kind "") (array/append @entity.outcomes @entity.lastOutcome) @entity.outcomes)')
 ROLLED_PRIOR = SET('outcomes', '(array/append (array/map @entity.outcomes (fn ro { kind: "rolled-back" })) @entity.lastOutcome)')
-FINISH_PLAIN = '(or ' + stg('count') + ' (and ' + STMT + ' (or ' + OPQ('read') + ' ' + OPQ('list') + ' (and ' + OPQ('query') + ' ' + QUERY_FIN + '))))'
+MORE_E = '(< (+ @entity.opAt 1) (array/len @entity.ddl))'
+FINISH_PLAIN = '(or ' + stg('count') + ' (and ' + STMT + ' (or ' + OPQ('read') + ' ' + OPQ('list') + ' (and ' + OPQ('query') + ' ' + QUERY_FIN + ') (and ' + OPQ('ensure') + ' (or @sm.err (not ' + MORE_E + '))))))'
 FINISH_WRITE = AND(STMT, OPQ('write'), NOT(ATOM), '(or (not ' + APPLIED_S + ') (not ' + MORE_S + '))')
 DONE = lambda c: SMR(AND('@sm.done', c))
 
@@ -1071,7 +1091,7 @@ blocks.append('\n'.join(R))
 DESCRIPTION = (
     "std-row-store-postgres — a row-store driver over a held Postgres v3 session, in .lolo over os/tcp-connect, os/send, "
     "os/recv and os/close, bytes/*, str/*, hash/* and bit/* (no postgres effect, no new operator): the native twin of "
-    "runtime/src/stores/pg_rows.rs. It answers the row-store typed verbs (ROW_READ, ROW_LIST, ROWS_QUERY, ROWS_WRITE) with "
+    "runtime/src/stores/pg_rows.rs. It answers the row-store typed verbs (ROW_READ, ROW_LIST, ROWS_QUERY, ROWS_WRITE, ROWS_ENSURE_INDEXES) with "
     "the exact SQL of spec/store/row-store-postgres.lolo: one table per entity (snake_case, pluralised, or the declared "
     "collection), stamps in created_at and updated_at, parameterised two-valued-logic predicates pushed down, an exact total "
     "from a window count, atomic batches in BEGIN and COMMIT, stop batches and the atomic take in one statement, and column "
@@ -1109,13 +1129,15 @@ ENTITY = '''  entity RowStoreFlight [runtime] {
     id : string!
     key : string @description "The kernel's key for the ask in flight; every reply carries it" = ""
     entityType : string @description "The entity type a read, list or query asks about" = ""
-    op : string @description "The ask in flight: read, list, query or write" = ""
+    op : string @description "The ask in flight: read, list, query, write or ensure" = ""
     rowId : string @description "The id a read asks for" = ""
     table : string @description "The table the statement in flight targets" = ""
     project : string @description "What a query answers: rows or ids" = ""
     query : RowQuery @description "The query a query ask carries" = {}
     batch : RowWriteBatch @description "The batch a write ask carries" = { ops: [], onFailure: "stop" }
-    opAt : number @description "The index of the batch op in flight" = 0
+    opAt : number @description "The index of the batch op or index statement in flight" = 0
+    paths : [IndexPath] @description "The index paths an ensureIndexes ask carries" = []
+    ddl : [string] @description "The CREATE INDEX statements an ensureIndexes ask runs, in order" = []
     outcomes : [RowWriteOutcome] @description "The outcomes of the ops that ran" = []
     sql : string @description "The SQL of the statement in flight" = ""
     params : [PgParam] @description "The binds of the statement in flight, as the diagnostic emits them" = []
@@ -1217,6 +1239,10 @@ EMITS = '''    emits {
         outcomes : [RowWriteOutcome]!
       }
         @tier "internal"
+      ROWS_INDEXES_ENSURED -> external {
+        key : string!
+      }
+        @tier "internal"
       STORE_UNSUPPORTED -> external {
         key : string!
         reason : string!
@@ -1279,6 +1305,13 @@ LISTENS = '''    listens {
         batch : RowWriteBatch!
       }
         @description "Apply a batch of create, upsert, update and delete ops, atomic in BEGIN and COMMIT or stop at the first op that is not applied."
+        @tier "internal"
+      ROWS_ENSURE_INDEXES -> input {
+        key : string!
+        entityType : string!
+        indexes : [IndexPath]!
+      }
+        @description "Declare the index paths of an entity type: one CREATE INDEX IF NOT EXISTS per path, after the column kinds are read. The kernel sends it once before the first ask for the entity."
         @tier "internal"
       ROW_COLLECTION -> input {
         entityType : string!

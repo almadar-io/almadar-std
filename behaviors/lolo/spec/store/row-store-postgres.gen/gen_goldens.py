@@ -509,6 +509,48 @@ case("x-read-decodes-arrays-bytea-bool-and-floats",
     recv(result(cols_x,[["t1",'{a,"b c",NULL,"q\\"uote"}','{1,2,NULL}','\\x48656c6c6f','{"2026-03-05 10:00:00+00"}','t','9007199254740993','1.5','{{1,2},{3}}']],"SELECT 1"),
          expect={"state":"ready","emits":[emit("ROW_FOUND", key="k", row={"id":"t1","labels":["a","b c",None,'q"uote'],"scores":[1,2,None],"blob":"SGVsbG8=","seen":["2026-03-05T10:00:00Z"],"flag":True,"big":"9007199254740993","ratio":1.5,"nested":[[1,2],[3]]})]})])
 
+# ================= ensure indexes =================
+ENS_P1 = {"fields": ["status"]}
+ENS_P2 = {"fields": ["status", "priority"], "orderBy": "title:desc"}
+IDX1 = 'CREATE INDEX IF NOT EXISTS "tickets_status_idx" ON "tickets" ("status", "created_at" ASC NULLS LAST, "id" COLLATE "C" ASC)'
+IDX2 = 'CREATE INDEX IF NOT EXISTS "tickets_status_priority_by_title_desc_idx" ON "tickets" ("status", "priority", "title" COLLATE "C" DESC NULLS LAST, "id" COLLATE "C" ASC)'
+IDX3 = 'CREATE INDEX IF NOT EXISTS "tickets_status_by_title_idx" ON "tickets" ("status", "title" COLLATE "C" ASC NULLS LAST, "id" COLLATE "C" ASC)'
+def ensure_ask(paths, entity, state, emits, nev=("STORE_FAILED",)):
+    return ask("ROWS_ENSURE_INDEXES", {"key": "k", "entityType": "Ticket", "indexes": paths}, entity, state, emits, effects=[{"type": "set"}], nev=nev)
+case("good-ensure-creates-one-index-per-path-in-order-then-answers",
+     [ensure_ask([ENS_P1, ENS_P2], warm(), "running", [stmt("statement", IDX1, [])]),
+      recv(nodata("CREATE INDEX"), expect={"state": "running", "emits": [stmt("statement", IDX2, [])], "neverEmits": ["ROWS_INDEXES_ENSURED", "STORE_FAILED"]}),
+      recv(nodata("CREATE INDEX"), expect={"state": "ready", "emits": [emit("ROWS_INDEXES_ENSURED", key="k")], "neverEmits": ["STORE_FAILED"]})],
+     note="path = equality fields, the order column (default createdAt) with the C collation and NULLS LAST the query uses, then id; the name is table_fields[_by_orderfield_dir]_idx so two paths over the same fields never share a name")
+case("good-ensure-reads-the-column-kinds-first-when-they-are-not-cached",
+     [ensure_ask([ENS_P1], WARM_NOSCHEMA, "running", [stmt("discover", DISCOVERY_SQL, ["tickets"])]),
+      recv(discovery_reply(), expect={"state": "running", "emits": [stmt("statement", IDX1, [])]}),
+      recv(nodata("CREATE INDEX"), expect={"state": "ready", "emits": [emit("ROWS_INDEXES_ENSURED", key="k")], "neverEmits": ["STORE_FAILED"]})],
+     note="the schema-cache read that every query uses; control: the cached case above sends no discovery")
+case("good-ensure-order-by-without-a-direction-is-ascending",
+     [ensure_ask([{"fields": ["status"], "orderBy": "title"}], warm(), "running", [stmt("statement", IDX3, [])]),
+      recv(nodata("CREATE INDEX"), expect={"state": "ready", "emits": [emit("ROWS_INDEXES_ENSURED", key="k")]})])
+case("good-ensure-with-no-paths-answers-at-once",
+     [{"event": "ROWS_ENSURE_INDEXES", "payload": {"key": "k", "entityType": "Ticket", "indexes": []}, "from": "ready", "entity": warm(),
+       "expect": {"state": "ready", "emits": [emit("ROWS_INDEXES_ENSURED", key="k")], "neverEmits": ["STORE_FAILED"]}}],
+     note="control: no statement is sent")
+case("bad-ensure-path-naming-a-missing-column-fails-without-creating-anything",
+     [ensure_ask([{"fields": ["nope"]}], warm(), "running", [stmt("discover", DISCOVERY_SQL, ["tickets"])]),
+      recv(discovery_reply(), expect={"state": "running", "emits": [emit("STORE_FAILED", key="k", message="an index path names a column the table does not have")], "neverEmits": ["ROWS_INDEXES_ENSURED"]})],
+     note="the column kinds are read once more because the cache does not know the field; the table has no such column, so no CREATE INDEX is sent")
+case("bad-ensure-server-error-is-store-failed",
+     [ensure_ask([ENS_P1], warm(), "running", [stmt("statement", IDX1, [])]),
+      recv(PARSE_BIND[:0] + E("42501", "must be owner of table tickets") + Z(), expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message="must be owner of table tickets")], "neverEmits": ["ROWS_INDEXES_ENSURED"]})])
+case("good-cold-ensure-connects-first",
+     [{"event": "ROWS_ENSURE_INDEXES", "payload": {"key": "k", "entityType": "Ticket", "indexes": [ENS_P1]}, "from": "ready", "entity": {"id": "f"},
+       "expect": {"state": "connecting", "effects": [{"type": "os/tcp-connect", "arg0": HOST, "arg1": PORT}], "neverEmits": ["STORE_FAILED", "ROWS_INDEXES_ENSURED"]}}])
+case("good-rows-are-unchanged-by-an-ensure-the-read-after-it-answers-the-same-row",
+     [ensure_ask([ENS_P1], warm(), "running", [stmt("statement", IDX1, [])]),
+      recv(nodata("CREATE INDEX"), expect={"state": "ready", "emits": [emit("ROWS_INDEXES_ENSURED", key="k")]}),
+      ask("ROW_READ", {"key": "k2", "entityType": "Ticket", "id": "t1"}, warm(), "running", [stmt("statement", READ_SQL, ["t1"])]),
+      recv(result(TICKET_COLS, [r1], "SELECT 1"), expect={"state": "ready", "emits": [emit("ROW_FOUND", key="k2", row=ticket_row("t1", "Fix login", "open", 3, ["a", "b"]))]})],
+     note="pair of the read case: same SQL, same row; an index changes cost, never a result")
+
 doc = {"atom": "spec/store/row-store-postgres-fixture.lolo", "trait": "RowStoreDriver",
        "spec": "spec/store/row-store-postgres.lolo",
        "source": "orbital-rust/crates/orbital-core/crates/runtime/src/stores/pg_rows.rs over drivers/postgres.rs (behavior and tests)",

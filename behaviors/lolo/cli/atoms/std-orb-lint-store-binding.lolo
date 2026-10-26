@@ -4,7 +4,7 @@ app std-orb-lint-store-binding [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-store-binding — the `orb lint store-binding <file>` command, the port of store_binding.rs (EXEC-STORE-4). It lowers the file with program/read and checks the program-level store and each entity store (primary and auxiliary): ORB_STORE_ON_NON_PERSISTENT for a store on a runtime or browser-local entity, then, once per driver at its first binding, ORB_STORE_UNKNOWN_ORBITAL for a driver naming no orbital and ORB_STORE_DRIVER_CONTRACT for a driver with no trait handling every row verb; then, when the program binds a driver, ORB_STORE_VERB_OUTSIDE_SEAM for each (emit <row verb> …) in a trait outside a driver orbital (the store seam alone asks a driver, one frame per ask); then ORB_STORE_DRIVER_NOT_CONDITIONAL for a single persist delete or update on an entity whose driver declares writeCapabilities.conditional false (status 500, exit 1). Clean answers `lint store-binding: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-store-binding — the `orb lint store-binding <file>` command, the port of store_binding.rs (EXEC-STORE-4). It lowers the file with program/read and checks the program-level store and each entity store (primary and auxiliary): ORB_STORE_ON_NON_PERSISTENT for a store on a runtime or browser-local entity, then, once per driver at its first binding, ORB_STORE_UNKNOWN_ORBITAL for a driver naming no orbital and ORB_STORE_DRIVER_CONTRACT for a driver with no trait handling every row verb; then, when the program binds a driver, ORB_STORE_VERB_OUTSIDE_SEAM for each (emit <row verb> …) in a trait outside a driver orbital (the store seam alone asks a driver, one frame per ask); then ORB_STORE_DRIVER_NOT_CONDITIONAL for a single persist delete or update on an entity whose driver declares writeCapabilities.conditional false (status 500, exit 1). a driver declaring `queryCapabilities.indexes` runtime or deploy with no trait handling ROWS_ENSURE_INDEXES is ORB_STORE_DRIVER_CONTRACT too (a driver declaring none, or nothing, needs no such verb). Clean answers `lint store-binding: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-store-binding"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -17,7 +17,9 @@ type StoreBindTrait = { name : string, stateMachine : StoreBindMachine }
 type StoreBindEntity = { name : string, store : string, persistence : string, browser : boolean }
 type StoreBindCaps = { conditional : boolean }
 type StoreBindCapsSlot = { default : StoreBindCaps }
-type StoreBindConfig = { writeCapabilities : StoreBindCapsSlot }
+type StoreBindQuery = { indexes : string }
+type StoreBindQuerySlot = { default : StoreBindQuery }
+type StoreBindConfig = { writeCapabilities : StoreBindCapsSlot, queryCapabilities : StoreBindQuerySlot }
 type StoreBindOrbital = { name : string, config : StoreBindConfig, entity : StoreBindEntity, auxiliaryEntities : [StoreBindEntity], traits : [StoreBindTrait] }
 type StoreBindProgram = { store : string, orbitals : [StoreBindOrbital]! }
 
@@ -58,7 +60,7 @@ orbital OrbLintStoreBindingOrbital {
                         (if (not (array/includes @names @d))
                           [{ code: "ORB_STORE_UNKNOWN_ORBITAL", path: (object/get @b "path"), message: (str/concat "store " @d " names no orbital of this program"), suggestion: "", severity: "error" }]
                           (let ((handled (array/flatten (array/map (object/get (array/first (array/filter @orbitals (fn o (= (object/get @o "name") @d)))) "traits" []) (fn t (array/map (object/get (object/get @t "stateMachine" {}) "transitions" []) (fn x (object/get @x "event" ""))))))))
-                            (let ((missing (array/filter ["ROW_READ", "ROW_LIST", "ROWS_QUERY", "ROWS_WRITE"] (fn v (not (array/includes @handled @v))))))
+                            (let ((missing (array/filter (array/concat ["ROW_READ", "ROW_LIST", "ROWS_QUERY", "ROWS_WRITE"] (if (array/includes ["runtime", "deploy"] (object/get (object/get (object/get (object/get (array/first (array/filter @orbitals (fn o (= (object/get @o "name") @d)))) "config" {}) "queryCapabilities" {}) "default" {}) "indexes" "")) ["ROWS_ENSURE_INDEXES"] [])) (fn v (not (array/includes @handled @v))))))
                               (if (= (array/len @missing) 0)
                                 []
                                 [{ code: "ORB_STORE_DRIVER_CONTRACT", path: (object/get @b "path"), message: (str/concat "store driver " @d " has no trait handling [" (str/join (array/map @missing (fn v (str/concat "\"" @v "\""))) ", ") "] (spec/store/row-store.lolo RowStoreDriver)"), suggestion: "Compose a std store driver atom, or give the driver a trait that answers every row verb", severity: "error" }]))))))))))))

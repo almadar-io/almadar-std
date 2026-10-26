@@ -1,0 +1,149 @@
+app std-behavior-loader [
+  version: "1.0.0",
+  description: "std-behavior-loader — opens one installed behavior to run it live: LOAD_BEHAVIOR { behavior, value } asks the substrate for the behavior's program (behavior/source), its resolved program (behavior/resolve), its knobs (behavior/describe), its source file (behavior/source with file: true) and its validation (program/validate of the program), and answers BEHAVIOR_LOADED { behavior, programJson, sourceJson, sourceText, knobs, valid, findings } once all five have answered, or BEHAVIOR_FAILED { behavior, error } when the program or the resolved program could not be read. A knobs, source file or validation failure does not fail the load: the knobs are empty, the source text names the failure, and the validation failure is a finding. A host embeds the behavior by setting the value's resolved field to programJson (object/set value \"resolved\" programJson), which the shell mounts as a page would.",
+  egress: []
+]
+;; @capabilities "load an installed behavior's program, resolved program, knobs, source and validation so it can run live"
+
+type LoaderKnob = { name : string!, type : string!, label : string, description : string }
+type LoaderDescription = { behavior : string!, knobs : [LoaderKnob]! }
+type LoaderProgram = { name : string }
+type LoaderSourceFile = { path : string!, source : string! }
+type LoaderFinding = { code : string!, message : string! }
+type LoaderCheck = { valid : boolean!, errors : [LoaderFinding]!, warnings : [LoaderFinding]! }
+
+orbital BehaviorLoaderOrbital {
+  entity BehaviorLoad [runtime] {
+    id : string!
+    behavior : string = ""
+    programJson : string = ""
+    sourceJson : string = ""
+    sourceText : string = ""
+    knobs : [LoaderKnob] = []
+    valid : boolean = false
+    findings : [LoaderFinding] = []
+    waiting : number @description "How many of the five answers (source, resolve, describe, file, check) are still to come." = 0
+  }
+
+  trait BehaviorLoader -> BehaviorLoad {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      LOAD_BEHAVIOR -> loading
+        (set @entity.behavior ?behavior)
+        (set @entity.programJson "")
+        (set @entity.sourceJson "")
+        (set @entity.sourceText "")
+        (set @entity.knobs [])
+        (set @entity.valid false)
+        (set @entity.findings [])
+        (set @entity.waiting 5)
+        (behavior/source ?value { emit: { success: SOURCED, failure: LOAD_FAILED } })
+        (behavior/resolve ?value { emit: { success: RESOLVED, failure: LOAD_FAILED } })
+        (behavior/describe { behavior: ?behavior } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+        (behavior/source ?value { file: true emit: { success: FILE_READ, failure: FILE_FAILED } })
+    }
+
+    state loading {
+      INIT -> idle
+      LOAD_BEHAVIOR -> loading
+        (set @entity.behavior ?behavior)
+        (set @entity.waiting 5)
+        (behavior/source ?value { emit: { success: SOURCED, failure: LOAD_FAILED } })
+        (behavior/resolve ?value { emit: { success: RESOLVED, failure: LOAD_FAILED } })
+        (behavior/describe { behavior: ?behavior } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
+        (behavior/source ?value { file: true emit: { success: FILE_READ, failure: FILE_FAILED } })
+      SOURCED -> loading
+        (set @entity.sourceJson (json/stringify ?result))
+        (program/validate ?result { emit: { success: CHECKED, failure: CHECK_FAILED } })
+        (emit LOAD_STEP {})
+      FILE_READ -> loading
+        (set @entity.sourceText ?result.source)
+        (emit LOAD_STEP {})
+      FILE_FAILED -> loading
+        (set @entity.sourceText (str/concat ";; the source file could not be read: " ?error))
+        (emit LOAD_STEP {})
+      CHECKED -> loading
+        (set @entity.valid @payload.result.valid)
+        (set @entity.findings (array/concat @payload.result.errors @payload.result.warnings))
+        (emit LOAD_STEP {})
+      CHECK_FAILED -> loading
+        (set @entity.valid false)
+        (set @entity.findings [{ code: "VALIDATE_FAILED", message: ?error }])
+        (emit LOAD_STEP {})
+      RESOLVED -> loading
+        (set @entity.programJson (json/stringify ?result))
+        (emit LOAD_STEP {})
+      DESCRIBED -> loading
+        (set @entity.knobs (object/get ?result knobs []))
+        (emit LOAD_STEP {})
+      DESCRIBE_FAILED -> loading
+        (emit LOAD_STEP {})
+      LOAD_STEP -> loading when (> @entity.waiting 1)
+        (set @entity.waiting (- @entity.waiting 1))
+      LOAD_STEP -> idle when (<= @entity.waiting 1)
+        (set @entity.waiting 0)
+        (emit BEHAVIOR_LOADED { behavior: @entity.behavior, programJson: @entity.programJson, sourceJson: @entity.sourceJson, sourceText: @entity.sourceText, knobs: @entity.knobs, valid: @entity.valid, findings: @entity.findings })
+      LOAD_FAILED -> idle
+        (emit BEHAVIOR_FAILED { behavior: @entity.behavior, error: ?error })
+    }
+
+    emits {
+      BEHAVIOR_LOADED -> external {
+        behavior : string!
+        programJson : string!
+        sourceJson : string!
+        sourceText : string!
+        knobs : [LoaderKnob]!
+        valid : boolean!
+        findings : [LoaderFinding]!
+      }
+        @description "The opened behavior's program, source file text, resolved program, knobs and validation."
+      BEHAVIOR_FAILED -> external {
+        behavior : string!
+        error : string!
+      }
+        @description "The behavior could not be read or resolved."
+      LOAD_STEP
+      SOURCED {
+        result : LoaderProgram!
+      }
+      RESOLVED {
+        result : LoaderProgram!
+      }
+      DESCRIBED {
+        result : LoaderDescription!
+      }
+      DESCRIBE_FAILED {
+        error : string!
+      }
+      FILE_READ {
+        result : LoaderSourceFile!
+      }
+      FILE_FAILED {
+        error : string!
+      }
+      CHECKED {
+        result : LoaderCheck!
+      }
+      CHECK_FAILED {
+        error : string!
+      }
+      LOAD_FAILED {
+        error : string!
+      }
+    }
+
+    listens {
+      LOAD_BEHAVIOR -> input {
+        behavior : string!
+        value : behavior
+      }
+        @description "Load an installed behavior: its program, resolved program, knobs, source file and validation."
+        @synonyms "open a behavior, load a behavior to run it live"
+    }
+  }
+
+  page boot as BehaviorLoaderStart -> BehaviorLoader
+}

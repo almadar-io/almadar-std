@@ -46,12 +46,12 @@ orbital OrbLintExpectationUnsatisfiedOrbital {
         (set @entity.findings (let ((orbs (object/get @payload.program "orbitals" [])))
  (let ((provs (array/flatten (array/map (array/filter @orbs (fn o (not (object/get @o "spec" false)))) (fn o (array/map (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn e (!= (object/get @e "name" "") ""))) (fn e { n: (object/get @e "name" ""), id: (object/get @e "identity" false) }))))))
        (allpg (array/flatten (array/map @orbs (fn o (array/map (object/get @o "pages" []) (fn pg { protocol: (object/get @pg "protocol" ""), path: (object/get @pg "path" "") }))))))
-       (want (object/fromEntries (array/flatten (array/map @orbs (fn o (array/map (object/get @o "expects" []) (fn x [(object/get @x "traitName" ""), true]))))))))
- (let ((pn (object/fromEntries (array/map @provs (fn p [(object/get @p "n"), true]))))
+       (want (or (object/fromEntries (array/flatten (array/map @orbs (fn o (array/map (object/get @o "expects" []) (fn x [(object/get @x "traitName" ""), true])))))) {})))
+ (let ((pn (or (object/fromEntries (array/map @provs (fn p [(object/get @p "n"), true]))) {}))
        (anyid (array/some @provs (fn p (object/get @p "id"))))
        (trs (array/flatten (array/map @orbs (fn o (let ((on (object/get @o "name" ""))) (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t (let ((tn (object/get @t "name" ""))) { name: @tn, on: @on, cfg: (object/keys (object/get @t "config" {})), states: (if (object/has @want @tn) (array/map (object/get @t "stateMachine.states" []) (fn s (object/get @s "name" ""))) []), emits: (if (object/has @want @tn) (array/map (object/get @t "emits" []) (fn e (object/get @e "event" ""))) []), trans: (if (object/has @want @tn) (array/map (object/get @t "stateMachine.transitions" []) (fn tr { event: (object/get @tr "event" ""), to: (object/get @tr "to" ""), from: (object/get @tr "from" null) })) []) })))))))))
-  (let ((tidx (object/fromEntries (array/map (array/reverse @trs) (fn r [(object/get @r "name"), @r]))))
-        (cfgset (object/fromEntries (array/flatten (array/map @trs (fn r (array/map (object/get @r "cfg") (fn k [@k, true]))))))))
+  (let ((tidx (or (object/fromEntries (array/map (array/reverse @trs) (fn r [(object/get @r "name"), @r]))) {}))
+        (cfgset (or (object/fromEntries (array/flatten (array/map @trs (fn r (array/map (object/get @r "cfg") (fn k [@k, true])))))) {})))
 (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
   (let ((o (array/nth @orbs @oi)))
    (if (or (object/get @o "spec" false) (not (object/has @o "expects"))) []

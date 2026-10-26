@@ -9,17 +9,14 @@ app std-behavior-playground [
 uses Layout from "std/behaviors/std-workspace-layout"
 uses Catalog from "std/behaviors/std-behavior-catalog"
 uses Cosmic from "std/behaviors/std-avl-cosmic-zoom"
+uses Loader from "std/behaviors/std-behavior-loader"
 
 type PlaygroundTopic = { package : string!, topic : string!, count : number! }
 type PlaygroundPackageLabel = { package : string!, label : string! }
 type PlaygroundLeaf = { behavior : string!, kind : string! }
 type PlaygroundLeafIcon = { kind : string!, icon : string! }
 type PlaygroundKnob = { name : string!, type : string!, label : string, description : string }
-type PlaygroundDescription = { behavior : string!, knobs : [PlaygroundKnob]! }
-type PlaygroundProgram = { name : string }
-type PlaygroundSourceFile = { path : string!, source : string! }
 type PlaygroundFinding = { code : string!, message : string! }
-type PlaygroundCheck = { valid : boolean!, errors : [PlaygroundFinding]!, warnings : [PlaygroundFinding]! }
 type CosmicNodeContext = { level : "overview" | "trait-expanded" | "system" | "code" | "transition"!, orbital : string!, trait : string, transition : string, transitionIndex : number }
 
 orbital BehaviorPlayground {
@@ -42,18 +39,6 @@ orbital BehaviorPlayground {
     findings : [PlaygroundFinding] = []
     error : string = ""
     status : "browsing" | "opening" | "open" | "failed" = browsing
-  }
-
-  entity PlaygroundLoad [runtime] {
-    id : string!
-    behavior : string = ""
-    programJson : string = ""
-    sourceJson : string = ""
-    sourceText : string = ""
-    knobs : [PlaygroundKnob] = []
-    valid : boolean = false
-    findings : [PlaygroundFinding] = []
-    waiting : number @description "How many of the five answers (source, resolve, describe, file, check) are still to come." = 0
   }
 
   config {
@@ -484,122 +469,9 @@ orbital BehaviorPlayground {
     }
   }
 
-  trait PlaygroundLoader -> PlaygroundLoad {
-    initial: idle
-
-    state idle {
-      INIT -> idle
-      LOAD_BEHAVIOR -> loading
-        (set @entity.behavior ?behavior)
-        (set @entity.programJson "")
-        (set @entity.sourceJson "")
-        (set @entity.sourceText "")
-        (set @entity.knobs [])
-        (set @entity.valid false)
-        (set @entity.findings [])
-        (set @entity.waiting 5)
-        (behavior/source ?value { emit: { success: SOURCED, failure: LOAD_FAILED } })
-        (behavior/resolve ?value { emit: { success: RESOLVED, failure: LOAD_FAILED } })
-        (behavior/describe { behavior: ?behavior } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
-        (behavior/source ?value { file: true emit: { success: FILE_READ, failure: FILE_FAILED } })
-    }
-
-    state loading {
-      INIT -> idle
-      LOAD_BEHAVIOR -> loading
-        (set @entity.behavior ?behavior)
-        (set @entity.waiting 5)
-        (behavior/source ?value { emit: { success: SOURCED, failure: LOAD_FAILED } })
-        (behavior/resolve ?value { emit: { success: RESOLVED, failure: LOAD_FAILED } })
-        (behavior/describe { behavior: ?behavior } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
-        (behavior/source ?value { file: true emit: { success: FILE_READ, failure: FILE_FAILED } })
-      SOURCED -> loading
-        (set @entity.sourceJson (json/stringify ?result))
-        (program/validate ?result { emit: { success: CHECKED, failure: CHECK_FAILED } })
-        (emit LOAD_STEP {})
-      FILE_READ -> loading
-        (set @entity.sourceText ?result.source)
-        (emit LOAD_STEP {})
-      FILE_FAILED -> loading
-        (set @entity.sourceText (str/concat ";; the source file could not be read: " ?error))
-        (emit LOAD_STEP {})
-      CHECKED -> loading
-        (set @entity.valid @payload.result.valid)
-        (set @entity.findings (array/concat @payload.result.errors @payload.result.warnings))
-        (emit LOAD_STEP {})
-      CHECK_FAILED -> loading
-        (set @entity.valid false)
-        (set @entity.findings [{ code: "VALIDATE_FAILED", message: ?error }])
-        (emit LOAD_STEP {})
-      RESOLVED -> loading
-        (set @entity.programJson (json/stringify ?result))
-        (emit LOAD_STEP {})
-      DESCRIBED -> loading
-        (set @entity.knobs (object/get ?result knobs []))
-        (emit LOAD_STEP {})
-      DESCRIBE_FAILED -> loading
-        (emit LOAD_STEP {})
-      LOAD_STEP -> loading when (> @entity.waiting 1)
-        (set @entity.waiting (- @entity.waiting 1))
-      LOAD_STEP -> idle when (<= @entity.waiting 1)
-        (set @entity.waiting 0)
-        (emit BEHAVIOR_LOADED { behavior: @entity.behavior, programJson: @entity.programJson, sourceJson: @entity.sourceJson, sourceText: @entity.sourceText, knobs: @entity.knobs, valid: @entity.valid, findings: @entity.findings })
-      LOAD_FAILED -> idle
-        (emit BEHAVIOR_FAILED { behavior: @entity.behavior, error: ?error })
-    }
-
-    emits {
-      BEHAVIOR_LOADED -> external {
-        behavior : string!
-        programJson : string!
-        sourceJson : string!
-        sourceText : string!
-        knobs : [PlaygroundKnob]!
-        valid : boolean!
-        findings : [PlaygroundFinding]!
-      }
-        @description "The opened behavior's program, source file text, resolved program, knobs and validation."
-      BEHAVIOR_FAILED -> external {
-        behavior : string!
-        error : string!
-      }
-        @description "The behavior could not be read or resolved."
-      LOAD_STEP
-      SOURCED {
-        result : PlaygroundProgram!
-      }
-      RESOLVED {
-        result : PlaygroundProgram!
-      }
-      DESCRIBED {
-        result : PlaygroundDescription!
-      }
-      DESCRIBE_FAILED {
-        error : string!
-      }
-      FILE_READ {
-        result : PlaygroundSourceFile!
-      }
-      FILE_FAILED {
-        error : string!
-      }
-      CHECKED {
-        result : PlaygroundCheck!
-      }
-      CHECK_FAILED {
-        error : string!
-      }
-      LOAD_FAILED {
-        error : string!
-      }
-    }
-
+  trait PlaygroundLoader = Loader.traits.BehaviorLoader {
     listens {
       PlaygroundStage.LOAD_BEHAVIOR -> LOAD_BEHAVIOR
-      LOAD_BEHAVIOR {
-        behavior : string!
-        value : behavior
-      }
     }
   }
 

@@ -2049,7 +2049,7 @@
             "program": {
               "name": "std-reminder-scheduler",
               "version": "1.1.0",
-              "description": "std-reminder-scheduler — deadline reminders for a target entity. A periodic tick scans the target for records whose `dateField` deadline (a ms-epoch number or an ISO datetime string) is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each — every matching record, via a self-driving scan loop. `direction` picks which side of now the scan matches: 'future' (default) fires for deadlines up to `offsetHours` ahead; 'past' fires once a record's date is at least `offsetHours` behind now. Marks each record `remindedAt` so it isn't reminded twice — and only when the record actually matched the scan, so records outside the window stay eligible for later passes. Compose alongside std-notify-on-event to deliver the reminder.",
+              "description": "std-reminder-scheduler \u2014 deadline reminders for a target entity. A periodic tick scans the target for records whose `dateField` deadline (a ms-epoch number or an ISO datetime string) is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each \u2014 every matching record, via a self-driving scan loop. `direction` picks which side of now the scan matches: 'future' (default) fires for deadlines up to `offsetHours` ahead; 'past' fires once a record's date is at least `offsetHours` behind now. Marks each record `remindedAt` so it isn't reminded twice \u2014 and only when the record actually matched the scan, so records outside the window stay eligible for later passes. Compose alongside std-notify-on-event to deliver the reminder.",
               "orbitals": [
                 {
                   "name": "ReminderSchedulerOrbital",
@@ -2104,7 +2104,7 @@
                         "name": "remindedAt",
                         "type": "number",
                         "default": 0.0,
-                        "description": "When this record was last reminded — the dedup marker; 0 = not yet reminded.",
+                        "description": "When this record was last reminded \u2014 the dedup marker; 0 = not yet reminded.",
                         "synonyms": "notified at, last reminder"
                       },
                       {
@@ -2402,7 +2402,7 @@
                                   "variant": "error",
                                   "message": [
                                     "str/concat",
-                                    "Couldn't scan for reminders — ",
+                                    "Couldn't scan for reminders \u2014 ",
                                     "@payload.error"
                                   ],
                                   "dismissible": true
@@ -2597,7 +2597,7 @@
                                   "variant": "error",
                                   "message": [
                                     "str/concat",
-                                    "Couldn't scan for reminders — ",
+                                    "Couldn't scan for reminders \u2014 ",
                                     "@payload.error"
                                   ],
                                   "dismissible": true
@@ -2730,7 +2730,7 @@
                           "type": "string",
                           "default": "future",
                           "label": "Scan which side of now?",
-                          "description": "'future' (default) matches records whose dateField is still ahead, up to offsetHours out — upcoming-deadline reminders. 'past' matches records whose dateField is at least offsetHours behind now — act-after-the-fact policies. The emitted event and the dedup marker are identical either way.",
+                          "description": "'future' (default) matches records whose dateField is still ahead, up to offsetHours out \u2014 upcoming-deadline reminders. 'past' matches records whose dateField is at least offsetHours behind now \u2014 act-after-the-fact policies. The emitted event and the dedup marker are identical either way.",
                           "synonyms": "direction, past due, overdue, after the deadline, look back, backward scan, past-window",
                           "tier": "infra",
                           "values": [
@@ -2902,7 +2902,7 @@
             "program": {
               "name": "std-notification-center",
               "version": "1.0.0",
-              "description": "std-notification-center — per-user notification preferences, web-push subscriptions, and the digest drain for suppressed notifications. Owns the two owner-scoped stores std-notify-on-event consults at dispatch time: NotificationPreference rows (per event key: mode instant/digest/off, channel override, per-user quiet hours) and PushSubscription rows (captured via the browser/push-subscribe flow — the shared service worker + PushManager subscription, persisted as flat endpoint/p256dh/auth credentials). The DigestDrain trait is the delivery half of every suppression std-notify-on-event records: an hourly cron tick scans NotificationRecord audit rows left undispatched for digest/quiet-hours reasons and at least `minAgeHours` old, delivers each by email (the digest channel), and marks it dispatched — the reminder-scheduler self-driving scan loop verbatim. Compose alongside std-notify-on-event: the listener suppresses and records, this atom captures subscriptions, edits preferences, and drains.",
+              "description": "std-notification-center \u2014 per-user notification preferences, web-push subscriptions, and the digest drain for suppressed notifications. Owns the two owner-scoped stores std-notify-on-event consults at dispatch time: NotificationPreference rows (per event key: mode instant/digest/off, channel override, per-user quiet hours) and PushSubscription rows (captured via the browser/push-subscribe flow \u2014 the shared service worker + PushManager subscription, persisted as flat endpoint/p256dh/auth credentials). The DigestDrain trait is the delivery half of every suppression std-notify-on-event records: an hourly cron tick scans NotificationRecord audit rows left undispatched for digest/quiet-hours reasons and at least `minAgeHours` old, delivers each by email (the digest channel), and marks it dispatched \u2014 the reminder-scheduler self-driving scan loop verbatim. Compose alongside std-notify-on-event: the listener suppresses and records, this atom captures subscriptions, edits preferences, and drains.",
               "orbitals": [
                 {
                   "name": "NotificationCenterOrbital",
@@ -2932,7 +2932,7 @@
                         "name": "personId",
                         "type": "string",
                         "required": true,
-                        "description": "Owner of this preference row — rows are meant to be private to their owner. Access predicates need an [identity] roster, so the binding organism (which declares one) owns the @read/@update scoping; the generic atom cannot.",
+                        "description": "Owner of this preference row \u2014 rows are meant to be private to their owner. Access predicates need an [identity] roster, so the binding organism (which declares one) owns the @read/@update scoping; the generic atom cannot.",
                         "synonyms": "user, owner, account"
                       },
                       {
@@ -4028,7 +4028,7 @@
                         {
                           "event": "DIGEST_FAILED",
                           "eventId": "evt_9A59DJKXNSYTWVG1WZ84NX5CWK",
-                          "description": "Digest scan / delivery / persist failed — the cycle stops until the next tick",
+                          "description": "Digest scan / delivery / persist failed \u2014 the cycle stops until the next tick",
                           "tier": "secondary",
                           "payloadSchema": [
                             {
@@ -4124,7 +4124,7 @@
                             "key": "DIGEST_FAILED",
                             "id": "evt_9A59DJKXNSYTWVG1WZ84NX5CWK",
                             "name": "Digest Failed",
-                            "description": "Digest scan / delivery / persist failed — the cycle stops until the next tick",
+                            "description": "Digest scan / delivery / persist failed \u2014 the cycle stops until the next tick",
                             "tier": "secondary",
                             "payloadSchema": [
                               {
@@ -4304,7 +4304,7 @@
                                   "variant": "error",
                                   "message": [
                                     "str/concat",
-                                    "Couldn't send the notification digest — ",
+                                    "Couldn't send the notification digest \u2014 ",
                                     "@payload.error"
                                   ],
                                   "dismissible": true
@@ -4506,7 +4506,7 @@
                                   "variant": "error",
                                   "message": [
                                     "str/concat",
-                                    "Couldn't send the notification digest — ",
+                                    "Couldn't send the notification digest \u2014 ",
                                     "@payload.error"
                                   ],
                                   "dismissible": true
@@ -4533,7 +4533,7 @@
                                   "variant": "error",
                                   "message": [
                                     "str/concat",
-                                    "Couldn't send the notification digest — ",
+                                    "Couldn't send the notification digest \u2014 ",
                                     "@payload.message"
                                   ],
                                   "dismissible": true
@@ -5268,6 +5268,942 @@
               }
             ]
           }
+        }
+      ]
+    },
+    {
+      "id": "a-driver-declaring-runtime-indexes-must-handle-ensure-indexes",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Tickets",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "collection": "tickets",
+                    "store": "Rows"
+                  },
+                  "traits": [
+                    {
+                      "name": "Desk",
+                      "linkedEntity": "Ticket",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                },
+                {
+                  "name": "Rows",
+                  "pages": [],
+                  "entity": {
+                    "name": "RowsRow",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "RowsDriver",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "ready",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROW_READ"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROW_LIST"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROWS_QUERY"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROWS_WRITE"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "config": {
+                    "queryCapabilities": {
+                      "type": "QueryCapabilities",
+                      "default": {
+                        "indexes": "runtime"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintStoreBinding"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "store-binding",
+                  "findings": [
+                    {
+                      "code": "ORB_STORE_DRIVER_CONTRACT",
+                      "path": "orbitals[0].entity.Ticket",
+                      "message": "store driver Rows has no trait handling [\"ROWS_ENSURE_INDEXES\"] (spec/store/row-store.lolo RowStoreDriver)",
+                      "suggestion": "Compose a std store driver atom, or give the driver a trait that answers every row verb",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintStoreBinding"
+        }
+      ]
+    },
+    {
+      "id": "a-driver-declaring-deploy-indexes-must-handle-ensure-indexes",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Tickets",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "collection": "tickets",
+                    "store": "Rows"
+                  },
+                  "traits": [
+                    {
+                      "name": "Desk",
+                      "linkedEntity": "Ticket",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                },
+                {
+                  "name": "Rows",
+                  "pages": [],
+                  "entity": {
+                    "name": "RowsRow",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "RowsDriver",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "ready",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROW_READ"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROW_LIST"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROWS_QUERY"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROWS_WRITE"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "config": {
+                    "queryCapabilities": {
+                      "type": "QueryCapabilities",
+                      "default": {
+                        "indexes": "deploy"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintStoreBinding"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "store-binding",
+                  "findings": [
+                    {
+                      "code": "ORB_STORE_DRIVER_CONTRACT",
+                      "path": "orbitals[0].entity.Ticket",
+                      "message": "store driver Rows has no trait handling [\"ROWS_ENSURE_INDEXES\"] (spec/store/row-store.lolo RowStoreDriver)",
+                      "suggestion": "Compose a std store driver atom, or give the driver a trait that answers every row verb",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintStoreBinding"
+        }
+      ]
+    },
+    {
+      "id": "control-a-runtime-driver-that-handles-ensure-indexes-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Tickets",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "collection": "tickets",
+                    "store": "Rows"
+                  },
+                  "traits": [
+                    {
+                      "name": "Desk",
+                      "linkedEntity": "Ticket",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                },
+                {
+                  "name": "Rows",
+                  "pages": [],
+                  "entity": {
+                    "name": "RowsRow",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "RowsDriver",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "ready",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROW_READ"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROW_LIST"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROWS_QUERY"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROWS_WRITE"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROWS_ENSURE_INDEXES"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "config": {
+                    "queryCapabilities": {
+                      "type": "QueryCapabilities",
+                      "default": {
+                        "indexes": "runtime"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintStoreBinding"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "store-binding",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintStoreBinding"
+        }
+      ]
+    },
+    {
+      "id": "control-a-deploy-driver-that-handles-ensure-indexes-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Tickets",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "collection": "tickets",
+                    "store": "Rows"
+                  },
+                  "traits": [
+                    {
+                      "name": "Desk",
+                      "linkedEntity": "Ticket",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                },
+                {
+                  "name": "Rows",
+                  "pages": [],
+                  "entity": {
+                    "name": "RowsRow",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "RowsDriver",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "ready",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROW_READ"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROW_LIST"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROWS_QUERY"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROWS_WRITE"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROWS_ENSURE_INDEXES"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "config": {
+                    "queryCapabilities": {
+                      "type": "QueryCapabilities",
+                      "default": {
+                        "indexes": "deploy"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintStoreBinding"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "store-binding",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintStoreBinding"
+        }
+      ]
+    },
+    {
+      "id": "control-a-none-driver-needs-no-ensure-indexes",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Tickets",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "collection": "tickets",
+                    "store": "Rows"
+                  },
+                  "traits": [
+                    {
+                      "name": "Desk",
+                      "linkedEntity": "Ticket",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                },
+                {
+                  "name": "Rows",
+                  "pages": [],
+                  "entity": {
+                    "name": "RowsRow",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "RowsDriver",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "ready",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROW_READ"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROW_LIST"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROWS_QUERY"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROWS_WRITE"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "config": {
+                    "queryCapabilities": {
+                      "type": "QueryCapabilities",
+                      "default": {
+                        "indexes": "none"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintStoreBinding"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "store-binding",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintStoreBinding"
+        }
+      ]
+    },
+    {
+      "id": "control-a-driver-declaring-no-index-realization-needs-no-ensure-indexes",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Tickets",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "collection": "tickets",
+                    "store": "Rows"
+                  },
+                  "traits": [
+                    {
+                      "name": "Desk",
+                      "linkedEntity": "Ticket",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": []
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                },
+                {
+                  "name": "Rows",
+                  "pages": [],
+                  "entity": {
+                    "name": "RowsRow",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "RowsDriver",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "ready",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROW_READ"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROW_LIST"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROWS_QUERY"
+                          },
+                          {
+                            "from": "ready",
+                            "to": "ready",
+                            "event": "ROWS_WRITE"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "config": {
+                    "queryCapabilities": {
+                      "type": "QueryCapabilities",
+                      "default": {}
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintStoreBinding"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "store-binding",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintStoreBinding"
         }
       ]
     }

@@ -1,0 +1,318 @@
+{
+ "atom": "dev/organisms/std-launchpad.lolo",
+ "trait": "LaunchpadStage",
+ "cases": [
+  {
+   "id": "opening-an-app-adds-a-tab-in-front-and-tells-home",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "TAB_OPEN",
+     "payload": {
+      "behavior": "almadar-std/std-ci-status",
+      "label": "std-ci-status",
+      "topic": "ops"
+     },
+     "entity": {
+      "id": "l",
+      "openTabs": [],
+      "recents": [],
+      "tabs": [],
+      "active": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TABS_PUSH"
+       },
+       {
+        "event": "TABS_SHOWN"
+       }
+      ],
+      "neverEmits": [
+       "LOAD_BEHAVIOR"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "opening-an-app-that-has-a-tab-only-brings-it-to-the-front",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "TAB_OPEN",
+     "payload": {
+      "behavior": "almadar-std/std-ci-status",
+      "label": "std-ci-status",
+      "topic": "ops"
+     },
+     "entity": {
+      "id": "l",
+      "openTabs": [],
+      "recents": [],
+      "tabs": [
+       {
+        "id": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "topic": "ops"
+       },
+       {
+        "id": "almadar-std/std-aws-board",
+        "label": "std-aws-board",
+        "topic": "ops"
+       }
+      ],
+      "active": "almadar-std/std-aws-board"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TABS_PUSH"
+       },
+       {
+        "event": "TABS_SHOWN"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "home-brings-no-tab-in-front",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "TAB_HOME",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "openTabs": [],
+      "recents": [],
+      "tabs": [
+       {
+        "id": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "topic": "ops"
+       }
+      ],
+      "active": "almadar-std/std-ci-status"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TABS_PUSH"
+       },
+       {
+        "event": "TABS_SHOWN"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "selecting-a-tab-brings-it-to-the-front",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "TAB_SELECT",
+     "payload": {
+      "id": "almadar-std/std-aws-board"
+     },
+     "entity": {
+      "id": "l",
+      "openTabs": [],
+      "recents": [],
+      "tabs": [
+       {
+        "id": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "topic": "ops"
+       },
+       {
+        "id": "almadar-std/std-aws-board",
+        "label": "std-aws-board",
+        "topic": "ops"
+       }
+      ],
+      "active": "almadar-std/std-ci-status"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TABS_PUSH"
+       },
+       {
+        "event": "TABS_SHOWN"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-selecting-a-tab-that-is-not-open-does-nothing",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "TAB_SELECT",
+     "payload": {
+      "id": "almadar-std/std-never"
+     },
+     "entity": {
+      "id": "l",
+      "openTabs": [],
+      "recents": [],
+      "tabs": [
+       {
+        "id": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "topic": "ops"
+       }
+      ],
+      "active": "almadar-std/std-ci-status"
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "closing-a-tab-removes-its-view-and-tells-home",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "TAB_CLOSE",
+     "payload": {
+      "id": "almadar-std/std-ci-status"
+     },
+     "entity": {
+      "id": "l",
+      "openTabs": [],
+      "recents": [],
+      "tabs": [
+       {
+        "id": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "topic": "ops"
+       },
+       {
+        "id": "almadar-std/std-aws-board",
+        "label": "std-aws-board",
+        "topic": "ops"
+       }
+      ],
+      "active": "almadar-std/std-ci-status"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TABS_PUSH"
+       },
+       {
+        "event": "TABS_SHOWN"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-open-tabs-are-handed-to-home-with-the-one-in-front",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "TABS_PUSH",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "openTabs": [],
+      "recents": [],
+      "tabs": [
+       {
+        "id": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "topic": "ops"
+       },
+       {
+        "id": "almadar-std/std-aws-board",
+        "label": "std-aws-board",
+        "topic": "ops"
+       }
+      ],
+      "active": "almadar-std/std-aws-board"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TABS_CHANGED",
+        "payload": {
+         "tabs": [
+          {
+           "id": "almadar-std/std-ci-status",
+           "label": "std-ci-status",
+           "topic": "ops"
+          },
+          {
+           "id": "almadar-std/std-aws-board",
+           "label": "std-aws-board",
+           "topic": "ops"
+          }
+         ],
+         "active": "almadar-std/std-aws-board"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-stage-draws-the-tab-bar-and-the-open-boards",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "TABS_SHOWN",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "openTabs": [],
+      "recents": [],
+      "tabs": [
+       {
+        "id": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "topic": "ops"
+       },
+       {
+        "id": "almadar-std/std-aws-board",
+        "label": "std-aws-board",
+        "topic": "ops"
+       }
+      ],
+      "active": "almadar-std/std-ci-status"
+     },
+     "expect": {
+      "fired": true
+     }
+    }
+   ],
+   "now": 1760531445678
+  }
+ ]
+}

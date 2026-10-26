@@ -1,0 +1,576 @@
+{
+ "atom": "dev/atoms/std-behavior-loader.lolo",
+ "trait": "BehaviorLoader",
+ "cases": [
+  {
+   "id": "load-asks-the-substrate-for-the-program-the-resolved-program-the-knobs-and-the-file",
+   "steps": [
+    {
+     "trait": "BehaviorLoader",
+     "event": "LOAD_BEHAVIOR",
+     "payload": {
+      "behavior": "std/behaviors/std-x",
+      "value": {
+       "from": "std/behaviors/std-x",
+       "as": "X"
+      }
+     },
+     "entity": {
+      "id": "b",
+      "behavior": "",
+      "programJson": "",
+      "sourceJson": "",
+      "sourceText": "",
+      "knobs": [],
+      "valid": false,
+      "findings": [],
+      "waiting": 0
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "behavior/source"
+       },
+       {
+        "type": "behavior/resolve"
+       },
+       {
+        "type": "behavior/describe"
+       },
+       {
+        "type": "behavior/source"
+       }
+      ]
+     },
+     "from": "idle"
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-second-load-while-loading-starts-over-for-the-new-behavior",
+   "steps": [
+    {
+     "trait": "BehaviorLoader",
+     "event": "LOAD_BEHAVIOR",
+     "payload": {
+      "behavior": "std/behaviors/std-y",
+      "value": {
+       "from": "std/behaviors/std-x",
+       "as": "X"
+      }
+     },
+     "entity": {
+      "id": "b",
+      "behavior": "std/behaviors/std-x",
+      "programJson": "",
+      "sourceJson": "",
+      "sourceText": "",
+      "knobs": [],
+      "valid": false,
+      "findings": [],
+      "waiting": 3
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "behavior/source"
+       },
+       {
+        "type": "behavior/resolve"
+       },
+       {
+        "type": "behavior/describe"
+       },
+       {
+        "type": "behavior/source"
+       }
+      ]
+     },
+     "from": "loading"
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-program-is-validated-and-counted",
+   "steps": [
+    {
+     "trait": "BehaviorLoader",
+     "event": "SOURCED",
+     "payload": {
+      "result": {
+       "name": "X"
+      }
+     },
+     "entity": {
+      "id": "b",
+      "behavior": "std/behaviors/std-x",
+      "programJson": "",
+      "sourceJson": "",
+      "sourceText": "",
+      "knobs": [],
+      "valid": false,
+      "findings": [],
+      "waiting": 5
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "program/validate"
+       },
+       {
+        "type": "emit"
+       }
+      ],
+      "emits": [
+       {
+        "event": "LOAD_STEP"
+       }
+      ]
+     },
+     "from": "loading"
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-resolved-program-is-kept-as-json",
+   "steps": [
+    {
+     "trait": "BehaviorLoader",
+     "event": "RESOLVED",
+     "payload": {
+      "result": {
+       "name": "X"
+      }
+     },
+     "entity": {
+      "id": "b",
+      "behavior": "std/behaviors/std-x",
+      "programJson": "",
+      "sourceJson": "",
+      "sourceText": "",
+      "knobs": [],
+      "valid": false,
+      "findings": [],
+      "waiting": 5
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "emits": [
+       {
+        "event": "LOAD_STEP"
+       }
+      ]
+     },
+     "from": "loading"
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-knobs-are-kept",
+   "steps": [
+    {
+     "trait": "BehaviorLoader",
+     "event": "DESCRIBED",
+     "payload": {
+      "result": {
+       "behavior": "std/behaviors/std-x",
+       "knobs": [
+        {
+         "name": "k",
+         "type": "string"
+        }
+       ]
+      }
+     },
+     "entity": {
+      "id": "b",
+      "behavior": "std/behaviors/std-x",
+      "programJson": "",
+      "sourceJson": "",
+      "sourceText": "",
+      "knobs": [],
+      "valid": false,
+      "findings": [],
+      "waiting": 5
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "emits": [
+       {
+        "event": "LOAD_STEP"
+       }
+      ]
+     },
+     "from": "loading"
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-refused-describe-does-not-fail-the-load",
+   "steps": [
+    {
+     "trait": "BehaviorLoader",
+     "event": "DESCRIBE_FAILED",
+     "payload": {
+      "error": "no"
+     },
+     "entity": {
+      "id": "b",
+      "behavior": "std/behaviors/std-x",
+      "programJson": "",
+      "sourceJson": "",
+      "sourceText": "",
+      "knobs": [],
+      "valid": false,
+      "findings": [],
+      "waiting": 5
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "emits": [
+       {
+        "event": "LOAD_STEP"
+       }
+      ],
+      "neverEmits": [
+       "BEHAVIOR_FAILED"
+      ]
+     },
+     "from": "loading"
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-source-file-text-is-kept",
+   "steps": [
+    {
+     "trait": "BehaviorLoader",
+     "event": "FILE_READ",
+     "payload": {
+      "result": {
+       "path": "/p",
+       "source": "app x"
+      }
+     },
+     "entity": {
+      "id": "b",
+      "behavior": "std/behaviors/std-x",
+      "programJson": "",
+      "sourceJson": "",
+      "sourceText": "",
+      "knobs": [],
+      "valid": false,
+      "findings": [],
+      "waiting": 5
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "emits": [
+       {
+        "event": "LOAD_STEP"
+       }
+      ]
+     },
+     "from": "loading"
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "an-unreadable-source-file-is-named-in-the-text-and-does-not-fail-the-load",
+   "steps": [
+    {
+     "trait": "BehaviorLoader",
+     "event": "FILE_FAILED",
+     "payload": {
+      "error": "gone"
+     },
+     "entity": {
+      "id": "b",
+      "behavior": "std/behaviors/std-x",
+      "programJson": "",
+      "sourceJson": "",
+      "sourceText": "",
+      "knobs": [],
+      "valid": false,
+      "findings": [],
+      "waiting": 5
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "emits": [
+       {
+        "event": "LOAD_STEP"
+       }
+      ],
+      "neverEmits": [
+       "BEHAVIOR_FAILED"
+      ]
+     },
+     "from": "loading"
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-valid-program-is-valid",
+   "steps": [
+    {
+     "trait": "BehaviorLoader",
+     "event": "CHECKED",
+     "payload": {
+      "result": {
+       "valid": true,
+       "errors": [],
+       "warnings": []
+      }
+     },
+     "entity": {
+      "id": "b",
+      "behavior": "std/behaviors/std-x",
+      "programJson": "",
+      "sourceJson": "",
+      "sourceText": "",
+      "knobs": [],
+      "valid": false,
+      "findings": [],
+      "waiting": 5
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "emits": [
+       {
+        "event": "LOAD_STEP"
+       }
+      ]
+     },
+     "from": "loading"
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-failed-validation-is-a-finding-not-a-failed-load",
+   "steps": [
+    {
+     "trait": "BehaviorLoader",
+     "event": "CHECK_FAILED",
+     "payload": {
+      "error": "boom"
+     },
+     "entity": {
+      "id": "b",
+      "behavior": "std/behaviors/std-x",
+      "programJson": "",
+      "sourceJson": "",
+      "sourceText": "",
+      "knobs": [],
+      "valid": false,
+      "findings": [],
+      "waiting": 5
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "emits": [
+       {
+        "event": "LOAD_STEP"
+       }
+      ],
+      "neverEmits": [
+       "BEHAVIOR_FAILED"
+      ]
+     },
+     "from": "loading"
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-step-with-answers-still-to-come-keeps-loading",
+   "steps": [
+    {
+     "trait": "BehaviorLoader",
+     "event": "LOAD_STEP",
+     "payload": {},
+     "entity": {
+      "id": "b",
+      "behavior": "std/behaviors/std-x",
+      "programJson": "",
+      "sourceJson": "",
+      "sourceText": "",
+      "knobs": [],
+      "valid": false,
+      "findings": [],
+      "waiting": 3
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "neverEmits": [
+       "BEHAVIOR_LOADED"
+      ]
+     },
+     "from": "loading"
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-last-answer-hands-over-the-loaded-behavior",
+   "steps": [
+    {
+     "trait": "BehaviorLoader",
+     "event": "LOAD_STEP",
+     "payload": {},
+     "entity": {
+      "id": "b",
+      "behavior": "std/behaviors/std-x",
+      "programJson": "{\"name\":\"X\"}",
+      "sourceJson": "{\"name\":\"X\"}",
+      "sourceText": "app x",
+      "knobs": [],
+      "valid": true,
+      "findings": [],
+      "waiting": 1
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BEHAVIOR_LOADED",
+        "payload": {
+         "behavior": "std/behaviors/std-x",
+         "programJson": "{\"name\":\"X\"}",
+         "sourceJson": "{\"name\":\"X\"}",
+         "sourceText": "app x",
+         "knobs": [],
+         "valid": true,
+         "findings": []
+        }
+       }
+      ]
+     },
+     "from": "loading"
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "an-unreadable-program-fails-the-load-by-name",
+   "steps": [
+    {
+     "trait": "BehaviorLoader",
+     "event": "LOAD_FAILED",
+     "payload": {
+      "error": "not found"
+     },
+     "entity": {
+      "id": "b",
+      "behavior": "std/behaviors/std-x",
+      "programJson": "",
+      "sourceJson": "",
+      "sourceText": "",
+      "knobs": [],
+      "valid": false,
+      "findings": [],
+      "waiting": 4
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "BEHAVIOR_FAILED",
+        "payload": {
+         "behavior": "std/behaviors/std-x",
+         "error": "not found"
+        }
+       }
+      ]
+     },
+     "from": "loading"
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-step-outside-loading-is-ignored",
+   "steps": [
+    {
+     "trait": "BehaviorLoader",
+     "event": "LOAD_STEP",
+     "payload": {},
+     "entity": {
+      "id": "b",
+      "behavior": "",
+      "programJson": "",
+      "sourceJson": "",
+      "sourceText": "",
+      "knobs": [],
+      "valid": false,
+      "findings": [],
+      "waiting": 0
+     },
+     "expect": {
+      "fired": false
+     },
+     "from": "idle"
+    }
+   ],
+   "now": 1760531445678
+  }
+ ]
+}

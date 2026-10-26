@@ -1,0 +1,1335 @@
+{
+  "atom": "cli/atoms/std-orb-lint-derived-field-write.lolo",
+  "trait": "OrbLintDerivedFieldWrite",
+  "note": "A field with a derived expression is computed by the kernel on every write. A set of @entity.<field> in a trait bound to the entity, or a persist create|update|upsert (single, or an op of a batch) whose data object names the field, is refused; reads, other fields, other entities and programs with no derived field are clean.",
+  "cases": [
+    {
+      "id": "a-set-of-a-derived-field-is-refused",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "People",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "nick",
+                        "type": "string"
+                      },
+                      {
+                        "name": "emailKey",
+                        "type": "string",
+                        "derived": [
+                          "str/lower",
+                          [
+                            "object/get",
+                            "@entity",
+                            "email"
+                          ]
+                        ]
+                      }
+                    ],
+                    "collection": "persons"
+                  },
+                  "traits": [
+                    {
+                      "name": "Edit",
+                      "linkedEntity": "Person",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SAVE",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.emailKey",
+                                "x"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "derived-field-write",
+                  "findings": [
+                    {
+                      "code": "ORB_DERIVED_FIELD_WRITTEN",
+                      "path": "orbitals[0 (People)].traits[0 (Edit)].stateMachine.transitions[0].effects",
+                      "message": "`emailKey` of entity Person is `@derived`: the kernel computes it on every write, so a `set` may not write it",
+                      "suggestion": "Remove the write; change the fields it is derived from",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        }
+      ]
+    },
+    {
+      "id": "a-persist-create-naming-a-derived-field-is-refused",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "People",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "nick",
+                        "type": "string"
+                      },
+                      {
+                        "name": "emailKey",
+                        "type": "string",
+                        "derived": [
+                          "str/lower",
+                          [
+                            "object/get",
+                            "@entity",
+                            "email"
+                          ]
+                        ]
+                      }
+                    ],
+                    "collection": "persons"
+                  },
+                  "traits": [
+                    {
+                      "name": "Edit",
+                      "linkedEntity": "Person",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SAVE",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Person",
+                                {
+                                  "id": "1",
+                                  "emailKey": "x"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "derived-field-write",
+                  "findings": [
+                    {
+                      "code": "ORB_DERIVED_FIELD_WRITTEN",
+                      "path": "orbitals[0 (People)].traits[0 (Edit)].stateMachine.transitions[0].effects",
+                      "message": "`emailKey` of entity Person is `@derived`: the kernel computes it on every write, so a `persist` may not write it",
+                      "suggestion": "Remove the write; change the fields it is derived from",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        }
+      ]
+    },
+    {
+      "id": "a-persist-update-naming-a-derived-field-is-refused",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "People",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "nick",
+                        "type": "string"
+                      },
+                      {
+                        "name": "emailKey",
+                        "type": "string",
+                        "derived": [
+                          "str/lower",
+                          [
+                            "object/get",
+                            "@entity",
+                            "email"
+                          ]
+                        ]
+                      }
+                    ],
+                    "collection": "persons"
+                  },
+                  "traits": [
+                    {
+                      "name": "Edit",
+                      "linkedEntity": "Person",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SAVE",
+                            "effects": [
+                              [
+                                "persist",
+                                "update",
+                                "Person",
+                                "@entity.id",
+                                {
+                                  "email": "a",
+                                  "emailKey": "x"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "derived-field-write",
+                  "findings": [
+                    {
+                      "code": "ORB_DERIVED_FIELD_WRITTEN",
+                      "path": "orbitals[0 (People)].traits[0 (Edit)].stateMachine.transitions[0].effects",
+                      "message": "`emailKey` of entity Person is `@derived`: the kernel computes it on every write, so a `persist` may not write it",
+                      "suggestion": "Remove the write; change the fields it is derived from",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        }
+      ]
+    },
+    {
+      "id": "a-persist-upsert-naming-a-derived-field-is-refused",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "People",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "nick",
+                        "type": "string"
+                      },
+                      {
+                        "name": "emailKey",
+                        "type": "string",
+                        "derived": [
+                          "str/lower",
+                          [
+                            "object/get",
+                            "@entity",
+                            "email"
+                          ]
+                        ]
+                      }
+                    ],
+                    "collection": "persons"
+                  },
+                  "traits": [
+                    {
+                      "name": "Edit",
+                      "linkedEntity": "Person",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SAVE",
+                            "effects": [
+                              [
+                                "persist",
+                                "upsert",
+                                "Person",
+                                {
+                                  "id": "1",
+                                  "emailKey": "x"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "derived-field-write",
+                  "findings": [
+                    {
+                      "code": "ORB_DERIVED_FIELD_WRITTEN",
+                      "path": "orbitals[0 (People)].traits[0 (Edit)].stateMachine.transitions[0].effects",
+                      "message": "`emailKey` of entity Person is `@derived`: the kernel computes it on every write, so a `persist` may not write it",
+                      "suggestion": "Remove the write; change the fields it is derived from",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        }
+      ]
+    },
+    {
+      "id": "a-persist-batch-op-naming-a-derived-field-is-refused",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "People",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "nick",
+                        "type": "string"
+                      },
+                      {
+                        "name": "emailKey",
+                        "type": "string",
+                        "derived": [
+                          "str/lower",
+                          [
+                            "object/get",
+                            "@entity",
+                            "email"
+                          ]
+                        ]
+                      }
+                    ],
+                    "collection": "persons"
+                  },
+                  "traits": [
+                    {
+                      "name": "Edit",
+                      "linkedEntity": "Person",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SAVE",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  [
+                                    "list",
+                                    "create",
+                                    "Person",
+                                    {
+                                      "id": "2",
+                                      "emailKey": "x"
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "derived-field-write",
+                  "findings": [
+                    {
+                      "code": "ORB_DERIVED_FIELD_WRITTEN",
+                      "path": "orbitals[0 (People)].traits[0 (Edit)].stateMachine.transitions[0].effects",
+                      "message": "`emailKey` of entity Person is `@derived`: the kernel computes it on every write, so a `persist` may not write it",
+                      "suggestion": "Remove the write; change the fields it is derived from",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        }
+      ]
+    },
+    {
+      "id": "control-a-set-of-an-ordinary-field-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "People",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "nick",
+                        "type": "string"
+                      },
+                      {
+                        "name": "emailKey",
+                        "type": "string",
+                        "derived": [
+                          "str/lower",
+                          [
+                            "object/get",
+                            "@entity",
+                            "email"
+                          ]
+                        ]
+                      }
+                    ],
+                    "collection": "persons"
+                  },
+                  "traits": [
+                    {
+                      "name": "Edit",
+                      "linkedEntity": "Person",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SAVE",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.nick",
+                                "x"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "derived-field-write",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        }
+      ]
+    },
+    {
+      "id": "control-a-persist-without-the-derived-field-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "People",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "nick",
+                        "type": "string"
+                      },
+                      {
+                        "name": "emailKey",
+                        "type": "string",
+                        "derived": [
+                          "str/lower",
+                          [
+                            "object/get",
+                            "@entity",
+                            "email"
+                          ]
+                        ]
+                      }
+                    ],
+                    "collection": "persons"
+                  },
+                  "traits": [
+                    {
+                      "name": "Edit",
+                      "linkedEntity": "Person",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SAVE",
+                            "effects": [
+                              [
+                                "persist",
+                                "update",
+                                "Person",
+                                "@entity.id",
+                                {
+                                  "email": "a@b.c",
+                                  "nick": "x"
+                                }
+                              ],
+                              [
+                                "persist",
+                                "create",
+                                "Person",
+                                {
+                                  "id": "1",
+                                  "email": "a"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "derived-field-write",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        }
+      ]
+    },
+    {
+      "id": "control-reading-a-derived-field-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "People",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "nick",
+                        "type": "string"
+                      },
+                      {
+                        "name": "emailKey",
+                        "type": "string",
+                        "derived": [
+                          "str/lower",
+                          [
+                            "object/get",
+                            "@entity",
+                            "email"
+                          ]
+                        ]
+                      }
+                    ],
+                    "collection": "persons"
+                  },
+                  "traits": [
+                    {
+                      "name": "Edit",
+                      "linkedEntity": "Person",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SAVE",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.nick",
+                                [
+                                  "object/get",
+                                  "@entity",
+                                  "emailKey"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "derived-field-write",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        }
+      ]
+    },
+    {
+      "id": "control-a-derived-field-of-another-entity-is-not-this-trait's",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "People",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "nick",
+                        "type": "string"
+                      },
+                      {
+                        "name": "emailKey",
+                        "type": "string",
+                        "derived": [
+                          "str/lower",
+                          [
+                            "object/get",
+                            "@entity",
+                            "email"
+                          ]
+                        ]
+                      }
+                    ],
+                    "collection": "persons"
+                  },
+                  "traits": [
+                    {
+                      "name": "Edit",
+                      "linkedEntity": "Other",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SAVE",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.emailKey",
+                                "x"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Other",
+                      "persistence": "persistent",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "emailKey",
+                          "type": "string"
+                        }
+                      ],
+                      "collection": "others"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "derived-field-write",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        }
+      ]
+    },
+    {
+      "id": "control-a-persist-on-an-entity-with-no-derived-field-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "People",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "nick",
+                        "type": "string"
+                      },
+                      {
+                        "name": "emailKey",
+                        "type": "string",
+                        "derived": [
+                          "str/lower",
+                          [
+                            "object/get",
+                            "@entity",
+                            "email"
+                          ]
+                        ]
+                      }
+                    ],
+                    "collection": "persons"
+                  },
+                  "traits": [
+                    {
+                      "name": "Edit",
+                      "linkedEntity": "Person",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SAVE",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Other",
+                                {
+                                  "id": "1",
+                                  "emailKey": "x"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Other",
+                      "persistence": "persistent",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "emailKey",
+                          "type": "string"
+                        }
+                      ],
+                      "collection": "others"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "derived-field-write",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        }
+      ]
+    },
+    {
+      "id": "control-a-program-with-no-derived-field-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "People",
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "emailKey",
+                        "type": "string"
+                      }
+                    ],
+                    "collection": "persons"
+                  },
+                  "traits": [
+                    {
+                      "name": "Edit",
+                      "linkedEntity": "Person",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "SAVE",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.emailKey",
+                                "x"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "derived-field-write",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintDerivedFieldWrite"
+        }
+      ]
+    }
+  ]
+}
