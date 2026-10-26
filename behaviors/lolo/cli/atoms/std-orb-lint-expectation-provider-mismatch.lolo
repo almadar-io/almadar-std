@@ -15,8 +15,8 @@ type LStr = string
 type LObj = Map string LNode?
 type ExWaivers = { read : string, create : string, update : string, delete : string }
 type ExField = { name : string, type : string, required : boolean, primaryKey : boolean, unique : boolean, values : [string], default : LNode?, relation : LNode?, items : LNode?, properties : LNode? }
-type ExEntity = { name : string, identity : boolean, shared : boolean, browser : boolean, persistence : string, collection : string, fields : [ExField], read_policy : LNode?, create_policy : LNode?, update_policy : LNode?, delete_policy : LNode?, access_waivers : ExWaivers? }
-type ExExpect = { kind : string, name : string, strict : boolean, traitName : string, state : string, from : string, to : string, event : string, protocol : string, path : string, traits : [string], shape : [ExField], payload : [ExField], persistence : string, shared : boolean, browser : boolean, read_policy : LNode?, create_policy : LNode?, update_policy : LNode?, delete_policy : LNode?, access_waivers : ExWaivers?, knob : ExField }
+type PmEntity = { name : string, identity : boolean, shared : boolean, browser : boolean, persistence : string, collection : string, fields : [ExField], read_policy : LNode?, create_policy : LNode?, update_policy : LNode?, delete_policy : LNode?, access_waivers : ExWaivers? }
+type PmExpect = { kind : string, name : string, strict : boolean, traitName : string, state : string, from : string, to : string, event : string, protocol : string, path : string, traits : [string], shape : [ExField], payload : [ExField], persistence : string, shared : boolean, browser : boolean, read_policy : LNode?, create_policy : LNode?, update_policy : LNode?, delete_policy : LNode?, access_waivers : ExWaivers?, knob : ExField }
 type ExEmit = { event : string, payloadSchema : [ExField] }
 type ExState = { name : string }
 type ExTransition = { from : LNode, to : string, event : string, guard : LNode?, effects : [LNode?] }
@@ -25,8 +25,8 @@ type ExKnob = { type : string, values : [string], default : LNode?, items : LNod
 type ExTrait = { name : string, emits : [ExEmit], stateMachine : ExMachine, ticks : [ExTransition], config : Map string ExKnob? }
 type ExPageTrait = { ref : string, name : string }
 type ExPage = { name : string, path : string, protocol : string, traits : [ExPageTrait] }
-type ExOrbital = { name : string, spec : boolean, expects : [ExExpect], entity : ExEntity, auxiliaryEntities : [ExEntity], traits : [ExTrait], pages : [ExPage] }
-type ExProgram = { orbitals : [ExOrbital] }
+type PmOrbital = { name : string, spec : boolean, expects : [PmExpect], entity : PmEntity, auxiliaryEntities : [PmEntity], traits : [ExTrait], pages : [ExPage] }
+type PmProgram = { orbitals : [PmOrbital] }
 
 orbital OrbLintExpectationProviderMismatchOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -114,7 +114,7 @@ orbital OrbLintExpectationProviderMismatchOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ExProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PmProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }

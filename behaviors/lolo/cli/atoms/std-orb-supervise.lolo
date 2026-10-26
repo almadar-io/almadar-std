@@ -1,0 +1,205 @@
+app std-orb-supervise [
+  version: "1.0.0",
+  inbound: ["cli-supervise"],
+  exec: ["orb"],
+  env: ["PATH", "HOME"],
+  stdio: [out, err],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-supervise — the `orb supervise [--watch <glob>]... [--debounce <ms>] -- <command> [args...]` command: it keeps one child process running under std-supervisor (restart policy permanent, so a crash restarts it) and restarts it a debounce after any file matching a --watch glob (relative to the working directory, recursive) changes. A restart signals the child with TERM, waits for its exit and only then respawns it, so two copies never run at once. The command is the word after `--` and must be `orb`: an os/spawn command is matched exactly against the exec grant and is a build-time literal, so only its arguments are read at run time. --debounce defaults to the debounceMs knob. The command stays open until TERM or INT stops the child and answers 200; a usage error answers 400 (exit 2); a failed watch, a failed spawn or a crash loop beyond the supervisor's restart intensity answers 500 (exit 1)."
+]
+uses Spec from "almadar-std/orb-supervise"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type ChildSpec = { name : string!, command : string!, args : [string]!, restart : "permanent" | "transient" | "temporary"! }
+
+orbital OrbSuperviseOrbital {
+  uses Args from "std/behaviors/std-args"
+  uses Sup from "std/behaviors/std-supervisor"
+
+  entity OrbSuperviseRun [runtime] {
+    id : string!
+    command : [string] = []
+    watches : [string] = []
+    debounce : number = 0
+    cursor : number = 0
+    pending : string = ""
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbSupervise.SUPERVISE_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait Supervisor = Sup.traits.Supervisor {
+    config {
+      strategy : "one-for-one" = one-for-one
+      maxRestarts : number = 5
+      periodMs : number = 60000
+      command : string = "orb"
+    }
+    listens {
+      START { children : [ChildSpec] }
+        @description "Spawn the child this START carries."
+      STOP { }
+        @description "Signal the child and end supervision."
+      RESTART { index : number! }
+        @description "Restart the running child."
+      CHILD_SPAWNED { pid : number!  key : string! }
+        @description "The os/spawn success."
+      CHILD_SPAWN_FAILED { error : string  kind : string  key : string! }
+        @description "The os/spawn failure."
+      CHILD_EXITED { code : number  signal : number  key : string! }
+        @description "The os/wait completion."
+      CHILD_WAIT_FAILED { error : string  kind : string  key : string! }
+        @description "The os/wait failure."
+      CHILD_DOWN { index : number! }
+        @description "Platform down event for the child."
+      CHILD_KILL_FAILED { error : string  kind : string  key : string! }
+        @description "The os/kill failure."
+      OrbSupervise.SUPERVISE_START -> START
+      OrbSupervise.SUPERVISE_STOP -> STOP
+      OrbSupervise.SUPERVISE_RESTART -> RESTART
+    }
+  }
+
+  trait OrbSupervise -> OrbSuperviseRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SUPERVISE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit SUPERVISE_ANSWERED { status: 400, body: "usage: orb supervise [--watch <glob>]... [--debounce <ms>] -- orb <args>..." })
+      SUPERVISE_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (not (array/includes (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") "--")))
+        (emit SUPERVISE_ANSWERED { status: 400, body: "usage: orb supervise [--watch <glob>]... [--debounce <ms>] -- orb <args>..." })
+      SUPERVISE_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (array/includes (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") "--"))
+        (let ((argv (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))
+          (let ((cut (array/reduce (array/range (array/len @argv)) -1 (fn acc i (if (and (< @acc 0) (= (array/nth @argv @i) "--")) @i @acc)))))
+            (do
+              (set @entity.command (array/drop @argv (+ @cut 1)))
+              (emit SUPERVISE_ARGS_PARSE { stage: "supervise" argv: (array/take @argv @cut) flags: [{ name: "watch" aliases: [] takesValue: true repeatable: true }, { name: "debounce" aliases: [] takesValue: true repeatable: false }] }))))
+      SUPERVISE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (= (array/len @entity.command) 0) (!= (array/first @entity.command) "orb") (and (!= (object/get @payload.flags "debounce") null) (not (validate/pattern (array/last (object/get @payload.flags "debounce")) "^[0-9]+$"))))
+        (emit SUPERVISE_ANSWERED { status: 400, body: "usage: orb supervise [--watch <glob>]... [--debounce <ms>] -- orb <args>..." })
+      SUPERVISE_ARGS_DONE -> running when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (> (array/len @entity.command) 0) (= (array/first @entity.command) "orb") (or (= (object/get @payload.flags "debounce") null) (validate/pattern (array/last (object/get @payload.flags "debounce")) "^[0-9]+$")))
+        (set @entity.watches (or (object/get @payload.flags "watch") []))
+        (set @entity.debounce (if (!= (object/get @payload.flags "debounce") null) (str/to-number (array/last (object/get @payload.flags "debounce"))) @config.debounceMs))
+        (set @entity.cursor 0)
+        (emit SUPERVISE_BOOT { })
+    }
+
+    state running {
+      INIT -> running
+      SUPERVISE_BOOT -> running
+        (os/watch-signal "TERM" { key: "term" emit: { onMessage: SUPERVISE_SIGNALLED, failure: SUPERVISE_SIGNAL_FAILED } })
+        (os/watch-signal "INT" { key: "int" emit: { onMessage: SUPERVISE_SIGNALLED, failure: SUPERVISE_SIGNAL_FAILED } })
+        (emit SUPERVISE_START { children: [{ name: "child", command: "orb", args: (array/drop @entity.command 1), restart: "permanent" }] })
+        (emit SUPERVISE_WATCH { at: 0 })
+      SUPERVISE_WATCH -> running when (< @entity.cursor (array/len @entity.watches))
+        (os/watch-files { anchor: "cwd" path: (array/nth @entity.watches @entity.cursor) } { key: "watch" emit: { onMessage: SUPERVISE_CHANGED, failure: SUPERVISE_WATCH_FAILED } })
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit SUPERVISE_WATCH { at: (+ @entity.cursor 1) })
+      SUPERVISE_CHANGED -> running
+        (emit SUPERVISE_RESTART { index: 0 })
+      SUPERVISE_WATCH_FAILED -> stopping
+        (set @entity.pending (str/concat "watch failed: " (or @payload.error "host failure")))
+        (emit SUPERVISE_STOP { })
+      SUPERVISE_SIGNALLED -> stopping
+        (set @entity.pending "")
+        (emit SUPERVISE_STOP { })
+      SUPERVISE_SIGNAL_FAILED -> running
+      SUPERVISE_GAVE_UP -> ready
+        (emit SUPERVISE_ANSWERED { status: 500, body: (str/concat "supervisor gave up: " @payload.reason " (" @payload.child ")" (if (validate/required @payload.error) (str/concat ": " @payload.error) "")) })
+    }
+
+    state stopping {
+      INIT -> stopping
+      SUPERVISE_STOPPED -> ready when (= @entity.pending "")
+        (emit SUPERVISE_ANSWERED { status: 200, body: "stopped" })
+      SUPERVISE_STOPPED -> ready when (!= @entity.pending "")
+        (emit SUPERVISE_ANSWERED { status: 500, body: @entity.pending })
+      SUPERVISE_GAVE_UP -> ready
+        (emit SUPERVISE_ANSWERED { status: 500, body: (str/concat "supervisor gave up: " @payload.reason " (" @payload.child ")" (if (validate/required @payload.error) (str/concat ": " @payload.error) "")) })
+    }
+
+    emits {
+      SUPERVISE_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      SUPERVISE_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the words before `--` against the --watch and --debounce flags."
+        @tier "internal"
+      SUPERVISE_BOOT { }
+        @description "Internal: start the child and the watchers."
+        @tier "internal"
+      SUPERVISE_WATCH { at : number! }
+        @description "Internal: start the next --watch glob."
+        @tier "internal"
+      SUPERVISE_START { children : [ChildSpec]! }
+        @description "Internal: ask the supervisor to spawn this child."
+        @tier "internal"
+      SUPERVISE_STOP { }
+        @description "Internal: ask the supervisor to stop the child."
+        @tier "internal"
+      SUPERVISE_RESTART { index : number! }
+        @description "Internal: ask the supervisor to restart the child."
+        @tier "internal"
+      SUPERVISE_CHANGED { path : string  name : string  kind : string }
+        @description "A watched file changed."
+        @tier "internal"
+      SUPERVISE_WATCH_FAILED { error : string }
+        @description "A --watch glob could not be watched."
+        @tier "internal"
+      SUPERVISE_SIGNALLED { signal : string }
+        @description "TERM or INT reached the process."
+        @tier "internal"
+      SUPERVISE_SIGNAL_FAILED { error : string }
+        @description "A signal could not be watched."
+        @tier "internal"
+    }
+
+    config {
+      debounceMs : number = 3000
+        @label "Default debounce (ms)"
+        @description "How long file changes settle before the child restarts when --debounce is not given."
+        @tier "domain"
+    }
+
+    listens {
+      SUPERVISE_CALLED -> inbound "cli-supervise" answers SUPERVISE_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb supervise` with its arguments and working directory."
+        @synonyms "orb supervise, restart on change, keep running"
+      SUPERVISE_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED: the words before `--`, parsed."
+      SUPERVISE_GAVE_UP {
+        reason : string!
+        child : string!
+        restarts : number!
+        error : string
+      }
+        @description "std-supervisor's SUPERVISOR_GAVE_UP: a spawn failed or the child crashed beyond the restart intensity."
+      SUPERVISE_STOPPED { }
+        @description "std-supervisor's SUPERVISOR_STOPPED: the child was signalled."
+      ArgsCli.ARGS_PARSED -> SUPERVISE_ARGS_DONE
+      Supervisor.SUPERVISOR_GAVE_UP -> SUPERVISE_GAVE_UP
+      Supervisor.SUPERVISOR_STOPPED -> SUPERVISE_STOPPED
+    }
+  }
+
+  page boot as OrbSuperviseOrbitalStart -> OrbSupervise, ArgsCli, Supervisor
+}

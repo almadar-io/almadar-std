@@ -1,7 +1,7 @@
 {
   "atom": "cli/atoms/std-orb-lint-page-unreachable.lolo",
   "trait": "OrbLintPageUnreachable",
-  "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for ORB_PAGE_UNREACHABLE on the same program. Each case copies a page.rs reachability test named in its id (validate_page_reachability, collect_href_strings, collect_reachability_signals); the cases without a test name pin a branch of those functions the tests leave open (tick effects, the static navigate prefix, the @pages sigil in app config and in an effect, schema-wide reachability, per-orbital indexes). The lazyPages half of validate_page_reachability is not ported: a lazy page's links are not serialized into the program, so the page.rs lazy-page tests have no golden.",
+  "note": "Expected findings are the code, path, message and suggestion `orb validate` (the Rust validator) reports for ORB_PAGE_UNREACHABLE on the same program. Each case copies a page.rs reachability test named in its id (validate_page_reachability, collect_href_strings, collect_reachability_signals); the cases without a test name pin a branch of those functions the tests leave open (tick effects, the static navigate prefix, the @pages sigil in app config and in an effect, schema-wide reachability, per-orbital indexes). The lazyPages half of validate_page_reachability is covered by the cases named for its page.rs tests and by the lazy cases beside them, built on the shape `orb resolve --output` serializes (orbRef, orbital, path, links omitted when empty).",
   "cases": [
     {
       "id": "a page no link, navItem or navigate reaches is unreachable (fires_for_a_page_reachable_by_no_link_navitem_or_navigate_target)",
@@ -3310,6 +3310,1317 @@
                       "path": "orbitals[1].pages[0]",
                       "message": "page '/b' is declared but appears in no link, navItems entry or navigate effect",
                       "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/b', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "control: booleans, numbers, nulls and mixed arrays in config defaults, effects and payloads do not abort the walk (real std-browse / std-orb-serve shape)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Browse",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.title",
+                                null
+                              ],
+                              [
+                                "fetch",
+                                "Widget",
+                                {
+                                  "filter": [
+                                    "and",
+                                    [
+                                      "=",
+                                      "@entity.status",
+                                      null
+                                    ],
+                                    [
+                                      [
+                                        "=",
+                                        "@entity.n",
+                                        1
+                                      ],
+                                      true
+                                    ]
+                                  ]
+                                }
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    [
+                                      {
+                                        "type": "badge"
+                                      },
+                                      "x",
+                                      true,
+                                      null
+                                    ],
+                                    {
+                                      "type": "button",
+                                      "label": "Go",
+                                      "disabled": false,
+                                      "tags": [
+                                        "a",
+                                        true,
+                                        3,
+                                        null
+                                      ]
+                                    }
+                                  ],
+                                  "empty": null
+                                }
+                              ],
+                              [
+                                "navigate",
+                                "/about"
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "Browse"
+                        },
+                        "dense": {
+                          "type": "boolean",
+                          "default": true
+                        },
+                        "limit": {
+                          "type": "number",
+                          "default": 20
+                        },
+                        "mixed": {
+                          "type": "array",
+                          "default": [
+                            "a",
+                            true,
+                            3,
+                            null
+                          ]
+                        },
+                        "none": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ],
+                  "config": {
+                    "flag": {
+                      "type": "boolean",
+                      "default": false
+                    }
+                  },
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/home",
+                      "traits": [
+                        {
+                          "ref": "Browse"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "AboutPage",
+                      "path": "/about",
+                      "traits": [
+                        {
+                          "ref": "Browse"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a page nothing reaches is still flagged beside booleans, numbers, nulls and mixed arrays in config defaults, effects and payloads",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Browse",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.title",
+                                null
+                              ],
+                              [
+                                "fetch",
+                                "Widget",
+                                {
+                                  "filter": [
+                                    "and",
+                                    [
+                                      "=",
+                                      "@entity.status",
+                                      null
+                                    ],
+                                    [
+                                      [
+                                        "=",
+                                        "@entity.n",
+                                        1
+                                      ],
+                                      true
+                                    ]
+                                  ]
+                                }
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    [
+                                      {
+                                        "type": "badge"
+                                      },
+                                      "x",
+                                      true,
+                                      null
+                                    ],
+                                    {
+                                      "type": "button",
+                                      "label": "Go",
+                                      "disabled": false,
+                                      "tags": [
+                                        "a",
+                                        true,
+                                        3,
+                                        null
+                                      ]
+                                    }
+                                  ],
+                                  "empty": null
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "Browse"
+                        },
+                        "dense": {
+                          "type": "boolean",
+                          "default": true
+                        },
+                        "limit": {
+                          "type": "number",
+                          "default": 20
+                        },
+                        "mixed": {
+                          "type": "array",
+                          "default": [
+                            "a",
+                            true,
+                            3,
+                            null
+                          ]
+                        },
+                        "none": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ],
+                  "config": {
+                    "flag": {
+                      "type": "boolean",
+                      "default": false
+                    }
+                  },
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/home",
+                      "traits": [
+                        {
+                          "ref": "Browse"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "LostPage",
+                      "path": "/lost",
+                      "traits": [
+                        {
+                          "ref": "Browse"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "page '/lost' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/lost', or remove the page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "control: a lazy page named by a nav href is reachable (control_a_linked_lazy_page_is_reachable)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/blog/a",
+                              "label": "L"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "lazyPages": [
+                {
+                  "orbRef": "lazy/blog_a.orb",
+                  "orbital": "blog_a",
+                  "path": "/blog/a"
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a lazy page nothing links to is unreachable (a_lazy_page_nothing_links_to_is_unreachable)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/blog/other",
+                              "label": "L"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "lazyPages": [
+                {
+                  "orbRef": "lazy/blog_a.orb",
+                  "orbital": "blog_a",
+                  "path": "/blog/a"
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "lazyPages[0]",
+                      "message": "page '/blog/a' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/blog/a', or remove the `uses lazy` page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "control: a lazy page reached through a chain of reached lazy pages' links is reachable, whatever the declaration order (a_lazy_page_linked_only_from_a_reached_lazy_page_is_reachable)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/blog/a",
+                              "label": "L"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "lazyPages": [
+                {
+                  "orbRef": "lazy/blog_c.orb",
+                  "orbital": "blog_c",
+                  "path": "/blog/c"
+                },
+                {
+                  "orbRef": "lazy/blog_b.orb",
+                  "orbital": "blog_b",
+                  "path": "/blog/b",
+                  "links": [
+                    "/blog/c"
+                  ]
+                },
+                {
+                  "orbRef": "lazy/blog_a.orb",
+                  "orbital": "blog_a",
+                  "path": "/blog/a",
+                  "links": [
+                    "/blog/b"
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a lazy page linked only from an unreached lazy page is unreachable, and so is its parent (control_links_inside_an_unreached_lazy_page_reach_nothing)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/blog/a",
+                              "label": "L"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "lazyPages": [
+                {
+                  "orbRef": "lazy/blog_x.orb",
+                  "orbital": "blog_x",
+                  "path": "/blog/x",
+                  "links": [
+                    "/blog/y"
+                  ]
+                },
+                {
+                  "orbRef": "lazy/blog_y.orb",
+                  "orbital": "blog_y",
+                  "path": "/blog/y"
+                },
+                {
+                  "orbRef": "lazy/blog_a.orb",
+                  "orbital": "blog_a",
+                  "path": "/blog/a"
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "lazyPages[0]",
+                      "message": "page '/blog/x' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/blog/x', or remove the `uses lazy` page if nothing should reach it",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "lazyPages[1]",
+                      "message": "page '/blog/y' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/blog/y', or remove the `uses lazy` page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a lazy page that links to itself does not reach itself (edge_a_lazy_page_lazy_page_does_not_reach_itself)",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/blog/a",
+                              "label": "L"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "lazyPages": [
+                {
+                  "orbRef": "lazy/blog_s.orb",
+                  "orbital": "blog_s",
+                  "path": "/blog/s",
+                  "links": [
+                    "/blog/s"
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "lazyPages[0]",
+                      "message": "page '/blog/s' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/blog/s', or remove the `uses lazy` page if nothing should reach it",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "control: a parameterized lazy page is never reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "config": {
+                        "navItems": {
+                          "type": "array",
+                          "default": [
+                            {
+                              "href": "/blog/a",
+                              "label": "L"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "lazyPages": [
+                {
+                  "orbRef": "lazy/blog_:slug.orb",
+                  "orbital": "blog_:slug",
+                  "path": "/blog/:slug"
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "control: a lazy page under a navigate prefix longer than one character is reachable",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/docs"
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {}
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "lazyPages": [
+                {
+                  "orbRef": "lazy/docs_intro.orb",
+                  "orbital": "docs_intro",
+                  "path": "/docs/intro"
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        }
+      ]
+    },
+    {
+      "id": "a lazy page under a one-character navigate prefix is unreachable",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "p",
+              "orbitals": [
+                {
+                  "name": "AppOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "AppLayout",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "navigate",
+                                "/"
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {}
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "HomePage",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "AppLayout"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "lazyPages": [
+                {
+                  "orbRef": "lazy/docs_intro.orb",
+                  "orbital": "docs_intro",
+                  "path": "/docs/intro"
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintPageUnreachable"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "page-unreachable",
+                  "findings": [
+                    {
+                      "code": "ORB_PAGE_UNREACHABLE",
+                      "path": "lazyPages[0]",
+                      "message": "page '/docs/intro' is declared but appears in no link, navItems entry or navigate effect",
+                      "suggestion": "add an href to a nav/footer/link component, or a navigate effect, targeting '/docs/intro', or remove the `uses lazy` page if nothing should reach it",
                       "severity": "error"
                     }
                   ],

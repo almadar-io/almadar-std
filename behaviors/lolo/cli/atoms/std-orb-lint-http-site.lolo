@@ -1,0 +1,294 @@
+app std-orb-lint-http-site [
+  version: "1.0.0",
+  inbound: ["cli-lint-http-site"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-http-site — the `orb lint http-site <file>` command, the port of http_site.rs: ORB_HTTP_AUTH_ON_CLIENT (an `http` whose literal request carries `auth`, found at any depth, in a transition of a [client] trait or in a non-background tick of a [client] or [optimistic] trait; one finding per call at the effect) and ORB_X_MIXED_RESIDENCE (a transition or tick that runs a keyless `http`, which is client work, and a server effect, so no single executor holds both; reported at the effect list). Where an effect runs follows effect_site: an operator whose installed runsOn is server stays server except an `http` with a keyless request, a `persist batch` whose named entities are all browser-stored, and a data effect (the operator's entity param) on a literal browser-stored entity; an `if` or `when` branch whose condition is statically false is dead, and a `let` pair name or `fn` parameter list is never a call. The operator sites and entity params come from LINT_OPERATOR_SHAPES; the browser-stored entities from the resolved program. It needs the RESOLVED program (program/read resolve). Findings print as `[code] path: message` (status 500, exit 1); clean answers `lint http-site: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-http-site"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type HsVal = string | number | boolean | [HsVal?] | Map string HsVal?
+type HsTransition = { event : string, effects : [HsVal]? }
+type HsTick = { name : string, runsInBackground : boolean?, effects : [HsVal]? }
+type HsMachine = { transitions : [HsTransition]? }
+type HsTrait = { name : string, dispatch : string?, stateMachine : HsMachine?, ticks : [HsTick]? }
+type HsEntity = { name : string, browser : boolean? }
+type HsOrbital = { name : string, entity : HsEntity?, auxiliaryEntities : [HsEntity]?, traits : [HsVal] }
+type HsProgram = { orbitals : [HsOrbital] }
+type HsTypeRef = string | HsTypeNode
+type HsTypeNode = { kind : string }
+type HsParam = { name : string, type : HsTypeRef }
+type HsShape = { runsOn : string?, params : [HsParam] }
+type HsRes = { f : boolean!, h : boolean!, ch : [boolean]! }
+type SfRes = { sf : boolean!, st : boolean! }
+type HsInfo = { server : boolean!, keyless : boolean!, keyed : number! }
+type HsGroup = { site : string!, tname : string!, dispatch : string!, kind : string!, i : number!, label : string!, bg : boolean!, infos : [HsInfo]! }
+
+orbital OrbLintHttpSiteOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintHttpSiteRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    servers : [string] = []
+    entityIdx : Map string number = {}
+    shapesUnread : boolean = false
+  }
+
+  trait OrbLintHttpSite -> OrbLintHttpSiteRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SHAPES_HEARD -> ready
+        (set @entity.shapesUnread false)
+        (set @entity.servers (array/sort (array/filter (object/keys @payload.operators) (fn k (= (object/get (object/get @payload.operators @k) "runsOn" "") "server")))))
+        (set @entity.entityIdx (object/fromEntries (array/flatten (array/map (object/keys @payload.operators) (fn k
+          (let ((ps (object/get (object/get @payload.operators @k) "params" [])))
+            (array/flatten (array/map (array/range 0 (array/len @ps)) (fn i
+              (let ((ty (object/get (array/nth @ps @i) "type" null)))
+                (if (validate/object @ty)
+                  (let ((nd (json/parse (json/stringify @ty) HsTypeNode)))
+                    (if (and (!= @nd null) (= (object/get @nd "kind" "") "entity")) [[@k, @i]] []))
+                  [])))))))))))
+      SHAPES_UNREAD -> ready
+        (set @entity.shapesUnread true)
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (if @entity.shapesUnread [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so where an effect runs is unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
+          (let ((servers @entity.servers) (entityIdx @entity.entityIdx) (orbitals (object/get @payload.program "orbitals" [])) (nos : [string] []))
+            (let ((browser (array/flatten (array/map @orbitals (fn o
+                    (array/map (array/filter (array/concat (if (validate/object (object/get @o "entity" null)) [(object/get @o "entity")] (array/take (object/get @o "auxiliaryEntities" []) 0)) (object/get @o "auxiliaryEntities" [])) (fn e (object/get @e "browser" false))) (fn e (object/get @e "name"))))))))
+              (let ((sites (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                      (let ((o (array/nth @orbitals @oi)))
+                        (let ((trs (object/get @o "traits" [])))
+                          (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
+                            (let ((t (json/parse (json/stringify (array/nth @trs @ti)) HsTrait)))
+                              (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
+                                []
+                                [{ site: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]"), trait: @t }]))))))))))))
+                (let ((slots (array/flatten (array/map @sites (fn s
+                        (let ((tr (object/get @s "trait")) (site (object/get @s "site")))
+                          (let ((trans (or (object/get (object/get @tr "stateMachine") "transitions" []) [])) (ticks (or (object/get @tr "ticks" []) [])) (dispatch (object/get @tr "dispatch" "")))
+                            (array/concat
+                              (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
+                                (let ((effs (or (object/get (array/nth @trans @i) "effects" []) [])))
+                                  (array/map (array/range 0 (array/len @effs)) (fn j
+                                    { site: @site, tname: (object/get @tr "name"), dispatch: @dispatch, kind: "t", i: @i, j: @j, label: (object/get (array/nth @trans @i) "event"), bg: false, effect: (array/nth @effs @j) }))))))
+                              (array/flatten (array/map (array/range 0 (array/len @ticks)) (fn i
+                                (let ((effs (or (object/get (array/nth @ticks @i) "effects" []) [])))
+                                  (array/map (array/range 0 (array/len @effs)) (fn j
+                                    { site: @site, tname: (object/get @tr "name"), dispatch: @dispatch, kind: "k", i: @i, j: @j, label: (object/get (array/nth @ticks @i) "name"), bg: (object/get (array/nth @ticks @i) "runsInBackground" false), effect: (array/nth @effs @j) }))))))))))))))
+                  (let ((rows (array/map @slots (fn sl
+                          (let ((cl (or (tree/fold (object/get @sl "effect") (fn (n k)
+  (let ((nos : [string] []))
+    (array/concat
+      (if (and (validate/array @n) (> (array/len @n) 0) (validate/string (array/first @n)) (= (array/first @n) "http"))
+        (let ((r (if (> (array/len @n) 4) (array/nth @n 4) null)))
+          [(if (validate/object @r) (if (object/has @r "auth") "keyed" "keyless") (if (= @r null) "keyless" "opaque"))])
+        @nos)
+      (if (validate/array @n) (array/flatten (array/filter @k (fn c (!= @c null)))) (if (validate/object @n) (array/flatten (array/map (object/keys @k) (fn key (or (object/get @k @key) @nos)))) @nos))))) HsVal) @nos)))
+                            { site: (object/get @sl "site"), tname: (object/get @sl "tname"), dispatch: (object/get @sl "dispatch"), kind: (object/get @sl "kind"), i: (object/get @sl "i"), j: (object/get @sl "j"), label: (object/get @sl "label"), bg: (object/get @sl "bg"),
+                              server: (object/get (tree/fold (object/get @sl "effect") (fn (n k)
+  (let ((nob : [boolean] []) (nos : [string] []))
+    (if (validate/array @n)
+      (let ((len (array/len @n)) (h (if (> (array/len @n) 0) (array/first @n) null)) (kids @k))
+        (let ((anyf (array/some @kids (fn c (object/get @c "f")))) (chs (array/map @kids (fn c (object/get @c "h")))))
+          (if (and (validate/string @h) (array/includes ["if", "when"] @h) (>= @len 3))
+            (let ((cn (array/nth @n 1)))
+              (let ((live (not (object/get (tree/fold @cn (fn (c kk)
+  (if (validate/array @c)
+    (if (= (array/len @c) 0)
+      { sf: true, st: false }
+      (let ((op (array/first @c)))
+        (if (not (validate/string @op))
+          { sf: false, st: true }
+          (let ((args (array/slice @c 1 (array/len @c))) (ars (array/slice @kk 1 (array/len @kk))))
+            (if (= @op "and")
+              { sf: (array/some @ars (fn r (object/get @r "sf"))), st: (and (> (array/len @ars) 0) (array/every @ars (fn r (object/get @r "st")))) }
+              (if (= @op "or")
+                { sf: (and (> (array/len @ars) 0) (array/every @ars (fn r (object/get @r "sf")))), st: (array/some @ars (fn r (object/get @r "st"))) }
+                (if (= @op "not")
+                  { sf: (and (= (array/len @ars) 1) (object/get (array/first @ars) "st")), st: (and (= (array/len @ars) 1) (object/get (array/first @ars) "sf")) }
+                  (if (and (array/includes ["=", "==", "!="] @op) (= (array/len @args) 2))
+                    (let ((a0 (array/nth @args 0)) (a1 (array/nth @args 1)))
+                      (if (and (or (= @a0 null) (validate/boolean @a0) (validate/number @a0) (and (validate/string @a0) (not (str/startsWith @a0 (quote "@")))))
+                               (or (= @a1 null) (validate/boolean @a1) (validate/number @a1) (and (validate/string @a1) (not (str/startsWith @a1 (quote "@"))))))
+                        (let ((eq (= (json/stringify @a0) (json/stringify @a1))))
+                          { sf: (= @eq (= @op "!=")), st: (= @eq (not (= @op "!="))) })
+                        { sf: false, st: false }))
+                    { sf: false, st: false }))))))))
+    (if (validate/object @c)
+      { sf: (= (array/len (object/keys @c)) 0), st: (> (array/len (object/keys @c)) 0) }
+      { sf: (or (= @c null) (and (validate/boolean @c) (not @c)) (and (validate/number @c) (= @c 0)) (and (validate/string @c) (= @c ""))),
+        st: (or (and (validate/boolean @c) @c) (and (validate/number @c) (!= @c 0)) (and (validate/string @c) (!= @c "") (not (str/startsWith @c (quote "@"))))) }))) HsVal) "sf"))))
+                (let ((f (or (and @live (object/get (array/nth @kids 2) "f")) (and (= @h "if") (> @len 3) (object/get (array/nth @kids 3) "f")) (and (= @h "when") @live (array/some (array/slice @kids 3 (array/len @kids)) (fn c (object/get @c "f")))))))
+                  { f: @f, h: @f, ch: @chs })))
+            (if (and (validate/string @h) (= @h "let") (>= @len 2))
+              (let ((b (array/nth @kids 1)))
+                (let ((bound (if (validate/array (array/nth @n 1)) (array/some (object/get @b "ch") (fn x @x)) (object/get @b "f"))))
+                  (let ((f (or @bound (array/some (array/slice @kids 2 (array/len @kids)) (fn c (object/get @c "f"))))))
+                    { f: @f, h: @f, ch: @chs })))
+              (if (and (validate/string @h) (array/includes ["fn", "lambda"] @h) (>= @len 3))
+                (let ((f (array/some (array/slice @kids 2 (array/len @kids)) (fn c (object/get @c "f")))))
+                  { f: @f, h: @f, ch: @chs })
+                { f: (or @anyf
+                         (and (validate/string @h) (array/includes @servers @h)
+                              (let ((args (array/slice @n 1 (array/len @n))))
+                                (if (= @h "http")
+                                  (let ((r (if (> (array/len @args) 3) (array/nth @args 3) null)))
+                                    (not (or (= @r null) (and (validate/object @r) (not (object/has @r "auth"))))))
+                                  (if (and (= @h "persist") (> (array/len @args) 1) (validate/string (array/first @args)) (= (array/first @args) "batch"))
+                                    (let ((ops (array/nth @args 1)))
+  (let ((ents (array/unique (if (not (validate/array @ops)) @nos
+          (if (= (array/len @ops) 0) @nos
+            (let ((oh (array/first @ops)))
+              (let ((viaList (and (validate/string @oh) (= @oh "list"))) (viaCall (and (validate/string @oh) (not (= @oh "list")))))
+                (if @viaCall
+                  (if (and (= @oh "array/map") (= (array/len @ops) 3))
+                    (let ((lam (array/nth @ops 2)))
+                      (if (and (validate/array @lam) (>= (array/len @lam) 3))
+                        (let ((lh (array/first @lam)) (body (array/last @lam)))
+                          (if (and (validate/string @lh) (array/includes ["fn", "lambda"] @lh) (validate/array @body) (> (array/len @body) 1))
+                            (let ((bh (array/first @body)) (be (array/nth @body 1)))
+                              (if (and (validate/string @bh) (array/includes ["create", "update", "delete"] @bh) (validate/string @be) (not (str/startsWith @be (quote "@"))))
+                                [@be]
+                                @nos))
+                            @nos))
+                        @nos))
+                    @nos)
+                  (array/flatten (array/map (if @viaList (array/slice @ops 1 (array/len @ops)) @ops) (fn e
+                    (if (and (validate/array @e) (> (array/len @e) 1))
+                      (let ((e0 (array/first @e)) (e1 (array/nth @e 1)))
+                        (if (and (validate/string @e0) (array/includes ["create", "update", "delete"] @e0) (validate/string @e1) (not (str/startsWith @e1 (quote "@"))))
+                          [@e1]
+                          @nos))
+                      @nos))))))))))))
+    (not (and (> (array/len @ents) 0) (array/every @ents (fn en (array/includes @browser @en)))))))
+                                    (let ((ei (object/get @entityIdx @h -1)))
+                                      (if (< @ei 0)
+                                        true
+                                        (let ((ea (if (< @ei (array/len @args)) (array/nth @args @ei) null)))
+                                          (not (and (validate/string @ea) (not (str/startsWith @ea (quote "@"))) (array/includes @browser @ea))))))))))),
+                  h: @anyf, ch: @chs })))))
+      (if (validate/object @n)
+        { f: (array/some (array/map (object/keys @k) (fn key (object/get (object/get @k @key) "f"))) (fn x @x)), h: (array/some (array/map (object/keys @k) (fn key (object/get (object/get @k @key) "f"))) (fn x @x)), ch: @nob }
+        { f: false, h: false, ch: @nob })))) HsVal) "f"),
+                              keyless: (array/includes @cl "keyless"), keyed: (array/len (array/filter @cl (fn c (= @c "keyed")))) })))))
+                    (array/flatten (array/map (array/unique (array/map @rows (fn r (object/get @r "site")))) (fn st
+                      (let ((rs (array/filter @rows (fn r (= (object/get @r "site") @st)))))
+                        (array/concat
+                          (array/flatten (array/map (array/unique (array/map @rs (fn r (str/concat (object/get @r "kind") "|" (object/get @r "i"))))) (fn gk
+                            (let ((g (array/filter @rs (fn r (= (str/concat (object/get @r "kind") "|" (object/get @r "i")) @gk)))))
+                              (if (and (array/some @g (fn r (object/get @r "keyless"))) (array/some @g (fn r (object/get @r "server"))))
+                                [{ code: "ORB_X_MIXED_RESIDENCE", path: (str/concat @st (if (= (object/get (array/first @g) "kind") "t") ".stateMachine.transitions[" ".ticks[") (object/get (array/first @g) "i") "].effects"), message: (str/concat "trait \"" (object/get (array/first @g) "tname") "\" " (if (= (object/get (array/first @g) "kind") "t") "transition '" "tick '") (object/get (array/first @g) "label") "' runs a keyless `http` (client work) and a server effect in one place — no single executor holds both"), suggestion: "Split it: send the `http` here and emit an event a trait on the server listens to, or make the call authenticated so it runs on the server.", severity: "error" }]
+                                [])))))
+                          (array/flatten (array/map @rs (fn r
+                            (if (or (and (= (object/get @r "kind") "t") (= (object/get @r "dispatch") "client")) (and (= (object/get @r "kind") "k") (array/includes ["client", "optimistic"] (object/get @r "dispatch")) (not (object/get @r "bg"))))
+                              (array/map (array/range 0 (object/get @r "keyed")) (fn z
+                                { code: "ORB_HTTP_AUTH_ON_CLIENT", path: (str/concat @st (if (= (object/get @r "kind") "t") ".stateMachine.transitions[" ".ticks[") (object/get @r "i") "].effects[" (object/get @r "j") "]"), message: (str/concat "trait \"" (object/get @r "tname") "\" " (if (= (object/get @r "kind") "t") "is [client], so its transitions run on the client" (str/concat "runs tick '" (object/get @r "label") "' in the browser")) ", but this `http` carries `auth` — a credential never reaches the client, so only a keyless `http` may run there"), suggestion: "Drop `auth`, or emit an event from here and make the authenticated call in a trait that runs on the server.", severity: "error" }))
+                              []))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "http-site", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : HsProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      SHAPES_HEARD { operators : Map string HsShape! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES: every installed operator's runsOn site and params; a server operator with an entity param is a data effect that runs on the client for a browser-stored entity."
+      SHAPES_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES_UNREAD: the operator table does not match the shape type."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbLintInput.LINT_OPERATOR_SHAPES -> SHAPES_HEARD
+      OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> SHAPES_UNREAD
+    }
+  }
+
+  trait OrbLintHttpSiteCli -> OrbLintHttpSiteRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint http-site <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "http-site") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint http-site: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "http-site") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint http-site: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-http-site" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint http-site` with its arguments and working directory."
+        @synonyms "orb lint http-site"
+      OrbLintHttpSite.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintHttpSiteCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintHttpSiteOrbitalStart -> OrbLintHttpSite, OrbLintHttpSiteCli, OrbLintInput, Packs, Versions
+}

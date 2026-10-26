@@ -68,7 +68,7 @@ A spec sits under the same folder path as the behavior it specs: the spec for `f
 | `store/row-store.lolo` | the store drivers (unbound; declares the `Row*` record types the verbs and replies carry) |
 | `store/row-store-kv.lolo` | `std-row-store-kv` (unbound; the file driver's public contract with `config.store` for `config.dir`, so `store:` swaps drivers; waits on the `kv/*` operators) |
 | `store/server.lolo` | the WS-S server program (unbound; route contract of `orbital-server`) |
-| `store/mock-seed.lolo` | `std-mock-seed` (bound; composes `std-mock-random` for the seeded draws; the index strategy matches the `sample-rows.index.json` golden on every row) |
+| `store/mock-seed.lolo` | `std-mock-seed` (bound; composes `std-mock-random` for the seeded draws; the index strategy's goldens are the atom's own replay goldens) |
 | `store/redis.lolo` | `std-redis` (bound; RESP over `os/tcp-connect`/`send`/`recv`/`close`; dropping the `handshaking`/`awaiting`/`closing` states or the `REDIS_WIRE_SENT` emit fails it) |
 | `store/package-registry.lolo` | the package registry server (unbound; publish/fetch/list/yank routes, sha256 integrity, exact versions) |
 | `store/tar.lolo` | `std-tar` (bound; rows carry `kind` file|directory, PAX `path`/`size` override the next entry, an unknown non-metadata PAX key refuses `pax-key`, every unsupported typeflag refuses by name; dropping the `TAR_REFUSED` emit fails it) |

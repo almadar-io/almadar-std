@@ -1,0 +1,1469 @@
+{
+ "atom": "cli/atoms/std-orb-emit-config.lolo",
+ "trait": "OrbEmitConfig",
+ "source": "Mirrors orbital-compiler tests/emit_config_validation.rs (the emit-key, identifier and undeclared-event cases; the keyed-call cancelled cases that reach validate_emit_config) and the postgres and redis cancelled-key cases of tests/host_effects_validation.rs.",
+ "note": "The caller passes the operator's allowed keys (from the operator shapes) and, as declared, the events its trait emits; checkDeclared false skips the undeclared-event check as the Rust None does.",
+ "cases": [
+  {
+   "id": "fetch-with-success-and-failure-is-valid",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "success": "PATIENT_LOADED",
+         "failure": "LOAD_FAILED"
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": [
+         "PATIENT_LOADED",
+         "LOAD_FAILED"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "fetch-with-on-message-is-rejected",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "on_message": "STREAMING"
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_KEY_INVALID",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.on_message is not supported on this operator (allowed: success, failure)",
+             "suggestion": "Remove the invalid key or use a different operator that supports it",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "set-with-failure-is-rejected",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "failure": "WRITE_FAILED"
+        },
+        "allowedKeys": [
+         "success"
+        ],
+        "checkDeclared": true,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_KEY_INVALID",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.failure is not supported on this operator (allowed: success)",
+             "suggestion": "Remove the invalid key or use a different operator that supports it",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "set-with-success-is-valid",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "success": "STATUS_CHANGED"
+        },
+        "allowedKeys": [
+         "success"
+        ],
+        "checkDeclared": true,
+        "declared": [
+         "STATUS_CHANGED"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "mixed-case-event-name-is-accepted",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "success": "patientLoaded"
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": false,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-name-starting-with-a-digit-is-not-an-identifier",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "success": "1badName"
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": false,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_INVALID_NAME",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.success = '1badName' is not a valid identifier",
+             "suggestion": "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-hyphenated-name-is-not-an-identifier",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "success": "bad-name"
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": false,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_INVALID_NAME",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.success = 'bad-name' is not a valid identifier",
+             "suggestion": "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-empty-name-is-not-an-identifier",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "success": ""
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": false,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_INVALID_NAME",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.success = '' is not a valid identifier",
+             "suggestion": "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-underscore-first-name-is-not-an-identifier",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "success": "_LOADED"
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": false,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_INVALID_NAME",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.success = '_LOADED' is not a valid identifier",
+             "suggestion": "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-undeclared-event-is-refused",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "success": "PATIENT_LOADED"
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_UNDECLARED_EVENT",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.success = 'PATIENT_LOADED' is not declared in the trait's emits array",
+             "suggestion": "Declare the event in the trait's `emits` block with its payload shape",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-declared-events-are-not-checked-when-the-caller-passes-none",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "success": "PATIENT_LOADED"
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": false,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "os-watch-http-on-message-is-valid",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "onMessage": "PUSH_RECEIVED"
+        },
+        "allowedKeys": [
+         "onMessage",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": [
+         "PUSH_RECEIVED"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ref-with-on-change-is-valid",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "onChange": "PATIENT_UPDATED"
+        },
+        "allowedKeys": [
+         "onChange",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": [
+         "PATIENT_UPDATED"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ref-with-success-is-rejected",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "success": "LOADED"
+        },
+        "allowedKeys": [
+         "onChange",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_KEY_INVALID",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.success is not supported on this operator (allowed: onChange, failure)",
+             "suggestion": "Remove the invalid key or use a different operator that supports it",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "snake-case-os-watch-http-key-is-not-a-second-spelling",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "on_message": "PUSH_RECEIVED"
+        },
+        "allowedKeys": [
+         "onMessage",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": [
+         "PUSH_RECEIVED"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_KEY_INVALID",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.on_message is not supported on this operator (allowed: onMessage, failure)",
+             "suggestion": "Remove the invalid key or use a different operator that supports it",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "snake-case-ref-key-is-not-a-second-spelling",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "on_change": "PUSH_RECEIVED"
+        },
+        "allowedKeys": [
+         "onChange",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": [
+         "PUSH_RECEIVED"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_KEY_INVALID",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.on_change is not supported on this operator (allowed: onChange, failure)",
+             "suggestion": "Remove the invalid key or use a different operator that supports it",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-undeclared-cancelled-event-is-validated-like-success",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "cancelled": "CALL_CANCELLED"
+        },
+        "allowedKeys": [
+         "success",
+         "failure",
+         "cancelled"
+        ],
+        "checkDeclared": true,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_UNDECLARED_EVENT",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.cancelled = 'CALL_CANCELLED' is not declared in the trait's emits array",
+             "suggestion": "Declare the event in the trait's `emits` block with its payload shape",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-malformed-cancelled-event-name-is-rejected",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "cancelled": "bad name"
+        },
+        "allowedKeys": [
+         "success",
+         "failure",
+         "cancelled"
+        ],
+        "checkDeclared": true,
+        "declared": [
+         "bad name"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_INVALID_NAME",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.cancelled = 'bad name' is not a valid identifier",
+             "suggestion": "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "cancelled-is-not-an-emit-key-of-fetch",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "cancelled": "CALL_CANCELLED"
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": [
+         "CALL_CANCELLED"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_KEY_INVALID",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.cancelled is not supported on this operator (allowed: success, failure)",
+             "suggestion": "Remove the invalid key or use a different operator that supports it",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "postgres-cancelled-is-not-an-emit-key",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "cancelled": "ROWS"
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": [
+         "ROWS"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_KEY_INVALID",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.cancelled is not supported on this operator (allowed: success, failure)",
+             "suggestion": "Remove the invalid key or use a different operator that supports it",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-non-text-value-must-be-a-string-event-name",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "success": 5,
+         "failure": true
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_INVALID_NAME",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.success must be a string event name",
+             "suggestion": "e.g. emit.success = 'PATIENT_LOADED'",
+             "severity": "error"
+            },
+            {
+             "code": "ORB_EFF_EMIT_INVALID_NAME",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.failure must be a string event name",
+             "suggestion": "e.g. emit.success = 'PATIENT_LOADED'",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-null-value-must-be-a-string-event-name",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "success": null
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_INVALID_NAME",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.success must be a string event name",
+             "suggestion": "e.g. emit.success = 'PATIENT_LOADED'",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-object-value-must-be-a-string-event-name",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "success": {
+          "a": 1
+         }
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_INVALID_NAME",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.success must be a string event name",
+             "suggestion": "e.g. emit.success = 'PATIENT_LOADED'",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "findings-keep-key-order-within-an-item",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "zeta": "A",
+         "success": "1x",
+         "failure": 7
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": [
+         "A"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_KEY_INVALID",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.zeta is not supported on this operator (allowed: success, failure)",
+             "suggestion": "Remove the invalid key or use a different operator that supports it",
+             "severity": "error"
+            },
+            {
+             "code": "ORB_EFF_EMIT_INVALID_NAME",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.success = '1x' is not a valid identifier",
+             "suggestion": "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')",
+             "severity": "error"
+            },
+            {
+             "code": "ORB_EFF_EMIT_INVALID_NAME",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.failure must be a string event name",
+             "suggestion": "e.g. emit.success = 'PATIENT_LOADED'",
+             "severity": "error"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "findings-keep-item-order-and-each-item-reports-at-its-own-path",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {
+         "x": "A"
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": false,
+        "declared": []
+       },
+       {
+        "id": "i1",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+        "emit": {
+         "success": "B"
+        },
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": []
+       },
+       {
+        "id": "i2",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {},
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_KEY_INVALID",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+             "message": "emit.x is not supported on this operator (allowed: success, failure)",
+             "suggestion": "Remove the invalid key or use a different operator that supports it",
+             "severity": "error"
+            }
+           ]
+          },
+          {
+           "id": "i1",
+           "findings": [
+            {
+             "code": "ORB_EFF_EMIT_UNDECLARED_EVENT",
+             "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+             "message": "emit.success = 'B' is not declared in the trait's emits array",
+             "suggestion": "Declare the event in the trait's `emits` block with its payload shape",
+             "severity": "error"
+            }
+           ]
+          },
+          {
+           "id": "i2",
+           "findings": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-empty-emit-object-has-no-findings",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": [
+       {
+        "id": "i0",
+        "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+        "emit": {},
+        "allowedKeys": [
+         "success",
+         "failure"
+        ],
+        "checkDeclared": true,
+        "declared": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "id": "i0",
+           "findings": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-items-no-findings",
+   "steps": [
+    {
+     "trait": "OrbEmitConfig",
+     "event": "EMIT_CONFIG_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "items": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

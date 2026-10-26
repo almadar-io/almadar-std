@@ -1,0 +1,228 @@
+app std-orb-lint-time-unit [
+  version: "1.0.0",
+  inbound: ["cli-lint-time-unit"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-time-unit - the `orb lint time-unit <file>` command, the port of ORB_OP_INVALID_TIME_UNIT (types/time_unit.rs). It lowers the file with program/read and walks every inline trait transition guard, transition effect and tick effect through arrays AND objects (so a unit inside a render-ui prop is reached). A time operator whose `unit` param is a literal union in the installed operator table (std-time, read from LINT_OPERATOR_SHAPES: its position and accepted literals) and whose argument at that position is a string literal outside the union is reported at <expression path>[<position>] (status 500, exit 1); a missing optional unit or a computed unit is left to the evaluator. The message lists the accepted spellings of the installed table where the compiler prints its fixed vocabulary string. Clean answers `lint time-unit: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-time-unit"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type TimeExpr = string | number | boolean | [TimeExpr?] | Map string TimeExpr?
+type TimeUnitSpec = { idx : number!, values : [string]! }
+type TimeOpParam = { name : string, type : TimeTypeRef }
+type TimeLit = { kind : string!, value : string }
+type TimeUnionNode = { kind : string!, of : [TimeLit]! }
+type TimeHit = { rel : string, op : string, unit : string, values : [string] }
+type TimeOpShape = { category : string?, params : [TimeOpParam] }
+type TimeTypeRef = string | TimeTypeNode
+type TimeTypeNode = { kind : string, fields : Map string TimeTypeRef? }
+type TimeTransition = { guard : TimeExpr?, effects : [TimeExpr] }
+type TimeTick = { effects : [TimeExpr] }
+type TimeMachine = { transitions : [TimeTransition] }
+type TimeTrait = { name : string, stateMachine : TimeMachine, ticks : [TimeTick] }
+type TimeOrbital = { name : string, traits : [TimeTrait] }
+type TimeProgram = { orbitals : [TimeOrbital] }
+type TimeUnitMap = Map string TimeUnitSpec
+type TimeUnitEntry = { op : string, idx : number, values : [string] }
+type TimeRoot = { x : TimeExpr?, w : string! }
+
+orbital OrbLintTimeUnitOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintTimeUnitRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    units : Map string TimeUnitSpec = {}
+    shapesUnread : boolean = false
+  }
+
+  trait OrbLintTimeUnit -> OrbLintTimeUnitRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SHAPES_HEARD -> ready
+        (set @entity.shapesUnread false)
+        (set @entity.units (let ((ents : [TimeUnitEntry] (array/flatten (array/map (array/filter (object/keys @payload.operators) (fn k (= (object/get (object/get @payload.operators @k) "category" "") "std-time"))) (fn k
+          (let ((ps : [TimeOpParam] (object/get (object/get @payload.operators @k) "params" [])))
+            (array/flatten (array/map (array/range 0 (array/len @ps)) (fn j
+              (let ((p (array/nth @ps @j)))
+                (if (!= (object/get @p "name" "") "unit")
+                  []
+                  (let ((nd (json/parse (json/stringify (object/get @p "type" null)) TimeUnionNode)))
+                    (if (and (!= @nd null) (= (object/get @nd "kind") "union"))
+                      [{ op: @k, idx: (+ @j 1), values: (array/map (object/get @nd "of") (fn x (object/get @x "value" ""))) }]
+                      [])))))))))))))
+          (or (json/parse (json/stringify (or (object/fromEntries (array/map @ents (fn e [(object/get @e "op"), { idx: (object/get @e "idx"), values: (object/get @e "values") }]))) {})) TimeUnitMap) {})))
+      SHAPES_UNREAD -> ready
+        (set @entity.shapesUnread true)
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (if @entity.shapesUnread
+  [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the time operators' unit literals are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
+  (let ((units @entity.units) (nohits : [TimeHit] []) (noroots : [TimeRoot] []) (nostr : [string] []) (orbitals : [TimeOrbital] (object/get @payload.program "orbitals" [])))
+    (let ((roots : [TimeRoot] (array/flatten
+  (array/map (array/range 0 (array/len @orbitals))
+    (fn oi
+      (let ((o (array/nth @orbitals @oi)))
+        (let ((trts : [TimeTrait] (object/get @o "traits" [])))
+          (array/flatten
+            (array/map (array/range 0 (array/len @trts))
+              (fn ti
+                (let ((t (array/nth @trts @ti)))
+                  (if (not (object/has @t "stateMachine"))
+                    @noroots
+                    (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (trs : [TimeTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (tks : [TimeTick] (object/get @t "ticks" [])))
+                      (array/concat
+                        (array/flatten
+                          (array/map (array/range 0 (array/len @trs))
+                            (fn xi
+                              (let ((tr (array/nth @trs @xi)) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
+                                (let ((effs : [TimeExpr] (object/get @tr "effects" [])) (g (object/get @tr "guard" null)))
+                                  (array/concat
+                                    (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard") }] @noroots)
+                                    (array/map (array/range 0 (array/len @effs)) (fn ei { x: (array/nth @effs @ei), w: (str/concat @xp ".effects[" @ei "]") }))))))))
+                        (array/flatten
+                          (array/map (array/range 0 (array/len @tks))
+                            (fn ki
+                              (let ((teffs : [TimeExpr] (object/get (array/nth @tks @ki) "effects" [])))
+                                (array/map (array/range 0 (array/len @teffs)) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]") }))))))))))))))))))))
+      (array/flatten
+        (array/map @roots
+          (fn r
+            (let ((res (tree/fold (object/get @r "x" null) (fn (n k) (if (validate/array @n)
+  (array/concat
+    (let ((op (if (> (array/len @n) 0) (array/first @n) null)))
+      (let ((ops (if (validate/string @op) @op "")) (spec (if (validate/string @op) (object/get @units @op null) null)))
+        (if (= @spec null)
+          @nohits
+          (let ((idx (object/get @spec "idx" 0)) (vals : [string] (object/get @spec "values" [])))
+            (let ((u (if (< @idx (array/len @n)) (array/nth @n @idx) null)))
+              (if (and (validate/string @u) (not (array/includes @vals @u)))
+                [{ rel: (str/concat "[" @idx "]"), op: @ops, unit: @u, values: @vals }]
+                @nohits))))))
+    (array/flatten
+      (array/map (array/range 0 (array/len @k))
+        (fn i
+          (array/map
+            (let ((r : [TimeHit]? (array/nth @k @i)))
+              (if (validate/array @r) @r @nohits))
+            (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) })))))))
+  (if (validate/object @n)
+    (array/flatten
+      (array/map (object/keys @k)
+        (fn key
+          (array/map
+            (let ((r : [TimeHit]? (object/get @k @key)))
+              (if (validate/array @r) @r @nohits))
+            (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
+    @nohits))) TimeExpr)))
+              (if (= @res null)
+                @nohits
+                (array/map @res
+                  (fn h { code: "ORB_OP_INVALID_TIME_UNIT", path: (str/concat (object/get @r "w" "") (object/get @h "rel" "")), message: (str/concat "'" (object/get @h "unit" "") "' is not a time unit. `" (object/get @h "op" "") "` accepts: " (str/join (object/get @h "values" @nostr) ", ") ". An unknown unit throws at evaluation time, and inside a read predicate that silently drops every row."), suggestion: "", severity: "error" })))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "time-unit", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : TimeProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      SHAPES_HEARD { operators : Map string TimeOpShape! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES: every installed operator with its params; the std-time operators' `unit` params name the accepted unit literals."
+      SHAPES_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES_UNREAD: the operator table does not match the shape type."
+      OrbLintInput.LINT_OPERATOR_SHAPES -> SHAPES_HEARD
+      OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> SHAPES_UNREAD
+    }
+  }
+
+  trait OrbLintTimeUnitCli -> OrbLintTimeUnitRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint time-unit <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "time-unit") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint time-unit: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "time-unit") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint time-unit: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-time-unit" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint time-unit` with its arguments and working directory."
+        @synonyms "orb lint time-unit"
+      OrbLintTimeUnit.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintTimeUnitCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintTimeUnitOrbitalStart -> OrbLintTimeUnit, OrbLintTimeUnitCli, OrbLintInput, Packs, Versions
+}

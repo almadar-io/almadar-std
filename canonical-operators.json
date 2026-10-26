@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-25T15:50:26.045Z",
+  "generated": "2026-10-25T20:11:27.367Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -693,6 +693,7 @@
           }
         }
       },
+      "closedCall": {},
       "runsOn": "server",
       "params": [
         {
@@ -6408,6 +6409,7 @@
           }
         }
       },
+      "closedCall": {},
       "runsOn": "server",
       "params": [
         {
@@ -6495,6 +6497,9 @@
           }
         }
       },
+      "closedCall": {
+        "request": true
+      },
       "runsOn": "server",
       "params": [
         {
@@ -6504,7 +6509,9 @@
             "fields": {
               "service": "string"
             },
-            "open": true
+            "optional": [
+              "service"
+            ]
           },
           "description": "An optional { service } filter"
         },
@@ -6553,6 +6560,9 @@
             "mode": "string"
           }
         }
+      },
+      "closedCall": {
+        "request": true
       },
       "runsOn": "server",
       "params": [
@@ -6624,6 +6634,9 @@
           }
         }
       },
+      "closedCall": {
+        "request": true
+      },
       "runsOn": "server",
       "params": [
         {
@@ -6685,6 +6698,7 @@
           }
         }
       },
+      "closedCall": {},
       "runsOn": "server",
       "params": [
         {
@@ -6735,6 +6749,9 @@
             "last4": "string"
           }
         }
+      },
+      "closedCall": {
+        "request": true
       },
       "runsOn": "server",
       "params": [
@@ -6797,6 +6814,7 @@
           }
         }
       },
+      "closedCall": {},
       "runsOn": "server",
       "params": [
         {
@@ -6881,6 +6899,9 @@
             "message": "string"
           }
         }
+      },
+      "closedCall": {
+        "request": true
       },
       "runsOn": "server",
       "params": [
@@ -8649,6 +8670,66 @@
           }
         }
       },
+      "oauth": {
+        "endpointTarget": "oauth-endpoint",
+        "endpointKinds": [
+          "token",
+          "revocation",
+          "userinfo"
+        ],
+        "ops": [
+          {
+            "name": "discovery",
+            "required": [],
+            "optional": []
+          },
+          {
+            "name": "code",
+            "required": [
+              "code",
+              "state"
+            ],
+            "optional": [
+              "subject"
+            ],
+            "endpoint": "token"
+          },
+          {
+            "name": "connect",
+            "required": [
+              "code",
+              "state",
+              "provider"
+            ],
+            "optional": [],
+            "endpoint": "token"
+          },
+          {
+            "name": "refresh",
+            "required": [
+              "refreshToken"
+            ],
+            "optional": [],
+            "endpoint": "token"
+          },
+          {
+            "name": "revoke",
+            "required": [
+              "token"
+            ],
+            "optional": [],
+            "endpoint": "revocation"
+          },
+          {
+            "name": "userinfo",
+            "required": [
+              "accessToken"
+            ],
+            "optional": [],
+            "endpoint": "userinfo"
+          }
+        ]
+      },
       "runsOn": "server",
       "params": [
         {
@@ -9784,6 +9865,13 @@
       "description": "Apply puts and deletes to one store all-or-nothing (grant kv: write). Success payload: { applied }.",
       "module": "kv",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "kv",
+          "access": "write",
+          "store": 0
+        }
+      ],
       "runsOn": "any",
       "host": "kv",
       "params": [
@@ -9869,6 +9957,13 @@
       "description": "Delete one key (grant kv: write). Success payload: { existed }; deleting a miss succeeds with existed: false.",
       "module": "kv",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "kv",
+          "access": "write",
+          "store": 0
+        }
+      ],
       "runsOn": "any",
       "host": "kv",
       "params": [
@@ -9923,6 +10018,13 @@
       "description": "Read one key (grant kv: read). Success payload: { found, value? }; a miss is { found: false }, not a failure.",
       "module": "kv",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "kv",
+          "access": "read",
+          "store": 0
+        }
+      ],
       "runsOn": "any",
       "host": "kv",
       "params": [
@@ -9977,6 +10079,13 @@
       "description": "Write one key, replacing any value (grant kv: write). The value must be JSON. Success payload: { storedKey }.",
       "module": "kv",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "kv",
+          "access": "write",
+          "store": 0
+        }
+      ],
       "runsOn": "any",
       "host": "kv",
       "params": [
@@ -10039,6 +10148,13 @@
       "description": "Every key starting with prefix, ascending in UTF-8 byte order, at most limit (grant kv: read). Success payload: { entries: [{ key, value }] }.",
       "module": "kv",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "kv",
+          "access": "read",
+          "store": 0
+        }
+      ],
       "runsOn": "any",
       "host": "kv",
       "params": [
@@ -11654,6 +11770,7 @@
           "type": {
             "kind": "object",
             "fields": {
+              "key": "string",
               "emit": {
                 "kind": "object",
                 "fields": {
@@ -11669,7 +11786,7 @@
             },
             "open": true
           },
-          "description": "Optional trailing options: { emit: { success, failure } }",
+          "description": "Optional trailing options: { key } is a non-empty string echoed as key in the success and failure payloads; { emit: { success, failure } } routes the result",
           "optional": true
         }
       ],
@@ -12664,6 +12781,12 @@
       "description": "Read whether the host is on AC power (grant sys: power-state). Success payload: { onAc: boolean }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "power-state"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -12708,6 +12831,13 @@
       "description": "Check access to a path (grant fs: meta). Success payload: { ok }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "read",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -12793,6 +12923,13 @@
       "description": "Append to a file (grant fs: write). Success payload: { bytes }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "write",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -12877,6 +13014,12 @@
       "description": "Read battery state (grant sys: power-state). Success payload: { present: boolean, percentage: number, status: string, timeToEmpty: number | null, timeToFull: number | null }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "power-state"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -12921,6 +13064,12 @@
       "description": "Read the display brightness (grant desktop: brightness). Success payload: { level }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "desktop",
+          "access": "brightness"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -12965,6 +13114,12 @@
       "description": "Set the display brightness (grant desktop: brightness). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "desktop",
+          "access": "brightness"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13014,6 +13169,13 @@
       "description": "Change the working directory (grant fs: meta). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "read",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13093,6 +13255,13 @@
       "description": "Change permission bits (grant fs: meta). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "meta",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13177,6 +13346,13 @@
       "description": "Change owner (grant fs: meta). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "meta",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13266,6 +13442,7 @@
       "description": "Read the monotonic clock (no grant; journaled, so a replay sees the same value). Success payload: { nanos }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13310,6 +13487,7 @@
       "description": "Close a file descriptor or a socket handle (grant fs for a descriptor, net for a socket). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13359,6 +13537,18 @@
       "description": "Copy a file (grant fs: read on from, write and create on to). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "read",
+          "path": 0
+        },
+        {
+          "kind": "fs",
+          "access": "create",
+          "path": 1
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13473,6 +13663,12 @@
       "description": "Read CPU usage, sampled across two asks without blocking (grant sys: cpu). Success payload: { percent: number }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "cpu"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13517,6 +13713,7 @@
       "description": "Read the absolute path of the running host binary, so a program can locate the binaries installed beside it (no grant: a fact of the process itself, like os/pid). Success payload: { path }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13561,6 +13758,7 @@
       "description": "Read the working directory (grant fs: meta). Success payload: { path }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13605,6 +13803,12 @@
       "description": "Read the default gateway (grant sys: network). Success payload: { gateway: string | null }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "network"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13649,6 +13853,12 @@
       "description": "Read disk I/O counters (grant sys: disk). Success payload: { devices: [{ device: string, readsCompleted: number, writesCompleted: number, readBytes: number, writeBytes: number }] }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "disk"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13693,6 +13903,12 @@
       "description": "Read disk usage for a path (grant sys: disk). Success payload: { path: string, total: number, used: number, available: number, usedPercent: number, filesystem: string }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "disk"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13772,6 +13988,16 @@
       "description": "Resolve a host name (grant net). Success payload: { addresses }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "net",
+          "access": [
+            "tcp",
+            "udp"
+          ],
+          "host": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13839,6 +14065,7 @@
       "description": "List environment variable names, never values (grant env). Success payload: { names }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13883,6 +14110,13 @@
       "description": "Check that a path exists (grant fs: meta). Success payload: { ok }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "read",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -13968,6 +14202,7 @@
       "description": "Flush a descriptor to storage (grant fs). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14017,6 +14252,12 @@
       "description": "Read an environment variable (grant env). Success payload: { value? }; value is absent when the variable is unset.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "env",
+          "name": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14066,6 +14307,12 @@
       "description": "Read the group id of the host process (grant sys: identity). Success payload: { gid }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "identity"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14110,6 +14357,12 @@
       "description": "Expand a glob pattern (grant fs: read). The pattern may be anchored ({ anchor, path }); a computed anchored pattern passes under a narrow anchored grant, and the host drops every match the grants do not cover. Success payload: { paths }: absolute for a plain pattern, relative to the anchor for an anchored one.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs-glob",
+          "glob": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14189,6 +14442,12 @@
       "description": "Look up a group by name (grant sys: identity). Success payload: { gid, members }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "identity"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14238,6 +14497,12 @@
       "description": "Hibernate the machine (grants desktop and power). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "desktop",
+          "access": "power"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14282,6 +14547,12 @@
       "description": "Read the host name (grant sys: identity). Success payload: { hostname: string }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "identity"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14326,6 +14597,13 @@
       "description": "Acknowledge the interrupt last delivered on an irq line so the next one can arrive (grant dev: { \"irq:<line>\": [ack] }). Success payload: {}. A host with no devices answers unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "irq",
+          "access": "ack",
+          "line": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14375,6 +14653,13 @@
       "description": "Wait for the next interrupt on an irq line (grant dev: { \"irq:<line>\": [wait] }). A keyed call completes later through its success route, once per call. Success payload: { irq }. A host with no devices answers unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "irq",
+          "access": "wait",
+          "line": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14424,6 +14709,7 @@
       "description": "Whether a descriptor is a terminal (grant stdio). Success payload: { ok }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14473,6 +14759,7 @@
       "description": "Send a signal to a child process (grant exec). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14567,6 +14854,18 @@
       "description": "Create a hard link (grant fs: create). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "write",
+          "path": 0
+        },
+        {
+          "kind": "fs",
+          "access": "create",
+          "path": 1
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14681,6 +14980,13 @@
       "description": "List a directory (grant fs: read). Success payload: { entries: [{ name, kind }] }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "read",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14760,6 +15066,12 @@
       "description": "Read load averages (grant sys: cpu). Success payload: { one: number, five: number, fifteen: number }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "cpu"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14804,6 +15116,13 @@
       "description": "Stat a path without following links (grant fs: meta). Success payload: { kind, size, mode, uid, gid, atime, mtime, ctime }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "read",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14883,6 +15202,12 @@
       "description": "Read memory totals and usage (grant sys: memory). Success payload: { total: number, available: number, used: number, usedPercent: number }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "memory"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -14927,6 +15252,13 @@
       "description": "Create a directory (grant fs: create). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "create",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -15018,6 +15350,13 @@
       "description": "Create a unique temporary file (grant fs: create). Success payload: { path }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "create",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -15103,6 +15442,15 @@
       "description": "Read a device register: width bytes at offset into the register window based at base (grant dev: { \"mmio:<base>+<length>\": [read] }; the window must hold offset + width). Success payload: { value }. A host with no devices answers unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "mmio",
+          "access": "read",
+          "base": 0,
+          "offset": 1,
+          "width": 2
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -15162,6 +15510,15 @@
       "description": "Write a device register: value as width bytes at offset into the register window based at base (grant dev: { \"mmio:<base>+<length>\": [write] }). Success payload: {}. A host with no devices answers unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "mmio",
+          "access": "write",
+          "base": 0,
+          "offset": 1,
+          "width": 2
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -15226,6 +15583,12 @@
       "description": "Read mounted file systems (grant sys: disk). Success payload: { mounts: [{ device: string, mountPoint: string, filesystem: string, options: [string] }] }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "disk"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -15270,6 +15633,12 @@
       "description": "Read whether the host is connected (grant sys: network). Success payload: { connected: boolean }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "network"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -15314,6 +15683,12 @@
       "description": "Read network interfaces and their addresses (grant sys: network). Success payload: { interfaces: [{ name: string, mac: string, up: boolean, running: boolean }] }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "network"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -15358,6 +15733,12 @@
       "description": "Read network traffic counters (grant sys: network). Success payload: { interfaces: Map string { rxBytes: number, txBytes: number, rxPackets: number, txPackets: number, rxErrors: number, txErrors: number } }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "network"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -15402,6 +15783,12 @@
       "description": "Show a desktop notification (grant desktop: notify). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "desktop",
+          "access": "notify"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -15478,6 +15865,13 @@
       "description": "Open a file and get a descriptor (grant fs). Success payload: { fd }. The host owns the descriptor and closes it at teardown.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs-open",
+          "path": 0,
+          "flags": 1
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -15924,6 +16318,7 @@
       "description": "Read the host process id (grant exec). Success payload: { pid }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -15968,6 +16363,7 @@
       "description": "Read the parent process id (grant exec). Success payload: { pid }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -16012,6 +16408,7 @@
       "description": "Read up to count bytes from a descriptor (grant fs). Success payload: { data: bytes, eof }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -16066,6 +16463,13 @@
       "description": "Read a whole file (grant fs: read). Success payload: { data: bytes }. Always bytes; decode text with bytes/to-string.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "read",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -16145,6 +16549,13 @@
       "description": "Read a symbolic link target (grant fs: read). Success payload: { target }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "read",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -16224,6 +16635,13 @@
       "description": "Resolve a path to its canonical form (grant fs: meta). Success payload: { path }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "read",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -16303,6 +16721,7 @@
       "description": "Receive from a connected socket (grant net). Success payload: { data: bytes, eof }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -16357,6 +16776,7 @@
       "description": "Receive a UDP datagram (grant net: udp). Success payload: { data: bytes, peer }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -16411,6 +16831,13 @@
       "description": "Remove a file (grant fs: remove). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "remove",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -16490,6 +16917,18 @@
       "description": "Rename or move a file (grant fs: write, remove). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "remove",
+          "path": 0
+        },
+        {
+          "kind": "fs",
+          "access": "create",
+          "path": 1
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -16604,6 +17043,13 @@
       "description": "Remove a directory (grant fs: remove). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "remove",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -16689,6 +17135,7 @@
       "description": "Move a descriptor position (grant fs). Success payload: { offset }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -16764,6 +17211,7 @@
       "description": "Send on a connected socket (grant net). Success payload: { bytes }. Sends on one socket are written in call order and never interleave. A keyed send under a declared route writes in the background and answers its route when the write ends (success { bytes }, or a failure such as timeout after the 5 s socket bound or closed), so a peer that stops reading does not hold the dispatch; an unkeyed send answers in place.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -16818,6 +17266,16 @@
       "description": "Send a UDP datagram (grant net: udp). Success payload: { bytes }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "net",
+          "access": [
+            "udp"
+          ],
+          "host": 2,
+          "port": 3
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -16914,6 +17372,12 @@
       "description": "Set an environment variable (grant env). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "env",
+          "name": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -16968,6 +17432,7 @@
       "description": "Shut down a socket (grant net). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -17017,6 +17482,13 @@
       "description": "Start a child process (grant exec; the command is matched against the grant by exact string and never run through a shell). Success payload: { pid, stdin?, stdout?, stderr? }; a piped stream is an fd read or written with os/read and os/write. A detached child runs in its own session and process group and outlives the program that started it; it takes no piped stream.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "exec",
+          "command": 0,
+          "options": 2
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -17230,6 +17702,12 @@
       "description": "Speak text aloud (grant desktop: speak). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "desktop",
+          "access": "speak"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -17279,6 +17757,13 @@
       "description": "Stat a path, following links (grant fs: meta). Success payload: { kind, size, mode, uid, gid, atime, mtime, ctime }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "read",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -17358,6 +17843,12 @@
       "description": "Write to standard error (grant stdio: err). Success payload: { bytes }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "stdio",
+          "access": "err"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -17407,6 +17898,12 @@
       "description": "Read standard input (grant stdio: in), at most count bytes per chunk. Keyed with an onMessage route, each chunk is an event { data: bytes } and the final answer is { eof: true }; otherwise one read answers { data, eof } with at most count bytes. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "stdio",
+          "access": "in"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -17460,6 +17957,12 @@
       "description": "Write to standard output (grant stdio: out). Success payload: { bytes }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "stdio",
+          "access": "out"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -17509,6 +18012,12 @@
       "description": "Suspend the machine (grants desktop and power). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "desktop",
+          "access": "power"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -17553,6 +18062,13 @@
       "description": "Create a symbolic link (grant fs: create). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "create",
+          "path": 1
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -17667,6 +18183,16 @@
       "description": "Open a TCP connection (grant net: tcp). Success payload: { sock }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "net",
+          "access": [
+            "tcp"
+          ],
+          "host": 0,
+          "port": 1
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -17753,6 +18279,16 @@
       "description": "Listen for TCP connections (grant net: listen). The first answer is { sock, address, port }, with the actual bound address and port (including an assigned ephemeral port); each connection arrives on the onMessage route as { sock, peer }. An accepted sock takes any number of os/send and os/recv until os/close (keep-alive, streamed replies); a keyed os/recv armed on it reports a client abort as { eof: true } or a closed failure, and os/close with that read pending ends the connection at once. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "net",
+          "access": [
+            "listen"
+          ],
+          "host": 0,
+          "port": 1
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -17842,6 +18378,12 @@
       "description": "Read thermal zone temperatures (grant sys: power-state). Success payload: { zones: [{ name: string, temperature: number, type: string }] }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "power-state"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -17886,6 +18428,13 @@
       "description": "Truncate a file given by path or descriptor to size bytes (grant fs: write). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "write",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -17976,6 +18525,7 @@
       "description": "Terminal size of a descriptor (grant stdio). Success payload: { rows, cols }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -18025,6 +18575,16 @@
       "description": "Bind a UDP socket (grant net: udp). Success payload: { sock }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "net",
+          "access": [
+            "udp"
+          ],
+          "host": 0,
+          "port": 1
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -18111,6 +18671,12 @@
       "description": "Read the user id of the host process (grant sys: identity). Success payload: { uid }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "identity"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -18155,6 +18721,12 @@
       "description": "Read kernel and platform identification (grant sys: identity). Success payload: { sysname: string, nodename: string, release: string, version: string, machine: string }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "identity"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -18199,6 +18771,12 @@
       "description": "Remove an environment variable (grant env). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "env",
+          "name": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -18248,6 +18826,12 @@
       "description": "Read system uptime (grant sys: cpu). Success payload: { seconds: number }; unavailable data fails unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "cpu"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -18292,6 +18876,12 @@
       "description": "Read the user name of the host process (grant sys: identity). Success payload: { username }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "identity"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -18336,6 +18926,13 @@
       "description": "Set access and modification times (grant fs: meta). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "meta",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -18425,6 +19022,12 @@
       "description": "Read the output volume (grant desktop: volume). Success payload: { level }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "desktop",
+          "access": "volume"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -18469,6 +19072,12 @@
       "description": "Mute or unmute the output (grant desktop: volume). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "desktop",
+          "access": "volume"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -18518,6 +19127,12 @@
       "description": "Set the output volume (grant desktop: volume). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "desktop",
+          "access": "volume"
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -18567,6 +19182,7 @@
       "description": "Wait for a child process to end (grant exec). Success payload: { code?, signal? }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -18616,6 +19232,7 @@
       "description": "Fire on a cron schedule (no grant). Events are { scheduledAt }. The options object also takes debounceMs. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "title": "Watch Cron",
@@ -18669,6 +19286,12 @@
       "description": "Watch an environment variable (grant env). Events are { name, value? }. The options object also takes debounceMs. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "env",
+          "name": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "title": "Watch Environment",
@@ -18722,6 +19345,13 @@
       "description": "Watch files matching a glob (grant fs: read). Events are { path, name, dir, timestamp, kind } for modified, created and deleted files. The options object also takes recursive, ignoreInitial and debounceMs. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "read",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "title": "Watch Files",
@@ -18803,6 +19433,7 @@
       "description": "Watch a local port (grant net). Events are { port, open }. The options object also takes debounceMs. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "title": "Watch Port",
@@ -18889,6 +19520,7 @@
       "description": "Watch a process by name (grant exec). Events are { pid, name, exitCode, signal, args, duration } as processes start and exit. The options object also takes debounceMs. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "title": "Watch Process",
@@ -18950,6 +19582,7 @@
       "description": "Receive an OS signal (grant exec). Events are { signal }. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "title": "Watch Signal",
@@ -19043,6 +19676,7 @@
       "description": "Write to a descriptor (grant fs: write). Success payload: { bytes }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -19097,6 +19731,13 @@
       "description": "Write a whole file (grant fs: write, create). Success payload: { bytes }.",
       "module": "os",
       "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "fs",
+          "access": "write",
+          "path": 0
+        }
+      ],
       "runsOn": "server",
       "host": "os",
       "params": [
@@ -19610,6 +20251,10 @@
             }
           }
         }
+      },
+      "defaultPorts": {
+        "postgres": 5432,
+        "postgresql": 5432
       },
       "runsOn": "server",
       "params": [
@@ -20302,24 +20947,38 @@
           "type": {
             "kind": "object",
             "fields": {
-              "key": "string",
-              "emit": {
-                "kind": "object",
-                "fields": {
-                  "success": {
-                    "kind": "eventKey"
+              "appName": "string",
+              "layout": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "sidebar"
                   },
-                  "failure": {
-                    "kind": "eventKey"
+                  {
+                    "kind": "literal",
+                    "value": "tabs"
                   },
-                  "cancelled": {
-                    "kind": "eventKey"
+                  {
+                    "kind": "literal",
+                    "value": "dashboard"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "wizard-flow"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "single"
                   }
-                },
-                "open": true
-              }
+                ]
+              },
+              "theme": "string"
             },
-            "open": true
+            "optional": [
+              "layout",
+              "theme"
+            ]
           },
           "description": "The app name, an optional layout strategy and theme (empty = none)"
         },
@@ -21633,6 +22292,13 @@
           }
         }
       },
+      "closedCall": {
+        "intRange": {
+          "arg": 0,
+          "min": 1,
+          "max": 1024
+        }
+      },
       "runsOn": "server",
       "params": [
         {
@@ -21763,6 +22429,10 @@
             }
           }
         }
+      },
+      "defaultPorts": {
+        "redis": 6379,
+        "rediss": 6379
       },
       "runsOn": "server",
       "params": [

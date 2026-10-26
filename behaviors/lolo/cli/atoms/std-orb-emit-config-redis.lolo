@@ -1,0 +1,51 @@
+app std-orb-emit-config-redis [
+  version: "1.0.0",
+  description: "std-orb-emit-config-redis — the one place a lint run checks an `emit: { … }` config block of an async or reactive operator, the port of the compiler's validate_emit_config (effect/emit.rs) that the fetch, set, persist, os-watch, oauth, postgres and redis rules all call. EMIT_CONFIG_CHECK { requestId, items } takes, per item, an id echoed in the answer, the path to report at, the emit object, the keys the operator allows, whether the declaring trait's emitted events are checked and those events; it answers EMIT_CONFIG_CHECKED { requestId, results }, one { id, findings } per item in request order with the findings in emit-key order. A key outside the allowed list is ORB_EFF_EMIT_KEY_INVALID; a value that is not text is ORB_EFF_EMIT_INVALID_NAME (`emit.<key> must be a string event name`); text that is not a letter followed by letters, digits and underscores is ORB_EFF_EMIT_INVALID_NAME (`is not a valid identifier`); a well-formed name the trait does not declare in its emits, when declared events are checked, is ORB_EFF_EMIT_UNDECLARED_EVENT. It does not read `@config.<knob>` references: std-orb-lint-emit-config-ref owns those. The Rust valid-values list on the key error has no finding field and is carried by the message's allowed list."
+]
+uses Spec from "almadar-std/emit-config-redis"
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type EmitConfigValue = string | number | boolean | [EmitConfigValue?] | Map string EmitConfigValue?
+type EmitConfigItem = { id : string!, path : string!, emit : Map string EmitConfigValue?, allowedKeys : [string]!, checkDeclared : boolean!, declared : [string]! }
+
+type EmitConfigResult = { id : string!, findings : [OrbFinding]! }
+
+orbital OrbEmitConfigRedisOrbital {
+  entity OrbEmitConfigRedisRun [runtime] {
+    id : string!
+  }
+
+  trait OrbEmitConfigRedis -> OrbEmitConfigRedisRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      EMIT_CONFIG_CHECK -> ready
+        (emit EMIT_CONFIG_CHECKED { requestId: @payload.requestId, results: (array/map @payload.items (fn it
+          { id: (object/get @it "id"), findings: (array/flatten (array/map (object/entries (object/get @it "emit")) (fn kv
+            (let ((key (array/nth @kv 0)) (v (array/nth @kv 1)) (p (object/get @it "path")) (allowed (object/get @it "allowedKeys")))
+              (if (not (array/includes @allowed @key))
+                [{ code: "ORB_EFF_EMIT_KEY_INVALID", path: @p, message: (str/concat "emit." @key " is not supported on this operator (allowed: " (str/join @allowed ", ") ")"), suggestion: "Remove the invalid key or use a different operator that supports it", severity: "error" }]
+                (if (not (validate/string @v))
+                  [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: (str/concat "emit." @key " must be a string event name"), suggestion: "e.g. emit.success = 'PATIENT_LOADED'", severity: "error" }]
+                  (if (not (validate/pattern @v "^[A-Za-z][A-Za-z0-9_]*$"))
+                    [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: (str/concat "emit." @key " = '" @v "' is not a valid identifier"), suggestion: "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')", severity: "error" }]
+                    (if (and (object/get @it "checkDeclared") (not (array/includes (object/get @it "declared") @v)))
+                      [{ code: "ORB_EFF_EMIT_UNDECLARED_EVENT", path: @p, message: (str/concat "emit." @key " = '" @v "' is not declared in the trait's emits array"), suggestion: "Declare the event in the trait's `emits` block with its payload shape", severity: "error" }]
+                      [])))))))) })) })
+    }
+
+    emits {
+      EMIT_CONFIG_CHECKED -> external { requestId : string!  results : [EmitConfigResult]! }
+        @description "Per item, in request order, its id and its findings in emit-key order."
+        @tier "internal"
+    }
+
+    listens {
+      EMIT_CONFIG_CHECK { requestId : string!  items : [EmitConfigItem]! }
+        @description "Check each item's emit object against its allowed keys and, when asked, the events its trait declares."
+        @tier "internal"
+    }
+  }
+
+  page boot as OrbEmitConfigRedisOrbitalStart -> OrbEmitConfigRedis
+}

@@ -1,0 +1,19 @@
+app effect-leaves-spec [
+  version: "1.0.0",
+  description: "Design contract for the shared effect leaves: for the lowered program's orbitals it answers EFFECT_LEAVES_EXPANDED { requestId, leaves }, one leaf per effect that is not a do, if, when or let form, in program order, with its path and its orbital and trait index."
+]
+type LeafVal = string | number | boolean | [LeafVal?] | Map string LeafVal?
+type EffectLeaf = { p : string!, e : LeafVal!, oi : number!, ti : number! }
+
+orbital EffectLeavesSpec {
+  expects entity OrbEffectLeavesRun [runtime] {
+    id : string!
+  }
+  expects trait OrbEffectLeaves {
+    state ready
+    emits {
+      EFFECT_LEAVES_EXPANDED { requestId : string!  leaves : [EffectLeaf]! }
+    }
+  }
+  expects page boot -> OrbEffectLeaves
+}

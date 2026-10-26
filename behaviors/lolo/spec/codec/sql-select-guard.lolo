@@ -1,0 +1,18 @@
+app sql-select-guard-spec [
+  version: "1.0.0",
+  description: "Design contract for the read-only SQL guard. SQL_GUARD_CHECK { requestId, statements } answers SQL_GUARD_CHECKED { requestId, results } with one { ok, reason } per statement: ok only for a single SELECT (or WITH ... SELECT) with no INSERT, UPDATE, DELETE, MERGE, INTO or FOR word outside comments and quoted text; the reason names the first failure (Empty statement, Only a single statement is allowed, Only SELECT statements are allowed, Keyword not allowed in a read-only query: <WORD>)."
+]
+type SqlGuardVerdict = { ok : boolean!, reason : string! }
+
+orbital SqlSelectGuardSpec {
+  expects entity SqlSelectGuardRun [runtime] {
+    id : string!
+  }
+  expects trait SqlSelectGuard {
+    state ready
+    emits {
+      SQL_GUARD_CHECKED { requestId : string!  results : [SqlGuardVerdict]! }
+    }
+  }
+  expects page boot -> SqlSelectGuard
+}

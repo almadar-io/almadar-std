@@ -114,6 +114,52 @@ export interface FailableMeta {
 /** What the sign of a numeric result is: always at least zero, or derived from the arguments' signs. */
 export type ResultSign = 'nonNegative' | 'sum' | 'product' | 'max' | 'min';
 
+/** The shape the validator holds a host-effect call to: arity from the operator, options closed to the keys the options parameter declares (and `emit` closed to the keys its type declares). */
+export interface ClosedCallMeta {
+  /** The first parameter is a request object: a literal one carries only its declared fields, every one not listed in `optional` present. */
+  request?: boolean;
+  /** An integer literal at `arg` lies in min..max. */
+  intRange?: { arg: number; min: number; max: number };
+}
+
+/** One thing an `os/` or `kv/` call needs from the program's grants; the numbers are 0-indexed argument positions. */
+export type OsGrantNeed =
+  /** A path at `path`: `access` on it. An anchored path (`{ anchor, path }`) may stand there. */
+  | { kind: 'fs'; access: 'read' | 'write' | 'create' | 'remove' | 'meta'; path: number }
+  /** A glob pattern at `glob`: read on the tree its literal directory prefix reaches. */
+  | { kind: 'fs-glob'; glob: number }
+  /** A path at `path` opened with the flags at `flags`: the flags decide read, write and create. */
+  | { kind: 'fs-open'; path: number; flags: number }
+  /** A command at `command`; `options` is the argument whose `cwd`, `env` and `stdio` entries add fs, env and stdio needs. */
+  | { kind: 'exec'; command: number; options: number }
+  | { kind: 'env'; name: number }
+  | { kind: 'stdio'; access: 'in' | 'out' | 'err' }
+  /** A host at `host` and a port at `port` (absent: port 0, any), covered by a net grant of one of the `access` kinds. */
+  | { kind: 'net'; access: ('tcp' | 'udp' | 'listen')[]; host: number; port?: number }
+  | { kind: 'sys'; access: 'cpu' | 'memory' | 'disk' | 'network' | 'power-state' | 'identity' }
+  | { kind: 'desktop'; access: 'notify' | 'speak' | 'brightness' | 'volume' | 'power' }
+  /** A store name at `store`. */
+  | { kind: 'kv'; access: 'read' | 'write'; store: number }
+  | { kind: 'mmio'; access: 'read' | 'write'; base: number; offset: number; width: number }
+  | { kind: 'irq'; access: 'wait' | 'ack'; line: number };
+
+/** One `oauth-client` auth op: the input keys it requires and may carry, and the `oauth-endpoint` word it is sent to (absent: a literal origin and path). */
+export interface OAuthOpMeta {
+  name: string;
+  required: string[];
+  optional: string[];
+  endpoint?: string;
+}
+
+/** The `oauth-client` auth vocabulary of `http`. */
+export interface OAuthMeta {
+  /** The word that stands where an origin goes: the URL comes from the client's metadata. */
+  endpointTarget: string;
+  /** The words that may follow {@link OAuthMeta.endpointTarget}. */
+  endpointKinds: string[];
+  ops: OAuthOpMeta[];
+}
+
 /** A host outside the runtime that executes an effect. */
 export type EffectHost = 'program' | 'os' | 'kv';
 
@@ -151,6 +197,14 @@ export interface OperatorMeta {
   busExcluded?: string[];
   /** The options that name a dispatch's target; a request naming none of them is addressed at the calling trait (on `program/dispatch`). */
   targetOptions?: string[];
+  /** What the call needs from the program's grants, one entry per need; `[]` for a call on a handle, whose grant was checked where the handle was made. Set on every `os/` and `kv/` operator. */
+  grant?: OsGrantNeed[];
+  /** The default port of each URL scheme the operator connects under (`redis`, `postgres`). */
+  defaultPorts?: Record<string, number>;
+  /** Set on the host effects (`random-bytes`, `access-check`, `credential-*`): the call's shape is closed. */
+  closedCall?: ClosedCallMeta;
+  /** The `oauth-client` auth ops and endpoint words (on `http`). */
+  oauth?: OAuthMeta;
   /** Execution site of an effect operator; set on every `hasSideEffects` operator, absent on pure ones. */
   runsOn?: RunsOn;
   /** The host that executes this effect: `program` = the shared program host (`@almadar/runtime` `host/program` `runProgramEffect`), on both execution paths. `os` = the `os/` family, executed by the OS host under a declared grant. Absent for effects the runtime executes itself. */

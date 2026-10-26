@@ -242,9 +242,10 @@ orbital ApprovalGateOrbital {
         (persist update ApprovalRequest @entity {
           emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
         })
-        (if (!= (json/parse ?row.payload p) null)
-          (emit ApprovalGranted { payload: (json/parse ?row.payload p), requestId: ?id })
-          (emit ApprovalRequestReviewFailed { error: "the approved request's payload could not be read", code: "PAYLOAD_UNREADABLE" }))
+        (let ((held (json/parse ?row.payload p)))
+          (if (!= @held null)
+            (emit ApprovalGranted { payload: @held, requestId: ?id })
+            (emit ApprovalRequestReviewFailed { error: "the approved request's payload could not be read", code: "PAYLOAD_UNREADABLE" })))
       ;; Deny is a two-step: capture the written reason first, commit second.
       DENY -> denying when (or (= (array/len @config.approverRoles) 0) (array/includes @config.approverRoles @user.role))
         (set @entity.id ?id)

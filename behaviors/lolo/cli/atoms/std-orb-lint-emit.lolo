@@ -16,16 +16,17 @@ type EmitTick = { effects : [EmitVal?] }
 type EmitTrait = { name : string, stateMachine : EmitMachine, ticks : [EmitTick] }
 type EmitOrbital = { name : string, traits : [EmitTrait] }
 type EmitLeaf = { p : string!, e : EmitVal!, oi : number!, ti : number! }
-type EmitLeaves = [EmitLeaf]
 type EmitProgram = { orbitals : [EmitOrbital] }
 
 orbital OrbLintEmitOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
+  uses LeavesUse from "std/behaviors/std-orb-effect-leaves"
 
   entity OrbLintEmitRun [runtime] {
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
+    orbitals : [EmitOrbital] = []
   }
 
   trait OrbLintEmit -> OrbLintEmitRun [optimistic] {
@@ -35,34 +36,11 @@ orbital OrbLintEmitOrbital {
       INIT -> ready
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
-          (let ((ls (json/parse (json/stringify (array/flatten (array/map (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-      (let ((o (array/nth @orbitals @oi)))
-        (array/flatten (array/map (array/range 0 (array/len (object/get @o "traits" []))) (fn ti
-          (let ((td (array/nth (object/get @o "traits" []) @ti)))
-            (if (not (object/has @td "stateMachine")) []
-              (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")) (trs (object/get (object/get @td "stateMachine" {}) "transitions" [])) (tks (object/get @td "ticks" [])))
-                (array/concat
-                  (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
-                    (let ((efs (object/get (array/nth @trs @tj) "effects" [])))
-                      (array/map (array/range 0 (array/len @efs)) (fn ej { p: (str/concat @tp ".stateMachine.transitions[" @tj "].effects[" @ej "]"), e: (array/nth @efs @ej), oi: @oi, ti: @ti }))))))
-                  (array/flatten (array/map (array/range 0 (array/len @tks)) (fn kj
-                    (let ((efs (object/get (array/nth @tks @kj) "effects" [])))
-                      (array/map (array/range 0 (array/len @efs)) (fn ej { p: (str/concat @tp ".ticks[" @kj "].effects[" @ej "]"), e: (array/nth @efs @ej), oi: @oi, ti: @ti }))))))))))))))))) (fn x
-      (if (not (and (validate/array (object/get @x "e")) (> (array/len (object/get @x "e")) 0) (validate/string (array/nth (object/get @x "e") 0)) (array/includes ["do", "if", "when", "let"] (array/nth (object/get @x "e") 0)))) [@x]
-        (array/reduce (array/range 0 (str/len (json/stringify (object/get @x "e")))) [@x]
-          (fn (wl i) (array/flatten (array/map @wl (fn it (if (and (validate/array (object/get @it "e")) (> (array/len (object/get @it "e")) 0) (validate/string (array/nth (object/get @it "e") 0)) (array/includes ["do", "if", "when", "let"] (array/nth (object/get @it "e") 0))) (array/flatten (array/map (if (= (array/nth (object/get @it "e") 0) "do")
-      (array/map (array/range 1 (array/len (object/get @it "e"))) (fn i { cp: (str/concat (object/get @it "p") ".do[" (- @i 1) "]"), x: (array/nth (object/get @it "e") @i) }))
-      (if (= (array/nth (object/get @it "e") 0) "if")
-        (array/concat (if (> (array/len (object/get @it "e")) 2) [{ cp: (str/concat (object/get @it "p") ".then"), x: (array/nth (object/get @it "e") 2) }] []) (if (> (array/len (object/get @it "e")) 3) [{ cp: (str/concat (object/get @it "p") ".else"), x: (array/nth (object/get @it "e") 3) }] []))
-        (if (= (array/nth (object/get @it "e") 0) "when")
-          (array/map (array/range 2 (array/len (object/get @it "e"))) (fn i { cp: (str/concat (object/get @it "p") ".then[" (- @i 2) "]"), x: (array/nth (object/get @it "e") @i) }))
-          (array/map (array/range 2 (array/len (object/get @it "e"))) (fn i { cp: (str/concat (object/get @it "p") ".body[" (- @i 2) "]"), x: (array/nth (object/get @it "e") @i) }))))) (fn pc
-        (let ((x (object/get @pc "x")) (cp (object/get @pc "cp")))
-          (if (and (validate/array @x) (> (array/len @x) 0) (validate/array (array/nth @x 0)))
-            (array/map (array/range 0 (array/len @x)) (fn k { p: (str/concat @cp "[" @k "]"), e: (array/nth @x @k), oi: (object/get @it "oi"), ti: (object/get @it "ti") }))
-            [{ p: @cp, e: @x, oi: (object/get @it "oi"), ti: (object/get @it "ti") }]))))) [@it])))))))))) ) EmitLeaves)))
-          (if (= @ls null) [{ code: "LINT_NODE_UNCHECKED", path: "", message: (str/concat @payload.file ": the effects could not be read as effect expressions; this rule could not check them"), suggestion: "", severity: "error" }]
+        (set @entity.orbitals (object/get @payload.program "orbitals" []))
+        (emit EFFECT_LEAVES_EXPAND { requestId: (str/concat "emit" @payload.scope), orbitals: (object/get @payload.program "orbitals" []) })
+      EFFECT_LEAVES_HEARD -> ready when (= @payload.requestId (str/concat "emit" @entity.scope))
+        (set @entity.findings (let ((orbitals @entity.orbitals))
+          (let ((ls @payload.leaves))
           (array/flatten (array/map @ls (fn l
             (let ((e (object/get @l "e")) (p (object/get @l "p")))
               (if (not (and (validate/array @e) (> (array/len @e) 0) (= (array/nth @e 0) "emit"))) []
@@ -74,13 +52,16 @@ orbital OrbLintEmitOrbital {
                       [{ code: "ORB_T_EVT_INVALID_NAME", path: @p, message: (str/concat "Event name '" @x "' is not a valid identifier"), suggestion: "Declare the event via `type EventName = Event<Payload>` and reference it by identifier", severity: "error" }])
                     (if (or (validate/array @x) (validate/number @x) (validate/boolean @x) (= @x null))
                       [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: (str/concat "emit's first argument must be the event name (a string identifier), got " (if (validate/array @x) "a list" (if (validate/number @x) "a number" (if (validate/boolean @x) "a boolean" "null")))), suggestion: "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block", severity: "error" }]
-                      [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: "emit's first argument must be the event name, but an object was passed — this looks like the payload with the event name missing", suggestion: "Write `(emit EVENT_NAME { … })` — the event name comes first, then the payload object. The event must be declared in the trait's `emits` block.", severity: "error" }])))))))))))))
+                      [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: "emit's first argument must be the event name, but an object was passed — this looks like the payload with the event name missing", suggestion: "Write `(emit EVENT_NAME { … })` — the event name comes first, then the payload object. The event must be declared in the trait's `emits` block.", severity: "error" }]))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "emit", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
+      EFFECT_LEAVES_EXPAND -> external { requestId : string!  orbitals : [EmitOrbital]! }
+        @description "Ask std-orb-effect-leaves to flatten the effects of every inline trait."
+        @tier "internal"
       LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
@@ -90,6 +71,9 @@ orbital OrbLintEmitOrbital {
     }
 
     listens {
+      EFFECT_LEAVES_HEARD { requestId : string!  leaves : [EmitLeaf]! }
+        @description "std-orb-effect-leaves's answer: the effects to check, flattened."
+      OrbEffectLeaves.EFFECT_LEAVES_EXPANDED -> EFFECT_LEAVES_HEARD
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EmitProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
@@ -149,6 +133,13 @@ orbital OrbLintEmitOrbital {
     }
   }
 
+  trait OrbEffectLeaves = LeavesUse.traits.OrbEffectLeaves {
+    listens {
+      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [EmitOrbital]! }
+        @description "Flatten the effects of every inline trait."
+      OrbLintEmit.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
+    }
+  }
   trait Versions = Input.traits.Versions {
   }
   trait Packs = Input.traits.Packs {
@@ -168,5 +159,5 @@ orbital OrbLintEmitOrbital {
     }
   }
 
-  page boot as OrbLintEmitOrbitalStart -> OrbLintEmit, OrbLintEmitCli, OrbLintInput, Packs, Versions
+  page boot as OrbLintEmitOrbitalStart -> OrbLintEmit, OrbLintEmitCli, OrbLintInput, Packs, OrbEffectLeaves, Versions
 }

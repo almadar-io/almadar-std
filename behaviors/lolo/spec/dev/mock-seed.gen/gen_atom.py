@@ -12,7 +12,7 @@ def keptf(fields_expr, seeded, ident, idx):
     return (f'(array/filter {fields_expr} (fn f (and (!= (object/get @f "name" "") "") (not (array/includes ["id", "createdAt", "updatedAt"] (object/get @f "name" ""))) '
             f'(not (and {seeded} (not {ident}) (not (object/get @f "required" false)) (not (object/has @f "default")) (!= (object/get @f "type" "") "relation") '
             f'(= {S.field_projection("@f")} null) (= (math/mod {idx} 2) 0))))))')
-def row_cell(kf): return f'[{{ path: "", kind: "row", text: "", num: 0, keys: (array/map {kf} (fn f (object/get @f "name"))), kids: (array/map {kf} (fn f (object/get @f "name"))) }}]'
+def row_cell(kf): return f'[{{ path: "", kind: "row", text: "", num: 0, keys: (array/map {kf} (fn f (object/get @f "name" ""))), kids: (array/map {kf} (fn f (object/get @f "name" ""))) }}]'
 def frames(kf,idx): return f'(array/map {kf} (fn f {{ spec: @f, name: (object/get @f "name"), index: {idx}, depth: 0, path: (object/get @f "name") }}))'
 run_start=S.run(P,'[{ spec: ?spec, name: ?name, index: ?index, depth: 0, path: ?name }]','[]','@entity.rng',root='?name')
 kf1=keptf('?fields','?seeded','?identity','?index')

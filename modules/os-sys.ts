@@ -1,8 +1,8 @@
-import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
+import type { OperatorTypeRef, OsGrantNeed, StdOperatorMeta } from '../types.js';
 import { BOOLEAN, NUMBER, STRING, formatOperatorType, list, mapOf, nullable, shape } from '../signature.js';
 import { arg, osEffect, OS_PATH } from './os-common.js';
 
-const SYSTEM_READINGS: Record<string, { grant: string; reading: string }> = {
+const SYSTEM_READINGS: Record<string, { grant: Extract<OsGrantNeed, { kind: 'sys' }>['access']; reading: string }> = {
   'os/cpu-usage': { grant: 'cpu', reading: 'CPU usage, sampled across two asks without blocking' },
   'os/memory-info': { grant: 'memory', reading: 'memory totals and usage' },
   'os/uptime': { grant: 'cpu', reading: 'system uptime' },
@@ -45,8 +45,9 @@ function payloadNote(op: string): string {
   return `Success payload: ${formatOperatorType(OS_SYS_PAYLOADS[op])}; unavailable data fails unsupported.`;
 }
 
-function reading(op: string, def: { grant: string; reading: string }): StdOperatorMeta {
+function reading(op: string, def: { grant: Extract<OsGrantNeed, { kind: 'sys' }>['access']; reading: string }): StdOperatorMeta {
   return osEffect({
+    grant: [{ kind: 'sys', access: def.grant }],
     description: `Read ${def.reading} (grant sys: ${def.grant}). ${payloadNote(op)}`,
     params: [],
     example: `["${op}", { "emit": { "success": "SYSTEM_READ", "failure": "SYSTEM_FAILED" } }]`,
@@ -56,6 +57,7 @@ function reading(op: string, def: { grant: string; reading: string }): StdOperat
 export const OS_SYS_OPERATORS: Record<string, StdOperatorMeta> = {
   ...Object.fromEntries(Object.entries(SYSTEM_READINGS).map(([op, def]) => [op, reading(op, def)])),
   'os/disk-usage': osEffect({
+    grant: [{ kind: 'sys', access: 'disk' }],
     description: `Read disk usage for a path (grant sys: disk). ${payloadNote('os/disk-usage')}`,
     params: [arg('path', OS_PATH, 'Path on the volume to measure')],
     example: '["os/disk-usage", "/data", { "emit": { "success": "SYSTEM_READ", "failure": "SYSTEM_FAILED" } }]',

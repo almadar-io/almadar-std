@@ -242,7 +242,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'sexpr',
     params: [
       { name: 'programs', type: { kind: 'array', of: { kind: 'sexpr' } }, description: 'The programs to assemble, in roster order' },
-      { name: 'options', type: EMIT_ENVELOPE, description: 'The app name, an optional layout strategy and theme (empty = none)' },
+      { name: 'options', type: shape({ appName: STRING, layout: union(lit('sidebar'), lit('tabs'), lit('dashboard'), lit('wizard-flow'), lit('single')), theme: STRING }, ['layout', 'theme']), description: 'The app name, an optional layout strategy and theme (empty = none)' },
       EMIT_OPTIONS,
     ],
     example: '["program/compose", "@entity.programs", { "appName": "Shop" }, { "emit": { "success": "COMPOSED", "failure": "COMPOSE_FAILED" } }]',

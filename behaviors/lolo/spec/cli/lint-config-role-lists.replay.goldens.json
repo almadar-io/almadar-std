@@ -1,0 +1,4909 @@
+{
+  "atom": "cli/atoms/std-orb-lint-config-role-lists.lolo",
+  "trait": "OrbLintConfigRoleLists",
+  "note": "Cases pin check_config_role_lists (identity/user_identity.rs) over the role_list_sites detector (inline/rewrite.rs). The Rust fixtures are the remap tests of rewrite.rs (config_role_list_compared_to_role_source_is_remapped, role_knob_read_inside_an_action_when_is_remapped, config_role_list_keeps_list_marker, config_item_roles_through_filter_are_remapped, config_lists_not_compared_to_role_source_are_untouched, config_list_compared_to_non_role_user_field_is_untouched), which exercise the same role_list_sites function; check_config_role_lists itself has no Rust test. Operator pass-through rows are the installed returnSemantics fed as SEM_HEARD. Differences: findings of different sites follow the breadth-first order of the walk, where the compiler's follows depth-first order (the same set); the lint reads the resolved program, in which config reads in transition bodies are already folded, so it reports only the sites that remain unfolded, as the compiler does after its own inline phase.",
+  "cases": [
+    {
+      "id": "config-role-list-compared-to-a-role-source-is-checked",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "or",
+                              [
+                                "=",
+                                [
+                                  "array/len",
+                                  "@config.allowedRoles"
+                                ],
+                                0
+                              ],
+                              [
+                                "array/includes",
+                                "@config.allowedRoles",
+                                "@config.viewerRole"
+                              ]
+                            ],
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "app-layout",
+                                  "navItems": [
+                                    "array/filter",
+                                    "@config.navItems",
+                                    [
+                                      "fn",
+                                      "item",
+                                      [
+                                        "or",
+                                        [
+                                          "=",
+                                          [
+                                            "array/len",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "roles",
+                                              []
+                                            ]
+                                          ],
+                                          0
+                                        ],
+                                        [
+                                          "array/includes",
+                                          [
+                                            "object/get",
+                                            "@item",
+                                            "roles",
+                                            []
+                                          ],
+                                          "@config.viewerRole"
+                                        ],
+                                        [
+                                          "array/some",
+                                          [
+                                            "array/filter",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "children",
+                                              []
+                                            ],
+                                            [
+                                              "fn",
+                                              "child",
+                                              [
+                                                "array/includes",
+                                                [
+                                                  "object/get",
+                                                  "@child",
+                                                  "roles",
+                                                  []
+                                                ],
+                                                "@config.viewerRole"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "c",
+                                            true
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "hr-director",
+                            "cfo",
+                            "ghost"
+                          ]
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": []
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.allowedRoles",
+                      "message": "\"hr-director\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"hr-director\" to `Person.role`.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.allowedRoles",
+                      "message": "\"cfo\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"cfo\" to `Person.role`.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.allowedRoles",
+                      "message": "\"ghost\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"ghost\" to `Person.role`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "declared-members-are-clean",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "or",
+                              [
+                                "=",
+                                [
+                                  "array/len",
+                                  "@config.allowedRoles"
+                                ],
+                                0
+                              ],
+                              [
+                                "array/includes",
+                                "@config.allowedRoles",
+                                "@config.viewerRole"
+                              ]
+                            ],
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "app-layout",
+                                  "navItems": [
+                                    "array/filter",
+                                    "@config.navItems",
+                                    [
+                                      "fn",
+                                      "item",
+                                      [
+                                        "or",
+                                        [
+                                          "=",
+                                          [
+                                            "array/len",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "roles",
+                                              []
+                                            ]
+                                          ],
+                                          0
+                                        ],
+                                        [
+                                          "array/includes",
+                                          [
+                                            "object/get",
+                                            "@item",
+                                            "roles",
+                                            []
+                                          ],
+                                          "@config.viewerRole"
+                                        ],
+                                        [
+                                          "array/some",
+                                          [
+                                            "array/filter",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "children",
+                                              []
+                                            ],
+                                            [
+                                              "fn",
+                                              "child",
+                                              [
+                                                "array/includes",
+                                                [
+                                                  "object/get",
+                                                  "@child",
+                                                  "roles",
+                                                  []
+                                                ],
+                                                "@config.viewerRole"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "c",
+                                            true
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "owner",
+                            "operations_director"
+                          ]
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": []
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "list-marker-is-not-a-member",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "or",
+                              [
+                                "=",
+                                [
+                                  "array/len",
+                                  "@config.allowedRoles"
+                                ],
+                                0
+                              ],
+                              [
+                                "array/includes",
+                                "@config.allowedRoles",
+                                "@config.viewerRole"
+                              ]
+                            ],
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "app-layout",
+                                  "navItems": [
+                                    "array/filter",
+                                    "@config.navItems",
+                                    [
+                                      "fn",
+                                      "item",
+                                      [
+                                        "or",
+                                        [
+                                          "=",
+                                          [
+                                            "array/len",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "roles",
+                                              []
+                                            ]
+                                          ],
+                                          0
+                                        ],
+                                        [
+                                          "array/includes",
+                                          [
+                                            "object/get",
+                                            "@item",
+                                            "roles",
+                                            []
+                                          ],
+                                          "@config.viewerRole"
+                                        ],
+                                        [
+                                          "array/some",
+                                          [
+                                            "array/filter",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "children",
+                                              []
+                                            ],
+                                            [
+                                              "fn",
+                                              "child",
+                                              [
+                                                "array/includes",
+                                                [
+                                                  "object/get",
+                                                  "@child",
+                                                  "roles",
+                                                  []
+                                                ],
+                                                "@config.viewerRole"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "c",
+                                            true
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "list",
+                            "cfo",
+                            "hr-director"
+                          ]
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": []
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.allowedRoles",
+                      "message": "\"cfo\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"cfo\" to `Person.role`.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.allowedRoles",
+                      "message": "\"hr-director\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"hr-director\" to `Person.role`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "item-roles-through-filter-and-nested-children",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "or",
+                              [
+                                "=",
+                                [
+                                  "array/len",
+                                  "@config.allowedRoles"
+                                ],
+                                0
+                              ],
+                              [
+                                "array/includes",
+                                "@config.allowedRoles",
+                                "@config.viewerRole"
+                              ]
+                            ],
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "app-layout",
+                                  "navItems": [
+                                    "array/filter",
+                                    "@config.navItems",
+                                    [
+                                      "fn",
+                                      "item",
+                                      [
+                                        "or",
+                                        [
+                                          "=",
+                                          [
+                                            "array/len",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "roles",
+                                              []
+                                            ]
+                                          ],
+                                          0
+                                        ],
+                                        [
+                                          "array/includes",
+                                          [
+                                            "object/get",
+                                            "@item",
+                                            "roles",
+                                            []
+                                          ],
+                                          "@config.viewerRole"
+                                        ],
+                                        [
+                                          "array/some",
+                                          [
+                                            "array/filter",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "children",
+                                              []
+                                            ],
+                                            [
+                                              "fn",
+                                              "child",
+                                              [
+                                                "array/includes",
+                                                [
+                                                  "object/get",
+                                                  "@child",
+                                                  "roles",
+                                                  []
+                                                ],
+                                                "@config.viewerRole"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "c",
+                                            true
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": []
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": [
+                            {
+                              "label": "A",
+                              "href": "/a",
+                              "roles": [
+                                "hr-director"
+                              ],
+                              "children": [
+                                {
+                                  "label": "A1",
+                                  "roles": [
+                                    "cfo",
+                                    "hr-director"
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "label": "B",
+                              "href": "/b"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.navItems",
+                      "message": "\"hr-director\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"hr-director\" to `Person.role`.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.navItems",
+                      "message": "\"cfo\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"cfo\" to `Person.role`.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.navItems",
+                      "message": "\"hr-director\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"hr-director\" to `Person.role`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "lists-not-compared-to-a-role-source-are-untouched",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "or",
+                              [
+                                "=",
+                                [
+                                  "array/len",
+                                  "@config.allowedRoles"
+                                ],
+                                0
+                              ],
+                              [
+                                "array/includes",
+                                "@config.allowedRoles",
+                                "@config.viewerRole"
+                              ]
+                            ],
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "app-layout",
+                                  "navItems": [
+                                    "array/filter",
+                                    "@config.navItems",
+                                    [
+                                      "fn",
+                                      "item",
+                                      [
+                                        "or",
+                                        [
+                                          "=",
+                                          [
+                                            "array/len",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "roles",
+                                              []
+                                            ]
+                                          ],
+                                          0
+                                        ],
+                                        [
+                                          "array/includes",
+                                          [
+                                            "object/get",
+                                            "@item",
+                                            "roles",
+                                            []
+                                          ],
+                                          "@config.viewerRole"
+                                        ],
+                                        [
+                                          "array/some",
+                                          [
+                                            "array/filter",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "children",
+                                              []
+                                            ],
+                                            [
+                                              "fn",
+                                              "child",
+                                              [
+                                                "array/includes",
+                                                [
+                                                  "object/get",
+                                                  "@child",
+                                                  "roles",
+                                                  []
+                                                ],
+                                                "@config.viewerRole"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "c",
+                                            true
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "hr-director"
+                          ]
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "not-a-user-read"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": [
+                            {
+                              "label": "A",
+                              "roles": [
+                                "hr-director"
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-non-role-user-field-is-not-a-role-source",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "or",
+                              [
+                                "=",
+                                [
+                                  "array/len",
+                                  "@config.allowedRoles"
+                                ],
+                                0
+                              ],
+                              [
+                                "array/includes",
+                                "@config.allowedRoles",
+                                "@config.viewerRole"
+                              ]
+                            ],
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "app-layout",
+                                  "navItems": [
+                                    "array/filter",
+                                    "@config.navItems",
+                                    [
+                                      "fn",
+                                      "item",
+                                      [
+                                        "or",
+                                        [
+                                          "=",
+                                          [
+                                            "array/len",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "roles",
+                                              []
+                                            ]
+                                          ],
+                                          0
+                                        ],
+                                        [
+                                          "array/includes",
+                                          [
+                                            "object/get",
+                                            "@item",
+                                            "roles",
+                                            []
+                                          ],
+                                          "@config.viewerRole"
+                                        ],
+                                        [
+                                          "array/some",
+                                          [
+                                            "array/filter",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "children",
+                                              []
+                                            ],
+                                            [
+                                              "fn",
+                                              "child",
+                                              [
+                                                "array/includes",
+                                                [
+                                                  "object/get",
+                                                  "@child",
+                                                  "roles",
+                                                  []
+                                                ],
+                                                "@config.viewerRole"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "c",
+                                            true
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "hr-director"
+                          ]
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.email"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": []
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "role-knob-read-inside-an-action-when",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Ledger",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "detail-panel",
+                                  "actions": "@config.detailActions"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "reconcileRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "cfo",
+                            "owner"
+                          ]
+                        },
+                        "otherList": {
+                          "type": "unknown",
+                          "default": [
+                            "cfo"
+                          ]
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "detailActions": {
+                          "type": "unknown",
+                          "default": [
+                            {
+                              "label": "Reconcile",
+                              "event": "RECONCILE",
+                              "when": [
+                                "fn",
+                                "row",
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "array/len",
+                                      "@config.reconcileRoles"
+                                    ],
+                                    0
+                                  ],
+                                  [
+                                    "array/includes",
+                                    "@config.reconcileRoles",
+                                    "@config.viewerRole"
+                                  ]
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Ledger)].config.reconcileRoles",
+                      "message": "\"cfo\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"cfo\" to `Person.role`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-needle-may-be-the-user-field-itself",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "array/includes",
+                              "@config.allowedRoles",
+                              "@user.role"
+                            ],
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "app-layout",
+                                  "navItems": [
+                                    "array/filter",
+                                    "@config.navItems",
+                                    [
+                                      "fn",
+                                      "item",
+                                      [
+                                        "or",
+                                        [
+                                          "=",
+                                          [
+                                            "array/len",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "roles",
+                                              []
+                                            ]
+                                          ],
+                                          0
+                                        ],
+                                        [
+                                          "array/includes",
+                                          [
+                                            "object/get",
+                                            "@item",
+                                            "roles",
+                                            []
+                                          ],
+                                          "@config.viewerRole"
+                                        ],
+                                        [
+                                          "array/some",
+                                          [
+                                            "array/filter",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "children",
+                                              []
+                                            ],
+                                            [
+                                              "fn",
+                                              "child",
+                                              [
+                                                "array/includes",
+                                                [
+                                                  "object/get",
+                                                  "@child",
+                                                  "roles",
+                                                  []
+                                                ],
+                                                "@config.viewerRole"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "c",
+                                            true
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "owner",
+                            "ghost"
+                          ]
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "x"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": []
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.allowedRoles",
+                      "message": "\"ghost\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"ghost\" to `Person.role`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "collection-through-an-identity-of-arg-operator",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "=",
+                              1,
+                              1
+                            ],
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                [
+                                  "array/map",
+                                  [
+                                    "array/filter",
+                                    "@config.navItems",
+                                    [
+                                      "fn",
+                                      "i",
+                                      true
+                                    ]
+                                  ],
+                                  [
+                                    "fn",
+                                    "p",
+                                    [
+                                      "array/includes",
+                                      [
+                                        "object/get",
+                                        "@p",
+                                        "roles",
+                                        []
+                                      ],
+                                      "@config.viewerRole"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": []
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": [
+                            {
+                              "label": "A",
+                              "roles": [
+                                "owner",
+                                "phantom"
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.navItems",
+                      "message": "\"phantom\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"phantom\" to `Person.role`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "collection-through-a-non-pass-through-operator-is-not-a-site",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "=",
+                              1,
+                              1
+                            ],
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                [
+                                  "array/map",
+                                  [
+                                    "array/concat",
+                                    "@config.navItems",
+                                    []
+                                  ],
+                                  [
+                                    "fn",
+                                    "p",
+                                    [
+                                      "array/includes",
+                                      [
+                                        "object/get",
+                                        "@p",
+                                        "roles",
+                                        []
+                                      ],
+                                      "@config.viewerRole"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": []
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": [
+                            {
+                              "label": "A",
+                              "roles": [
+                                "phantom"
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "let-body-passes-the-collection-through",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "=",
+                              1,
+                              1
+                            ],
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                [
+                                  "array/map",
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "z",
+                                        1
+                                      ]
+                                    ],
+                                    "@config.navItems"
+                                  ],
+                                  [
+                                    "fn",
+                                    "p",
+                                    [
+                                      "array/includes",
+                                      [
+                                        "object/get",
+                                        "@p",
+                                        "roles",
+                                        []
+                                      ],
+                                      "@config.viewerRole"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": []
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": [
+                            {
+                              "label": "A",
+                              "roles": [
+                                "phantom"
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.navItems",
+                      "message": "\"phantom\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"phantom\" to `Person.role`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-dynamic-member-skips-the-whole-list",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "array/includes",
+                              "@config.allowedRoles",
+                              "@user.role"
+                            ],
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "app-layout",
+                                  "navItems": [
+                                    "array/filter",
+                                    "@config.navItems",
+                                    [
+                                      "fn",
+                                      "item",
+                                      [
+                                        "or",
+                                        [
+                                          "=",
+                                          [
+                                            "array/len",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "roles",
+                                              []
+                                            ]
+                                          ],
+                                          0
+                                        ],
+                                        [
+                                          "array/includes",
+                                          [
+                                            "object/get",
+                                            "@item",
+                                            "roles",
+                                            []
+                                          ],
+                                          "@config.viewerRole"
+                                        ],
+                                        [
+                                          "array/some",
+                                          [
+                                            "array/filter",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "children",
+                                              []
+                                            ],
+                                            [
+                                              "fn",
+                                              "child",
+                                              [
+                                                "array/includes",
+                                                [
+                                                  "object/get",
+                                                  "@child",
+                                                  "roles",
+                                                  []
+                                                ],
+                                                "@config.viewerRole"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "c",
+                                            true
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "ghost",
+                            "@config.other"
+                          ]
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": []
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-tests-of-one-knob-report-each-literal-once",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "or",
+                              [
+                                "=",
+                                [
+                                  "array/len",
+                                  "@config.allowedRoles"
+                                ],
+                                0
+                              ],
+                              [
+                                "array/includes",
+                                "@config.allowedRoles",
+                                "@config.viewerRole"
+                              ]
+                            ],
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                [
+                                  "array/includes",
+                                  "@config.allowedRoles",
+                                  "@user.role"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "ghost"
+                          ]
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": []
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.allowedRoles",
+                      "message": "\"ghost\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"ghost\" to `Person.role`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "multi-valued-role-field-uses-the-items-vocabulary",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "values": [
+                            "a",
+                            "b"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "or",
+                              [
+                                "=",
+                                [
+                                  "array/len",
+                                  "@config.allowedRoles"
+                                ],
+                                0
+                              ],
+                              [
+                                "array/includes",
+                                "@config.allowedRoles",
+                                "@config.viewerRole"
+                              ]
+                            ],
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "app-layout",
+                                  "navItems": [
+                                    "array/filter",
+                                    "@config.navItems",
+                                    [
+                                      "fn",
+                                      "item",
+                                      [
+                                        "or",
+                                        [
+                                          "=",
+                                          [
+                                            "array/len",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "roles",
+                                              []
+                                            ]
+                                          ],
+                                          0
+                                        ],
+                                        [
+                                          "array/includes",
+                                          [
+                                            "object/get",
+                                            "@item",
+                                            "roles",
+                                            []
+                                          ],
+                                          "@config.viewerRole"
+                                        ],
+                                        [
+                                          "array/some",
+                                          [
+                                            "array/filter",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "children",
+                                              []
+                                            ],
+                                            [
+                                              "fn",
+                                              "child",
+                                              [
+                                                "array/includes",
+                                                [
+                                                  "object/get",
+                                                  "@child",
+                                                  "roles",
+                                                  []
+                                                ],
+                                                "@config.viewerRole"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "c",
+                                            true
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "ghost",
+                            "a"
+                          ]
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": []
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.allowedRoles",
+                      "message": "\"ghost\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: a, b, or add \"ghost\" to `Person.role`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-identity-shape-means-no-check",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Doc",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "or",
+                              [
+                                "=",
+                                [
+                                  "array/len",
+                                  "@config.allowedRoles"
+                                ],
+                                0
+                              ],
+                              [
+                                "array/includes",
+                                "@config.allowedRoles",
+                                "@config.viewerRole"
+                              ]
+                            ],
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "app-layout",
+                                  "navItems": [
+                                    "array/filter",
+                                    "@config.navItems",
+                                    [
+                                      "fn",
+                                      "item",
+                                      [
+                                        "or",
+                                        [
+                                          "=",
+                                          [
+                                            "array/len",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "roles",
+                                              []
+                                            ]
+                                          ],
+                                          0
+                                        ],
+                                        [
+                                          "array/includes",
+                                          [
+                                            "object/get",
+                                            "@item",
+                                            "roles",
+                                            []
+                                          ],
+                                          "@config.viewerRole"
+                                        ],
+                                        [
+                                          "array/some",
+                                          [
+                                            "array/filter",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "children",
+                                              []
+                                            ],
+                                            [
+                                              "fn",
+                                              "child",
+                                              [
+                                                "array/includes",
+                                                [
+                                                  "object/get",
+                                                  "@child",
+                                                  "roles",
+                                                  []
+                                                ],
+                                                "@config.viewerRole"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "c",
+                                            true
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "ghost"
+                          ]
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": []
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "expects-shape-is-the-vocabulary-without-a-roster",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Doc",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "or",
+                              [
+                                "=",
+                                [
+                                  "array/len",
+                                  "@config.allowedRoles"
+                                ],
+                                0
+                              ],
+                              [
+                                "array/includes",
+                                "@config.allowedRoles",
+                                "@config.viewerRole"
+                              ]
+                            ],
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "app-layout",
+                                  "navItems": [
+                                    "array/filter",
+                                    "@config.navItems",
+                                    [
+                                      "fn",
+                                      "item",
+                                      [
+                                        "or",
+                                        [
+                                          "=",
+                                          [
+                                            "array/len",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "roles",
+                                              []
+                                            ]
+                                          ],
+                                          0
+                                        ],
+                                        [
+                                          "array/includes",
+                                          [
+                                            "object/get",
+                                            "@item",
+                                            "roles",
+                                            []
+                                          ],
+                                          "@config.viewerRole"
+                                        ],
+                                        [
+                                          "array/some",
+                                          [
+                                            "array/filter",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "children",
+                                              []
+                                            ],
+                                            [
+                                              "fn",
+                                              "child",
+                                              [
+                                                "array/includes",
+                                                [
+                                                  "object/get",
+                                                  "@child",
+                                                  "roles",
+                                                  []
+                                                ],
+                                                "@config.viewerRole"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "c",
+                                            true
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "ghost"
+                          ]
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": []
+                        }
+                      }
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "name": "Viewer",
+                      "shape": [
+                        {
+                          "name": "role",
+                          "type": "string",
+                          "values": [
+                            "admin"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.allowedRoles",
+                      "message": "\"ghost\" is not a declared value of `@user.role` on the [identity] entity `Viewer`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: admin, or add \"ghost\" to `Viewer.role`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "imported-body-is-skipped-against-an-expectation",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Doc",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "or",
+                              [
+                                "=",
+                                [
+                                  "array/len",
+                                  "@config.allowedRoles"
+                                ],
+                                0
+                              ],
+                              [
+                                "array/includes",
+                                "@config.allowedRoles",
+                                "@config.viewerRole"
+                              ]
+                            ],
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "app-layout",
+                                  "navItems": [
+                                    "array/filter",
+                                    "@config.navItems",
+                                    [
+                                      "fn",
+                                      "item",
+                                      [
+                                        "or",
+                                        [
+                                          "=",
+                                          [
+                                            "array/len",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "roles",
+                                              []
+                                            ]
+                                          ],
+                                          0
+                                        ],
+                                        [
+                                          "array/includes",
+                                          [
+                                            "object/get",
+                                            "@item",
+                                            "roles",
+                                            []
+                                          ],
+                                          "@config.viewerRole"
+                                        ],
+                                        [
+                                          "array/some",
+                                          [
+                                            "array/filter",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "children",
+                                              []
+                                            ],
+                                            [
+                                              "fn",
+                                              "child",
+                                              [
+                                                "array/includes",
+                                                [
+                                                  "object/get",
+                                                  "@child",
+                                                  "roles",
+                                                  []
+                                                ],
+                                                "@config.viewerRole"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "c",
+                                            true
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "ghost"
+                          ]
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": []
+                        }
+                      },
+                      "sourceBehavior": "std-x"
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "name": "Viewer",
+                      "shape": [
+                        {
+                          "name": "role",
+                          "type": "string",
+                          "values": [
+                            "admin"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-trait-without-a-config-block-is-skipped",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Plain",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                [
+                                  "array/includes",
+                                  [
+                                    "a"
+                                  ],
+                                  "@user.role"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-knob-with-no-default-is-skipped",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "guard": [
+                              "array/includes",
+                              "@config.missing",
+                              "@user.role"
+                            ],
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "app-layout",
+                                  "navItems": [
+                                    "array/filter",
+                                    "@config.navItems",
+                                    [
+                                      "fn",
+                                      "item",
+                                      [
+                                        "or",
+                                        [
+                                          "=",
+                                          [
+                                            "array/len",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "roles",
+                                              []
+                                            ]
+                                          ],
+                                          0
+                                        ],
+                                        [
+                                          "array/includes",
+                                          [
+                                            "object/get",
+                                            "@item",
+                                            "roles",
+                                            []
+                                          ],
+                                          "@config.viewerRole"
+                                        ],
+                                        [
+                                          "array/some",
+                                          [
+                                            "array/filter",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "children",
+                                              []
+                                            ],
+                                            [
+                                              "fn",
+                                              "child",
+                                              [
+                                                "array/includes",
+                                                [
+                                                  "object/get",
+                                                  "@child",
+                                                  "roles",
+                                                  []
+                                                ],
+                                                "@config.viewerRole"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "fn",
+                                            "c",
+                                            true
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": []
+                        },
+                        "viewerRole": {
+                          "type": "unknown",
+                          "default": "@user.role"
+                        },
+                        "navItems": {
+                          "type": "unknown",
+                          "default": []
+                        },
+                        "missing": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-role-list-in-a-tick-guard-and-a-listen-mapping",
+      "steps": [
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "SEM_HEARD",
+          "from": "ready",
+          "payload": {
+            "semantics": {
+              "%": "integer-closed",
+              "*": "integer-closed",
+              "+": "integer-closed",
+              "-": "integer-closed",
+              "array/append": "union-of-args<0,1>",
+              "array/concat": "union-of-args",
+              "array/drop": "identity-of-arg<0>",
+              "array/dropLast": "identity-of-arg<0>",
+              "array/filter": "identity-of-arg<0>",
+              "array/insert": "union-of-args<0,2>",
+              "array/map": "lambda-result",
+              "array/nth": "tuple-element",
+              "array/prepend": "union-of-args<0,1>",
+              "array/reduce": "lambda-result",
+              "array/reject": "identity-of-arg<0>",
+              "array/remove": "identity-of-arg<0>",
+              "array/removeItem": "identity-of-arg<0>",
+              "array/reverse": "identity-of-arg<0>",
+              "array/shuffle": "identity-of-arg<0>",
+              "array/slice": "identity-of-arg<0>",
+              "array/sort": "identity-of-arg<0>",
+              "array/take": "identity-of-arg<0>",
+              "array/takeLast": "identity-of-arg<0>",
+              "array/unique": "identity-of-arg<0>",
+              "behavior/apply": "identity-of-arg<0>",
+              "brotli/compress": "option-branch<1,result>",
+              "brotli/decompress": "option-branch<2,result>",
+              "do": "last-of-args",
+              "gzip/compress": "option-branch<1,result>",
+              "gzip/decompress": "option-branch<2,result>",
+              "if": "branch-union",
+              "let": "identity-of-arg<1>",
+              "math/abs": "integer-closed",
+              "math/ceil": "integer-result",
+              "math/clamp": "integer-closed",
+              "math/floor": "integer-result",
+              "math/max": "integer-closed",
+              "math/min": "integer-closed",
+              "math/mod": "integer-closed",
+              "math/round": "integer-result",
+              "or": "coalesce",
+              "str/default": "coalesce",
+              "tree/fold": "lambda-result",
+              "typed": "identity-of-arg<0>"
+            },
+            "functions": [],
+            "busExcluded": [],
+            "targetOptions": [],
+            "emitSlots": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "operations_director"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Layout",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "name": "tk",
+                          "interval": 1000,
+                          "guard": [
+                            "array/includes",
+                            "@config.allowedRoles",
+                            "@user.role"
+                          ],
+                          "effects": []
+                        }
+                      ],
+                      "listens": [
+                        {
+                          "event": "E",
+                          "payloadMapping": {
+                            "ok": [
+                              "array/includes",
+                              "@config.mapRoles",
+                              "@user.role"
+                            ]
+                          }
+                        }
+                      ],
+                      "config": {
+                        "allowedRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "ghost"
+                          ]
+                        },
+                        "mapRoles": {
+                          "type": "unknown",
+                          "default": [
+                            "phantom"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigRoleLists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-role-lists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.allowedRoles",
+                      "message": "\"ghost\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"ghost\" to `Person.role`.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+                      "path": "orbitals[0 (A)].traits[0 (Layout)].config.mapRoles",
+                      "message": "\"phantom\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true \u2014 the branch is dead.",
+                      "suggestion": "Use one of: owner, operations_director, or add \"phantom\" to `Person.role`.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

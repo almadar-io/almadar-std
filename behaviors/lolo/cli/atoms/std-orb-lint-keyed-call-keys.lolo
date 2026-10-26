@@ -1,0 +1,244 @@
+app std-orb-lint-keyed-call-keys [
+  version: "1.0.0",
+  inbound: ["cli-lint-keyed-call-keys"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-keyed-call-keys — the `orb lint keyed-call-keys <file>` command, the port of the key rules of keyed_call.rs and check_key_and_cancelled: ORB_CALL_SERVICE_KEY_TYPE (a `key` that is null, an empty string, or a number, boolean, object or array literal), ORB_CALL_SERVICE_CANCELLED_WITHOUT_KEY (an `emit.cancelled` route on a call with no non-null `key`) and ORB_CALL_KEY_UNUSED (a literal `(as \"k\" CallKey)` in a program whose every keyed call is keyed by a literal, none of them \"k\"). The keyed operators come from LINT_OPERATOR_SHAPES: an operator is keyed when a param's object type has a `key` field; the param is the options object when it also has `emit`, a request that only names the call (browser/beacon) otherwise. It needs the RESOLVED program (program/read resolve). A key-type finding is reported at the top effect of the transition or tick, once per violation; an unused key at the guard or effect that holds the cast. Findings print as `[code] path: message` (status 500, exit 1); clean answers `lint keyed-call-keys: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500. A key whose type only inference decides (a number-typed @config knob, `(+ 1 2)`) is not decided here; it stays with the compiler."
+]
+uses Spec from "almadar-std/lint-keyed-call-keys"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type KkVal = string | number | boolean | [KkVal?] | Map string KkVal?
+type KkTransition = { guard : KkVal?, effects : [KkVal]? }
+type KkTick = { effects : [KkVal]? }
+type KkMachine = { transitions : [KkTransition]? }
+type KkTrait = { name : string, stateMachine : KkMachine?, ticks : [KkTick]? }
+type KkOrbital = { name : string, traits : [KkVal] }
+type KkProgram = { orbitals : [KkOrbital] }
+type KkTypeRef = string | KkTypeNode
+type KkTypeNode = { kind : string, fields : Map string KkTypeRef? }
+type KkParam = { name : string, type : KkTypeRef }
+type KkShape = { params : [KkParam] }
+type KkOp = { emit : [number]!, keyOnly : [number]! }
+type KkRec = { rtype : string!, head : string!, hasKey : boolean!, key : KkVal?, cancelled : boolean!, text : string!, path : string!, place : string! }
+type KkRecs = [KkRec]
+
+orbital OrbLintKeyedCallKeysOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintKeyedCallKeysRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    keyed : Map string KkOp = {}
+    shapesUnread : boolean = false
+  }
+
+  trait OrbLintKeyedCallKeys -> OrbLintKeyedCallKeysRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SHAPES_HEARD -> ready
+        (set @entity.shapesUnread false)
+        (set @entity.keyed (object/fromEntries (array/filter (array/map (object/keys @payload.operators) (fn k
+          (let ((fs (array/map (object/get (object/get @payload.operators @k) "params" []) (fn pr
+                  (let ((ty (object/get @pr "type" null)))
+                    (if (validate/object @ty)
+                      (let ((nd (json/parse (json/stringify @ty) KkTypeNode)))
+                        (if (= @nd null) {} (object/get @nd "fields" {})))
+                      {}))))))
+            [@k, { emit: (array/filter (array/range 0 (array/len @fs)) (fn i (and (object/has (array/nth @fs @i) "key") (object/has (array/nth @fs @i) "emit")))),
+                   keyOnly: (array/filter (array/range 0 (array/len @fs)) (fn i (and (object/has (array/nth @fs @i) "key") (not (object/has (array/nth @fs @i) "emit"))))) }])))
+          (fn e (or (> (array/len (object/get (array/nth @e 1) "emit")) 0) (> (array/len (object/get (array/nth @e 1) "keyOnly")) 0))))))
+      SHAPES_UNREAD -> ready
+        (set @entity.shapesUnread true)
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (if @entity.shapesUnread [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the keyed operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
+          (let ((keyed @entity.keyed) (orbitals (object/get @payload.program "orbitals" [])))
+            (let ((sites (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                    (let ((o (array/nth @orbitals @oi)))
+                      (let ((trs (object/get @o "traits" [])))
+                        (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
+                          (let ((t (json/parse (json/stringify (array/nth @trs @ti)) KkTrait)))
+                            (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
+                              []
+                              [{ site: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]"), trait: @t }]))))))))))))
+              (let ((places (array/flatten (array/map @sites (fn s
+                      (let ((sm (object/get (object/get @s "trait") "stateMachine")) (ticks (or (object/get (object/get @s "trait") "ticks" []) [])))
+                        (let ((trans (or (object/get @sm "transitions" []) [])))
+                          (array/concat
+                            (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
+                              (let ((tr (array/nth @trans @i)))
+                                (let ((effs (or (object/get @tr "effects" []) [])))
+                                  (array/concat
+                                    (if (!= (object/get @tr "guard" null) null) [{ path: (str/concat (object/get @s "site") ".stateMachine.transitions[" @i "].guard"), node: (object/get @tr "guard"), place: "g" }] [])
+                                    (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat (object/get @s "site") ".stateMachine.transitions[" @i "].effects[" @j "]"), node: (array/nth @effs @j), place: "e" }))))))))
+                            (array/flatten (array/map (array/range 0 (array/len @ticks)) (fn i
+                              (let ((effs (or (object/get (array/nth @ticks @i) "effects" []) [])))
+                                (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat (object/get @s "site") ".ticks[" @i "].effects[" @j "]"), node: (array/nth @effs @j), place: "e" }))))))))))))))
+                (let ((recs (array/flatten (array/map @places (fn pl
+                        (json/parse (json/stringify (or (tree/fold (object/get @pl "node") (fn (n k)
+                            (array/concat
+                              (if (and (validate/array @n) (> (array/len @n) 0))
+                                (let ((h (array/first @n)))
+                                  (array/concat
+                                    (if (and (validate/string @h) (object/has @keyed @h))
+                                      (let ((spec (object/get @keyed @h)) (args (array/slice @n 1 (array/len @n))))
+                                        (let ((koKeys (array/flatten (array/map (object/get @spec "keyOnly") (fn i
+                                                (let ((a (if (< @i (array/len @args)) (array/nth @args @i) null)))
+                                                  (if (and (validate/object @a) (object/has @a "key")) [{ key: (object/get @a "key" null) }] [])))))))
+                                          (let ((emitted (array/flatten (array/map (object/get @spec "emit") (fn i
+                                                  (let ((a (if (< @i (array/len @args)) (array/nth @args @i) null)))
+                                                    (if (validate/object @a)
+                                                      [{ rtype: "call", head: @h, hasKey: (or (> (array/len @koKeys) 0) (object/has @a "key")), key: (if (> (array/len @koKeys) 0) (object/get (array/first @koKeys) "key" null) (object/get @a "key" null)),
+                                                         cancelled: (let ((em (object/get @a "emit" null))) (and (validate/object @em) (object/has @em "cancelled") (!= (object/get @em "cancelled" null) null))), text: "", path: (object/get @pl "path"), place: (object/get @pl "place") }]
+                                                      [])))))))
+                                            (if (> (array/len @emitted) 0)
+                                              @emitted
+                                              (array/map (array/take @koKeys 1) (fn ko { rtype: "call", head: @h, hasKey: true, key: (object/get @ko "key" null), cancelled: false, text: "", path: (object/get @pl "path"), place: (object/get @pl "place") }))))))
+                                      [])
+                                    (let ((t1 (if (>= (array/len @n) 3) (array/nth @n 1) null)) (t2 (if (>= (array/len @n) 3) (array/nth @n 2) null)))
+                                      (if (and (validate/string @h) (= @h "as") (validate/string @t1) (validate/string @t2) (= @t2 "CallKey") (not (str/startsWith @t1 (quote "@"))) (not (str/startsWith @t1 "?")))
+                                        [{ rtype: "cast", head: "as", hasKey: false, key: "", cancelled: false, text: @t1, path: (object/get @pl "path"), place: (object/get @pl "place") }]
+                                        []))))
+                                [])
+                              (if (validate/array @n) (array/flatten (array/filter @k (fn c (!= @c null)))) (if (validate/object @n) (array/flatten (array/map (object/keys @k) (fn key (or (object/get @k @key []) [])))) []))))
+                          KkVal) []))
+                          KkRecs))))))
+                  (let ((texts (array/map (array/filter @recs (fn r (and (= (object/get @r "rtype") "call") (object/get @r "hasKey")))) (fn r
+                          (let ((k (object/get @r "key" null)))
+                            (if (validate/string @k)
+                              (if (or (str/startsWith @k (quote "@")) (str/startsWith @k "?")) null @k)
+                              (if (validate/array @k)
+                                (let ((k1 (if (>= (array/len @k) 3) (array/nth @k 1) null)) (k2 (if (>= (array/len @k) 3) (array/nth @k 2) null)))
+                                  (if (and (validate/string (array/first @k)) (= (array/first @k) "as") (validate/string @k1) (validate/string @k2) (= @k2 "CallKey") (not (str/startsWith @k1 (quote "@"))) (not (str/startsWith @k1 "?")))
+                                    @k1
+                                    null))
+                                null)))))))
+                    (array/concat
+                      (array/flatten (array/map (array/filter @recs (fn r (and (= (object/get @r "rtype") "call") (= (object/get @r "place") "e")))) (fn r
+                        (let ((k (object/get @r "key" null)) (h (object/get @r "head")) (hk (object/get @r "hasKey")) (p (object/get @r "path")))
+                          (array/concat
+                            (if (and @hk (or (= @k null) (and (validate/string @k) (= @k ""))))
+                              [{ code: "ORB_CALL_SERVICE_KEY_TYPE", path: @p, message: (str/concat @h " `key` must be a non-empty string"), suggestion: "", severity: "error" }]
+                              [])
+                            (let ((lk (if (validate/string @k)
+                                            (if (or (str/startsWith @k (quote "@")) (str/startsWith @k "?") (str/startsWith @k "$")) null "string")
+                                            (if (validate/number @k) "number"
+                                              (if (validate/boolean @k) "boolean"
+                                                (if (validate/object @k) "object"
+                                                  (if (validate/array @k) (if (validate/string (array/first @k)) null "array") null)))))))
+                              (if (and @hk (!= @lk null) (!= @lk "string"))
+                                [{ code: "ORB_CALL_SERVICE_KEY_TYPE", path: @p, message: (str/concat @h " `key` must be a string, got a " @lk " literal"), suggestion: "Use a string literal or a string-typed expression such as @entity.batchId", severity: "error" }]
+                                []))
+                            (if (and (object/get @r "cancelled") (or (not @hk) (= @k null)))
+                              [{ code: "ORB_CALL_SERVICE_CANCELLED_WITHOUT_KEY", path: @p, message: "emit.cancelled is declared but the call has no `key` — nothing can cancel an unkeyed call", suggestion: (str/concat "Add `key: <string expression>` to the " @h " options, and cancel it with (cancel-call <key>)"), severity: "error" }]
+                              []))))))
+                      (if (array/some @texts (fn x (= @x null)))
+                        []
+                        (array/map (array/filter (array/filter @recs (fn r (= (object/get @r "rtype") "cast"))) (fn c (not (array/includes @texts (object/get @c "text"))))) (fn c
+                          { code: "ORB_CALL_KEY_UNUSED", path: (object/get @c "path"), message: (str/concat "`(as \"" (object/get @c "text") "\" CallKey)` names a key, but no call in this program runs under \"" (object/get @c "text") "\""), suggestion: (str/concat "Key the call it should reach with `key: (as \"" (object/get @c "text") "\" CallKey)`, or use the key the call declares"), severity: "error" })))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "keyed-call-keys", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : KkProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      SHAPES_HEARD { operators : Map string KkShape! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES: every installed operator's params with their types; a param whose object type has a `key` field makes the operator keyed."
+      SHAPES_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES_UNREAD: the operator table does not match the shape type."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbLintInput.LINT_OPERATOR_SHAPES -> SHAPES_HEARD
+      OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> SHAPES_UNREAD
+    }
+  }
+
+  trait OrbLintKeyedCallKeysCli -> OrbLintKeyedCallKeysRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint keyed-call-keys <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "keyed-call-keys") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint keyed-call-keys: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "keyed-call-keys") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint keyed-call-keys: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-keyed-call-keys" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint keyed-call-keys` with its arguments and working directory."
+        @synonyms "orb lint keyed-call-keys"
+      OrbLintKeyedCallKeys.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintKeyedCallKeysCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintKeyedCallKeysOrbitalStart -> OrbLintKeyedCallKeys, OrbLintKeyedCallKeysCli, OrbLintInput, Packs, Versions
+}

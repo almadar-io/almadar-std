@@ -39,7 +39,7 @@ orbital LaunchpadProgramsOrbital {
     port : number = 0
   }
 
-  trait ProgramRunner -> ProgramsRun [optimistic] {
+  trait ProgramRunner -> ProgramsRun {
     config {
       portFrom : number = 3041
         @label "First port"
@@ -112,10 +112,10 @@ orbital LaunchpadProgramsOrbital {
       PROGRAM_STOP -> ready when (not (array/some @entity.running (fn r (= @r.id ?id))))
         (emit PROGRAM_FAILED { behavior: ?id, code: "not_running", error: "no running program has this id" })
       PROGRAM_STOP -> ready when (array/some @entity.running (fn r (= @r.id ?id)))
-        (os/kill (object/get (array/find @entity.running (fn r (= @r.id ?id))) "pid") "TERM" { key: ?id emit: { success: PROGRAM_STOPPED, failure: PROGRAM_STOP_FAILED } })
+        (os/kill (object/get (array/find @entity.running (fn r (= @r.id ?id))) "pid") "TERM" { key: (str/concat "stop:" ?id) emit: { success: PROGRAM_STOPPED, failure: PROGRAM_STOP_FAILED } })
       PROGRAM_STOPPED -> ready
       PROGRAM_STOP_FAILED -> ready
-        (emit PROGRAM_FAILED { behavior: ?key, code: "stop_failed", error: ?error })
+        (emit PROGRAM_FAILED { behavior: (str/slice ?key 5 (str/len ?key)), code: "stop_failed", error: ?error })
       PROGRAM_OPEN -> ready when (not (array/some @entity.running (fn r (= @r.id ?id))))
         (emit PROGRAM_FAILED { behavior: ?id, code: "not_running", error: "no running program has this id" })
       PROGRAM_OPEN -> ready when (array/some @entity.running (fn r (= @r.id ?id)))

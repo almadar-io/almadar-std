@@ -1,0 +1,1506 @@
+{
+  "atom": "cli/atoms/std-orb-effect-leaves.lolo",
+  "trait": "OrbEffectLeaves",
+  "note": "Cases for the shared effect-leaf expansion: plain effects and ticks, the paths of the do, if, when and let forms, a branch written as a list of effects, nesting, an effect in a value position, and the branches that are null or not effects, which are no leaf and leave the later indexes where they were.",
+  "cases": [
+    {
+      "id": "a-plain-effect-is-its-own-leaf",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "emit",
+                              "X"
+                            ],
+                            [
+                              "set",
+                              "@entity.n",
+                              1
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "e": [
+                        "emit",
+                        "X"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                      "e": [
+                        "set",
+                        "@entity.n",
+                        1
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-empty-program-has-no-leaves",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-trait-without-a-state-machine-is-skipped",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "Ref"
+                  },
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "emit",
+                              "X"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[1 (T)].stateMachine.transitions[0].effects[0]",
+                      "e": [
+                        "emit",
+                        "X"
+                      ],
+                      "oi": 0,
+                      "ti": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "if-then-and-else-are-two-leaves",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "if",
+                              "@a",
+                              [
+                                "emit",
+                                "X"
+                              ],
+                              [
+                                "emit",
+                                "Y"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then",
+                      "e": [
+                        "emit",
+                        "X"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].else",
+                      "e": [
+                        "emit",
+                        "Y"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "if-with-a-condition-only-has-no-leaf",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "if",
+                              "@a"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "do-when-and-let-bodies-keep-their-index",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "do",
+                              [
+                                "emit",
+                                "A"
+                              ],
+                              [
+                                "emit",
+                                "B"
+                              ]
+                            ],
+                            [
+                              "when",
+                              "@g",
+                              [
+                                "emit",
+                                "C"
+                              ],
+                              [
+                                "emit",
+                                "D"
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "x",
+                                  1
+                                ]
+                              ],
+                              [
+                                "emit",
+                                "E"
+                              ],
+                              [
+                                "emit",
+                                "F"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[0]",
+                      "e": [
+                        "emit",
+                        "A"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[1]",
+                      "e": [
+                        "emit",
+                        "B"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1].then[0]",
+                      "e": [
+                        "emit",
+                        "C"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1].then[1]",
+                      "e": [
+                        "emit",
+                        "D"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[2].body[0]",
+                      "e": [
+                        "emit",
+                        "E"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[2].body[1]",
+                      "e": [
+                        "emit",
+                        "F"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-branch-written-as-a-list-of-effects-adds-an-index",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "if",
+                              "@a",
+                              [
+                                [
+                                  "emit",
+                                  "X"
+                                ],
+                                [
+                                  "emit",
+                                  "Y"
+                                ]
+                              ],
+                              [
+                                [
+                                  "set",
+                                  "@entity.n",
+                                  1
+                                ]
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then[0]",
+                      "e": [
+                        "emit",
+                        "X"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then[1]",
+                      "e": [
+                        "emit",
+                        "Y"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].else[0]",
+                      "e": [
+                        "set",
+                        "@entity.n",
+                        1
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "nesting-three-deep-reaches-the-innermost-effect",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "do",
+                              [
+                                "if",
+                                "@a",
+                                [
+                                  "when",
+                                  "@g",
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "x",
+                                        1
+                                      ]
+                                    ],
+                                    [
+                                      "emit",
+                                      "DEEP"
+                                    ]
+                                  ]
+                                ],
+                                null
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[0].then.then[0].body[0]",
+                      "e": [
+                        "emit",
+                        "DEEP"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-effect-inside-a-value-position-is-not-a-leaf",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.n",
+                              [
+                                "if",
+                                "@a",
+                                [
+                                  "emit",
+                                  "X"
+                                ],
+                                [
+                                  "emit",
+                                  "Y"
+                                ]
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "e": [
+                        "set",
+                        "@entity.n",
+                        [
+                          "if",
+                          "@a",
+                          [
+                            "emit",
+                            "X"
+                          ],
+                          [
+                            "emit",
+                            "Y"
+                          ]
+                        ]
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-null-else-branch-is-no-leaf",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "if",
+                              "@a",
+                              [
+                                "emit",
+                                "X"
+                              ],
+                              null
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then",
+                      "e": [
+                        "emit",
+                        "X"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-null-then-branch-is-no-leaf",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "if",
+                              "@a",
+                              null,
+                              [
+                                "emit",
+                                "Y"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].else",
+                      "e": [
+                        "emit",
+                        "Y"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-null-in-a-do-keeps-the-later-indexes",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "do",
+                              [
+                                "emit",
+                                "A"
+                              ],
+                              null,
+                              [
+                                "emit",
+                                "B"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[0]",
+                      "e": [
+                        "emit",
+                        "A"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[2]",
+                      "e": [
+                        "emit",
+                        "B"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-null-in-a-when-body-keeps-the-later-indexes",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "when",
+                              "@g",
+                              null,
+                              [
+                                "emit",
+                                "A"
+                              ],
+                              null,
+                              [
+                                "emit",
+                                "B"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then[1]",
+                      "e": [
+                        "emit",
+                        "A"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then[3]",
+                      "e": [
+                        "emit",
+                        "B"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-null-in-a-list-of-effects-keeps-the-later-indexes",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "if",
+                              "@a",
+                              [
+                                [
+                                  "emit",
+                                  "A"
+                                ],
+                                null,
+                                [
+                                  "emit",
+                                  "B"
+                                ]
+                              ],
+                              null
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then[0]",
+                      "e": [
+                        "emit",
+                        "A"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then[2]",
+                      "e": [
+                        "emit",
+                        "B"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-null-top-level-effect-is-no-leaf",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            null,
+                            [
+                              "emit",
+                              "X"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                      "e": [
+                        "emit",
+                        "X"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-scalar-branch-is-no-leaf",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "if",
+                              "@a",
+                              "just text",
+                              [
+                                "emit",
+                                "Y"
+                              ]
+                            ],
+                            [
+                              "do",
+                              5,
+                              true,
+                              [
+                                "emit",
+                                "Z"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].else",
+                      "e": [
+                        "emit",
+                        "Y"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1].do[2]",
+                      "e": [
+                        "emit",
+                        "Z"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-null-branch-beside-real-leaves-in-nested-controls",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "do",
+                              [
+                                "if",
+                                "@a",
+                                [
+                                  "emit",
+                                  "A"
+                                ],
+                                null
+                              ],
+                              [
+                                "when",
+                                "@g",
+                                null,
+                                [
+                                  "if",
+                                  "@b",
+                                  null,
+                                  [
+                                    "emit",
+                                    "B"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "emit",
+                                "C"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[0].then",
+                      "e": [
+                        "emit",
+                        "A"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[1].then[1].else",
+                      "e": [
+                        "emit",
+                        "B"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[2]",
+                      "e": [
+                        "emit",
+                        "C"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-tick-effect-is-expanded-at-its-tick-path",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "emit",
+                              "X"
+                            ]
+                          ]
+                        }
+                      ]
+                    },
+                    "ticks": [
+                      {
+                        "effects": [
+                          [
+                            "if",
+                            "@a",
+                            [
+                              "emit",
+                              "TICK"
+                            ],
+                            null
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "e": [
+                        "emit",
+                        "X"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].ticks[0].effects[0].then",
+                      "e": [
+                        "emit",
+                        "TICK"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-orbitals-and-traits-carry-their-indexes",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "r1",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T1",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "if",
+                              "@a",
+                              [
+                                "emit",
+                                "X"
+                              ],
+                              null
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "name": "Ref"
+                  },
+                  {
+                    "name": "T2",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "do",
+                              [
+                                "emit",
+                                "Y"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "B",
+                "traits": [
+                  {
+                    "name": "T3",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "emit",
+                              "Z"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "r1",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T1)].stateMachine.transitions[0].effects[0].then",
+                      "e": [
+                        "emit",
+                        "X"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    },
+                    {
+                      "p": "orbitals[0 (A)].traits[2 (T2)].stateMachine.transitions[0].effects[0].do[0]",
+                      "e": [
+                        "emit",
+                        "Y"
+                      ],
+                      "oi": 0,
+                      "ti": 2
+                    },
+                    {
+                      "p": "orbitals[1 (B)].traits[0 (T3)].stateMachine.transitions[0].effects[0]",
+                      "e": [
+                        "emit",
+                        "Z"
+                      ],
+                      "oi": 1,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "requests-are-answered-with-their-own-id",
+      "steps": [
+        {
+          "trait": "OrbEffectLeaves",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_EXPAND",
+          "payload": {
+            "requestId": "emit#lazy[0]",
+            "orbitals": [
+              {
+                "name": "A",
+                "traits": [
+                  {
+                    "name": "T",
+                    "stateMachine": {
+                      "transitions": [
+                        {
+                          "effects": [
+                            [
+                              "emit",
+                              "X"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPANDED",
+                "payload": {
+                  "requestId": "emit#lazy[0]",
+                  "leaves": [
+                    {
+                      "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "e": [
+                        "emit",
+                        "X"
+                      ],
+                      "oi": 0,
+                      "ti": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

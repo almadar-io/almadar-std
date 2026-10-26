@@ -12,7 +12,6 @@ type OrbFinding = { code : string!, path : string!, message : string!, suggestio
 type PevVal = string | number | boolean | [PevVal?] | Map string PevVal?
 type PevLeaf = { p : string!, e : PevVal!, oi : number!, ti : number! }
 type PevOpts = { emit : Map string PevVal? }
-type PevLeaves = [PevLeaf]
 type PevEmit = { event : string }
 type PevTransition = { effects : [PevVal?] }
 type PevMachine = { transitions : [PevTransition] }
@@ -23,11 +22,13 @@ type PevProgram = { orbitals : [PevOrbital] }
 
 orbital OrbLintProgramEvalOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
+  uses LeavesUse from "std/behaviors/std-orb-effect-leaves"
 
   entity OrbLintProgramEvalRun [runtime] {
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
+    orbitals : [PevOrbital] = []
   }
 
   trait OrbLintProgramEval -> OrbLintProgramEvalRun [optimistic] {
@@ -37,34 +38,11 @@ orbital OrbLintProgramEvalOrbital {
       INIT -> ready
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
-          (let ((ls (json/parse (json/stringify (array/flatten (array/map (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-      (let ((o (array/nth @orbitals @oi)))
-        (array/flatten (array/map (array/range 0 (array/len (object/get @o "traits" []))) (fn ti
-          (let ((td (array/nth (object/get @o "traits" []) @ti)))
-            (if (not (object/has @td "stateMachine")) []
-              (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")) (trs (object/get (object/get @td "stateMachine" {}) "transitions" [])) (tks (object/get @td "ticks" [])))
-                (array/concat
-                  (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
-                    (let ((efs (object/get (array/nth @trs @tj) "effects" [])))
-                      (array/map (array/range 0 (array/len @efs)) (fn ej { p: (str/concat @tp ".stateMachine.transitions[" @tj "].effects[" @ej "]"), e: (array/nth @efs @ej), oi: @oi, ti: @ti }))))))
-                  (array/flatten (array/map (array/range 0 (array/len @tks)) (fn kj
-                    (let ((efs (object/get (array/nth @tks @kj) "effects" [])))
-                      (array/map (array/range 0 (array/len @efs)) (fn ej { p: (str/concat @tp ".ticks[" @kj "].effects[" @ej "]"), e: (array/nth @efs @ej), oi: @oi, ti: @ti }))))))))))))))))) (fn x
-      (if (not (and (validate/array (object/get @x "e")) (> (array/len (object/get @x "e")) 0) (validate/string (array/nth (object/get @x "e") 0)) (array/includes ["do", "if", "when", "let"] (array/nth (object/get @x "e") 0)))) [@x]
-        (array/reduce (array/range 0 (str/len (json/stringify (object/get @x "e")))) [@x]
-          (fn (wl i) (array/flatten (array/map @wl (fn it (if (and (validate/array (object/get @it "e")) (> (array/len (object/get @it "e")) 0) (validate/string (array/nth (object/get @it "e") 0)) (array/includes ["do", "if", "when", "let"] (array/nth (object/get @it "e") 0))) (array/flatten (array/map (if (= (array/nth (object/get @it "e") 0) "do")
-      (array/map (array/range 1 (array/len (object/get @it "e"))) (fn i { cp: (str/concat (object/get @it "p") ".do[" (- @i 1) "]"), x: (array/nth (object/get @it "e") @i) }))
-      (if (= (array/nth (object/get @it "e") 0) "if")
-        (array/concat (if (> (array/len (object/get @it "e")) 2) [{ cp: (str/concat (object/get @it "p") ".then"), x: (array/nth (object/get @it "e") 2) }] []) (if (> (array/len (object/get @it "e")) 3) [{ cp: (str/concat (object/get @it "p") ".else"), x: (array/nth (object/get @it "e") 3) }] []))
-        (if (= (array/nth (object/get @it "e") 0) "when")
-          (array/map (array/range 2 (array/len (object/get @it "e"))) (fn i { cp: (str/concat (object/get @it "p") ".then[" (- @i 2) "]"), x: (array/nth (object/get @it "e") @i) }))
-          (array/map (array/range 2 (array/len (object/get @it "e"))) (fn i { cp: (str/concat (object/get @it "p") ".body[" (- @i 2) "]"), x: (array/nth (object/get @it "e") @i) }))))) (fn pc
-        (let ((x (object/get @pc "x")) (cp (object/get @pc "cp")))
-          (if (and (validate/array @x) (> (array/len @x) 0) (validate/array (array/nth @x 0)))
-            (array/map (array/range 0 (array/len @x)) (fn k { p: (str/concat @cp "[" @k "]"), e: (array/nth @x @k), oi: (object/get @it "oi"), ti: (object/get @it "ti") }))
-            [{ p: @cp, e: @x, oi: (object/get @it "oi"), ti: (object/get @it "ti") }]))))) [@it])))))))))) ) PevLeaves)))
-          (if (= @ls null) [{ code: "LINT_NODE_UNCHECKED", path: "", message: (str/concat @payload.file ": the effects could not be read as effect expressions; this rule could not check them"), suggestion: "", severity: "error" }]
+        (set @entity.orbitals (object/get @payload.program "orbitals" []))
+        (emit EFFECT_LEAVES_EXPAND { requestId: (str/concat "program-eval" @payload.scope), orbitals: (object/get @payload.program "orbitals" []) })
+      EFFECT_LEAVES_HEARD -> ready when (= @payload.requestId (str/concat "program-eval" @entity.scope))
+        (set @entity.findings (let ((orbitals @entity.orbitals))
+          (let ((ls @payload.leaves))
           (array/flatten (array/map @ls (fn l
             (let ((e (object/get @l "e")) (p (object/get @l "p")))
               (if (not (and (validate/array @e) (> (array/len @e) 0) (= (array/nth @e 0) "program/eval"))) []
@@ -80,13 +58,16 @@ orbital OrbLintProgramEvalOrbital {
                                 (if (not (validate/pattern @v "^[A-Za-z][A-Za-z0-9_]*$")) [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: (str/concat "emit." @k " = '" @v "' is not a valid identifier"), suggestion: "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')", severity: "error" }]
                                   (if (array/includes @declared @v) [] [{ code: "ORB_EFF_EMIT_UNDECLARED_EVENT", path: @p, message: (str/concat "emit." @k " = '" @v "' is not declared in the trait's emits array"), suggestion: "Declare the event in the trait's `emits` block with its payload shape", severity: "error" }]))
                                 [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: (str/concat "emit." @k " must be a string event name"), suggestion: "e.g. emit.success = 'PATIENT_LOADED'", severity: "error" }])))))))))
-                      (if (array/some @emitobjs (fn eo (let ((fv (object/get @eo "failure" null))) (and (validate/string @fv) (!= @fv ""))))) [] [{ code: "ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING", path: @p, message: "`program/eval` carries no `emit.failure` event — the validator's errors come back through it and would be dropped", suggestion: "Add `{ emit: { success: \"<EVENT>\", failure: \"<FAILURE_EVENT>\" } }` as the last arg and handle the failure event in an arm.", severity: "error" }])))))))))))))
+                      (if (array/some @emitobjs (fn eo (let ((fv (object/get @eo "failure" null))) (and (validate/string @fv) (!= @fv ""))))) [] [{ code: "ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING", path: @p, message: "`program/eval` carries no `emit.failure` event — the validator's errors come back through it and would be dropped", suggestion: "Add `{ emit: { success: \"<EVENT>\", failure: \"<FAILURE_EVENT>\" } }` as the last arg and handle the failure event in an arm.", severity: "error" }]))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "program-eval", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
+      EFFECT_LEAVES_EXPAND -> external { requestId : string!  orbitals : [PevOrbital]! }
+        @description "Ask std-orb-effect-leaves to flatten the effects of every inline trait."
+        @tier "internal"
       LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
         @tier "internal"
@@ -96,6 +77,9 @@ orbital OrbLintProgramEvalOrbital {
     }
 
     listens {
+      EFFECT_LEAVES_HEARD { requestId : string!  leaves : [PevLeaf]! }
+        @description "std-orb-effect-leaves's answer: the effects to check, flattened."
+      OrbEffectLeaves.EFFECT_LEAVES_EXPANDED -> EFFECT_LEAVES_HEARD
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PevProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
@@ -155,6 +139,13 @@ orbital OrbLintProgramEvalOrbital {
     }
   }
 
+  trait OrbEffectLeaves = LeavesUse.traits.OrbEffectLeaves {
+    listens {
+      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [PevOrbital]! }
+        @description "Flatten the effects of every inline trait."
+      OrbLintProgramEval.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
+    }
+  }
   trait Versions = Input.traits.Versions {
   }
   trait Packs = Input.traits.Packs {
@@ -174,5 +165,5 @@ orbital OrbLintProgramEvalOrbital {
     }
   }
 
-  page boot as OrbLintProgramEvalOrbitalStart -> OrbLintProgramEval, OrbLintProgramEvalCli, OrbLintInput, Packs, Versions
+  page boot as OrbLintProgramEvalOrbitalStart -> OrbLintProgramEval, OrbLintProgramEvalCli, OrbLintInput, Packs, OrbEffectLeaves, Versions
 }

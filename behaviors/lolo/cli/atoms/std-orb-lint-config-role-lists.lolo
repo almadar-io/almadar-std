@@ -1,0 +1,305 @@
+app std-orb-lint-config-role-lists [
+  version: "1.0.0",
+  inbound: ["cli-lint-config-role-lists"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-config-role-lists - the `orb lint config-role-lists <file>` command, the port of check_config_role_lists (identity/user_identity.rs, ORB_S_ROLE_LITERAL_NOT_MEMBER) over the compiler's role_list_sites dataflow (inline/rewrite.rs). It lowers the file with program/read. For each inline trait with a config block (an authored trait when the identity shape is the orbital's own expects shape), against the roster's closed-vocabulary fields (the declared [identity] entity, else the orbital's expects entity [identity] { shape }): a knob list is a role-list site when the trait tests membership in it against a role source, either `(array/includes @config.K <role source>)` (the knob is the list) or `(array/includes (object/get @p <key>) <role source>)` inside a `(fn p ...)` over a collection that resolves to knob K (a `@config.K`, an identity-of-arg<N> pass-through of one as the installed operator table declares it, or `(object/get @q <key>)` of an outer element), where a role source is `@user.<role field>` or `@config.V` whose default is such a read. Sites are searched in transition guards and effects, tick guards and effects, listen guards and payload mappings, and every knob default. Every string literal of a site's list in the knob's default that is not a declared member of the role field is reported at <trait path>.config.<knob>. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint config-role-lists: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-config-role-lists"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type RlShape = string | number | boolean | [RlShape?] | Map string RlShape?
+type RlField = { name : string, values : [string]?, items : RlItemsT? }
+type RlItemsT = { values : [string]? }
+type RlEntity = { name : string, identity : boolean, fields : [RlField] }
+type RlExpect = { kind : string, name : string, shape : [RlField] }
+type RlKnob = { default : RlShape? }
+type RlListen = { guard : RlShape?, payloadMapping : Map string RlShape? }
+type RlTransition = { guard : RlShape?, effects : [RlShape] }
+type RlTick = { guard : RlShape?, effects : [RlShape] }
+type RlMachine = { transitions : [RlTransition] }
+type RlTrait = { name : string, stateMachine : RlMachine, ticks : [RlTick], listens : [RlListen], config : Map string RlKnob, sourceBehavior : RlShape? }
+type RlOrbital = { name : string, expects : [RlExpect], entity : RlEntityRef, auxiliaryEntities : [RlEntity], traits : [RlTrait] }
+type RlEntityRef = RlEntity | string
+type RlProgram = { orbitals : [RlOrbital] }
+type RlColl = { knob : string, path : [string] }
+type RlScope = Map string RlColl
+type RlWork = { x : RlShape?, sc : RlScope, t : number }
+type RlSite = { t : number, knob : string, path : [string], hasKey : boolean, key : string, field : string, id : string }
+type RlCtx = { tp : string, idName : string, rf : Map string [string], cfg : Map string RlShape?, o : number, i : number }
+type RlWorkList = [RlWork]
+type RlRfMap = Map string [string]
+type RlCfgMap = Map string RlShape?
+
+orbital OrbLintConfigRoleListsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintConfigRoleListsRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    semantics : Map string string = {}
+    ctxs : [RlCtx] = []
+    frontier : [RlWork] = []
+    sites : [RlSite] = []
+    semUnread : boolean = false
+  }
+
+  trait OrbLintConfigRoleLists -> OrbLintConfigRoleListsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SEM_HEARD -> ready
+        (set @entity.semUnread false)
+        (set @entity.semantics @payload.semantics)
+      RL_STEP -> ready when (> (array/len @entity.frontier) 0)
+        (set @entity.sites (let ((ctxs : [RlCtx] @entity.ctxs) (nosites : [RlSite] []) (nostr : [string] []) (nosc : RlScope {}) (nocoll : RlColl { knob: "", path: [] }) (norf : RlRfMap {}) (nocfg : RlCfgMap {}))
+  (array/concat @entity.sites (array/flatten
+  (array/map @entity.frontier
+    (fn w
+      (let ((x (object/get @w "x" null)) (sc (object/get @w "sc" @nosc)) (t (object/get @w "t" 0)))
+        (if (and (validate/array @x) (= (array/len @x) 3) (= (let ((o0 (array/nth @x 0))) (if (validate/string @o0) @o0 "")) "array/includes"))
+          (let ((cx (array/nth @ctxs @t)))
+            (let ((f (let ((rs (array/nth @x 2)) (rfm (object/get @cx "rf" @norf))) (if (validate/string @rs) (if (and (validate/string @rs) (str/startsWith @rs (quote "@user.")) (> (str/len @rs) 6) (not (str/includes (str/slice @rs 6) ".")) (not (str/includes (str/slice @rs 6) "[")) (object/has @rfm (str/slice @rs 6))) (str/slice @rs 6) (if (str/startsWith @rs (quote "@config.")) (let ((dv (object/get (object/get @cx "cfg" @nocfg) (str/slice @rs 8) null))) (if (and (validate/string @dv) (str/startsWith @dv (quote "@user.")) (> (str/len @dv) 6) (not (str/includes (str/slice @dv 6) ".")) (not (str/includes (str/slice @dv 6) "[")) (object/has @rfm (str/slice @dv 6))) (str/slice @dv 6) "")) "")) ""))))
+              (if (= @f "")
+                @nosites
+                (let ((it1 (array/nth @x 1)))
+                  (if (validate/string @it1)
+                    (if (and (str/startsWith @it1 (quote "@config.")) (not (str/includes (str/slice @it1 8) ".")))
+                      [{ t: @t, knob: (str/slice @it1 8), path: @nostr, hasKey: false, key: "", field: @f, id: (str/concat @t "|" (str/slice @it1 8) "|" (str/join @nostr "/") "|" "" "|" @f) }]
+                      @nosites)
+                    (if (and (validate/array @it1) (= (let ((g0 (array/nth @it1 0))) (if (validate/string @g0) @g0 "")) "object/get") (>= (array/len @it1) 3))
+                      (let ((gp (array/nth @it1 1)) (gk (array/nth @it1 2)))
+                        (if (and (validate/string @gp) (validate/string @gk) (str/startsWith @gp (quote "@")) (object/has @sc (str/slice @gp 1)))
+                          (let ((co (object/get @sc (str/slice @gp 1) @nocoll)))
+                            [{ t: @t, knob: (object/get @co "knob" ""), path: (object/get @co "path" @nostr), hasKey: true, key: @gk, field: @f, id: (str/concat @t "|" (object/get @co "knob" "") "|" (str/join (object/get @co "path" @nostr) "/") "|" @gk "|" @f) }])
+                          @nosites))
+                      @nosites))))))
+          @nosites))))))))
+        (set @entity.frontier (let ((nowork : [RlWork] []) (noshapes : [RlShape] []) (nostr : [string] []) (nosc : RlScope {}) (nocoll : RlColl { knob: "", path: [] }) (sem0 @entity.semantics))
+  (or (json/parse (json/stringify (or (array/flatten
+  (array/map @entity.frontier
+    (fn w
+      (let ((x (object/get @w "x" null)) (sc (object/get @w "sc" @nosc)) (t (object/get @w "t" 0)))
+        (if (validate/array @x)
+          (let ((l20 (if (>= (array/len @x) 3) (array/nth @x 2) null)))
+            (let ((l2 (if (validate/array @l20) @l20 @noshapes)))
+              (let ((isLam (and (>= (array/len @l2) 3) (validate/string (array/nth @l2 0)) (validate/string (array/nth @l2 1)) (= (array/nth @l2 0) "fn"))) (pname (let ((p0 (if (>= (array/len @l2) 2) (array/nth @l2 1) ""))) (if (validate/string @p0) @p0 ""))))
+                (let ((cj (if @isLam (tree/fold (array/nth @x 1) (fn (n k) (if (validate/string @n)
+  (if (and (str/startsWith @n (quote "@config.")) (not (str/includes (str/slice @n 8) ".")))
+    (json/stringify { knob: (str/slice @n 8), path: @nostr })
+    "")
+  (if (validate/array @n)
+    (let ((op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))) (argc (- (array/len @n) 1)))
+      (let ((sem (object/get @sem0 @op "")))
+        (let ((idxText (str/slice @sem 16 (- (str/len @sem) 1))))
+          (if (and (str/startsWith @sem "identity-of-arg<") (str/endsWith @sem ">") (not (str/includes @idxText ",")) (!= (str/to-int (str/trim @idxText)) null))
+            (if (< (str/to-int (str/trim @idxText)) @argc)
+              (let ((kr (array/nth @k (+ (str/to-int (str/trim @idxText)) 1))))
+                (if (validate/string @kr) @kr ""))
+              "")
+            (if (and (= @op "object/get") (>= (array/len @n) 3))
+              (let ((gp (array/nth @n 1)) (gk (array/nth @n 2)))
+                (if (and (validate/string @gp) (validate/string @gk) (str/startsWith @gp (quote "@")) (object/has @sc (str/slice @gp 1)))
+                  (let ((co (object/get @sc (str/slice @gp 1) @nocoll)))
+                    (json/stringify { knob: (object/get @co "knob" ""), path: (array/append (object/get @co "path" @nostr) @gk) }))
+                  ""))
+              "")))))
+    ""))) RlShape) "")))
+                  (let ((coll (if (and @isLam (validate/string @cj) (!= @cj "")) (json/parse @cj RlColl) null)))
+                    (if (!= @coll null)
+                      [{ x: (array/nth @x 1), sc: @sc, t: @t }, { x: (array/nth @l2 2), sc: (object/set @sc @pname @coll), t: @t }]
+                      (array/map (array/range 0 (array/len @x))
+                        (fn i { x: (array/nth @x @i), sc: @sc, t: @t }))))))))
+          (if (validate/object @x)
+            (array/map (object/keys @x)
+              (fn key { x: (object/get @x @key), sc: @sc, t: @t }))
+            @nowork)))))) [])) RlWorkList) @nowork)))
+        (emit RL_STEP { left: (array/len @entity.frontier) })
+      RL_STEP -> ready when (= (array/len @entity.frontier) 0)
+        (set @entity.findings (let ((nof : [OrbFinding] []) (nostr : [string] []) (nox : [RlShape] []) (nosites : [RlSite] []) (norf : RlRfMap {}) (nocfg : RlCfgMap {}))
+  (let ((uniq (array/reduce @entity.sites @nosites (fn (acc s) (if (array/some @acc (fn u (= (object/get @u "id" "") (object/get @s "id" "")))) @acc (array/append @acc @s))))))
+    (array/flatten
+      (array/map @uniq
+        (fn s
+          (let ((cx (array/nth @entity.ctxs (object/get @s "t" 0))))
+            (let ((dflt (object/get (object/get @cx "cfg" @nocfg) (object/get @s "knob" "") null)))
+              (if (= @dflt null)
+                @nof
+                (let ((vocab (object/get (object/get @cx "rf" @norf) (object/get @s "field" "") @nostr)) (idName (object/get @cx "idName" "")) (fld (object/get @s "field" "")))
+                  (let ((nodes (array/reduce (object/get @s "path" @nostr) [@dflt] (fn (acc head) (array/flatten (array/map @acc (fn v (if (validate/array @v) (let ((el (if (and (> (array/len @v) 0) (= (let ((h0 (array/nth @v 0))) (if (validate/string @h0) @h0 "")) "list")) (array/slice @v 1) @v))) (array/flatten (array/map @el (fn e (if (and (validate/object @e) (object/has @e @head)) [(object/get @e @head)] @nox))))) @nox))))))))
+                    (let ((lists (if (object/get @s "hasKey" false) (array/flatten (array/map @nodes (fn v (if (validate/array @v) (let ((el (if (and (> (array/len @v) 0) (= (let ((h0 (array/nth @v 0))) (if (validate/string @h0) @h0 "")) "list")) (array/slice @v 1) @v))) (array/flatten (array/map @el (fn e (if (and (validate/object @e) (object/has @e (object/get @s "key" ""))) [(object/get @e (object/get @s "key" ""))] @nox))))) @nox)))) [@dflt])))
+                      (let ((lits (array/reduce @lists @nostr (fn (acc l) (if (validate/array @l) (let ((mem (if (and (> (array/len @l) 0) (= (let ((h1 (array/nth @l 0))) (if (validate/string @h1) @h1 "")) "list")) (array/slice @l 1) @l))) (if (array/every @mem (fn m (and (validate/string @m) (not (str/startsWith @m (quote "@")))))) (array/reduce @mem @acc (fn (a2 m2) (if (and (validate/string @m2) (not (array/includes @a2 @m2))) (array/append @a2 @m2) @a2))) @acc)) @acc)))))
+                        (array/flatten
+                          (array/map @lits
+                            (fn lit
+                              (if (array/includes @vocab @lit)
+                                @nof
+                                [{ code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", path: (str/concat (object/get @cx "tp" "") ".config." (object/get @s "knob" "")), message: (str/concat "\"" @lit "\" is not a declared value of `" (quote "@user.") @fld "` on the [identity] entity `" @idName "`. This comparison can never be true — the branch is dead."), suggestion: (str/concat "Use one of: " (str/join @vocab ", ") ", or add \"" @lit "\" to `" @idName "." @fld "`."), severity: "error" }])))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.sites [])
+        (set @entity.ctxs (let ((orbs : [RlOrbital] (object/get @payload.program "orbitals" [])) (noctx : [RlCtx] []) (nostr : [string] []) (nopair : [[RlShape]] []) (norf : RlRfMap {}) (nocfg : RlCfgMap {}))
+          (let ((primIds (array/flatten (array/map @orbs (fn o (let ((e0 (object/get @o "entity" {}))) (if (and (validate/object @e0) (object/get @e0 "identity" false)) [@e0] []))))))  (auxIds (array/flatten (array/map @orbs (fn o (array/filter (array/flatten (array/map (object/get @o "auxiliaryEntities" []) (fn xe (if (validate/object @xe) [@xe] [])))) (fn e (object/get @e "identity" false))))))))
+  (let ((hasDecl (or (> (array/len @primIds) 0) (> (array/len @auxIds) 0))))
+    (let ((declared (if (> (array/len @primIds) 0) (array/first @primIds) (array/first @auxIds))))
+      (array/flatten
+        (array/map (array/range 0 (array/len @orbs))
+          (fn oi
+            (let ((orb (array/nth @orbs @oi)))
+              (let ((exps (array/filter (object/get @orb "expects" []) (fn e (= (object/get @e "kind" "") "identity")))))
+                (let ((hasShape (and (> (array/len @exps) 0) (object/has (array/first @exps) "shape"))) (exp (array/first @exps)))
+                  (let ((hasEnv (or @hasDecl @hasShape)) (skip (not @hasDecl)) (flds (if @hasDecl (object/get @declared "fields" []) (object/get @exp "shape" []))) (idName (if @hasDecl (object/get @declared "name" "") (if (and @hasShape (object/has @exp "name")) (object/get @exp "name" "") (quote "@user")))))
+                    (let ((rf (or (json/parse (json/stringify (or (object/fromEntries (array/flatten (array/map @flds (fn f (let ((v1 (object/get @f "values" @nostr))) (let ((vs (if (> (array/len @v1) 0) @v1 (object/get (object/get @f "items" { values: [] }) "values" @nostr)))) (if (> (array/len @vs) 0) [[(object/get @f "name" ""), @vs]] @nopair))))))) {})) RlRfMap) @norf)))
+                      (if (or (not @hasEnv) (= (array/len (object/keys @rf)) 0))
+                        @noctx
+                        (let ((trlist (object/get @orb "traits" [])))
+                          (array/flatten
+                            (array/map (array/range 0 (array/len @trlist))
+                              (fn ti
+                                (let ((td (array/nth @trlist @ti)))
+                                  (if (and (validate/object @td) (validate/object (object/get @td "stateMachine" null)) (object/has @td "config") (not (and @skip (object/has @td "sourceBehavior"))))
+                                    (let ((cfgm (object/get @td "config" {})))
+                                      [{ tp: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]"), idName: @idName, rf: @rf, o: @oi, i: @ti, cfg: (or (json/parse (json/stringify (or (object/fromEntries (array/flatten (array/map (object/keys @cfgm) (fn kn (if (object/has (object/get @cfgm @kn) "default") [[@kn, (object/get (object/get @cfgm @kn) "default")]] @nopair))))) {})) RlCfgMap) @nocfg) }])
+                                    @noctx))))))))))))))))))))
+        (set @entity.frontier (let ((orbs : [RlOrbital] (object/get @payload.program "orbitals" [])) (noexprs : [RlShape] []) (nowork : [RlWork] []) (nopm : RlCfgMap {}) (nosc : RlScope {}) (nocfg : RlCfgMap {}))
+          (array/flatten
+  (array/map (array/range 0 (array/len @entity.ctxs))
+    (fn t
+      (let ((cx (array/nth @entity.ctxs @t)))
+        (let ((td (array/nth (object/get (array/nth @orbs (object/get @cx "o" 0)) "traits" []) (object/get @cx "i" 0))))
+          (let ((trs (object/get (object/get @td "stateMachine" { transitions: [] }) "transitions" [])) (tks (object/get @td "ticks" [])) (lss (object/get @td "listens" [])))
+            (array/concat
+  (array/concat
+    (array/concat
+      (array/flatten
+        (array/map @trs
+          (fn tr
+            (array/concat
+              (let ((g (object/get @tr "guard" null)))
+                (if (!= @g null) [{ x: @g, sc: @nosc, t: @t }] @nowork))
+              (array/map (object/get @tr "effects" @noexprs)
+                (fn e { x: @e, sc: @nosc, t: @t }))))))
+      (array/flatten
+        (array/map @tks
+          (fn tk
+            (array/concat
+              (let ((g (object/get @tk "guard" null)))
+                (if (!= @g null) [{ x: @g, sc: @nosc, t: @t }] @nowork))
+              (array/map (object/get @tk "effects" @noexprs)
+                (fn e { x: @e, sc: @nosc, t: @t })))))))
+    (array/flatten
+      (array/map @lss
+        (fn ls
+          (array/concat
+            (let ((g (object/get @ls "guard" null)))
+              (if (!= @g null) [{ x: @g, sc: @nosc, t: @t }] @nowork))
+            (let ((pm (object/get @ls "payloadMapping" @nopm)))
+              (array/map (object/keys @pm)
+                (fn pk { x: (object/get @pm @pk), sc: @nosc, t: @t }))))))))
+  (array/map (object/keys (object/get @cx "cfg" @nocfg))
+    (fn kn { x: (object/get (object/get @cx "cfg" @nocfg) @kn), sc: @nosc, t: @t })))))))))))
+        (emit RL_STEP { left: (array/len @entity.frontier) })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "config-role-lists", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+      RL_STEP { left : number! }
+        @description "Internal: process the next frontier of expressions."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : RlProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      SEM_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]!  emitSlots : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: every operator's declared returnSemantics; an operator declaring identity-of-arg<N> passes argument N through."
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> SEM_HEARD
+    }
+  }
+
+  trait OrbLintConfigRoleListsCli -> OrbLintConfigRoleListsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint config-role-lists <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "config-role-lists") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint config-role-lists: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "config-role-lists") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint config-role-lists: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-config-role-lists" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint config-role-lists` with its arguments and working directory."
+        @synonyms "orb lint config-role-lists"
+      OrbLintConfigRoleLists.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintConfigRoleListsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintConfigRoleListsOrbitalStart -> OrbLintConfigRoleLists, OrbLintConfigRoleListsCli, OrbLintInput, Packs, Versions
+}

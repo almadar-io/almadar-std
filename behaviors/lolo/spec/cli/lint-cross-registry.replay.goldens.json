@@ -1,0 +1,3825 @@
+{
+  "atom": "cli/atoms/std-orb-lint-cross-registry.lolo",
+  "trait": "OrbLintCrossRegistry",
+  "note": "Added cases copy the six unit tests of composition/cross_registry.rs (known_operator_passes, unknown_namespaced_operator_warns, known_pattern_passes, a_registered_behavior_operator_is_a_verb_not_a_behavior_name, control_an_unregistered_behavior_shorthand_is_still_checked, unknown_pattern_warns). The operator and pattern registries are hand-written subsets of LINT_OPERATOR_NAMES and LINT_PATTERNS; the behavior flow feeds behavior/packages and behavior/catalog results by hand. Findings are the Rust code, path, message and suggestion. The did-you-mean tie order follows the sorted operator names (the compiler iterates a hash map).",
+  "cases": [
+    {
+      "id": "known-operator-passes",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "math/pow",
+                                2,
+                                3
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-namespaced-operator-is-reported-with-the-orb-signatures-hint",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "xyz/totally-fake"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "SEXPR_INVALID_OPERATOR",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Operator 'xyz/totally-fake' is not in operators.json (cross-registry check)",
+                      "suggestion": "Use a registered operator — `orb signatures` lists the canonical set",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-unnamespaced-head-is-data-not-an-operator",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "totally-fake",
+                                1
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "agent-and-behavior-heads-are-not-operator-references",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "agent/whatever",
+                                1
+                              ],
+                              [
+                                "behavior/ref",
+                                "./x"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "known-pattern-passes",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-pattern-is-reported-at-its-argument-type",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "totally-fake-pattern-xyz"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_PATTERN",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0][2].type",
+                      "message": "Pattern 'totally-fake-pattern-xyz' is not in patterns-registry.json (cross-registry check)",
+                      "suggestion": "Either add the pattern to almadar-patterns or declare it in projects/<name>/patterns.json",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-underscore-render-ui-spelling-is-checked-too",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render_ui",
+                                "main",
+                                {
+                                  "type": "nope"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_PATTERN",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0][2].type",
+                      "message": "Pattern 'nope' is not in patterns-registry.json (cross-registry check)",
+                      "suggestion": "Either add the pattern to almadar-patterns or declare it in projects/<name>/patterns.json",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-pattern-is-the-first-object-argument",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                "x",
+                                {
+                                  "type": "nope"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_PATTERN",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0][3].type",
+                      "message": "Pattern 'nope' is not in patterns-registry.json (cross-registry check)",
+                      "suggestion": "Either add the pattern to almadar-patterns or declare it in projects/<name>/patterns.json",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-render-ui-without-an-object-argument-or-type-is-not-checked",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                null
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "title": "x"
+                                }
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": [
+                                    "str/join",
+                                    "a"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-nested-operator-reports-at-its-index-path",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "if",
+                                true,
+                                [
+                                  "xyz/nope",
+                                  1
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "SEXPR_INVALID_OPERATOR",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0][2]",
+                      "message": "Operator 'xyz/nope' is not in operators.json (cross-registry check)",
+                      "suggestion": "Use a registered operator — `orb signatures` lists the canonical set",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-nested-pattern-inside-an-object-reports-at-its-key-path",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "do",
+                                {
+                                  "ui": [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "nope"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_RUI_INVALID_PATTERN",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0][1].ui[2].type",
+                      "message": "Pattern 'nope' is not in patterns-registry.json (cross-registry check)",
+                      "suggestion": "Either add the pattern to almadar-patterns or declare it in projects/<name>/patterns.json",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-guard-is-walked-before-the-effects",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "xyz/b"
+                              ]
+                            ],
+                            "guard": [
+                              "xyz/a"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "SEXPR_INVALID_OPERATOR",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].guard",
+                      "message": "Operator 'xyz/a' is not in operators.json (cross-registry check)",
+                      "suggestion": "Use a registered operator — `orb signatures` lists the canonical set",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_INVALID_OPERATOR",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Operator 'xyz/b' is not in operators.json (cross-registry check)",
+                      "suggestion": "Use a registered operator — `orb signatures` lists the canonical set",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tick-effects-are-walked-after-the-transitions",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "xyz/a"
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "interval": 1000,
+                          "guard": [
+                            "xyz/skipped"
+                          ],
+                          "effects": [
+                            [
+                              "xyz/t"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "SEXPR_INVALID_OPERATOR",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Operator 'xyz/a' is not in operators.json (cross-registry check)",
+                      "suggestion": "Use a registered operator — `orb signatures` lists the canonical set",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_INVALID_OPERATOR",
+                      "path": "orbitals[0 (A)].traits[0 (T)].ticks[0].effects[0]",
+                      "message": "Operator 'xyz/t' is not in operators.json (cross-registry check)",
+                      "suggestion": "Use a registered operator — `orb signatures` lists the canonical set",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-namespace-miss-suggests-the-same-basename-elsewhere",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "array/floor",
+                                1.5
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "SEXPR_INVALID_OPERATOR",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Operator 'array/floor' is not in operators.json (cross-registry check)",
+                      "suggestion": "did you mean 'math/floor'?",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "several-namespace-hits-are-listed-in-name-order",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "x/join",
+                                1
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "SEXPR_INVALID_OPERATOR",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Operator 'x/join' is not in operators.json (cross-registry check)",
+                      "suggestion": "did you mean 'str/join'?",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-near-miss-suggests-the-closest-operator-within-two-edits",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "str/uppr",
+                                "a"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "SEXPR_INVALID_OPERATOR",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Operator 'str/uppr' is not in operators.json (cross-registry check)",
+                      "suggestion": "did you mean 'str/upper'?",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-registered-behavior-operator-is-a-verb-not-a-behavior-name",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "behavior/ref",
+                                "./orbitals/shop"
+                              ],
+                              [
+                                "behavior/apply",
+                                "@entity.w",
+                                {}
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-composer-takes-a-binding-as-its-argument-so-no-behavior-is-named",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "behavior/compose",
+                                "@entity.x"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FINAL",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-unresolved-behavior-call-asks-for-the-installed-packages",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "behavior/packages"
+              }
+            ]
+          },
+          "entity": {
+            "items": [
+              {
+                "kind": "beh",
+                "name": "std-button",
+                "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-program-with-no-behavior-call-never-reads-the-installed-behaviors",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_FINAL",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "XR_NEXT"
+            ]
+          },
+          "entity": {
+            "items": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-listed-packages-start-the-catalog-of-the-first",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_PACKAGES",
+          "from": "ready",
+          "payload": {
+            "result": [
+              {
+                "prefix": "almadar-std"
+              },
+              {
+                "prefix": "almadar-behaviors"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_NEXT",
+                "payload": {}
+              }
+            ]
+          },
+          "entity": {
+            "items": [
+              {
+                "kind": "beh",
+                "name": "std-button",
+                "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "each-package-is-cataloged-under-its-prefix",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_NEXT",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "behavior/catalog"
+              }
+            ]
+          },
+          "entity": {
+            "pkgs": [
+              "almadar-std",
+              "almadar-behaviors"
+            ],
+            "pkgCursor": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unregistered-behavior-shorthand-is-still-checked",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_CATALOGED",
+          "from": "ready",
+          "payload": {
+            "result": [
+              {
+                "behavior": "almadar-std/std-button"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "SEXPR_INVALID_OPERATOR",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Behavior 'no-such-behavior-xyz' is not shipped by any installed behavior package (cross-registry check)",
+                      "suggestion": "Author no-such-behavior-xyz.lolo under <topic>/<atoms|molecules|organisms>/ in a behavior package's `orb.source` tree, or install the package that ships it (`orb add`).",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "entity": {
+            "items": [
+              {
+                "kind": "beh",
+                "name": "no-such-behavior-xyz",
+                "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]"
+              }
+            ],
+            "pkgs": [
+              "almadar-std"
+            ],
+            "pkgCursor": 0,
+            "known": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-installed-behavior-shorthand-passes",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_CATALOGED",
+          "from": "ready",
+          "payload": {
+            "result": [
+              {
+                "behavior": "almadar-std/std-button"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          },
+          "entity": {
+            "items": [
+              {
+                "kind": "beh",
+                "name": "std-button",
+                "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]"
+              }
+            ],
+            "pkgs": [
+              "almadar-std"
+            ],
+            "pkgCursor": 0,
+            "known": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-behavior-name-is-what-follows-the-package-prefix",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_CATALOGED",
+          "from": "ready",
+          "payload": {
+            "result": [
+              {
+                "behavior": "almadar-std/ui/std-card"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          },
+          "entity": {
+            "items": [
+              {
+                "kind": "beh",
+                "name": "ui/std-card",
+                "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]"
+              }
+            ],
+            "pkgs": [
+              "almadar-std"
+            ],
+            "pkgCursor": 0,
+            "known": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-hit-outside-the-package-prefix-is-not-a-name",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_CATALOGED",
+          "from": "ready",
+          "payload": {
+            "result": [
+              {
+                "behavior": "other/std-button"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "SEXPR_INVALID_OPERATOR",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Behavior 'std-button' is not shipped by any installed behavior package (cross-registry check)",
+                      "suggestion": "Author std-button.lolo under <topic>/<atoms|molecules|organisms>/ in a behavior package's `orb.source` tree, or install the package that ships it (`orb add`).",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "entity": {
+            "items": [
+              {
+                "kind": "beh",
+                "name": "std-button",
+                "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]"
+              }
+            ],
+            "pkgs": [
+              "almadar-std"
+            ],
+            "pkgCursor": 0,
+            "known": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-behavior-shipped-by-a-later-package-passes",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_CATALOGED",
+          "from": "ready",
+          "payload": {
+            "result": [
+              {
+                "behavior": "almadar-std/std-button"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_NEXT",
+                "payload": {}
+              }
+            ]
+          },
+          "entity": {
+            "items": [
+              {
+                "kind": "beh",
+                "name": "std-card",
+                "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]"
+              }
+            ],
+            "pkgs": [
+              "almadar-std",
+              "almadar-behaviors"
+            ],
+            "pkgCursor": 0,
+            "known": []
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_CATALOGED",
+          "from": "ready",
+          "payload": {
+            "result": [
+              {
+                "behavior": "almadar-behaviors/std-card"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          },
+          "entity": {
+            "pkgCursor": 1,
+            "known": [
+              "std-button"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-package-whose-catalog-fails-ships-nothing",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_PKG_FAILED",
+          "from": "ready",
+          "payload": {
+            "error": "boom"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "SEXPR_INVALID_OPERATOR",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Behavior 'std-button' is not shipped by any installed behavior package (cross-registry check)",
+                      "suggestion": "Author std-button.lolo under <topic>/<atoms|molecules|organisms>/ in a behavior package's `orb.source` tree, or install the package that ships it (`orb add`).",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "entity": {
+            "items": [
+              {
+                "kind": "beh",
+                "name": "std-button",
+                "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]"
+              }
+            ],
+            "pkgs": [
+              "almadar-std"
+            ],
+            "pkgCursor": 0,
+            "known": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-package-does-not-stop-the-next",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_PKG_FAILED",
+          "from": "ready",
+          "payload": {
+            "error": "boom"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "XR_NEXT",
+                "payload": {}
+              }
+            ]
+          },
+          "entity": {
+            "items": [
+              {
+                "kind": "beh",
+                "name": "std-card",
+                "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]"
+              }
+            ],
+            "pkgs": [
+              "almadar-std",
+              "almadar-behaviors"
+            ],
+            "pkgCursor": 0,
+            "known": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "packages-that-cannot-be-listed-know-no-behavior",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_FAILED",
+          "from": "ready",
+          "payload": {
+            "error": "boom"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-registry",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "SEXPR_INVALID_OPERATOR",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Behavior 'std-button' is not shipped by any installed behavior package (cross-registry check)",
+                      "suggestion": "Author std-button.lolo under <topic>/<atoms|molecules|organisms>/ in a behavior package's `orb.source` tree, or install the package that ships it (`orb add`).",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "entity": {
+            "items": [
+              {
+                "kind": "beh",
+                "name": "std-button",
+                "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-composer-names-its-behavior-in-the-first-argument",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_OPERATOR_NAMES_HEARD",
+          "from": "ready",
+          "payload": {
+            "names": [
+              "math/pow",
+              "math/floor",
+              "str/join",
+              "str/upper",
+              "array/map",
+              "array/len",
+              "if",
+              "emit",
+              "behavior/ref",
+              "behavior/apply",
+              "behavior/catalog",
+              "render-ui"
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "drawHost": false
+              },
+              "card": {
+                "drawHost": false
+              },
+              "stack": {
+                "drawHost": false
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "fields": []
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "behavior/compose",
+                                "std-missing"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossRegistry",
+          "event": "XR_COLLECTED",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "behavior/packages"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-args-body-that-does-not-parse-is-the-usage-error",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistryCli",
+          "event": "LINT_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint cross-registry <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-file-arguments-are-the-usage-error",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistryCli",
+          "event": "LINT_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"a\", \"b\"], \"cwd\": \"/\"}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint cross-registry <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "one-file-argument-asks-the-input-to-read-it",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistryCli",
+          "event": "LINT_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/\"}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "waiting",
+            "emits": [
+              {
+                "event": "LINT_REQUEST",
+                "payload": {
+                  "file": "a.lolo"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-clean-verdict-answers-200",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistryCli",
+          "event": "LINT_FOUND",
+          "from": "waiting",
+          "payload": {
+            "rule": "cross-registry",
+            "scope": "",
+            "findings": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "lint cross-registry: clean"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-unreadable-file-answers-500",
+      "steps": [
+        {
+          "trait": "OrbLintCrossRegistryCli",
+          "event": "LINT_INPUT_UNREAD",
+          "from": "waiting",
+          "payload": {
+            "file": "a.lolo"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "lint cross-registry: the file could not be read or lowered"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+app orb-supervise-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb supervise [--watch <glob>]... [--debounce <ms>] -- orb <args>...`: it keeps the command after `--` running under std-supervisor (permanent) and, a debounce after any file matching a --watch glob changes, signals it, waits for its exit and respawns it, so one copy runs at a time. The command must be `orb` (the exec grant is exact). TERM or INT stops the child and answers 200; a usage error answers 400; a failed watch or spawn, or a crash loop, answers 500."
+]
+
+orbital OrbSuperviseSpec {
+  expects trait OrbSupervise {
+    state ready
+    state running
+    state stopping
+    emits {
+      SUPERVISE_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbSupervise
+}

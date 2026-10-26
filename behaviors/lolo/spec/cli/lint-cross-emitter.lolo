@@ -1,0 +1,21 @@
+app lint-cross-emitter-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint cross-emitter <file>`, the port of ORB_X_CROSS_EMITTER_DECLARED_PAYLOAD_MISMATCH. An event declared in the emits of two or more inline traits must carry one payload signature, the set of (field name, field type, required) triples; a render-emitter's payload is what its first render-ui node sends through the registry's payloadFor pairing. Only an event some listener can see from more than one emitter is checked (a `*` source, or an orbital-pinned source naming one of the emitters from another orbital). Each emitter whose signature differs from the first is reported once at `<first trait path> vs <trait path>` (status 500, exit 1). A clean program answers `lint cross-emitter: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintCrossEmitterSpec {
+  expects trait OrbLintCrossEmitter {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintCrossEmitterCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintCrossEmitter, OrbLintCrossEmitterCli
+}

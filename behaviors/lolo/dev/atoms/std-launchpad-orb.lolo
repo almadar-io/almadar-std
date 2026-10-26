@@ -1,0 +1,202 @@
+app std-launchpad-orb [
+  version: "1.0.0",
+  description: "std-launchpad-orb — the launchpad's Orb view: the behaviors of the topic on screen as a constellation, each one a star and each `uses` link between them an edge, read with behavior/dependencies from the topic's rows (KINDS_READY). Stars the topic's behaviors reach outside the topic (std and io, never a UI primitive) are drawn too, larger the more behaviors import them. Clicking a topic star emits ORB_PICKED { behavior }, which the organism routes like a pick in its tree. KINDS_READY redraws it for the topic; TOPIC_PICKED clears it while the next topic is read. The dark look is the game-sci-fi-dark theme scoped to the view.",
+  themes: ["game-sci-fi-dark"],
+  egress: []
+]
+;; @capabilities "draw the behaviors of a topic as a constellation of their uses links, pick a behavior from the constellation"
+
+type OrbRow = {
+  id : string!
+  behavior : string!
+  description : string!
+  level : string!
+  topic : string!
+  package : string!
+  kind : "route" | "cli" | "http" | "stdio" | "boot" | "library" | "unreadable"!
+  command : string!
+  route : string!
+  note : string!
+  value : behavior!
+}
+type OrbProgram = {
+  name : string
+  orbitals : [orbital]
+}
+type OrbImports = {
+  layer : "io" | "std" | "primitive" | "unknown"!
+  imports : [string]!
+}
+type OrbGraph = {
+  orbitals : Map string [string]!
+  behaviors : Map string OrbImports!
+}
+type OrbNode = { id : string!, label : string!, group : string!, size : number! }
+type OrbEdge = { source : string!, target : string! }
+type OrbClicked = { id : string!, label : string, group : string, size : number, color : string }
+
+orbital LaunchpadOrbOrbital {
+  entity OrbRun [runtime] {
+    id : string!
+    package : string = ""
+    topic : string = ""
+    rows : [OrbRow] = []
+    names : [string] = []
+    loaded : boolean = false
+    status : "waiting" | "scanning" | "ready" | "failed" = waiting
+    run : number = 0
+    nodes : [OrbNode] = []
+    edges : [OrbEdge] = []
+    error : string = ""
+    selected : string = ""
+  }
+
+  trait OrbConstellation -> OrbRun {
+    config {
+      title : string = "Orb"
+        @label "Title"
+        @tier "presentation"
+      hint : string = "Each star is a behavior of the topic, each line a uses link; a large topic draws labels only for small constellations. Click a star to open that behavior."
+        @label "Hint"
+        @tier "presentation"
+      graphHeight : number = 420
+        @label "Constellation height"
+        @description "Height of the constellation in pixels."
+        @tier "presentation"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (emit ORB_SHOWN {})
+      ORB_SHOWN -> ready
+        (render-ui main {
+          type: box
+          data-theme: game-sci-fi-dark
+          className: "rounded-xl border overflow-hidden bg-background text-foreground"
+          children: [{ type: stack, direction: vertical, gap: md, className: "p-4", children: [
+            { type: stack, direction: horizontal, align: center, justify: between, gap: md, className: "flex-wrap", children: [
+              { type: stack, direction: horizontal, align: center, gap: sm, children: [
+                { type: icon, name: orbit, size: md },
+                { type: stack, direction: vertical, gap: none, children: [
+                  { type: typography, content: @config.title, variant: h3, weight: semibold },
+                  { type: typography, content: (if (= @entity.status ready) (str/concat @entity.topic ": " (array/len @entity.names) " behaviors, " (array/len @entity.nodes) " stars, " (array/len @entity.edges) " links") (if (= @entity.status failed) "The constellation could not be read" "Reading the constellation")), variant: caption, color: muted }
+                ] }
+              ] },
+              { type: stack, direction: horizontal, align: center, gap: sm, className: (if (= @entity.status ready) "" hidden), children: [
+                { type: badge, label: (str/concat "topic " (array/count @entity.nodes (fn n (= @n.group "topic")))), variant: info },
+                { type: badge, label: (str/concat "std " (array/count @entity.nodes (fn n (= @n.group "std")))), variant: default },
+                { type: badge, label: (str/concat "io " (array/count @entity.nodes (fn n (= @n.group "io")))), variant: default }
+              ] }
+            ] },
+            { type: skeleton, variant: detail, rows: 6, className: (if (or (= @entity.status waiting) (= @entity.status scanning)) "" hidden) },
+            { type: alert, variant: error, title: "The dependencies of this topic could not be read", message: @entity.error, className: (if (= @entity.status failed) "" hidden) },
+            { type: box, className: (if (= @entity.status ready) "" hidden), children: [{
+              type: graph-view
+              nodes: (array/map @entity.nodes (fn n { id: @n.id, label: @n.label, group: (if (= @n.id @entity.selected) "selected" @n.group), size: @n.size }))
+              edges: @entity.edges
+              layout: force
+              height: @config.graphHeight
+              showLabels: (< (array/len @entity.nodes) 60)
+              zoomToFit: true
+              onNodeClick: NODE_CLICK
+            }] },
+            { type: typography, content: @config.hint, variant: caption, color: muted, className: (if (= @entity.status ready) "" hidden) }
+          ] }]
+        })
+      TOPIC_PICKED -> ready
+        (set @entity.package ?package)
+        (set @entity.topic ?topic)
+        (set @entity.rows [])
+        (set @entity.names [])
+        (set @entity.nodes [])
+        (set @entity.edges [])
+        (set @entity.loaded false)
+        (set @entity.selected "")
+        (set @entity.status waiting)
+        (emit ORB_SHOWN {})
+      KINDS_READY -> ready when (> (array/len ?data) 0)
+        (set @entity.package ?package)
+        (set @entity.topic ?topic)
+        (set @entity.rows ?data)
+        (set @entity.names (array/map ?data (fn r (array/last (str/split @r.behavior "/")))))
+        (set @entity.loaded true)
+        (set @entity.selected "")
+        (set @entity.status scanning)
+        (set @entity.run (+ @entity.run 1))
+        (behavior/dependencies (json/parse (json/stringify { name: "Orb", orbitals: [{ name: "Topic", uses: (array/map ?data (fn r { from: @r.behavior, as: (array/last (str/split @r.behavior "/")) })), traits: [], pages: [] }] }) OrbProgram) { key: (str/concat "orb-" @entity.run), emit: { success: ORB_DEPS, failure: ORB_DEPS_FAILED } })
+        (emit ORB_BUSY {})
+        (emit ORB_SHOWN {})
+      KINDS_READY -> ready when (= (array/len ?data) 0)
+        (set @entity.package ?package)
+        (set @entity.topic ?topic)
+        (set @entity.rows [])
+        (set @entity.names [])
+        (set @entity.loaded true)
+        (set @entity.status failed)
+        (set @entity.error "This topic has no behaviors.")
+        (emit ORB_IDLE {})
+        (emit ORB_SHOWN {})
+      ORB_DEPS -> ready when (= ?key (str/concat "orb-" @entity.run))
+        (set @entity.edges (array/flatten (array/map (array/filter (object/keys ?result.behaviors) (fn k (!= (object/get (object/get ?result.behaviors @k) "layer") "primitive"))) (fn k (array/map (array/filter (object/get (object/get ?result.behaviors @k) "imports") (fn i (and (object/has ?result.behaviors @i) (!= (object/get (object/get ?result.behaviors @i) "layer") "primitive")))) (fn i { source: @k, target: @i }))))))
+        (set @entity.nodes (array/map (array/filter (object/keys ?result.behaviors) (fn k (!= (object/get (object/get ?result.behaviors @k) "layer") "primitive"))) (fn k { id: @k, label: @k, group: (if (array/includes @entity.names @k) "topic" (object/get (object/get ?result.behaviors @k) "layer")), size: (+ (if (array/includes @entity.names @k) 3 2) (math/ln (+ 1 (array/count @entity.edges (fn e (= @e.target @k)))))) })))
+        (set @entity.status ready)
+        (emit ORB_IDLE {})
+        (emit ORB_SHOWN {})
+      ORB_DEPS_FAILED -> ready when (= ?key (str/concat "orb-" @entity.run))
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (emit ORB_IDLE {})
+        (emit ORB_SHOWN {})
+      NODE_CLICK -> ready when (array/includes @entity.names ?node.id)
+        (set @entity.selected ?node.id)
+        (emit ORB_PICKED { behavior: (object/get (array/find @entity.rows (fn r (= (array/last (str/split @r.behavior "/")) ?node.id))) "behavior") })
+      NODE_CLICK -> ready when (not (array/includes @entity.names ?node.id))
+        (render-ui toast { type: alert, variant: info, message: (str/concat ?node.id " is outside this topic; it is drawn for the links.") })
+    }
+
+    emits {
+      ORB_SHOWN { }
+        @description "Internal: draw the constellation."
+        @tier "internal"
+      ORB_BUSY -> external { }
+        @description "A dependency read is in flight: the host answers one read at a time, so the organism holds its own reads until ORB_IDLE."
+        @tier "domain"
+      ORB_IDLE -> external { }
+        @description "The dependency read ended."
+        @tier "domain"
+      ORB_PICKED -> external {
+        behavior : string!
+      }
+        @description "A star of the topic was picked: open that behavior like a pick in the tree."
+        @tier "domain"
+    }
+
+    listens {
+      TOPIC_PICKED {
+        package : string!
+        topic : string!
+        count : number!
+      }
+      KINDS_READY {
+        package : string!
+        topic : string!
+        data : [OrbRow]!
+        totalCount : number!
+      }
+      ORB_DEPS {
+        key : string
+        result : OrbGraph!
+      }
+      ORB_DEPS_FAILED {
+        key : string
+        error : string!
+      }
+      NODE_CLICK {
+        node : OrbClicked!
+      }
+    }
+  }
+
+  page "/orb" as LaunchpadOrbPage -> OrbConstellation
+}

@@ -8,8 +8,9 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 - **Close by deleting.** Remove the entry in the same commit as the fix. There is no "closed" section; git history is the record.
 - **Cross-repo gaps don't go here.** If fixing it needs another repo, describe it in your report or PR body; the monorepo coordinator files it.
 
-Next code: `G-STD-160`
+Next code: `G-STD-162`
 
+- **G-STD-160** — `spec/net/server-declared-traits.replay.goldens.json` fails 3/3 with `options.stream (missing, expected object)`, identically before and after the 2026-10-26 std-http-dispatch/std-bearer-verify fixes: the fixture predates the required `stream` dispatch option [mechanical]. Owner: almadar-std net (std-http-dispatch). Repro: run that spec's goldens. Rung: the goldens themselves.
 - **G-STD-158** — std-stats does not validate once resolved: `orb resolve behaviors/lolo/ui/core/atoms/std-stats.lolo` then `orb validate` on the result gives 134 `ORB_X_OPERATOR_ARG_UNDETERMINED` (`metric.field`, `(object/get metric …)` in the metric lambdas) plus 2 type mismatches, while the unresolved atom validates 0/0; every composer inherits them (std-notes-experience; the launchpad dropped std-stats for it, 2026-10-25). `behaviors/lolo/ui/core/atoms/std-stats.lolo` [mechanical] — rung: `orb validate` (validate a std atom's resolved form as well as its source).
 - **G-STD-159** — A composed served program carries a stale id-ledger row: `orb launchpad`'s `.orbital/serve/std-launchpad/program.orb` validates with `ORB_ID_LEDGER_ORPHAN` on `HttpServerOrbital` plus unused `net 127.0.0.1:3000 listen` and `env PORT` grants from std-http-server's defaults; `program/eval` accepts it, but it is not 0/0. Owner: std-orb-serve-handoff composition + std-http-server grants. [mechanical] — rung: `orb validate` (already reports it).
 

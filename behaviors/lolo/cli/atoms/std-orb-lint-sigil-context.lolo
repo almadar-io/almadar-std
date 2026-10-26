@@ -1,0 +1,263 @@
+app std-orb-lint-sigil-context [
+  version: "1.0.0",
+  inbound: ["cli-lint-sigil-context"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-sigil-context - the `orb lint sigil-context <file>` command, the port of ORB_BINDING_UNKNOWN_ROOT and ORB_BINDING_PAYLOAD_IN_TICK (traits/sigil_context.rs). It lowers the file with program/read and walks the guard and effects of every inline trait transition (guard and effect context) and the effects of every tick (tick context): every `@root` binding string must name a sigil the installed @almadar/core binding rules allow in that context (read from LINT_LANGUAGE_FACTS), unless it is bound by an enclosing `(fn (x) ...)` / `(lambda ...)` parameter, a sequential `let` name, or, inside a collection callback (a collection or std-array operator of two or more arguments in the installed operator table, read from LINT_OPERATOR_SHAPES), `item` / `index`. `@item` / `@index` outside a callback get the out-of-scope diagnostic; `@payload` in a tick is ORB_BINDING_PAYLOAD_IN_TICK; PascalCase roots (entity bindings) are skipped. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint sigil-context: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-sigil-context"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type SgShape = string | number | boolean | [SgShape?] | Map string SgShape?
+type SgTransition = { guard : SgShape?, effects : [SgShape] }
+type SgTick = { effects : [SgShape] }
+type SgMachine = { transitions : [SgTransition] }
+type SgTrait = { name : string, stateMachine : SgMachine, ticks : [SgTick] }
+type SgOrbital = { name : string, traits : [SgTrait] }
+type SgProgram = { orbitals : [SgOrbital] }
+type SgOpShape = { category : string, minArity : number }
+type SgProgType = { type : string }
+type SgHit = { rel : string, r : string }
+type SgRoot = { x : SgShape?, w : string!, c : string! }
+
+orbital OrbLintSigilContextOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintSigilContextRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    collOps : [string] = []
+    guardAllowed : [string] = []
+    effectAllowed : [string] = []
+    tickAllowed : [string] = []
+    shapesUnread : boolean = false
+    factsUnread : boolean = false
+  }
+
+  trait OrbLintSigilContext -> OrbLintSigilContextRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SHAPES_HEARD -> ready
+        (set @entity.shapesUnread false)
+        (set @entity.collOps (array/filter (object/keys @payload.operators) (fn k (and (or (= (object/get (object/get @payload.operators @k) "category" "") "collection") (= (object/get (object/get @payload.operators @k) "category" "") "std-array")) (>= (object/get (object/get @payload.operators @k) "minArity" 0) 2)))))
+      SHAPES_UNREAD -> ready
+        (set @entity.shapesUnread true)
+      FACTS_HEARD -> ready
+        (set @entity.factsUnread false)
+        (set @entity.guardAllowed @payload.guardSigils)
+        (set @entity.effectAllowed @payload.effectSigils)
+        (set @entity.tickAllowed @payload.tickSigils)
+      FACTS_UNREAD -> ready
+        (set @entity.factsUnread true)
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((nohits : [SgHit] []) (noroots : [SgRoot] []) (nostr : [string] [])  (nof : [OrbFinding] []) (collOps : [string] @entity.collOps) (orbitals : [SgOrbital] (object/get @payload.program "orbitals" [])))
+  (if (or @entity.shapesUnread @entity.factsUnread)
+    (array/concat
+      (if @entity.shapesUnread [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the collection callback operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }] @nof)
+      (if @entity.factsUnread [{ code: "ORB_LINT_LANGUAGE_FACTS_UNREAD", path: "bindingRules", message: "the installed @almadar/core language facts could not be read, so the sigils allowed in a guard, an effect and a tick are unknown", suggestion: "Reinstall @almadar/core so its orbLanguage declares bindingRules", severity: "error" }] @nof))
+    (let ((roots : [SgRoot] (array/flatten
+  (array/map (array/range 0 (array/len @orbitals))
+    (fn oi
+      (let ((o (array/nth @orbitals @oi)))
+        (let ((trts : [SgTrait] (object/get @o "traits" [])))
+          (array/flatten
+            (array/map (array/range 0 (array/len @trts))
+              (fn ti
+                (let ((t (array/nth @trts @ti)))
+                  (if (not (object/has @t "stateMachine"))
+                    @noroots
+                    (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (trs : [SgTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (tks : [SgTick] (object/get @t "ticks" [])))
+                      (array/concat
+                        (array/flatten
+                          (array/map (array/range 0 (array/len @trs))
+                            (fn xi
+                              (let ((tr (array/nth @trs @xi)) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
+                                (let ((effs : [SgShape] (object/get @tr "effects" [])) (g (object/get @tr "guard" null)))
+                                  (array/concat
+                                    (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard"), c: "guard" }] @noroots)
+                                    (array/map (array/range 0 (array/len @effs)) (fn ei { x: (array/nth @effs @ei), w: (str/concat @xp ".effects[" @ei "]"), c: "effect" }))))))))
+                        (array/flatten
+                          (array/map (array/range 0 (array/len @tks))
+                            (fn ki
+                              (let ((teffs : [SgShape] (object/get (array/nth @tks @ki) "effects" [])))
+                                (array/map (array/range 0 (array/len @teffs)) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]"), c: "tick" }))))))))))))))))))))
+      (array/flatten
+        (array/map @roots
+          (fn x
+            (let ((hs (or (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
+  (if (and (str/startsWith @n (quote "@")) (>= (str/len @n) 2))
+    (let ((root (array/first (str/split (str/replaceAll (str/slice @n 1) "[" ".") "."))))
+      (if (or (= @root "") (validate/pattern @root "^[A-Z]"))
+        @nohits
+        [{ rel: "", r: @root }]))
+    @nohits)
+  (if (validate/array @n)
+    (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
+      (if (and (= @len 3) (or (= @op "lambda") (= @op "fn")))
+        (let ((p1 (array/nth @n 1)))
+          (let ((params : [string] (if (validate/array @p1) (array/flatten (array/map @p1 (fn x (if (validate/string @x) [@x] @nostr)))) (if (validate/string @p1) [@p1] @nostr))))
+            (array/map (array/filter (let ((r : [SgHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes @params (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) })))))
+        (if (and (= @len 3) (= @op "let"))
+          (let ((p1 (array/nth @n 1)))
+            (if (validate/array @p1)
+              (let ((k1 : [SgHit] (let ((r : [SgHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits))) (allNames (array/flatten (array/map @p1 (fn pr (if (and (validate/array @pr) (> (array/len @pr) 0)) (let ((nm0 (array/nth @pr 0))) (if (validate/string @nm0) [@nm0] @nostr)) @nostr))))))
+                (array/concat
+                  (array/flatten
+                    (array/map (array/range 0 (array/len @p1))
+                      (fn bi
+                        (let ((before (array/flatten (array/map (array/range 0 @bi) (fn bj (let ((pj (array/nth @p1 @bj))) (if (and (validate/array @pj) (> (array/len @pj) 0)) (let ((nm1 (array/nth @pj 0))) (if (validate/string @nm1) [@nm1] @nostr)) @nostr)))))) (pfx (str/concat "[" @bi "][1]")))
+                          (array/map (array/filter (array/filter @k1 (fn h (str/startsWith (object/get @h "rel" "") @pfx))) (fn h (not (array/includes @before (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")) })))))))
+                  (array/map (array/filter (let ((r : [SgHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes @allNames (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) })))))
+              (if (validate/object @p1)
+                (let ((names : [string] (object/keys @p1)) (k1 : [SgHit] (let ((r : [SgHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits))))
+                  (array/concat
+                    (array/map (array/filter @k1 (fn h (not (array/includes @names (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")) })))
+                    (array/map (array/filter (let ((r : [SgHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes @names (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) })))))
+                (array/map (let ((r : [SgHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) }))))))
+          (if (and (>= @len 3) (array/includes @collOps @op))
+            (array/concat
+              (array/map (let ((r : [SgHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")) })))
+              (array/flatten
+                (array/map (array/range 2 @len)
+                  (fn i
+                    (array/map (array/filter (let ((r : [SgHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes ["item", "index"] (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) })))))))
+            (array/flatten
+              (array/map (array/range 0 @len)
+                (fn i
+                  (array/map (let ((r : [SgHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) }))))))))))
+    (if (validate/object @n)
+      (array/flatten
+        (array/map (object/keys @k)
+          (fn key
+            (array/map (let ((r : [SgHit]? (object/get @k @key))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
+      @nohits)))) SgShape) @nohits)))
+              (if (= (object/get @x "c" "") "guard")
+                (let ((allowed : [string] @entity.guardAllowed))
+  (array/map (array/filter @hs (fn h (or (= (object/get @h "r" "") "item") (= (object/get @h "r" "") "index") (not (array/includes @allowed (object/get @h "r" ""))))))
+    (fn h
+      (let ((root (object/get @h "r" "")))
+        { code: (if (and (= "guard" "tick") (= @root "payload")) "ORB_BINDING_PAYLOAD_IN_TICK" "ORB_BINDING_UNKNOWN_ROOT"), path: (str/concat (object/get @x "w" "") (object/get @h "rel" "")), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in guard context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" }))))
+                (if (= (object/get @x "c" "") "effect")
+                  (let ((allowed : [string] @entity.effectAllowed))
+  (array/map (array/filter @hs (fn h (or (= (object/get @h "r" "") "item") (= (object/get @h "r" "") "index") (not (array/includes @allowed (object/get @h "r" ""))))))
+    (fn h
+      (let ((root (object/get @h "r" "")))
+        { code: (if (and (= "effect" "tick") (= @root "payload")) "ORB_BINDING_PAYLOAD_IN_TICK" "ORB_BINDING_UNKNOWN_ROOT"), path: (str/concat (object/get @x "w" "") (object/get @h "rel" "")), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in effect context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" }))))
+                  (let ((allowed : [string] @entity.tickAllowed))
+  (array/map (array/filter @hs (fn h (or (= (object/get @h "r" "") "item") (= (object/get @h "r" "") "index") (not (array/includes @allowed (object/get @h "r" ""))))))
+    (fn h
+      (let ((root (object/get @h "r" "")))
+        { code: (if (and (= "tick" "tick") (= @root "payload")) "ORB_BINDING_PAYLOAD_IN_TICK" "ORB_BINDING_UNKNOWN_ROOT"), path: (str/concat (object/get @x "w" "") (object/get @h "rel" "")), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in tick context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" }))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "sigil-context", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SgProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      SHAPES_HEARD { operators : Map string SgOpShape! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES: every installed operator with its category and arity; a collection or std-array operator of two or more arguments introduces @item and @index into its callback arguments."
+      SHAPES_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES_UNREAD: the operator table does not match the shape type."
+      FACTS_HEARD { programTypes : Map string SgProgType!  guardSigils : [string]!  effectSigils : [string]!  tickSigils : [string]!  fieldTypes : [string]! }
+        @description "std-orb-lint-input's LINT_LANGUAGE_FACTS: the sigils the installed binding rules allow in a guard, an effect and a tick."
+      FACTS_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_LANGUAGE_FACTS_UNREAD: the installed language facts could not be read."
+      OrbLintInput.LINT_OPERATOR_SHAPES -> SHAPES_HEARD
+      OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> SHAPES_UNREAD
+      OrbLintInput.LINT_LANGUAGE_FACTS -> FACTS_HEARD
+      OrbLintInput.LINT_LANGUAGE_FACTS_UNREAD -> FACTS_UNREAD
+    }
+  }
+
+  trait OrbLintSigilContextCli -> OrbLintSigilContextRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint sigil-context <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "sigil-context") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint sigil-context: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "sigil-context") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint sigil-context: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-sigil-context" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint sigil-context` with its arguments and working directory."
+        @synonyms "orb lint sigil-context"
+      OrbLintSigilContext.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintSigilContextCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintSigilContextOrbitalStart -> OrbLintSigilContext, OrbLintSigilContextCli, OrbLintInput, Packs, Versions
+}

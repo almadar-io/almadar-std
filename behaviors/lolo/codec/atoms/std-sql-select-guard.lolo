@@ -1,0 +1,96 @@
+app std-sql-select-guard [
+  version: "1.0.0",
+  description: "std-sql-select-guard — whether a SQL text is a single read-only SELECT, the port of the kernel's assert_read_only_select (the postgres effect's guard, the twin of the TS assertReadOnlySelect). SQL_GUARD_CHECK { requestId, statements } answers SQL_GUARD_CHECKED { requestId, results }, one { ok, reason } per statement in order (reason is empty when ok). Comments (nested block comments included) are dropped and the contents of single-quoted, E-prefixed, double-quoted and dollar-quoted text are blanked before anything is read, so a denied word inside a literal never counts and a comment or quote can never hide a second statement. What remains is split on semicolons (JavaScript white space trims, the byte order mark included, U+0085 excluded): none is Empty statement, more than one is Only a single statement is allowed. The first word must be SELECT or WITH (Only SELECT statements are allowed), and no word may be INSERT, UPDATE, DELETE, MERGE, INTO or FOR (Keyword not allowed in a read-only query: <WORD>). Words are the ASCII runs of letters, digits and underscores that do not start with a digit."
+]
+uses Spec from "almadar-std/sql-select-guard"
+type SqlGuardVerdict = { ok : boolean!, reason : string! }
+
+orbital SqlSelectGuardOrbital {
+  entity SqlSelectGuardRun [runtime] {
+    id : string!
+  }
+
+  trait SqlSelectGuard -> SqlSelectGuardRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SQL_GUARD_CHECK -> ready
+        (emit SQL_GUARD_CHECKED { requestId: @payload.requestId, results: (array/map @payload.statements (fn sql
+        (let ((ch (str/split @sql "")))
+          (let ((n (array/len @ch)))
+            (let ((scan (array/reduce (array/range 0 @n) { m: "n", d: 0, tg: "", sk: 0, o: [] } (fn a i
+                    (let ((m (object/get @a "m")) (sk (object/get @a "sk")))
+  (if (< @i @sk)
+    @a
+    (let ((c (array/nth @ch @i)) (c1 (if (< (+ @i 1) @n) (array/nth @ch (+ @i 1)) "")))
+      (if (= @m "n")
+        (if (and (= @c "-") (= @c1 "-"))
+          (object/merge @a { m: "line", sk: (+ @i 2), o: (array/append (object/get @a "o") " ") })
+          (if (and (= @c "/") (= @c1 "*"))
+            (object/merge @a { m: "blk", d: 1, sk: (+ @i 2), o: (array/append (object/get @a "o") " ") })
+            (if (= @c "'")
+              (object/merge @a { m: (if (let ((t (str/replace-pattern (str/join (array/slice @ch 0 @i) "") "[ \t\n\r]+$" "")))
+  (let ((tc (str/split @t "")))
+    (and (> (array/len @tc) 0) (array/includes ["e", "E"] (array/last @tc)) (or (= (array/len @tc) 1) (not (validate/pattern (array/nth @tc (- (array/len @tc) 2)) "^[A-Za-z0-9_$]$")))))) "esq" "sq"), o: (array/append (object/get @a "o") "''") })
+              (if (= @c "\"")
+                (object/merge @a { m: "dq", o: (array/append (object/get @a "o") "\"\"") })
+                (if (= @c "$")
+                  (let ((parts (str/split (str/join (array/slice @ch (+ @i 1) @n) "") "$")))
+  (let ((e (array/first @parts)))
+    (if (and (> (array/len @parts) 1) (or (= @e "") (validate/pattern @e "^[A-Za-z_][A-Za-z0-9_]*$")))
+      (let ((tag (str/concat "$" @e "$")))
+        (object/merge @a { m: "dol", tg: @tag, sk: (+ @i (array/len (str/split @tag ""))), o: (array/append (object/get @a "o") "$$") }))
+      (object/merge @a { o: (array/append (object/get @a "o") @c) }))))
+                  (object/merge @a { o: (array/append (object/get @a "o") @c) }))))))
+        (if (= @m "line")
+          (if (= @c "\n") (object/merge @a { m: "n", o: (array/append (object/get @a "o") @c) }) @a)
+          (if (= @m "blk")
+            (if (and (= @c "/") (= @c1 "*"))
+              (object/merge @a { d: (+ (object/get @a "d") 1), sk: (+ @i 2) })
+              (if (and (= @c "*") (= @c1 "/"))
+                (object/merge @a { d: (- (object/get @a "d") 1), sk: (+ @i 2), m: (if (= (object/get @a "d") 1) "n" "blk") })
+                @a))
+            (if (= @m "dq")
+              (if (= @c "\"")
+                (if (= @c1 "\"") (object/merge @a { sk: (+ @i 2) }) (object/merge @a { m: "n" }))
+                @a)
+              (if (= @m "dol")
+                (let ((tg (object/get @a "tg")))
+                  (if (str/startsWith (str/join (array/slice @ch @i (+ @i (array/len (str/split @tg "")))) "") @tg)
+                    (object/merge @a { m: "n", sk: (+ @i (array/len (str/split @tg ""))) })
+                    @a))
+                (if (and (= @m "esq") (= @c "\\"))
+                  (object/merge @a { sk: (+ @i 2) })
+                  (if (= @c "'")
+                    (if (= @c1 "'") (object/merge @a { sk: (+ @i 2) }) (object/merge @a { m: "n" }))
+                    @a))))))))))))))
+              (let ((stmts (array/filter (array/map (str/split (str/join (object/get @scan "o") "") ";") (fn x (str/replace-pattern @x "^[\\t\\n\\u000b\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+|[\\t\\n\\u000b\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+$" ""))) (fn x (!= @x "")))))
+  (if (= (array/len @stmts) 0)
+    { ok: false, reason: "Empty statement" }
+    (if (> (array/len @stmts) 1)
+      { ok: false, reason: "Only a single statement is allowed" }
+      (let ((words (array/map (array/filter (str/split (str/replace-pattern (array/first @stmts) "[^A-Za-z0-9_]" " ") " ") (fn w (validate/pattern @w "^[A-Za-z_]"))) (fn w (str/upper @w)))))
+        (if (not (array/includes ["SELECT", "WITH"] (array/first @words)))
+          { ok: false, reason: "Only SELECT statements are allowed" }
+          (let ((denied (array/find @words (fn w (array/includes ["INSERT", "UPDATE", "DELETE", "MERGE", "INTO", "FOR"] @w)))))
+            (if (= @denied null)
+              { ok: true, reason: "" }
+              { ok: false, reason: (str/concat "Keyword not allowed in a read-only query: " @denied) })))))))))))) })
+    }
+
+    emits {
+      SQL_GUARD_CHECKED -> external { requestId : string!  results : [SqlGuardVerdict]! }
+        @description "The verdict for each statement of the request, in order: ok, and the Rust guard's reason when it is not."
+        @tier "internal"
+    }
+
+    listens {
+      SQL_GUARD_CHECK { requestId : string!  statements : [string]! }
+        @description "Ask whether each statement is a single read-only SELECT."
+        @tier "internal"
+    }
+  }
+
+  page boot as SqlSelectGuardOrbitalStart -> SqlSelectGuard
+}

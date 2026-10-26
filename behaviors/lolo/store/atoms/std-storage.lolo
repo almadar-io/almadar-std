@@ -175,10 +175,10 @@ orbital StorageOrbital {
         (emit STORAGE_FAILED { code: null, message: (str/concat (str/slice "a@" 1) "aws-sdk XML parse error: unexpected content.\n  Deserialization error: to see the raw response, inspect the hidden field {error}.$response on this object.") })
       STORAGE_LIST_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (xml/valid @payload.body) (= (object/get (xml/parse @payload.body S3Listing) IsTruncated "") "true") (!= (object/get (xml/parse @payload.body S3Listing) NextContinuationToken null) null))
         (let ((l (xml/parse @payload.body S3Listing)))
-          (emit STORAGE_LISTED { keys: (array/map (object/get @l Contents []) (fn e { key: (object/get @e Key ""), size: (str/to-number (object/get @e Size "0")), lastModified: (if (time/valid (object/get @e LastModified "")) (time/parse (object/get @e LastModified "")) 0) })), truncated: true, nextToken: (object/get @l NextContinuationToken "") }))
+          (emit STORAGE_LISTED { keys: (array/map (object/get @l Contents []) (fn e { key: (object/get @e Key ""), size: (or (str/to-number (object/get @e Size "0")) 0), lastModified: (or (time/parse (object/get @e LastModified "")) 0) })), truncated: true, nextToken: (object/get @l NextContinuationToken "") }))
       STORAGE_LIST_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (xml/valid @payload.body) (not (and (= (object/get (xml/parse @payload.body S3Listing) IsTruncated "") "true") (!= (object/get (xml/parse @payload.body S3Listing) NextContinuationToken null) null))))
         (let ((l (xml/parse @payload.body S3Listing)))
-          (emit STORAGE_LISTED { keys: (array/map (object/get @l Contents []) (fn e { key: (object/get @e Key ""), size: (str/to-number (object/get @e Size "0")), lastModified: (if (time/valid (object/get @e LastModified "")) (time/parse (object/get @e LastModified "")) 0) })), truncated: (= (object/get @l IsTruncated "") "true") }))
+          (emit STORAGE_LISTED { keys: (array/map (object/get @l Contents []) (fn e { key: (object/get @e Key ""), size: (or (str/to-number (object/get @e Size "0")) 0), lastModified: (or (time/parse (object/get @e LastModified "")) 0) })), truncated: (= (object/get @l IsTruncated "") "true") }))
       STORAGE_LIST_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit STORAGE_HTTP_ERROR { text: @payload.body })
 

@@ -1,7 +1,7 @@
 {
  "atom": "net/atoms/std-live-feed.lolo",
  "trait": "LiveFeed",
- "note": "Design contract spec/net/live-feed.lolo. The subscription itself (STREAM_AUTHORIZED's keyed program/live and the items it delivers in order until cancel-call) is pinned on the Rust-shell host: orbital-shell-rust host::runtime::tests::a_keyed_live_subscribe_receives_each_broadcast_in_order_until_cancelled and control_an_unkeyed_live_subscribe_is_refused. The frame's data is the kernel's json/stringify text, whose keys come out sorted.",
+ "note": "Design contract spec/net/live-feed.lolo. The subscription itself (STREAM_AUTHORIZED's keyed program/live and the items it delivers in order until cancel-call) is pinned on the Rust-shell host: orbital-shell-rust host::runtime::tests::a_keyed_live_subscribe_receives_each_broadcast_in_order_until_cancelled and control_an_unkeyed_live_subscribe_is_refused. The frame's data is the kernel's json/stringify text, its keys in the order the atom writes them.",
  "cases": [
   {
    "id": "a-subscribed-stream-writes-each-item-as-a-bus-frame",
@@ -32,7 +32,7 @@
         "event": "SSE_SEND",
         "payload": {
          "requestId": 7,
-         "data": "{\"event\":\"SAVED\",\"payload\":{\"id\":\"n1\"},\"source\":{\"trait\":\"Saver\"},\"timestamp\":1700000000000,\"type\":\"bus\"}"
+         "data": "{\"type\":\"bus\",\"event\":\"SAVED\",\"payload\":{\"id\":\"n1\"},\"source\":{\"trait\":\"Saver\"},\"timestamp\":1700000000000}"
         }
        }
       ]
@@ -66,7 +66,7 @@
         "event": "SSE_SEND",
         "payload": {
          "requestId": 7,
-         "data": "{\"event\":\"PINGED\",\"source\":{\"trait\":\"Saver\"},\"timestamp\":1700000000000,\"type\":\"bus\"}"
+         "data": "{\"type\":\"bus\",\"event\":\"PINGED\",\"source\":{\"trait\":\"Saver\"},\"timestamp\":1700000000000}"
         }
        }
       ]
@@ -171,6 +171,55 @@
      },
      "expect": {
       "fired": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-dispatch-item-is-written-as-a-dispatch-frame",
+   "entity": {
+    "open": [
+     7
+    ]
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "serving",
+     "event": "LIVE_ITEM",
+     "payload": {
+      "type": "dispatch",
+      "event": "READ_DONE",
+      "source": {
+       "trait": "Files"
+      },
+      "orbitalName": "Reader",
+      "request": {
+       "entityId": "singleton",
+       "event": "READ_DONE",
+       "targetTrait": "Files"
+      },
+      "response": {
+       "emittedEvents": [
+        {
+         "event": "SEEN"
+        }
+       ],
+       "success": true
+      },
+      "key": "live-7"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "SSE_SEND",
+        "payload": {
+         "requestId": 7,
+         "data": "{\"type\":\"dispatch\",\"orbitalName\":\"Reader\",\"request\":{\"entityId\":\"singleton\",\"event\":\"READ_DONE\",\"targetTrait\":\"Files\"},\"response\":{\"emittedEvents\":[{\"event\":\"SEEN\"}],\"success\":true},\"timestamp\":1700000000000}"
+        }
+       }
+      ]
      }
     }
    ]

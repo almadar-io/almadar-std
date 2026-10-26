@@ -1,0 +1,5319 @@
+{
+  "atom": "cli/atoms/std-orb-lint-user-field-exists.lolo",
+  "trait": "OrbLintUserFieldExists",
+  "note": "Cases mirror the Rust tests of the @user.<field> existence checks. user_identity.rs: a_viewer_field_reads_in_every_identity_environment (the first five cases), an_identity_row_field_reads_only_where_the_roster_declares_it (the next four). tests/user_identity_validation.rs: without_a_declared_identity_entity_an_unknown_field_is_still_an_error and its default-shape control, reading_an_undeclared_identity_field_is_an_error, and the sourceEntityDefinition provenance test. tests/entity_access_validation.rs: an_unknown_user_field_reuses_the_identity_error_code (the policy cases). tests/expectations_validation.rs: a_user_field_outside_the_declared_shape_fails_standalone, slice_with_expects_identity_validates_clean, a_trait_guard_outside_the_declared_shape_fails_standalone, without_expects_an_unknown_user_field_keeps_todays_verdict, an_imported_bodys_user_reads_are_not_checked_against_the_declaration, an_authored_traits_user_reads_are_checked_against_the_declaration, and under_declared_identity_expectation_fails_even_when_a_real_roster_exists with its covering, over-declaring and shapeless controls. Differences from the compiler: findings inside one trait follow the key order of the lowered program, where the compiler follows the order of its trait struct (the same set); the Viewer members come from the installed language facts fed here as FACTS_HEARD.",
+  "cases": [
+    {
+      "id": "viewer-field-with-a-roster-lacking-it-is-clean",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "PeopleOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "teamId",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "DocOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.email",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "viewer-field-with-no-roster-is-clean",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "DocOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.email",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "viewer-field-outside-an-expects-shape-is-clean",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "DocOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.email",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "shape": [
+                        {
+                          "name": "role",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "viewer-field-roster-plus-expects-shape-is-clean",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "PeopleOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "DocOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.email",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "shape": [
+                        {
+                          "name": "role",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "viewer-claims-is-clean",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "DocOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.claims",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "roster-field-declared-is-clean",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "PeopleOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "teamId",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "DocOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.teamId",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "roster-field-not-declared-is-unknown",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "PeopleOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "tier",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "DocOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.teamId",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "orbitals[1 (DocOrbital)].traits[0 (DocView)].stateMachine.transitions[0].guard[1]",
+                      "message": "`@user.teamId` is not a field of the [identity] entity `Person`. It resolves to null, so every branch reading it silently takes its negative arm.",
+                      "suggestion": "Declare `teamId` on entity Person, or read one of: claims, email, id, name, permissions, role, tier",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-roster-reads-the-viewer-alone",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "DocOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.teamId",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "orbitals[0 (DocOrbital)].traits[0 (DocView)].stateMachine.transitions[0].guard[1]",
+                      "message": "`@user.teamId` is not part of the default identity shape (claims, email, id, name, permissions, role). No [identity] entity is declared, so nothing can carry this field \u2014 it resolves to null and every branch reading it silently takes its negative arm.",
+                      "suggestion": "Declare an [identity] entity carrying `teamId`, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-viewer-has-no-uid",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "DocOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.uid",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "orbitals[0 (DocOrbital)].traits[0 (DocView)].stateMachine.transitions[0].guard[1]",
+                      "message": "`@user.uid` is not part of the default identity shape (claims, email, id, name, permissions, role). No [identity] entity is declared, so nothing can carry this field \u2014 it resolves to null and every branch reading it silently takes its negative arm.",
+                      "suggestion": "Declare an [identity] entity carrying `uid`, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "default-shape-role-stays-readable",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "DocOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.role",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "undeclared-field-beside-a-role-vocabulary",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "PeopleOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "DocOrbital",
+                  "entity": {
+                    "name": "DocOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.clearance",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "orbitals[1 (DocOrbital)].traits[0 (DocView)].stateMachine.transitions[0].guard[1]",
+                      "message": "`@user.clearance` is not a field of the [identity] entity `Person`. It resolves to null, so every branch reading it silently takes its negative arm.",
+                      "suggestion": "Declare `clearance` on entity Person, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "nested-user-path-and-bare-user-are-not-field-claims",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.profile.x",
+                              "x"
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "TWO",
+                            "guard": [
+                              "=",
+                              "@user",
+                              "x"
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "THREE",
+                            "guard": [
+                              "=",
+                              "@user.",
+                              "x"
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "FOUR",
+                            "guard": [
+                              "=",
+                              "@user.a[0]",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "expects-shape-trait-guard-outside-the-shape",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "ProductOrbital",
+                  "entity": {
+                    "name": "ProductOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Shell",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.avatar",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "name": "Customer",
+                      "shape": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "role",
+                          "type": "string",
+                          "values": [
+                            "store-manager",
+                            "operations-director"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_FIELD_UNDECLARED",
+                      "path": "orbitals[0 (ProductOrbital)].traits[0 (Shell)].stateMachine.transitions[0].guard[1]",
+                      "message": "`ProductOrbital` reads `@user.avatar`, but its `expects entity Customer [identity]` declaration only declares: claims, email, id, name, permissions, role. The declaration is this orbital's own source of truth for the `@user` fields it reads.",
+                      "suggestion": "Add `avatar` to the expects shape, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "under-declared-expectation-beside-a-real-roster",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "RosterOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string"
+                      },
+                      {
+                        "name": "teamId",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "ConsumerOrbital",
+                  "entity": {
+                    "name": "ConsumerOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.teamId",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "name": "Person",
+                      "shape": [
+                        {
+                          "name": "role",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_FIELD_UNDECLARED",
+                      "path": "orbitals[1 (ConsumerOrbital)].traits[0 (DocView)].stateMachine.transitions[0].guard[1]",
+                      "message": "`ConsumerOrbital` reads `@user.teamId`, but its `expects entity Person [identity]` declaration only declares: claims, email, id, name, permissions, role. The declaration is this orbital's own source of truth for the `@user` fields it reads.",
+                      "suggestion": "Add `teamId` to the expects shape, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "expectation-covering-the-read-is-clean",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "RosterOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string"
+                      },
+                      {
+                        "name": "teamId",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "ConsumerOrbital",
+                  "entity": {
+                    "name": "ConsumerOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.teamId",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "name": "Person",
+                      "shape": [
+                        {
+                          "name": "teamId",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "over-declaring-is-legal",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "RosterOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string"
+                      },
+                      {
+                        "name": "teamId",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "ConsumerOrbital",
+                  "entity": {
+                    "name": "ConsumerOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.email",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "name": "Person",
+                      "shape": [
+                        {
+                          "name": "email",
+                          "type": "string"
+                        },
+                        {
+                          "name": "role",
+                          "type": "string"
+                        },
+                        {
+                          "name": "name",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "shapeless-identity-expectation-opts-out",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "RosterOrbital",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "email",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string"
+                      },
+                      {
+                        "name": "teamId",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "ConsumerOrbital",
+                  "entity": {
+                    "name": "ConsumerOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.email",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "identity"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unnamed-expectation-message-has-no-entity-name",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "entity": {
+                    "name": "ConsumerOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DocView",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.avatar",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "shape": [
+                        {
+                          "name": "role",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_FIELD_UNDECLARED",
+                      "path": "orbitals[0 (ConsumerOrbital)].traits[0 (DocView)].stateMachine.transitions[0].guard[1]",
+                      "message": "`ConsumerOrbital` reads `@user.avatar`, but its `expects entity [identity]` declaration only declares: claims, email, id, name, permissions, role. The declaration is this orbital's own source of truth for the `@user` fields it reads.",
+                      "suggestion": "Add `avatar` to the expects shape, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "imported-body-is-not-checked-against-the-expectation",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "SliceOrbital",
+                  "entity": {
+                    "name": "SliceOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Browse",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.teamId",
+                              "x"
+                            ]
+                          }
+                        ]
+                      },
+                      "sourceBehavior": "std-browse"
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "name": "Person",
+                      "shape": [
+                        {
+                          "name": "role",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "authored-trait-is-checked-against-the-expectation",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "SliceOrbital",
+                  "entity": {
+                    "name": "SliceOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Browse",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.teamId",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "name": "Person",
+                      "shape": [
+                        {
+                          "name": "role",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_FIELD_UNDECLARED",
+                      "path": "orbitals[0 (SliceOrbital)].traits[0 (Browse)].stateMachine.transitions[0].guard[1]",
+                      "message": "`SliceOrbital` reads `@user.teamId`, but its `expects entity Person [identity]` declaration only declares: claims, email, id, name, permissions, role. The declaration is this orbital's own source of truth for the `@user` fields it reads.",
+                      "suggestion": "Add `teamId` to the expects shape, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "without-expects-the-default-verdict-is-unchanged",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "ProductOrbital",
+                  "entity": {
+                    "name": "ProductOrbitalE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Shell",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.avatar",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "orbitals[0 (ProductOrbital)].traits[0 (Shell)].stateMachine.transitions[0].guard[1]",
+                      "message": "`@user.avatar` is not part of the default identity shape (claims, email, id, name, permissions, role). No [identity] entity is declared, so nothing can carry this field \u2014 it resolves to null and every branch reading it silently takes its negative arm.",
+                      "suggestion": "Declare an [identity] entity carrying `avatar`, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "source-entity-definition-is-provenance-not-walked",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO"
+                          }
+                        ]
+                      },
+                      "sourceEntityDefinition": {
+                        "name": "X",
+                        "read_policy": [
+                          "=",
+                          "@user.zzz",
+                          "a"
+                        ]
+                      },
+                      "description": "d"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "config-default-and-effects-are-walked",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                "@user.dept"
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "label": {
+                          "type": "string",
+                          "default": [
+                            "if",
+                            [
+                              "=",
+                              "@user.team",
+                              "a"
+                            ],
+                            "a",
+                            "b"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0][2]",
+                      "message": "`@user.dept` is not part of the default identity shape (claims, email, id, name, permissions, role). No [identity] entity is declared, so nothing can carry this field \u2014 it resolves to null and every branch reading it silently takes its negative arm.",
+                      "suggestion": "Declare an [identity] entity carrying `dept`, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "orbitals[0 (A)].traits[0 (T)].config.label.default[1][1]",
+                      "message": "`@user.team` is not part of the default identity shape (claims, email, id, name, permissions, role). No [identity] entity is declared, so nothing can carry this field \u2014 it resolves to null and every branch reading it silently takes its negative arm.",
+                      "suggestion": "Declare an [identity] entity carrying `team`, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "reference-trait-is-skipped-but-counts-in-the-index",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "ref": "X"
+                    },
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@user.dept",
+                              "x"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "orbitals[0 (A)].traits[1 (T)].stateMachine.transitions[0].guard[1]",
+                      "message": "`@user.dept` is not part of the default identity shape (claims, email, id, name, permissions, role). No [identity] entity is declared, so nothing can carry this field \u2014 it resolves to null and every branch reading it silently takes its negative arm.",
+                      "suggestion": "Declare an [identity] entity carrying `dept`, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "policy-unknown-user-field-in-create",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "create_policy": [
+                      "=",
+                      "@user.clearance",
+                      "write"
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Person",
+                      "identity": true,
+                      "persistence": "persistent",
+                      "collection": "people",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "role",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "Ticket.@create[1]",
+                      "message": "`@user.clearance` is not a field of the [identity] entity `Person`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `clearance` on entity Person, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "policy-object-get-user-form-in-update",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "update_policy": [
+                      "=",
+                      [
+                        "object/get",
+                        "@user",
+                        "level"
+                      ],
+                      "x"
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Person",
+                      "identity": true,
+                      "persistence": "persistent",
+                      "collection": "people",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "role",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "Ticket.@update[1]",
+                      "message": "`(object/get @user \"level\")` is not a field of the [identity] entity `Person`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `level` on entity Person, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "policy-known-user-fields-are-clean",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@user.role",
+                      "agent"
+                    ],
+                    "delete_policy": [
+                      "=",
+                      [
+                        "object/get",
+                        "@user",
+                        "id"
+                      ],
+                      "x"
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Person",
+                      "identity": true,
+                      "persistence": "persistent",
+                      "collection": "people",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "role",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "policy-findings-follow-read-create-update-delete",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@user.a",
+                      "x"
+                    ],
+                    "create_policy": [
+                      "=",
+                      "@user.c",
+                      "x"
+                    ],
+                    "update_policy": [
+                      "=",
+                      "@user.u",
+                      "x"
+                    ],
+                    "delete_policy": [
+                      "=",
+                      "@user.d",
+                      "x"
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Person",
+                      "identity": true,
+                      "persistence": "persistent",
+                      "collection": "people",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "role",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "Ticket.@read[1]",
+                      "message": "`@user.a` is not a field of the [identity] entity `Person`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `a` on entity Person, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "Ticket.@create[1]",
+                      "message": "`@user.c` is not a field of the [identity] entity `Person`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `c` on entity Person, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "Ticket.@update[1]",
+                      "message": "`@user.u` is not a field of the [identity] entity `Person`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `u` on entity Person, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "Ticket.@delete[1]",
+                      "message": "`@user.d` is not a field of the [identity] entity `Person`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `d` on entity Person, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "policy-outside-the-expects-shape-fails-standalone",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "ProductOrbital",
+                  "entity": {
+                    "name": "Product",
+                    "persistence": "persistent",
+                    "collection": "products",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "create_policy": [
+                      "=",
+                      "@user.avatar",
+                      "x"
+                    ]
+                  },
+                  "traits": [],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "name": "Customer",
+                      "shape": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "role",
+                          "type": "string",
+                          "values": [
+                            "store-manager",
+                            "operations-director"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_FIELD_UNDECLARED",
+                      "path": "Product.@create[1]",
+                      "message": "`ProductOrbital` reads `@user.avatar`, but its `expects entity Customer [identity]` declaration only declares: claims, email, id, name, permissions, role. The declaration is this orbital's own source of truth for the `@user` fields it reads.",
+                      "suggestion": "Add `avatar` to the expects shape, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "policy-inside-the-expects-shape-is-clean",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "ProductOrbital",
+                  "entity": {
+                    "name": "Product",
+                    "persistence": "persistent",
+                    "collection": "products",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "create_policy": [
+                      "or",
+                      [
+                        "=",
+                        "@user.role",
+                        "store-manager"
+                      ],
+                      [
+                        "=",
+                        "@user.role",
+                        "operations-director"
+                      ]
+                    ]
+                  },
+                  "traits": [],
+                  "expects": [
+                    {
+                      "kind": "identity",
+                      "name": "Customer",
+                      "shape": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "role",
+                          "type": "string",
+                          "values": [
+                            "store-manager",
+                            "operations-director"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "policy-without-any-identity-reads-the-viewer-alone",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "ProductOrbital",
+                  "entity": {
+                    "name": "Product",
+                    "persistence": "persistent",
+                    "collection": "products",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@user.teamId",
+                      "x"
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "Product.@read[1]",
+                      "message": "`@user.teamId` is not a field of the [identity] entity `@user`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `teamId` on entity @user, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "policy-on-an-auxiliary-entity-is-walked",
+      "steps": [
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {
+              "Viewer": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "required": true
+                        },
+                        "value": {
+                          "type": "SExpr",
+                          "required": true
+                        }
+                      }
+                    },
+                    "required": true
+                  }
+                }
+              }
+            },
+            "guardSigils": [],
+            "effectSigils": [],
+            "tickSigils": [],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "persistent",
+                    "collection": "docs",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Aux",
+                      "persistence": "persistent",
+                      "collection": "a",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        }
+                      ],
+                      "read_policy": [
+                        "=",
+                        "@user.zz",
+                        "x"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintUserFieldExists",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "user-field-exists",
+                  "findings": [
+                    {
+                      "code": "ORB_S_UNKNOWN_IDENTITY_FIELD",
+                      "path": "Aux.@read[1]",
+                      "message": "`@user.zz` is not a field of the [identity] entity `@user`. It resolves to null, so this access directive silently denies everyone.",
+                      "suggestion": "Declare `zz` on entity @user, or read one of: claims, email, id, name, permissions, role",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

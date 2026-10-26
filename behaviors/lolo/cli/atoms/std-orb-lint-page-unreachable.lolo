@@ -4,7 +4,7 @@ app std-orb-lint-page-unreachable [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-page-unreachable — the `orb lint page-unreachable <file>` command, the port of the inline-page half of validate_page_reachability. It lowers the file with program/read and reports ORB_PAGE_UNREACHABLE for every route page (a page with a protocol is an endpoint and is skipped) that nothing can route a viewer to: not the boot page (the first route page in declaration order), not a parameterized page (any :name segment), not the literal path of an href or navigatesTo value (a str/concat of literals counts) in a trait config default or a render-ui payload, not the target or static str/concat prefix of a navigate effect anywhere in a trait, not the app signIn route, and not a labelled page when the program mentions @pages. Findings carry the page location orbitals[i].pages[j] (status 500, exit 1). Clean answers `lint page-unreachable: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500. The lazyPages half is not ported: a lazy page links are not part of the serialized program."
+  description: "std-orb-lint-page-unreachable — the `orb lint page-unreachable <file>` command, the port of the inline-page half of validate_page_reachability. It lowers the file with program/read and reports ORB_PAGE_UNREACHABLE for every route page (a page with a protocol is an endpoint and is skipped) that nothing can route a viewer to: not the boot page (the first route page in declaration order), not a parameterized page (any :name segment), not the literal path of an href or navigatesTo value (a str/concat of literals counts) in a trait config default or a render-ui payload, not the target or static str/concat prefix of a navigate effect anywhere in a trait, not the app signIn route, and not a labelled page when the program mentions @pages. Findings carry the page location orbitals[i].pages[j] (status 500, exit 1). Clean answers `lint page-unreachable: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500. A `uses lazy` page (the program's lazyPages[], each with its path and the links its own behavior carries) is reached by an href, a navigate target or a navigate prefix longer than one character; every reached lazy page adds its links to the hrefs until nothing grows, so an unreached lazy page's links reach nothing, and a parameterized lazy page is skipped. An unreached one reports at lazyPages[k]."
 ]
 uses Spec from "almadar-std/lint-page-unreachable"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -14,13 +14,14 @@ type ReachVal = string | number | boolean | [ReachVal?] | Map string ReachVal?
 type ReachPage = { path : string, protocol : string, label : string }
 type ReachField = { default : ReachVal? }
 type ReachStrings = [string]
-type ReachEffect = [ReachVal]
+type ReachEffect = [ReachVal?]
 type ReachEffects = { effects : [ReachEffect] }
 type ReachMachine = { transitions : [ReachEffects] }
 type ReachTrait = { stateMachine : ReachMachine, ticks : [ReachEffects], config : Map string ReachField }
 type ReachOrbital = { traits : [ReachTrait], config : Map string ReachField, pages : [ReachPage] }
 type ReachSite = { signIn : string }
-type ReachProgram = { site : ReachSite, config : Map string ReachField, orbitals : [ReachOrbital] }
+type ReachLazy = { path : string, links : [string]? }
+type ReachProgram = { site : ReachSite, config : Map string ReachField, orbitals : [ReachOrbital], lazyPages : [ReachLazy]? }
 
 orbital OrbLintPageUnreachableOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -44,10 +45,10 @@ orbital OrbLintPageUnreachableOrbital {
                               (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (object/get @t "effects" [])))))))
                               (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get @tr "ticks" []) (fn k (object/get @k "effects" [])))))))))
                   (transEffects (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (object/get @t "effects" [])))))))))
-              (let ((trCfg (array/filter (array/flatten (array/map @trs (fn tr (array/map (object/values (object/get @tr "config" {})) (fn f (object/get @f "default" null)))))) (fn v (!= @v null))))
-                    (orbCfg (array/filter (array/flatten (array/map @orbitals (fn orb (array/map (object/values (object/get @orb "config" {})) (fn f (object/get @f "default" null)))))) (fn v (!= @v null))))
+              (let ((trCfg (array/map @trs (fn tr (array/filter (array/map (object/values (object/get @tr "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))))
+                    (orbCfg (array/map @orbitals (fn orb (array/filter (array/map (object/values (object/get @orb "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))))
                     (appCfgDefaults (array/filter (array/map (object/values @appCfg) (fn f (object/get @f "default" null))) (fn v (!= @v null))))
-                    (payloads (array/filter (array/map (array/filter @effects (fn e (and (validate/array @e) (> (array/len @e) 2) (= (array/first @e) "render-ui")))) (fn e (array/nth @e 2))) (fn v (!= @v null)))))
+                    (payloads (array/filter (array/map (array/filter @effects (fn e (and (validate/array @e) (> (array/len @e) 2) (validate/string (array/first @e)) (= (array/first @e) "render-ui")))) (fn e (array/nth @e 2))) (fn v (!= @v null)))))
                 (let ((hrefs (or (tree/fold (or (json/parse (json/stringify { cfg: @trCfg, pay: @payloads }) ReachVal) "") (fn (n kids)
                                   (array/concat
                                     (if (and (validate/object @n) (not (validate/array @n)))
@@ -61,13 +62,13 @@ orbital OrbLintPageUnreachableOrbital {
                                                 (if (= (str/join (array/drop @parts 1) "") "") [] [(str/join (array/drop @parts 1) "")])
                                                 [])))))))
                                       [])
-                                    (if (validate/array @n) (array/flatten @kids) (if (validate/object @n) (array/flatten (object/values @kids)) [])))) ReachVal) []))
+                                    (if (validate/array @n) (array/flatten (array/filter @kids (fn r (!= @r null)))) (if (validate/object @n) (array/flatten (array/filter (object/values @kids) (fn r (!= @r null)))) [])))) ReachVal) []))
                       (navs (array/concat
                               (if (= @signIn "") [] [@signIn])
                               (array/flatten (array/map @effects (fn v
                                 (tree/fold @v (fn (n kids)
                                   (array/concat
-                                    (if (and (validate/array @n) (> (array/len @n) 1) (= (array/first @n) "navigate"))
+                                    (if (and (validate/array @n) (> (array/len @n) 1) (validate/string (array/first @n)) (= (array/first @n) "navigate"))
                                       (let ((tg (array/nth @n 1)))
                                         (if (validate/string @tg)
                                           [@tg]
@@ -75,7 +76,7 @@ orbital OrbLintPageUnreachableOrbital {
                                             [(array/nth @tg 1)]
                                             [])))
                                       [])
-                                    (if (validate/array @n) (array/flatten @kids) (if (validate/object @n) (array/flatten (object/values @kids)) [])))) ReachVal))))))
+                                    (if (validate/array @n) (array/flatten (array/filter @kids (fn r (!= @r null)))) (if (validate/object @n) (array/flatten (array/filter (object/values @kids) (fn r (!= @r null)))) [])))) ReachVal))))))
                       (sigil (= (tree/fold (or (json/parse (json/stringify { app: @appCfgDefaults, orb: @orbCfg, tr: @trCfg, eff: @transEffects }) ReachVal) "") (fn (n kids)
                                       (if (validate/string @n)
                                         (= @n (quote "@pages"))
@@ -90,14 +91,28 @@ orbital OrbLintPageUnreachableOrbital {
                                             [{ loc: (str/concat "orbitals[" @oi "].pages[" @pj "]"), path: (object/get @pg "path" ""), labelled: (object/has @pg "label") }]
                                             [])))))))))))
                     (let ((linked (array/concat @hrefs (if @sigil (array/map (array/filter @entries (fn en (object/get @en "labelled"))) (fn en (object/get @en "path"))) []))))
-                      (array/flatten (array/map (array/drop @entries 1) (fn en
+                      (array/concat
+(array/flatten (array/map (array/drop @entries 1) (fn en
                         (let ((pth (object/get @en "path")))
                           (if (or (array/some (str/split @pth "/") (fn seg (str/startsWith @seg ":")))
                                   (array/includes @linked @pth)
                                   (array/includes @navs @pth)
                                   (array/some @navs (fn tg (and (> (str/len @tg) 1) (str/startsWith @pth @tg)))))
                             []
-                            [{ code: "ORB_PAGE_UNREACHABLE", path: (object/get @en "loc"), message: (str/concat "page '" @pth "' is declared but appears in no link, navItems entry or navigate effect"), suggestion: (str/concat "add an href to a nav/footer/link component, or a navigate effect, targeting '" @pth "', or remove the page if nothing should reach it"), severity: "error" }])))))))))))))
+                            [{ code: "ORB_PAGE_UNREACHABLE", path: (object/get @en "loc"), message: (str/concat "page '" @pth "' is declared but appears in no link, navItems entry or navigate effect"), suggestion: (str/concat "add an href to a nav/footer/link component, or a navigate effect, targeting '" @pth "', or remove the page if nothing should reach it"), severity: "error" }])))))
+                        (let ((lzs (object/get @payload.program "lazyPages" [])))
+                          (let ((reached (array/reduce (array/range 0 (array/len @lzs)) @hrefs (fn (acc pass)
+                                            (array/concat @acc (array/flatten (array/map
+                                              (array/filter @lzs (fn lz (let ((lp (object/get @lz "path" ""))) (or (array/includes @acc @lp) (array/includes @navs @lp) (array/some @navs (fn tg (and (> (str/len @tg) 1) (str/startsWith @lp @tg))))))))
+                                              (fn lz (object/get @lz "links" [])))))))))
+                            (array/flatten (array/map (array/range 0 (array/len @lzs)) (fn k
+                              (let ((lpth (object/get (array/nth @lzs @k) "path" "")))
+                                (if (or (array/some (str/split @lpth "/") (fn seg (str/startsWith @seg ":")))
+                                        (array/includes @reached @lpth)
+                                        (array/includes @navs @lpth)
+                                        (array/some @navs (fn tg (and (> (str/len @tg) 1) (str/startsWith @lpth @tg)))))
+                                  []
+                                  [{ code: "ORB_PAGE_UNREACHABLE", path: (str/concat "lazyPages[" @k "]"), message: (str/concat "page '" @lpth "' is declared but appears in no link, navItems entry or navigate effect"), suggestion: (str/concat "add an href to a nav/footer/link component, or a navigate effect, targeting '" @lpth "', or remove the `uses lazy` page if nothing should reach it"), severity: "error" }]))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "page-unreachable", scope: @entity.scope, findings: @entity.findings })

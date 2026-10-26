@@ -1,7 +1,7 @@
 {
   "atom": "cli/atoms/std-orb-lint-navigate.lolo",
   "trait": "OrbLintNavigate",
-  "note": "One case per Rust test of effect/navigate.rs dynamic_prefix_tests (a_slash_terminated_dynamic_prefix_needs_a_page_beneath_it, control_a_declared_detail_page_beneath_the_prefix_satisfies_it, control_a_prefix_without_a_trailing_slash_keeps_prefix_matching, a_dynamic_query_string_resolves_its_route_before_the_question_mark, the_host_sign_in_route_is_reachable_without_a_page, control_an_undeclared_route_is_still_unreachable, control_a_declared_sign_in_page_is_reachable_as_any_page, control_a_static_target_still_matches_its_page), effect/utils.rs (test_navigate_missing_required_payload, test_navigate_with_required_payload; test_path_matches_pattern is covered by the param-segment matching of the pages), and orbital-compiler/tests/expects_page_slice.rs (slice_without_the_declaration_reports_the_navigate_unreachable, expects_page_makes_the_sibling_route_reachable, an_unrelated_expected_route_does_not_satisfy_the_navigate, a_real_declaration_still_wins_over_an_expectation_of_the_same_path), plus the invalid-path, arity, external URL, wholly-dynamic target, lazy page and send-server branches of validate_navigate and validate_send_server. Where several declared pages could match a target the Rust check picks one by hash-map order; the lint picks the first in declaration order (exact path, then param match, then prefix), which agrees whenever one page matches.",
+  "note": "One case per Rust test of effect/navigate.rs dynamic_prefix_tests (a_slash_terminated_dynamic_prefix_needs_a_page_beneath_it, control_a_declared_detail_page_beneath_the_prefix_satisfies_it, control_a_prefix_without_a_trailing_slash_keeps_prefix_matching, a_dynamic_query_string_resolves_its_route_before_the_question_mark, the_host_sign_in_route_is_reachable_without_a_page, control_an_undeclared_route_is_still_unreachable, control_a_declared_sign_in_page_is_reachable_as_any_page, control_a_static_target_still_matches_its_page), effect/utils.rs (test_navigate_missing_required_payload, test_navigate_with_required_payload; test_path_matches_pattern is covered by the param-segment matching of the pages), and orbital-compiler/tests/expects_page_slice.rs (slice_without_the_declaration_reports_the_navigate_unreachable, expects_page_makes_the_sibling_route_reachable, an_unrelated_expected_route_does_not_satisfy_the_navigate, a_real_declaration_still_wins_over_an_expectation_of_the_same_path), plus the invalid-path, arity, external URL, wholly-dynamic target, lazy page and send-server branches of validate_navigate and validate_send_server. Where several declared pages could match a target the Rust check picks one by hash-map order; the lint picks the first in declaration order (exact path, then param match, then prefix), which agrees whenever one page matches. The effects are flattened by std-orb-effect-leaves: the rule asks with EFFECT_LEAVES_EXPAND and checks the leaves it answers. A branch that is null is no leaf, so a null else is neither a finding nor an unchecked node.",
   "cases": [
     {
       "id": "a-slash-terminated-dynamic-prefix-needs-a-page-beneath-it",
@@ -76,6 +76,97 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    [
+                                      "str/concat",
+                                      "/feed/",
+                                      "@payload.id"
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  [
+                    "str/concat",
+                    "/feed/",
+                    "@payload.id"
+                  ]
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -200,6 +291,106 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    [
+                                      "str/concat",
+                                      "/feed/",
+                                      "@payload.id"
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "P1",
+                          "path": "/feed/:id",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  [
+                    "str/concat",
+                    "/feed/",
+                    "@payload.id"
+                  ]
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -299,6 +490,97 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    [
+                                      "str/concat",
+                                      "/feed",
+                                      "@payload.id"
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  [
+                    "str/concat",
+                    "/feed",
+                    "@payload.id"
+                  ]
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -406,6 +688,97 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    [
+                                      "str/concat",
+                                      "/inspection/new?companyId=",
+                                      "@payload.id"
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/inspection/new",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  [
+                    "str/concat",
+                    "/inspection/new?companyId=",
+                    "@payload.id"
+                  ]
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -505,6 +878,97 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    [
+                                      "str/concat",
+                                      "/inspection/new?companyId=",
+                                      "@payload.id"
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/inspection",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  [
+                    "str/concat",
+                    "/inspection/new?companyId=",
+                    "@payload.id"
+                  ]
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -624,6 +1088,115 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/login"
+                                  ],
+                                  [
+                                    "navigate",
+                                    "/login/"
+                                  ],
+                                  [
+                                    "navigate",
+                                    "/login?returnTo=/feed"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/login"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                "e": [
+                  "navigate",
+                  "/login/"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[2]",
+                "e": [
+                  "navigate",
+                  "/login?returnTo=/feed"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -727,6 +1300,115 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/nowhere"
+                                  ],
+                                  [
+                                    "navigate",
+                                    "/login-help"
+                                  ],
+                                  [
+                                    "navigate",
+                                    "/account/login"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/nowhere"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                "e": [
+                  "navigate",
+                  "/login-help"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[2]",
+                "e": [
+                  "navigate",
+                  "/account/login"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -852,6 +1534,89 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/welcome"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/welcome",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/welcome"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -947,6 +1712,89 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/feed"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/feed"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -1078,6 +1926,121 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/inspection/123"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Init0",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [
+                              {
+                                "key": "INIT",
+                                "payloadSchema": [
+                                  {
+                                    "name": "id",
+                                    "type": "string",
+                                    "required": true
+                                  }
+                                ]
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": []
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/inspection/:id",
+                          "traits": [
+                            {
+                              "ref": "Init0"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/inspection/123"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -1224,6 +2187,127 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/inspection/123",
+                                    {
+                                      "id": "@entity.id"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Init0",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [
+                              {
+                                "key": "INIT",
+                                "payloadSchema": [
+                                  {
+                                    "name": "id",
+                                    "type": "string",
+                                    "required": true
+                                  }
+                                ]
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": []
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/inspection/:id",
+                          "traits": [
+                            {
+                              "ref": "Init0"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/inspection/123",
+                  {
+                    "id": "@entity.id"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -1364,6 +2448,137 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/x/1",
+                                    {
+                                      "b": "1"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Init0",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [
+                              {
+                                "key": "INIT",
+                                "payloadSchema": [
+                                  {
+                                    "name": "a",
+                                    "type": "string",
+                                    "required": true
+                                  },
+                                  {
+                                    "name": "b",
+                                    "type": "string",
+                                    "required": true
+                                  },
+                                  {
+                                    "name": "c",
+                                    "type": "string",
+                                    "required": true
+                                  }
+                                ]
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": []
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/x/:id",
+                          "traits": [
+                            {
+                              "ref": "Init0"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/x/1",
+                  {
+                    "b": "1"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -1514,6 +2729,121 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/inspection/5?x=1"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Init0",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [
+                              {
+                                "key": "INIT",
+                                "payloadSchema": [
+                                  {
+                                    "name": "id",
+                                    "type": "string",
+                                    "required": true
+                                  }
+                                ]
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": []
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/inspection/:id",
+                          "traits": [
+                            {
+                              "ref": "Init0"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/inspection/5?x=1"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -1657,6 +2987,129 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    [
+                                      "str/concat",
+                                      "/inspection/",
+                                      "@payload.id"
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Init0",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [
+                              {
+                                "key": "INIT",
+                                "payloadSchema": [
+                                  {
+                                    "name": "id",
+                                    "type": "string",
+                                    "required": true
+                                  }
+                                ]
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": []
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/inspection/:id",
+                          "traits": [
+                            {
+                              "ref": "Init0"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  [
+                    "str/concat",
+                    "/inspection/",
+                    "@payload.id"
+                  ]
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -1760,6 +3213,89 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/articles/x"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/categories",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/articles/x"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -1877,6 +3413,95 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/articles/x"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/categories",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ],
+                      "expects": [
+                        {
+                          "kind": "page",
+                          "path": "/articles/:slug"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/articles/x"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -1978,6 +3603,95 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/articles/x"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/categories",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ],
+                      "expects": [
+                        {
+                          "kind": "page",
+                          "path": "/authors/:id"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/articles/x"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -2127,6 +3841,127 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/inspection/1"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Init0",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [
+                              {
+                                "key": "INIT",
+                                "payloadSchema": [
+                                  {
+                                    "name": "id",
+                                    "type": "string",
+                                    "required": true
+                                  }
+                                ]
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": []
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/inspection/:id",
+                          "traits": [
+                            {
+                              "ref": "Init0"
+                            }
+                          ]
+                        }
+                      ],
+                      "expects": [
+                        {
+                          "kind": "page",
+                          "path": "/inspection/:id"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/inspection/1"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -2237,6 +4072,96 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/hook"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ],
+                      "expects": [
+                        {
+                          "kind": "page",
+                          "path": "/hook",
+                          "protocol": "http"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/hook"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -2355,6 +4280,89 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/lazy"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/lazy"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -2450,6 +4458,89 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "about"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "about"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -2554,6 +4645,79 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "about"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "about"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -2669,6 +4833,102 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "https://example.com/x"
+                                  ],
+                                  [
+                                    "navigate",
+                                    "http://a.b"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "https://example.com/x"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                "e": [
+                  "navigate",
+                  "http://a.b"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -2771,6 +5031,108 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "@payload.href"
+                                  ],
+                                  [
+                                    "navigate",
+                                    "@entity.route",
+                                    {
+                                      "a": 1
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "@payload.href"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                "e": [
+                  "navigate",
+                  "@entity.route",
+                  {
+                    "a": 1
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -2881,6 +5243,103 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    [
+                                      "str/concat",
+                                      [
+                                        "str/lower",
+                                        "X"
+                                      ],
+                                      "y"
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  [
+                    "str/concat",
+                    [
+                      "str/lower",
+                      "X"
+                    ],
+                    "y"
+                  ]
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -2966,6 +5425,79 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate",
+                                    "/anywhere"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/anywhere"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -3064,6 +5596,87 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "navigate"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "navigate"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -3171,6 +5784,109 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "send-server"
+                                  ],
+                                  [
+                                    "send-server",
+                                    "GO"
+                                  ],
+                                  [
+                                    "send-server",
+                                    "GO",
+                                    {
+                                      "a": 1
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "send-server"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                "e": [
+                  "send-server",
+                  "GO"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[2]",
+                "e": [
+                  "send-server",
+                  "GO",
+                  {
+                    "a": 1
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -3301,6 +6017,117 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "if",
+                                    "@entity.id",
+                                    [
+                                      "do",
+                                      [
+                                        "navigate",
+                                        "/nope"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          },
+                          "ticks": [
+                            {
+                              "name": "t",
+                              "interval": 1000,
+                              "effects": [
+                                [
+                                  "navigate",
+                                  "/gone"
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then.do[0]",
+                "e": [
+                  "navigate",
+                  "/nope"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].ticks[0].effects[0]",
+                "e": [
+                  "navigate",
+                  "/gone"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -3361,6 +6188,466 @@
                 "payload": {
                   "status": 400,
                   "body": "usage: orb lint navigate <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-null-else-branch-is-no-leaf-and-no-unchecked-finding",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "if",
+                                "@a",
+                                [
+                                  "navigate",
+                                  [
+                                    "str/concat",
+                                    "/feed/",
+                                    "@payload.id"
+                                  ]
+                                ],
+                                null
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "P1",
+                      "path": "/feed/:id",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "if",
+                                    "@a",
+                                    [
+                                      "navigate",
+                                      [
+                                        "str/concat",
+                                        "/feed/",
+                                        "@payload.id"
+                                      ]
+                                    ],
+                                    null
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "P1",
+                          "path": "/feed/:id",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then",
+                "e": [
+                  "navigate",
+                  [
+                    "str/concat",
+                    "/feed/",
+                    "@payload.id"
+                  ]
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-finding-beside-null-branches-is-reported-at-its-branch-path",
+      "steps": [
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "do",
+                                [
+                                  "if",
+                                  "@a",
+                                  [
+                                    "navigate",
+                                    [
+                                      "str/concat",
+                                      "/feed/",
+                                      "@payload.id"
+                                    ]
+                                  ],
+                                  null
+                                ],
+                                [
+                                  "if",
+                                  "@b",
+                                  null,
+                                  [
+                                    "when",
+                                    "@g",
+                                    null
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P0",
+                      "path": "/feed",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "navigate",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "do",
+                                    [
+                                      "if",
+                                      "@a",
+                                      [
+                                        "navigate",
+                                        [
+                                          "str/concat",
+                                          "/feed/",
+                                          "@payload.id"
+                                        ]
+                                      ],
+                                      null
+                                    ],
+                                    [
+                                      "if",
+                                      "@b",
+                                      null,
+                                      [
+                                        "when",
+                                        "@g",
+                                        null
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": [
+                        {
+                          "name": "P0",
+                          "path": "/feed",
+                          "traits": [
+                            {
+                              "ref": "T"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "navigate",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[0].then",
+                "e": [
+                  "navigate",
+                  [
+                    "str/concat",
+                    "/feed/",
+                    "@payload.id"
+                  ]
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintNavigate",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "navigate",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[0].then",
+                      "message": "Navigate target '/feed/' doesn't resolve to any declared page",
+                      "suggestion": "Declare a matching `pages[].path` (e.g. `page \"/feed/\" -> ...`) or correct the navigate path",
+                      "severity": "error"
+                    }
+                  ]
                 }
               }
             ]

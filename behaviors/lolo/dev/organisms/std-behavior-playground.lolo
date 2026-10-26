@@ -12,6 +12,8 @@ uses Cosmic from "std/behaviors/std-avl-cosmic-zoom"
 
 type PlaygroundTopic = { package : string!, topic : string!, count : number! }
 type PlaygroundPackageLabel = { package : string!, label : string! }
+type PlaygroundLeaf = { behavior : string!, kind : string! }
+type PlaygroundLeafIcon = { kind : string!, icon : string! }
 type PlaygroundKnob = { name : string!, type : string!, label : string, description : string }
 type PlaygroundDescription = { behavior : string!, knobs : [PlaygroundKnob]! }
 type PlaygroundProgram = { name : string }
@@ -24,6 +26,8 @@ orbital BehaviorPlayground {
   entity PlaygroundView [runtime] {
     id : string!
     topics : [PlaygroundTopic] = []
+    leaves : [PlaygroundLeaf] = []
+    leafSelected : string = ""
     topicPackage : string = ""
     topic : string = ""
     behavior : string = ""
@@ -189,6 +193,14 @@ orbital BehaviorPlayground {
       labels : [PlaygroundPackageLabel] = @config.packageLabels
         @label "Package names"
         @tier "presentation"
+      leaves : boolean = false
+        @label "Behaviors in the tree"
+        @description "List the open topic's behaviors under it, as LEAVES_LOADED names them; a click on one answers LEAF_PICKED."
+        @tier "presentation"
+      leafIcons : [PlaygroundLeafIcon] = []
+        @label "Behavior icons"
+        @description "The icon of a behavior in the tree by its kind; a kind not listed shows a file."
+        @tier "presentation"
     }
     initial: idle
 
@@ -203,20 +215,31 @@ orbital BehaviorPlayground {
       TOPICS_SHOWN -> idle
         (render-ui main { type: stack, direction: vertical, gap: xs, className: "h-full overflow-y-auto p-2", children: [
           { type: typography, content: "Topics", variant: overline, color: muted, className: "px-2 pt-1" },
-          { type: file-tree, selectedId: (str/concat @entity.topicPackage " " @entity.topic), onNodeSelect: NODE_SELECTED, items: (array/concat
+          { type: file-tree, selectedId: (if (= @entity.leafSelected "") (str/concat @entity.topicPackage " " @entity.topic) @entity.leafSelected), expandedPaths: [@entity.topicPackage, (str/concat @entity.topicPackage " " @entity.topic)], onNodeSelect: NODE_SELECTED, items: (array/concat (array/concat
             (array/concat
               (array/map (array/filter @config.labels (fn l (array/some @entity.topics (fn t (= @t.package @l.package))))) (fn l { id: @l.package, label: @l.label, icon: package }))
               (array/map (array/filter (array/unique (array/map @entity.topics (fn t @t.package))) (fn pkg (not (array/some @config.labels (fn l (= @l.package @pkg)))))) (fn pkg { id: @pkg, label: @pkg, icon: package })))
-            (array/map (array/sort @entity.topics "topic" "asc") (fn t { id: (str/concat @t.package " " @t.topic), label: (str/concat @t.topic "  ·  " @t.count), parentId: @t.package, icon: folder }))) }
+            (array/map (array/sort @entity.topics "topic" "asc") (fn t { id: (str/concat @t.package " " @t.topic), label: (str/concat @t.topic "  ·  " @t.count), parentId: @t.package, icon: folder })))
+            (if @config.leaves (array/map (array/sort @entity.leaves "behavior" "asc") (fn l { id: @l.behavior, label: (array/last (str/split @l.behavior "/")), parentId: (str/concat @entity.topicPackage " " @entity.topic), icon: (object/get (array/find @config.leafIcons (fn i (= @i.kind @l.kind))) "icon" "file") })) [])) }
         ] })
       NODE_SELECTED -> idle when (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))
         (let ((picked (array/find @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))))
           (do
             (set @entity.topicPackage @picked.package)
             (set @entity.topic @picked.topic)
+            (set @entity.leaves [])
+            (set @entity.leafSelected "")
             (emit TOPIC_PICKED { package: @picked.package, topic: @picked.topic, count: @picked.count })
             (emit TOPICS_SHOWN {})))
-      NODE_SELECTED -> idle when (not (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id))))
+      NODE_SELECTED -> idle when (and (not (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))) (array/some @entity.leaves (fn l (= @l.behavior ?id))))
+        (set @entity.leafSelected ?id)
+        (emit LEAF_PICKED { behavior: ?id })
+        (emit TOPICS_SHOWN {})
+      NODE_SELECTED -> idle when (and (not (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))) (not (array/some @entity.leaves (fn l (= @l.behavior ?id)))))
+      LEAVES_LOADED -> idle when (and (= ?package (if (= @entity.topic "") @config.openPackage @entity.topicPackage)) (= ?topic (if (= @entity.topic "") @config.openTopic @entity.topic)))
+        (set @entity.leaves ?data)
+        (emit TOPICS_SHOWN {})
+      LEAVES_LOADED -> idle when (not (and (= ?package (if (= @entity.topic "") @config.openPackage @entity.topicPackage)) (= ?topic (if (= @entity.topic "") @config.openTopic @entity.topic))))
     }
 
     emits {
@@ -226,6 +249,10 @@ orbital BehaviorPlayground {
         count : number!
       }
         @description "A topic was chosen in the tree."
+      LEAF_PICKED -> external {
+        behavior : string!
+      }
+        @description "A behavior was chosen in the tree."
       TOPICS_SHOWN
     }
 
@@ -237,6 +264,12 @@ orbital BehaviorPlayground {
       NODE_SELECTED {
         id : string!
       }
+      LEAVES_LOADED {
+        package : string!
+        topic : string!
+        data : [PlaygroundLeaf]!
+      }
+        @description "The behaviors of a topic, listed under it when the leaves knob is on."
     }
   }
 

@@ -1,0 +1,149 @@
+app std-orb-lint-cross-emitter [
+  version: "1.0.0",
+  inbound: ["cli-lint-cross-emitter"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-cross-emitter — the `orb lint cross-emitter <file>` command, the port of validate_cross_emitter (circuit/cross_emitter.rs, ORB_X_CROSS_EMITTER_DECLARED_PAYLOAD_MISMATCH). Every inline trait's `emits` entries are grouped by event; an event declared by two or more emitters must carry the same payload signature, the set of (field name, field type, required) triples of the declared payloadSchema. A render-emitter's declared payload is replaced by what its first render-ui node sends: a pattern node whose event prop (the LINT_PATTERNS payloadFor pairing, the named prop of kind event) equals the event and whose paired payload prop is an object, each key typed from the linked entity when the value is `@entity.<field>` and string! otherwise (number and boolean literals by their own type). A group is checked only when some listener of the event can see more than one emitter: a `*` source, or an orbital-pinned source naming one of the group's (orbital, trait) emitters from a different orbital. Each emitter after the first whose signature differs from the first is reported once at `<first trait path> vs <trait path>`; events are reported in name order. Clean answers `lint cross-emitter: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-cross-emitter"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type CemNode = string | number | boolean | [CemNode?] | Map string CemNode?
+type CemHit = { hits : [CemNode?]! }
+type CemCell = string | boolean
+type CemCells = [CemCell]
+type CemRow = { event : string!, path : string!, orb : string!, trait : string!, sig : [string]! }
+type CemPair = { e : string!, p : string! }
+type CemField = { name : string, type : string, required : boolean }
+type CemDef = { event : string, payloadSchema : [CemField] }
+type CemSource = { kind : string, orbital : string, trait : string }
+type CemListen = { event : string, source : CemSource }
+type CemTransition = { effects : [CemNode?] }
+type CemMachine = { transitions : [CemTransition] }
+type CemTrait = { name : string, linkedEntity : string, emits : [CemDef], listens : [CemListen], stateMachine : CemMachine }
+type CemEntity = { name : string, fields : [CemField] }
+type CemOrbital = { name : string, entity : CemEntity, auxiliaryEntities : [CemEntity], traits : [CemTrait] }
+type CemProgram = { orbitals : [CemOrbital] }
+type CemPatternProp = { kind : string, payloadFor : string }
+type CemPattern = { props : Map string CemPatternProp }
+
+orbital OrbLintCrossEmitterOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintCrossEmitterRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    pairsOf : Map string [CemPair] = {}
+  }
+
+  trait OrbLintCrossEmitter -> OrbLintCrossEmitterRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_PATTERNS_HEARD -> ready
+        (set @entity.pairsOf (object/mapValues @payload.patterns (fn pt (let ((props (object/get @pt "props" {}))) (array/flatten (array/map (object/keys @props) (fn pn (let ((pf (object/get (object/get @props @pn {}) "payloadFor" ""))) (if (and (!= @pf "") (= (object/get (object/get @props @pf {}) "kind" "") "event")) [{ e: @pf, p: @pn }] [])))))))))
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((nof : [OrbFinding] []) (nos : [string] []) (noc : CemCells []) (noh : [CemNode?] []) (nop : [CemPair] []) (nor : [CemRow] []) (orbitals (object/get @payload.program "orbitals" [])) (pairsOf @entity.pairsOf)) (let ((primary (array/filter (array/map @orbitals (fn o (object/get (object/get @o "entity" {}) "name" ""))) (fn nm (!= @nm "")))) (entList (array/flatten (array/map @orbitals (fn o (array/concat (if (validate/string (object/get (object/get @o "entity" {}) "name")) [(object/get @o "entity" {})] []) (object/get @o "auxiliaryEntities" []))))))) (let ((dups (array/unique (array/filter @primary (fn nm (> (array/len (array/filter @primary (fn m (= @m @nm)))) 1)))))) (let ((ents (object/fromEntries (array/map (array/filter @entList (fn en (not (array/includes @dups (object/get @en "name" ""))))) (fn en [(object/get @en "name" ""), (object/get @en "fields" [])]))))) (let ((rows : [CemRow] (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((o (array/nth @orbitals @oi))) (let ((trs (object/get @o "traits" []))) (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti (let ((td (array/nth @trs @ti))) (if (not (object/has @td "stateMachine")) @nor (array/map (object/get @td "emits" []) (fn em (let ((ev (object/get @em "event" ""))) (let ((hits (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "transitions" []) (fn tr (array/flatten (array/map (object/get @tr "effects" []) (fn eff (if (and (validate/array @eff) (>= (array/len @eff) 3) (validate/string (array/nth @eff 0)) (array/includes ["render-ui", "render_ui"] (array/nth @eff 0))) (object/get (tree/fold (array/nth @eff 2) (fn (n k) (let ((nr : CemHit { hits: [] })) (if (validate/array @n) { hits: (array/flatten (array/map (array/map @k (fn r (if (= @r null) @nr @r))) (fn r (object/get @r "hits" @noh)))) } (if (validate/object @n) (let ((keys (object/keys @n))) { hits: (array/concat (let ((ty (object/get @n "type" null))) (if (validate/string @ty) (let ((prs : [CemPair] (object/get @pairsOf @ty @nop))) (let ((fires : [CemPair] (array/filter @prs (fn pr (and (= (object/get @n (object/get @pr "e")) @ev) (validate/object (object/get @n (object/get @pr "p")))))))) (if (> (array/len @fires) 0) [(object/get @n (object/get (array/first @fires) "p"))] @noh))) @noh)) (array/flatten (array/map @keys (fn key (object/get (let ((r (object/get @k @key null))) (if (= @r null) @nr @r)) "hits" @noh))))) }) @nr)))) "CemNode") "hits" @noh) @noh)))))))) (flds (object/get @ents (object/get @td "linkedEntity" "") []))) { event: @ev path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]") orb: (object/get @o "name" "") trait: (object/get @td "name" "") sig: (array/sort (array/unique (if (> (array/len @hits) 0) (let ((pl (array/first @hits))) (if (not (validate/object @pl)) @nos (array/map (object/keys @pl) (fn pk (let ((v (object/get @pl @pk))) (let ((tr2 (if (and (validate/string @v) (str/startsWith @v (quote "@entity."))) (let ((fm : [CemField] (array/filter @flds (fn f (= (object/get @f "name" "") (str/slice @v 8 (str/len @v))))))) (if (> (array/len @fm) 0) { t: (object/get (array/first @fm) "type" "string"), r: (= (object/get (array/first @fm) "required" false) true) } { t: "string", r: true })) (if (validate/number @v) { t: "number", r: true } (if (validate/boolean @v) { t: "boolean", r: true } { t: "string", r: true }))))) (str/concat "[" (json/stringify @pk) "," (json/stringify (object/get @tr2 "t")) "," (if (object/get @tr2 "r") "true" "false") "]"))))))) (array/map (object/get @em "payloadSchema" []) (fn pf (str/concat "[" (json/stringify (object/get @pf "name" "")) "," (json/stringify (object/get @pf "type" "")) "," (if (= (object/get @pf "required" false) true) "true" "false") "]")))))) })))))))))))))))) (let ((events (array/sort (array/unique (array/map @rows (fn r (object/get @r "event"))))))) (array/flatten (array/map @events (fn ev (let ((group (array/filter @rows (fn r (= (object/get @r "event") @ev))))) (if (< (array/len @group) 2) @nof (if (not (array/some @orbitals (fn o (array/some (object/get @o "traits" []) (fn td (and (object/has @td "stateMachine") (array/some (array/filter (object/get @td "listens" []) (fn l (= (object/get @l "event" "") @ev))) (fn l (let ((s (object/get @l "source" {}))) (let ((kd (object/get @s "kind" ""))) (or (= @kd "any") (and (= @kd "orbital") (!= (object/get @s "orbital" "") (object/get @o "name" "")) (array/some @group (fn g (and (= (object/get @g "orb") (object/get @s "orbital" "")) (= (object/get @g "trait") (object/get @s "trait" ""))))))))))))))))) @nof (let ((anchor (array/first @group))) (array/flatten (array/map (array/drop @group 1) (fn other (if (= (object/get @other "sig") (object/get @anchor "sig")) @nof (let ((onlyA (array/filter (object/get @anchor "sig") (fn c (not (array/includes (object/get @other "sig") @c))))) (onlyO (array/filter (object/get @other "sig") (fn c (not (array/includes (object/get @anchor "sig") @c)))))) [{ code: "ORB_X_CROSS_EMITTER_DECLARED_PAYLOAD_MISMATCH", path: (str/concat (object/get @anchor "path") " vs " (object/get @other "path")), message: (str/concat "Event '" @ev "' is declared by multiple emitters with conflicting payload fields. anchor only: [" (str/join (array/map @onlyA (fn c (let ((cc (or (json/parse @c CemCells) @noc))) (str/concat (array/nth @cc 0) ":" (array/nth @cc 1) (if (= (array/nth @cc 2) true) "!" ""))))) ", ") "]; other only: [" (str/join (array/map @onlyO (fn c (let ((cc (or (json/parse @c CemCells) @noc))) (str/concat (array/nth @cc 0) ":" (array/nth @cc 1) (if (= (array/nth @cc 2) true) "!" ""))))) ", ") "]"), suggestion: "Align the payload field lists across every trait that declares this event, or rename the event so each emitter has its own typed channel.", severity: "error" }])))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "cross-emitter", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CemProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      LINT_PATTERNS_HEARD { patterns : Map string CemPattern! }
+        @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry, whose payloadFor pairings name each event prop's payload prop."
+      OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD
+    }
+  }
+
+  trait OrbLintCrossEmitterCli -> OrbLintCrossEmitterRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint cross-emitter <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "cross-emitter") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint cross-emitter: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "cross-emitter") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint cross-emitter: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-cross-emitter" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint cross-emitter` with its arguments and working directory."
+        @synonyms "orb lint cross-emitter"
+      OrbLintCrossEmitter.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintCrossEmitterCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintCrossEmitterOrbitalStart -> OrbLintCrossEmitter, OrbLintCrossEmitterCli, OrbLintInput, Packs, Versions
+}

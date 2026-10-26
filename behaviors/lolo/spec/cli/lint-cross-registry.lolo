@@ -1,0 +1,21 @@
+app lint-cross-registry-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint cross-registry <file>`, the port of the cross-registry consistency check. A namespaced operator head that is not an installed operator (and not an agent/ or behavior/ call) and a render-ui pattern type that is not in the installed registry are reported at the expression with the compiler's code, message and suggestion; an unresolved behavior/<name> call naming a behavior no installed package ships is reported the same way, the installed behaviors read only when such a call exists (status 500, exit 1). A clean program answers `lint cross-registry: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintCrossRegistrySpec {
+  expects trait OrbLintCrossRegistry {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintCrossRegistryCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintCrossRegistry, OrbLintCrossRegistryCli
+}

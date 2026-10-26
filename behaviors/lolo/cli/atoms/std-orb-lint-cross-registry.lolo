@@ -1,0 +1,200 @@
+app std-orb-lint-cross-registry [
+  version: "1.0.0",
+  inbound: ["cli-lint-cross-registry"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-cross-registry — the `orb lint cross-registry <file>` command, the port of validate_cross_registry (composition/cross_registry.rs). It walks every inline trait's transition guards and effects and tick effects as expression trees and reports, in walk order, SEXPR_INVALID_OPERATOR for a namespaced head (it contains `/`) that is not an installed operator (LINT_OPERATOR_NAMES) and is not an `agent/` or `behavior/` call, with the compiler's did-you-mean suggestion (the same basename under another namespace, else the closest operator name within edit distance 2, else the `orb signatures` hint); ORB_RUI_INVALID_PATTERN for a render-ui whose first object argument names a `type` that is not in the installed pattern registry (LINT_PATTERNS), at `[<arg index>].type`; and SEXPR_INVALID_OPERATOR for an unresolved `behavior/<name>` call (a composer `compose`, `wire`, `detect-layout` or `pipe` names its behavior in its first argument unless that starts with `@`, and a registered operator such as `behavior/ref` is a verb, not a behavior) naming a behavior no installed package ships. The installed behavior names are read only when such a call exists, from behavior/packages and one behavior/catalog per package (a package whose catalog fails ships nothing, as in the compiler). Clean answers `lint cross-registry: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-cross-registry"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type XrNode = string | number | boolean | [XrNode?] | Map string XrNode?
+type XrItem = { kind : string!, name : string!, sfx : string! }
+type XrRes = { items : [XrItem]! }
+type XrFound = { kind : string!, name : string!, path : string! }
+type XrTick = { effects : [XrNode?] }
+type XrTransition = { guard : XrNode?, effects : [XrNode?] }
+type XrMachine = { transitions : [XrTransition] }
+type XrTrait = { name : string, stateMachine : XrMachine, ticks : [XrTick] }
+type XrOrbital = { name : string, traits : [XrTrait] }
+type XrProgram = { orbitals : [XrOrbital] }
+type XrPattern = { drawHost : boolean }
+type XrPackage = { prefix : string! }
+type XrHit = { behavior : string! }
+
+orbital OrbLintCrossRegistryOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintCrossRegistryRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    patterns : [string] = []
+    ops : [string] = []
+    items : [XrFound] = []
+    pkgs : [string] = []
+    pkgCursor : number = 0
+    known : [string] = []
+  }
+
+  trait OrbLintCrossRegistry -> OrbLintCrossRegistryRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_PATTERNS_HEARD -> ready
+        (set @entity.patterns (object/keys @payload.patterns))
+      LINT_OPERATOR_NAMES_HEARD -> ready
+        (set @entity.ops (array/sort @payload.names))
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.items (let ((noi : [XrItem] []) (nr : XrRes { items: [] }) (nof2 : [XrFound] []) (orbitals (object/get @payload.program "orbitals" [])) (ops @entity.ops) (patterns @entity.patterns)) (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((o (array/nth @orbitals @oi))) (let ((trs (object/get @o "traits" []))) (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti (let ((td (array/nth @trs @ti))) (if (not (object/has @td "stateMachine")) @nof2 (let ((base (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")) (trs2 (object/get (object/get @td "stateMachine" {}) "transitions" [])) (tks (object/get @td "ticks" []))) (array/concat (array/flatten (array/map (array/range 0 (array/len @trs2)) (fn tj (let ((tr (array/nth @trs2 @tj))) (array/concat (if (= (object/get @tr "guard" null) null) @nof2 (array/map (object/get (tree/fold (object/get @tr "guard") (fn (n k) (if (validate/array @n) (let ((head (if (> (array/len @n) 0) (array/nth @n 0) null))) (let ((own : [XrItem] (if (validate/string @head) (array/concat (array/concat (if (and (str/includes @head "/") (not (array/includes @ops @head)) (not (str/startsWith @head "agent/")) (not (str/startsWith @head "behavior/"))) [{ kind: "op", name: @head, sfx: "" }] @noi) (if (array/includes ["render-ui", "render_ui"] @head) (let ((idxs (array/filter (array/range 1 (array/len @n)) (fn i (validate/object (array/nth @n @i)))))) (if (> (array/len @idxs) 0) (let ((pi (array/first @idxs))) (let ((po (array/nth @n @pi))) (if (validate/object @po) (let ((ty (object/get @po "type" null))) (if (and (validate/string @ty) (not (array/includes @patterns @ty))) [{ kind: "pat", name: @ty, sfx: (str/concat "[" @pi "].type") }] @noi)) @noi))) @noi)) @noi)) (if (str/startsWith @head "behavior/") (let ((suffix (str/slice @head 9 (str/len @head))) (composer (array/includes ["compose", "wire", "detect-layout", "pipe"] (str/slice @head 9 (str/len @head))))) (let ((a1 (if (> (array/len @n) 1) (array/nth @n 1) null))) (let ((bn (if (and (not @composer) (array/includes @ops @head)) { ok: false, nm: "" } (if @composer (if (and (validate/string @a1) (not (str/startsWith @a1 (quote "@")))) { ok: true, nm: @a1 } { ok: false, nm: "" }) { ok: true, nm: @suffix })))) (if (object/get @bn "ok" false) [{ kind: "beh", name: (object/get @bn "nm" ""), sfx: "" }] @noi)))) @noi)) @noi))) { items: (array/concat @own (array/flatten (array/map (array/range 0 (array/len @k)) (fn i (let ((r (array/nth @k @i))) (let ((rr (if (= @r null) @nr @r))) (array/map (object/get @rr "items" @noi) (fn it { kind: (object/get @it "kind"), name: (object/get @it "name"), sfx: (str/concat (str/concat "[" @i "]") (object/get @it "sfx")) })))))))) })) (if (validate/object @n) (let ((keys (object/keys @n))) { items: (array/flatten (array/map @keys (fn key (let ((r (object/get @k @key null))) (let ((rr (if (= @r null) @nr @r))) (array/map (object/get @rr "items" @noi) (fn it { kind: (object/get @it "kind"), name: (object/get @it "name"), sfx: (str/concat (str/concat "." @key) (object/get @it "sfx")) }))))))) }) @nr))) "XrNode") "items" @noi) (fn it { kind: (object/get @it "kind"), name: (object/get @it "name"), path: (str/concat (str/concat @base ".stateMachine.transitions[" @tj "].guard") (object/get @it "sfx")) }))) (array/flatten (array/map (array/range 0 (array/len (object/get @tr "effects" []))) (fn ek (array/map (object/get (tree/fold (array/nth (object/get @tr "effects" []) @ek) (fn (n k) (if (validate/array @n) (let ((head (if (> (array/len @n) 0) (array/nth @n 0) null))) (let ((own : [XrItem] (if (validate/string @head) (array/concat (array/concat (if (and (str/includes @head "/") (not (array/includes @ops @head)) (not (str/startsWith @head "agent/")) (not (str/startsWith @head "behavior/"))) [{ kind: "op", name: @head, sfx: "" }] @noi) (if (array/includes ["render-ui", "render_ui"] @head) (let ((idxs (array/filter (array/range 1 (array/len @n)) (fn i (validate/object (array/nth @n @i)))))) (if (> (array/len @idxs) 0) (let ((pi (array/first @idxs))) (let ((po (array/nth @n @pi))) (if (validate/object @po) (let ((ty (object/get @po "type" null))) (if (and (validate/string @ty) (not (array/includes @patterns @ty))) [{ kind: "pat", name: @ty, sfx: (str/concat "[" @pi "].type") }] @noi)) @noi))) @noi)) @noi)) (if (str/startsWith @head "behavior/") (let ((suffix (str/slice @head 9 (str/len @head))) (composer (array/includes ["compose", "wire", "detect-layout", "pipe"] (str/slice @head 9 (str/len @head))))) (let ((a1 (if (> (array/len @n) 1) (array/nth @n 1) null))) (let ((bn (if (and (not @composer) (array/includes @ops @head)) { ok: false, nm: "" } (if @composer (if (and (validate/string @a1) (not (str/startsWith @a1 (quote "@")))) { ok: true, nm: @a1 } { ok: false, nm: "" }) { ok: true, nm: @suffix })))) (if (object/get @bn "ok" false) [{ kind: "beh", name: (object/get @bn "nm" ""), sfx: "" }] @noi)))) @noi)) @noi))) { items: (array/concat @own (array/flatten (array/map (array/range 0 (array/len @k)) (fn i (let ((r (array/nth @k @i))) (let ((rr (if (= @r null) @nr @r))) (array/map (object/get @rr "items" @noi) (fn it { kind: (object/get @it "kind"), name: (object/get @it "name"), sfx: (str/concat (str/concat "[" @i "]") (object/get @it "sfx")) })))))))) })) (if (validate/object @n) (let ((keys (object/keys @n))) { items: (array/flatten (array/map @keys (fn key (let ((r (object/get @k @key null))) (let ((rr (if (= @r null) @nr @r))) (array/map (object/get @rr "items" @noi) (fn it { kind: (object/get @it "kind"), name: (object/get @it "name"), sfx: (str/concat (str/concat "." @key) (object/get @it "sfx")) }))))))) }) @nr))) "XrNode") "items" @noi) (fn it { kind: (object/get @it "kind"), name: (object/get @it "name"), path: (str/concat (str/concat @base ".stateMachine.transitions[" @tj "].effects[" @ek "]") (object/get @it "sfx")) })))))))))) (array/flatten (array/map (array/range 0 (array/len @tks)) (fn tk (let ((tick (array/nth @tks @tk))) (array/flatten (array/map (array/range 0 (array/len (object/get @tick "effects" []))) (fn ek (array/map (object/get (tree/fold (array/nth (object/get @tick "effects" []) @ek) (fn (n k) (if (validate/array @n) (let ((head (if (> (array/len @n) 0) (array/nth @n 0) null))) (let ((own : [XrItem] (if (validate/string @head) (array/concat (array/concat (if (and (str/includes @head "/") (not (array/includes @ops @head)) (not (str/startsWith @head "agent/")) (not (str/startsWith @head "behavior/"))) [{ kind: "op", name: @head, sfx: "" }] @noi) (if (array/includes ["render-ui", "render_ui"] @head) (let ((idxs (array/filter (array/range 1 (array/len @n)) (fn i (validate/object (array/nth @n @i)))))) (if (> (array/len @idxs) 0) (let ((pi (array/first @idxs))) (let ((po (array/nth @n @pi))) (if (validate/object @po) (let ((ty (object/get @po "type" null))) (if (and (validate/string @ty) (not (array/includes @patterns @ty))) [{ kind: "pat", name: @ty, sfx: (str/concat "[" @pi "].type") }] @noi)) @noi))) @noi)) @noi)) (if (str/startsWith @head "behavior/") (let ((suffix (str/slice @head 9 (str/len @head))) (composer (array/includes ["compose", "wire", "detect-layout", "pipe"] (str/slice @head 9 (str/len @head))))) (let ((a1 (if (> (array/len @n) 1) (array/nth @n 1) null))) (let ((bn (if (and (not @composer) (array/includes @ops @head)) { ok: false, nm: "" } (if @composer (if (and (validate/string @a1) (not (str/startsWith @a1 (quote "@")))) { ok: true, nm: @a1 } { ok: false, nm: "" }) { ok: true, nm: @suffix })))) (if (object/get @bn "ok" false) [{ kind: "beh", name: (object/get @bn "nm" ""), sfx: "" }] @noi)))) @noi)) @noi))) { items: (array/concat @own (array/flatten (array/map (array/range 0 (array/len @k)) (fn i (let ((r (array/nth @k @i))) (let ((rr (if (= @r null) @nr @r))) (array/map (object/get @rr "items" @noi) (fn it { kind: (object/get @it "kind"), name: (object/get @it "name"), sfx: (str/concat (str/concat "[" @i "]") (object/get @it "sfx")) })))))))) })) (if (validate/object @n) (let ((keys (object/keys @n))) { items: (array/flatten (array/map @keys (fn key (let ((r (object/get @k @key null))) (let ((rr (if (= @r null) @nr @r))) (array/map (object/get @rr "items" @noi) (fn it { kind: (object/get @it "kind"), name: (object/get @it "name"), sfx: (str/concat (str/concat "." @key) (object/get @it "sfx")) }))))))) }) @nr))) "XrNode") "items" @noi) (fn it { kind: (object/get @it "kind"), name: (object/get @it "name"), path: (str/concat (str/concat @base ".ticks[" @tk "].effects[" @ek "]") (object/get @it "sfx")) })))))))))))))))))))))))
+        (set @entity.known (array/take @entity.known 0))
+        (set @entity.pkgCursor 0)
+        (emit XR_COLLECTED { })
+      XR_COLLECTED -> ready when (array/some @entity.items (fn it (= (object/get @it "kind") "beh")))
+        (behavior/packages { emit: { success: XR_PACKAGES, failure: XR_FAILED } })
+      XR_COLLECTED -> ready when (not (array/some @entity.items (fn it (= (object/get @it "kind") "beh"))))
+        (emit XR_FINAL { })
+      XR_PACKAGES -> ready
+        (set @entity.pkgs (array/map @payload.result (fn p (object/get @p "prefix"))))
+        (set @entity.pkgCursor 0)
+        (emit XR_NEXT { })
+      XR_NEXT -> ready when (< @entity.pkgCursor (array/len @entity.pkgs))
+        (behavior/catalog { paths: [(array/nth @entity.pkgs @entity.pkgCursor)], exposure: [] } { vectors: false emit: { success: XR_CATALOGED, failure: XR_PKG_FAILED } })
+      XR_NEXT -> ready when (>= @entity.pkgCursor (array/len @entity.pkgs))
+        (emit XR_FINAL { })
+      XR_CATALOGED -> ready
+        (set @entity.known (array/concat @entity.known (let ((pre (str/concat (array/nth @entity.pkgs @entity.pkgCursor) "/"))) (array/map (array/filter @payload.result (fn h (str/startsWith (object/get @h "behavior") @pre))) (fn h (str/slice (object/get @h "behavior") (str/len @pre) (str/len (object/get @h "behavior"))))))))
+        (set @entity.pkgCursor (+ @entity.pkgCursor 1))
+        (emit XR_NEXT { })
+      XR_PKG_FAILED -> ready
+        (set @entity.pkgCursor (+ @entity.pkgCursor 1))
+        (emit XR_NEXT { })
+      XR_FAILED -> ready
+        (emit XR_FINAL { })
+      XR_FINAL -> ready
+        (set @entity.findings (let ((nof : [OrbFinding] []) (ops @entity.ops) (known @entity.known)) (array/flatten (array/map @entity.items (fn it (let ((kd (object/get @it "kind")) (name (object/get @it "name")) (p (object/get @it "path"))) (if (= @kd "op") [{ code: "SEXPR_INVALID_OPERATOR", path: @p, message: (str/concat "Operator '" @name "' is not in operators.json (cross-registry check)"), suggestion: (let ((base (array/last (str/split @name "/"))) (sorted : [string] @ops)) (let ((hits (array/sort (array/unique (array/filter @sorted (fn k (and (str/includes @k "/") (= (array/last (str/split @k "/")) @base)))))))) (if (> (array/len @hits) 0) (str/concat "did you mean " (str/join (array/map @hits (fn h (str/concat "'" @h "'"))) ", ") "?") (let ((bed (array/reduce @ops { v: "", d: 3 } (fn be cand (if (> (math/abs (- (str/len @name) (str/len @cand))) 2) @be (let ((ed (let ((ea (str/split @name "")) (eb (str/split @cand ""))) (let ((lb (array/len @eb))) (array/nth (array/reduce (array/range 0 (array/len @ea)) (array/range 0 (+ @lb 1)) (fn prow ei (array/reduce (array/range 0 @lb) [(+ @ei 1)] (fn crow ej (array/append @crow (math/min (+ (array/nth @prow @ej) (if (= (array/nth @ea @ei) (array/nth @eb @ej)) 0 1)) (+ (array/nth @prow (+ @ej 1)) 1) (+ (array/last @crow) 1))))))) @lb))))) (if (and (<= @ed 2) (< @ed (object/get @be "d" 3))) { v: @cand, d: @ed } @be))))))) (if (<= (object/get @bed "d" 3) 2) (str/concat "did you mean '" (object/get @bed "v" "") "'?") "Use a registered operator — `orb signatures` lists the canonical set"))))), severity: "error" }] (if (= @kd "pat") [{ code: "ORB_RUI_INVALID_PATTERN", path: @p, message: (str/concat "Pattern '" @name "' is not in patterns-registry.json (cross-registry check)"), suggestion: "Either add the pattern to almadar-patterns or declare it in projects/<name>/patterns.json", severity: "error" }] (if (array/includes @known @name) @nof [{ code: "SEXPR_INVALID_OPERATOR", path: @p, message: (str/concat "Behavior '" @name "' is not shipped by any installed behavior package (cross-registry check)"), suggestion: (str/concat "Author " @name ".lolo under <topic>/<atoms|molecules|organisms>/ in a behavior package's `orb.source` tree, or install the package that ships it (`orb add`)."), severity: "error" }])))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "cross-registry", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+      XR_COLLECTED { }
+        @description "Internal: the expression trees were walked."
+        @tier "internal"
+      XR_NEXT { }
+        @description "Internal: catalog the next installed package."
+        @tier "internal"
+      XR_FINAL { }
+        @description "Internal: every needed fact is in, build the findings."
+        @tier "internal"
+      XR_PACKAGES { result : [XrPackage]! }
+        @description "behavior/packages' success."
+        @tier "internal"
+      XR_CATALOGED { result : [XrHit]! }
+        @description "behavior/catalog's success for one package."
+        @tier "internal"
+      XR_PKG_FAILED { error : string }
+        @description "behavior/catalog failed for one package: it ships nothing."
+        @tier "internal"
+      XR_FAILED { error : string }
+        @description "behavior/packages failed: no package is known."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : XrProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      LINT_PATTERNS_HEARD { patterns : Map string XrPattern! }
+        @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry."
+      OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD
+      LINT_OPERATOR_NAMES_HEARD { names : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_NAMES: every installed operator name."
+      OrbLintInput.LINT_OPERATOR_NAMES -> LINT_OPERATOR_NAMES_HEARD
+    }
+  }
+
+  trait OrbLintCrossRegistryCli -> OrbLintCrossRegistryRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint cross-registry <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "cross-registry") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint cross-registry: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "cross-registry") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint cross-registry: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-cross-registry" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint cross-registry` with its arguments and working directory."
+        @synonyms "orb lint cross-registry"
+      OrbLintCrossRegistry.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintCrossRegistryCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintCrossRegistryOrbitalStart -> OrbLintCrossRegistry, OrbLintCrossRegistryCli, OrbLintInput, Packs, Versions
+}

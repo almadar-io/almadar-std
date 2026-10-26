@@ -1086,6 +1086,18 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       'Send HTTP through the shared kernel: (http METHOD origin path request? options?). The origin, optionally including a path prefix, must be declared in egress; credentials are host-resolved named secret knobs. Keyless calls can run on client/extension; auth requires server execution. Replies carry { status, headers, body, key } (non-2xx is a success reply); failures carry { error, kind, credential, key }. Optional trailing { key, emit: { success, failure, cancelled, onMessage } } routes the result like call-service. An oauth-client auth runs one OAuth op end to end: discovery against a literal origin, and code, connect, refresh, revoke and userinfo against (http METHOD oauth-endpoint token|revocation|userinfo …), whose URL comes from the client metadata; failures carry { error, kind: oauth, code, reason }.',
     hasSideEffects: true,
     runsOn: 'server',
+    oauth: {
+      endpointTarget: 'oauth-endpoint',
+      endpointKinds: ['token', 'revocation', 'userinfo'],
+      ops: [
+        { name: 'discovery', required: [], optional: [] },
+        { name: 'code', required: ['code', 'state'], optional: ['subject'], endpoint: 'token' },
+        { name: 'connect', required: ['code', 'state', 'provider'], optional: [], endpoint: 'token' },
+        { name: 'refresh', required: ['refreshToken'], optional: [], endpoint: 'token' },
+        { name: 'revoke', required: ['token'], optional: [], endpoint: 'revocation' },
+        { name: 'userinfo', required: ['accessToken'], optional: [], endpoint: 'userinfo' },
+      ],
+    },
     returnType: 'void',
     params: [
       { name: 'method', type: HTTP_METHOD, description: 'HTTP method word: GET, POST, PUT, PATCH or DELETE' },
@@ -1113,6 +1125,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   redis: {
     module: 'core',
     category: 'effect',
+    defaultPorts: { redis: 6379, rediss: 6379 },
     minArity: 2,
     maxArity: 4,
     description:
@@ -1142,6 +1155,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   postgres: {
     module: 'core',
     category: 'effect',
+    defaultPorts: { postgres: 5432, postgresql: 5432 },
     minArity: 3,
     maxArity: 5,
     description:
@@ -1192,6 +1206,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       'Draw n bytes from the host CSPRNG (journaled, so a replay sees the same bytes). The success payload is { value }: the bytes as base64url without padding, for an OAuth state or a PKCE verifier. n is an integer from 1 to 1024. An optional key (a non-empty string expression) is echoed as key in the success and failure payloads, so a caller can carry its request context through the draw.',
     hasSideEffects: true,
     runsOn: 'server',
+    closedCall: { intRange: { arg: 0, min: 1, max: 1024 } },
     returnType: 'void',
     params: [
       { name: 'bytes', type: NUMBER, description: 'How many random bytes to draw (1 to 1024)' },
@@ -1214,6 +1229,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       'A bare secret knob checks the signed-in user credential; { credential: knob, scope: app | user } explicitly selects a scope. App checks need no viewer and treat absent or empty values as disconnected. User checks require a signed-in viewer and never fall back to app credentials. Success is { connected, label }: label is the non-secret account name stored beside the credential (the email it was signed in as), empty text when it has none; the credential value is never readable.',
     hasSideEffects: true,
     runsOn: 'server',
+    closedCall: {},
     returnType: 'void',
     params: [
       { name: 'credential', type: union(STRING, shape({ credential: STRING, scope: union(lit('app'), lit('user')) })), description: 'A secret-typed @config knob (user scope), or a closed credential/scope object with an explicit app or user scope' },
@@ -1236,6 +1252,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       'Drop the signed-in viewer\'s stored credential named by a secret knob; the success payload is { connected: false, label: "" }. Fails when nobody is signed in.',
     hasSideEffects: true,
     runsOn: 'server',
+    closedCall: {},
     returnType: 'void',
     params: [
       { name: 'credential', type: STRING, description: 'A secret-typed @config knob whose value names the credential' },
@@ -1258,6 +1275,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       'Ask the kernel for the verdict of an entity access policy: whether viewer may create, read, update or delete row of entity, evaluated by the same evaluator fetch and persist enforce. The success payload is { allowed }; an entity with no policy for the action allows every viewer, a null viewer is nobody. An entity the program does not declare, an unknown action or a request missing a key fails with { error }.',
     hasSideEffects: true,
     runsOn: 'server',
+    closedCall: {},
     returnType: 'void',
     params: [
       {
@@ -1289,9 +1307,10 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       "Masked credential inventory: whether the host's credential store can encrypt, the integrations mode, each service's status and every declared credential's source (store, env or none) with its last four characters, never the value. The declared names are the registry's remaining services plus the secret knobs the running program reads. Open to every caller. The success payload is { enabled, mode, services, entries }.",
     hasSideEffects: true,
     runsOn: 'server',
+    closedCall: { request: true },
     returnType: 'void',
     params: [
-      { name: 'request', type: openShape({ service: STRING }), description: 'An optional { service } filter' },
+      { name: 'request', type: shape({ service: STRING }, ['service']), description: 'An optional { service } filter' },
       {
         name: 'options',
         type: HOST_CALL_ENVELOPE,
@@ -1311,6 +1330,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       "Store a credential value encrypted in the host's credential store; only a credential the named service or program group declares is accepted. Requires the caller's @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { saved, service, envVar, last4 }; the value is never echoed or logged.",
     hasSideEffects: true,
     runsOn: 'server',
+    closedCall: { request: true },
     returnType: 'void',
     params: [
       { name: 'request', type: shape({ service: STRING, envVar: STRING, value: STRING }), description: '{ service, envVar, value }' },
@@ -1333,6 +1353,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       "Delete a stored credential row so resolution falls back to the environment; only a declared credential is accepted. Requires the caller's @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { removed }.",
     hasSideEffects: true,
     runsOn: 'server',
+    closedCall: { request: true },
     returnType: 'void',
     params: [
       { name: 'request', type: shape({ service: STRING, envVar: STRING }), description: '{ service, envVar }' },
@@ -1355,6 +1376,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       "Credential presence check for a service or program group: the required declared credentials the store or the environment do not hold. Presence only, never a live probe. Requires the caller's @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { service, configured, missing, probed, ok, message }.",
     hasSideEffects: true,
     runsOn: 'server',
+    closedCall: { request: true },
     returnType: 'void',
     params: [
       { name: 'request', type: shape({ service: STRING }), description: '{ service }' },
@@ -1377,6 +1399,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       'Switch the host\'s integrations mode flag between "mock" and "real"; the host may refuse (mock under production). Requires the caller\'s @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { mode }.',
     hasSideEffects: true,
     runsOn: 'server',
+    closedCall: { request: true },
     returnType: 'void',
     params: [
       { name: 'request', type: shape({ mode: union(lit('mock'), lit('real')) }), description: '{ mode: "mock" | "real" }' },
@@ -1399,6 +1422,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       "Re-encrypt every stored credential row under the current master key. It takes no request, only the optional options. Requires the caller's @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { rotated, alreadyCurrent, unreadable }.",
     hasSideEffects: true,
     runsOn: 'server',
+    closedCall: {},
     returnType: 'void',
     params: [
       {
@@ -1430,8 +1454,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       },
       {
         name: 'options',
-        type: HOST_CALL_ENVELOPE,
-        description: 'Optional trailing options: { emit: { success, failure } }',
+        type: openShape({ key: STRING, emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY }) }),
+        description: 'Optional trailing options: { key } is a non-empty string echoed as key in the success and failure payloads; { emit: { success, failure } } routes the result',
         optional: true,
       },
     ],

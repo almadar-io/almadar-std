@@ -124,12 +124,12 @@ orbital OrbFiredEventsOrbital {
                                           (if (str/startsWith @tx "\"") { f: (= @tx "\"\""), t: (and (!= @tx "\"\"") (not (str/startsWith @tx "\"@"))), lit: (not (str/startsWith @tx "\"@")), v: @tx }
                                             (if (or (= @tx "true") (= @tx "false")) { f: (= @tx "false"), t: (= @tx "true"), lit: true, v: @tx }
                                               { f: (= (str/to-number @tx) 0), t: (!= (str/to-number @tx) 0), lit: true, v: @tx })))))) })))) "FiredNode")))))
-                          { trait: (object/get @t "name"), ev: (array/flatten (array/map @res (fn x (object/get @x "ev")))), ctl: (array/flatten (array/map @res (fn x (object/get @x "ctl")))) }))))))))))
-            (let ((tnames (array/unique (array/map @recs (fn r (object/get @r "trait"))))))
+                          { trait: (object/get @t "name" ""), ev: (array/flatten (array/map @res (fn x (object/get @x "ev" [])))), ctl: (array/flatten (array/map @res (fn x (object/get @x "ctl" [])))) }))))))))))
+            (let ((tnames (array/unique (array/map @recs (fn r (object/get @r "trait" ""))))))
               (emit FIRED_EVENTS {
                 scope: @payload.scope,
-                byControl: (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (array/filter @recs (fn r (= (object/get @r "trait") @nm))) (fn r (object/get @r "ctl")))))) ]))),
-                byEffect: (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (array/filter @recs (fn r (= (object/get @r "trait") @nm))) (fn r (object/get @r "ev")))))) ]))) }))))
+                byControl: (or (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (array/filter @recs (fn r (= (object/get @r "trait" "") @nm))) (fn r (object/get @r "ctl" [])))))) ]))) {}),
+                byEffect: (or (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (array/filter @recs (fn r (= (object/get @r "trait" "") @nm))) (fn r (object/get @r "ev" [])))))) ]))) {}) }))))
     }
 
     emits {

@@ -1,0 +1,21 @@
+app lint-user-field-exists-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-user-field-exists - the `orb lint user-field-exists <file>` command, the port of the `@user.<field>` existence checks of user_identity.rs (check_field_exists, walked over every inline trait) and entity_access.rs (unknown_user_field, walked over the @read/@create/@update/@delete directives of every inline entity). It lowers the file with program/read and reports an `@user.<field>` (and, in an access directive, `(object/get @user <field>)`) that names no field of the identity shape the orbital resolves against: the declared [identity] entity (ORB_S_UNKNOWN_IDENTITY_FIELD), the orbital's own `expects entity [identity] { shape }` (ORB_S_EXPECTATION_FIELD_UNDECLARED), or the default shape; every shape carries the installed language's Viewer members (read from LINT_LANGUAGE_FACTS). A declared roster also re-checks the authored traits against the orbital's expects shape. Bodies inlined from a uses import (sourceBehavior) are skipped against an expectation. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint user-field-exists: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintUserFieldExistsSpec {
+  expects trait OrbLintUserFieldExists {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintUserFieldExistsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintUserFieldExists, OrbLintUserFieldExistsCli
+}

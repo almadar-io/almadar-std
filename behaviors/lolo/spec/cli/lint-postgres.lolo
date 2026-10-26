@@ -1,0 +1,21 @@
+app lint-postgres-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint postgres <file>`, the port of validate_postgres_effects. Every `(postgres origin sql params options? options?)` call in an inline trait is checked for its arity and closed option keys (from the operator table), its origin and egress, a literal statement against the read-only SELECT guard, its params, its option values and its key and emit routes, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint postgres: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintPostgresSpec {
+  expects trait OrbLintPostgres {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintPostgresCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintPostgres, OrbLintPostgresCli
+}

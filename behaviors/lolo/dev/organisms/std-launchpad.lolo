@@ -1,6 +1,7 @@
 app std-launchpad [
   version: "1.0.0",
   theme: "linear-clean-light",
+  themes: ["game-sci-fi-dark"],
   exec: ["orb", "open"],
   env: ["PATH", "HOME", "NODE_ENV", "AUTH_PROVIDER", "OIDC_ISSUER_URL", "OIDC_AUDIENCE", "FIREBASE_PROJECT_ID", "FIREBASE_SERVICE_ACCOUNT_PATH", "FIREBASE_AUTH_EMULATOR_HOST", "FIRESTORE_EMULATOR_HOST", "ALMADAR_INTEGRATIONS_MODE"],
   fs: { "~/.almadar/launchpad": [create], "~/.almadar/launchpad/**": [read, write, create] },
@@ -15,6 +16,8 @@ uses Playground from "std/behaviors/std-behavior-playground"
 uses Kinds from "std/behaviors/std-launchpad-kinds"
 uses Programs from "std/behaviors/std-launchpad-programs"
 uses Recents from "std/behaviors/std-launchpad-recents"
+uses Orb from "std/behaviors/std-launchpad-orb"
+uses Cosmic from "std/behaviors/std-avl-cosmic-zoom"
 uses Cli from "std/behaviors/std-cli"
 uses Gate from "std/behaviors/std-http-boot-gate"
 uses EnvCheck from "std/behaviors/std-boot-env-check"
@@ -35,6 +38,10 @@ type LaunchpadPick = {
   note : string!
   value : behavior!
 }
+type CosmicNodeContext = { level : "overview" | "trait-expanded" | "system" | "code" | "transition"!, orbital : string!, trait : string, transition : string, transitionIndex : number }
+type OrbImports = { layer : "io" | "std" | "primitive" | "unknown"!, imports : [string]! }
+type OrbGraph = { orbitals : Map string [string]!, behaviors : Map string OrbImports! }
+type OrbClicked = { id : string!, label : string, group : string, size : number, color : string }
 type LaunchpadSkipped = { package : string!, error : string! }
 type LaunchpadTopicCount = { package : string!, topic : string!, count : number! }
 type LaunchpadFinding = { code : string!, message : string! }
@@ -72,6 +79,8 @@ orbital Launchpad {
     view : "home" | "picked" = home
     picked : LaunchpadPick?
     picking : boolean = false
+    orbBusy : boolean = false
+    pendingLoad : LaunchpadPick?
     argvText : string = ""
     commandStatus : "idle" | "running" | "done" | "failed" = idle
     commandExit : number = 0
@@ -99,7 +108,7 @@ orbital Launchpad {
       @description "The topic the launchpad opens on."
     title : string = "Launchpad"
       @label "Title"
-    kinds : [LaunchpadKindLabel] = [{ kind: "route", title: "Apps", run: "Run and open", hint: "Served on a port of its own and opened in the browser." }, { kind: "cli", title: "Commands", run: "Open", hint: "An orb command: type its arguments, then run it." }, { kind: "http", title: "Servers", run: "Run", hint: "Serves the endpoint it declares, on the port its program names." }, { kind: "stdio", title: "Terminal programs", run: "Run", hint: "Runs in the background." }, { kind: "boot", title: "Background programs", run: "Run", hint: "Starts when run and keeps running until stopped." }, { kind: "library", title: "Atoms and organisms", run: "Open live", hint: "Has no page of its own: it runs embedded, here." }, { kind: "unreadable", title: "Unreadable", run: "", hint: "The program could not be read." }]
+    kinds : [LaunchpadKindLabel] = [{ kind: "route", title: "Apps", run: "Run", hint: "Served on a port of its own and opened in the browser." }, { kind: "cli", title: "Commands", run: "Open", hint: "An orb command: type its arguments, then run it." }, { kind: "http", title: "Servers", run: "Run", hint: "Serves the endpoint it declares, on the port its program names." }, { kind: "stdio", title: "Terminal programs", run: "Run", hint: "Runs in the background." }, { kind: "boot", title: "Background programs", run: "Run", hint: "Starts when run and keeps running until stopped." }, { kind: "library", title: "Atoms and organisms", run: "Open live", hint: "Has no page of its own: it runs embedded, here." }, { kind: "unreadable", title: "Unreadable", run: "", hint: "The program could not be read." }]
       @label "Kinds"
       @description "The kinds of behavior, in the order they are listed, with the heading, the Run button text and the hint of each."
   }
@@ -174,15 +183,88 @@ orbital Launchpad {
     config {
       openPackage: @config.startPackage
       openTopic: @config.startTopic
+      leaves: true
+      leafIcons: [{ kind: "route", icon: "app-window" }, { kind: "cli", icon: "terminal" }, { kind: "http", icon: "server" }, { kind: "stdio", icon: "square-terminal" }, { kind: "boot", icon: "cpu" }, { kind: "library", icon: "box" }, { kind: "unreadable", icon: "file-warning" }]
     }
     listens {
       KindsIndex.KINDS_INDEXED -> TOPICS_LOADED
+      KindsTopic.KINDS_READY -> LEAVES_LOADED
     }
   }
 
   trait LiveLoader = Playground.traits.PlaygroundLoader {
     listens {
       LaunchpadStage.LOAD_BEHAVIOR -> LOAD_BEHAVIOR
+    }
+  }
+
+  trait OrbConstellation = Orb.traits.OrbConstellation {
+    listens {
+      LaunchpadTopics.TOPIC_PICKED -> TOPIC_PICKED
+      KindsTopic.KINDS_READY -> KINDS_READY
+      TOPIC_PICKED {
+        package : string!
+        topic : string!
+        count : number!
+      }
+      KINDS_READY {
+        package : string!
+        topic : string!
+        data : [LaunchpadPick]!
+        totalCount : number!
+      }
+      ORB_DEPS {
+        key : string
+        result : OrbGraph!
+      }
+      ORB_DEPS_FAILED {
+        key : string
+        error : string!
+      }
+      NODE_CLICK {
+        node : OrbClicked!
+      }
+    }
+  }
+
+  trait OrbCosmic = Cosmic.traits.CosmicZoom {
+    config {
+      emptyTitle: "No machines yet"
+      emptyDescription: "Open a behavior to see its orbitals, traits and transitions."
+    }
+    listens {
+      LaunchpadStage.COSMIC_LOAD -> LOAD
+      LOAD {
+        program : string!
+        source : string!
+        highlighted : string!
+      }
+      OPEN_TRAITS {
+        orbital : string!
+      }
+      OPEN_CODE {
+        orbital : string!
+      }
+      NODE_CLICK {
+        context : CosmicNodeContext!
+      }
+      ZOOM_OUT
+      CRUMB {
+        label : string!
+        href : string
+        index : number!
+      }
+      CURSOR {
+        value : number!
+      }
+      STOP
+      STEP {
+        orbital : string!
+        trait : string!
+        from : string!
+        event : event!
+        payload : @payload event!
+      }
     }
   }
 
@@ -365,27 +447,13 @@ orbital Launchpad {
           { type: alert, variant: warning, title: "Packages skipped", message: (str/join (array/map @entity.skipped (fn k (str/concat @k.package ": " @k.error))) "; "), className: (if (= (array/len @entity.skipped) 0) "hidden" "") },
           { type: alert, variant: (if @entity.mock info warning), title: (if @entity.mock "Mock integrations" "Production integrations"), message: (if @entity.mock "Programs start with ALMADAR_INTEGRATIONS_MODE=mock: services answer from mocks and no credentials are needed." (str/join @entity.problems "; ")), className: (if (or (not @entity.envChecked) (and (not @entity.mock) (= (array/len @entity.problems) 0))) "hidden" "") },
           { type: simple-grid, cols: 4, gap: md, children: (array/map (array/filter @config.kindLabels (fn k (and (!= @k.kind "unreadable") (> (array/count @entity.rows (fn r (= @r.kind @k.kind))) 0)))) (fn k { type: stat-display, label: @k.title, value: (array/count @entity.rows (fn r (= @r.kind @k.kind))), variant: default })) },
+          { type: box, children: [@trait.OrbConstellation] },
           { type: stack, direction: vertical, gap: xs, children: [
             { type: typography, content: @entity.topic, variant: h3, weight: semibold },
-            { type: typography, content: (if (= @entity.rowsStatus ready) (str/concat (array/len @entity.rows) " behaviors in this topic. Choose another topic on the left.") "Reading the topic."), variant: caption, color: muted }
+            { type: typography, content: (if (= @entity.rowsStatus ready) (str/concat (array/len @entity.rows) " behaviors in this topic, listed under it in the tree.") "Reading the topic."), variant: caption, color: muted }
           ] },
-          { type: skeleton, variant: list, rows: 6, className: (if (= @entity.rowsStatus loading) "" hidden) },
-          { type: stack, direction: vertical, gap: lg, className: (if (= @entity.rowsStatus ready) "" hidden), children: (array/map @config.kindLabels (fn k { type: stack, direction: vertical, gap: sm, className: (if (= (array/count @entity.rows (fn r (= @r.kind @k.kind))) 0) "hidden" ""), children: [
-            { type: stack, direction: horizontal, align: center, gap: sm, children: [
-              { type: typography, content: @k.title, variant: h4, weight: semibold },
-              { type: badge, label: (str/concat (array/count @entity.rows (fn r (= @r.kind @k.kind)))), variant: default },
-              { type: typography, content: @k.hint, variant: caption, color: muted }
-            ] },
-            { type: stack, direction: vertical, gap: xs, children: (array/map (array/filter @entity.rows (fn r (= @r.kind @k.kind))) (fn r { type: card, padding: sm, children: [
-              { type: stack, direction: horizontal, align: center, justify: between, gap: md, children: [
-                { type: stack, direction: vertical, gap: none, className: "min-w-0", children: [
-                  { type: typography, content: (if (= @r.kind cli) (str/concat "orb " @r.command) (array/last (str/split @r.behavior "/"))), variant: h5, weight: medium },
-                  { type: typography, content: (if (= @r.kind unreadable) @r.note @r.description), variant: caption, color: muted, className: "line-clamp-2" }
-                ] },
-                { type: button, label: @k.run, variant: primary, size: sm, action: ROW_RUN, actionPayload: { behavior: @r.behavior }, className: (if (= @r.kind unreadable) hidden "") }
-              ] }
-            ] })) }
-          ] })) }
+          { type: skeleton, variant: list, rows: 3, className: (if (= @entity.rowsStatus loading) "" hidden) },
+          { type: empty-state, icon: mouse-pointer-click, title: "Pick a behavior in the tree", description: "Open a topic on the left and choose one of its behaviors to see how it runs and run it.", className: (if (= @entity.rowsStatus ready) "" hidden) }
         ] })
       STAGE_SHOWN -> ready when (= @entity.view picked)
         (render-ui main { type: stack, direction: vertical, gap: md, className: "h-full overflow-y-auto p-6", children: [
@@ -393,18 +461,21 @@ orbital Launchpad {
           { type: stack, direction: vertical, gap: xs, children: [
             { type: stack, direction: horizontal, align: center, gap: sm, children: [
               { type: typography, content: (if (= @entity.picked.kind cli) (str/concat "orb " @entity.picked.command) (array/last (str/split @entity.picked.behavior "/"))), variant: h2, weight: bold },
-              { type: badge, label: @entity.picked.kind, variant: info }
+              { type: badge, label: (object/get (array/find @config.kindLabels (fn k (= @k.kind @entity.picked.kind))) "title" @entity.picked.kind), variant: info }
             ] },
-            { type: typography, content: @entity.picked.behavior, variant: caption, color: muted },
+            { type: typography, content: (str/concat @entity.picked.behavior "  ·  " (object/get (array/find @config.kindLabels (fn k (= @k.kind @entity.picked.kind))) "hint" "")), variant: caption, color: muted },
             { type: typography, content: @entity.picked.description, variant: body, color: muted }
           ] },
           { type: stack, direction: vertical, gap: sm, className: (if (array/includes ["route", "http", "stdio", "boot"] @entity.picked.kind) "" hidden), children: [
             { type: stack, direction: horizontal, align: center, gap: sm, children: [
-              { type: button, label: (object/get (array/find @config.kindLabels (fn k (= @k.kind @entity.picked.kind))) "run" "Run"), variant: primary, action: PICKED_RUN, className: (if (array/some @entity.running (fn r (= @r.id @entity.picked.behavior))) hidden "") },
+              { type: button, label: (object/get (array/find @config.kindLabels (fn k (= @k.kind @entity.picked.kind))) "run" "Run"), variant: primary, action: PICKED_RUN, className: (if (or (array/some @entity.running (fn r (= @r.id @entity.picked.behavior))) (not (and (= @entity.liveStatus ready) @entity.liveValid))) hidden "") },
               { type: button, label: "Open", variant: secondary, action: PICKED_OPEN, className: (if (array/some @entity.running (fn r (and (= @r.id @entity.picked.behavior) (!= @r.url "")))) "" hidden) },
               { type: button, label: "Stop", variant: ghost, action: PICKED_STOP, className: (if (array/some @entity.running (fn r (= @r.id @entity.picked.behavior))) "" hidden) }
             ] },
-            { type: typography, content: (if @entity.mock "It starts with ALMADAR_INTEGRATIONS_MODE=mock." "It starts with the integrations of this machine."), variant: caption, color: muted }
+            { type: typography, content: (if @entity.mock "It starts with ALMADAR_INTEGRATIONS_MODE=mock." "It starts with the integrations of this machine."), variant: caption, color: muted },
+            { type: loading-state, message: "Checking the program", className: (if (= @entity.liveStatus loading) "" hidden) },
+            { type: alert, variant: error, title: "This program does not validate, so orb will not run it", message: (str/join (array/map @entity.liveFindings (fn f (str/concat @f.code ": " @f.message))) "\n"), className: (if (and (= @entity.liveStatus ready) (not @entity.liveValid)) "whitespace-pre-wrap" hidden) },
+            { type: alert, variant: error, title: "This program could not be read", message: @entity.liveError, className: (if (= @entity.liveStatus failed) "" hidden) }
           ] },
           { type: stack, direction: vertical, gap: sm, className: (if (= @entity.picked.kind cli) "" hidden), children: [
             { type: stack, direction: horizontal, align: end, gap: sm, children: [
@@ -425,6 +496,10 @@ orbital Launchpad {
             { type: alert, variant: warning, title: "This behavior does not run on its own", message: (str/join (array/map @entity.liveFindings (fn f (str/concat @f.code ": " @f.message))) "; "), className: (if (and (= @entity.liveStatus ready) (= @entity.tab live) (not @entity.liveValid)) "" hidden) },
             { type: box, className: (if (and (= @entity.liveStatus ready) (= @entity.tab live) @entity.liveValid) "min-h-[24rem]" hidden), children: [(object/set @entity.picked.value "resolved" @entity.liveProgram)] },
             { type: box, className: (if (and (= @entity.liveStatus ready) (= @entity.tab source)) "" hidden), children: [{ type: code-block, code: @entity.liveSource, language: "lolo", showLineNumbers: true, maxHeight: "40rem" }] }
+          ] },
+          { type: stack, direction: vertical, gap: sm, className: (if (= @entity.liveStatus ready) "" hidden), children: [
+            { type: typography, content: "State machines", variant: h4, weight: semibold },
+            { type: box, className: "h-[calc(100vh-9rem)] min-h-0", children: [@trait.OrbCosmic] }
           ] }
         ] })
       SEARCH_TERM -> ready
@@ -478,10 +553,18 @@ orbital Launchpad {
         (emit PANEL_REQUESTED { row: ?row })
       KIND_FAILED -> ready
         (render-ui toast { type: alert, variant: error, message: (str/concat ?behavior " could not be read: " ?error) })
-      ROW_RUN -> ready when (array/some @entity.rows (fn r (and (= @r.behavior ?behavior) (array/includes ["route", "http", "stdio", "boot"] @r.kind))))
-        (emit LAUNCH_REQUESTED { row: (array/find @entity.rows (fn r (= @r.behavior ?behavior))) })
-      ROW_RUN -> ready when (array/some @entity.rows (fn r (and (= @r.behavior ?behavior) (array/includes ["cli", "library"] @r.kind))))
+      LEAF_PICKED -> ready when (array/some @entity.rows (fn r (= @r.behavior ?behavior)))
         (emit PANEL_REQUESTED { row: (array/find @entity.rows (fn r (= @r.behavior ?behavior))) })
+      LEAF_PICKED -> ready when (not (array/some @entity.rows (fn r (= @r.behavior ?behavior))))
+        (emit KIND_OF { behavior: ?behavior })
+      ORB_BUSY -> ready
+        (set @entity.orbBusy true)
+      ORB_IDLE -> ready when (!= @entity.pendingLoad null)
+        (set @entity.orbBusy false)
+        (emit LOAD_BEHAVIOR { behavior: @entity.pendingLoad.behavior, value: @entity.pendingLoad.value })
+        (set @entity.pendingLoad null)
+      ORB_IDLE -> ready when (= @entity.pendingLoad null)
+        (set @entity.orbBusy false)
       LAUNCH_REQUESTED -> ready
         (emit PROGRAM_LAUNCH { behavior: ?row.behavior, label: (array/last (str/split ?row.behavior "/")), kind: ?row.kind, verb: (if (or (= ?row.kind route) (= ?row.kind http)) "serve" "run"), ported: (= ?row.kind route), open: (= ?row.kind route), route: ?row.route, mock: @entity.mock })
         (emit RECENT_ADD { behavior: ?row.behavior, label: (array/last (str/split ?row.behavior "/")), kind: ?row.kind, command: ?row.command, route: ?row.route })
@@ -491,12 +574,16 @@ orbital Launchpad {
         (set @entity.tab live)
         (set @entity.liveStatus loading)
         (set @entity.liveError "")
-        (emit LOAD_BEHAVIOR { behavior: ?row.behavior, value: ?row.value })
+        (if @entity.orbBusy (set @entity.pendingLoad ?row) (emit LOAD_BEHAVIOR { behavior: ?row.behavior, value: ?row.value }))
         (emit RECENT_ADD { behavior: ?row.behavior, label: (array/last (str/split ?row.behavior "/")), kind: ?row.kind, command: ?row.command, route: ?row.route })
         (emit STAGE_SHOWN {})
       PANEL_REQUESTED -> ready when (!= ?row.kind library)
         (set @entity.picked ?row)
         (set @entity.view picked)
+        (set @entity.liveStatus loading)
+        (set @entity.liveError "")
+        (set @entity.liveFindings [])
+        (if @entity.orbBusy (set @entity.pendingLoad ?row) (emit LOAD_BEHAVIOR { behavior: ?row.behavior, value: ?row.value }))
         (set @entity.argvText "")
         (set @entity.commandStatus idle)
         (set @entity.commandOut "")
@@ -544,6 +631,7 @@ orbital Launchpad {
         (set @entity.liveValid ?valid)
         (set @entity.liveFindings ?findings)
         (set @entity.liveStatus ready)
+        (emit COSMIC_LOAD { program: ?programJson, source: ?sourceJson, highlighted: "" })
         (emit STAGE_SHOWN {})
       BEHAVIOR_FAILED -> ready when (and (= @entity.view picked) (= ?behavior @entity.picked.behavior))
         (set @entity.liveError ?error)
@@ -618,6 +706,12 @@ orbital Launchpad {
       COMMAND_CANCEL -> external {
       }
         @description "Stop the running command."
+      COSMIC_LOAD -> external {
+        program : string!
+        source : string!
+        highlighted : string!
+      }
+        @description "Show the picked behavior's state machines."
       LOAD_BEHAVIOR -> external {
         behavior : string!
         value : behavior
@@ -627,6 +721,10 @@ orbital Launchpad {
 
     listens {
       LaunchpadTopics.TOPIC_PICKED -> TOPIC_PICKED
+      LaunchpadTopics.LEAF_PICKED -> LEAF_PICKED
+      OrbConstellation.ORB_PICKED -> LEAF_PICKED
+      OrbConstellation.ORB_BUSY -> ORB_BUSY
+      OrbConstellation.ORB_IDLE -> ORB_IDLE
       KindsTopic.KINDS_READY -> KINDS_READY
       KindsIndex.KINDS_INDEXED -> INDEX_READY
       KindsOne.KIND_RESOLVED -> KIND_RESOLVED
@@ -736,9 +834,11 @@ orbital Launchpad {
       RECENT_PICK {
         behavior : string!
       }
-      ROW_RUN {
+      LEAF_PICKED {
         behavior : string!
       }
+      ORB_BUSY { }
+      ORB_IDLE { }
       PANEL_REQUESTED {
         row : LaunchpadPick!
       }
@@ -876,5 +976,5 @@ orbital Launchpad {
     }
   }
 
-  page "/" as LaunchpadPage -> LaunchpadFrame, LaunchpadTopBar, LaunchpadTopics, LaunchpadStage, LaunchpadRunning, LaunchpadStatus, BehaviorCatalog, BehaviorCatalogLlm, LiveLoader, KindsTopic, KindsOne, KindsClassifier, KindsIndex, ProgramRunner, RecentsStore, CommandRunner, BootGuard, BootCheck
+  page "/" as LaunchpadPage -> LaunchpadFrame, LaunchpadTopBar, LaunchpadTopics, LaunchpadStage, LaunchpadRunning, LaunchpadStatus, BehaviorCatalog, BehaviorCatalogLlm, LiveLoader, OrbConstellation, OrbCosmic, KindsTopic, KindsOne, KindsClassifier, KindsIndex, ProgramRunner, RecentsStore, CommandRunner, BootGuard, BootCheck
 }

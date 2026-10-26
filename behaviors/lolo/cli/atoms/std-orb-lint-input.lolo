@@ -36,11 +36,11 @@ type OperatorTable = { operators : Map string OperatorEntry! }
 type PatternProp = { kind : string, eventField : string }
 type PatternEntry = { propsSchema : Map string PatternProp }
 type PatternRegistry = { patterns : Map string PatternEntry! }
-type PatternRegProp = { types : [string], enumValues : [string], required : boolean | [string], kind : string, itemKind : string, payloadFor : string, items : PatternRegProp?, properties : Map string PatternRegProp? }
-type PatternRegEntry = { drawHost : boolean, drawable : boolean, fieldsContract : string, accessibleName : [string], propsSchema : Map string PatternRegProp }
+type PatternRegProp = { types : [string], enumValues : [string], required : boolean | [string], kind : string, itemKind : string, payloadFor : string, requiredFields : [string], items : PatternRegProp?, properties : Map string PatternRegProp? }
+type PatternRegEntry = { requiresAction : boolean, drawHost : boolean, drawable : boolean, fieldsContract : string, accessibleName : [string], propsSchema : Map string PatternRegProp }
 type PatternRegFile = { patterns : Map string PatternRegEntry! }
-type PatternPropShape = { types : [string]!, requiredOnParent : boolean!, requiredNames : [string]!, enumValues : [string]?, kind : string?, itemKind : string?, payloadFor : string?, items : PatternPropShape?, properties : Map string PatternPropShape? }
-type PatternShape = { drawHost : boolean!, drawable : boolean!, fieldsContract : string!, accessibleName : [string]?, props : Map string PatternPropShape! }
+type PatternPropShape = { types : [string]!, requiredOnParent : boolean!, requiredNames : [string]!, enumValues : [string]?, kind : string?, itemKind : string?, payloadFor : string?, requiredFields : [string]?, items : PatternPropShape?, properties : Map string PatternPropShape? }
+type PatternShape = { requiresAction : boolean!, drawHost : boolean!, drawable : boolean!, fieldsContract : string!, accessibleName : [string]?, props : Map string PatternPropShape? }
 type ProgTypeNode = { type : string!, required : boolean, nullable : boolean, items : ProgTypeNode, properties : Map string ProgTypeNode, values : [string] }
 type ProgTypeFile = Map string ProgTypeNode
 type BindingRule = { allowed : [string]! }
@@ -175,19 +175,25 @@ orbital OrbLintInputOrbital {
               (let ((rows (array/flatten (array/map (array/sort (object/keys @pats)) (fn pn
                       (let ((ps (object/get (object/get @pats @pn) "propsSchema" {})))
                         (array/map (object/keys @ps) (fn k { pattern: @pn, prop: @k, kind: (object/get (object/get @ps @k) "kind" ""), field: (object/get (object/get @ps @k) "eventField" "") }))))))))
+                (let ((listenMap (object/fromEntries (array/map (array/unique (array/map (array/filter @rows (fn r (= (object/get @r "kind") "event-listen"))) (fn r (object/get @r "pattern")))) (fn pn [@pn, (array/map (array/filter @rows (fn r (and (= (object/get @r "pattern") @pn) (= (object/get @r "kind") "event-listen")))) (fn r (object/get @r "prop")))])))))
+                  (if (= @listenMap null)
+                    (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core pattern registry has event-listen props that cannot be grouped by pattern" })
                 (emit LINT_EVENT_PROPS {
                   names: (array/sort (array/unique (array/flatten (array/map @rows (fn r
                     (if (array/includes ["event", "event-ref", "event-listen", "callback"] (object/get @r "kind")) [(object/get @r "prop")]
                       (if (and (= (object/get @r "kind") "event-list") (!= (object/get @r "field") "")) [(object/get @r "field")] []))))))),
                   maps: (array/sort (array/unique (array/map (array/filter @rows (fn r (= (object/get @r "kind") "event-map"))) (fn r (object/get @r "prop"))))),
                   byPattern: (array/flatten (array/map @rows (fn r (if (array/includes ["event", "event-ref", "callback"] (object/get @r "kind")) [{ pattern: (object/get @r "pattern"), prop: (object/get @r "prop"), field: "" }] (if (= (object/get @r "kind") "event-list") [{ pattern: (object/get @r "pattern"), prop: (object/get @r "prop"), field: (if (= (object/get @r "field") "") "event" (object/get @r "field")) }] []))))),
-                  listens: (object/fromEntries (array/map (array/unique (array/map (array/filter @rows (fn r (= (object/get @r "kind") "event-listen"))) (fn r (object/get @r "pattern")))) (fn pn [@pn, (array/map (array/filter @rows (fn r (and (= (object/get @r "pattern") @pn) (= (object/get @r "kind") "event-listen")))) (fn r (object/get @r "prop")))]))) })))))
+                  listens: @listenMap })))))))
         (let ((text (bytes/to-string @payload.data)))
           (if (= @text null)
             (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core pattern registry is not valid text" })
-            (emit LINT_PATTERNS { patterns: (object/mapValues (object/get (json/parse @text PatternRegFile) "patterns") (fn e
+            (let ((registry (json/parse @text PatternRegFile)))
+             (if (= @registry null)
+              (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/core pattern registry is not a pattern registry" })
+              (emit LINT_PATTERNS { patterns: (object/mapValues (object/get @registry "patterns") (fn e
               (object/merge
-                { drawHost: (= (object/get @e "drawHost" false) true), drawable: (= (object/get @e "drawable" false) true), fieldsContract: (object/get @e "fieldsContract" ""),
+                { requiresAction: (= (object/get @e "requiresAction" false) true), drawHost: (= (object/get @e "drawHost" false) true), drawable: (= (object/get @e "drawable" false) true), fieldsContract: (object/get @e "fieldsContract" ""),
                   props: (object/mapValues (object/get @e "propsSchema" {}) (fn p
                     (tree/fold @p (fn node kids
                       (object/merge
@@ -195,11 +201,12 @@ orbital OrbLintInputOrbital {
                         (if (!= (object/get @node "kind" "") "") { kind: (object/get @node "kind") } {})
                         (if (!= (object/get @node "itemKind" "") "") { itemKind: (object/get @node "itemKind") } {})
                         (if (!= (object/get @node "payloadFor" "") "") { payloadFor: (object/get @node "payloadFor") } {})
+                        (if (object/has @node "requiredFields") { requiredFields: (object/get @node "requiredFields") } {})
                         (if (object/has @node "enumValues") { enumValues: (object/get @node "enumValues") } {})
                         (if (object/has @kids "items") { items: (object/get @kids "items") } {})
                         (if (object/has @kids "properties") { properties: (object/get @kids "properties") } {})))
                       "PatternRegProp"))) }
-                (if (object/has @e "accessibleName") { accessibleName: (object/get @e "accessibleName") } {})))) })))
+                (if (object/has @e "accessibleName") { accessibleName: (object/get @e "accessibleName") } {})))) })))))
         (emit LINT_STD_READ { })
       LINT_STD_READ -> ready when (= @entity.stdRoot "")
         (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the language scan found no compatible @almadar/std" })
@@ -226,27 +233,31 @@ orbital OrbLintInputOrbital {
         (let ((text (bytes/to-string @payload.data)))
           (if (= @text null)
             (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table is not valid text" })
-            (if (= (json/parse @text OperatorShapeFile) null)
+            (let ((shapes (json/parse @text OperatorShapeFile)))
+             (if (= @shapes null)
               (emit LINT_OPERATOR_SHAPES_UNREAD { error: "the installed @almadar/std operator table has an operator whose arity, params or types are not declared in the table's shape" })
-              (emit LINT_OPERATOR_SHAPES { operators: (object/mapValues (object/get (json/parse @text OperatorShapeFile) "operators") (fn o
+              (emit LINT_OPERATOR_SHAPES { operators: (object/mapValues (object/get @shapes "operators") (fn o
               (object/merge
                 { hasSideEffects: (= (object/get @o "hasSideEffects" false) true),
-                  params: (array/map (object/get @o "params" []) (fn pr { name: (object/get @pr "name" ""), optional: (= (object/get @pr "optional" false) true), type: (object/get @pr "type") })) }
+                  params: (array/map (object/get @o "params" []) (fn pr (object/merge { name: (object/get @pr "name" ""), optional: (= (object/get @pr "optional" false) true) } (if (object/has @pr "type") { type: (object/get @pr "type") } {})))) }
                 (if (object/has @o "category") { category: (object/get @o "category") } {})
                 (if (object/has @o "minArity") { minArity: (object/get @o "minArity") } {})
                 (if (object/has @o "maxArity") { maxArity: (object/get @o "maxArity") } {})
                 (if (object/has @o "runsOn") { runsOn: (object/get @o "runsOn") } {})
-                (if (object/has @o "host") { host: (object/get @o "host") } {})))) }))))
+                (if (object/has @o "host") { host: (object/get @o "host") } {})))) })))))
         (let ((text (bytes/to-string @payload.data)))
           (if (= @text null)
             (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table is not valid text" })
             (let ((ops (object/get (json/parse @text OperatorTable) "operators")))
+              (let ((semMap (object/fromEntries (array/map (array/filter (object/keys @ops) (fn n (!= (object/get (object/get @ops @n) "returnSemantics" "") ""))) (fn n [@n, (object/get (object/get @ops @n) "returnSemantics")])))))
+                (if (= @semMap null)
+                  (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table has operators whose declared returnSemantics cannot be keyed by name" })
               (emit LINT_OPERATOR_SEMANTICS {
                 busExcluded: (object/get (object/get @ops "emit") "busExcluded"),
                 targetOptions: (object/get (object/get @ops "program/dispatch") "targetOptions"),
-                semantics: (object/fromEntries (array/map (array/filter (object/keys @ops) (fn n (!= (object/get (object/get @ops @n) "returnSemantics" "") ""))) (fn n [@n, (object/get (object/get @ops @n) "returnSemantics")]))),
+                semantics: @semMap,
                 functions: (array/sort (array/filter (object/keys @ops) (fn n (let ((rt (object/get (object/get @ops @n) "returnType" ""))) (and (validate/object @rt) (= (object/get @rt "kind" "") "fn")))))),
-                emitSlots: (array/sort (array/unique (array/flatten (array/map (object/keys @ops) (fn n (array/flatten (array/map (object/get (object/get @ops @n) "params" []) (fn p (let ((ty (object/get @p "type" null))) (if (validate/object @ty) (let ((em (object/get (object/get (json/parse (json/stringify @ty) OpShape) "fields" {}) "emit" null))) (if (validate/object @em) (object/keys (object/get (json/parse (json/stringify @em) OpShape) "fields" {})) [])) [])))))))))) }))))
+                emitSlots: (array/sort (array/unique (array/flatten (array/map (object/keys @ops) (fn n (array/flatten (array/map (object/get (object/get @ops @n) "params" []) (fn p (let ((ty (object/get @p "type" null))) (if (validate/object @ty) (let ((em (object/get (object/get (json/parse (json/stringify @ty) OpShape) "fields" {}) "emit" null))) (if (validate/object @em) (object/keys (object/get (json/parse (json/stringify @em) OpShape) "fields" {})) [])) [])))))))))) }))))))
         (program/read "" { resolve: true text: false path: (if (os/path-is-absolute @entity.file) @entity.file (os/path-join @entity.cwd @entity.file)) } { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
       LINT_PROGRAM_READ -> reading when (not @entity.factsDone)
         (set @entity.lazy (object/get @payload.result "lazy" []))
@@ -308,7 +319,7 @@ orbital OrbLintInputOrbital {
         @description "The event-bearing prop names of the installed @almadar/core pattern registry: `names` are the props of kind event, event-ref, event-listen or callback plus the eventField of each event-list prop, `maps` the event-map props, `listens` the event-listen props by pattern; sent before LINT_INPUT."
         @tier "internal"
       LINT_PATTERNS -> external { patterns : Map string PatternShape! }
-        @description "The installed @almadar/core pattern registry projected for the render-ui checks: per pattern its drawHost and drawable flags, fieldsContract, accessibleName props (absent when the pattern declares none) and props; per prop its concrete types (never `unknown`), whether it is required on its parent (the bool form), the sub-keys it requires (the list form), kind, itemKind, payloadFor (the sibling event prop it pairs with, absent when none), enumValues (absent when unbounded) and the same shape for its items and properties; sent before LINT_INPUT."
+        @description "The installed @almadar/core pattern registry projected for the render-ui checks: per pattern its requiresAction (a render of it needs an action, event, onClick or href), drawHost and drawable flags, fieldsContract, accessibleName props (absent when the pattern declares none) and props; per prop its concrete types (never `unknown`), whether it is required on its parent (the bool form), the sub-keys it requires (the list form), kind, itemKind, payloadFor (the sibling event prop it pairs with, absent when none), requiredFields (the entity fields an EntityWith prop requires, absent when none), enumValues (absent when unbounded) and the same shape for its items and properties; sent before LINT_INPUT."
         @tier "internal"
       LINT_OPERATOR_NAMES -> external { names : [string]! }
         @description "Every installed operator name, namespaced ones included (`array/concat`): a children list headed by one is an expression, not a list of patterns; sent before LINT_INPUT."

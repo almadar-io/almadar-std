@@ -1,0 +1,5693 @@
+{
+  "atom": "cli/atoms/std-orb-lint-sigil-context.lolo",
+  "trait": "OrbLintSigilContext",
+  "note": "Cases mirror the unit tests of traits/sigil_context.rs: payload_in_tick_is_rejected, payload_in_effect_is_allowed, entity_binding_is_allowed_in_all_contexts, pascalcase_entity_bindings_skip_sigil_check, out_of_scope_item_gets_the_hoist_diagnostic_not_the_sigil_list, item_in_scope_is_still_accepted, lambda_locals_are_skipped, let_locals_are_valid_roots_in_body, let_value_exprs_see_prior_bindings_only (both halves) and unknown_sigil_root_in_guard_is_rejected, plus fn parameter lists, the collection source argument, non-collection operators, object values and finding order. The sigil lists are the installed binding-rules.json fed as FACTS_HEARD; the operator rows are fed as SHAPES_HEARD (a collection or std-array operator of two or more arguments introduces item and index). Differences: none in code, path or message. The compiler's older binding validator reports the same codes at the same paths with its own wording; this rule is the sigil-context one.",
+  "cases": [
+    {
+      "id": "payload-in-tick-is-rejected",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "ticks": [
+                        {
+                          "name": "tk",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.n",
+                              "@payload.amount"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_PAYLOAD_IN_TICK",
+                      "path": "orbitals[0 (A)].traits[0 (T)].ticks[0].effects[0][2]",
+                      "message": "Binding @payload is not allowed in tick context. Allowed sigils: entity, state, now, config, user",
+                      "suggestion": "Use one of: @entity, @state, @now, @config, @user",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "payload-in-effect-is-allowed",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                "@payload.amount"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "entity-binding-is-allowed-in-guard-effect-and-tick",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@entity.health",
+                              1
+                            ],
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                "@entity.health"
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "name": "tk",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.n",
+                              "@entity.health"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pascalcase-entity-binding-skips-the-sigil-check",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "ticks": [
+                        {
+                          "name": "tk",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.n",
+                              "@GameConfig.gravity"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "out-of-scope-item-gets-the-hoist-diagnostic",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                "@item.id"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_UNKNOWN_ROOT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0][2]",
+                      "message": "Binding @item is not in scope here \u2014 @item / @index are bound only inside a collection callback (array/map, array/filter, \u2026).",
+                      "suggestion": "Under `children:` the collection callback must use the EXPLICIT lambda form \u2014 `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { \u2026 })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "item-in-scope-inside-a-collection-callback",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                [
+                                  "array/map",
+                                  "@entity.items",
+                                  [
+                                    "fn",
+                                    "x",
+                                    [
+                                      "str/concat",
+                                      "@x",
+                                      "@item.id"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "lambda-parameter-is-skipped-even-in-a-tick",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "ticks": [
+                        {
+                          "name": "tk",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.n",
+                              [
+                                "array/map",
+                                "@entity.items",
+                                [
+                                  "fn",
+                                  "item",
+                                  "@item.name"
+                                ]
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "let-name-is-a-valid-root-in-the-body",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "ticks": [
+                        {
+                          "name": "tk",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.n",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "nextWaypoint",
+                                    "@entity.path"
+                                  ]
+                                ],
+                                "@nextWaypoint.x"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-later-let-binding-sees-an-earlier-one",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "ticks": [
+                        {
+                          "name": "tk",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.n",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "a",
+                                    "@entity.n"
+                                  ],
+                                  [
+                                    "b",
+                                    "@a"
+                                  ]
+                                ],
+                                "@b"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-root-in-a-let-value-is-still-flagged",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "ticks": [
+                        {
+                          "name": "tk",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.n",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "x",
+                                    "@bogus.field"
+                                  ]
+                                ],
+                                "@x"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_UNKNOWN_ROOT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].ticks[0].effects[0][2][1][0][1]",
+                      "message": "Binding @bogus is not allowed in tick context. Allowed sigils: entity, state, now, config, user",
+                      "suggestion": "Use one of: @entity, @state, @now, @config, @user",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "let-value-does-not-see-its-own-name",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "ticks": [
+                        {
+                          "name": "tk",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.n",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "a",
+                                    "@a"
+                                  ]
+                                ],
+                                "@a"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_UNKNOWN_ROOT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].ticks[0].effects[0][2][1][0][1]",
+                      "message": "Binding @a is not allowed in tick context. Allowed sigils: entity, state, now, config, user",
+                      "suggestion": "Use one of: @entity, @state, @now, @config, @user",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-sigil-root-in-guard-is-rejected",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@bogus.field",
+                              1
+                            ],
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_UNKNOWN_ROOT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].guard[1]",
+                      "message": "Binding @bogus is not allowed in guard context. Allowed sigils: entity, payload, state, now, config, user, event, prevEvents, prevStates, fromState, toState",
+                      "suggestion": "Use one of: @entity, @payload, @state, @now, @config, @user, @event, @prevEvents, @prevStates, @fromState, @toState",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-guard-may-read-event-and-user-but-not-trait",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "and",
+                              [
+                                "=",
+                                "@user.id",
+                                1
+                              ],
+                              [
+                                "=",
+                                "@event",
+                                1
+                              ],
+                              [
+                                "=",
+                                "@trait",
+                                1
+                              ]
+                            ],
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_UNKNOWN_ROOT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].guard[3][1]",
+                      "message": "Binding @trait is not allowed in guard context. Allowed sigils: entity, payload, state, now, config, user, event, prevEvents, prevStates, fromState, toState",
+                      "suggestion": "Use one of: @entity, @payload, @state, @now, @config, @user, @event, @prevEvents, @prevStates, @fromState, @toState",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tick-effect-unknown-root-is-unknown-not-payload",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": []
+                      },
+                      "ticks": [
+                        {
+                          "name": "tk",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.n",
+                              "@nope"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_UNKNOWN_ROOT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].ticks[0].effects[0][2]",
+                      "message": "Binding @nope is not allowed in tick context. Allowed sigils: entity, state, now, config, user",
+                      "suggestion": "Use one of: @entity, @state, @now, @config, @user",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "item-in-the-collection-source-argument-is-out-of-scope",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                [
+                                  "array/map",
+                                  "@item",
+                                  [
+                                    "fn",
+                                    "x",
+                                    "@x"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_UNKNOWN_ROOT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0][2][1]",
+                      "message": "Binding @item is not in scope here \u2014 @item / @index are bound only inside a collection callback (array/map, array/filter, \u2026).",
+                      "suggestion": "Under `children:` the collection callback must use the EXPLICIT lambda form \u2014 `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { \u2026 })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "index-outside-a-callback-is-out-of-scope",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                "@index"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_UNKNOWN_ROOT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0][2]",
+                      "message": "Binding @index is not in scope here \u2014 @item / @index are bound only inside a collection callback (array/map, array/filter, \u2026).",
+                      "suggestion": "Under `children:` the collection callback must use the EXPLICIT lambda form \u2014 `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { \u2026 })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "item-under-a-non-collection-operator-is-out-of-scope",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                [
+                                  "+",
+                                  "@item",
+                                  1
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_UNKNOWN_ROOT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0][2][1]",
+                      "message": "Binding @item is not in scope here \u2014 @item / @index are bound only inside a collection callback (array/map, array/filter, \u2026).",
+                      "suggestion": "Under `children:` the collection callback must use the EXPLICIT lambda form \u2014 `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { \u2026 })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "fn-parameter-list-binds-every-name",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                [
+                                  "array/filter",
+                                  "@entity.items",
+                                  [
+                                    "fn",
+                                    [
+                                      "a",
+                                      "b"
+                                    ],
+                                    [
+                                      "+",
+                                      "@a",
+                                      "@b"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "fn-parameter-does-not-leak-past-its-body",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                [
+                                  "+",
+                                  [
+                                    "array/len",
+                                    [
+                                      "array/map",
+                                      "@entity.items",
+                                      [
+                                        "fn",
+                                        "x",
+                                        "@x"
+                                      ]
+                                    ]
+                                  ],
+                                  "@x"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_UNKNOWN_ROOT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0][2][2]",
+                      "message": "Binding @x is not allowed in effect context. Allowed sigils: entity, payload, state, now, trait, config, user, callsitePayload, pages, currentTheme, locale, event, prevEvents, prevStates, fromState, toState",
+                      "suggestion": "Use one of: @entity, @payload, @state, @now, @trait, @config, @user, @callsitePayload, @pages, @currentTheme, @locale, @event, @prevEvents, @prevStates, @fromState, @toState",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "object-values-are-walked-with-dotted-paths",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "content": "@zzz.a"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_UNKNOWN_ROOT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0][2].children[0].content",
+                      "message": "Binding @zzz is not allowed in effect context. Allowed sigils: entity, payload, state, now, trait, config, user, callsitePayload, pages, currentTheme, locale, event, prevEvents, prevStates, fromState, toState",
+                      "suggestion": "Use one of: @entity, @payload, @state, @now, @trait, @config, @user, @callsitePayload, @pages, @currentTheme, @locale, @event, @prevEvents, @prevStates, @fromState, @toState",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "bare-at-and-empty-root-are-skipped",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                "@"
+                              ],
+                              [
+                                "set",
+                                "@entity.n",
+                                "@."
+                              ],
+                              [
+                                "set",
+                                "@entity.n",
+                                "@[0]"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "entity-and-config-reads-in-an-effect-are-clean",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                [
+                                  "+",
+                                  "@entity.a",
+                                  "@config.b"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "each-finding-keeps-its-own-position",
+      "steps": [
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "array/map": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/filter": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/concat": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/nth": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "str/concat": {
+                "category": "std-str",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "+": {
+                "category": "arithmetic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "and": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "if": {
+                "category": "logic",
+                "hasSideEffects": false,
+                "minArity": 3,
+                "params": []
+              },
+              "set": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "emit": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              },
+              "render-ui": {
+                "category": "effect",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "let": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "fn": {
+                "category": "control",
+                "hasSideEffects": false,
+                "minArity": 2,
+                "params": []
+              },
+              "array/len": {
+                "category": "std-array",
+                "hasSideEffects": false,
+                "minArity": 1,
+                "params": []
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "FACTS_HEARD",
+          "from": "ready",
+          "payload": {
+            "programTypes": {},
+            "guardSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "config",
+              "user",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "effectSigils": [
+              "entity",
+              "payload",
+              "state",
+              "now",
+              "trait",
+              "config",
+              "user",
+              "callsitePayload",
+              "pages",
+              "currentTheme",
+              "locale",
+              "event",
+              "prevEvents",
+              "prevStates",
+              "fromState",
+              "toState"
+            ],
+            "tickSigils": [
+              "entity",
+              "state",
+              "now",
+              "config",
+              "user"
+            ],
+            "fieldTypes": []
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "AE",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@cc",
+                              1
+                            ],
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                "@aa"
+                              ],
+                              [
+                                "set",
+                                "@entity.m",
+                                "@bb"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSigilContext",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sigil-context",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_UNKNOWN_ROOT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].guard[1]",
+                      "message": "Binding @cc is not allowed in guard context. Allowed sigils: entity, payload, state, now, config, user, event, prevEvents, prevStates, fromState, toState",
+                      "suggestion": "Use one of: @entity, @payload, @state, @now, @config, @user, @event, @prevEvents, @prevStates, @fromState, @toState",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_BINDING_UNKNOWN_ROOT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0][2]",
+                      "message": "Binding @aa is not allowed in effect context. Allowed sigils: entity, payload, state, now, trait, config, user, callsitePayload, pages, currentTheme, locale, event, prevEvents, prevStates, fromState, toState",
+                      "suggestion": "Use one of: @entity, @payload, @state, @now, @trait, @config, @user, @callsitePayload, @pages, @currentTheme, @locale, @event, @prevEvents, @prevStates, @fromState, @toState",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_BINDING_UNKNOWN_ROOT",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1][2]",
+                      "message": "Binding @bb is not allowed in effect context. Allowed sigils: entity, payload, state, now, trait, config, user, callsitePayload, pages, currentTheme, locale, event, prevEvents, prevStates, fromState, toState",
+                      "suggestion": "Use one of: @entity, @payload, @state, @now, @trait, @config, @user, @callsitePayload, @pages, @currentTheme, @locale, @event, @prevEvents, @prevStates, @fromState, @toState",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

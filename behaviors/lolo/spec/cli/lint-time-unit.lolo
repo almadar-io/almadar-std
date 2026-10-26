@@ -1,0 +1,21 @@
+app lint-time-unit-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-time-unit - the `orb lint time-unit <file>` command, the port of ORB_OP_INVALID_TIME_UNIT (types/time_unit.rs). It lowers the file with program/read and walks every inline trait transition guard, transition effect and tick effect through arrays AND objects (so a unit inside a render-ui prop is reached). A time operator whose `unit` param is a literal union in the installed operator table (std-time, read from LINT_OPERATOR_SHAPES: its position and accepted literals) and whose argument at that position is a string literal outside the union is reported at <expression path>[<position>] (status 500, exit 1); a missing optional unit or a computed unit is left to the evaluator. The message lists the accepted spellings of the installed table where the compiler prints its fixed vocabulary string. Clean answers `lint time-unit: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintTimeUnitSpec {
+  expects trait OrbLintTimeUnit {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintTimeUnitCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintTimeUnit, OrbLintTimeUnitCli
+}

@@ -18,6 +18,7 @@ type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTi
 type FiredOrbital = { traits : [FiredTrait] }
 type FiredProgram = { orbitals : [FiredOrbital] }
 type RedNodes = [FiredNode?]
+type EmbedMap = Map string [string]
 type RedSource = { kind : string, trait : string }
 type RedListen = { event : string, triggers : string, source : RedSource }
 type RedTransition = { event : string, guard : FiredNode?, effects : [FiredNode?] }
@@ -29,12 +30,18 @@ type RedProgram = { orbitals : [RedOrbital] }
 orbital OrbLintListenRedundantEmbedRouteOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses Fired from "std/behaviors/std-orb-fired-events"
+  uses Chain from "std/behaviors/std-orb-embed-chain"
 
   entity OrbLintListenRedundantEmbedRouteRun [runtime] {
     id : string!
     scope : string = ""
     program : RedProgram = {}
     findings : [OrbFinding] = []
+    byControl : Map string [string] = {}
+    byEffect : Map string [string] = {}
+    chains : [EmbedMap] = []
+    haveFired : boolean = false
+    haveChains : boolean = false
   }
 
   trait OrbLintListenRedundantEmbedRoute -> OrbLintListenRedundantEmbedRouteRun [optimistic] {
@@ -44,27 +51,30 @@ orbital OrbLintListenRedundantEmbedRouteOrbital {
       INIT -> ready
       LINT_INPUT -> ready
         (set @entity.program @payload.program)
-      FIRED_HEARD -> ready
+      FIRED_HEARD -> ready when @entity.haveChains
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals (object/get @entity.program "orbitals" [])) (bc @payload.byControl) (be @payload.byEffect))
-          (array/flatten (array/map @orbitals (fn o
+        (set @entity.byControl @payload.byControl)
+        (set @entity.byEffect @payload.byEffect)
+        (set @entity.haveFired true)
+        (emit LINT_COMPUTE { })
+      FIRED_HEARD -> ready when (not @entity.haveChains)
+        (set @entity.scope @payload.scope)
+        (set @entity.byControl @payload.byControl)
+        (set @entity.byEffect @payload.byEffect)
+        (set @entity.haveFired true)
+      CHAINS_HEARD -> ready when @entity.haveFired
+        (set @entity.chains @payload.chains)
+        (set @entity.haveChains true)
+        (emit LINT_COMPUTE { })
+      CHAINS_HEARD -> ready when (not @entity.haveFired)
+        (set @entity.chains @payload.chains)
+        (set @entity.haveChains true)
+      LINT_COMPUTE -> ready
+        (set @entity.findings (let ((orbitals (object/get @entity.program "orbitals" [])) (bc @entity.byControl) (be @entity.byEffect) (allchains @entity.chains))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((o (array/nth @orbitals @oi)))
             (let ((inl (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine")))))
-              (let ((names (array/map @inl (fn t (object/get @t "name" ""))))
-                    (pairs (array/flatten (array/map @inl (fn t
-                      (let ((roots (array/concat
-                                     (array/concat
-                                       (array/map (array/filter (array/map (object/values (object/get @t "config" {})) (fn f (object/get (or @f {}) "default" null))) (fn d (not (= @d null)))) (fn d (json/stringify (json/nodes @d))))
-                                       (array/flatten (array/map (object/get (object/get @t "stateMachine") "transitions" []) (fn x (array/concat (array/map (array/filter [@x] (fn y (not (= (object/get @y "guard" null) null)))) (fn y (json/stringify (json/nodes (object/get @y "guard"))))) (array/map (object/get @x "effects" []) (fn e (json/stringify (json/nodes @e)))))))))
-                                     (array/flatten (array/map (object/get @t "ticks" []) (fn x (array/concat (array/map (array/filter [@x] (fn y (not (= (object/get @y "guard" null) null)))) (fn y (json/stringify (json/nodes (object/get @y "guard"))))) (array/map (object/get @x "effects" []) (fn e (json/stringify (json/nodes @e)))))))))))
-                        (array/map (array/unique (array/filter (array/flatten (array/map @roots (fn r (array/map (let ((nd (json/parse @r RedNodes))) (if (= @nd null) [] @nd)) (fn n (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "[")) "") "")))))) (fn c (and (!= @c "") (!= @c (object/get @t "name" "")))))) (fn c [@c, (object/get @t "name" "")]))))))))
-                (let ((hosts (object/fromEntries (array/reverse @pairs))))
-                  (let ((chains (object/fromEntries (array/map @names (fn nm
-                          [@nm, (object/get (array/reduce (array/range 0 (+ (array/len @names) 1)) { cur: @nm, ch: (array/drop @names (array/len @names)), stop: false }
-                              (fn (acc i) (if (object/get @acc "stop") @acc
-                                (let ((h (object/get (or @hosts {}) (object/get @acc "cur") "")))
-                                  (if (or (= @h "") (= @h @nm) (array/includes (object/get @acc "ch") @h))
-                                    { cur: (object/get @acc "cur"), ch: (object/get @acc "ch"), stop: true }
-                                    { cur: @h, ch: (array/append (object/get @acc "ch") @h), stop: false}))))) "ch")])))))
+              (let ((chains (array/nth @allchains @oi)))
                     (array/flatten (array/map @inl (fn host
                       (let ((hn (object/get @host "name" "")))
                         (array/map (array/filter (object/get @host "listens" [])
@@ -77,7 +87,9 @@ orbital OrbLintListenRedundantEmbedRouteOrbital {
                                  (not (array/includes (object/get @be @src []) @ev))
                                  (array/some @inl (fn td (let ((tn (object/get @td "name" ""))) (and (array/includes (object/get @bc @tn []) @ev) (or (= @tn @src) (array/includes (object/get (or @chains {}) @tn []) @src))))))))))
                           (fn l (let ((src (object/get (object/get @l "source" {}) "trait" "")) (ev (object/get @l "event" "")))
-                            { code: "ORB_LISTEN_REDUNDANT_EMBED_ROUTE", path: (str/concat "orbitals." (object/get @o "name" "") ".traits." @hn ".listens"), message: (str/concat "listens route " @src "." @ev " -> " @ev " on '" @hn "' is redundant: '" @hn "' embeds '" @src "', so the control's " @ev " already reaches '" @hn "' as its own transition, and the route delivers the same event a second time"), suggestion: (str/concat "delete the `" @src "." @ev " -> " @ev "` listen from '" @hn "'"), severity: "error" }))))))))))))))))
+                            { code: "ORB_LISTEN_REDUNDANT_EMBED_ROUTE", path: (str/concat "orbitals." (object/get @o "name" "") ".traits." @hn ".listens"), message: (str/concat "listens route " @src "." @ev " -> " @ev " on '" @hn "' is redundant: '" @hn "' embeds '" @src "', so the control's " @ev " already reaches '" @hn "' as its own transition, and the route delivers the same event a second time"), suggestion: (str/concat "delete the `" @src "." @ev " -> " @ev "` listen from '" @hn "'"), severity: "error" })))))))))))))))
+        (set @entity.haveFired false)
+        (set @entity.haveChains false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "listen-redundant-embed-route", scope: @entity.scope, findings: @entity.findings })
@@ -86,6 +98,9 @@ orbital OrbLintListenRedundantEmbedRouteOrbital {
     emits {
       LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
         @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_COMPUTE { }
+        @description "Internal: both the fired events and the embed chains are in, compute the findings."
         @tier "internal"
       LINT_FINISH { }
         @description "Internal: answer with the verdict."
@@ -97,8 +112,11 @@ orbital OrbLintListenRedundantEmbedRouteOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
         @description "std-orb-fired-events' FIRED_EVENTS: the events each trait fires by a control or by an effect."
+      CHAINS_HEARD { scope : string!  chains : [EmbedMap]! }
+        @description "std-orb-embed-chain's EMBED_CHAINS: per orbital, each trait's host names."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
+      OrbEmbedChain.EMBED_CHAINS -> CHAINS_HEARD
     }
   }
 
@@ -168,6 +186,13 @@ orbital OrbLintListenRedundantEmbedRouteOrbital {
       OrbLintInput.LINT_INPUT -> FIRED_INPUT_HEARD
     }
   }
+  trait OrbEmbedChain = Chain.traits.OrbEmbedChain {
+    listens {
+      EMBED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_INPUT -> EMBED_INPUT_HEARD
+    }
+  }
   trait Versions = Input.traits.Versions {
   }
   trait Packs = Input.traits.Packs {
@@ -187,5 +212,5 @@ orbital OrbLintListenRedundantEmbedRouteOrbital {
     }
   }
 
-  page boot as OrbLintListenRedundantEmbedRouteOrbitalStart -> OrbLintListenRedundantEmbedRoute, OrbLintListenRedundantEmbedRouteCli, OrbLintInput, OrbFiredEvents, Packs, Versions
+  page boot as OrbLintListenRedundantEmbedRouteOrbitalStart -> OrbLintListenRedundantEmbedRoute, OrbLintListenRedundantEmbedRouteCli, OrbLintInput, OrbFiredEvents, OrbEmbedChain, Packs, Versions
 }

@@ -8,7 +8,7 @@ def numok(x): return f'(and (!= (str/trim {x}) "") (= (str/replace-pattern (str/
 def numv(x): return f'(str/to-number (str/trim {x}))'
 def modlen(n,xs): return f'(or (math/mod {n} (array/len {xs})) 0)'
 def iso_of(ms): return f'(let ((isd (time/format {ms} "YYYY-MM-DD")) (ist (time/format {ms} "HH:mm:ss"))) (if (or (= @isd null) (= @ist null)) null (str/concat @isd "T" @ist "." (str/padStart (str/concat "" (math/mod (math/floor {ms}) 1000)) 3 "0") "Z")))'
-def cells_bad(cells): return f'(array/some {cells} (fn bc (= (object/get @bc "text") null)))'
+def cells_bad(cells): return f'(array/some {cells} (fn bc (= (object/get @bc "kind") "clock")))'
 CLOCK_FAILED='mock-seed: clock is not a date'
 def pad(x,n): return f'(str/padStart (str/concat "" {x}) {n} "0")'
 def slug(x): return f'(let ((sg (str/lower (str/replace-pattern {x} "[^A-Za-z0-9]" "")))) (if (= @sg "") "value" @sg))'
@@ -19,6 +19,7 @@ def isoparts(ms):
     return d,dt
 def draws(n,s0): return f'(array/reduce (array/range {n}) [{s0}] (fn da dj (array/append @da {nxt("(array/last @da)")})))'
 def cell(path,kind,text='""',num='0',extra=''): return f'{{ path: {path}, kind: {kind}, text: {text}, num: {num}{extra} }}'
+def dcell(kind,x): return f'(let ((dv {x})) {{ path: @pa, kind: (if (= @dv null) "clock" {kind}), text: (or @dv ""), num: 0 }})'
 def res(cellx,push='[]',s='@s0'):
     cells = '[]' if cellx is None else f'[{cellx}]'
     return f'{{ cells: {cells}, push: {push}, s: {s} }}'
@@ -56,7 +57,7 @@ def sampler_step(P):
     mock_member=C(qs('string'),pick)
     mock_beh=f'(if (> {ncs} 0) {C(qs("behavior"),pick)} {C(qs("null"))})'
     lit_date=f'(if (> {ncs} 0) {pick} {mockv})'
-    mock_date=C(qs('string'),resolve(lit_date))
+    mock_date=dcell(qs('string'),resolve(lit_date))
     lit_t=f'(if (> {ncs} 1) {pick} (str/concat (str/trim {mockv}) "-" @o))'
     mock_typed=(f'(let ((lt {lit_t})) (let ((nv (if (and (array/includes ["number", "money"] @ty) {numok("@lt")}) {numv("@lt")} null))) (if (and (!= @nv null) (= (- (or @nv 0) (or @nv 0)) 0)) {C(qs("number"),"@lt","(or @nv 0)")} '
                 f'(if (and (= @ty "boolean") (array/includes ["true", "false"] @lt)) {C(qs("boolean"),"@lt")} {C(qs("string"),"@lt")}))))')
@@ -115,7 +116,7 @@ def sampler_step(P):
     string=f'(if {imgname} {img} (if {SD} {str_words} {str_idx}))'
     ms_s=f'(+ {NOW} (- (math/floor (* {uu("@s1")} (* 120 86400000 2))) (* 120 86400000)))'
     d_s,dt_s=isoparts('@dms')
-    date_seed=f'(let ((s1 {nxt("@s0")})) (let ((dms {ms_s})) {res(C("@ty",f"(if (= @ty {qs(chr(100)+chr(97)+chr(116)+chr(101))}) {d_s} {dt_s})"),"[]","@s1")}))'
+    date_seed=f'(let ((s1 {nxt("@s0")})) (let ((dms {ms_s})) {res(dcell("@ty",f"(if (= @ty {qs(chr(100)+chr(97)+chr(116)+chr(101))}) {d_s} {dt_s})"),"[]","@s1")}))'
     mon='(str/padStart (str/concat "" (+ (math/mod @ix 12) 1)) 2 "0")'
     date_idx=res(C('@ty',f'(let ((dd2 (str/concat "2026-" {mon} "-15"))) (if (= @ty "date") @dd2 (str/concat @dd2 "T00:00:00.000Z")))'))
     date=f'(if {SD} {date_seed} {date_idx})'
@@ -146,11 +147,11 @@ def build_expr(cells_expr, root_path_expr='""', row_root=False):
     def put(value):
         return f'(object/set @vm (object/get @cl "path") {value})'
     def put_entries(entries): return f'(let ((fe {entries})) (if (= @fe null) @vm {put("@fe")}))'
-    row_value='(object/fromEntries (array/map (array/filter (array/range (array/len @ks)) (fn i (!= (object/get (array/find @allc (fn c (= (object/get @c "path") (array/nth @ks @i)))) "kind") "omit"))) (fn i [(array/nth (object/get @cl "keys" []) @i), (object/get @vm (array/nth @ks @i))])))'
+    row_value='(object/fromEntries (array/map (array/filter (array/range (array/len @ks)) (fn i (!= (object/get (array/find @allc (fn c (= (object/get @c "path") (array/nth @ks @i)))) "kind") "omit"))) (fn i [(or (array/nth (object/get @cl "keys" []) @i) ""), (object/get @vm (array/nth @ks @i))])))'
     cases = [
         ('(or (= @kd "array") (= @kd "tuple"))', '(array/map @ks (fn p (object/get @vm @p)))'),
         ('(= @kd "row")', row_value),
-        ('(= @kd "object")', '(object/fromEntries (array/map (array/range (array/len @ks)) (fn i [(array/nth (object/get @cl "keys" []) @i), (object/get @vm (array/nth @ks @i))])))'),
+        ('(= @kd "object")', '(object/fromEntries (array/map (array/range (array/len @ks)) (fn i [(or (array/nth (object/get @cl "keys" []) @i) ""), (object/get @vm (array/nth @ks @i))])))'),
         ('(= @kd "default")', '(object/get @cl "val" null)'),
         ('(= @kd "behavior")', '{ behavior: (object/get @cl "text" "") }'),
         ('(= @kd "file")', '{ name: (object/get @cl "text" ""), url: (object/get @cl "url" ""), mimeType: (object/get @cl "mime" ""), sizeBytes: (object/get @cl "num" 0) }'),

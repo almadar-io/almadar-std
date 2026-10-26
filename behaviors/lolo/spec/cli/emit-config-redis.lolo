@@ -1,0 +1,19 @@
+app emit-config-redis-spec [
+  version: "1.0.0",
+  description: "Design contract for the shared emit-config-redis check. EMIT_CONFIG_CHECK { requestId, items } answers EMIT_CONFIG_CHECKED { requestId, results } with one { id, findings } per item: ORB_EFF_EMIT_KEY_INVALID for a key the operator does not allow, ORB_EFF_EMIT_INVALID_NAME for a value that is not a well-formed event identifier, ORB_EFF_EMIT_UNDECLARED_EVENT for a well-formed name the trait does not declare when declared events are checked."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type EmitConfigResult = { id : string!, findings : [OrbFinding]! }
+
+orbital EmitConfigSpec {
+  expects entity OrbEmitConfigRedisRun [runtime] {
+    id : string!
+  }
+  expects trait OrbEmitConfigRedis {
+    state ready
+    emits {
+      EMIT_CONFIG_CHECKED { requestId : string!  results : [EmitConfigResult]! }
+    }
+  }
+  expects page boot -> OrbEmitConfigRedis
+}

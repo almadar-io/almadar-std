@@ -1,0 +1,72 @@
+app std-orb-effect-leaves [
+  version: "1.0.0",
+  description: "std-orb-effect-leaves — the one place a lint run flattens the effect sequencing forms into the effects a rule checks. EFFECT_LEAVES_EXPAND { requestId, orbitals } takes the lowered program's orbitals and answers EFFECT_LEAVES_EXPANDED { requestId, leaves } with one { p, e, oi, ti } per effect that is not itself a do, if, when or let form, in program order: every inline trait's transition and tick effects, the effects inside a do, a then or else branch, a when body and a let body (a branch written as a list of effects adds an index), each with its path, the effect, and its orbital and trait index. A branch that is null, and anything that is not an effect list, is no leaf. The expansion is a structural tree/fold over the effect, one step per node, so the depth of nesting is not bounded by a count. A rule asks with its own requestId and scope and never walks control forms itself."
+]
+uses Spec from "almadar-std/effect-leaves"
+type LeafVal = string | number | boolean | [LeafVal?] | Map string LeafVal?
+type LeafTransition = { effects : [LeafVal?] }
+type LeafTick = { effects : [LeafVal?] }
+type LeafMachine = { transitions : [LeafTransition] }
+type LeafTrait = { name : string, stateMachine : LeafMachine, ticks : [LeafTick] }
+type LeafOrbital = { name : string, traits : [LeafTrait] }
+type EffectLeaf = { p : string!, e : LeafVal!, oi : number!, ti : number! }
+
+orbital OrbEffectLeavesOrbital {
+  entity OrbEffectLeavesRun [runtime] {
+    id : string!
+  }
+
+  trait OrbEffectLeaves -> OrbEffectLeavesRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      EFFECT_LEAVES_EXPAND -> ready
+        (emit EFFECT_LEAVES_EXPANDED { requestId: @payload.requestId, leaves: (let ((orbitals @payload.orbitals))
+          (array/flatten (array/map (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+      (let ((o (array/nth @orbitals @oi)))
+        (array/flatten (array/map (array/range 0 (array/len (object/get @o "traits" []))) (fn ti
+          (let ((td (array/nth (object/get @o "traits" []) @ti)))
+            (if (not (object/has @td "stateMachine")) []
+              (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")) (trs (object/get (object/get @td "stateMachine" {}) "transitions" [])) (tks (object/get @td "ticks" [])))
+                (array/concat
+                  (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
+                    (let ((efs (object/get (array/nth @trs @tj) "effects" [])))
+                      (array/map (array/range 0 (array/len @efs)) (fn ej { p: (str/concat @tp ".stateMachine.transitions[" @tj "].effects[" @ej "]"), e: (array/nth @efs @ej), oi: @oi, ti: @ti }))))))
+                  (array/flatten (array/map (array/range 0 (array/len @tks)) (fn kj
+                    (let ((efs (object/get (array/nth @tks @kj) "effects" [])))
+                      (array/map (array/range 0 (array/len @efs)) (fn ej { p: (str/concat @tp ".ticks[" @kj "].effects[" @ej "]"), e: (array/nth @efs @ej), oi: @oi, ti: @ti }))))))))))))))))) (fn x
+      (let ((r (tree/fold (object/get @x "e") (fn (n k)
+        (if (not (validate/array @n)) { e: [], s: [] }
+          (let ((len (array/len @n)) (hd (if (> (array/len @n) 0) (array/nth @n 0) null)))
+            (if (and (validate/string @hd) (array/includes ["do", "if", "when", "let"] @hd))
+              (let ((kids (array/flatten (array/map (array/filter (array/range 1 @len) (fn i (and (not (= (array/nth @n @i) null)) (if (= @hd "do") true (if (= @hd "if") (and (>= @i 2) (<= @i 3)) (>= @i 2)))))) (fn i
+                (let ((lbl (if (= @hd "do") (str/concat ".do[" (- @i 1) "]") (if (= @hd "if") (if (= @i 2) ".then" ".else") (if (= @hd "when") (str/concat ".then[" (- @i 2) "]") (str/concat ".body[" (- @i 2) "]")))))
+                      (kr (array/nth @k @i)))
+                  (array/map (object/get @kr "s") (fn lf { r: (str/concat @lbl (object/get @lf "r")), e: (object/get @lf "e") }))))))))
+                { e: @kids, s: @kids })
+              (let ((self [{ r: "", e: @n }]))
+                { e: @self, s: (if (and (> @len 0) (validate/array @hd))
+                  (array/flatten (array/map (array/range 0 @len) (fn j
+                    (let ((kr (array/nth @k @j)))
+                      (if (= (array/nth @n @j) null) []
+                        (array/map (object/get @kr "e") (fn lf { r: (str/concat "[" @j "]" (object/get @lf "r")), e: (object/get @lf "e") })))))))
+                  @self) }))))) "LeafVal")))
+        (if (= @r null) [] (array/map (object/get @r "e") (fn lf { p: (str/concat (object/get @x "p") (object/get @lf "r")), e: (object/get @lf "e"), oi: (object/get @x "oi"), ti: (object/get @x "ti") })))))))) })
+    }
+
+    emits {
+      EFFECT_LEAVES_EXPANDED -> external { requestId : string!  leaves : [EffectLeaf]! }
+        @description "The effects to check, in program order, each with its path and its orbital and trait index."
+        @tier "internal"
+    }
+
+    listens {
+      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [LeafOrbital]! }
+        @description "Expand the effects of each inline trait's transitions and ticks into the leaves a rule checks."
+        @tier "internal"
+    }
+  }
+
+  page boot as OrbEffectLeavesOrbitalStart -> OrbEffectLeaves
+}

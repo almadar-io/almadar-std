@@ -1,0 +1,1519 @@
+{
+ "atom": "codec/atoms/std-sql-select-guard.lolo",
+ "trait": "SqlSelectGuard",
+ "source": "Mirrors the Rust tests of orbital-core base contract/sql_guard.rs and the postgres statement cases of orbital-compiler tests/host_effects_validation.rs.",
+ "note": "Each case sends one SQL_GUARD_CHECK and pins the verdicts; reason texts are the Rust guard's.",
+ "cases": [
+  {
+   "id": "a-select-with-a-trailing-semicolon-is-accepted",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 1;"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-second-statement-is-refused",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 1; SELECT 2"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Only a single statement is allowed"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-denied-word-inside-a-literal-is-inert",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 'delete into'"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "for-update-outside-a-literal-is-denied",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT x FROM t FOR UPDATE"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Keyword not allowed in a read-only query: FOR"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-byte-order-mark-trims-to-empty",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "﻿"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Empty statement"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-next-line-character-does-not-trim",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       ""
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Only SELECT statements are allowed"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-non-ascii-letter-is-a-word-boundary",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "éSELECT 1"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-line-comment-hides-a-denied-statement",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 1 -- DROP TABLE users\n"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-block-comment-hides-a-denied-statement",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "/* DELETE FROM users */ SELECT 1"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "block-comments-nest",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "/* nested /* comment */ still comment DELETE */ SELECT 1"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cte-led-select-is-accepted",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "WITH recent AS (SELECT * FROM events) SELECT * FROM recent"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "dollar-quoted-text-is-blanked",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT $$ ; DELETE $$, $tag$ INSERT $tag$"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-double-quoted-identifier-is-blanked",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT \"delete\" FROM t"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-e-string-escapes-a-quote",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT E'it\\'s; DELETE' AS x"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "numbered-placeholders-are-not-dollar-tags",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT * FROM orders WHERE id = $1 AND total > $2;"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-delete-after-a-select-is-a-second-statement",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 1; DELETE FROM t"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Only a single statement is allowed"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-delete-is-not-a-select",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "DELETE FROM t"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Only SELECT statements are allowed"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "select-into-is-denied",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT * INTO copy FROM t"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Keyword not allowed in a read-only query: INTO"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-delete-inside-a-cte-is-denied",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "WITH x AS (DELETE FROM t RETURNING *) SELECT * FROM x"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Keyword not allowed in a read-only query: DELETE"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-empty-string-is-empty",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       ""
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Empty statement"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "only-a-semicolon-is-empty",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "  ;  "
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Empty statement"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-word-starting-with-a-digit-is-not-a-keyword",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 1update, x2insert FROM t"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "for-share-is-denied",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 1 FROM t FOR SHARE"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Keyword not allowed in a read-only query: FOR"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "host-effects-delete-from-t",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "DELETE FROM t"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Only SELECT statements are allowed"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "host-effects-update-t-set-a-=-1",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "UPDATE t SET a = 1"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Only SELECT statements are allowed"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "host-effects-select-1-drop-table-t",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 1; DROP TABLE t"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Only a single statement is allowed"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "host-effects-select-star-into-c-from-t",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT * INTO c FROM t"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Keyword not allowed in a read-only query: INTO"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "host-effects-insert-into-t-values-(1)",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "INSERT INTO t VALUES (1)"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Only SELECT statements are allowed"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "host-effects-select-star-from-t-for-update",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT * FROM t FOR UPDATE"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Keyword not allowed in a read-only query: FOR"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "host-effects-empty",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       ""
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Empty statement"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "host-effects-select-with-comment-tail",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 'delete into' AS note -- DROP"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-escaped-doubled-quote-stays-inside-the-literal",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 'it''s; DELETE'"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-backslash-does-not-escape-in-a-plain-string",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 'a\\'; DELETE FROM t; --'"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Only a single statement is allowed"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-unterminated-literal-swallows-the-rest",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 'abc; DELETE FROM t"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-unterminated-block-comment-swallows-the-rest",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 1 /* ; DELETE"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-lowercase-select-is-accepted",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "select 1"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-lowercase-delete-keyword-is-denied",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "with x as (select 1) select * from x for update"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Keyword not allowed in a read-only query: FOR"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-keyword-prefix-word-is-not-the-keyword",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT format, insertion, updated, intolerance, formerly FROM t"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-dollar-tag-needs-its-own-closer",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT $a$ ; DELETE $b$ ; $a$"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-lone-dollar-is-plain-text",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 1 $"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-statements-after-a-comment",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "/* c */ SELECT 1; /* d */ SELECT 2"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Only a single statement is allowed"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-comment-alone-is-empty",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "/* only */"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Empty statement"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-string-alone-is-not-a-select",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "'x'"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Only SELECT statements are allowed"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "several-statements-are-checked-in-order",
+   "steps": [
+    {
+     "trait": "SqlSelectGuard",
+     "event": "SQL_GUARD_CHECK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r",
+      "statements": [
+       "SELECT 1",
+       "DELETE FROM t",
+       "",
+       "SELECT 1; SELECT 2"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "r",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          },
+          {
+           "ok": false,
+           "reason": "Only SELECT statements are allowed"
+          },
+          {
+           "ok": false,
+           "reason": "Empty statement"
+          },
+          {
+           "ok": false,
+           "reason": "Only a single statement is allowed"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

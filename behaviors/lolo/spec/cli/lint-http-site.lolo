@@ -1,0 +1,21 @@
+app lint-http-site-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint http-site <file>`, the port of ORB_X_CIRCULAR_DEPENDENCY. The event graph of arms (trait.event) connected by unguarded, propagating listens routes is searched depth-first in sorted order; the first cycle is reported once at `traits` with its node path (status 500, exit 1). A clean program answers `lint http-site: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintHttpSiteSpec {
+  expects trait OrbLintHttpSite {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintHttpSiteCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintHttpSite, OrbLintHttpSiteCli
+}

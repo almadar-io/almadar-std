@@ -1,7 +1,7 @@
 {
   "atom": "cli/atoms/std-orb-lint-emit.lolo",
   "trait": "OrbLintEmit",
-  "note": "One case per Rust test of effect/emit.rs (emit_with_object_first_arg_is_a_hard_error_naming_the_missing_event, emit_with_number_first_arg_is_a_hard_error, emit_with_valid_identifier_stays_clean) and the orbital-cli test validate_emit_missing_event_name.rs (the object-first emit is ORB_EFF_EMIT_INVALID_NAME with the message and suggestion it pins), plus the arity, identifier, list, boolean and null forms of validate_emit and the effect-sequencing walk of validate_effect_in (paths .do[i], .then, .else, .then[i], .body[i] and [k] for a branch written as a list of effects). Expected findings are the code, path, message and suggestion the Rust validator reports. The emit config blocks of the async operators (validate_emit_config) are checked by those operators' own lints.",
+  "note": "One case per Rust test of effect/emit.rs (emit_with_object_first_arg_is_a_hard_error_naming_the_missing_event, emit_with_number_first_arg_is_a_hard_error, emit_with_valid_identifier_stays_clean) and the orbital-cli test validate_emit_missing_event_name.rs (the object-first emit is ORB_EFF_EMIT_INVALID_NAME with the message and suggestion it pins), plus the arity, identifier, list, boolean and null forms of validate_emit and the effect-sequencing walk of validate_effect_in (paths .do[i], .then, .else, .then[i], .body[i] and [k] for a branch written as a list of effects). Expected findings are the code, path, message and suggestion the Rust validator reports. The emit config blocks of the async operators (validate_emit_config) are checked by those operators' own lints. The effects are flattened by std-orb-effect-leaves: the rule asks with EFFECT_LEAVES_EXPAND and checks the leaves it answers. A branch that is null is no leaf, so a null else is neither a finding nor an unchecked node.",
   "cases": [
     {
       "id": "emit-with-object-first-arg-is-a-hard-error-naming-the-missing-event",
@@ -64,6 +64,83 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    {
+                                      "data": "?data"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "emit",
+                  {
+                    "data": "?data"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -165,6 +242,79 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    42
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "emit",
+                  42
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -262,6 +412,79 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    "TOPIC_SAVED"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "emit",
+                  "TOPIC_SAVED"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -355,6 +578,92 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    "TopicSaved2"
+                                  ],
+                                  [
+                                    "emit",
+                                    "A_b_9"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "emit",
+                  "TopicSaved2"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                "e": [
+                  "emit",
+                  "A_b_9"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -439,6 +748,77 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "emit"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -544,6 +924,87 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    [
+                                      "str/concat",
+                                      "A",
+                                      "B"
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "emit",
+                  [
+                    "str/concat",
+                    "A",
+                    "B"
+                  ]
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -641,6 +1102,79 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    true
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "emit",
+                  true
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -734,6 +1268,79 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    null
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "emit",
+                  null
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -839,6 +1446,105 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    "BAD-NAME"
+                                  ],
+                                  [
+                                    "emit",
+                                    "1ST"
+                                  ],
+                                  [
+                                    "emit",
+                                    ""
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "emit",
+                  "BAD-NAME"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                "e": [
+                  "emit",
+                  "1ST"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[2]",
+                "e": [
+                  "emit",
+                  ""
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -966,6 +1672,108 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    "SAVED",
+                                    {
+                                      "status": 200
+                                    }
+                                  ],
+                                  [
+                                    "emit",
+                                    {
+                                      "data": "x"
+                                    },
+                                    {
+                                      "status": 200
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "emit",
+                  "SAVED",
+                  {
+                    "status": 200
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                "e": [
+                  "emit",
+                  {
+                    "data": "x"
+                  },
+                  {
+                    "status": 200
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -1067,6 +1875,96 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "if",
+                                    "@entity.id",
+                                    [
+                                      "emit",
+                                      42
+                                    ],
+                                    [
+                                      "emit",
+                                      null
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then",
+                "e": [
+                  "emit",
+                  42
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].else",
+                "e": [
+                  "emit",
+                  null
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -1205,6 +2103,138 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "do",
+                                    [
+                                      "emit",
+                                      "OK"
+                                    ],
+                                    [
+                                      "emit",
+                                      {
+                                        "a": 1
+                                      }
+                                    ]
+                                  ],
+                                  [
+                                    "when",
+                                    "@entity.id",
+                                    [
+                                      "emit",
+                                      5
+                                    ]
+                                  ],
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "x",
+                                        1
+                                      ]
+                                    ],
+                                    [
+                                      "emit",
+                                      false
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[0]",
+                "e": [
+                  "emit",
+                  "OK"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[1]",
+                "e": [
+                  "emit",
+                  {
+                    "a": 1
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1].then[0]",
+                "e": [
+                  "emit",
+                  5
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[2].body[0]",
+                "e": [
+                  "emit",
+                  false
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -1326,6 +2356,98 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "if",
+                                    "@entity.id",
+                                    [
+                                      [
+                                        "emit",
+                                        "OK"
+                                      ],
+                                      [
+                                        "emit",
+                                        7
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then[0]",
+                "e": [
+                  "emit",
+                  "OK"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then[1]",
+                "e": [
+                  "emit",
+                  7
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -1436,6 +2558,94 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "if",
+                                    "@entity.id",
+                                    [
+                                      "do",
+                                      [
+                                        "when",
+                                        "@entity.id",
+                                        [
+                                          "emit",
+                                          {
+                                            "d": 1
+                                          }
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then.do[0].then[0]",
+                "e": [
+                  "emit",
+                  {
+                    "d": 1
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -1537,6 +2747,87 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "set",
+                                    "@entity.id",
+                                    [
+                                      "emit",
+                                      42
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "set",
+                  "@entity.id",
+                  [
+                    "emit",
+                    42
+                  ]
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -1629,6 +2920,86 @@
               ]
             },
             "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": []
+                              }
+                            ]
+                          },
+                          "ticks": [
+                            {
+                              "name": "t",
+                              "interval": 1000,
+                              "effects": [
+                                [
+                                  "emit",
+                                  42
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].ticks[0].effects[0]",
+                "e": [
+                  "emit",
+                  42
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
           },
           "expect": {
             "emits": [
@@ -1798,6 +3169,165 @@
           "expect": {
             "emits": [
               {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    1
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "U",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    2
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    },
+                    {
+                      "name": "B",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "V",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    3
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "emit",
+                  1
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (A)].traits[1 (U)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "emit",
+                  2
+                ],
+                "oi": 0,
+                "ti": 1
+              },
+              {
+                "p": "orbitals[1 (B)].traits[0 (V)].stateMachine.transitions[0].effects[0]",
+                "e": [
+                  "emit",
+                  3
+                ],
+                "oi": 1,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
                 "event": "LINT_FINISH",
                 "payload": {}
               }
@@ -1865,6 +3395,390 @@
                 "payload": {
                   "status": 400,
                   "body": "usage: orb lint emit <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-null-else-branch-is-no-leaf-and-no-unchecked-finding",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "if",
+                                "@a",
+                                [
+                                  "emit",
+                                  "TOPIC_SAVED"
+                                ],
+                                null
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "if",
+                                    "@a",
+                                    [
+                                      "emit",
+                                      "TOPIC_SAVED"
+                                    ],
+                                    null
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then",
+                "e": [
+                  "emit",
+                  "TOPIC_SAVED"
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-finding-beside-null-branches-is-reported-at-its-branch-path",
+      "steps": [
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "E",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "do",
+                                [
+                                  "if",
+                                  "@a",
+                                  [
+                                    "emit",
+                                    {
+                                      "data": "?data"
+                                    }
+                                  ],
+                                  null
+                                ],
+                                [
+                                  "if",
+                                  "@b",
+                                  null,
+                                  [
+                                    "when",
+                                    "@g",
+                                    null
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emit",
+                  "orbitals": [
+                    {
+                      "name": "A",
+                      "entity": {
+                        "name": "E",
+                        "persistence": "runtime",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "traits": [
+                        {
+                          "name": "T",
+                          "linkedEntity": "E",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "events": [],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "do",
+                                    [
+                                      "if",
+                                      "@a",
+                                      [
+                                        "emit",
+                                        {
+                                          "data": "?data"
+                                        }
+                                      ],
+                                      null
+                                    ],
+                                    [
+                                      "if",
+                                      "@b",
+                                      null,
+                                      [
+                                        "when",
+                                        "@g",
+                                        null
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "pages": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emit",
+            "leaves": [
+              {
+                "p": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[0].then",
+                "e": [
+                  "emit",
+                  {
+                    "data": "?data"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmit",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_EMIT_INVALID_NAME",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[0].then",
+                      "message": "emit's first argument must be the event name, but an object was passed — this looks like the payload with the event name missing",
+                      "suggestion": "Write `(emit EVENT_NAME { … })` — the event name comes first, then the payload object. The event must be declared in the trait's `emits` block.",
+                      "severity": "error"
+                    }
+                  ]
                 }
               }
             ]

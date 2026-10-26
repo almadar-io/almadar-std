@@ -16,7 +16,42 @@ type FiredMachine = { transitions : [FiredTransition] }
 type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
 type FiredOrbital = { traits : [FiredTrait] }
 type FiredProgram = { orbitals : [FiredOrbital] }
+type LeafVal = string | number | boolean | [LeafVal?] | Map string LeafVal?
+type LeafTransition = { effects : [LeafVal?] }
+type LeafTick = { effects : [LeafVal?] }
+type LeafMachine = { transitions : [LeafTransition] }
+type LeafTrait = { name : string, stateMachine : LeafMachine, ticks : [LeafTick] }
+type LeafOrbital = { name : string, traits : [LeafTrait] }
 type PatternEventProp = { pattern : string!, prop : string!, field : string! }
+type LsuSource = { kind : string, trait : string, orbital : string }
+type LsuListen = { event : string, source : LsuSource }
+type LsuEmit = { event : string }
+type LsuTrait = { name : string, emits : [LsuEmit], listens : [LsuListen], stateMachine : FiredMachine }
+type LsuOrbital = { name : string, traits : [LsuTrait] }
+type LsuProgram = { orbitals : [LsuOrbital] }
+type LNode = string | number | boolean | [LNode?] | Map string LNode?
+type LNodes = [LNode?]
+type PgVal = string | number | boolean | [PgVal?] | Map string PgVal?
+type PgCalls = [[PgVal?]]
+type PgField = { type : string?, default : PgVal? }
+type PgEmit = { event : string }
+type PgTransition = { guard : PgVal?, effects : [PgVal?]? }
+type PgTick = { guard : PgVal?, effects : [PgVal?]? }
+type PgMachine = { transitions : [PgTransition]? }
+type PgTrait = { name : string, stateMachine : PgMachine?, ticks : [PgTick]?, config : Map string PgField?, emits : [PgEmit]? }
+type PgOrbital = { name : string, traits : [PgVal] }
+type PgProgram = { orbitals : [PgOrbital], egress : [string]? }
+type PgSite = { path : string!, call : [PgVal?]!, config : Map string PgField!, declared : [string]! }
+type PgEmitObj = Map string PgVal?
+type PgSites = [PgSite]
+type PgSeg = { k : string!, id : string!, sql : string!, at : string!, em : PgEmitObj!, dc : [string]!, fs : [OrbFinding]! }
+type PgShapeParam = { name : string, type : PgShapeType }
+type PgShapeType = string | PgShapeNode
+type PgShapeNode = { kind : string, fields : Map string PgShapeType? }
+type PgShape = { minArity : number?, maxArity : number?, params : [PgShapeParam] }
+type PgEmitConfigItem = { id : string!, path : string!, emit : PgEmitObj!, allowedKeys : [string]!, checkDeclared : boolean!, declared : [string]! }
+type EmitConfigResult = { id : string!, findings : [OrbFinding]! }
+type SqlGuardVerdict = { ok : boolean!, reason : string! }
 
 orbital OrbLintEngineOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -80,6 +115,49 @@ orbital OrbLintEngineOrbital {
   uses IdLedger from "std/behaviors/std-orb-lint-id-ledger"
   uses Produced from "std/behaviors/std-orb-produced-events"
   uses CsInput from "std/behaviors/std-orb-lint-call-site-input"
+  uses KeyedCall from "std/behaviors/std-orb-lint-keyed-call"
+  uses PageUnreachable from "std/behaviors/std-orb-lint-page-unreachable"
+  uses Navigate from "std/behaviors/std-orb-lint-navigate"
+  uses Emit from "std/behaviors/std-orb-lint-emit"
+  uses ProgramEval from "std/behaviors/std-orb-lint-program-eval"
+  uses InboundAnswerForeign from "std/behaviors/std-orb-lint-inbound-answer-foreign"
+  uses ExternalEmitPayload from "std/behaviors/std-orb-lint-external-emit-payload"
+  uses ListenRouteStarvesRequiredField from "std/behaviors/std-orb-lint-listen-route-starves-required-field"
+  uses CircularDependencies from "std/behaviors/std-orb-lint-circular-dependencies"
+  uses ListenSourceUnresolved from "std/behaviors/std-orb-lint-listen-source-unresolved"
+  uses ListenSourceNeverProduces from "std/behaviors/std-orb-lint-listen-source-never-produces"
+  uses TypeParamSweep from "std/behaviors/std-orb-lint-type-param-sweep"
+  uses EntityAccess from "std/behaviors/std-orb-lint-entity-access"
+  uses UserIdentity from "std/behaviors/std-orb-lint-user-identity"
+  uses FilterFieldNeverWritten from "std/behaviors/std-orb-lint-filter-field-never-written"
+  uses ExpectationFieldUndeclared from "std/behaviors/std-orb-lint-expectation-field-undeclared"
+  uses ExpectationUnsatisfied from "std/behaviors/std-orb-lint-expectation-unsatisfied"
+  uses ExpectationProviderMismatch from "std/behaviors/std-orb-lint-expectation-provider-mismatch"
+  uses ExpectedFieldNotProvided from "std/behaviors/std-orb-lint-expected-field-not-provided"
+  uses ExpectationConfigKnob from "std/behaviors/std-orb-lint-expectation-config-knob"
+  uses ExpectationEventUnfired from "std/behaviors/std-orb-lint-expectation-event-unfired"
+  uses ExpectationPersistentUnwritten from "std/behaviors/std-orb-lint-expectation-persistent-unwritten"
+  uses IconFormat from "std/behaviors/std-orb-lint-icon-format"
+  uses ThemeUndeclared from "std/behaviors/std-orb-lint-theme-undeclared"
+  uses ItemActionEvent from "std/behaviors/std-orb-lint-item-action-event"
+  uses FieldPath from "std/behaviors/std-orb-lint-field-path"
+  uses RenderUiPattern from "std/behaviors/std-orb-lint-render-ui-pattern"
+  uses HttpSite from "std/behaviors/std-orb-lint-http-site"
+  uses KeyedCallKeys from "std/behaviors/std-orb-lint-keyed-call-keys"
+  uses Postgres from "std/behaviors/std-orb-lint-postgres"
+  uses Redis from "std/behaviors/std-orb-lint-redis"
+  uses CrossEmitter from "std/behaviors/std-orb-lint-cross-emitter"
+  uses CrossRegistry from "std/behaviors/std-orb-lint-cross-registry"
+  uses SigilContext from "std/behaviors/std-orb-lint-sigil-context"
+  uses TimeUnit from "std/behaviors/std-orb-lint-time-unit"
+  uses UserFieldExists from "std/behaviors/std-orb-lint-user-field-exists"
+  uses ConfigRoleLists from "std/behaviors/std-orb-lint-config-role-lists"
+  uses Chain from "std/behaviors/std-orb-embed-chain"
+  uses Leaves from "std/behaviors/std-orb-effect-leaves"
+  uses Pp from "std/behaviors/std-orb-produced-program"
+  uses Ec from "std/behaviors/std-orb-emit-config"
+  uses Sg from "std/behaviors/std-sql-select-guard"
+  uses EcR from "std/behaviors/std-orb-emit-config-redis"
 
   entity OrbLintEngineRun [runtime] {
     id : string!
@@ -140,7 +218,7 @@ orbital OrbLintEngineOrbital {
     }
 
     config {
-      ruleCount : number = 57
+      ruleCount : number = 94
         @label "Rule count"
         @description "How many composed rule traits answer LINT_FOUND before the run settles."
       programOnlyCount : number = 3
@@ -217,6 +295,43 @@ orbital OrbLintEngineOrbital {
       OrbLintTraitRefConfig.LINT_FOUND -> LINT_FOUND
       OrbLintOrbitalRefExtend.LINT_FOUND -> LINT_FOUND
       OrbLintIdLedger.LINT_FOUND -> LINT_FOUND
+      OrbLintKeyedCall.LINT_FOUND -> LINT_FOUND
+      OrbLintPageUnreachable.LINT_FOUND -> LINT_FOUND
+      OrbLintNavigate.LINT_FOUND -> LINT_FOUND
+      OrbLintEmit.LINT_FOUND -> LINT_FOUND
+      OrbLintProgramEval.LINT_FOUND -> LINT_FOUND
+      OrbLintInboundAnswerForeign.LINT_FOUND -> LINT_FOUND
+      OrbLintExternalEmitPayload.LINT_FOUND -> LINT_FOUND
+      OrbLintListenRouteStarvesRequiredField.LINT_FOUND -> LINT_FOUND
+      OrbLintCircularDependencies.LINT_FOUND -> LINT_FOUND
+      OrbLintListenSourceUnresolved.LINT_FOUND -> LINT_FOUND
+      OrbLintListenSourceNeverProduces.LINT_FOUND -> LINT_FOUND
+      OrbLintTypeParamSweep.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityAccess.LINT_FOUND -> LINT_FOUND
+      OrbLintUserIdentity.LINT_FOUND -> LINT_FOUND
+      OrbLintFilterFieldNeverWritten.LINT_FOUND -> LINT_FOUND
+      OrbLintExpectationFieldUndeclared.LINT_FOUND -> LINT_FOUND
+      OrbLintExpectationUnsatisfied.LINT_FOUND -> LINT_FOUND
+      OrbLintExpectationProviderMismatch.LINT_FOUND -> LINT_FOUND
+      OrbLintExpectedFieldNotProvided.LINT_FOUND -> LINT_FOUND
+      OrbLintExpectationConfigKnob.LINT_FOUND -> LINT_FOUND
+      OrbLintExpectationEventUnfired.LINT_FOUND -> LINT_FOUND
+      OrbLintExpectationPersistentUnwritten.LINT_FOUND -> LINT_FOUND
+      OrbLintIconFormat.LINT_FOUND -> LINT_FOUND
+      OrbLintThemeUndeclared.LINT_FOUND -> LINT_FOUND
+      OrbLintItemActionEvent.LINT_FOUND -> LINT_FOUND
+      OrbLintFieldPath.LINT_FOUND -> LINT_FOUND
+      OrbLintRenderUiPattern.LINT_FOUND -> LINT_FOUND
+      OrbLintHttpSite.LINT_FOUND -> LINT_FOUND
+      OrbLintKeyedCallKeys.LINT_FOUND -> LINT_FOUND
+      OrbLintPostgres.LINT_FOUND -> LINT_FOUND
+      OrbLintRedis.LINT_FOUND -> LINT_FOUND
+      OrbLintCrossEmitter.LINT_FOUND -> LINT_FOUND
+      OrbLintCrossRegistry.LINT_FOUND -> LINT_FOUND
+      OrbLintSigilContext.LINT_FOUND -> LINT_FOUND
+      OrbLintTimeUnit.LINT_FOUND -> LINT_FOUND
+      OrbLintUserFieldExists.LINT_FOUND -> LINT_FOUND
+      OrbLintConfigRoleLists.LINT_FOUND -> LINT_FOUND
     }
   }
 
@@ -368,6 +483,146 @@ orbital OrbLintEngineOrbital {
   }
   trait OrbLintIdLedger = IdLedger.traits.OrbLintIdLedger {
   }
+  trait OrbLintKeyedCall = KeyedCall.traits.OrbLintKeyedCall {
+  }
+  trait OrbLintPageUnreachable = PageUnreachable.traits.OrbLintPageUnreachable {
+  }
+  trait OrbLintNavigate = Navigate.traits.OrbLintNavigate {
+  }
+  trait OrbLintEmit = Emit.traits.OrbLintEmit {
+  }
+  trait OrbLintProgramEval = ProgramEval.traits.OrbLintProgramEval {
+  }
+  trait OrbLintInboundAnswerForeign = InboundAnswerForeign.traits.OrbLintInboundAnswerForeign {
+  }
+  trait OrbLintExternalEmitPayload = ExternalEmitPayload.traits.OrbLintExternalEmitPayload {
+  }
+  trait OrbLintListenRouteStarvesRequiredField = ListenRouteStarvesRequiredField.traits.OrbLintListenRouteStarvesRequiredField {
+  }
+  trait OrbLintCircularDependencies = CircularDependencies.traits.OrbLintCircularDependencies {
+  }
+  trait OrbLintListenSourceUnresolved = ListenSourceUnresolved.traits.OrbLintListenSourceUnresolved {
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LsuProgram  scope : string! }
+      PRODUCED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbProducedProgram.PRODUCED_EVENTS -> PRODUCED_HEARD
+    }
+  }
+  trait OrbLintListenSourceNeverProduces = ListenSourceNeverProduces.traits.OrbLintListenSourceNeverProduces {
+  }
+  trait OrbLintTypeParamSweep = TypeParamSweep.traits.OrbLintTypeParamSweep {
+  }
+  trait OrbLintEntityAccess = EntityAccess.traits.OrbLintEntityAccess {
+  }
+  trait OrbLintUserIdentity = UserIdentity.traits.OrbLintUserIdentity {
+  }
+  trait OrbLintFilterFieldNeverWritten = FilterFieldNeverWritten.traits.OrbLintFilterFieldNeverWritten {
+  }
+  trait OrbLintExpectationFieldUndeclared = ExpectationFieldUndeclared.traits.OrbLintExpectationFieldUndeclared {
+  }
+  trait OrbLintExpectationUnsatisfied = ExpectationUnsatisfied.traits.OrbLintExpectationUnsatisfied {
+  }
+  trait OrbLintExpectationProviderMismatch = ExpectationProviderMismatch.traits.OrbLintExpectationProviderMismatch {
+  }
+  trait OrbLintExpectedFieldNotProvided = ExpectedFieldNotProvided.traits.OrbLintExpectedFieldNotProvided {
+  }
+  trait OrbLintExpectationConfigKnob = ExpectationConfigKnob.traits.OrbLintExpectationConfigKnob {
+  }
+  trait OrbLintExpectationEventUnfired = ExpectationEventUnfired.traits.OrbLintExpectationEventUnfired {
+  }
+  trait OrbLintExpectationPersistentUnwritten = ExpectationPersistentUnwritten.traits.OrbLintExpectationPersistentUnwritten {
+  }
+  trait OrbLintIconFormat = IconFormat.traits.OrbLintIconFormat {
+  }
+  trait OrbLintThemeUndeclared = ThemeUndeclared.traits.OrbLintThemeUndeclared {
+  }
+  trait OrbLintItemActionEvent = ItemActionEvent.traits.OrbLintItemActionEvent {
+  }
+  trait OrbLintFieldPath = FieldPath.traits.OrbLintFieldPath {
+  }
+  trait OrbLintRenderUiPattern = RenderUiPattern.traits.OrbLintRenderUiPattern {
+  }
+  trait OrbLintHttpSite = HttpSite.traits.OrbLintHttpSite {
+  }
+  trait OrbLintKeyedCallKeys = KeyedCallKeys.traits.OrbLintKeyedCallKeys {
+  }
+  trait OrbLintPostgres = Postgres.traits.OrbLintPostgres {
+  }
+  trait OrbLintRedis = Redis.traits.OrbLintRedis {
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PgProgram  scope : string! }
+      SHAPES_HEARD { operators : Map string PgShape! }
+      SHAPES_UNREAD { error : string! }
+      EMIT_HEARD { requestId : string!  results : [EmitConfigResult]! }
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbLintInput.LINT_OPERATOR_SHAPES -> SHAPES_HEARD
+      OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> SHAPES_UNREAD
+      OrbEmitConfigRedis.EMIT_CONFIG_CHECKED -> EMIT_HEARD
+    }
+  }
+  trait OrbLintCrossEmitter = CrossEmitter.traits.OrbLintCrossEmitter {
+  }
+  trait OrbLintCrossRegistry = CrossRegistry.traits.OrbLintCrossRegistry {
+  }
+  trait OrbLintSigilContext = SigilContext.traits.OrbLintSigilContext {
+  }
+  trait OrbLintTimeUnit = TimeUnit.traits.OrbLintTimeUnit {
+  }
+  trait OrbLintUserFieldExists = UserFieldExists.traits.OrbLintUserFieldExists {
+  }
+  trait OrbLintConfigRoleLists = ConfigRoleLists.traits.OrbLintConfigRoleLists {
+  }
+  trait OrbEmbedChain = Chain.traits.OrbEmbedChain {
+    listens {
+      EMBED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_INPUT -> EMBED_INPUT_HEARD
+    }
+  }
+  trait OrbEffectLeaves = Leaves.traits.OrbEffectLeaves {
+    listens {
+      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [LeafOrbital]! }
+        @description "The effect-sequencing rules' asks: flatten the effects of every inline trait."
+      OrbLintEmit.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
+      OrbLintNavigate.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
+      OrbLintProgramEval.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
+    }
+  }
+  trait OrbProducedProgram = Pp.traits.OrbProducedProgram {
+    listens {
+      PRODUCED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      PRODUCED_PATTERNS_HEARD { byPattern : [PatternEventProp]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: each pattern's event props and event-list fields."
+      PRODUCED_SLOTS_HEARD { emitSlots : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the emit option slots the operator table declares."
+      PRODUCED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_EVENT_PROPS -> PRODUCED_PATTERNS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> PRODUCED_SEMANTICS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> PRODUCED_SLOTS_HEARD
+      OrbLintInput.LINT_INPUT -> PRODUCED_INPUT_HEARD
+    }
+  }
+  trait OrbEmitConfig = Ec.traits.OrbEmitConfig {
+    listens {
+      EMIT_CONFIG_CHECK { requestId : string!  items : [PgEmitConfigItem]! }
+      OrbLintPostgres.EMIT_CONFIG_CHECK -> EMIT_CONFIG_CHECK
+    }
+  }
+  trait SqlSelectGuard = Sg.traits.SqlSelectGuard {
+    listens {
+      SQL_GUARD_CHECK { requestId : string!  statements : [string]! }
+      OrbLintPostgres.SQL_GUARD_CHECK -> SQL_GUARD_CHECK
+    }
+  }
+  trait OrbEmitConfigRedis = EcR.traits.OrbEmitConfigRedis {
+    listens {
+      EMIT_CONFIG_CHECK { requestId : string!  items : [PgEmitConfigItem]! }
+      OrbLintRedis.EMIT_CONFIG_CHECK -> EMIT_CONFIG_CHECK
+    }
+  }
   trait CallSiteInput = CsInput.traits.CallSiteInput {
     listens {
       OrbLintEngine.LINT_CALL_SITES_REQUEST -> LINT_CALL_SITES_REQUEST
@@ -390,5 +645,5 @@ orbital OrbLintEngineOrbital {
     }
   }
 
-  page boot as OrbLintEngineOrbitalStart -> OrbLintEngine, OrbLintInput, Packs, Versions, CallSiteInput, OrbProducedEvents, OrbLintTraitRefConfig, OrbLintOrbitalRefExtend, OrbLintIdLedger, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintTickRequiresRuntime, OrbLintLoopInvariantParse, OrbLintReservedComponentName, OrbLintAssetInlineUrl, Versions, Packs, OrbLintClientTickLocality, OrbLintEntityNameShadowsTraitUnion, OrbLintListenWildcardUnkeyed, OrbLintFetchByIdPayload, OrbLintAsyncResultDeafTarget, OrbLintOrbitalConfigDeadKnob, OrbLintListenRedundantEmbedRoute, OrbLintEmbedBridge, OrbFiredEvents
+  page boot as OrbLintEngineOrbitalStart -> OrbLintEngine, OrbLintInput, Packs, Versions, CallSiteInput, OrbProducedEvents, OrbLintTraitRefConfig, OrbLintOrbitalRefExtend, OrbLintIdLedger, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintTickRequiresRuntime, OrbLintLoopInvariantParse, OrbLintReservedComponentName, OrbLintAssetInlineUrl, Versions, Packs, OrbLintClientTickLocality, OrbLintEntityNameShadowsTraitUnion, OrbLintListenWildcardUnkeyed, OrbLintFetchByIdPayload, OrbLintAsyncResultDeafTarget, OrbLintOrbitalConfigDeadKnob, OrbLintListenRedundantEmbedRoute, OrbLintEmbedBridge, OrbFiredEvents, OrbEmbedChain, OrbProducedProgram, OrbEmitConfig, SqlSelectGuard, OrbEmitConfigRedis, OrbLintKeyedCall, OrbLintPageUnreachable, OrbLintNavigate, OrbLintEmit, OrbLintProgramEval, OrbLintInboundAnswerForeign, OrbLintExternalEmitPayload, OrbLintListenRouteStarvesRequiredField, OrbLintCircularDependencies, OrbLintListenSourceUnresolved, OrbLintListenSourceNeverProduces, OrbLintTypeParamSweep, OrbLintEntityAccess, OrbLintUserIdentity, OrbLintFilterFieldNeverWritten, OrbLintExpectationFieldUndeclared, OrbLintExpectationUnsatisfied, OrbLintExpectationProviderMismatch, OrbLintExpectedFieldNotProvided, OrbLintExpectationConfigKnob, OrbLintExpectationEventUnfired, OrbLintExpectationPersistentUnwritten, OrbLintIconFormat, OrbLintThemeUndeclared, OrbLintItemActionEvent, OrbLintFieldPath, OrbLintRenderUiPattern, OrbLintHttpSite, OrbLintKeyedCallKeys, OrbLintPostgres, OrbLintRedis, OrbLintCrossEmitter, OrbLintCrossRegistry, OrbLintSigilContext, OrbLintTimeUnit, OrbLintUserFieldExists, OrbLintConfigRoleLists, OrbEffectLeaves
 }

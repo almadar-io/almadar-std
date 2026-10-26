@@ -120,3 +120,99 @@ describe('HTTP contract metadata', () => {
     expect(parts.bytes).toBe('string');
   });
 });
+
+describe('OAuth and OS grant metadata', () => {
+  const oauth = () => STD_OPERATORS.http.oauth;
+
+  it('names every oauth-client op the auth `op` union allows, each with its inputs and endpoint', () => {
+    const auth = fields(STD_OPERATORS.http.params?.[3]?.type);
+    const opType = fields(auth.auth).op;
+    if (typeof opType !== 'object' || opType.kind !== 'union') throw new Error('expected the op union');
+    const words = opType.of.map((member) => (typeof member === 'object' && member.kind === 'literal' ? member.value : undefined));
+    expect(oauth()?.ops.map((op) => op.name)).toEqual(words);
+    expect(oauth()?.ops.find((op) => op.name === 'connect')).toEqual({ name: 'connect', required: ['code', 'state', 'provider'], optional: [], endpoint: 'token' });
+    expect(oauth()?.ops.find((op) => op.name === 'discovery')?.endpoint).toBeUndefined();
+    expect(oauth()?.endpointTarget).toBe('oauth-endpoint');
+    expect(canonical.operators.http.oauth).toEqual(oauth());
+  });
+
+  it('control: only http carries oauth metadata, and every endpoint an op names is a declared endpoint kind', () => {
+    expect(Object.entries(STD_OPERATORS).filter(([, m]) => m.oauth).map(([name]) => name)).toEqual(['http']);
+    for (const op of oauth()?.ops ?? []) {
+      if (op.endpoint !== undefined) expect(oauth()?.endpointKinds).toContain(op.endpoint);
+    }
+  });
+
+  it('declares a grant on every os/ and kv/ effect, and on nothing else', () => {
+    const host = Object.entries(STD_OPERATORS).filter(([, m]) => m.host === 'os' || m.host === 'kv');
+    expect(host.length).toBe(100);
+    for (const [name, meta] of host) expect(meta.grant, name).toBeDefined();
+    expect(Object.entries(STD_OPERATORS).filter(([, m]) => m.grant && m.host !== 'os' && m.host !== 'kv')).toEqual([]);
+  });
+
+  it('declares argument positions that exist and a handle call with no need', () => {
+    expect(STD_OPERATORS['os/copy'].grant).toEqual([
+      { kind: 'fs', access: 'read', path: 0 },
+      { kind: 'fs', access: 'create', path: 1 },
+    ]);
+    expect(STD_OPERATORS['os/sendto'].grant).toEqual([{ kind: 'net', access: ['udp'], host: 2, port: 3 }]);
+    expect(STD_OPERATORS['os/read'].grant).toEqual([]);
+    for (const [name, meta] of Object.entries(STD_OPERATORS)) {
+      for (const need of meta.grant ?? []) {
+        const positions = Object.entries(need).filter(([key, value]) => typeof value === 'number' && key !== 'kind').map(([, value]) => value as number);
+        for (const at of positions) expect(at, name).toBeLessThan(meta.params?.length ?? 0);
+      }
+    }
+  });
+});
+
+describe('host effect and key metadata', () => {
+  const optionsOf = (name: string) => fields(STD_OPERATORS[name].params?.at(-1)?.type);
+
+  it('marks exactly the host effects as closed calls, with the byte range as data', () => {
+    const marked = Object.entries(STD_OPERATORS).filter(([, m]) => m.closedCall).map(([name]) => name).sort();
+    expect(marked).toEqual(['access-check', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'random-bytes']);
+    expect(STD_OPERATORS['random-bytes'].closedCall).toEqual({ intRange: { arg: 0, min: 1, max: 1024 } });
+    expect(STD_OPERATORS['credential-set'].closedCall).toEqual({ request: true });
+    expect(STD_OPERATORS.fetch.closedCall).toBeUndefined();
+  });
+
+  it('declares the credential-list request closed with service optional, and the others with every field required', () => {
+    const list = STD_OPERATORS['credential-list'].params?.[0]?.type;
+    expect(list).toEqual({ kind: 'object', fields: { service: 'string' }, optional: ['service'] });
+    const set = STD_OPERATORS['credential-set'].params?.[0]?.type;
+    expect(set).toMatchObject({ kind: 'object' });
+    expect(set && typeof set === 'object' && 'optional' in set ? set.optional : undefined).toBeUndefined();
+  });
+
+  it('gives oauth-authorize the key its lint checks, and random-bytes the only other keyed host effect', () => {
+    expect(Object.keys(optionsOf('oauth-authorize'))).toEqual(['key', 'emit']);
+    expect(Object.keys(optionsOf('random-bytes'))).toEqual(['key', 'emit']);
+    for (const name of ['access-check', 'credential-status', 'oauth-connection-status', 'oauth-connection-forget']) expect(optionsOf(name).key, name).toBeUndefined();
+  });
+
+  it('declares program/compose options as the app name, layout and theme, not the emit envelope', () => {
+    const options = STD_OPERATORS['program/compose'].params?.[1]?.type;
+    expect(options).toMatchObject({ kind: 'object', optional: ['layout', 'theme'] });
+    expect(Object.keys(fields(options))).toEqual(['appName', 'layout', 'theme']);
+  });
+
+  it('carries a key only on the ask families that echo one: call/http/redis/postgres, random-bytes, oauth-authorize, os/, kv/, browser/ and the program host', () => {
+    const keyed = Object.entries(STD_OPERATORS).filter(([, m]) => m.params?.some((p) => typeof p.type === 'object' && p.type.kind === 'object' && 'key' in p.type.fields)).map(([name]) => name);
+    const allowed = new Set(['call-service', 'http', 'redis', 'postgres', 'random-bytes', 'oauth-authorize']);
+    for (const name of keyed) {
+      const m = STD_OPERATORS[name];
+      expect(allowed.has(name) || name.startsWith('os/') || name.startsWith('kv/') || name.startsWith('browser/') || m.host === 'program', name).toBe(true);
+    }
+    for (const name of ['fetch', 'persist', 'ref', 'watch', 'fetch-stream', 'credential-set']) expect(keyed, name).not.toContain(name);
+  });
+});
+
+describe('URL scheme default ports', () => {
+  it('declares them on the operators that connect under the scheme, and nowhere else', () => {
+    expect(STD_OPERATORS.redis.defaultPorts).toEqual({ redis: 6379, rediss: 6379 });
+    expect(STD_OPERATORS.postgres.defaultPorts).toEqual({ postgres: 5432, postgresql: 5432 });
+    expect(Object.entries(STD_OPERATORS).filter(([, m]) => m.defaultPorts).map(([name]) => name).sort()).toEqual(['postgres', 'redis']);
+    expect(canonical.operators.redis.defaultPorts).toEqual(STD_OPERATORS.redis.defaultPorts);
+  });
+});

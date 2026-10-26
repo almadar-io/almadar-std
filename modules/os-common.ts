@@ -1,4 +1,4 @@
-import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
+import type { OperatorTypeRef, OsGrantNeed, StdOperatorMeta } from '../types.js';
 import { BYTES, EMIT_ENVELOPE, STRING, NUMBER, BOOLEAN, list, lit, openShape, shape, union } from '../signature.js';
 
 type OsParam = NonNullable<StdOperatorMeta['params']>[number];
@@ -44,6 +44,7 @@ const STREAM_OPTIONS: OsParam = {
 };
 
 interface OsEffectDef {
+  grant: OsGrantNeed[];
   description: string;
   params: OsParam[];
   example: string;
@@ -62,6 +63,7 @@ export function osEffect(def: OsEffectDef): StdOperatorMeta {
     hasSideEffects: true,
     runsOn: 'server',
     host: 'os',
+    grant: def.grant,
     returnType: 'void',
     params: [...def.params, def.stream ? STREAM_OPTIONS : OPTIONS],
     example: def.example,
