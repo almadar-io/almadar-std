@@ -1,6 +1,6 @@
 app std-launchpad-kinds [
   version: "1.0.0",
-  description: "std-launchpad-kinds — how each installed behavior runs, read from its program. KINDS_LOAD { package, topic } lists the behaviors of that topic from the index, reads each one's program with a keyed behavior/source, one at a time, and answers KINDS_READY { package, topic, data, totalCount } with one row per behavior: its kind and, for a command, its name or, for a route app, its first route page's path. KIND_OF { behavior } finds that behavior in the index and answers its one row as KIND_RESOLVED { row }. A program that declares an inbound hook beginning with the hookPrefix knob is a cli command (the name after the prefix); otherwise the first page protocol present wins in the order route (a page with no protocol is a route), http, stdio, boot; a program with none of them is a library, an atom or organism that only runs embedded in a page. A behavior whose program cannot be read is an unreadable row carrying the reason in note, never a guess. KIND_FAILED a behavior that is not installed or cannot be read. Every row carries the behavior's value, ready to embed or load. The newest KINDS_LOAD wins while one is in flight. The index (KindsIndex), read once per mount and then answered from memory, is every installed package from behavior/packages cataloged one package at a time (behavior/catalog, no vectors), answering KINDS_ENTRIES { entries } to the traits that read programs and KINDS_INDEXED { topics, paths, skipped } to the views: a package whose catalog fails is listed in skipped with its error and the rest are still listed.",
+  description: "std-launchpad-kinds — how each installed behavior runs, read from its program. KINDS_LOAD { package, topic } lists the behaviors of that topic from the index, reads each one's program with a keyed behavior/source, one at a time, classifies it and writes one LaunchpadRow per behavior (its kind and, for a command, its name or, for a route app, its first route page's path), then answers KINDS_READY { package, topic, totalCount, counts } with the number of rows and the count of each kind; the rows stay in the LaunchpadRow store, never in a trait's frame, and KindsRows reads them back a page at a time and answers KINDS_LEAVES { package, topic, totalCount, data } with each behavior's name, kind, description and route page. KINDS_SCOPE_LOAD (KindsScopeLoader) reads every pair of the scope knob one after the other: it asks KINDS_LOAD for the pair at its cursor, moves on when that pair's KINDS_LEAVES arrives, and answers KINDS_SCOPE_READY when the last pair is read (a failed read ends the run; no pair answers KINDS_SCOPE_READY at once). KIND_OF { behavior } finds that behavior in the index and answers its one row as KIND_RESOLVED { row }. A program that declares an inbound hook beginning with the hookPrefix knob is a cli command (the name after the prefix); otherwise the first page protocol present wins in the order route (a page with no protocol is a route), http, stdio, boot; a program with none of them is a library, an atom or organism that only runs embedded in a page. A behavior whose program cannot be read is an unreadable row carrying the reason in note, never a guess. KIND_FAILED a behavior that is not installed or cannot be read. KINDS_FAILED the rows could not be stored or read. Every row carries the behavior's value, ready to embed or load. The newest KINDS_LOAD wins while one is in flight. The index (KindsIndex), read once per mount and then answered from memory, is every installed package from behavior/packages cataloged one package at a time (behavior/catalog, no vectors) into KindsHitRow rows in catalog order, narrowed by its scope knob: with package and topic pairs listed, only the `<prefix>/<topic>` folders of those topics are cataloged and only the behaviors of a listed package and topic are stored (empty scope indexes every topic of every package); answering KINDS_ENTRIES { total } to the traits that read programs and KINDS_INDEXED { topics, paths, skipped } to the views: a package whose catalog fails is listed in skipped with its error and the rest are still listed.",
   egress: []
 ]
 ;; @capabilities "classify installed behaviors by how they run, find a behavior's cli command, find a behavior's route page"
@@ -15,7 +15,9 @@ type KindsHit = {
 }
 type KindsSkipped = { package : string!, error : string! }
 type KindsTopicCount = { package : string!, topic : string!, count : number! }
-type KindsPackage = { root : string!, prefix : string! }
+type KindsOkPkg = { prefix : string!, fp : string! }
+type KindsScopeCount = { scope : string!, package : string!, topic : string!, count : number! }
+type KindsPackage = { root : string!, prefix : string!, fingerprint : string! }
 type KindsPage = { protocol : string, path : string }
 type KindsOrbital = { name : string, pages : [KindsPage] }
 type KindsProgram = { name : string, inbound : [string], orbitals : [KindsOrbital] }
@@ -32,6 +34,37 @@ type KindsRow = {
   note : string!
   value : behavior!
 }
+type KindsIndexed = {
+  id : string!
+  behavior : string!
+  package : string!
+  description : string
+  topic : string!
+  level : string!
+  value : behavior!
+  seq : number!
+  fp : string
+  scope : string
+}
+type KindsStored = {
+  id : string!
+  behavior : string!
+  description : string
+  level : string!
+  topic : string!
+  package : string!
+  kind : "route" | "cli" | "http" | "stdio" | "boot" | "library" | "unreadable"!
+  command : string
+  route : string
+  note : string
+  value : behavior!
+  seq : number!
+  fp : string
+  scope : string
+}
+type KindsAsk = { origin : string!, behavior : string!, description : string!, level : string!, topic : string!, package : string!, value : behavior! }
+type KindsScope = { package : string!, topic : string! }
+type KindsLeaf = { behavior : string!, kind : string!, description : string!, route : string! }
 
 orbital LaunchpadKindsOrbital {
   entity KindsRun [runtime] {
@@ -39,18 +72,62 @@ orbital LaunchpadKindsOrbital {
     run : number @description "Which KINDS_LOAD the loop in flight belongs to; a completion of an older one is ignored." = 0
     wantPackage : string = ""
     wantTopic : string = ""
-    hits : [KindsHit] = []
     cursor : number = 0
-    acc : [KindsRow] = []
+    counts : Map string number = {}
+    cur : KindsIndexed?
     pkgs : [string] = []
-    pkgCursor : number = 0
-    found : [KindsHit] = []
-    okPaths : [string] = []
-    indexed : boolean = false
+    pkgFps : [string] = []
+    okPkgs : [KindsOkPkg] = []
+    todo : [string] = []
+    todoCursor : number = 0
+    round : number = 0
+    seqNext : number = 0
+    scopeTopics : [KindsScopeCount] = []
+    indexCount : number = 0
     indexTopics : [KindsTopicCount] = []
+    pendingTopics : [KindsScopeCount] = []
     skipped : [KindsSkipped] = []
     oneBehavior : string = ""
-    oneHit : KindsHit?
+    oneHit : KindsIndexed?
+    oneRow : KindsRow?
+    leafPackage : string = ""
+    leafTopic : string = ""
+    leafOffset : number = 0
+    leaves : [KindsLeaf] = []
+    hits : [KindsHit] = []
+    scope : [KindsScope] = []
+    scopeList : [KindsScope] = []
+    scopeCursor : number = 0
+  }
+
+  entity KindsHitRow [persistent: launchpad_hits] {
+    id : string!
+    behavior : string!
+    package : string!
+    description : string
+    topic : string!
+    level : string!
+    value : behavior!
+    seq : number!
+    fp : string
+    scope : string
+  }
+
+  entity LaunchpadRow [persistent: launchpad_rows] {
+    id : string!
+    behavior : string!
+    description : string
+    level : string!
+    topic : string!
+    package : string!
+    kind : "route" | "cli" | "http" | "stdio" | "boot" | "library" | "unreadable"!
+    command : string
+    route : string
+    note : string
+    value : behavior!
+    seq : number!
+    fp : string
+    scope : string
   }
 
   trait KindsTopic -> KindsRun {
@@ -62,7 +139,7 @@ orbital LaunchpadKindsOrbital {
         (set @entity.run (+ @entity.run 1))
         (set @entity.wantPackage ?package)
         (set @entity.wantTopic ?topic)
-        (emit KINDS_INDEX_ASK { })
+        (behavior/packages { key: "topic" emit: { success: KINDS_PACKAGES, failure: KINDS_PACKAGES_FAILED } })
     }
 
     state listing {
@@ -71,11 +148,51 @@ orbital LaunchpadKindsOrbital {
         (set @entity.run (+ @entity.run 1))
         (set @entity.wantPackage ?package)
         (set @entity.wantTopic ?topic)
-      KINDS_ENTRIES -> sourcing
-        (set @entity.hits (array/filter ?entries (fn e (and (= @e.package @entity.wantPackage) (= @e.topic @entity.wantTopic)))))
+      KINDS_PACKAGES -> listing
+        (emit KINDS_REFRESH { result: ?result })
+      KINDS_PACKAGES_FAILED -> listing
+        (emit KINDS_REFRESH_FAILED { error: ?error })
+      KINDS_ENTRIES -> reading
         (set @entity.cursor 0)
-        (set @entity.acc [])
-        (emit KINDS_NEXT { })
+        (set @entity.counts {})
+        (emit KINDS_NEXT { package: @entity.wantPackage, topic: @entity.wantTopic, offset: 0 })
+    }
+
+    state reading {
+      INIT -> reading
+      KINDS_LOAD -> listing
+        (set @entity.run (+ @entity.run 1))
+        (set @entity.wantPackage ?package)
+        (set @entity.wantTopic ?topic)
+        (behavior/packages { key: "topic" emit: { success: KINDS_PACKAGES, failure: KINDS_PACKAGES_FAILED } })
+      KINDS_NEXT -> reading
+        (fetch KindsHitRow { filter: (and (= (object/get @entity "package") ?package) (= (object/get @entity "topic") ?topic)), orderBy: "seq", limit: 1, offset: ?offset, emit: { success: KINDS_HIT_LOADED, failure: KINDS_HIT_FAILED } })
+      KINDS_HIT_LOADED -> checking when (> (array/len ?data) 0)
+        (set @entity.cur (array/nth ?data 0))
+        (emit KINDS_PEEK { behavior: (object/get (array/nth ?data 0) "behavior") })
+      KINDS_HIT_LOADED -> idle when (= (array/len ?data) 0)
+        (emit KINDS_READY { package: @entity.wantPackage, topic: @entity.wantTopic, totalCount: @entity.cursor, counts: @entity.counts })
+      KINDS_HIT_FAILED -> idle
+        (emit KINDS_FAILED { package: @entity.wantPackage, topic: @entity.wantTopic, error: ?error })
+    }
+
+    state checking {
+      INIT -> checking
+      KINDS_LOAD -> listing
+        (set @entity.run (+ @entity.run 1))
+        (set @entity.wantPackage ?package)
+        (set @entity.wantTopic ?topic)
+        (behavior/packages { key: "topic" emit: { success: KINDS_PACKAGES, failure: KINDS_PACKAGES_FAILED } })
+      KINDS_PEEK -> checking
+        (fetch LaunchpadRow { filter: (= (object/get @entity "id") ?behavior), limit: 1, emit: { success: KINDS_PEEKED, failure: KINDS_PEEK_FAILED } })
+      KINDS_PEEKED -> reading when (and (> (array/len ?data) 0) (!= (str/default @entity.cur.fp "") "") (= (str/default (object/get (array/nth ?data 0) "fp") "") (str/default @entity.cur.fp "")) (!= (object/get (array/nth ?data 0) "kind") "unreadable"))
+        (set @entity.counts (object/set @entity.counts (object/get (array/nth ?data 0) "kind") (+ 1 (object/get @entity.counts (object/get (array/nth ?data 0) "kind") 0))))
+        (emit KINDS_NEXT { package: @entity.wantPackage, topic: @entity.wantTopic, offset: (+ @entity.cursor 1) })
+        (set @entity.cursor (+ @entity.cursor 1))
+      KINDS_PEEKED -> sourcing when (not (and (> (array/len ?data) 0) (!= (str/default @entity.cur.fp "") "") (= (str/default (object/get (array/nth ?data 0) "fp") "") (str/default @entity.cur.fp "")) (!= (object/get (array/nth ?data 0) "kind") "unreadable")))
+        (emit KIND_CLASSIFY { origin: (str/concat "topic-" @entity.run), behavior: @entity.cur.behavior, description: (str/default @entity.cur.description ""), level: @entity.cur.level, topic: @entity.cur.topic, package: @entity.cur.package, value: @entity.cur.value })
+      KINDS_PEEK_FAILED -> idle
+        (emit KINDS_FAILED { package: @entity.wantPackage, topic: @entity.wantTopic, error: ?error })
     }
 
     state sourcing {
@@ -84,50 +201,118 @@ orbital LaunchpadKindsOrbital {
         (set @entity.run (+ @entity.run 1))
         (set @entity.wantPackage ?package)
         (set @entity.wantTopic ?topic)
-        (emit KINDS_INDEX_ASK { })
-      KINDS_NEXT -> sourcing when (< @entity.cursor (array/len @entity.hits))
-        (behavior/source (object/get (array/nth @entity.hits @entity.cursor) "value") { key: (str/concat "source-" @entity.run) emit: { success: KINDS_SOURCED, failure: KINDS_SOURCE_FAILED } })
-      KINDS_NEXT -> idle when (>= @entity.cursor (array/len @entity.hits))
-        (emit KINDS_READY { package: @entity.wantPackage, topic: @entity.wantTopic, data: @entity.acc, totalCount: (array/len @entity.acc) })
-      KINDS_SOURCED -> sourcing when (= ?key (str/concat "source-" @entity.run))
-        (emit KIND_CLASSIFY { origin: (str/concat "topic-" @entity.run), behavior: (object/get (array/nth @entity.hits @entity.cursor) "behavior"), description: (object/get (array/nth @entity.hits @entity.cursor) "description"), level: (object/get (array/nth @entity.hits @entity.cursor) "level"), topic: (object/get (array/nth @entity.hits @entity.cursor) "topic"), package: (object/get (array/nth @entity.hits @entity.cursor) "package"), value: (object/get (array/nth @entity.hits @entity.cursor) "value"), program: ?result })
-      KINDS_CLASSIFIED -> sourcing when (= ?origin (str/concat "topic-" @entity.run))
-        (set @entity.acc (array/append @entity.acc ?row))
+        (behavior/packages { key: "topic" emit: { success: KINDS_PACKAGES, failure: KINDS_PACKAGES_FAILED } })
+      KINDS_CLASSIFIED -> storing when (= ?origin (str/concat "topic-" @entity.run))
+        (persist upsert LaunchpadRow { id: ?row.id, behavior: ?row.behavior, description: ?row.description, level: ?row.level, topic: ?row.topic, package: ?row.package, kind: ?row.kind, command: ?row.command, route: ?row.route, note: ?row.note, value: ?row.value, seq: @entity.cur.seq, fp: @entity.cur.fp, scope: @entity.cur.scope } { emit: { success: KINDS_ROW_STORED, failure: KINDS_ROW_FAILED } })
+        (set @entity.counts (object/set @entity.counts ?row.kind (+ 1 (object/get @entity.counts ?row.kind 0))))
         (set @entity.cursor (+ @entity.cursor 1))
-        (emit KINDS_NEXT { })
-      KINDS_SOURCE_FAILED -> sourcing when (= ?key (str/concat "source-" @entity.run))
-        (set @entity.acc (array/append @entity.acc { id: (object/get (array/nth @entity.hits @entity.cursor) "behavior"), behavior: (object/get (array/nth @entity.hits @entity.cursor) "behavior"), description: (object/get (array/nth @entity.hits @entity.cursor) "description"), level: (object/get (array/nth @entity.hits @entity.cursor) "level"), topic: (object/get (array/nth @entity.hits @entity.cursor) "topic"), package: (object/get (array/nth @entity.hits @entity.cursor) "package"), kind: "unreadable", command: "", route: "", note: ?error, value: (object/get (array/nth @entity.hits @entity.cursor) "value") }))
-        (set @entity.cursor (+ @entity.cursor 1))
-        (emit KINDS_NEXT { })
+    }
+
+    state storing {
+      INIT -> storing
+      KINDS_LOAD -> listing
+        (set @entity.run (+ @entity.run 1))
+        (set @entity.wantPackage ?package)
+        (set @entity.wantTopic ?topic)
+        (behavior/packages { key: "topic" emit: { success: KINDS_PACKAGES, failure: KINDS_PACKAGES_FAILED } })
+      KINDS_ROW_STORED -> reading
+        (emit KINDS_NEXT { package: @entity.wantPackage, topic: @entity.wantTopic, offset: @entity.cursor })
+      KINDS_ROW_FAILED -> idle
+        (emit KINDS_FAILED { package: @entity.wantPackage, topic: @entity.wantTopic, error: ?error })
     }
 
     emits {
+      KINDS_HIT_LOADED {
+        data : [KindsIndexed]!
+        totalCount : number!
+      }
+        @description "Internal: the index row at the cursor."
+        @tier "internal"
+      KINDS_HIT_FAILED {
+        error : string!
+      }
+        @description "Internal: the index rows could not be read."
+        @tier "internal"
+      KINDS_PEEK {
+        behavior : string!
+      }
+        @description "Internal: look up the behavior's stored row."
+        @tier "internal"
+      KINDS_PEEKED {
+        data : [KindsStored]!
+        totalCount : number!
+      }
+        @description "Internal: the behavior's stored row, none when it was never classified."
+        @tier "internal"
+      KINDS_PEEK_FAILED {
+        error : string!
+      }
+        @description "Internal: the stored rows could not be read."
+        @tier "internal"
+      KINDS_ROW_STORED {
+        id : string
+      }
+        @description "Internal: the classified row was written."
+        @tier "internal"
+      KINDS_ROW_FAILED {
+        error : string!
+      }
+        @description "Internal: the classified row could not be written."
+        @tier "internal"
       KINDS_READY -> external {
         package : string!
         topic : string!
-        data : [KindsRow]!
         totalCount : number!
+        counts : Map string number!
       }
-        @description "Every behavior of the topic with how it runs, in catalog order."
+        @description "The topic's behaviors are all classified and stored as LaunchpadRow rows: how many, and how many of each kind."
         @tier "domain"
-      KINDS_NEXT { }
-        @description "Internal: read the next behavior's program."
-        @tier "internal"
-      KINDS_INDEX_ASK -> external {
+      KINDS_FAILED -> external {
+        package : string!
+        topic : string!
+        error : string!
       }
-        @description "Ask the index for every installed behavior."
+        @description "The topic's rows could not be read or stored."
+        @tier "domain"
+      KINDS_NEXT {
+        package : string!
+        topic : string!
+        offset : number!
+      }
+        @description "Internal: read the next behavior of the topic from the index rows."
+        @tier "internal"
+      KINDS_REFRESH -> external {
+        result : [KindsPackage]!
+      }
+        @description "The installed packages with their fingerprints, handed to the index so it indexes again the packages that changed."
+        @tier "internal"
+      KINDS_REFRESH_FAILED -> external {
+        error : string!
+      }
+        @description "The installed packages could not be read: the index answers as it stands."
+        @tier "internal"
+      KINDS_PACKAGES {
+        result : [KindsPackage]!
+        key : string
+      }
+        @description "Internal: behavior/packages' answer."
+        @tier "internal"
+      KINDS_PACKAGES_FAILED {
+        error : string!
+        key : string
+      }
+        @description "Internal: behavior/packages' failure."
         @tier "internal"
       KIND_CLASSIFY -> external {
         origin : string!
         behavior : string!
-        description : string!
+        description : string
         level : string!
         topic : string!
         package : string!
         value : behavior!
-        program : KindsProgram!
       }
-        @description "A behavior's program, handed to the classifier."
+        @description "A behavior of the index, handed to the classifier, which reads its program."
         @tier "internal"
     }
 
@@ -139,28 +324,240 @@ orbital LaunchpadKindsOrbital {
         @description "List the behaviors of one topic and classify each by how it runs."
         @synonyms "load topic kinds, classify topic, list how behaviors run"
       KindsIndex.KINDS_ENTRIES -> KINDS_ENTRIES
+      KindsScopeLoader.KINDS_LOAD -> KINDS_LOAD
       KINDS_ENTRIES {
-        entries : [KindsHit]!
+        total : number!
       }
-        @description "The index: every installed behavior."
-      KINDS_NEXT { }
-        @description "Self: read the next behavior's program."
-      KINDS_SOURCED {
-        result : KindsProgram!
-        key : string!
+        @description "The index is stored: how many behaviors it holds."
+      KINDS_PACKAGES {
+        result : [KindsPackage]!
+        key : string
       }
-        @description "behavior/source's success; key names the load it belongs to."
-      KINDS_SOURCE_FAILED {
+        @description "behavior/packages' answer: handed to the index."
+      KINDS_PACKAGES_FAILED {
         error : string!
-        key : string!
+        key : string
       }
-        @description "behavior/source's failure."
+        @description "behavior/packages' failure."
+      KINDS_NEXT {
+        package : string!
+        topic : string!
+        offset : number!
+      }
+        @description "Self: read the next behavior of the topic."
+      KINDS_HIT_LOADED {
+        data : [KindsIndexed]!
+        totalCount : number!
+      }
+        @description "The index row at the cursor; no row once the topic is done."
+      KINDS_HIT_FAILED {
+        error : string!
+      }
+        @description "The index rows could not be read."
+      KINDS_PEEK {
+        behavior : string!
+      }
+        @description "Self: look up the behavior's stored row."
+      KINDS_PEEKED {
+        data : [KindsStored]!
+        totalCount : number!
+      }
+        @description "The behavior's stored row: it is reused when it was classified under the package's current fingerprint."
+      KINDS_PEEK_FAILED {
+        error : string!
+      }
+        @description "The stored rows could not be read."
       KindsClassifier.KINDS_CLASSIFIED -> KINDS_CLASSIFIED
       KINDS_CLASSIFIED {
         origin : string!
         row : KindsRow!
       }
         @description "The classifier's row for a program handed to it."
+      KINDS_ROW_STORED {
+        id : string
+      }
+        @description "The classified row is stored."
+      KINDS_ROW_FAILED {
+        error : string!
+      }
+        @description "The classified row could not be stored."
+    }
+  }
+
+  trait KindsScopeLoader -> KindsRun {
+    config {
+      scope : [KindsScope] = []
+        @label "Listed topics"
+        @description "The package and topic pairs KINDS_SCOPE_LOAD reads, one after the other, in this order."
+        @tier "domain"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      KINDS_SCOPE_LOAD -> running
+        (set @entity.scopeList @config.scope)
+        (set @entity.scopeCursor 0)
+        (emit KINDS_SCOPE_NEXT { })
+    }
+
+    state running {
+      INIT -> running
+      KINDS_SCOPE_LOAD -> running
+        (set @entity.scopeList @config.scope)
+        (set @entity.scopeCursor 0)
+        (emit KINDS_SCOPE_NEXT { })
+      KINDS_SCOPE_NEXT -> running when (< @entity.scopeCursor (array/len @entity.scopeList))
+        (emit KINDS_LOAD { package: (object/get (array/nth @entity.scopeList @entity.scopeCursor) "package"), topic: (object/get (array/nth @entity.scopeList @entity.scopeCursor) "topic") })
+      KINDS_SCOPE_NEXT -> idle when (>= @entity.scopeCursor (array/len @entity.scopeList))
+        (emit KINDS_SCOPE_READY { })
+      KINDS_LEAVES -> running when (and (< @entity.scopeCursor (array/len @entity.scopeList)) (= ?package (object/get (array/nth @entity.scopeList @entity.scopeCursor) "package")) (= ?topic (object/get (array/nth @entity.scopeList @entity.scopeCursor) "topic")))
+        (set @entity.scopeCursor (+ @entity.scopeCursor 1))
+        (emit KINDS_SCOPE_NEXT { })
+      KINDS_FAILED -> idle
+    }
+
+    emits {
+      KINDS_LOAD -> external {
+        package : string!
+        topic : string!
+      }
+        @description "Read the behaviors of the next listed package and topic."
+        @tier "domain"
+      KINDS_SCOPE_READY -> external {
+      }
+        @description "Every listed package and topic has been read: each answered its KINDS_LEAVES."
+        @tier "domain"
+      KINDS_SCOPE_NEXT { }
+        @description "Internal: read the pair at the cursor, or end the run when none is left."
+        @tier "internal"
+    }
+
+    listens {
+      KINDS_SCOPE_LOAD -> input {
+      }
+        @description "Read every listed package and topic, one after the other; a new request restarts from the first."
+        @synonyms "load every listed topic, read the listed apps"
+      KindsRows.KINDS_LEAVES -> KINDS_LEAVES
+      KindsTopic.KINDS_FAILED -> KINDS_FAILED
+      KindsRows.KINDS_FAILED -> KINDS_FAILED
+      KINDS_SCOPE_NEXT { }
+        @description "Self: read the pair at the cursor."
+      KINDS_LEAVES {
+        package : string!
+        topic : string!
+        totalCount : number!
+        data : [KindsLeaf]!
+      }
+        @description "A pair's behaviors were read: the run moves to the next pair."
+      KINDS_FAILED {
+        package : string!
+        topic : string!
+        error : string!
+      }
+        @description "A pair could not be read: the run ends."
+    }
+  }
+
+  trait KindsRows -> KindsRun {
+    config {
+      pageSize : number = 50
+        @label "Rows per read"
+        @description "How many LaunchpadRow rows one read of the stored rows takes."
+        @tier "domain"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      KINDS_READY -> paging
+        (set @entity.leafPackage ?package)
+        (set @entity.leafTopic ?topic)
+        (set @entity.leafOffset 0)
+        (set @entity.leaves [])
+        (emit KINDS_PAGE { package: ?package, topic: ?topic, offset: 0 })
+    }
+
+    state paging {
+      INIT -> paging
+      KINDS_READY -> paging
+        (set @entity.leafPackage ?package)
+        (set @entity.leafTopic ?topic)
+        (set @entity.leafOffset 0)
+        (set @entity.leaves [])
+        (emit KINDS_PAGE { package: ?package, topic: ?topic, offset: 0 })
+      KINDS_PAGE -> paging
+        (fetch LaunchpadRow { filter: (and (= (object/get @entity "package") ?package) (= (object/get @entity "topic") ?topic)), orderBy: "seq", limit: @config.pageSize, offset: ?offset, emit: { success: KINDS_PAGE_LOADED, failure: KINDS_PAGE_FAILED } })
+      KINDS_PAGE_LOADED -> paging when (and (> (array/len ?data) 0) (< (+ @entity.leafOffset (array/len ?data)) ?totalCount))
+        (set @entity.leaves (array/concat @entity.leaves (array/map ?data (fn r { behavior: @r.behavior, kind: @r.kind, description: (str/default @r.description ""), route: (str/default @r.route "") }))))
+        (set @entity.leafOffset (+ @entity.leafOffset (array/len ?data)))
+        (emit KINDS_PAGE { package: @entity.leafPackage, topic: @entity.leafTopic, offset: @entity.leafOffset })
+      KINDS_PAGE_LOADED -> idle when (or (= (array/len ?data) 0) (>= (+ @entity.leafOffset (array/len ?data)) ?totalCount))
+        (emit KINDS_LEAVES { package: @entity.leafPackage, topic: @entity.leafTopic, totalCount: ?totalCount, data: (array/concat @entity.leaves (array/map ?data (fn r { behavior: @r.behavior, kind: @r.kind, description: (str/default @r.description ""), route: (str/default @r.route "") }))) })
+      KINDS_PAGE_FAILED -> idle
+        (emit KINDS_FAILED { package: @entity.leafPackage, topic: @entity.leafTopic, error: ?error })
+    }
+
+    emits {
+      KINDS_PAGE_LOADED {
+        data : [KindsStored]!
+        totalCount : number!
+      }
+        @description "Internal: one page of the topic's stored rows."
+        @tier "internal"
+      KINDS_PAGE_FAILED {
+        error : string!
+      }
+        @description "Internal: the stored rows could not be read."
+        @tier "internal"
+      KINDS_LEAVES -> external {
+        package : string!
+        topic : string!
+        totalCount : number!
+        data : [KindsLeaf]!
+      }
+        @description "Every behavior of the topic with its kind, in catalog order, read back from the stored rows."
+        @tier "domain"
+      KINDS_FAILED -> external {
+        package : string!
+        topic : string!
+        error : string!
+      }
+        @description "The topic's rows could not be read or stored."
+        @tier "domain"
+      KINDS_PAGE {
+        package : string!
+        topic : string!
+        offset : number!
+      }
+        @description "Internal: read the next page of the topic's stored rows."
+        @tier "internal"
+    }
+
+    listens {
+      KindsTopic.KINDS_READY -> KINDS_READY
+      KINDS_READY {
+        package : string!
+        topic : string!
+        totalCount : number!
+        counts : Map string number!
+      }
+        @description "A topic's rows are stored: read them back."
+      KINDS_PAGE {
+        package : string!
+        topic : string!
+        offset : number!
+      }
+        @description "Self: read the next page of rows."
+      KINDS_PAGE_LOADED {
+        data : [KindsStored]!
+        totalCount : number!
+      }
+        @description "One page of the topic's stored rows."
+      KINDS_PAGE_FAILED {
+        error : string!
+      }
+        @description "The stored rows could not be read."
     }
   }
 
@@ -171,35 +568,114 @@ orbital LaunchpadKindsOrbital {
       INIT -> idle
       KIND_OF -> listing
         (set @entity.oneBehavior ?behavior)
-        (emit KINDS_INDEX_ASK { })
+        (behavior/packages { key: "one" emit: { success: KIND_PACKAGES, failure: KIND_PACKAGES_FAILED } })
     }
 
     state listing {
       INIT -> listing
       KIND_OF -> listing
         (set @entity.oneBehavior ?behavior)
-        (emit KINDS_INDEX_ASK { })
-      KIND_ENTRIES -> idle when (not (array/some ?entries (fn e (= @e.behavior @entity.oneBehavior))))
+        (behavior/packages { key: "one" emit: { success: KIND_PACKAGES, failure: KIND_PACKAGES_FAILED } })
+      KIND_PACKAGES -> listing
+        (emit KINDS_REFRESH { result: ?result })
+      KIND_PACKAGES_FAILED -> listing
+        (emit KINDS_REFRESH_FAILED { error: ?error })
+      KIND_ENTRIES -> looking
+        (emit KIND_LOOKUP { behavior: @entity.oneBehavior })
+    }
+
+    state looking {
+      INIT -> looking
+      KIND_OF -> listing
+        (set @entity.oneBehavior ?behavior)
+        (behavior/packages { key: "one" emit: { success: KIND_PACKAGES, failure: KIND_PACKAGES_FAILED } })
+      KIND_LOOKUP -> looking
+        (fetch KindsHitRow { filter: (= (object/get @entity "behavior") ?behavior), limit: 1, emit: { success: KIND_HIT_LOADED, failure: KIND_HIT_FAILED } })
+      KIND_HIT_LOADED -> idle when (= (array/len ?data) 0)
         (emit KIND_FAILED { behavior: @entity.oneBehavior, error: "it is not an installed behavior" })
-      KIND_ENTRIES -> reading when (array/some ?entries (fn e (= @e.behavior @entity.oneBehavior)))
-        (set @entity.oneHit (array/find ?entries (fn e (= @e.behavior @entity.oneBehavior))))
-        (behavior/source (object/get (array/find ?entries (fn e (= @e.behavior @entity.oneBehavior))) "value") { key: "one" emit: { success: KIND_SOURCED, failure: KIND_SOURCE_FAILED } })
+      KIND_HIT_LOADED -> peeking when (> (array/len ?data) 0)
+        (set @entity.oneHit (array/nth ?data 0))
+        (emit KIND_PEEK { behavior: @entity.oneBehavior })
+      KIND_HIT_FAILED -> idle
+        (emit KIND_FAILED { behavior: @entity.oneBehavior, error: ?error })
+    }
+
+    state peeking {
+      INIT -> peeking
+      KIND_OF -> listing
+        (set @entity.oneBehavior ?behavior)
+        (behavior/packages { key: "one" emit: { success: KIND_PACKAGES, failure: KIND_PACKAGES_FAILED } })
+      KIND_PEEK -> peeking
+        (fetch LaunchpadRow { filter: (= (object/get @entity "id") ?behavior), limit: 1, emit: { success: KIND_PEEKED, failure: KIND_PEEK_FAILED } })
+      KIND_PEEKED -> idle when (and (> (array/len ?data) 0) (!= (str/default @entity.oneHit.fp "") "") (= (str/default (object/get (array/nth ?data 0) "fp") "") (str/default @entity.oneHit.fp "")) (!= (object/get (array/nth ?data 0) "kind") "unreadable"))
+        (emit KIND_RESOLVED { row: { id: (object/get (array/nth ?data 0) "id"), behavior: (object/get (array/nth ?data 0) "behavior"), description: (str/default (object/get (array/nth ?data 0) "description") ""), level: (object/get (array/nth ?data 0) "level"), topic: (object/get (array/nth ?data 0) "topic"), package: (object/get (array/nth ?data 0) "package"), kind: (object/get (array/nth ?data 0) "kind"), command: (str/default (object/get (array/nth ?data 0) "command") ""), route: (str/default (object/get (array/nth ?data 0) "route") ""), note: (str/default (object/get (array/nth ?data 0) "note") ""), value: (object/get (array/nth ?data 0) "value") } })
+      KIND_PEEKED -> reading when (not (and (> (array/len ?data) 0) (!= (str/default @entity.oneHit.fp "") "") (= (str/default (object/get (array/nth ?data 0) "fp") "") (str/default @entity.oneHit.fp "")) (!= (object/get (array/nth ?data 0) "kind") "unreadable")))
+        (emit KIND_CLASSIFY { origin: "one", behavior: @entity.oneHit.behavior, description: (str/default @entity.oneHit.description ""), level: @entity.oneHit.level, topic: @entity.oneHit.topic, package: @entity.oneHit.package, value: @entity.oneHit.value })
+      KIND_PEEK_FAILED -> idle
+        (emit KIND_FAILED { behavior: @entity.oneBehavior, error: ?error })
     }
 
     state reading {
       INIT -> reading
       KIND_OF -> listing
         (set @entity.oneBehavior ?behavior)
-        (emit KINDS_INDEX_ASK { })
-      KIND_SOURCE_FAILED -> idle
+        (behavior/packages { key: "one" emit: { success: KIND_PACKAGES, failure: KIND_PACKAGES_FAILED } })
+      KIND_ONE_CLASSIFIED -> idle when (and (= ?origin "one") (= ?row.behavior @entity.oneBehavior) (= ?row.kind "unreadable"))
+        (emit KIND_FAILED { behavior: @entity.oneBehavior, error: ?row.note })
+      KIND_ONE_CLASSIFIED -> storing when (and (= ?origin "one") (= ?row.behavior @entity.oneBehavior) (!= ?row.kind "unreadable"))
+        (set @entity.oneRow ?row)
+        (persist upsert LaunchpadRow { id: ?row.id, behavior: ?row.behavior, description: ?row.description, level: ?row.level, topic: ?row.topic, package: ?row.package, kind: ?row.kind, command: ?row.command, route: ?row.route, note: ?row.note, value: ?row.value, seq: @entity.oneHit.seq, fp: @entity.oneHit.fp, scope: @entity.oneHit.scope } { emit: { success: KIND_STORED, failure: KIND_STORE_FAILED } })
+    }
+
+    state storing {
+      INIT -> storing
+      KIND_OF -> listing
+        (set @entity.oneBehavior ?behavior)
+        (behavior/packages { key: "one" emit: { success: KIND_PACKAGES, failure: KIND_PACKAGES_FAILED } })
+      KIND_STORED -> idle
+        (emit KIND_RESOLVED { row: @entity.oneRow })
+      KIND_STORE_FAILED -> idle
         (emit KIND_FAILED { behavior: @entity.oneBehavior, error: ?error })
-      KIND_SOURCED -> reading
-        (emit KIND_CLASSIFY { origin: "one", behavior: @entity.oneBehavior, description: @entity.oneHit.description, level: @entity.oneHit.level, topic: @entity.oneHit.topic, package: @entity.oneHit.package, value: @entity.oneHit.value, program: ?result })
-      KIND_ONE_CLASSIFIED -> idle when (and (= ?origin "one") (= ?row.behavior @entity.oneBehavior))
-        (emit KIND_RESOLVED { row: ?row })
     }
 
     emits {
+      KIND_HIT_LOADED {
+        data : [KindsIndexed]!
+        totalCount : number!
+      }
+        @description "Internal: the behavior's index row."
+        @tier "internal"
+      KIND_HIT_FAILED {
+        error : string!
+      }
+        @description "Internal: the index rows could not be read."
+        @tier "internal"
+      KIND_PEEK {
+        behavior : string!
+      }
+        @description "Internal: look up the behavior's stored row."
+        @tier "internal"
+      KIND_PEEKED {
+        data : [KindsStored]!
+        totalCount : number!
+      }
+        @description "Internal: the behavior's stored row, none when it was never classified."
+        @tier "internal"
+      KIND_PEEK_FAILED {
+        error : string!
+      }
+        @description "Internal: the stored rows could not be read."
+        @tier "internal"
+      KIND_STORED {
+        id : string
+      }
+        @description "Internal: the classified row was stored."
+        @tier "internal"
+      KIND_STORE_FAILED {
+        error : string!
+      }
+        @description "Internal: the classified row could not be stored."
+        @tier "internal"
       KIND_RESOLVED -> external {
         row : KindsRow!
       }
@@ -211,21 +687,43 @@ orbital LaunchpadKindsOrbital {
       }
         @description "The behavior is not installed or its program could not be read."
         @tier "domain"
+      KIND_LOOKUP {
+        behavior : string!
+      }
+        @description "Internal: find the behavior's index row."
+        @tier "internal"
       KIND_CLASSIFY -> external {
         origin : string!
         behavior : string!
-        description : string!
+        description : string
         level : string!
         topic : string!
         package : string!
         value : behavior!
-        program : KindsProgram!
       }
-        @description "A behavior's program, handed to the classifier."
+        @description "A behavior of the index, handed to the classifier, which reads its program."
         @tier "internal"
-      KINDS_INDEX_ASK -> external {
+      KINDS_REFRESH -> external {
+        result : [KindsPackage]!
       }
-        @description "Ask the index for every installed behavior."
+        @description "The installed packages with their fingerprints, handed to the index so it indexes again the packages that changed."
+        @tier "internal"
+      KINDS_REFRESH_FAILED -> external {
+        error : string!
+      }
+        @description "The installed packages could not be read: the index answers as it stands."
+        @tier "internal"
+      KIND_PACKAGES {
+        result : [KindsPackage]!
+        key : string
+      }
+        @description "Internal: behavior/packages' answer."
+        @tier "internal"
+      KIND_PACKAGES_FAILED {
+        error : string!
+        key : string
+      }
+        @description "Internal: behavior/packages' failure."
         @tier "internal"
     }
 
@@ -237,17 +735,53 @@ orbital LaunchpadKindsOrbital {
         @synonyms "how does this behavior run, classify one behavior"
       KindsIndex.KINDS_ENTRIES -> KIND_ENTRIES
       KIND_ENTRIES {
-        entries : [KindsHit]!
+        total : number!
       }
-        @description "The index: every installed behavior."
-      KIND_SOURCED {
-        result : KindsProgram!
+        @description "The index is stored: how many behaviors it holds."
+      KIND_PACKAGES {
+        result : [KindsPackage]!
+        key : string
       }
-        @description "behavior/source's success."
-      KIND_SOURCE_FAILED {
+        @description "behavior/packages' answer: handed to the index."
+      KIND_PACKAGES_FAILED {
+        error : string!
+        key : string
+      }
+        @description "behavior/packages' failure."
+      KIND_LOOKUP {
+        behavior : string!
+      }
+        @description "Self: find the behavior's index row."
+      KIND_HIT_LOADED {
+        data : [KindsIndexed]!
+        totalCount : number!
+      }
+        @description "The behavior's index row; none when it is not installed."
+      KIND_HIT_FAILED {
         error : string!
       }
-        @description "behavior/source's failure."
+        @description "The index rows could not be read."
+      KIND_PEEK {
+        behavior : string!
+      }
+        @description "Self: look up the behavior's stored row."
+      KIND_PEEKED {
+        data : [KindsStored]!
+        totalCount : number!
+      }
+        @description "The behavior's stored row: it is reused when it was classified under the package's current fingerprint."
+      KIND_PEEK_FAILED {
+        error : string!
+      }
+        @description "The stored rows could not be read."
+      KIND_STORED {
+        id : string
+      }
+        @description "The classified row is stored."
+      KIND_STORE_FAILED {
+        error : string!
+      }
+        @description "The classified row could not be stored."
       KindsClassifier.KINDS_CLASSIFIED -> KIND_ONE_CLASSIFIED
       KIND_ONE_CLASSIFIED {
         origin : string!
@@ -258,84 +792,199 @@ orbital LaunchpadKindsOrbital {
   }
 
   trait KindsIndex -> KindsRun {
+    config {
+      scope : [KindsScope] = []
+        @label "Indexed topics"
+        @description "The package and topic pairs the index reads; each installed package is cataloged one `<prefix>/<topic>` folder per topic here and only the behaviors of a listed package and topic are stored. Empty indexes every topic of every installed package."
+        @tier "domain"
+    }
     initial: idle
 
     state idle {
       INIT -> idle
-      KINDS_INDEX_ASK -> idle when @entity.indexed
-        (emit KINDS_ENTRIES { entries: @entity.found })
-        (emit KINDS_INDEXED { paths: @entity.okPaths, topics: @entity.indexTopics, skipped: @entity.skipped })
-      KINDS_INDEX_ASK -> packages when (not @entity.indexed)
-        (behavior/packages { key: "packages" emit: { success: KINDS_PACKAGES, failure: KINDS_PACKAGES_FAILED } })
-    }
-
-    state packages {
-      INIT -> packages
-      KINDS_PACKAGES_FAILED -> idle
-        (emit KINDS_ENTRIES { entries: [] })
-        (emit KINDS_INDEXED { topics: [], paths: [], skipped: [{ package: "behavior/packages", error: ?error }] })
-      KINDS_PACKAGES -> cataloging
+      KINDS_REFRESH_FAILED -> idle
+        (emit KINDS_ENTRIES { total: @entity.indexCount })
+        (emit KINDS_INDEXED { paths: (array/map @entity.okPkgs (fn o @o.prefix)), fingerprints: (array/map @entity.okPkgs (fn o @o.fp)), topics: @entity.indexTopics, skipped: (array/append @entity.skipped { package: "behavior/packages", error: ?error }) })
+      KINDS_REFRESH -> cataloging
+        (set @entity.scope @config.scope)
         (set @entity.pkgs (array/map ?result (fn p (object/get @p "prefix"))))
-        (set @entity.pkgCursor 0)
-        (set @entity.found [])
-        (set @entity.okPaths [])
+        (set @entity.pkgFps (array/map ?result (fn p (object/get @p "fingerprint"))))
+        (set @entity.todo (array/concat (array/map (array/filter ?result (fn p (not (array/some @entity.okPkgs (fn o (and (= @o.prefix (object/get @p "prefix")) (= @o.fp (object/get @p "fingerprint")))))))) (fn p (object/get @p "prefix"))) (array/map (array/filter @entity.okPkgs (fn o (not (array/some ?result (fn p (= (object/get @p "prefix") @o.prefix)))))) (fn o @o.prefix))))
+        (set @entity.todoCursor 0)
         (set @entity.skipped [])
         (emit KINDS_PKG_NEXT { })
     }
 
     state cataloging {
       INIT -> cataloging
-      KINDS_PKG_NEXT -> cataloging when (< @entity.pkgCursor (array/len @entity.pkgs))
-        (behavior/catalog { paths: [(array/nth @entity.pkgs @entity.pkgCursor)] } { vectors: false key: "package" emit: { success: KINDS_PKG_CATALOGED, failure: KINDS_PKG_FAILED } })
-      KINDS_PKG_NEXT -> idle when (>= @entity.pkgCursor (array/len @entity.pkgs))
-        (set @entity.indexTopics (array/map (array/unique (array/map @entity.found (fn e { package: @e.package, topic: @e.topic }))) (fn t { package: @t.package, topic: @t.topic, count: (array/count @entity.found (fn e (and (= @e.package @t.package) (= @e.topic @t.topic)))) })))
-        (set @entity.indexed true)
-        (emit KINDS_ENTRIES { entries: @entity.found })
-        (emit KINDS_INDEXED { paths: @entity.okPaths, topics: @entity.indexTopics, skipped: @entity.skipped })
+      KINDS_PKG_NEXT -> cataloging when (< @entity.todoCursor (array/len @entity.todo))
+        (set @entity.okPkgs (array/filter @entity.okPkgs (fn o (!= @o.prefix (array/nth @entity.todo @entity.todoCursor)))))
+        (set @entity.scopeTopics (array/filter @entity.scopeTopics (fn t (!= @t.scope (array/nth @entity.todo @entity.todoCursor)))))
+        (emit KINDS_PKG_CLEAR { scope: (array/nth @entity.todo @entity.todoCursor), round: 0 })
+      KINDS_PKG_NEXT -> idle when (>= @entity.todoCursor (array/len @entity.todo))
+        (set @entity.indexTopics (array/map (array/unique (array/map @entity.scopeTopics (fn t { package: @t.package, topic: @t.topic }))) (fn k { package: @k.package, topic: @k.topic, count: (array/sum (array/map (array/filter @entity.scopeTopics (fn t (and (= @t.package @k.package) (= @t.topic @k.topic)))) (fn t @t.count))) })))
+        (set @entity.indexCount (array/sum (array/map @entity.scopeTopics (fn t @t.count))))
+        (emit KINDS_ENTRIES { total: @entity.indexCount })
+        (emit KINDS_INDEXED { paths: (array/map @entity.okPkgs (fn o @o.prefix)), fingerprints: (array/map @entity.okPkgs (fn o @o.fp)), topics: @entity.indexTopics, skipped: @entity.skipped })
+      KINDS_PKG_CLEAR -> cataloging
+        (fetch KindsHitRow { filter: (= (object/get @entity "scope") ?scope), limit: 200, emit: { success: KINDS_PKG_OLD, failure: KINDS_PKG_STORE_FAILED } })
+      KINDS_PKG_OLD -> cataloging when (> (array/len ?data) 0)
+        (persist batch (array/map ?data (fn r ["delete", "KindsHitRow", (object/get @r "id")])) { emit: { success: KINDS_PKG_CLEARED, failure: KINDS_PKG_STORE_FAILED } })
+      KINDS_PKG_OLD -> cataloging when (= (array/len ?data) 0)
+        (emit KINDS_PKG_CLEAR_ROWS { scope: (array/nth @entity.todo @entity.todoCursor), round: 0 })
+        (set @entity.round 0)
+      KINDS_PKG_CLEARED -> cataloging
+        (emit KINDS_PKG_CLEAR { scope: (array/nth @entity.todo @entity.todoCursor), round: (+ @entity.round 1) })
+        (set @entity.round (+ @entity.round 1))
+      KINDS_PKG_CLEAR_ROWS -> cataloging
+        (fetch LaunchpadRow { filter: (= (object/get @entity "scope") ?scope), limit: 200, emit: { success: KINDS_PKG_OLD_ROWS, failure: KINDS_PKG_STORE_FAILED } })
+      KINDS_PKG_OLD_ROWS -> cataloging when (> (array/len ?data) 0)
+        (persist batch (array/map ?data (fn r ["delete", "LaunchpadRow", (object/get @r "id")])) { emit: { success: KINDS_PKG_ROWS_CLEARED, failure: KINDS_PKG_STORE_FAILED } })
+      KINDS_PKG_ROWS_CLEARED -> cataloging
+        (emit KINDS_PKG_CLEAR_ROWS { scope: (array/nth @entity.todo @entity.todoCursor), round: (+ @entity.round 1) })
+        (set @entity.round (+ @entity.round 1))
+      KINDS_PKG_OLD_ROWS -> cataloging when (and (= (array/len ?data) 0) (array/includes @entity.pkgs (array/nth @entity.todo @entity.todoCursor)))
+        (behavior/catalog { paths: (if (= (array/len @entity.scope) 0) [(array/nth @entity.todo @entity.todoCursor)] (array/map (array/unique (array/map @entity.scope (fn s @s.topic))) (fn t (str/concat (array/nth @entity.todo @entity.todoCursor) "/" @t)))) } { vectors: false key: "package" emit: { success: KINDS_PKG_CATALOGED, failure: KINDS_PKG_FAILED } })
+      KINDS_PKG_OLD_ROWS -> cataloging when (and (= (array/len ?data) 0) (not (array/includes @entity.pkgs (array/nth @entity.todo @entity.todoCursor))))
+        (set @entity.todoCursor (+ @entity.todoCursor 1))
+        (emit KINDS_PKG_NEXT { })
       KINDS_PKG_CATALOGED -> cataloging
-        (set @entity.found (array/concat @entity.found ?result))
-        (set @entity.okPaths (array/append @entity.okPaths (array/nth @entity.pkgs @entity.pkgCursor)))
-        (set @entity.pkgCursor (+ @entity.pkgCursor 1))
+        (set @entity.hits (array/filter ?result (fn e (or (= (array/len @entity.scope) 0) (array/some @entity.scope (fn k (and (= @k.package @e.package) (= @k.topic @e.topic))))))))
+        (emit KINDS_PKG_SCOPED { })
+      KINDS_PKG_SCOPED -> cataloging when (= (array/len @entity.hits) 0)
+        (set @entity.okPkgs (array/append @entity.okPkgs { prefix: (array/nth @entity.todo @entity.todoCursor), fp: (array/nth @entity.pkgFps (array/indexOf @entity.pkgs (array/nth @entity.todo @entity.todoCursor))) }))
+        (set @entity.todoCursor (+ @entity.todoCursor 1))
+        (emit KINDS_PKG_NEXT { })
+      KINDS_PKG_SCOPED -> cataloging when (> (array/len @entity.hits) 0)
+        (persist batch (array/map (array/range (array/len @entity.hits)) (fn i ["create", "KindsHitRow", { id: (object/get (array/nth @entity.hits @i) "behavior"), behavior: (object/get (array/nth @entity.hits @i) "behavior"), package: (object/get (array/nth @entity.hits @i) "package"), description: (object/get (array/nth @entity.hits @i) "description"), topic: (object/get (array/nth @entity.hits @i) "topic"), level: (object/get (array/nth @entity.hits @i) "level"), value: (object/get (array/nth @entity.hits @i) "value"), seq: (+ @entity.seqNext @i), fp: (array/nth @entity.pkgFps (array/indexOf @entity.pkgs (array/nth @entity.todo @entity.todoCursor))), scope: (array/nth @entity.todo @entity.todoCursor) }])) { emit: { success: KINDS_PKG_STORED, failure: KINDS_PKG_STORE_FAILED } })
+        (set @entity.seqNext (+ @entity.seqNext (array/len @entity.hits)))
+        (set @entity.pendingTopics (array/map (array/unique (array/map @entity.hits (fn e { package: @e.package, topic: @e.topic }))) (fn t { scope: (array/nth @entity.todo @entity.todoCursor), package: @t.package, topic: @t.topic, count: (array/count @entity.hits (fn e (and (= @e.package @t.package) (= @e.topic @t.topic)))) })))
+      KINDS_PKG_STORED -> cataloging
+        (set @entity.scopeTopics (array/concat @entity.scopeTopics @entity.pendingTopics))
+        (set @entity.pendingTopics [])
+        (set @entity.okPkgs (array/append @entity.okPkgs { prefix: (array/nth @entity.todo @entity.todoCursor), fp: (array/nth @entity.pkgFps (array/indexOf @entity.pkgs (array/nth @entity.todo @entity.todoCursor))) }))
+        (set @entity.todoCursor (+ @entity.todoCursor 1))
+        (emit KINDS_PKG_NEXT { })
+      KINDS_PKG_STORE_FAILED -> cataloging
+        (set @entity.pendingTopics [])
+        (set @entity.skipped (array/append @entity.skipped { package: (array/nth @entity.todo @entity.todoCursor), error: ?error }))
+        (set @entity.todoCursor (+ @entity.todoCursor 1))
         (emit KINDS_PKG_NEXT { })
       KINDS_PKG_FAILED -> cataloging
-        (set @entity.skipped (array/append @entity.skipped { package: (array/nth @entity.pkgs @entity.pkgCursor), error: ?error }))
-        (set @entity.pkgCursor (+ @entity.pkgCursor 1))
+        (set @entity.skipped (array/append @entity.skipped { package: (array/nth @entity.todo @entity.todoCursor), error: ?error }))
+        (set @entity.todoCursor (+ @entity.todoCursor 1))
         (emit KINDS_PKG_NEXT { })
     }
 
     emits {
       KINDS_ENTRIES -> external {
-        entries : [KindsHit]!
+        total : number!
       }
-        @description "Every behavior of every installed package. Only the traits that read programs hear it: it is large, and the views are told the counts, not the rows."
+        @description "The index is stored as KindsHitRow rows, in catalog order: how many behaviors of every installed package. Only the traits that read programs hear it; they read the rows."
         @tier "domain"
       KINDS_INDEXED -> external {
         topics : [KindsTopicCount]!
         paths : [string]!
+        fingerprints : [string]!
         skipped : [KindsSkipped]!
       }
-        @description "The packages' topics with their counts, the prefixes of the packages that were cataloged (paths, ready to be a catalog scope), and each package that could not be cataloged with its error."
+        @description "The packages' topics with their counts, the prefixes of the packages that were cataloged (paths, ready to be a catalog scope) with each one's fingerprint, and each package that could not be cataloged with its error."
         @tier "domain"
       KINDS_PKG_NEXT { }
-        @description "Internal: catalog the next package."
+        @description "Internal: index the next package that changed."
+        @tier "internal"
+      KINDS_PKG_CLEAR {
+        scope : string!
+        round : number!
+      }
+        @description "Internal: read the next page of the package's old index rows to delete."
+        @tier "internal"
+      KINDS_PKG_CLEAR_ROWS {
+        scope : string!
+        round : number!
+      }
+        @description "Internal: read the next page of the package's old classified rows to delete."
+        @tier "internal"
+      KINDS_PKG_OLD {
+        data : [KindsIndexed]!
+        totalCount : number!
+      }
+        @description "Internal: a page of the package's old index rows."
+        @tier "internal"
+      KINDS_PKG_OLD_ROWS {
+        data : [KindsStored]!
+        totalCount : number!
+      }
+        @description "Internal: a page of the package's old classified rows."
+        @tier "internal"
+      KINDS_PKG_CLEARED {
+        totalCount : number
+      }
+        @description "Internal: a page of old index rows was deleted."
+        @tier "internal"
+      KINDS_PKG_ROWS_CLEARED {
+        totalCount : number
+      }
+        @description "Internal: a page of old classified rows was deleted."
+        @tier "internal"
+      KINDS_PKG_SCOPED { }
+        @description "Internal: the cataloged behaviors were narrowed to the configured package and topic pairs."
+        @tier "internal"
+      KINDS_PKG_STORED {
+        totalCount : number
+      }
+        @description "Internal: the package's index rows were written."
+        @tier "internal"
+      KINDS_PKG_STORE_FAILED {
+        error : string!
+      }
+        @description "Internal: the package's index rows could not be read, deleted or written."
         @tier "internal"
     }
 
     listens {
-      KindsTopic.KINDS_INDEX_ASK -> KINDS_INDEX_ASK
-      KindsOne.KINDS_INDEX_ASK -> KINDS_INDEX_ASK
-      KINDS_INDEX_ASK { }
-        @description "List every installed behavior."
-      KINDS_PACKAGES {
+      KindsTopic.KINDS_REFRESH -> KINDS_REFRESH
+      KindsOne.KINDS_REFRESH -> KINDS_REFRESH
+      KindsTopic.KINDS_REFRESH_FAILED -> KINDS_REFRESH_FAILED
+      KindsOne.KINDS_REFRESH_FAILED -> KINDS_REFRESH_FAILED
+      KINDS_REFRESH {
         result : [KindsPackage]!
       }
-        @description "behavior/packages' success."
-      KINDS_PACKAGES_FAILED {
+        @description "The installed packages with their fingerprints: index again the ones that changed."
+      KINDS_REFRESH_FAILED {
         error : string!
       }
-        @description "behavior/packages' failure."
+        @description "The installed packages could not be read."
       KINDS_PKG_NEXT { }
-        @description "Self: catalog the next package."
+        @description "Self: index the next package that changed."
+      KINDS_PKG_CLEAR {
+        scope : string!
+        round : number!
+      }
+        @description "Self: read the next page of the package's old index rows."
+      KINDS_PKG_CLEAR_ROWS {
+        scope : string!
+        round : number!
+      }
+        @description "Self: read the next page of the package's old classified rows."
+      KINDS_PKG_OLD {
+        data : [KindsIndexed]!
+        totalCount : number!
+      }
+        @description "A page of the package's old index rows."
+      KINDS_PKG_OLD_ROWS {
+        data : [KindsStored]!
+        totalCount : number!
+      }
+        @description "A page of the package's old classified rows."
+      KINDS_PKG_CLEARED {
+        totalCount : number
+      }
+        @description "A page of old index rows is deleted."
+      KINDS_PKG_ROWS_CLEARED {
+        totalCount : number
+      }
+        @description "A page of old classified rows is deleted."
       KINDS_PKG_CATALOGED {
         result : [KindsHit]!
       }
@@ -344,6 +993,16 @@ orbital LaunchpadKindsOrbital {
         error : string!
       }
         @description "behavior/catalog's failure for one package."
+      KINDS_PKG_SCOPED { }
+        @description "Self: the cataloged behaviors are narrowed to the configured package and topic pairs."
+      KINDS_PKG_STORED {
+        totalCount : number
+      }
+        @description "The package's index rows are stored."
+      KINDS_PKG_STORE_FAILED {
+        error : string!
+      }
+        @description "The package's index rows could not be read, deleted or written."
     }
   }
 
@@ -359,12 +1018,28 @@ orbital LaunchpadKindsOrbital {
     state ready {
       INIT -> ready
       KIND_CLASSIFY -> ready
-        (let ((hook (array/find (object/get ?program "inbound" []) (fn h (str/startsWith @h @config.hookPrefix)))))
-          (let ((kind (if (!= @hook null) "cli" (if (array/some (object/get ?program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "route"))))) "route" (if (array/some (object/get ?program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))) "http" (if (array/some (object/get ?program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "stdio"))))) "stdio" (if (array/some (object/get ?program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "boot"))))) "boot" "library")))))))
-            (emit KINDS_CLASSIFIED { origin: ?origin, row: { id: ?behavior, behavior: ?behavior, description: ?description, level: ?level, topic: ?topic, package: ?package, kind: @kind, command: (if (!= @hook null) (str/slice @hook (str/len @config.hookPrefix) (str/len @hook)) ""), route: (if (= @kind "route") (object/get (array/find (object/get (array/find (object/get ?program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "route"))))) "pages" []) (fn pg (= (object/get @pg "protocol" "route") "route"))) "path" "") ""), note: "", value: ?value } })))
+        (behavior/source ?value { key: (json/stringify { origin: ?origin, behavior: ?behavior, description: ?description, level: ?level, topic: ?topic, package: ?package, value: ?value }), emit: { success: KINDS_PROGRAM, failure: KINDS_PROGRAM_FAILED } })
+      KINDS_PROGRAM -> ready
+        (let ((ask (json/parse ?key KindsAsk)) (program ?result)) (let ((hook (array/find (object/get @program "inbound" []) (fn h (str/startsWith @h @config.hookPrefix)))))
+          (let ((kind (if (!= @hook null) "cli" (if (array/some (object/get @program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "route"))))) "route" (if (array/some (object/get @program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))) "http" (if (array/some (object/get @program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "stdio"))))) "stdio" (if (array/some (object/get @program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "boot"))))) "boot" "library")))))))
+            (emit KINDS_CLASSIFIED { origin: @ask.origin, row: { id: @ask.behavior, behavior: @ask.behavior, description: @ask.description, level: @ask.level, topic: @ask.topic, package: @ask.package, kind: @kind, command: (if (!= @hook null) (str/slice @hook (str/len @config.hookPrefix) (str/len @hook)) ""), route: (if (= @kind "route") (object/get (array/find (object/get (array/find (object/get @program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "route"))))) "pages" []) (fn pg (= (object/get @pg "protocol" "route") "route"))) "path" "") ""), note: "", value: @ask.value } }))))
+      KINDS_PROGRAM_FAILED -> ready
+        (let ((ask (json/parse ?key KindsAsk))) (emit KINDS_CLASSIFIED { origin: @ask.origin, row: { id: @ask.behavior, behavior: @ask.behavior, description: @ask.description, level: @ask.level, topic: @ask.topic, package: @ask.package, kind: "unreadable", command: "", route: "", note: ?error, value: @ask.value } }))
     }
 
     emits {
+      KINDS_PROGRAM {
+        result : KindsProgram!
+        key : string!
+      }
+        @description "Internal: the program of the behavior being classified; it reaches only this trait."
+        @tier "internal"
+      KINDS_PROGRAM_FAILED {
+        error : string!
+        key : string!
+      }
+        @description "Internal: the program could not be read."
+        @tier "internal"
       KINDS_CLASSIFIED -> external {
         origin : string!
         row : KindsRow!
@@ -379,16 +1054,25 @@ orbital LaunchpadKindsOrbital {
       KIND_CLASSIFY {
         origin : string!
         behavior : string!
-        description : string!
+        description : string
         level : string!
         topic : string!
         package : string!
         value : behavior!
-        program : KindsProgram!
       }
-        @description "A behavior's program to classify."
+        @description "A behavior to classify: its program is read here, keyed by the request, so it travels in no event."
+      KINDS_PROGRAM {
+        result : KindsProgram!
+        key : string!
+      }
+        @description "behavior/source's success; key carries the request."
+      KINDS_PROGRAM_FAILED {
+        error : string!
+        key : string!
+      }
+        @description "behavior/source's failure."
     }
   }
 
-  page boot as LaunchpadKindsOrbitalStart -> KindsTopic, KindsOne, KindsClassifier, KindsIndex
+  page boot as LaunchpadKindsOrbitalStart -> KindsTopic, KindsRows, KindsScopeLoader, KindsOne, KindsClassifier, KindsIndex
 }

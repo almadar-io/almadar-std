@@ -1,0 +1,2352 @@
+{
+ "atom": "ops/atoms/std-system-stats.lolo",
+ "trait": "SystemStatsMeter",
+ "cases": [
+  {
+   "id": "start-activates-sampling",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_START",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": false,
+      "sampling": false,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "watch-while-active-and-idle-takes-a-sample-at-once",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_WATCH",
+     "payload": {
+      "pids": [
+       10
+      ]
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": false,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_SAMPLE",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "watch-while-stopped-only-names-the-pids",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_WATCH",
+     "payload": {
+      "pids": [
+       10
+      ]
+     },
+     "entity": {
+      "id": "s",
+      "active": false,
+      "sampling": false,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "STATS_SAMPLE"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "watch-while-sampling-does-not-start-a-second-sample",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_WATCH",
+     "payload": {
+      "pids": [
+       10
+      ]
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "STATS_SAMPLE"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "stop-then-watch-takes-no-sample",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_STOP",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": false,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_WATCH",
+     "payload": {
+      "pids": [
+       10
+      ]
+     },
+     "entity": {
+      "id": "s",
+      "active": false,
+      "sampling": false,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "STATS_SAMPLE"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "sample-while-sampling-reads-nothing",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_SAMPLE",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "sample-when-idle-asks-memory-first",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_SAMPLE",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": false,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "os/memory-info"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "memory-answer-asks-cpu-next",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_MEMORY",
+     "payload": {
+      "total": 17179869184,
+      "available": 6000000000,
+      "used": 11179869184,
+      "usedPercent": 65.1
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "os/cpu-usage"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "cpu-answer-asks-load-next",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_CPU",
+     "payload": {
+      "percent": 23.5
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "os/load-avg"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "load-answer-asks-uptime-next",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_LOAD",
+     "payload": {
+      "one": 1.5,
+      "five": 2.0,
+      "fifteen": 2.5
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "os/uptime"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "uptime-answer-with-no-pids-ends-the-sample-with-every-stat",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_UPTIME",
+     "payload": {
+      "seconds": 86400
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 23.5,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "STATS_PROCESSES",
+        "payload": {}
+       },
+       {
+        "event": "STATS_FINISH",
+        "payload": {}
+       },
+       {
+        "event": "STATS_READ",
+        "payload": {
+         "memoryTotal": 17179869184,
+         "memoryUsed": 11179869184,
+         "memoryAvailable": 6000000000,
+         "memoryPercent": 65.1,
+         "cpuPercent": 23.5,
+         "load1": 1.5,
+         "load5": 2.0,
+         "load15": 2.5,
+         "uptimeSeconds": 86400,
+         "processes": [],
+         "missing": [],
+         "unavailable": [],
+         "at": 1760531445678
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "finish-answers-every-stat",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_FINISH",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 23.5,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 86400,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "STATS_READ",
+        "payload": {
+         "memoryTotal": 17179869184,
+         "memoryUsed": 11179869184,
+         "memoryAvailable": 6000000000,
+         "memoryPercent": 65.1,
+         "cpuPercent": 23.5,
+         "load1": 1.5,
+         "load5": 2.0,
+         "load15": 2.5,
+         "uptimeSeconds": 86400,
+         "processes": [],
+         "missing": [],
+         "unavailable": [],
+         "at": 1760531445678
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "memory-unsupported-is-named-and-cpu-is-asked",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_MEMORY_FAILED",
+     "payload": {
+      "error": "memory is not supported here",
+      "kind": "unsupported"
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "os/cpu-usage"
+       }
+      ],
+      "emits": [
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "memory",
+         "code": "unsupported",
+         "error": "memory is not supported here"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "cpu-unsupported-is-named-and-load-is-asked",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_CPU_FAILED",
+     "payload": {
+      "error": "cpu is not supported here",
+      "kind": "unsupported"
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "os/load-avg"
+       }
+      ],
+      "emits": [
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "cpu",
+         "code": "unsupported",
+         "error": "cpu is not supported here"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "load-denied-is-named-and-uptime-is-asked",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_LOAD_FAILED",
+     "payload": {
+      "error": "load is denied",
+      "kind": "denied"
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 23.5,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "os/uptime"
+       }
+      ],
+      "emits": [
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "load",
+         "code": "denied",
+         "error": "load is denied"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "uptime-failure-without-a-kind-is-named-unknown",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_UPTIME_FAILED",
+     "payload": {
+      "error": "uptime is not supported here"
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 23.5,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "uptime",
+         "code": "unknown",
+         "error": "uptime is not supported here"
+        }
+       },
+       {
+        "event": "STATS_PROCESSES",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "finish-after-memory-failure-zeroes-memory-and-lists-it",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_FINISH",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 23.5,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 86400,
+      "processes": [],
+      "missing": [],
+      "unavailable": [
+       "memory"
+      ],
+      "psLines": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "STATS_READ",
+        "payload": {
+         "memoryTotal": 0,
+         "memoryUsed": 0,
+         "memoryAvailable": 0,
+         "memoryPercent": 0,
+         "cpuPercent": 23.5,
+         "load1": 1.5,
+         "load5": 2.0,
+         "load15": 2.5,
+         "uptimeSeconds": 86400,
+         "processes": [],
+         "missing": [],
+         "unavailable": [
+          "memory"
+         ],
+         "at": 1760531445678
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "finish-after-two-failures-lists-both-in-order",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_FINISH",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 86400,
+      "processes": [],
+      "missing": [],
+      "unavailable": [
+       "memory",
+       "cpu"
+      ],
+      "psLines": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "STATS_READ",
+        "payload": {
+         "memoryTotal": 0,
+         "memoryUsed": 0,
+         "memoryAvailable": 0,
+         "memoryPercent": 0,
+         "cpuPercent": 0,
+         "load1": 1.5,
+         "load5": 2.0,
+         "load15": 2.5,
+         "uptimeSeconds": 86400,
+         "processes": [],
+         "missing": [],
+         "unavailable": [
+          "memory",
+          "cpu"
+         ],
+         "at": 1760531445678
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "failure-resets-the-stat-and-lists-it",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_MEMORY_FAILED",
+     "payload": {
+      "error": "denied",
+      "kind": "denied"
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "memory",
+         "code": "denied",
+         "error": "denied"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "pids-are-asked-with-one-comma-list",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_PROCESSES",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10,
+       20
+      ],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PS_RUN",
+        "payload": {
+         "stage": "processes",
+         "argv": [
+          "-o",
+          "pid=",
+          "-o",
+          "rss=",
+          "-p",
+          "10,20"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "STATS_FINISH"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "one-pid-is-asked-alone",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_PROCESSES",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       4242
+      ],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PS_RUN",
+        "payload": {
+         "stage": "processes",
+         "argv": [
+          "-o",
+          "pid=",
+          "-o",
+          "rss=",
+          "-p",
+          "4242"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "empty-pid-list-runs-no-ps",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_PROCESSES",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FINISH",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "PS_RUN"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "ps-done-with-rows-is-parsed",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_DONE",
+     "payload": {
+      "stage": "processes",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "  4242  20480\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       4242
+      ],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PS_PARSE",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "parse-one-row",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_PARSE",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       4242
+      ],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 23.5,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 86400,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": [
+       "  4242  20480"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FINISH",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "STATS_FAILED"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "finish-reads-the-parsed-process",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_FINISH",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       4242
+      ],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 23.5,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 86400,
+      "processes": [
+       {
+        "pid": 4242,
+        "rssKb": 20480
+       }
+      ],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "STATS_READ",
+        "payload": {
+         "memoryTotal": 17179869184,
+         "memoryUsed": 11179869184,
+         "memoryAvailable": 6000000000,
+         "memoryPercent": 65.1,
+         "cpuPercent": 23.5,
+         "load1": 1.5,
+         "load5": 2.0,
+         "load15": 2.5,
+         "uptimeSeconds": 86400,
+         "processes": [
+          {
+           "pid": 4242,
+           "rssKb": 20480
+          }
+         ],
+         "missing": [],
+         "unavailable": [],
+         "at": 1760531445678
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "parse-two-rows-keeps-ps-order",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_PARSE",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10,
+       20
+      ],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 23.5,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 86400,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": [
+       " 10 2048",
+       " 20 4096"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FINISH",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "STATS_FAILED"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-pid-ps-does-not-list-is-missing-not-zero",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_FINISH",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10,
+       99
+      ],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 23.5,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 86400,
+      "processes": [
+       {
+        "pid": 10,
+        "rssKb": 2048
+       }
+      ],
+      "missing": [
+       99
+      ],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "STATS_READ",
+        "payload": {
+         "memoryTotal": 17179869184,
+         "memoryUsed": 11179869184,
+         "memoryAvailable": 6000000000,
+         "memoryPercent": 65.1,
+         "cpuPercent": 23.5,
+         "load1": 1.5,
+         "load5": 2.0,
+         "load15": 2.5,
+         "uptimeSeconds": 86400,
+         "processes": [
+          {
+           "pid": 10,
+           "rssKb": 2048
+          }
+         ],
+         "missing": [
+          99
+         ],
+         "unavailable": [],
+         "at": 1760531445678
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "every-pid-unknown-ps-exits-1-silently-and-parses-as-empty",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_DONE",
+     "payload": {
+      "stage": "processes",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       98,
+       99
+      ],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PS_PARSE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "STATS_FAILED"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "parse-of-nothing-lists-every-pid-missing",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_PARSE",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       98,
+       99
+      ],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 23.5,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 86400,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FINISH",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "STATS_FAILED"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "ps-abnormal-exit-is-named",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_DONE",
+     "payload": {
+      "stage": "processes",
+      "exitCode": 2,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "ps: illegal option"
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10
+      ],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "processes",
+         "code": "ps_failed",
+         "error": "ps exited with code 2: ps: illegal option"
+        }
+       },
+       {
+        "event": "STATS_FINISH",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "PS_PARSE"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "exit-1-with-stderr-is-a-failure-not-all-missing",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_DONE",
+     "payload": {
+      "stage": "processes",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "ps: error"
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10
+      ],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "processes",
+         "code": "ps_failed",
+         "error": "ps exited with code 1: ps: error"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PS_PARSE"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "exit-1-with-output-is-a-failure",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_DONE",
+     "payload": {
+      "stage": "processes",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "10 2048\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10
+      ],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "processes",
+         "code": "ps_failed",
+         "error": "ps exited with code 1: "
+        }
+       }
+      ],
+      "neverEmits": [
+       "PS_PARSE"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "finish-after-a-ps-failure-lists-processes-unavailable-and-nothing-missing",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "STATS_FINISH",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10
+      ],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 23.5,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 86400,
+      "processes": [],
+      "missing": [],
+      "unavailable": [
+       "processes"
+      ],
+      "psLines": []
+     },
+     "expect": {
+      "exactEmits": [
+       {
+        "event": "STATS_READ",
+        "payload": {
+         "memoryTotal": 17179869184,
+         "memoryUsed": 11179869184,
+         "memoryAvailable": 6000000000,
+         "memoryPercent": 65.1,
+         "cpuPercent": 23.5,
+         "load1": 1.5,
+         "load5": 2.0,
+         "load15": 2.5,
+         "uptimeSeconds": 86400,
+         "processes": [],
+         "missing": [],
+         "unavailable": [
+          "processes"
+         ],
+         "at": 1760531445678
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "ps-line-of-letters-is-unparsable",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_PARSE",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10
+      ],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": [
+       "abc def"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "processes",
+         "code": "unparsable",
+         "error": "a line of the ps output is not a pid and a number"
+        }
+       },
+       {
+        "event": "STATS_FINISH",
+        "payload": {}
+       }
+      ],
+      "neverEmits": []
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "ps-line-with-one-token-is-unparsable",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_PARSE",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10
+      ],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": [
+       "10"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "processes",
+         "code": "unparsable",
+         "error": "a line of the ps output is not a pid and a number"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "ps-line-with-three-tokens-is-unparsable",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_PARSE",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10
+      ],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": [
+       "10 2048 7"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "processes",
+         "code": "unparsable",
+         "error": "a line of the ps output is not a pid and a number"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "ps-line-with-a-bad-rss-is-unparsable",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_PARSE",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10
+      ],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": [
+       "10 2k"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "processes",
+         "code": "unparsable",
+         "error": "a line of the ps output is not a pid and a number"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "one-bad-line-among-good-ones-fails-the-whole-read",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_PARSE",
+     "payload": {},
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10,
+       20
+      ],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": [
+       " 10 2048",
+       " x 4096"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "processes",
+         "code": "unparsable",
+         "error": "a line of the ps output is not a pid and a number"
+        }
+       }
+      ],
+      "neverEmits": []
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "blank-lines-are-dropped-before-parsing",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_DONE",
+     "payload": {
+      "stage": "processes",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "\n 10 2048\n\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10
+      ],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PS_PARSE",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "cli-failure-passes-its-code-through",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_FAILED",
+     "payload": {
+      "stage": "processes",
+      "error": "ps could not start",
+      "code": "cli_spawn_failed"
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10
+      ],
+      "memoryTotal": 0,
+      "memoryUsed": 0,
+      "memoryAvailable": 0,
+      "memoryPercent": 0,
+      "cpuPercent": 0,
+      "load1": 0,
+      "load5": 0,
+      "load15": 0,
+      "uptimeSeconds": 0,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "processes",
+         "code": "cli_spawn_failed",
+         "error": "ps could not start"
+        }
+       },
+       {
+        "event": "STATS_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "ps-rows-flow-through-to-the-read",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_DONE",
+     "payload": {
+      "stage": "processes",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": " 10 2048\n 20 4096\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10,
+       20
+      ],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 23.5,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 86400,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "PS_PARSE",
+        "payload": {}
+       },
+       {
+        "event": "STATS_FINISH",
+        "payload": {}
+       },
+       {
+        "event": "STATS_READ",
+        "payload": {
+         "memoryTotal": 17179869184,
+         "memoryUsed": 11179869184,
+         "memoryAvailable": 6000000000,
+         "memoryPercent": 65.1,
+         "cpuPercent": 23.5,
+         "load1": 1.5,
+         "load5": 2.0,
+         "load15": 2.5,
+         "uptimeSeconds": 86400,
+         "processes": [
+          {
+           "pid": 10,
+           "rssKb": 2048
+          },
+          {
+           "pid": 20,
+           "rssKb": 4096
+          }
+         ],
+         "missing": [],
+         "unavailable": [],
+         "at": 1760531445678
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "an-unlisted-pid-flows-through-as-missing",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_DONE",
+     "payload": {
+      "stage": "processes",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": " 10 2048\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10,
+       99
+      ],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 23.5,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 86400,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "PS_PARSE",
+        "payload": {}
+       },
+       {
+        "event": "STATS_FINISH",
+        "payload": {}
+       },
+       {
+        "event": "STATS_READ",
+        "payload": {
+         "memoryTotal": 17179869184,
+         "memoryUsed": 11179869184,
+         "memoryAvailable": 6000000000,
+         "memoryPercent": 65.1,
+         "cpuPercent": 23.5,
+         "load1": 1.5,
+         "load5": 2.0,
+         "load15": 2.5,
+         "uptimeSeconds": 86400,
+         "processes": [
+          {
+           "pid": 10,
+           "rssKb": 2048
+          }
+         ],
+         "missing": [
+          99
+         ],
+         "unavailable": [],
+         "at": 1760531445678
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "every-pid-unknown-flows-through-as-all-missing",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_DONE",
+     "payload": {
+      "stage": "processes",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       98,
+       99
+      ],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 23.5,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 86400,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "PS_PARSE",
+        "payload": {}
+       },
+       {
+        "event": "STATS_FINISH",
+        "payload": {}
+       },
+       {
+        "event": "STATS_READ",
+        "payload": {
+         "memoryTotal": 17179869184,
+         "memoryUsed": 11179869184,
+         "memoryAvailable": 6000000000,
+         "memoryPercent": 65.1,
+         "cpuPercent": 23.5,
+         "load1": 1.5,
+         "load5": 2.0,
+         "load15": 2.5,
+         "uptimeSeconds": 86400,
+         "processes": [],
+         "missing": [
+          98,
+          99
+         ],
+         "unavailable": [],
+         "at": 1760531445678
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "unparsable-output-flows-through-as-unavailable",
+   "steps": [
+    {
+     "trait": "SystemStatsMeter",
+     "event": "PS_DONE",
+     "payload": {
+      "stage": "processes",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "abc def\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "s",
+      "active": true,
+      "sampling": true,
+      "dueAt": 0,
+      "pids": [
+       10
+      ],
+      "memoryTotal": 17179869184,
+      "memoryUsed": 11179869184,
+      "memoryAvailable": 6000000000,
+      "memoryPercent": 65.1,
+      "cpuPercent": 23.5,
+      "load1": 1.5,
+      "load5": 2.0,
+      "load15": 2.5,
+      "uptimeSeconds": 86400,
+      "processes": [],
+      "missing": [],
+      "unavailable": [],
+      "psLines": []
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "PS_PARSE",
+        "payload": {}
+       },
+       {
+        "event": "STATS_FAILED",
+        "payload": {
+         "stat": "processes",
+         "code": "unparsable",
+         "error": "a line of the ps output is not a pid and a number"
+        }
+       },
+       {
+        "event": "STATS_FINISH",
+        "payload": {}
+       },
+       {
+        "event": "STATS_READ",
+        "payload": {
+         "memoryTotal": 17179869184,
+         "memoryUsed": 11179869184,
+         "memoryAvailable": 6000000000,
+         "memoryPercent": 65.1,
+         "cpuPercent": 23.5,
+         "load1": 1.5,
+         "load5": 2.0,
+         "load15": 2.5,
+         "uptimeSeconds": 86400,
+         "processes": [],
+         "missing": [],
+         "unavailable": [
+          "processes"
+         ],
+         "at": 1760531445678
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  }
+ ]
+}

@@ -1,0 +1,335 @@
+app std-system-stats [
+  version: "1.0.0",
+  exec: ["ps"],
+  env: ["PATH"],
+  sys: [memory, cpu],
+  description: "std-system-stats — the load of the machine the program runs on, sampled on an interval. STATS_START begins sampling and STATS_STOP ends it; a sample is taken as soon as the interval knob's time (intervalMs, kept to the second by the one-second tick that checks it) has passed since the last one ended, so two samples never overlap. A sample reads os/memory-info (total, available, used and used percent), os/cpu-usage (the percent between this ask and the previous one: the host samples across two asks, so the first sample of a run has nothing to compare with), os/load-avg (one, five and fifteen minutes) and os/uptime, one after the other, then the resident memory of the processes STATS_WATCH { pids } names, read with one `ps -o pid= -o rss= -p <pid,pid>` run through std-cli (rss in kilobytes, parsed line by line into a pid and a number; a line that is not two numbers fails the read as unparsable; an empty pid list reads nothing; a pid ps does not list is answered in missing, never as zero memory). Each sample ends with STATS_READ { memoryTotal, memoryUsed, memoryAvailable, memoryPercent, cpuPercent, load1, load5, load15, uptimeSeconds, processes, missing, unavailable, at }; a stat the host cannot answer (the grant is denied, the platform does not support it, ps fails) is named in STATS_FAILED { stat, code, error } with the host's failure kind as code, listed in unavailable, and left at zero, and the rest of the sample is still taken. STATS_WATCH while sampling takes a sample at once so a new process shows its memory without waiting for the interval. Memory is in bytes, except a process's rss which is in kilobytes. Subject-agnostic: it knows nothing of what the pids are.",
+  egress: []
+]
+;; @capabilities "read the memory, cpu, load average and uptime of this machine on an interval, read the resident memory of given processes"
+uses Spec from "almadar-std/system-stats"
+uses Cli from "std/behaviors/std-cli"
+
+type StatsProcess = { pid : number!, rssKb : number! }
+
+orbital SystemStatsOrbital {
+  entity SystemStatsRun [runtime] {
+    id : string!
+    active : boolean = false
+    sampling : boolean = false
+    dueAt : number = 0
+    pids : [number] = []
+    memoryTotal : number = 0
+    memoryUsed : number = 0
+    memoryAvailable : number = 0
+    memoryPercent : number = 0
+    cpuPercent : number = 0
+    load1 : number = 0
+    load5 : number = 0
+    load15 : number = 0
+    uptimeSeconds : number = 0
+    processes : [StatsProcess] = []
+    missing : [number] = []
+    unavailable : [string] = []
+    psLines : [string] = []
+  }
+
+  trait SystemStatsMeter -> SystemStatsRun {
+    config {
+      intervalMs : number = 3000
+        @label "Sample interval"
+        @description "Milliseconds between the end of one sample and the start of the next; it is checked once a second, so it is kept to the second."
+        @tier "policy"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      STATS_START -> ready
+        (set @entity.active true)
+        (set @entity.dueAt 0)
+      STATS_STOP -> ready
+        (set @entity.active false)
+      STATS_WATCH -> ready when (and @entity.active (not @entity.sampling))
+        (set @entity.pids ?pids)
+        (emit STATS_SAMPLE {})
+      STATS_WATCH -> ready when (not (and @entity.active (not @entity.sampling)))
+        (set @entity.pids ?pids)
+      STATS_SAMPLE -> ready when (not @entity.sampling)
+        (set @entity.sampling true)
+        (set @entity.unavailable [])
+        (os/memory-info { emit: { success: STATS_MEMORY, failure: STATS_MEMORY_FAILED } })
+      STATS_MEMORY -> ready
+        (set @entity.memoryTotal ?total)
+        (set @entity.memoryUsed ?used)
+        (set @entity.memoryAvailable ?available)
+        (set @entity.memoryPercent ?usedPercent)
+        (os/cpu-usage { emit: { success: STATS_CPU, failure: STATS_CPU_FAILED } })
+      STATS_MEMORY_FAILED -> ready
+        (set @entity.memoryTotal 0)
+        (set @entity.memoryUsed 0)
+        (set @entity.memoryAvailable 0)
+        (set @entity.memoryPercent 0)
+        (set @entity.unavailable (array/append @entity.unavailable "memory"))
+        (emit STATS_FAILED { stat: "memory", code: (or ?kind "unknown"), error: ?error })
+        (os/cpu-usage { emit: { success: STATS_CPU, failure: STATS_CPU_FAILED } })
+      STATS_CPU -> ready
+        (set @entity.cpuPercent ?percent)
+        (os/load-avg { emit: { success: STATS_LOAD, failure: STATS_LOAD_FAILED } })
+      STATS_CPU_FAILED -> ready
+        (set @entity.cpuPercent 0)
+        (set @entity.unavailable (array/append @entity.unavailable "cpu"))
+        (emit STATS_FAILED { stat: "cpu", code: (or ?kind "unknown"), error: ?error })
+        (os/load-avg { emit: { success: STATS_LOAD, failure: STATS_LOAD_FAILED } })
+      STATS_LOAD -> ready
+        (set @entity.load1 ?one)
+        (set @entity.load5 ?five)
+        (set @entity.load15 ?fifteen)
+        (os/uptime { emit: { success: STATS_UPTIME, failure: STATS_UPTIME_FAILED } })
+      STATS_LOAD_FAILED -> ready
+        (set @entity.load1 0)
+        (set @entity.load5 0)
+        (set @entity.load15 0)
+        (set @entity.unavailable (array/append @entity.unavailable "load"))
+        (emit STATS_FAILED { stat: "load", code: (or ?kind "unknown"), error: ?error })
+        (os/uptime { emit: { success: STATS_UPTIME, failure: STATS_UPTIME_FAILED } })
+      STATS_UPTIME -> ready
+        (set @entity.uptimeSeconds ?seconds)
+        (emit STATS_PROCESSES {})
+      STATS_UPTIME_FAILED -> ready
+        (set @entity.uptimeSeconds 0)
+        (set @entity.unavailable (array/append @entity.unavailable "uptime"))
+        (emit STATS_FAILED { stat: "uptime", code: (or ?kind "unknown"), error: ?error })
+        (emit STATS_PROCESSES {})
+      STATS_PROCESSES -> ready when (= (array/len @entity.pids) 0)
+        (set @entity.processes [])
+        (set @entity.missing [])
+        (emit STATS_FINISH {})
+      STATS_PROCESSES -> ready when (> (array/len @entity.pids) 0)
+        (emit PS_RUN { stage: "processes", argv: ["-o", "pid=", "-o", "rss=", "-p", (str/join (array/map @entity.pids (fn p (str/concat @p))) ",")] })
+      PS_DONE -> ready when (not (or (= ?exitCode 0) (and (= ?exitCode 1) (= ?stdout "") (= ?stderr ""))))
+        (set @entity.processes [])
+        (set @entity.missing [])
+        (set @entity.unavailable (array/append @entity.unavailable "processes"))
+        (emit STATS_FAILED { stat: "processes", code: "ps_failed", error: (str/concat "ps exited with code " ?exitCode ": " ?stderr) })
+        (emit STATS_FINISH {})
+      PS_DONE -> ready when (or (= ?exitCode 0) (and (= ?exitCode 1) (= ?stdout "") (= ?stderr "")))
+        (set @entity.psLines (array/filter (str/split ?stdout "\n") (fn l (!= (str/trim @l) ""))))
+        (emit PS_PARSE {})
+      PS_PARSE -> ready when (array/some @entity.psLines (fn l (let ((t (array/filter (str/split (str/trim @l) " ") (fn w (!= @w ""))))) (or (!= (array/len @t) 2) (== (str/to-number (array/nth @t 0)) null) (== (str/to-number (array/nth @t 1)) null)))))
+        (set @entity.processes [])
+        (set @entity.missing [])
+        (set @entity.unavailable (array/append @entity.unavailable "processes"))
+        (emit STATS_FAILED { stat: "processes", code: "unparsable", error: "a line of the ps output is not a pid and a number" })
+        (emit STATS_FINISH {})
+      PS_PARSE -> ready when (not (array/some @entity.psLines (fn l (let ((t (array/filter (str/split (str/trim @l) " ") (fn w (!= @w ""))))) (or (!= (array/len @t) 2) (== (str/to-number (array/nth @t 0)) null) (== (str/to-number (array/nth @t 1)) null))))))
+        (set @entity.processes (array/map @entity.psLines (fn l (let ((t (array/filter (str/split (str/trim @l) " ") (fn w (!= @w ""))))) { pid: (or (str/to-number (array/nth @t 0)) 0), rssKb: (or (str/to-number (array/nth @t 1)) 0) }))))
+        (set @entity.missing (array/filter @entity.pids (fn p (not (array/some @entity.processes (fn q (= @q.pid @p)))))))
+        (emit STATS_FINISH {})
+      PS_FAILED -> ready
+        (set @entity.processes [])
+        (set @entity.missing [])
+        (set @entity.unavailable (array/append @entity.unavailable "processes"))
+        (emit STATS_FAILED { stat: "processes", code: ?code, error: ?error })
+        (emit STATS_FINISH {})
+      STATS_FINISH -> ready
+        (set @entity.sampling false)
+        (set @entity.dueAt (+ @now @config.intervalMs))
+        (emit STATS_READ { memoryTotal: @entity.memoryTotal, memoryUsed: @entity.memoryUsed, memoryAvailable: @entity.memoryAvailable, memoryPercent: @entity.memoryPercent, cpuPercent: @entity.cpuPercent, load1: @entity.load1, load5: @entity.load5, load15: @entity.load15, uptimeSeconds: @entity.uptimeSeconds, processes: @entity.processes, missing: @entity.missing, unavailable: @entity.unavailable, at: @now })
+    }
+
+    ticks {
+      sampleDue every 1s [background]
+        when (and @entity.active (not @entity.sampling) (>= @now @entity.dueAt))
+        (emit STATS_SAMPLE {})
+    }
+
+    emits {
+      STATS_READ -> external {
+        memoryTotal : number!
+        memoryUsed : number!
+        memoryAvailable : number!
+        memoryPercent : number!
+        cpuPercent : number!
+        load1 : number!
+        load5 : number!
+        load15 : number!
+        uptimeSeconds : number!
+        processes : [StatsProcess]!
+        missing : [number]!
+        unavailable : [string]!
+        at : number!
+      }
+        @description "One finished sample: memory in bytes, cpu and memory percent, the load averages, the uptime in seconds, the resident memory (kilobytes) of each watched process, the watched pids ps did not list, and the stats the host could not answer (left at zero)."
+        @tier "domain"
+      STATS_FAILED -> external {
+        stat : "memory" | "cpu" | "load" | "uptime" | "processes"!
+        code : string!
+        error : string!
+      }
+        @description "One stat of a sample could not be read: code is the host's failure kind (denied, unsupported, io, ...), ps_failed when ps exited abnormally, unparsable when its output was not pids and numbers, or the std-cli failure code."
+        @tier "domain"
+      STATS_SAMPLE { }
+        @description "Internal: take a sample."
+        @tier "internal"
+      STATS_PROCESSES { }
+        @description "Internal: read the watched processes."
+        @tier "internal"
+      STATS_FINISH { }
+        @description "Internal: the sample is complete."
+        @tier "internal"
+      PS_PARSE { }
+        @description "Internal: parse the ps output."
+        @tier "internal"
+      PS_RUN -> external {
+        stage : string!
+        argv : [string]!
+      }
+        @description "The ps run for the watched processes, handed to std-cli."
+        @tier "internal"
+      STATS_MEMORY {
+        total : number!
+        available : number!
+        used : number!
+        usedPercent : number!
+      }
+        @description "Internal: os/memory-info's success."
+        @tier "internal"
+      STATS_MEMORY_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "Internal: os/memory-info's failure."
+        @tier "internal"
+      STATS_CPU {
+        percent : number!
+      }
+        @description "Internal: os/cpu-usage's success."
+        @tier "internal"
+      STATS_CPU_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "Internal: os/cpu-usage's failure."
+        @tier "internal"
+      STATS_LOAD {
+        one : number!
+        five : number!
+        fifteen : number!
+      }
+        @description "Internal: os/load-avg's success."
+        @tier "internal"
+      STATS_LOAD_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "Internal: os/load-avg's failure."
+        @tier "internal"
+      STATS_UPTIME {
+        seconds : number!
+      }
+        @description "Internal: os/uptime's success."
+        @tier "internal"
+      STATS_UPTIME_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "Internal: os/uptime's failure."
+        @tier "internal"
+    }
+
+    listens {
+      STATS_START -> input {
+      }
+        @description "Begin sampling: the first sample is taken within a second."
+        @synonyms "start monitoring, watch the machine, begin system stats"
+      STATS_STOP -> input {
+      }
+        @description "Stop sampling; a sample in flight still finishes."
+        @synonyms "stop monitoring, pause system stats"
+      STATS_WATCH -> input {
+        pids : [number]!
+      }
+        @description "Name the processes whose resident memory each sample reads; an empty list reads none."
+        @synonyms "watch processes, process memory, rss of pids"
+      ProcessReader.CLI_DONE -> PS_DONE
+      ProcessReader.CLI_FAILED -> PS_FAILED
+      PS_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "std-cli's answer for the ps run."
+      PS_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's failure for the ps run."
+      STATS_SAMPLE { }
+        @description "Self: take a sample."
+      STATS_PROCESSES { }
+        @description "Self: read the watched processes."
+      STATS_FINISH { }
+        @description "Self: the sample is complete."
+      PS_PARSE { }
+        @description "Self: parse the ps output."
+      STATS_MEMORY {
+        total : number!
+        available : number!
+        used : number!
+        usedPercent : number!
+      }
+        @description "os/memory-info's success."
+      STATS_MEMORY_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "os/memory-info's failure."
+      STATS_CPU {
+        percent : number!
+      }
+        @description "os/cpu-usage's success."
+      STATS_CPU_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "os/cpu-usage's failure."
+      STATS_LOAD {
+        one : number!
+        five : number!
+        fifteen : number!
+      }
+        @description "os/load-avg's success."
+      STATS_LOAD_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "os/load-avg's failure."
+      STATS_UPTIME {
+        seconds : number!
+      }
+        @description "os/uptime's success."
+      STATS_UPTIME_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "os/uptime's failure."
+    }
+  }
+
+  trait ProcessReader = Cli.traits.CliRunner {
+    config {
+      commands: ["ps"]
+      passEnv: ["PATH"]
+    }
+    listens {
+      SystemStatsMeter.PS_RUN -> CLI_RUN
+    }
+  }
+
+  page boot as SystemStatsOrbitalStart -> SystemStatsMeter, ProcessReader
+}

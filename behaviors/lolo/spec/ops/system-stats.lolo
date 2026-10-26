@@ -1,0 +1,30 @@
+app system-stats-spec [
+  version: "1.0.0",
+  description: "Design contract for sampling the load of the machine a program runs on: a sample reads memory, cpu, load average and uptime and the resident memory of named processes, and answers once with all of them; a stat the host cannot answer is named in a failure and left at zero, never dropped silently."
+]
+
+type StatsProcess = { pid : number!, rssKb : number! }
+
+orbital SystemStatsSpec {
+  expects entity SystemStatsRun [runtime] {
+    id : string!
+    active : boolean
+    sampling : boolean
+    pids : [number]
+    processes : [StatsProcess]
+    unavailable : [string]
+  }
+  expects trait SystemStatsMeter {
+    state ready {
+      STATS_START -> ready
+      STATS_WATCH -> ready
+      STATS_SAMPLE -> ready
+    }
+    emits {
+      STATS_READ { memoryTotal : number!  cpuPercent : number!  processes : [StatsProcess]!  missing : [number]!  unavailable : [string]! }
+      STATS_FAILED { code : string!  error : string! }
+    }
+  }
+  expects config { intervalMs : number = 3000 }
+  expects page boot -> SystemStatsMeter
+}

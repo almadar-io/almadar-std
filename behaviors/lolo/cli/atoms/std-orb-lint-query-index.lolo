@@ -1,0 +1,249 @@
+app std-orb-lint-query-index [
+  version: "1.0.0",
+  inbound: ["cli-lint-query-index"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-query-index — the `orb lint query-index <file>` command, the check of declared `@index` access paths against the fetches that use them. It lowers the file with program/read. A path naming a field the entity does not declare (id, createdAt and updatedAt always are) or a non-scalar field (array, object, file) is [ORB_INDEX_PATH_INVALID]; a path repeating an earlier one (field and field:asc are one order) is [ORB_INDEX_PATH_DUPLICATE]. A conjunctive fetch of a persistent entity whose store driver creates no index at runtime (a driver config with an orderableFields knob) and that needs a composite index (two or more equality fields, or an equality with a range or an order on another field) is [ORB_FETCH_NEEDS_COMPOSITE_INDEX] unless a path covers it. A fetch with an equality or a range that a bound driver declines (no compare leaf, or an order outside a listed orderableFields) and that no path covers is the warning [ORB_FETCH_UNINDEXED]. A path covers a fetch when its leading fields are the fetch's equality fields in any order, a range is on the next field, and its orderBy is the fetch's orderBy. Clean answers `lint query-index: clean` (status 200, exit 0); findings answer status 500 (exit 1). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-query-index"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type IxVal = string | number | boolean | [IxVal?] | Map string IxVal?
+type IxOpts = { filter : IxVal, orderBy : string, id : IxVal, nearest : IxVal }
+type IxNodes = [IxVal?]
+type IxFound = { e : string, o : IxOpts }
+type IxFounds = [IxFound]
+type IxLeaf = { k : string, f : string }
+type IxLeaves = [IxLeaf]
+type IxField = { name : string, type : string }
+type IxPath = { fields : [string], orderBy : string }
+type IxEntity = { name : string, persistence : string, browser : boolean, store : string, fields : [IxField], indexes : [IxPath] }
+type IxArm = { effects : [IxVal] }
+type IxMachine = { transitions : [IxArm] }
+type IxTrait = { name : string, stateMachine : IxMachine }
+type IxCaps = { indexes : string }
+type IxKnob = { default : IxCaps }
+type IxConfig = { queryCapabilities : IxKnob }
+type IxOrbital = { name : string, config : IxConfig, entity : IxEntity, auxiliaryEntities : [IxEntity], traits : [IxTrait] }
+type IxProgram = { store : string, orbitals : [IxOrbital]! }
+
+orbital OrbLintQueryIndexOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintQueryIndexRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintQueryIndex -> OrbLintQueryIndexRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbs (object/get @payload.program "orbitals" [])))
+ (let ((ents (array/filter (array/flatten (array/map @orbs (fn o (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" []))))) (fn e (!= (object/get @e "name" "") ""))))
+       (appStore (object/get @payload.program "store" ""))
+       (anyDrv (array/some (object/get @payload.program "orbitals" []) (fn d (array/includes ["deploy", "none"] (object/get (object/get (object/get (object/get @d "config" {}) "queryCapabilities" {}) "default" {}) "indexes" ""))))))
+  (let ((defs (object/fromEntries (array/map @ents (fn e [(object/get @e "name"), @e])))))
+   (array/concat
+    (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+     (let ((o (array/nth @orbs @oi)))
+      (let ((es (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" []))))
+       (array/flatten (array/map (array/range 0 (array/len @es)) (fn ei
+        (let ((e (array/nth @es @ei)))
+         (let ((ixs (object/get @e "indexes" []))
+               (efields (object/get @e "fields" [])))
+          (let ((declared (array/concat ["id", "createdAt", "updatedAt"] (array/map @efields (fn f (object/get @f "name" ""))))))
+           (array/flatten (array/map (array/range 0 (array/len @ixs)) (fn xi
+            (let ((x (array/nth @ixs @xi)))
+             (let ((base (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")]." (if (= @ei 0) "entity" (str/concat "auxiliaryEntities[" (- @ei 1) "]")) ".indexes[" @xi "]"))
+                   (ob (object/get @x "orderBy" ""))
+                   (xf (object/get @x "fields" [])))
+              (let ((ord (if (str/endsWith @ob ":asc") (str/replace @ob ":asc" "") @ob))
+                    (of (array/first (str/split @ob ":"))))
+               (let ((names (array/concat @xf (if (= @of "") [] [@of])))
+                     (dupOf (array/find (array/range 0 @xi) (fn xj (let ((jb (object/get (array/nth @ixs @xj) "orderBy" ""))) (= (str/concat (str/join (object/get (array/nth @ixs @xj) "fields" []) ",") "|" (if (str/endsWith @jb ":asc") (str/replace @jb ":asc" "") @jb)) (str/concat (str/join @xf ",") "|" (if (str/endsWith @ob ":asc") (str/replace @ob ":asc" "") @ob))))))))
+                (array/concat
+                 (array/map (array/filter @names (fn nm (not (array/includes @declared @nm))))
+                  (fn nm { code: "ORB_INDEX_PATH_INVALID", path: @base, message: (str/concat "index path names field " @nm ", which entity " (object/get @e "name" "") " does not declare"), suggestion: "Name a declared field (or id, createdAt, updatedAt)", severity: "error" }))
+                 (array/map (array/filter @names (fn nm (array/some @efields (fn f (and (= (object/get @f "name" "") @nm) (array/includes ["array", "object", "file"] (object/get @f "type" "")))))))
+                  (fn nm { code: "ORB_INDEX_PATH_INVALID", path: @base, message: (str/concat "index path names field " @nm ", an " (object/get (array/find @efields (fn f (= (object/get @f "name" "") @nm))) "type" "") " field; only scalar fields can be indexed"), suggestion: "Index a scalar field (string, number, boolean, date, enum)", severity: "error" }))
+                 (if (= @dupOf null) []
+                  [{ code: "ORB_INDEX_PATH_DUPLICATE", path: @base, message: (str/concat "index path [" (str/join @xf ", ") "]" (if (= @ord "") "" (str/concat " ordered by " @ord)) " repeats indexes[" @dupOf "] of entity " (object/get @e "name" "")), suggestion: "Remove the repeated @index", severity: "error" }]))))))))))))))))))))
+    (if (not @anyDrv) []
+    (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+     (let ((o (array/nth @orbs @oi)))
+      (let ((trs (object/get @o "traits" [])))
+       (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
+        (let ((t (array/nth @trs @ti)))
+         (let ((trans (object/get (object/get @t "stateMachine" {}) "transitions" [])))
+          (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ni
+           (let ((fetches (or (json/parse (json/stringify (or (tree/fold (object/get (array/nth @trans @ni) "effects" []) (fn (n k)
+                  (if (validate/array @n)
+                   (array/concat
+                    (if (and (> (array/len @n) 1) (validate/string (array/nth @n 0)) (= (array/nth @n 0) "fetch") (validate/string (array/nth @n 1)))
+                     [{ e: (array/nth @n 1), o: (if (and (> (array/len @n) 2) (validate/object (array/nth @n 2))) (array/nth @n 2) {}) }]
+                     [])
+                    (array/flatten (array/filter @k (fn c (!= @c null)))))
+                   [])) IxVal) [])) IxFounds) [])))
+            (array/flatten (array/map @fetches (fn fx
+             (let ((ename (object/get @fx "e" ""))
+                   (opts (object/get @fx "o" {})))
+              (let ((ent (object/get @defs @ename null)))
+               (if (or (= @ent null) (!= (object/get @ent "persistence" "") "persistent") (object/get @ent "browser" false) (object/has @opts "id") (object/has @opts "nearest"))
+                []
+                (let ((drvName (if (!= (object/get @ent "store" "") "") (object/get @ent "store") @appStore)))
+                 (let ((drv (array/find @orbs (fn d (= (object/get @d "name" "") @drvName)))))
+                  (if (or (= @drvName "") (= @drv null))
+                   []
+                   (let ((mode (object/get (object/get (object/get (object/get @drv "config" {}) "queryCapabilities" {}) "default" {}) "indexes" "")))
+                    (if (not (array/includes ["deploy", "none"] @mode))
+                     []
+                     (let ((leaves (let ((fs (object/get @opts "filter" null))) (if (= @fs null) [] (or (json/parse (json/stringify (or (tree/fold @fs (fn (n k)
+                            (if (validate/array @n)
+                             (let ((h (if (and (> (array/len @n) 0) (validate/string (array/nth @n 0))) (array/nth @n 0) "")))
+                              (if (= @h "and")
+                               (array/flatten (array/filter @k (fn c (!= @c null))))
+                               (if (array/includes ["or", "not"] @h)
+                                [{ k: "complex", f: "" }]
+                                (if (array/includes ["=", ">", ">=", "<", "<="] @h)
+                                 (let ((a (or (json/parse (json/stringify (array/nth @n 1)) IxNodes) []))
+                                       (b (or (json/parse (json/stringify (array/nth @n 2)) IxNodes) [])))
+                                  (let ((fa (if (and (= (array/len @a) 3) (= (array/nth @a 0) "object/get") (= (array/nth @a 1) (quote "@entity")) (validate/string (array/nth @a 2))) (array/nth @a 2) ""))
+                                        (fb (if (and (= (array/len @b) 3) (= (array/nth @b 0) "object/get") (= (array/nth @b 1) (quote "@entity")) (validate/string (array/nth @b 2))) (array/nth @b 2) "")))
+                                   (let ((fld (if (!= @fa "") @fa @fb)))
+                                    (if (= @fld "") [] [{ k: (if (= @h "=") "eq" "range"), f: @fld }]))))
+                                 []))))
+                             [])) IxVal) [])) IxLeaves) [])))))
+                      (let ((E (array/unique (array/map (array/filter @leaves (fn l (= (object/get @l "k" "") "eq"))) (fn l (object/get @l "f" "")))))
+                            (R (array/unique (array/map (array/filter @leaves (fn l (= (object/get @l "k" "") "range"))) (fn l (object/get @l "f" ""))))))
+                       (let ((ov (object/get @opts "orderBy" "")))
+                        (let ((ord @ov))
+                         (let ((of (array/first (str/split @ord ":")))
+                               (ordKey (if (str/endsWith @ord ":asc") (str/replace @ord ":asc" "") @ord))
+                               (nE (array/len @E))
+                               (nR (array/len @R))
+                               (e1 (if (> (array/len @E) 0) (array/first @E) ""))
+                               (r1 (if (> (array/len @R) 0) (array/first @R) "")))
+                          (if (or (array/some @leaves (fn l (= (object/get @l "k" "") "complex"))) (and (= @nE 0) (= @nR 0)))
+                           []
+                           (let ((covered (array/some (object/get @ent "indexes" []) (fn p
+                                  (let ((pf (object/get @p "fields" []))
+                                        (pb (object/get @p "orderBy" "")))
+                                   (and (<= @nR 1)
+                                        (= (array/len @pf) (+ @nE @nR))
+                                        (array/every @E (fn e (array/includes (array/slice @pf 0 @nE) @e)))
+                                        (or (= @nR 0) (= (array/nth @pf @nE) @r1))
+                                        (= @ordKey (if (str/endsWith @pb ":asc") (str/replace @pb ":asc" "") @pb))))))))
+                            (if @covered
+                             []
+                             (let ((cols (array/concat @E @R)))
+                              (let ((shown (str/concat "fetch of " @ename " filters on " (str/join @cols ", ") (if (= @ord "") "" (str/concat " ordered by " @ord))))
+                                    (sug (str/concat "Declare @index { fields: [" (str/join (array/map @cols (fn c (str/concat "\"" @c "\""))) ", ") "]" (if (= @ord "") "" (str/concat ", orderBy: \"" @ord "\"")) " } on " @ename))
+                                    (fpath (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" @ni "].effects")))
+                               (if (= @mode "deploy")
+                                (if (or (>= @nE 2) (and (= @nE 1) (or (> @nR 0) (and (!= @of "") (!= @of @e1)))) (and (= @nE 0) (> @nR 0) (!= @of "") (!= @of @r1)))
+                                 [{ code: "ORB_FETCH_NEEDS_COMPOSITE_INDEX", path: @fpath, message: (str/concat @shown ", and its store driver " @drvName " creates no index at runtime; no `@index` of " @ename " covers it"), suggestion: @sug, severity: "error" }]
+                                 [])
+                                [{ code: "ORB_FETCH_UNINDEXED", path: @fpath, message: (str/concat @shown ", and its store driver " @drvName " cannot push it down, so the kernel scans every row; no `@index` of " @ename " covers it"), suggestion: @sug, severity: "warning" }]))))))))))))))))))))))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "query-index", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IxProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintQueryIndexCli -> OrbLintQueryIndexRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit LINT_ANSWERED { status: 500, body: "Error: orb lint query-index: the command arguments could not be read" })
+      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint query-index <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "query-index") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint query-index: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "query-index") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint query-index: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-query-index" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint query-index` with its arguments and working directory."
+        @synonyms "orb lint query-index, query index, index path, composite index, fetch index"
+      OrbLintQueryIndex.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintQueryIndexCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintQueryIndexOrbitalStart -> OrbLintQueryIndex, OrbLintQueryIndexCli, OrbLintInput, Packs, Versions
+}

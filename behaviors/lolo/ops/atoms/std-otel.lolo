@@ -225,18 +225,15 @@ orbital OtelOrbital {
         (set @entity.spans [@payload.data])
         (fetch OtelSpanEvent { filter: { spanId: (object/get @payload.data id "") }, orderBy: "timestamp", emit: { success: OTEL_SPAN_EVENTS_LOADED, failure: OTEL_READ_FAILED } })
       OTEL_SPAN_EVENTS_LOADED -> idle
-        (let ((s (array/first @entity.spans)))
-          (emit GET_SPAN_RESULT { found: true, span: (object/merge
-            {
-              spanId: @s.id,
-              traceId: @s.traceId,
-              name: @s.name,
-              startTime: @s.startTime,
-              attributes: @s.attributes,
-              events: (array/map @payload.data (fn ev { name: @ev.name, timestamp: @ev.timestamp, attributes: @ev.attributes }))
-            }
-            (if (!= @s.endTime 0) { endTime: @s.endTime } {})
-            (if (!= @s.status "") { status: @s.status } {})) }))
+        (let ((s (array/first @entity.spans))
+              (evs (array/map @payload.data (fn ev { name: @ev.name, timestamp: @ev.timestamp, attributes: @ev.attributes }))))
+          (if (!= @s.endTime 0)
+            (if (!= @s.status "")
+              (emit GET_SPAN_RESULT { found: true, span: { spanId: @s.id, traceId: @s.traceId, name: @s.name, startTime: @s.startTime, attributes: @s.attributes, events: @evs, endTime: @s.endTime, status: @s.status } })
+              (emit GET_SPAN_RESULT { found: true, span: { spanId: @s.id, traceId: @s.traceId, name: @s.name, startTime: @s.startTime, attributes: @s.attributes, events: @evs, endTime: @s.endTime } }))
+            (if (!= @s.status "")
+              (emit GET_SPAN_RESULT { found: true, span: { spanId: @s.id, traceId: @s.traceId, name: @s.name, startTime: @s.startTime, attributes: @s.attributes, events: @evs, status: @s.status } })
+              (emit GET_SPAN_RESULT { found: true, span: { spanId: @s.id, traceId: @s.traceId, name: @s.name, startTime: @s.startTime, attributes: @s.attributes, events: @evs } }))))
 
       GET_METRICS -> idle
         (fetch OtelMetric { orderBy: "timestamp", emit: { success: OTEL_METRICS_LOADED, failure: OTEL_READ_FAILED } })

@@ -65,7 +65,7 @@ orbital GithubBillingOrbital {
       BILLING_REFRESH -> reading
       BILLING_NEXT -> reading when (< @entity.cursor (array/len @config.accounts))
         (let ((a (array/nth @config.accounts @entity.cursor)))
-          (emit BILLING_USAGE { account: @a.name, kind: @a.kind, year: (str/to-number (time/format @entity.startedAt "YYYY")), month: (str/to-number (time/format @entity.startedAt "MM")) }))
+          (let ((y (str/to-number (time/format @entity.startedAt "YYYY"))) (m (str/to-number (time/format @entity.startedAt "MM")))) (if (or (= @y null) (= @m null)) (emit BILLING_MONTH_FAILED { account: @a.name, kind: @a.kind, message: "the billing month could not be read from the clock" }) (emit BILLING_USAGE { account: @a.name, kind: @a.kind, year: @y, month: @m }))))
       BILLING_NEXT -> idle when (>= @entity.cursor (array/len @config.accounts))
         (set @entity.accounts @entity.collected)
         (set @entity.period (time/format @entity.startedAt "YYYY-MM"))
@@ -91,6 +91,10 @@ orbital GithubBillingOrbital {
             netByCategory: { compute: (math/round (array/reduce (array/filter @its (fn i (= (object/get @config.unitCategories @i.unit "other") "compute"))) 0 (fn acc i (+ @acc @i.net))) 4), storage: (math/round (array/reduce (array/filter @its (fn i (= (object/get @config.unitCategories @i.unit "other") "storage"))) 0 (fn acc i (+ @acc @i.net))) 4), transfer: (math/round (array/reduce (array/filter @its (fn i (= (object/get @config.unitCategories @i.unit "other") "transfer"))) 0 (fn acc i (+ @acc @i.net))) 4), other: (math/round (array/reduce (array/filter @its (fn i (= (object/get @config.unitCategories @i.unit "other") "other"))) 0 (fn acc i (+ @acc @i.net))) 4) },
             repos: (array/sort (array/map (array/unique (array/map (array/filter @its (fn i (!= @i.repo ""))) (fn i @i.repo))) (fn r (let ((rs (array/filter @its (fn i (= @i.repo @r))))) { repo: @r, gross: (math/round (array/reduce @rs 0 (fn acc i (+ @acc @i.gross))) 2), net: (math/round (array/reduce @rs 0 (fn acc i (+ @acc @i.net))) 4) }))) "gross" "desc")
           }))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit BILLING_NEXT { })
+      BILLING_MONTH_FAILED -> reading
+        (let ((base : GhBillingAccount { name: "", kind: "", available: false, grossUsd: 0, netUsd: 0, discountUsd: 0, byProduct: [], bySku: [], netByCategory: { compute: 0, storage: 0, transfer: 0, other: 0 }, repos: [] })) (set @entity.collected (array/append @entity.collected (object/merge @base { name: @payload.account, kind: @payload.kind, error: @payload.message }))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit BILLING_NEXT { })
       BILLING_USAGE_FAILED -> reading
@@ -120,6 +124,13 @@ orbital GithubBillingOrbital {
         month : number!
       }
         @description "Internal: one account's usage read, to the GitHub client."
+        @tier "internal"
+      BILLING_MONTH_FAILED -> internal {
+        account : string!
+        kind : string!
+        message : string!
+      }
+        @description "Internal: the billing month could not be read, so that account is listed unavailable."
         @tier "internal"
       BILLING_NEXT -> internal { }
         @description "Internal: read the next account, or answer."

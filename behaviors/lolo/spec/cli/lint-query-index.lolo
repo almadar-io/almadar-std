@@ -1,0 +1,21 @@
+app lint-query-index-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint query-index <file>`: declared `@index` paths are checked against the program's fetches. A path naming an undeclared or non-scalar field is `[ORB_INDEX_PATH_INVALID]`, a repeated path `[ORB_INDEX_PATH_DUPLICATE]`; a conjunctive fetch of a persistent entity bound to a driver that creates no index at runtime and needing a composite index with no covering path is `[ORB_FETCH_NEEDS_COMPOSITE_INDEX]`; a fetch a bound driver declines to push down with no covering path is the warning `[ORB_FETCH_UNINDEXED]`. Findings answer status 500 (exit 1); a clean program answers `lint query-index: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintQueryIndexSpec {
+  expects trait OrbLintQueryIndex {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintQueryIndexCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintQueryIndex, OrbLintQueryIndexCli
+}

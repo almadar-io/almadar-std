@@ -32,7 +32,7 @@ orbital FirestoreOrbital {
   type EveryFieldOrderable = { kind : "every-field" }
   type ListedOrderable = { kind : "listed", fields : [string]! }
   type RowOrderableFields = EveryFieldOrderable | ListedOrderable
-  type QueryCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]!, operatorValueKinds : [OperatorValueKinds]?, orderableFields : RowOrderableFields!, window : boolean!, exactTotal : boolean!, idsOnly : boolean?, nearest : boolean? }
+  type QueryCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]!, operatorValueKinds : [OperatorValueKinds]?, orderableFields : RowOrderableFields!, window : boolean!, exactTotal : boolean!, idsOnly : boolean?, nearest : boolean?, indexes : "runtime" | "deploy" | "none"? }
   type GuardCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]! }
   type WriteCapabilities = { guards : GuardCapabilities!, conditional : boolean!, returnsRow : boolean!, stopRuns : boolean!, atomicBatch : boolean! }
 
@@ -181,7 +181,7 @@ orbital FirestoreOrbital {
         @description "How many times a write transaction that Firestore aborts (contention) is repeated from its read."
         @synonyms "contention retries"
         @tier "infra"
-      queryCapabilities : QueryCapabilities = { leaves: ["compare", "member", "hasElement"], combinators: ["all", "any"], compareOps: ["==", "<", "<=", ">", ">="], operatorValueKinds: [{ operator: "<", valueKinds: ["string", "number", "boolean", "date"] }, { operator: "<=", valueKinds: ["string", "number", "boolean", "date"] }, { operator: ">", valueKinds: ["string", "number", "boolean", "date"] }, { operator: ">=", valueKinds: ["string", "number", "boolean", "date"] }], orderableFields: { kind: "every-field" }, window: true, exactTotal: true, idsOnly: true, nearest: false }
+      queryCapabilities : QueryCapabilities = { leaves: ["compare", "member", "hasElement"], combinators: ["all", "any"], compareOps: ["==", "<", "<=", ">", ">="], operatorValueKinds: [{ operator: "<", valueKinds: ["string", "number", "boolean", "date"] }, { operator: "<=", valueKinds: ["string", "number", "boolean", "date"] }, { operator: ">", valueKinds: ["string", "number", "boolean", "date"] }, { operator: ">=", valueKinds: ["string", "number", "boolean", "date"] }], orderableFields: { kind: "every-field" }, window: true, exactTotal: true, idsOnly: true, nearest: false, indexes: "deploy" }
         @label "Query capabilities"
         @description "What query Firestore runs: == and range comparisons, member, hasElement, all, and an any over one field."
         @synonyms "pushdown capabilities"

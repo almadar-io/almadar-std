@@ -1,0 +1,138 @@
+app std-orb-stats [
+  version: "1.0.0",
+  exec: ["orb"],
+  env: ["PATH", "HOME"],
+  description: "std-orb-stats — what the orb running this program reports about itself. ORB_STATS_ASK reads the kernel's counters with program/inputs { stats: true } (registeredSchemas, registeredTraits, activeInstances, cachedEntities) and answers ORB_KERNEL_READ { registeredSchemas, registeredTraits, activeInstances, cachedEntities, uptimeMs } (uptimeMs is the time since the first ask this atom ever answered, so the program's uptime to within the delay of its first reader); the first ask also runs `orb --version` through std-cli (the orb on PATH) and answers ORB_VERSION_READ { version } with the output trimmed; the version is read once per mount, and every later ask answers ORB_VERSION_READ again with it, so a client that joined later still gets it. A kernel read that the host refuses, a version run that exits non-zero or cannot start, answers ORB_STATS_FAILED { stat, code, error } and the other stat is still answered. Subject-agnostic: it knows nothing of who asks.",
+  egress: []
+]
+;; @capabilities "read the kernel counters of the running orb, read the version of the orb on PATH"
+uses Cli from "std/behaviors/std-cli"
+
+type OrbKernelCounters = { registeredSchemas : number!, registeredTraits : number!, activeInstances : number!, cachedEntities : number! }
+type OrbInputsRead = { stats : OrbKernelCounters! }
+
+orbital OrbStatsOrbital {
+  entity OrbStatsRun [runtime] {
+    id : string!
+    version : string = ""
+    versionAsked : boolean = false
+    startedAt : number = 0
+  }
+
+  trait OrbStatsReader -> OrbStatsRun {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      ORB_STATS_ASK -> ready when (not @entity.versionAsked)
+        (set @entity.startedAt (if (= @entity.startedAt 0) @now @entity.startedAt))
+        (set @entity.versionAsked true)
+        (emit ORB_VERSION_RUN { stage: "version", argv: ["--version"] })
+        (program/inputs { stats: true } { emit: { success: ORB_INPUTS, failure: ORB_INPUTS_FAILED } })
+      ORB_STATS_ASK -> ready when (and @entity.versionAsked (= @entity.version ""))
+        (set @entity.startedAt (if (= @entity.startedAt 0) @now @entity.startedAt))
+        (program/inputs { stats: true } { emit: { success: ORB_INPUTS, failure: ORB_INPUTS_FAILED } })
+      ORB_STATS_ASK -> ready when (!= @entity.version "")
+        (set @entity.startedAt (if (= @entity.startedAt 0) @now @entity.startedAt))
+        (emit ORB_VERSION_READ { version: @entity.version })
+        (program/inputs { stats: true } { emit: { success: ORB_INPUTS, failure: ORB_INPUTS_FAILED } })
+      ORB_INPUTS -> ready
+        (emit ORB_KERNEL_READ { registeredSchemas: ?result.stats.registeredSchemas, registeredTraits: ?result.stats.registeredTraits, activeInstances: ?result.stats.activeInstances, cachedEntities: ?result.stats.cachedEntities, uptimeMs: (- @now @entity.startedAt) })
+      ORB_INPUTS_FAILED -> ready
+        (emit ORB_STATS_FAILED { stat: "kernel", code: "inputs_refused", error: ?error })
+      ORB_VERSION_DONE -> ready when (= ?exitCode 0)
+        (set @entity.version (str/trim ?stdout))
+        (emit ORB_VERSION_READ { version: @entity.version })
+      ORB_VERSION_DONE -> ready when (!= ?exitCode 0)
+        (set @entity.versionAsked false)
+        (emit ORB_STATS_FAILED { stat: "version", code: "orb_exit", error: (str/concat "orb --version exited with code " ?exitCode ": " ?stderr) })
+      ORB_VERSION_FAILED -> ready
+        (set @entity.versionAsked false)
+        (emit ORB_STATS_FAILED { stat: "version", code: ?code, error: ?error })
+    }
+
+    emits {
+      ORB_KERNEL_READ -> external {
+        registeredSchemas : number!
+        registeredTraits : number!
+        activeInstances : number!
+        cachedEntities : number!
+        uptimeMs : number!
+      }
+        @description "The kernel's counters: the schemas and traits registered, the trait instances running and the entities cached, and how long ago the first ask of this run was (the program's uptime, counted from its first read)."
+        @tier "domain"
+      ORB_VERSION_READ -> external {
+        version : string!
+      }
+        @description "What `orb --version` printed, trimmed."
+        @tier "domain"
+      ORB_STATS_FAILED -> external {
+        stat : "kernel" | "version"!
+        code : string!
+        error : string!
+      }
+        @description "One stat could not be read: code is inputs_refused for the kernel read, orb_exit for a non-zero exit, or the std-cli failure code."
+        @tier "domain"
+      ORB_VERSION_RUN -> external {
+        stage : string!
+        argv : [string]!
+      }
+        @description "The `orb --version` run, handed to std-cli."
+        @tier "internal"
+      ORB_INPUTS {
+        result : OrbInputsRead!
+      }
+        @description "Internal: program/inputs' success."
+        @tier "internal"
+      ORB_INPUTS_FAILED {
+        error : string!
+      }
+        @description "Internal: program/inputs' failure."
+        @tier "internal"
+    }
+
+    listens {
+      ORB_STATS_ASK -> input {
+      }
+        @description "Read the kernel counters, and the orb version the first time."
+        @synonyms "orb stats, kernel counters, orb version"
+      OrbVersionRunner.CLI_DONE -> ORB_VERSION_DONE
+      OrbVersionRunner.CLI_FAILED -> ORB_VERSION_FAILED
+      ORB_VERSION_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "std-cli's answer for the version run."
+      ORB_VERSION_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's failure for the version run."
+      ORB_INPUTS {
+        result : OrbInputsRead!
+      }
+        @description "program/inputs' success."
+      ORB_INPUTS_FAILED {
+        error : string!
+      }
+        @description "program/inputs' failure."
+    }
+  }
+
+  trait OrbVersionRunner = Cli.traits.CliRunner {
+    config {
+      commands: ["orb"]
+      passEnv: ["PATH", "HOME"]
+    }
+    listens {
+      OrbStatsReader.ORB_VERSION_RUN -> CLI_RUN
+    }
+  }
+
+  page boot as OrbStatsOrbitalStart -> OrbStatsReader, OrbVersionRunner
+}

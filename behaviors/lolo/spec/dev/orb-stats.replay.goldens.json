@@ -1,0 +1,315 @@
+{
+ "atom": "dev/atoms/std-orb-stats.lolo",
+ "trait": "OrbStatsReader",
+ "cases": [
+  {
+   "id": "first-ask-runs-the-version-and-reads-the-kernel",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_STATS_ASK",
+     "payload": {},
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": false
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "emit"
+       },
+       {
+        "type": "program/inputs"
+       }
+      ],
+      "emits": [
+       {
+        "event": "ORB_VERSION_RUN",
+        "payload": {
+         "stage": "version",
+         "argv": [
+          "--version"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "later-ask-reads-the-kernel-and-repeats-the-version",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_STATS_ASK",
+     "payload": {},
+     "entity": {
+      "id": "o",
+      "version": "orb 1.2.3",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "emit"
+       },
+       {
+        "type": "program/inputs"
+       }
+      ],
+      "emits": [
+       {
+        "event": "ORB_VERSION_READ",
+        "payload": {
+         "version": "orb 1.2.3"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ORB_VERSION_RUN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "kernel-counters-are-answered-as-they-came",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_INPUTS",
+     "payload": {
+      "result": {
+       "stats": {
+        "registeredSchemas": 3,
+        "registeredTraits": 41,
+        "activeInstances": 17,
+        "cachedEntities": 5
+       }
+      }
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": false,
+      "startedAt": 1760531400000
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "ORB_KERNEL_READ",
+        "payload": {
+         "registeredSchemas": 3,
+         "registeredTraits": 41,
+         "activeInstances": 17,
+         "cachedEntities": 5,
+         "uptimeMs": 45678
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "refused-kernel-read-is-named",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_INPUTS_FAILED",
+     "payload": {
+      "error": "program/inputs is not available here"
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": false
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "ORB_STATS_FAILED",
+        "payload": {
+         "stat": "kernel",
+         "code": "inputs_refused",
+         "error": "program/inputs is not available here"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "version-output-is-trimmed",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_VERSION_DONE",
+     "payload": {
+      "stage": "version",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "orb 18.0.5\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "ORB_VERSION_READ",
+        "payload": {
+         "version": "orb 18.0.5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "version-exit-nonzero-is-named",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_VERSION_DONE",
+     "payload": {
+      "stage": "version",
+      "exitCode": 2,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "boom"
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "ORB_STATS_FAILED",
+        "payload": {
+         "stat": "version",
+         "code": "orb_exit",
+         "error": "orb --version exited with code 2: boom"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "version-spawn-failure-passes-its-code-through",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_VERSION_FAILED",
+     "payload": {
+      "stage": "version",
+      "error": "orb could not start",
+      "code": "cli_spawn_failed"
+     },
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "ORB_STATS_FAILED",
+        "payload": {
+         "stat": "version",
+         "code": "cli_spawn_failed",
+         "error": "orb could not start"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-ask-while-the-version-is-still-being-read-repeats-nothing",
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_STATS_ASK",
+     "payload": {},
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": true
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "program/inputs"
+       }
+      ],
+      "neverEmits": [
+       "ORB_VERSION_READ",
+       "ORB_VERSION_RUN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-first-ask-starts-the-uptime-clock",
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "OrbStatsReader",
+     "event": "ORB_STATS_ASK",
+     "payload": {},
+     "entity": {
+      "id": "o",
+      "version": "",
+      "versionAsked": false,
+      "startedAt": 0
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "emit"
+       },
+       {
+        "type": "program/inputs"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -144,7 +144,7 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/packages': {
     module: 'behavior', category: 'std-behavior',
     minArity: 0, maxArity: 1,
-    description: 'The installed behavior packages, each `{ root, prefix, vectors }`: its directory, its behavior prefix, and the path of its `orb.vectors` snapshot as the sidecar lock resolves it (the cached sidecar when locked), `null` when the package declares none.',
+    description: 'The installed behavior packages, each `{ root, prefix, vectors, fingerprint }`: its directory, its behavior prefix, the path of its `orb.vectors` snapshot as the sidecar lock resolves it (the cached sidecar when locked, `null` when the package declares none), and the fingerprint its catalog index is cached under (it changes whenever any file the index depends on changes).',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',

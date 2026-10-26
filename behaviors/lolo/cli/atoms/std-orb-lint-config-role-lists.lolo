@@ -79,7 +79,7 @@ orbital OrbLintConfigRoleListsOrbital {
                       @nosites))))))
           @nosites))))))))
         (set @entity.frontier (let ((nowork : [RlWork] []) (noshapes : [RlShape] []) (nostr : [string] []) (nosc : RlScope {}) (nocoll : RlColl { knob: "", path: [] }) (sem0 @entity.semantics))
-  (or (json/parse (json/stringify (or (array/flatten
+  (or (json/parse (json/stringify (or (array/filter (array/flatten
   (array/map @entity.frontier
     (fn w
       (let ((x (object/get @w "x" null)) (sc (object/get @w "sc" @nosc)) (t (object/get @w "t" 0)))
@@ -116,7 +116,7 @@ orbital OrbLintConfigRoleListsOrbital {
           (if (validate/object @x)
             (array/map (object/keys @x)
               (fn key { x: (object/get @x @key), sc: @sc, t: @t }))
-            @nowork)))))) [])) RlWorkList) @nowork)))
+            @nowork)))))) (fn c (tree/fold (object/get @c "x") (fn (hn hk) (if (validate/string @hn) (= @hn "array/includes") (if (validate/array @hk) (array/includes @hk true) (array/some (object/keys @hk) (fn hq (object/get @hk @hq)))))) RlShape))) [])) RlWorkList) @nowork)))
         (emit RL_STEP { left: (array/len @entity.frontier) })
       RL_STEP -> ready when (= (array/len @entity.frontier) 0)
         (set @entity.findings (let ((nof : [OrbFinding] []) (nostr : [string] []) (nox : [RlShape] []) (nosites : [RlSite] []) (norf : RlRfMap {}) (nocfg : RlCfgMap {}))
@@ -166,7 +166,7 @@ orbital OrbLintConfigRoleListsOrbital {
                                       [{ tp: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]"), idName: @idName, rf: @rf, o: @oi, i: @ti, cfg: (or (json/parse (json/stringify (or (object/fromEntries (array/flatten (array/map (object/keys @cfgm) (fn kn (if (object/has (object/get @cfgm @kn) "default") [[@kn, (object/get (object/get @cfgm @kn) "default")]] @nopair))))) {})) RlCfgMap) @nocfg) }])
                                     @noctx))))))))))))))))))))
         (set @entity.frontier (let ((orbs : [RlOrbital] (object/get @payload.program "orbitals" [])) (noexprs : [RlShape] []) (nowork : [RlWork] []) (nopm : RlCfgMap {}) (nosc : RlScope {}) (nocfg : RlCfgMap {}))
-          (array/flatten
+          (array/filter (array/flatten
   (array/map (array/range 0 (array/len @entity.ctxs))
     (fn t
       (let ((cx (array/nth @entity.ctxs @t)))
@@ -201,7 +201,7 @@ orbital OrbLintConfigRoleListsOrbital {
               (array/map (object/keys @pm)
                 (fn pk { x: (object/get @pm @pk), sc: @nosc, t: @t }))))))))
   (array/map (object/keys (object/get @cx "cfg" @nocfg))
-    (fn kn { x: (object/get (object/get @cx "cfg" @nocfg) @kn), sc: @nosc, t: @t })))))))))))
+    (fn kn { x: (object/get (object/get @cx "cfg" @nocfg) @kn), sc: @nosc, t: @t }))))))))) (fn c (tree/fold (object/get @c "x") (fn (hn hk) (if (validate/string @hn) (= @hn "array/includes") (if (validate/array @hk) (array/includes @hk true) (array/some (object/keys @hk) (fn hq (object/get @hk @hq)))))) RlShape)))))
         (emit RL_STEP { left: (array/len @entity.frontier) })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "config-role-lists", scope: @entity.scope, findings: @entity.findings })

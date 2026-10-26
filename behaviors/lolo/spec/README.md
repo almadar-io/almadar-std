@@ -45,6 +45,7 @@ A spec sits under the same folder path as the behavior it specs: the spec for `f
 | `store/analytics.lolo` | `std-analytics` (bound; changing the status vocabulary or the page path fails it) |
 | `store/analytics-collector.lolo` | `std-analytics-collector` (bound; dropping `AnalyticsStats` from the page fails it) |
 | `store/cli.lolo` | `std-cli` (bound; moving the busy edge out of `running` fails it) |
+| `ops/system-stats.lolo` | `std-system-stats` (bound; a sample reads memory, cpu, load average and uptime and the resident memory of named pids through one `ps -o pid= -o rss=` run composed from `std-cli`; a stat the host cannot answer is named in `STATS_FAILED` and left at zero, a pid `ps` does not list is `missing`, never zero; 44 replay goldens in `ops/system-stats.replay.goldens.json`, each paired with a control; the one-second `[background]` tick is not played) |
 | `store/dependency-audit.lolo` | `std-dependency-audit` (bound; dropping the busy `AUDIT` edge in `auditing` fails it) |
 | `store/infra-projection.lolo` | `std-infra-projection` (bound; a page mounting another trait fails it) |
 | `store/name-claim.lolo` | `std-name-claim` (bound; both entities `[persistent]`, written only through a `persist batch`; a batch that stops writing `NameHolder` fails it) |

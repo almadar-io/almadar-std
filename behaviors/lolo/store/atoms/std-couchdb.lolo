@@ -31,7 +31,7 @@ type OperatorValueKinds = { operator : RowOperator!, valueKinds : [RowValueKind]
 type EveryFieldOrderable = { kind : "every-field" }
 type ListedOrderable = { kind : "listed", fields : [string]! }
 type RowOrderableFields = EveryFieldOrderable | ListedOrderable
-type QueryCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]!, operatorValueKinds : [OperatorValueKinds]?, orderableFields : RowOrderableFields!, window : boolean!, exactTotal : boolean!, idsOnly : boolean?, nearest : boolean? }
+type QueryCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]!, operatorValueKinds : [OperatorValueKinds]?, orderableFields : RowOrderableFields!, window : boolean!, exactTotal : boolean!, idsOnly : boolean?, nearest : boolean?, indexes : "runtime" | "deploy" | "none"? }
 type GuardCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]! }
 type WriteCapabilities = { guards : GuardCapabilities!, conditional : boolean!, returnsRow : boolean!, stopRuns : boolean!, atomicBatch : boolean! }
 
@@ -764,7 +764,7 @@ orbital CouchdbOrbital {
         @description "The database an entity type is bound to (the last binding of an entity type wins); an entity type not listed here is stored in the database named like its Postgres table (TimeEntry is time_entries)."
         @synonyms "database names, collection map"
         @tier "infra"
-      queryCapabilities : QueryCapabilities = { leaves: ["compare", "member", "hasElement", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="], operatorValueKinds: [{ operator: "<", valueKinds: ["number", "boolean", "null"] }, { operator: "<=", valueKinds: ["number", "boolean", "null"] }, { operator: ">", valueKinds: ["number", "boolean", "null"] }, { operator: ">=", valueKinds: ["number", "boolean", "null"] }], orderableFields: { kind: "listed", fields: ["id"] }, window: true, exactTotal: true, idsOnly: true }
+      queryCapabilities : QueryCapabilities = { leaves: ["compare", "member", "hasElement", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="], operatorValueKinds: [{ operator: "<", valueKinds: ["number", "boolean", "null"] }, { operator: "<=", valueKinds: ["number", "boolean", "null"] }, { operator: ">", valueKinds: ["number", "boolean", "null"] }, { operator: ">=", valueKinds: ["number", "boolean", "null"] }], orderableFields: { kind: "listed", fields: ["id"] }, window: true, exactTotal: true, idsOnly: true, indexes: "runtime" }
         @description "What query the store pushes down as a Mango selector sorted on _id: no contains leaf, ordering comparisons only on numbers, booleans and null, order only by id."
         @tier "infra"
       writeCapabilities : WriteCapabilities = { guards: { leaves: ["compare", "member", "hasElement", "contains", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="] }, conditional: true, returnsRow: true, stopRuns: true, atomicBatch: false }

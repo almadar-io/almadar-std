@@ -32,7 +32,7 @@ orbital RowStoreFileOrbital {
   type EveryFieldOrderable = { kind : "every-field" }
   type ListedOrderable = { kind : "listed", fields : [string]! }
   type RowOrderableFields = EveryFieldOrderable | ListedOrderable
-  type QueryCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]!, operatorValueKinds : [OperatorValueKinds]?, orderableFields : RowOrderableFields!, window : boolean!, exactTotal : boolean!, idsOnly : boolean?, nearest : boolean? }
+  type QueryCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]!, operatorValueKinds : [OperatorValueKinds]?, orderableFields : RowOrderableFields!, window : boolean!, exactTotal : boolean!, idsOnly : boolean?, nearest : boolean?, indexes : "runtime" | "deploy" | "none"? }
   type GuardCapabilities = { leaves : [RowLeafKind]!, combinators : [RowCombinator]!, compareOps : [string]! }
   type WriteCapabilities = { guards : GuardCapabilities!, conditional : boolean!, returnsRow : boolean!, stopRuns : boolean!, atomicBatch : boolean! }
 
@@ -82,7 +82,7 @@ orbital RowStoreFileOrbital {
         @description "Where the entity files live, relative to the invocation directory; ends with /. The app needs a cwd fs grant on it, { cwd: \"<dir>**\": [read, write] }."
         @synonyms "folder, data directory"
         @tier "infra"
-      queryCapabilities : QueryCapabilities = { leaves: [], combinators: [], compareOps: [], orderableFields: { kind: "listed", fields: [] }, window: false, exactTotal: false }
+      queryCapabilities : QueryCapabilities = { leaves: [], combinators: [], compareOps: [], orderableFields: { kind: "listed", fields: [] }, window: false, exactTotal: false, indexes: "none" }
         @description "What query the store pushes down: nothing, so the kernel lists the rows and filters, orders and windows them itself."
         @tier "infra"
       writeCapabilities : WriteCapabilities = { guards: { leaves: ["compare", "member", "hasElement", "contains", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="] }, conditional: true, returnsRow: true, stopRuns: true, atomicBatch: true }

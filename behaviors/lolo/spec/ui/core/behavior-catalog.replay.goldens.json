@@ -1,0 +1,924 @@
+{
+ "atom": "../ui/core/atoms/std-behavior-catalog.lolo",
+ "trait": "BehaviorCatalog",
+ "cases": [
+  {
+   "id": "first-scope-loads-the-catalog",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "loading",
+     "entity": {
+      "id": "c",
+      "paths": []
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1",
+       "p2"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "first-scope-while-ready-loads-the-catalog",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": []
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unchanged-scope-in-ready-reads-nothing",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1",
+       "p2"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1",
+       "p2"
+      ]
+     },
+     "expect": {
+      "fired": false,
+      "state": "ready"
+     }
+    }
+   ]
+  },
+  {
+   "id": "changed-scope-in-ready-reloads",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1",
+       "p2"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1",
+       "p3"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-scope-with-fewer-folders-reloads",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1",
+       "p2"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-scope-in-another-order-reloads",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1",
+       "p2"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p2",
+       "p1"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unchanged-scope-while-loading-leaves-the-read-in-flight",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "loading",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ]
+     },
+     "expect": {
+      "fired": false,
+      "state": "loading"
+     }
+    }
+   ]
+  },
+  {
+   "id": "changed-scope-while-loading-reloads",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "loading",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p2"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unchanged-scope-while-searching-keeps-the-search",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "searching",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ]
+     },
+     "expect": {
+      "fired": false,
+      "state": "searching"
+     }
+    }
+   ]
+  },
+  {
+   "id": "changed-scope-while-searching-reloads",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "searching",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p2"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unchanged-scope-while-describing-keeps-the-describe",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "describing",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ]
+     },
+     "expect": {
+      "fired": false,
+      "state": "describing"
+     }
+    }
+   ]
+  },
+  {
+   "id": "changed-scope-while-describing-reloads",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "describing",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p2"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unchanged-scope-after-a-failure-retries",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "failed",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "changed-scope-after-a-failure-reloads",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "failed",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p2"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "topic-narrows-the-loaded-entries-without-a-read",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "entries": [
+       {
+        "behavior": "std/a",
+        "package": "@almadar/std",
+        "topic": "cli",
+        "level": "atom",
+        "description": "d",
+        "traits": []
+       },
+       {
+        "behavior": "std/b",
+        "package": "@almadar/std",
+        "topic": "dev",
+        "level": "atom",
+        "description": "d",
+        "traits": []
+       }
+      ]
+     },
+     "event": "TOPIC",
+     "payload": {
+      "package": "@almadar/std",
+      "topic": "dev"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "CATALOG_SHOWN"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-empty-search-lists-the-loaded-entries-without-a-read",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "entries": [
+       {
+        "behavior": "std/a",
+        "package": "@almadar/std",
+        "topic": "cli",
+        "level": "atom",
+        "description": "d",
+        "traits": []
+       },
+       {
+        "behavior": "std/b",
+        "package": "@almadar/std",
+        "topic": "dev",
+        "level": "atom",
+        "description": "d",
+        "traits": []
+       }
+      ]
+     },
+     "event": "SEARCH",
+     "payload": {
+      "searchTerm": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "CATALOG_SHOWN"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-search-term-reads-the-catalog-with-vectors",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "entries": [
+       {
+        "behavior": "std/a",
+        "package": "@almadar/std",
+        "topic": "cli",
+        "level": "atom",
+        "description": "d",
+        "traits": []
+       },
+       {
+        "behavior": "std/b",
+        "package": "@almadar/std",
+        "topic": "dev",
+        "level": "atom",
+        "description": "d",
+        "traits": []
+       }
+      ]
+     },
+     "event": "SEARCH",
+     "payload": {
+      "searchTerm": "x"
+     },
+     "expect": {
+      "fired": true,
+      "state": "searching",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "same-folders-and-same-fingerprints-read-nothing",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "expect": {
+      "fired": false,
+      "state": "ready"
+     }
+    }
+   ]
+  },
+  {
+   "id": "same-folders-and-a-changed-fingerprint-reload",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F2"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "same-folders-without-fingerprints-follow-the-folders-rule",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ]
+     },
+     "expect": {
+      "fired": false,
+      "state": "ready"
+     }
+    }
+   ]
+  },
+  {
+   "id": "fingerprints-seen-for-the-first-time-reload-once",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": []
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "changed-folders-with-the-same-fingerprints-reload",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p2"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-fingerprint-for-another-folder-reloads",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1",
+       "p2"
+      ],
+      "fingerprints": [
+       "F1",
+       "F2"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1",
+       "p2"
+      ],
+      "fingerprints": [
+       "F1",
+       "F9"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "same-fingerprints-while-searching-keep-the-search",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "searching",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "expect": {
+      "fired": false,
+      "state": "searching"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-changed-fingerprint-while-searching-reloads",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "searching",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F2"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "same-fingerprints-while-loading-leave-the-read-in-flight",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "loading",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "expect": {
+      "fired": false,
+      "state": "loading"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-changed-fingerprint-while-describing-reloads",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "describing",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F2"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "same-fingerprints-after-a-failure-retry",
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "failed",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ],
+      "fingerprints": [
+       "F1"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

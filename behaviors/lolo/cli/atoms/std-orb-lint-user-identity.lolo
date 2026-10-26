@@ -64,7 +64,7 @@ orbital OrbLintUserIdentityOrbital {
            (let ((td (array/nth @trlist @ti)))
             (if (and (validate/object @td) (validate/object (object/get @td "stateMachine" null)) (not (and @skip (object/has @td "sourceBehavior"))))
              (let ((tp (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (let ((s25 (object/get @td "name" ""))) (if (validate/string @s25) @s25 "")) ")]"))
-                   (hs (tree/fold @td (fn (n k)
+                   (hs (tree/fold (if (str/includes (json/stringify @td) (quote "@user.")) @td {}) (fn (n k) (if (or (validate/array @n) (validate/object @n)) 
  (if (validate/array @n)
   (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
    (array/concat
@@ -95,7 +95,7 @@ orbital OrbLintUserIdentityOrbital {
     (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (let ((r (array/nth @k @i))) (if (validate/array @r) (array/map @r (fn h { rel: (str/concat "[" @i "]" (let ((s15 (object/get @h "rel" ""))) (if (validate/string @s15) @s15 ""))), kind: (let ((s16 (object/get @h "kind" ""))) (if (validate/string @s16) @s16 "")), a: (let ((s17 (object/get @h "a" ""))) (if (validate/string @s17) @s17 "")), b: (let ((s18 (object/get @h "b" ""))) (if (validate/string @s18) @s18 "")), vv: (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov)) })) [])))))))
   (if (validate/object @n)
    (array/flatten (array/map (array/filter (object/keys @k) (fn key (not (= @key "sourceEntityDefinition")))) (fn key (let ((r (object/get @k @key))) (if (validate/array @r) (array/map @r (fn h { rel: (str/concat "." @key (let ((s19 (object/get @h "rel" ""))) (if (validate/string @s19) @s19 ""))), kind: (let ((s20 (object/get @h "kind" ""))) (if (validate/string @s20) @s20 "")), a: (let ((s21 (object/get @h "a" ""))) (if (validate/string @s21) @s21 "")), b: (let ((s22 (object/get @h "b" ""))) (if (validate/string @s22) @s22 "")), vv: (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov)) })) [])))))
-   []))) UidShape)))
+   [])) [])) UidShape)))
               (if (validate/array @hs)
                (array/flatten (array/map @hs (fn h (let ((kind (let ((s27 (object/get @h "kind" ""))) (if (validate/string @s27) @s27 ""))) (a (let ((s28 (object/get @h "a" ""))) (if (validate/string @s28) @s28 ""))) (b (let ((s29 (object/get @h "b" ""))) (if (validate/string @s29) @s29 ""))) (vv (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov))))
  (if (= @kind "role")
@@ -127,7 +127,7 @@ orbital OrbLintUserIdentityOrbital {
       (array/flatten (array/map (array/range 0 (array/len @trs)) (fn xi
        (let ((tr (array/nth @trs @xi)) (path (str/concat "orbitals[" @oi "].traits[" @ti "].stateMachine.transitions[" @xi "]")))
         (let ((g (object/get @tr "guard" null)))
-         (if (and (not (= @g null)) (let ((p (tree/fold @g (fn (m j)
+         (if (not (str/includes (json/stringify (object/get @tr "effects" [])) "\"@user\"")) @nof (if (and (not (= @g null)) (let ((p (tree/fold @g (fn (m j)
  (if (validate/array @m)
   (let ((ln (array/len @m)) (o (let ((o0 (if (> (array/len @m) 0) (array/nth @m 0) ""))) (if (validate/string @o0) @o0 ""))))
    (if (and (= @o "!=") (= @ln 3)) (or (and (and (validate/string (array/nth @m 1)) (= (array/nth @m 1) (quote "@user"))) (= (array/nth @m 2) null)) (and (and (validate/string (array/nth @m 2)) (= (array/nth @m 2) (quote "@user"))) (= (array/nth @m 1) null)))
@@ -177,7 +177,7 @@ orbital OrbLintUserIdentityOrbital {
    @nos))) UidShape)))
             (if (validate/array @hs)
              (array/map @hs (fn h { code: "ORB_USER_INTO_REQUIRED_SLOT", path: @path, message: (str/concat (let ((s23 (object/get @h "a" ""))) (if (validate/string @s23) @s23 "")) " is required but is filled with the whole `@user`, which is null when no viewer is signed in"), suggestion: "Guard the transition on `(!= @user null)`, or build the viewer explicitly (e.g. `(or @user { id: \"anonymous\", role: \"anonymous\", permissions: [] })`)", severity: "error" }))
-             @nof))))))))))))
+             @nof)))))))))))))
      @nof))))))))) ))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready

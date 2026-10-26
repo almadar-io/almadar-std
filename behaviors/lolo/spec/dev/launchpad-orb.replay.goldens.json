@@ -1,0 +1,501 @@
+{
+ "atom": "dev/atoms/std-launchpad-orb.lolo",
+ "trait": "SystemOrb",
+ "cases": [
+  {
+   "id": "state-redraws-the-orb",
+   "steps": [
+    {
+     "trait": "SystemOrb",
+     "event": "ORB_STATE",
+     "payload": {
+      "machine": {
+       "label": "CPU 24% \u00b7 RAM 66%",
+       "detail": "11 GB of 16 GB in use"
+      },
+      "stars": [
+       {
+        "id": "std/behaviors/a",
+        "label": "a",
+        "kind": "production",
+        "state": "running",
+        "weight": 209715200,
+        "detail": "port 3041, 200 MB"
+       },
+       {
+        "id": "std/behaviors/b",
+        "label": "b",
+        "kind": "mock",
+        "state": "starting",
+        "weight": 0,
+        "detail": "port 3042"
+       },
+       {
+        "id": "std/behaviors/c",
+        "label": "c",
+        "kind": "production",
+        "state": "stopped",
+        "weight": 0,
+        "detail": "stopped"
+       }
+      ]
+     },
+     "entity": {
+      "id": "o",
+      "stars": [
+       {
+        "id": "std/behaviors/a",
+        "label": "a",
+        "kind": "production",
+        "state": "running",
+        "weight": 209715200,
+        "detail": "port 3041, 200 MB"
+       },
+       {
+        "id": "std/behaviors/b",
+        "label": "b",
+        "kind": "mock",
+        "state": "starting",
+        "weight": 0,
+        "detail": "port 3042"
+       },
+       {
+        "id": "std/behaviors/c",
+        "label": "c",
+        "kind": "production",
+        "state": "stopped",
+        "weight": 0,
+        "detail": "stopped"
+       }
+      ],
+      "selected": ""
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "set"
+       },
+       {
+        "type": "emit"
+       }
+      ],
+      "emits": [
+       {
+        "event": "ORB_SHOWN"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "state-with-no-stars-still-draws-the-machine",
+   "steps": [
+    {
+     "trait": "SystemOrb",
+     "event": "ORB_STATE",
+     "payload": {
+      "machine": {
+       "label": "CPU 24% \u00b7 RAM 66%",
+       "detail": "11 GB of 16 GB in use"
+      },
+      "stars": []
+     },
+     "entity": {
+      "id": "o",
+      "stars": [],
+      "selected": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_SHOWN"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "show-renders-the-orb",
+   "steps": [
+    {
+     "trait": "SystemOrb",
+     "event": "ORB_SHOWN",
+     "payload": {},
+     "entity": {
+      "id": "o",
+      "stars": [
+       {
+        "id": "std/behaviors/a",
+        "label": "a",
+        "kind": "production",
+        "state": "running",
+        "weight": 209715200,
+        "detail": "port 3041, 200 MB"
+       },
+       {
+        "id": "std/behaviors/b",
+        "label": "b",
+        "kind": "mock",
+        "state": "starting",
+        "weight": 0,
+        "detail": "port 3042"
+       },
+       {
+        "id": "std/behaviors/c",
+        "label": "c",
+        "kind": "production",
+        "state": "stopped",
+        "weight": 0,
+        "detail": "stopped"
+       }
+      ],
+      "selected": "",
+      "machine": {
+       "label": "CPU 24% \u00b7 RAM 66%",
+       "detail": "11 GB of 16 GB in use"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "clicking-a-star-selects-it",
+   "steps": [
+    {
+     "trait": "SystemOrb",
+     "event": "NODE_CLICK",
+     "payload": {
+      "node": {
+       "id": "std/behaviors/a"
+      }
+     },
+     "entity": {
+      "id": "o",
+      "stars": [
+       {
+        "id": "std/behaviors/a",
+        "label": "a",
+        "kind": "production",
+        "state": "running",
+        "weight": 209715200,
+        "detail": "port 3041, 200 MB"
+       },
+       {
+        "id": "std/behaviors/b",
+        "label": "b",
+        "kind": "mock",
+        "state": "starting",
+        "weight": 0,
+        "detail": "port 3042"
+       },
+       {
+        "id": "std/behaviors/c",
+        "label": "c",
+        "kind": "production",
+        "state": "stopped",
+        "weight": 0,
+        "detail": "stopped"
+       }
+      ],
+      "selected": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_SHOWN"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "clicking-the-machine-clears-the-selection",
+   "steps": [
+    {
+     "trait": "SystemOrb",
+     "event": "NODE_CLICK",
+     "payload": {
+      "node": {
+       "id": "machine"
+      }
+     },
+     "entity": {
+      "id": "o",
+      "stars": [
+       {
+        "id": "std/behaviors/a",
+        "label": "a",
+        "kind": "production",
+        "state": "running",
+        "weight": 209715200,
+        "detail": "port 3041, 200 MB"
+       },
+       {
+        "id": "std/behaviors/b",
+        "label": "b",
+        "kind": "mock",
+        "state": "starting",
+        "weight": 0,
+        "detail": "port 3042"
+       },
+       {
+        "id": "std/behaviors/c",
+        "label": "c",
+        "kind": "production",
+        "state": "stopped",
+        "weight": 0,
+        "detail": "stopped"
+       }
+      ],
+      "selected": "std/behaviors/a"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_SHOWN"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "clicking-the-hub-clears-the-selection",
+   "steps": [
+    {
+     "trait": "SystemOrb",
+     "event": "NODE_CLICK",
+     "payload": {
+      "node": {
+       "id": "hub"
+      }
+     },
+     "entity": {
+      "id": "o",
+      "stars": [
+       {
+        "id": "std/behaviors/a",
+        "label": "a",
+        "kind": "production",
+        "state": "running",
+        "weight": 209715200,
+        "detail": "port 3041, 200 MB"
+       },
+       {
+        "id": "std/behaviors/b",
+        "label": "b",
+        "kind": "mock",
+        "state": "starting",
+        "weight": 0,
+        "detail": "port 3042"
+       },
+       {
+        "id": "std/behaviors/c",
+        "label": "c",
+        "kind": "production",
+        "state": "stopped",
+        "weight": 0,
+        "detail": "stopped"
+       }
+      ],
+      "selected": "std/behaviors/a"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_SHOWN"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "open-is-handed-to-the-host",
+   "steps": [
+    {
+     "trait": "SystemOrb",
+     "event": "STAR_OPEN",
+     "payload": {
+      "id": "std/behaviors/a"
+     },
+     "entity": {
+      "id": "o",
+      "stars": [
+       {
+        "id": "std/behaviors/a",
+        "label": "a",
+        "kind": "production",
+        "state": "running",
+        "weight": 209715200,
+        "detail": "port 3041, 200 MB"
+       },
+       {
+        "id": "std/behaviors/b",
+        "label": "b",
+        "kind": "mock",
+        "state": "starting",
+        "weight": 0,
+        "detail": "port 3042"
+       },
+       {
+        "id": "std/behaviors/c",
+        "label": "c",
+        "kind": "production",
+        "state": "stopped",
+        "weight": 0,
+        "detail": "stopped"
+       }
+      ],
+      "selected": ""
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "ORB_OPEN",
+        "payload": {
+         "id": "std/behaviors/a"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "stop-is-handed-to-the-host",
+   "steps": [
+    {
+     "trait": "SystemOrb",
+     "event": "STAR_STOP",
+     "payload": {
+      "id": "std/behaviors/a"
+     },
+     "entity": {
+      "id": "o",
+      "stars": [
+       {
+        "id": "std/behaviors/a",
+        "label": "a",
+        "kind": "production",
+        "state": "running",
+        "weight": 209715200,
+        "detail": "port 3041, 200 MB"
+       },
+       {
+        "id": "std/behaviors/b",
+        "label": "b",
+        "kind": "mock",
+        "state": "starting",
+        "weight": 0,
+        "detail": "port 3042"
+       },
+       {
+        "id": "std/behaviors/c",
+        "label": "c",
+        "kind": "production",
+        "state": "stopped",
+        "weight": 0,
+        "detail": "stopped"
+       }
+      ],
+      "selected": ""
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "ORB_STOP",
+        "payload": {
+         "id": "std/behaviors/a"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "relaunch-is-handed-to-the-host",
+   "steps": [
+    {
+     "trait": "SystemOrb",
+     "event": "STAR_RELAUNCH",
+     "payload": {
+      "id": "std/behaviors/c"
+     },
+     "entity": {
+      "id": "o",
+      "stars": [
+       {
+        "id": "std/behaviors/a",
+        "label": "a",
+        "kind": "production",
+        "state": "running",
+        "weight": 209715200,
+        "detail": "port 3041, 200 MB"
+       },
+       {
+        "id": "std/behaviors/b",
+        "label": "b",
+        "kind": "mock",
+        "state": "starting",
+        "weight": 0,
+        "detail": "port 3042"
+       },
+       {
+        "id": "std/behaviors/c",
+        "label": "c",
+        "kind": "production",
+        "state": "stopped",
+        "weight": 0,
+        "detail": "stopped"
+       }
+      ],
+      "selected": ""
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "ORB_RELAUNCH",
+        "payload": {
+         "id": "std/behaviors/c"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

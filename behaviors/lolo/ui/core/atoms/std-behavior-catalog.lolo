@@ -1,6 +1,6 @@
 app std-behavior-catalog [
   version: "1.4.0",
-  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the list carries no vectors; a search lists the current topic's registry folder, or the whole scope, with its vectors, embeds the query with std-llm (LLM_EMBED) and ranks by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. After listing it emits CATALOG_TOPICS { topics } (each package and topic once, with its count), and SCOPE { paths } replaces the scope knob's registry folders at run time (the catalog lists them again), and TOPIC { package, topic } narrows the rows and search results to that topic (an empty topic lists everything). Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block.",
+  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the list carries no vectors; a search lists the current topic's registry folder, or the whole scope, with its vectors, embeds the query with std-llm (LLM_EMBED) and ranks by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. After listing it emits CATALOG_TOPICS { topics } (each package and topic once, with its count), and SCOPE { paths } replaces the scope knob's registry folders at run time (the catalog lists them again; a SCOPE naming exactly the folders it already lists, in the same order, and carrying no fingerprints or the same ones, is ignored and reads nothing; fingerprints are one opaque string per folder that changes when the folder's files do), and TOPIC { package, topic } narrows the rows and search results to that topic (an empty topic lists everything). Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block.",
   egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 ;; @capabilities "browse installed behaviors, search behaviors by meaning, describe a behavior's knobs and events, pick a behavior to bind"
@@ -64,6 +64,7 @@ orbital BehaviorCatalogOrbital {
     error : string = ""
     selected : [string] = []
     paths : [string] @description "The registry folders SCOPE named; empty lists the scope knob's." = []
+    fingerprints : [string] @description "The fingerprints SCOPE carried beside the folders, one per folder; empty when it carried none." = []
     topicPackage : string @description "The package of the topic the rows are narrowed to; empty with topic for every listed behavior." = ""
     topic : string @description "The topic the rows are narrowed to (TOPIC); empty for every listed behavior." = ""
     status : "loading" | "ready" | "searching" | "describing" | "failed" = loading
@@ -133,8 +134,9 @@ orbital BehaviorCatalogOrbital {
     initial: loading
 
     state loading {
-      SCOPE -> loading
+      SCOPE -> loading when (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints)))
         (set @entity.paths ?paths)
+        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
@@ -170,8 +172,9 @@ orbital BehaviorCatalogOrbital {
     }
 
     state ready {
-      SCOPE -> loading
+      SCOPE -> loading when (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints)))
         (set @entity.paths ?paths)
+        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
@@ -318,8 +321,9 @@ orbital BehaviorCatalogOrbital {
     }
 
     state searching {
-      SCOPE -> loading
+      SCOPE -> loading when (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints)))
         (set @entity.paths ?paths)
+        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
@@ -355,8 +359,9 @@ orbital BehaviorCatalogOrbital {
     }
 
     state describing {
-      SCOPE -> loading
+      SCOPE -> loading when (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints)))
         (set @entity.paths ?paths)
+        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
@@ -382,6 +387,7 @@ orbital BehaviorCatalogOrbital {
     state failed {
       SCOPE -> loading
         (set @entity.paths ?paths)
+        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
@@ -481,8 +487,9 @@ orbital BehaviorCatalogOrbital {
       RETRY
       SCOPE {
         paths : [string]!
+        fingerprints : [string]
       }
-        @description "Replace the registry folders the catalog lists (and searches) with these, at run time, and list them again; the scope knob is what it lists until then."
+        @description "Replace the registry folders the catalog lists (and searches) with these, at run time, and list them again; the same folders in the same order are a no-op, unless the fingerprints it carries (one per folder, how each folder's files stand) differ from the last SCOPE's; the scope knob is what it lists until then."
         @synonyms "set scope, installed packages, list these packages"
     }
   }

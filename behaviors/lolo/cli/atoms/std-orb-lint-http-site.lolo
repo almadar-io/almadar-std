@@ -62,37 +62,31 @@ orbital OrbLintHttpSiteOrbital {
           (let ((servers @entity.servers) (entityIdx @entity.entityIdx) (orbitals (object/get @payload.program "orbitals" [])) (nos : [string] []))
             (let ((browser (array/flatten (array/map @orbitals (fn o
                     (array/map (array/filter (array/concat (if (validate/object (object/get @o "entity" null)) [(object/get @o "entity")] (array/take (object/get @o "auxiliaryEntities" []) 0)) (object/get @o "auxiliaryEntities" [])) (fn e (object/get @e "browser" false))) (fn e (object/get @e "name"))))))))
-              (let ((sites (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
-                      (let ((o (array/nth @orbitals @oi)))
-                        (let ((trs (object/get @o "traits" [])))
-                          (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
-                            (let ((t (json/parse (json/stringify (array/nth @trs @ti)) HsTrait)))
-                              (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
-                                []
-                                [{ site: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]"), trait: @t }]))))))))))))
-                (let ((slots (array/flatten (array/map @sites (fn s
-                        (let ((tr (object/get @s "trait")) (site (object/get @s "site")))
-                          (let ((trans (or (object/get (object/get @tr "stateMachine") "transitions" []) [])) (ticks (or (object/get @tr "ticks" []) [])) (dispatch (object/get @tr "dispatch" "")))
-                            (array/concat
-                              (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
-                                (let ((effs (or (object/get (array/nth @trans @i) "effects" []) [])))
-                                  (array/map (array/range 0 (array/len @effs)) (fn j
-                                    { site: @site, tname: (object/get @tr "name"), dispatch: @dispatch, kind: "t", i: @i, j: @j, label: (object/get (array/nth @trans @i) "event"), bg: false, effect: (array/nth @effs @j) }))))))
-                              (array/flatten (array/map (array/range 0 (array/len @ticks)) (fn i
-                                (let ((effs (or (object/get (array/nth @ticks @i) "effects" []) [])))
-                                  (array/map (array/range 0 (array/len @effs)) (fn j
-                                    { site: @site, tname: (object/get @tr "name"), dispatch: @dispatch, kind: "k", i: @i, j: @j, label: (object/get (array/nth @ticks @i) "name"), bg: (object/get (array/nth @ticks @i) "runsInBackground" false), effect: (array/nth @effs @j) }))))))))))))))
-                  (let ((rows (array/map @slots (fn sl
-                          (let ((cl (or (tree/fold (object/get @sl "effect") (fn (n k)
+              (array/flatten (array/map (array/zip (array/range 0 (array/len @orbitals)) @orbitals) (fn op
+ (let ((oi (array/nth @op 0)) (o (array/nth @op 1)))
+  (let ((trs (object/get @o "traits" [])))
+   (array/flatten (array/map (array/zip (array/range 0 (array/len @trs)) @trs) (fn tp
+    (let ((ti (array/nth @tp 0)) (t (json/parse (json/stringify (array/nth @tp 1)) HsTrait)))
+     (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
+      []
+      (let ((st (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tname (object/get @t "name")) (dispatch (object/get @t "dispatch" "")))
+       (let ((trans (or (object/get (object/get @t "stateMachine") "transitions" []) [])) (ticks (or (object/get @t "ticks" []) [])))
+        (let ((grps (array/concat
+                      (array/map (array/zip (array/range 0 (array/len @trans)) @trans) (fn q { kind: "t", i: (array/nth @q 0), label: (object/get (array/nth @q 1) "event"), bg: false, effs: (or (object/get (array/nth @q 1) "effects" []) []) }))
+                      (array/map (array/zip (array/range 0 (array/len @ticks)) @ticks) (fn q { kind: "k", i: (array/nth @q 0), label: (object/get (array/nth @q 1) "name"), bg: (object/get (array/nth @q 1) "runsInBackground" false), effs: (or (object/get (array/nth @q 1) "effects" []) []) })))))
+         (let ((gis (array/map @grps (fn g
+                 (let ((effs (object/get @g "effs")))
+                  (let ((cls (array/map @effs (fn eff (if (tree/fold @eff (fn (hn hk) (if (validate/string @hn) (= @hn "http") (if (validate/array @hk) (array/includes @hk true) (array/some (object/keys @hk) (fn hq (object/get @hk @hq)))))) HsVal) (or (tree/fold @eff (fn (n k)
   (let ((nos : [string] []))
     (array/concat
       (if (and (validate/array @n) (> (array/len @n) 0) (validate/string (array/first @n)) (= (array/first @n) "http"))
         (let ((r (if (> (array/len @n) 4) (array/nth @n 4) null)))
           [(if (validate/object @r) (if (object/has @r "auth") "keyed" "keyless") (if (= @r null) "keyless" "opaque"))])
         @nos)
-      (if (validate/array @n) (array/flatten (array/filter @k (fn c (!= @c null)))) (if (validate/object @n) (array/flatten (array/map (object/keys @k) (fn key (or (object/get @k @key) @nos)))) @nos))))) HsVal) @nos)))
-                            { site: (object/get @sl "site"), tname: (object/get @sl "tname"), dispatch: (object/get @sl "dispatch"), kind: (object/get @sl "kind"), i: (object/get @sl "i"), j: (object/get @sl "j"), label: (object/get @sl "label"), bg: (object/get @sl "bg"),
-                              server: (object/get (tree/fold (object/get @sl "effect") (fn (n k)
+      (if (validate/array @n) (array/flatten (array/filter @k (fn c (!= @c null)))) (if (validate/object @n) (array/flatten (array/map (object/keys @k) (fn key (or (object/get @k @key) @nos)))) @nos))))) HsVal) @nos) @nos)))))
+                   { kind: (object/get @g "kind"), i: (object/get @g "i"), label: (object/get @g "label"), bg: (object/get @g "bg"),
+                     keyed: (array/map @cls (fn c (array/len (array/filter @c (fn x (= @x "keyed")))))),
+                     mixed: (if (array/some @cls (fn c (array/includes @c "keyless"))) (array/some @effs (fn eff (object/get (tree/fold @eff (fn (n k)
   (let ((nob : [boolean] []) (nos : [string] []))
     (if (validate/array @n)
       (let ((len (array/len @n)) (h (if (> (array/len @n) 0) (array/first @n) null)) (kids @k))
@@ -176,21 +170,15 @@ orbital OrbLintHttpSiteOrbital {
                   h: @anyf, ch: @chs })))))
       (if (validate/object @n)
         { f: (array/some (array/map (object/keys @k) (fn key (object/get (object/get @k @key) "f"))) (fn x @x)), h: (array/some (array/map (object/keys @k) (fn key (object/get (object/get @k @key) "f"))) (fn x @x)), ch: @nob }
-        { f: false, h: false, ch: @nob })))) HsVal) "f"),
-                              keyless: (array/includes @cl "keyless"), keyed: (array/len (array/filter @cl (fn c (= @c "keyed")))) })))))
-                    (array/flatten (array/map (array/unique (array/map @rows (fn r (object/get @r "site")))) (fn st
-                      (let ((rs (array/filter @rows (fn r (= (object/get @r "site") @st)))))
-                        (array/concat
-                          (array/flatten (array/map (array/unique (array/map @rs (fn r (str/concat (object/get @r "kind") "|" (object/get @r "i"))))) (fn gk
-                            (let ((g (array/filter @rs (fn r (= (str/concat (object/get @r "kind") "|" (object/get @r "i")) @gk)))))
-                              (if (and (array/some @g (fn r (object/get @r "keyless"))) (array/some @g (fn r (object/get @r "server"))))
-                                [{ code: "ORB_X_MIXED_RESIDENCE", path: (str/concat @st (if (= (object/get (array/first @g) "kind") "t") ".stateMachine.transitions[" ".ticks[") (object/get (array/first @g) "i") "].effects"), message: (str/concat "trait \"" (object/get (array/first @g) "tname") "\" " (if (= (object/get (array/first @g) "kind") "t") "transition '" "tick '") (object/get (array/first @g) "label") "' runs a keyless `http` (client work) and a server effect in one place — no single executor holds both"), suggestion: "Split it: send the `http` here and emit an event a trait on the server listens to, or make the call authenticated so it runs on the server.", severity: "error" }]
-                                [])))))
-                          (array/flatten (array/map @rs (fn r
-                            (if (or (and (= (object/get @r "kind") "t") (= (object/get @r "dispatch") "client")) (and (= (object/get @r "kind") "k") (array/includes ["client", "optimistic"] (object/get @r "dispatch")) (not (object/get @r "bg"))))
-                              (array/map (array/range 0 (object/get @r "keyed")) (fn z
-                                { code: "ORB_HTTP_AUTH_ON_CLIENT", path: (str/concat @st (if (= (object/get @r "kind") "t") ".stateMachine.transitions[" ".ticks[") (object/get @r "i") "].effects[" (object/get @r "j") "]"), message: (str/concat "trait \"" (object/get @r "tname") "\" " (if (= (object/get @r "kind") "t") "is [client], so its transitions run on the client" (str/concat "runs tick '" (object/get @r "label") "' in the browser")) ", but this `http` carries `auth` — a credential never reaches the client, so only a keyless `http` may run there"), suggestion: "Drop `auth`, or emit an event from here and make the authenticated call in a trait that runs on the server.", severity: "error" }))
-                              []))))))))))))))))
+        { f: false, h: false, ch: @nob })))) HsVal) "f"))) false) }))))))
+          (array/concat
+           (array/flatten (array/map @gis (fn gi (if (object/get @gi "mixed") [{ code: "ORB_X_MIXED_RESIDENCE", path: (str/concat @st (if (= (object/get @gi "kind") "t") ".stateMachine.transitions[" ".ticks[") (object/get @gi "i") "].effects"), message: (str/concat "trait \"" @tname "\" " (if (= (object/get @gi "kind") "t") "transition '" "tick '") (object/get @gi "label") "' runs a keyless `http` (client work) and a server effect in one place — no single executor holds both"), suggestion: "Split it: send the `http` here and emit an event a trait on the server listens to, or make the call authenticated so it runs on the server.", severity: "error" }] [])))) 
+           (array/flatten (array/map @gis (fn gi
+            (if (or (and (= (object/get @gi "kind") "t") (= @dispatch "client")) (and (= (object/get @gi "kind") "k") (array/includes ["client", "optimistic"] @dispatch) (not (object/get @gi "bg"))))
+             (array/flatten (array/map (array/zip (array/range 0 (array/len (object/get @gi "keyed"))) (object/get @gi "keyed")) (fn pr
+              (let ((j (array/nth @pr 0)))
+               (array/map (array/range 0 (array/nth @pr 1)) (fn z { code: "ORB_HTTP_AUTH_ON_CLIENT", path: (str/concat @st (if (= (object/get @gi "kind") "t") ".stateMachine.transitions[" ".ticks[") (object/get @gi "i") "].effects[" @j "]"), message: (str/concat "trait \"" @tname "\" " (if (= (object/get @gi "kind") "t") "is [client], so its transitions run on the client" (str/concat "runs tick '" (object/get @gi "label") "' in the browser")) ", but this `http` carries `auth` — a credential never reaches the client, so only a keyless `http` may run there"), suggestion: "Drop `auth`, or emit an event from here and make the authenticated call in a trait that runs on the server.", severity: "error" }))))))
+             [])))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "http-site", scope: @entity.scope, findings: @entity.findings })

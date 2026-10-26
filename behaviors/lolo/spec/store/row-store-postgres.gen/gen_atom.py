@@ -1180,7 +1180,7 @@ CONFIG = '''    config {
         @label "Read size"
         @description "The most bytes one os/recv takes."
         @tier "infra"
-      queryCapabilities : QueryCapabilities = { leaves: ["compare", "member", "hasElement", "contains", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="], orderableFields: { kind: "every-field" }, window: true, exactTotal: true, idsOnly: true }
+      queryCapabilities : QueryCapabilities = { leaves: ["compare", "member", "hasElement", "contains", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="], orderableFields: { kind: "every-field" }, window: true, exactTotal: true, idsOnly: true, indexes: "runtime" }
         @description "What query the store pushes down: every leaf and combinator, any orderable field, a window, an exact total and an ids-only projection; nearest is not pushed down."
         @tier "infra"
       writeCapabilities : WriteCapabilities = { guards: { leaves: ["compare", "member", "hasElement", "contains", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="] }, conditional: true, returnsRow: true, stopRuns: true, atomicBatch: true }

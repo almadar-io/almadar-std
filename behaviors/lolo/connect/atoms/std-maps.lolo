@@ -33,7 +33,7 @@ orbital MapsOrbital {
             (let ((place (array/first @places)))
               (if (= @place null)
                 (emit MAPS_FAILURE { error: "no place matches the address", code: "not_found" })
-                (emit GEOCODED { lat: (str/to-number (object/get @place lat "0")), lng: (str/to-number (object/get @place lon "0")), formattedAddress: (object/get @place display_name "") })))))
+                (let ((lat (str/to-number (object/get @place lat "0"))) (lng (str/to-number (object/get @place lon "0")))) (if (or (= @lat null) (= @lng null)) (emit MAPS_FAILURE { error: "Nominatim answered a place whose coordinates are not numbers", code: "http_error" }) (emit GEOCODED { lat: @lat, lng: @lng, formattedAddress: (object/get @place display_name "") })))))))
 
       REVERSE_GEOCODE -> idle
         (http GET @config.origin (str/concat "/reverse?format=json&lat=" @payload.lat "&lon=" @payload.lng) {

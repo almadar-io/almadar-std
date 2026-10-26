@@ -3712,6 +3712,450 @@
           }
         }
       ]
+    },
+    {
+      "id": "control-two-traits-with-one-name-the-first-one-answers",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "state",
+                      "traitName": "OrderFlow",
+                      "state": "refunded"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "OrderOrbitalTwo",
+                  "entity": {
+                    "name": "OrderRecordTwo",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          },
+                          {
+                            "name": "refunded"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_UNSATISFIED",
+                      "path": "orbitals[0 (ConsumerOrbital)].expects[0]",
+                      "message": "`ConsumerOrbital` expects trait `OrderFlow` to declare state `refunded`, but nothing in this program provides it \u2014 `OrderFlow` declares no such state.",
+                      "suggestion": "Provide it in an orbital of this program (give the providing import that name, or declare it here).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
+    },
+    {
+      "id": "control-two-traits-with-one-name-the-first-one-answers-reversed",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "App",
+              "orbitals": [
+                {
+                  "name": "ConsumerOrbital",
+                  "expects": [
+                    {
+                      "kind": "state",
+                      "traitName": "OrderFlow",
+                      "state": "refunded"
+                    }
+                  ],
+                  "entity": {
+                    "name": "Cart",
+                    "persistence": "persistent",
+                    "collection": "carts",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [],
+                  "pages": []
+                },
+                {
+                  "name": "OrderOrbitalTwo",
+                  "entity": {
+                    "name": "OrderRecordTwo",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          },
+                          {
+                            "name": "refunded"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "OrderOrbital",
+                  "entity": {
+                    "name": "OrderRecord",
+                    "persistence": "persistent",
+                    "collection": "orders",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "primaryKey": true
+                      },
+                      {
+                        "name": "email",
+                        "type": "string",
+                        "unique": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "OrderFlow",
+                      "linkedEntity": "OrderRecord",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "Init"
+                          },
+                          {
+                            "key": "PAY",
+                            "name": "Pay"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OrderPage",
+                      "path": "/orders",
+                      "traits": [
+                        {
+                          "ref": "OrderFlow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-unsatisfied",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationUnsatisfied"
+        }
+      ]
     }
   ]
 }

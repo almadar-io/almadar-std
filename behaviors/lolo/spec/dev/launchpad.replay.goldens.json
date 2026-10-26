@@ -1,0 +1,1021 @@
+{
+ "atom": "dev/organisms/std-launchpad.lolo",
+ "trait": "LaunchpadStage",
+ "cases": [
+  {
+   "id": "init-asks-for-the-listed-apps-and-starts-everything-else",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "INIT",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "KINDS_SCOPE_LOAD"
+       },
+       {
+        "event": "RECENTS_LOAD"
+       },
+       {
+        "event": "PROGRAMS_LIST"
+       },
+       {
+        "event": "STATS_START"
+       },
+       {
+        "event": "ORB_STATS_ASK"
+       },
+       {
+        "event": "STAGE_SHOWN"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "route-leaves-become-apps-of-their-topic",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "KINDS_LEAVES",
+     "payload": {
+      "package": "@almadar/std",
+      "topic": "ops",
+      "totalCount": 2,
+      "data": [
+       {
+        "behavior": "almadar-std/std-ci-status",
+        "kind": "route",
+        "description": "the status",
+        "route": "/ci"
+       },
+       {
+        "behavior": "almadar-std/std-git",
+        "kind": "boot",
+        "description": "d",
+        "route": "/"
+       }
+      ]
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "emit"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-excluded-launchpad-is-not-listed",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "KINDS_LEAVES",
+     "payload": {
+      "package": "@almadar/std",
+      "topic": "dev",
+      "totalCount": 2,
+      "data": [
+       {
+        "behavior": "almadar-std/std-launchpad",
+        "kind": "route",
+        "description": "d",
+        "route": "/"
+       },
+       {
+        "behavior": "almadar-std/std-behavior-playground",
+        "kind": "route",
+        "description": "d",
+        "route": "/"
+       }
+      ]
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STAGE_SHOWN"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-scope-ending-marks-the-apps-ready",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "KINDS_SCOPE_READY",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STAGE_SHOWN"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-failed-read-is-shown-not-hidden",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "KINDS_FAILED",
+     "payload": {
+      "package": "@almadar/std",
+      "topic": "ops",
+      "error": "boom"
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STAGE_SHOWN"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "run-on-a-listed-app-launches-it-served-ported-and-opened",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "RUN_APP",
+     "payload": {
+      "behavior": "almadar-std/std-ci-status"
+     },
+     "entity": {
+      "id": "l",
+      "apps": [
+       {
+        "behavior": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "description": "d std-ci-status",
+        "topic": "ops",
+        "kind": "route",
+        "route": "/ci"
+       }
+      ],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": true
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PROGRAM_LAUNCH",
+        "payload": {
+         "behavior": "almadar-std/std-ci-status",
+         "label": "std-ci-status",
+         "kind": "route",
+         "verb": "serve",
+         "ported": true,
+         "open": true,
+         "route": "/ci",
+         "mock": true
+        }
+       },
+       {
+        "event": "RECENT_ADD",
+        "payload": {
+         "behavior": "almadar-std/std-ci-status",
+         "label": "std-ci-status",
+         "kind": "route",
+         "command": "",
+         "route": "/ci"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-run-on-an-unlisted-app-does-nothing",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "RUN_APP",
+     "payload": {
+      "behavior": "almadar-std/std-nope"
+     },
+     "entity": {
+      "id": "l",
+      "apps": [
+       {
+        "behavior": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "description": "d std-ci-status",
+        "topic": "ops",
+        "kind": "route",
+        "route": "/"
+       }
+      ],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-recent-that-is-running-is-opened-not-relaunched",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "RECENT_PICK",
+     "payload": {
+      "behavior": "almadar-std/std-ci-status"
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [
+       {
+        "id": "almadar-std/std-ci-status",
+        "behavior": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "kind": "route",
+        "verb": "serve",
+        "file": "/f/std-ci-status",
+        "port": 3061,
+        "url": "http://127.0.0.1:3061/",
+        "pid": 123,
+        "mock": false,
+        "status": "running"
+       }
+      ],
+      "recents": [
+       {
+        "behavior": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "kind": "route",
+        "command": "",
+        "route": "/",
+        "at": 1760531000000
+       }
+      ],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PROGRAM_OPEN",
+        "payload": {
+         "id": "almadar-std/std-ci-status"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-stopped-recent-is-relaunched-the-way-it-ran",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "RECENT_PICK",
+     "payload": {
+      "behavior": "almadar-std/std-ci-status"
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [
+       {
+        "behavior": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "kind": "route",
+        "command": "",
+        "route": "/ci",
+        "at": 1760531000000
+       }
+      ],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PROGRAM_LAUNCH",
+        "payload": {
+         "behavior": "almadar-std/std-ci-status",
+         "label": "std-ci-status",
+         "kind": "route",
+         "verb": "serve",
+         "ported": true,
+         "open": true,
+         "route": "/ci",
+         "mock": false
+        }
+       },
+       {
+        "event": "RECENT_ADD",
+        "payload": {
+         "behavior": "almadar-std/std-ci-status",
+         "label": "std-ci-status",
+         "kind": "route",
+         "command": "",
+         "route": "/ci"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-stopped-boot-recent-is-run-without-a-port-or-a-browser",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "RECENT_PICK",
+     "payload": {
+      "behavior": "almadar-std/std-bigcmp"
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [
+       {
+        "behavior": "almadar-std/std-bigcmp",
+        "label": "std-bigcmp",
+        "kind": "boot",
+        "command": "",
+        "route": "",
+        "at": 1760531000000
+       }
+      ],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PROGRAM_LAUNCH",
+        "payload": {
+         "verb": "run",
+         "ported": false,
+         "open": false,
+         "kind": "boot"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-pick-of-something-never-launched-does-nothing",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "RECENT_PICK",
+     "payload": {
+      "behavior": "almadar-std/std-never"
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [
+       {
+        "behavior": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "kind": "route",
+        "command": "",
+        "route": "/",
+        "at": 1760531000000
+       }
+      ],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-changed-programs-list-redraws-the-stage-and-the-orb",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "PROGRAMS_CHANGED",
+     "payload": {
+      "running": [
+       {
+        "id": "almadar-std/std-ci-status",
+        "behavior": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "kind": "route",
+        "verb": "serve",
+        "file": "/f/std-ci-status",
+        "port": 3061,
+        "url": "http://127.0.0.1:3061/",
+        "pid": 123,
+        "mock": false,
+        "status": "running"
+       },
+       {
+        "id": "almadar-std/std-aws-board",
+        "behavior": "almadar-std/std-aws-board",
+        "label": "std-aws-board",
+        "kind": "route",
+        "verb": "serve",
+        "file": "/f/std-aws-board",
+        "port": 3062,
+        "url": "http://127.0.0.1:3062/",
+        "pid": 0,
+        "mock": false,
+        "status": "starting"
+       }
+      ]
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_PUSH"
+       },
+       {
+        "event": "STAGE_SHOWN"
+       }
+      ],
+      "neverEmits": [
+       "STATS_WATCH"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-sample-redraws-the-orb-and-the-stage",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "STATS_READ",
+     "payload": {
+      "memoryTotal": 100,
+      "memoryUsed": 60,
+      "memoryAvailable": 40,
+      "memoryPercent": 60,
+      "cpuPercent": 12,
+      "load1": 1,
+      "load5": 1,
+      "load15": 1,
+      "uptimeSeconds": 9,
+      "processes": [
+       {
+        "pid": 123,
+        "rssKb": 2048
+       }
+      ],
+      "missing": [],
+      "unavailable": [],
+      "at": 1760531445678
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_PUSH"
+       },
+       {
+        "event": "STAGE_SHOWN"
+       }
+      ],
+      "neverEmits": [
+       "ORB_STATS_ASK"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-orb-shows-a-running-star-weighed-by-its-resident-memory",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "ORB_PUSH",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [
+       {
+        "id": "almadar-std/std-ci-status",
+        "behavior": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "kind": "route",
+        "verb": "serve",
+        "file": "/f/std-ci-status",
+        "port": 3061,
+        "url": "http://127.0.0.1:3061/",
+        "pid": 123,
+        "mock": true,
+        "status": "running"
+       }
+      ],
+      "recents": [
+       {
+        "behavior": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "kind": "route",
+        "command": "",
+        "route": "/",
+        "at": 1760531000000
+       }
+      ],
+      "procs": [
+       {
+        "pid": 123,
+        "rssKb": 204800
+       }
+      ],
+      "mock": false,
+      "statsReady": true,
+      "cpuPercent": 24,
+      "memoryPercent": 66,
+      "memoryUsed": 11179869184,
+      "memoryTotal": 17179869184,
+      "load1": 1.5
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_STATE",
+        "payload": {
+         "machine": {
+          "label": "CPU 24% \u00b7 RAM 66%",
+          "detail": "10 GB of 16 GB in use \u00b7 load 1.5"
+         },
+         "stars": [
+          {
+           "id": "almadar-std/std-ci-status",
+           "label": "std-ci-status",
+           "kind": "mock",
+           "state": "running",
+           "weight": 209715200,
+           "detail": "port 3061 \u00b7 200 MB"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-starting-program-has-no-weight-yet",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "ORB_PUSH",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [
+       {
+        "id": "almadar-std/std-ci-status",
+        "behavior": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "kind": "route",
+        "verb": "serve",
+        "file": "/f/std-ci-status",
+        "port": 3061,
+        "url": "http://127.0.0.1:3061/",
+        "pid": 0,
+        "mock": false,
+        "status": "starting"
+       }
+      ],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_STATE",
+        "payload": {
+         "machine": {
+          "label": "This machine",
+          "detail": "Reading the machine"
+         },
+         "stars": [
+          {
+           "id": "almadar-std/std-ci-status",
+           "kind": "production",
+           "state": "starting",
+           "weight": 0,
+           "detail": "port 3061 \u00b7 memory not read yet",
+           "label": "std-ci-status"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-kernel-counters-are-kept",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "ORB_KERNEL_READ",
+     "payload": {
+      "registeredSchemas": 1,
+      "registeredTraits": 42,
+      "activeInstances": 30,
+      "cachedEntities": 3,
+      "uptimeMs": 61000
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-failed-stat-is-kept-by-name",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "STATS_FAILED",
+     "payload": {
+      "stat": "cpu",
+      "code": "unsupported",
+      "error": "no cpu"
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-version-is-kept",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "ORB_VERSION_READ",
+     "payload": {
+      "version": "orb 18.0.5"
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STAGE_SHOWN"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "integrations-follow-the-top-bar",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "INTEGRATIONS_CHANGED",
+     "payload": {
+      "mock": true,
+      "authProvider": "firebase",
+      "problems": [],
+      "envChecked": true
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STAGE_SHOWN"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "open-and-stop-are-handed-to-the-program-runner",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "RUNNING_OPEN",
+     "payload": {
+      "id": "almadar-std/std-ci-status"
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PROGRAM_OPEN",
+        "payload": {
+         "id": "almadar-std/std-ci-status"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "LaunchpadStage",
+     "event": "RUNNING_STOP",
+     "payload": {
+      "id": "almadar-std/std-ci-status"
+     },
+     "entity": {
+      "id": "l",
+      "apps": [],
+      "appsStatus": "loading",
+      "running": [],
+      "recents": [],
+      "procs": [],
+      "mock": false
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PROGRAM_STOP",
+        "payload": {
+         "id": "almadar-std/std-ci-status"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-recent-that-is-not-running-is-a-stopped-star-on-the-outer-ring",
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "ORB_PUSH",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "recents": [
+       {
+        "behavior": "almadar-std/std-bigcmp",
+        "label": "std-bigcmp",
+        "kind": "boot",
+        "command": "",
+        "route": "",
+        "at": 0
+       }
+      ],
+      "running": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_STATE",
+        "payload": {
+         "machine": {
+          "label": "This machine",
+          "detail": "Reading the machine"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-recent-that-is-running-is-not-also-a-stopped-star",
+   "now": 1760531445678,
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "ORB_PUSH",
+     "payload": {},
+     "entity": {
+      "id": "l",
+      "recents": [
+       {
+        "behavior": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "kind": "route",
+        "command": "",
+        "route": "/",
+        "at": 0
+       }
+      ],
+      "running": [
+       {
+        "id": "almadar-std/std-ci-status",
+        "behavior": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "kind": "route",
+        "verb": "serve",
+        "file": "/f",
+        "port": 3061,
+        "url": "http://127.0.0.1:3061/",
+        "pid": 0,
+        "mock": false,
+        "status": "starting"
+       }
+      ],
+      "procs": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "ORB_STATE",
+        "payload": {
+         "stars": [
+          {
+           "id": "almadar-std/std-ci-status",
+           "label": "std-ci-status",
+           "kind": "production",
+           "state": "starting",
+           "weight": 0,
+           "detail": "port 3061 \u00b7 memory not read yet"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

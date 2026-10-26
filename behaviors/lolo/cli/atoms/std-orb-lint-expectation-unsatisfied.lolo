@@ -44,9 +44,14 @@ orbital OrbLintExpectationUnsatisfiedOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbs (object/get @payload.program "orbitals" [])))
- (let ((provs (array/filter (array/flatten (array/map (array/filter @orbs (fn o (not (object/get @o "spec" false)))) (fn o (array/map (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn e (!= (object/get @e "name" "") ""))) (fn e { n: (object/get @e "name" ""), id: (object/get @e "identity" false), on: (object/get @o "name" ""), e: @e }))))) (fn p (!= (object/get @p "n") ""))))
-       (alltr (array/flatten (array/map @orbs (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t { t: @t, on: (object/get @o "name" "") }))))))
-       (allpg (array/flatten (array/map @orbs (fn o (object/get @o "pages" []))))))
+ (let ((provs (array/flatten (array/map (array/filter @orbs (fn o (not (object/get @o "spec" false)))) (fn o (array/map (array/filter (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn e (!= (object/get @e "name" "") ""))) (fn e { n: (object/get @e "name" ""), id: (object/get @e "identity" false) }))))))
+       (allpg (array/flatten (array/map @orbs (fn o (array/map (object/get @o "pages" []) (fn pg { protocol: (object/get @pg "protocol" ""), path: (object/get @pg "path" "") }))))))
+       (want (object/fromEntries (array/flatten (array/map @orbs (fn o (array/map (object/get @o "expects" []) (fn x [(object/get @x "traitName" ""), true]))))))))
+ (let ((pn (object/fromEntries (array/map @provs (fn p [(object/get @p "n"), true]))))
+       (anyid (array/some @provs (fn p (object/get @p "id"))))
+       (trs (array/flatten (array/map @orbs (fn o (let ((on (object/get @o "name" ""))) (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t (let ((tn (object/get @t "name" ""))) { name: @tn, on: @on, cfg: (object/keys (object/get @t "config" {})), states: (if (object/has @want @tn) (array/map (object/get @t "stateMachine.states" []) (fn s (object/get @s "name" ""))) []), emits: (if (object/has @want @tn) (array/map (object/get @t "emits" []) (fn e (object/get @e "event" ""))) []), trans: (if (object/has @want @tn) (array/map (object/get @t "stateMachine.transitions" []) (fn tr { event: (object/get @tr "event" ""), to: (object/get @tr "to" ""), from: (object/get @tr "from" null) })) []) })))))))))
+  (let ((tidx (object/fromEntries (array/map (array/reverse @trs) (fn r [(object/get @r "name"), @r]))))
+        (cfgset (object/fromEntries (array/flatten (array/map @trs (fn r (array/map (object/get @r "cfg") (fn k [@k, true]))))))))
 (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
   (let ((o (array/nth @orbs @oi)))
    (if (or (object/get @o "spec" false) (not (object/has @o "expects"))) []
@@ -55,28 +60,29 @@ orbital OrbLintExpectationUnsatisfiedOrbital {
       (let ((x (array/nth @xs @j)))
        (let ((base (str/concat "orbitals[" @oi " (" @on ")].expects[" @j "]")) (kind (object/get @x "kind" "")) (strict (object/get @x "strict" false)))
         (array/concat
-  (let ((unprov (if (= @kind "entity") (if (array/some @provs (fn p (= (object/get @p "n") (object/get @x "name" "")))) "" (str/concat "entity `" (object/get @x "name" "") "`"))
-  (if (= @kind "identity") (if (!= (object/get @x "name" "") "") (if (array/some @provs (fn p (= (object/get @p "n") (object/get @x "name" "")))) "" (str/concat "identity `" (object/get @x "name" "") "`")) (if (array/some @provs (fn p (object/get @p "id"))) "" "an [identity] entity"))
-  (if (= @kind "event") (if (array/some @alltr (fn p (= (object/get (object/get @p "t") "name" "") (object/get @x "traitName" "")))) "" (str/concat "trait `" (object/get @x "traitName" "") "` (to emit `" (object/get @x "event" "") "`)"))
-  (if (or (= @kind "state") (= @kind "transition")) (if (array/some @alltr (fn p (= (object/get (object/get @p "t") "name" "") (object/get @x "traitName" "")))) "" (str/concat "trait `" (object/get @x "traitName" "") "`"))
+  (if @strict
+   (let ((unprov (if (= @kind "entity") (if (object/has @pn (object/get @x "name" "")) "" (str/concat "entity `" (object/get @x "name" "") "`"))
+  (if (= @kind "identity") (if (!= (object/get @x "name" "") "") (if (object/has @pn (object/get @x "name" "")) "" (str/concat "identity `" (object/get @x "name" "") "`")) (if @anyid "" "an [identity] entity"))
+  (if (= @kind "event") (if (object/has @tidx (object/get @x "traitName" "")) "" (str/concat "trait `" (object/get @x "traitName" "") "` (to emit `" (object/get @x "event" "") "`)"))
+  (if (or (= @kind "state") (= @kind "transition")) (if (object/has @tidx (object/get @x "traitName" "")) "" (str/concat "trait `" (object/get @x "traitName" "") "`"))
   (if (= @kind "page")
     (let ((pr (object/get @x "protocol" "")))
       (if (array/some @allpg (fn pg (if (!= @pr "") (= (object/get @pg "protocol" "") @pr) (and (= (object/get @pg "protocol" "") "") (= (object/get @pg "path" "") (object/get @x "path" ""))))))
         "" (if (!= @pr "") (str/concat "a `" @pr "` page") (str/concat "page `" (object/get @x "path" "") "`"))))
-  (if (= @kind "config") (if (array/some @alltr (fn p (object/has (object/get (object/get @p "t") "config" {}) (object/get @x "name" "")))) "" (str/concat "config knob `" (object/get @x "name" "") "` on a trait"))
+  (if (= @kind "config") (if (object/has @cfgset (object/get @x "name" "")) "" (str/concat "config knob `" (object/get @x "name" "") "` on a trait"))
     ""))))))))
-    (if (and @strict (!= @unprov "")) [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects " @unprov ", but nothing in this program provides it — " "a spec obligation is never deferred" "."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }] []))
-  (if (= @kind "state") (let ((tr (array/find @alltr (fn p (= (object/get (object/get @p "t") "name" "") (object/get @x "traitName" ""))))))
-  (if (or (= @tr null) (array/some (object/get (object/get (object/get @tr "t") "stateMachine") "states" []) (fn s (= (object/get @s "name" "") (object/get @x "state" ""))))) []
+    (if (!= @unprov "") [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects " @unprov ", but nothing in this program provides it — " "a spec obligation is never deferred" "."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }] [])) [])
+  (if (= @kind "state") (let ((tr (object/get @tidx (object/get @x "traitName" "") null)))
+  (if (or (= @tr null) (array/includes (object/get @tr "states" []) (object/get @x "state" ""))) []
     [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects " (str/concat "trait `" (object/get @x "traitName" "") "` to declare state `" (object/get @x "state" "") "`") ", but nothing in this program provides it — " (str/concat "`" (object/get @x "traitName" "") "` declares no such state") "."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }]))
-    (if (= @kind "transition") (let ((tr (array/find @alltr (fn p (= (object/get (object/get @p "t") "name" "") (object/get @x "traitName" ""))))))
-  (if (or (= @tr null) (array/some (object/get (object/get (object/get @tr "t") "stateMachine") "transitions" [])
+    (if (= @kind "transition") (let ((tr (object/get @tidx (object/get @x "traitName" "") null)))
+  (if (or (= @tr null) (array/some (object/get @tr "trans" [])
         (fn t (and (= (object/get @t "event" "") (object/get @x "event" "")) (= (object/get @t "to" "") (object/get @x "to" ""))
                    (or (= (or (json/parse (json/stringify (object/get @t "from" null)) LStr) "") (object/get @x "from" "")) (array/includes (or (json/parse (json/stringify (object/get @t "from" null)) LNodes) []) (object/get @x "from" ""))))))) []
     [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects " (str/concat "trait `" (object/get @x "traitName" "") "` to move `" (object/get @x "from" "") "` to `" (object/get @x "to" "") "` on `" (object/get @x "event" "") "`") ", but nothing in this program provides it — " (str/concat "`" (object/get @x "traitName" "") "` has no such transition") "."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }]))
-      (if (= @kind "event") (let ((tr (array/find @alltr (fn p (= (object/get (object/get @p "t") "name" "") (object/get @x "traitName" ""))))))
-  (if (or (= @tr null) (array/some (object/get (object/get @tr "t") "emits" []) (fn e (= (object/get @e "event" "") (object/get @x "event" ""))))) []
-    [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects `" (object/get @x "traitName" "") "." (object/get @x "event" "") "`, but trait `" (object/get @x "traitName" "") "` in `" (object/get @tr "on") "` does not emit `" (object/get @x "event" "") "`."), suggestion: (str/concat "Declare `" (object/get @x "event" "") "` in `" (object/get @x "traitName" "") "`'s `emits`, or listen to the trait that emits it."), severity: "error" }])) []))))))))))))))))))
+      (if (= @kind "event") (let ((tr (object/get @tidx (object/get @x "traitName" "") null)))
+  (if (or (= @tr null) (array/includes (object/get @tr "emits" []) (object/get @x "event" ""))) []
+    [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects `" (object/get @x "traitName" "") "." (object/get @x "event" "") "`, but trait `" (object/get @x "traitName" "") "` in `" (object/get @tr "on") "` does not emit `" (object/get @x "event" "") "`."), suggestion: (str/concat "Declare `" (object/get @x "event" "") "` in `" (object/get @x "traitName" "") "`'s `emits`, or listen to the trait that emits it."), severity: "error" }])) []))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "expectation-unsatisfied", scope: @entity.scope, findings: @entity.findings })

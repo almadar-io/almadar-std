@@ -6,14 +6,14 @@ app std-docker [
 type DockerLogLine = { at : string!, line : string! }
 type DockerPort = { host : number!, container : number!, protocol : string }
 type DockerVolume = { host : string!, container : string! }
-type DockerPortView = { host : number!, container : number!, protocol : string! }
+type DockerPortView = { host : number?, container : number?, protocol : string! }
 type DockerInspectState = { Status : string!, StartedAt : string!, FinishedAt : string! }
-type DockerInspectConfig = { Image : string }
+type DockerInspectConfig = { Image : string! }
 type DockerPortBinding = { HostIp : string!, HostPort : string! }
 type DockerInspectNetwork = { Ports : Map string [DockerPortBinding] }
 type DockerInspect = { Id : string!, Name : string!, Created : string!, State : DockerInspectState!, Config : DockerInspectConfig!, NetworkSettings : DockerInspectNetwork! }
 type DockerImageInspect = { Id : string!, Size : number }
-type DockerContainerView = { id : string!, name : string!, image : string!, status : string!, ports : [DockerPortView]!, createdAt : number! }
+type DockerContainerView = { id : string!, name : string!, image : string!, status : string!, ports : [DockerPortView]!, createdAt : number? }
 orbital DockerOrbital {
   uses Cli from "std/behaviors/std-cli"
 
@@ -187,7 +187,7 @@ orbital DockerOrbital {
         image : string!
         status : string!
         ports : [DockerPortView]!
-        createdAt : number!
+        createdAt : number?
         startedAt : number!
         stoppedAt : number!
       }
