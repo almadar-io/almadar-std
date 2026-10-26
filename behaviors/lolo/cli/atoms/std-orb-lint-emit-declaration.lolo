@@ -1,0 +1,173 @@
+app std-orb-lint-emit-declaration [
+  version: "1.0.0",
+  inbound: ["cli-lint-emit-declaration"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-emit-declaration — the `orb lint emit-declaration <file>` command, the port of validate_emit_against_declaration (effect/emit_declaration.rs). It lowers the file with program/read and checks each `emit` effect of every inline trait transition and tick, however nested in do, if, when and let (std-orb-effect-leaves flattens them): an event the trait's `emits` array does not declare is ORB_T_EVT_UNDECLARED, and an emit of a declared external event that carries a payload object missing a required payload field (or carries a non-object payload while the event has required fields) is ORB_X_PAYLOAD_MISMATCH, each with the Rust path, message and suggestion (status 500, exit 1). ORB_EFF_MISSING_REQUIRED_EMIT (validate_required_emit_success) is not here: no operator in the table sets requiresEmitSuccess, so the Rust pass is inert. Clean answers `lint emit-declaration: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-emit-declaration"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type EmdVal = string | number | boolean | [EmdVal?] | Map string EmdVal?
+type EmdTransition = { effects : [EmdVal?] }
+type EmdMachine = { transitions : [EmdTransition] }
+type EmdTick = { effects : [EmdVal?] }
+type EmdField = { name : string, required : boolean }
+type EmdEmit = { event : string, scope : string, payloadSchema : [EmdField] }
+type EmdTrait = { name : string, stateMachine : EmdMachine, ticks : [EmdTick], emits : [EmdEmit] }
+type EmdOrbital = { name : string, traits : [EmdTrait] }
+type EmdLeaf = { p : string!, e : EmdVal!, oi : number!, ti : number! }
+type EmdProgram = { orbitals : [EmdOrbital] }
+
+orbital OrbLintEmitDeclarationOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses LeavesUse from "std/behaviors/std-orb-effect-leaves"
+
+  entity OrbLintEmitDeclarationRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    orbitals : [EmdOrbital] = []
+  }
+
+  trait OrbLintEmitDeclaration -> OrbLintEmitDeclarationRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.orbitals (object/get @payload.program "orbitals" []))
+        (emit EFFECT_LEAVES_EXPAND { requestId: (str/concat "emitdecl" @payload.scope), orbitals: (object/get @payload.program "orbitals" []) })
+      EFFECT_LEAVES_HEARD -> ready when (= @payload.requestId (str/concat "emitdecl" @entity.scope))
+        (set @entity.findings (let ((orbitals @entity.orbitals) (nof : [OrbFinding] []))
+          (let ((idx (object/fromEntries (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                  (array/map (array/range 0 (array/len (object/get (array/nth @orbitals @oi) "traits" []))) (fn ti
+                    [(str/concat @oi "-" @ti), (object/get (array/nth (object/get (array/nth @orbitals @oi) "traits" []) @ti) "emits" [])]))))))))
+          (array/flatten (array/map @payload.leaves (fn l
+            (let ((e (object/get @l "e")) (p (object/get @l "p")))
+              (if (not (and (validate/array @e) (>= (array/len @e) 2) (= (array/nth @e 0) "emit"))) @nof
+                (let ((ev (array/nth @e 1)))
+                  (if (not (validate/string @ev)) @nof
+                    (let ((decls (array/filter (object/get @idx (str/concat (object/get @l "oi") "-" (object/get @l "ti")) []) (fn d (= (object/get @d "event" "") @ev)))))
+                      (if (= (array/len @decls) 0)
+                        [{ code: "ORB_T_EVT_UNDECLARED", path: @p, message: (str/concat "Event '" @ev "' is emitted but not declared in trait's emits array"), suggestion: "Add the event to the trait's 'emits' array with proper payload schema", severity: "error" }]
+                        (let ((d (array/first @decls)))
+                          (if (not (and (= (object/get @d "scope" "") "external") (>= (array/len @e) 3))) @nof
+                            (let ((req (array/map (array/filter (object/get @d "payloadSchema" []) (fn f (= (object/get @f "required" false) true))) (fn f (object/get @f "name" "")))) (pl (array/nth @e 2)))
+                              (if (validate/object @pl)
+                                (array/map (array/filter @req (fn r (not (object/has @pl @r)))) (fn r
+                                  { code: "ORB_X_PAYLOAD_MISMATCH", path: @p, message: (str/concat "External emit '" @ev "' is missing required payload field '" @r "'"), suggestion: (str/concat "Add the '" @r "' field to the emit payload"), severity: "error" }))
+                                (if (= (array/len @req) 0) @nof
+                                  [{ code: "ORB_X_PAYLOAD_MISMATCH", path: @p, message: (str/concat "External emit '" @ev "' requires payload with fields: [" (str/join (array/map @req (fn r (json/stringify @r))) ", ") "]"), suggestion: "Add a payload object with the required fields", severity: "error" }])))))))))))))))))
+        (emit LINT_FINISH { })
+
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "emit-declaration", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      EFFECT_LEAVES_EXPAND -> external { requestId : string!  orbitals : [EmdOrbital]! }
+        @description "Ask std-orb-effect-leaves to flatten the effects of every inline trait."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      EFFECT_LEAVES_HEARD { requestId : string!  leaves : [EmdLeaf]! }
+        @description "std-orb-effect-leaves's answer: the effects to check, flattened."
+      OrbEffectLeaves.EFFECT_LEAVES_EXPANDED -> EFFECT_LEAVES_HEARD
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EmdProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintEmitDeclarationCli -> OrbLintEmitDeclarationRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint emit-declaration <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "emit-declaration") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint emit-declaration: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "emit-declaration") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint emit-declaration: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-emit-declaration" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint emit-declaration` with its arguments and working directory."
+        @synonyms "orb lint emit-declaration"
+      OrbLintEmitDeclaration.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait OrbEffectLeaves = LeavesUse.traits.OrbEffectLeaves {
+    listens {
+      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [EmdOrbital]! }
+        @description "Flatten the effects of every inline trait."
+      OrbLintEmitDeclaration.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintEmitDeclarationCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintEmitDeclarationOrbitalStart -> OrbLintEmitDeclaration, OrbLintEmitDeclarationCli, OrbLintInput, Packs, OrbEffectLeaves, Versions
+}

@@ -1,0 +1,21 @@
+app lint-merged-fields-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-merged-fields - the `orb lint merged-fields <file>` command, the port of ORB_E_MERGED_FIELD_UNREFERENCED (validate_all_merged_field_usage in entities/entity_mutation.rs). A field a rebind merged onto an entity (`mergedFrom`) that no trait of the whole program uses is reported at `orbitals[i].entity[E].fields.<field>` of the orbital that declares the entity, sorted by field name. A trait uses an entity field when it is linked to the entity and names `@entity.<field>` or sets it anywhere (guards, effects, tick guards and effects, config defaults), lists it in a `fetch` include, writes it in a `persist` data literal (a `persist batch` too), a render-ui node of a pattern whose prop declares it required binds the entity (its own entity by default), or its entity contract requires it; a trait linked to another entity uses the fields it fetch-includes or persists, every field when it fetches or persists the entity with no data to name. The pattern requirements come from LINT_PATTERNS. Reported with the Rust message and suggestion (status 500, exit 1). Clean answers `lint merged-fields: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintMergedFieldsSpec {
+  expects trait OrbLintMergedFields {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintMergedFieldsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintMergedFields, OrbLintMergedFieldsCli
+}

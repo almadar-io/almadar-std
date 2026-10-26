@@ -1,6 +1,6 @@
 app std-launchpad-orb [
   version: "2.0.0",
-  description: "std-launchpad-orb — the launchpad's Orb view: this machine as one orb with the programs around it as stars, redrawn each time ORB_STATE { machine, stars } arrives. The machine is the centre node, labelled with its own label (the host puts its CPU and memory there); a running or starting star sits on the first ring and its size grows with its weight in bytes (minSize plus scale times the square root of the megabytes, held between minSize and maxSize); its colour is the one the colours knob names for its kind (the host's mock and production), or the freshColor knob while it is starting, and a kind the knob does not name takes the graph's own palette; a stopped star hangs on the outer ring from a hub node labelled by the hubLabel knob, dimmed to stoppedColor at minSize. Clicking a star selects it and shows its actions: Open and Stop for a running or starting one (ORB_OPEN { id }, ORB_STOP { id }), Relaunch for a stopped one (ORB_RELAUNCH { id }); clicking the machine or the hub clears the selection, and a state that no longer holds the selected star clears it too. The layout is the graph view's radial one, so the rings are fixed by depth from the machine. The look comes from the theme's own tokens.",
+  description: "std-launchpad-orb — the launchpad's Orb view: this machine as one orb with the programs around it as stars, redrawn each time ORB_STATE { machine, stars } arrives. The machine is the centre node, labelled with its own label (the host puts its CPU and memory there); a running or starting star sits on the first ring and its size grows with its weight in bytes (minSize plus scale times the square root of the megabytes, held between minSize and maxSize); its colour is the one the colours knob names for its kind (the host's mock and production), or the freshColor knob while it is starting, and a kind the knob does not name takes the graph's own palette; a stopped star hangs on the outer ring from a hub node labelled by the hubLabel knob, dimmed to stoppedColor at minSize. Clicking a star selects it and shows its actions: Open and Close for an open or starting one (ORB_OPEN { id }, ORB_STOP { id }), Reopen for a stopped one (ORB_RELAUNCH { id }); clicking the machine or the hub clears the selection, and a state that no longer holds the selected star clears it too. The layout is the graph view's radial one, so the rings are fixed by depth from the machine. The look comes from the theme's own tokens.",
   egress: []
 ]
 ;; @capabilities "draw this machine as an orb with the running programs as stars sized by memory, open stop or relaunch a program from its star"
@@ -96,8 +96,8 @@ orbital LaunchpadOrbOrbital {
             { type: typography, content: (if (= @entity.selected "") "" (str/concat (object/get (array/find @entity.stars (fn s (= @s.id @entity.selected))) "label" "") ": " (object/get (array/find @entity.stars (fn s (= @s.id @entity.selected))) "detail" ""))), variant: body, weight: medium },
             { type: stack, direction: horizontal, align: center, gap: sm, children: [
               { type: button, label: "Open", variant: secondary, size: sm, action: STAR_OPEN, actionPayload: { id: @entity.selected }, className: (if (array/some @entity.stars (fn s (and (= @s.id @entity.selected) (!= @s.state "stopped")))) "" hidden) },
-              { type: button, label: "Stop", variant: ghost, size: sm, action: STAR_STOP, actionPayload: { id: @entity.selected }, className: (if (array/some @entity.stars (fn s (and (= @s.id @entity.selected) (!= @s.state "stopped")))) "" hidden) },
-              { type: button, label: "Relaunch", variant: secondary, size: sm, action: STAR_RELAUNCH, actionPayload: { id: @entity.selected }, className: (if (array/some @entity.stars (fn s (and (= @s.id @entity.selected) (= @s.state "stopped")))) "" hidden) }
+              { type: button, label: "Close", variant: ghost, size: sm, action: STAR_STOP, actionPayload: { id: @entity.selected }, className: (if (array/some @entity.stars (fn s (and (= @s.id @entity.selected) (!= @s.state "stopped")))) "" hidden) },
+              { type: button, label: "Reopen", variant: secondary, size: sm, action: STAR_RELAUNCH, actionPayload: { id: @entity.selected }, className: (if (array/some @entity.stars (fn s (and (= @s.id @entity.selected) (= @s.state "stopped")))) "" hidden) }
             ] }
           ] },
           { type: typography, content: @config.hint, variant: caption, color: muted }
@@ -135,12 +135,12 @@ orbital LaunchpadOrbOrbital {
       ORB_STOP -> external {
         id : string!
       }
-        @description "A running star's Stop was pressed."
+        @description "An open star's Close was pressed."
         @tier "domain"
       ORB_RELAUNCH -> external {
         id : string!
       }
-        @description "A stopped star's Relaunch was pressed."
+        @description "A stopped star's Reopen was pressed."
         @tier "domain"
     }
 

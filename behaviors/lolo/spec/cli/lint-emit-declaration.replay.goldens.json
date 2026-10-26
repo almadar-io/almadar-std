@@ -1,0 +1,1124 @@
+{
+  "atom": "cli/atoms/std-orb-lint-emit-declaration.lolo",
+  "trait": "OrbLintEmitDeclaration",
+  "note": "Cases pin ORB_T_EVT_UNDECLARED and ORB_X_PAYLOAD_MISMATCH of validate_emit_against_declaration; expected findings are what `orb validate --json` reports on the same fixture (emd-a.lolo, emd-b.orb, emd-c.orb). ORB_EFF_MISSING_REQUIRED_EMIT is inert in Rust (no operator sets requiresEmitSuccess) and is not ported.",
+  "cases": [
+    {
+      "id": "undeclared-events-in-transitions-and-do",
+      "steps": [
+        {
+          "trait": "OrbLintEmitDeclaration",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "EmdAOrbital",
+                  "traits": [
+                    {
+                      "name": "EmdT",
+                      "emits": [
+                        {
+                          "event": "EXT",
+                          "scope": "external",
+                          "payloadSchema": [
+                            {
+                              "name": "a",
+                              "required": true
+                            },
+                            {
+                              "name": "b"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "INT",
+                          "payloadSchema": [
+                            {
+                              "name": "a",
+                              "required": true
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "UNDECLARED",
+                                {
+                                  "a": "x"
+                                }
+                              ],
+                              [
+                                "emit",
+                                "EXT",
+                                {
+                                  "a": "x"
+                                }
+                              ],
+                              [
+                                "emit",
+                                "INT",
+                                {
+                                  "a": "x"
+                                }
+                              ],
+                              [
+                                "do",
+                                [
+                                  "emit",
+                                  "UNDECLARED2",
+                                  {}
+                                ],
+                                [
+                                  "emit",
+                                  "EXT",
+                                  {
+                                    "a": "z",
+                                    "b": "y"
+                                  }
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emitdecl",
+                  "orbitals": [
+                    {
+                      "name": "EmdAOrbital",
+                      "traits": [
+                        {
+                          "name": "EmdT",
+                          "emits": [
+                            {
+                              "event": "EXT",
+                              "scope": "external",
+                              "payloadSchema": [
+                                {
+                                  "name": "a",
+                                  "required": true
+                                },
+                                {
+                                  "name": "b"
+                                }
+                              ]
+                            },
+                            {
+                              "event": "INT",
+                              "payloadSchema": [
+                                {
+                                  "name": "a",
+                                  "required": true
+                                }
+                              ]
+                            }
+                          ],
+                          "stateMachine": {
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT"
+                              },
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    "UNDECLARED",
+                                    {
+                                      "a": "x"
+                                    }
+                                  ],
+                                  [
+                                    "emit",
+                                    "EXT",
+                                    {
+                                      "a": "x"
+                                    }
+                                  ],
+                                  [
+                                    "emit",
+                                    "INT",
+                                    {
+                                      "a": "x"
+                                    }
+                                  ],
+                                  [
+                                    "do",
+                                    [
+                                      "emit",
+                                      "UNDECLARED2",
+                                      {}
+                                    ],
+                                    [
+                                      "emit",
+                                      "EXT",
+                                      {
+                                        "a": "z",
+                                        "b": "y"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmitDeclaration",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emitdecl",
+            "leaves": [
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[0]",
+                "e": [
+                  "emit",
+                  "UNDECLARED",
+                  {
+                    "a": "x"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[1]",
+                "e": [
+                  "emit",
+                  "EXT",
+                  {
+                    "a": "x"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[2]",
+                "e": [
+                  "emit",
+                  "INT",
+                  {
+                    "a": "x"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[3].do[0]",
+                "e": [
+                  "emit",
+                  "UNDECLARED2",
+                  {}
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[3].do[1]",
+                "e": [
+                  "emit",
+                  "EXT",
+                  {
+                    "a": "z",
+                    "b": "y"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmitDeclaration",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit-declaration",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_T_EVT_UNDECLARED",
+                      "path": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[0]",
+                      "message": "Event 'UNDECLARED' is emitted but not declared in trait's emits array",
+                      "suggestion": "Add the event to the trait's 'emits' array with proper payload schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_T_EVT_UNDECLARED",
+                      "path": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[3].do[0]",
+                      "message": "Event 'UNDECLARED2' is emitted but not declared in trait's emits array",
+                      "suggestion": "Add the event to the trait's 'emits' array with proper payload schema",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "external-payload-mismatch-nested-and-ticks",
+      "steps": [
+        {
+          "trait": "OrbLintEmitDeclaration",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "EmdAOrbital",
+                  "traits": [
+                    {
+                      "name": "EmdT",
+                      "emits": [
+                        {
+                          "event": "EXT",
+                          "scope": "external",
+                          "payloadSchema": [
+                            {
+                              "name": "a",
+                              "required": true
+                            },
+                            {
+                              "name": "b"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "INT",
+                          "payloadSchema": [
+                            {
+                              "name": "a",
+                              "required": true
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "EXT",
+                                {
+                                  "b": "y"
+                                }
+                              ],
+                              [
+                                "emit",
+                                "EXT",
+                                "?x"
+                              ],
+                              [
+                                "emit",
+                                "EXT"
+                              ],
+                              [
+                                "emit",
+                                "INT",
+                                {
+                                  "b": "y"
+                                }
+                              ],
+                              [
+                                "emit",
+                                "EXT",
+                                {
+                                  "a": "ok"
+                                }
+                              ],
+                              [
+                                "if",
+                                true,
+                                [
+                                  "emit",
+                                  "EXT",
+                                  {
+                                    "b": "q"
+                                  }
+                                ],
+                                [
+                                  "emit",
+                                  "NOPE"
+                                ]
+                              ],
+                              [
+                                "emit",
+                                [
+                                  "x"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "emit",
+                              "TICKNOPE"
+                            ],
+                            [
+                              "emit",
+                              "EXT",
+                              {}
+                            ]
+                          ],
+                          "name": "T1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emitdecl",
+                  "orbitals": [
+                    {
+                      "name": "EmdAOrbital",
+                      "traits": [
+                        {
+                          "name": "EmdT",
+                          "emits": [
+                            {
+                              "event": "EXT",
+                              "scope": "external",
+                              "payloadSchema": [
+                                {
+                                  "name": "a",
+                                  "required": true
+                                },
+                                {
+                                  "name": "b"
+                                }
+                              ]
+                            },
+                            {
+                              "event": "INT",
+                              "payloadSchema": [
+                                {
+                                  "name": "a",
+                                  "required": true
+                                }
+                              ]
+                            }
+                          ],
+                          "stateMachine": {
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT"
+                              },
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    "EXT",
+                                    {
+                                      "b": "y"
+                                    }
+                                  ],
+                                  [
+                                    "emit",
+                                    "EXT",
+                                    "?x"
+                                  ],
+                                  [
+                                    "emit",
+                                    "EXT"
+                                  ],
+                                  [
+                                    "emit",
+                                    "INT",
+                                    {
+                                      "b": "y"
+                                    }
+                                  ],
+                                  [
+                                    "emit",
+                                    "EXT",
+                                    {
+                                      "a": "ok"
+                                    }
+                                  ],
+                                  [
+                                    "if",
+                                    true,
+                                    [
+                                      "emit",
+                                      "EXT",
+                                      {
+                                        "b": "q"
+                                      }
+                                    ],
+                                    [
+                                      "emit",
+                                      "NOPE"
+                                    ]
+                                  ],
+                                  [
+                                    "emit",
+                                    [
+                                      "x"
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          },
+                          "ticks": [
+                            {
+                              "interval": 1000,
+                              "effects": [
+                                [
+                                  "emit",
+                                  "TICKNOPE"
+                                ],
+                                [
+                                  "emit",
+                                  "EXT",
+                                  {}
+                                ]
+                              ],
+                              "name": "T1"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmitDeclaration",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emitdecl",
+            "leaves": [
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[0]",
+                "e": [
+                  "emit",
+                  "EXT",
+                  {
+                    "b": "y"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[1]",
+                "e": [
+                  "emit",
+                  "EXT",
+                  "?x"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[2]",
+                "e": [
+                  "emit",
+                  "EXT"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[3]",
+                "e": [
+                  "emit",
+                  "INT",
+                  {
+                    "b": "y"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[4]",
+                "e": [
+                  "emit",
+                  "EXT",
+                  {
+                    "a": "ok"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[5].then",
+                "e": [
+                  "emit",
+                  "EXT",
+                  {
+                    "b": "q"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[5].else",
+                "e": [
+                  "emit",
+                  "NOPE"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[6]",
+                "e": [
+                  "emit",
+                  [
+                    "x"
+                  ]
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].ticks[0].effects[0]",
+                "e": [
+                  "emit",
+                  "TICKNOPE"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].ticks[0].effects[1]",
+                "e": [
+                  "emit",
+                  "EXT",
+                  {}
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmitDeclaration",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit-declaration",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_X_PAYLOAD_MISMATCH",
+                      "path": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[0]",
+                      "message": "External emit 'EXT' is missing required payload field 'a'",
+                      "suggestion": "Add the 'a' field to the emit payload",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_X_PAYLOAD_MISMATCH",
+                      "path": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[1]",
+                      "message": "External emit 'EXT' requires payload with fields: [\"a\"]",
+                      "suggestion": "Add a payload object with the required fields",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_X_PAYLOAD_MISMATCH",
+                      "path": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[5].then",
+                      "message": "External emit 'EXT' is missing required payload field 'a'",
+                      "suggestion": "Add the 'a' field to the emit payload",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_T_EVT_UNDECLARED",
+                      "path": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[5].else",
+                      "message": "Event 'NOPE' is emitted but not declared in trait's emits array",
+                      "suggestion": "Add the event to the trait's 'emits' array with proper payload schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_T_EVT_UNDECLARED",
+                      "path": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].ticks[0].effects[0]",
+                      "message": "Event 'TICKNOPE' is emitted but not declared in trait's emits array",
+                      "suggestion": "Add the event to the trait's 'emits' array with proper payload schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_X_PAYLOAD_MISMATCH",
+                      "path": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].ticks[0].effects[1]",
+                      "message": "External emit 'EXT' is missing required payload field 'a'",
+                      "suggestion": "Add the 'a' field to the emit payload",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-declared-events-and-complete-payloads",
+      "steps": [
+        {
+          "trait": "OrbLintEmitDeclaration",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "EmdAOrbital",
+                  "traits": [
+                    {
+                      "name": "EmdT",
+                      "emits": [
+                        {
+                          "event": "EXT",
+                          "scope": "external",
+                          "payloadSchema": [
+                            {
+                              "name": "a",
+                              "required": true
+                            },
+                            {
+                              "name": "b"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "INT",
+                          "payloadSchema": [
+                            {
+                              "name": "a",
+                              "required": true
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "emit",
+                                "EXT",
+                                {
+                                  "a": "x",
+                                  "b": "y"
+                                }
+                              ],
+                              [
+                                "emit",
+                                "EXT"
+                              ],
+                              [
+                                "emit",
+                                "INT",
+                                {
+                                  "b": "y"
+                                }
+                              ],
+                              [
+                                "emit",
+                                "INT"
+                              ],
+                              [
+                                "do",
+                                [
+                                  "emit",
+                                  "EXT",
+                                  {
+                                    "a": "k"
+                                  }
+                                ]
+                              ],
+                              [
+                                "set",
+                                "@entity.n",
+                                1
+                              ],
+                              [
+                                "emit",
+                                [
+                                  "x"
+                                ]
+                              ],
+                              [
+                                "emit",
+                                "EXT",
+                                {
+                                  "a": "x"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "ticks": []
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EFFECT_LEAVES_EXPAND",
+                "payload": {
+                  "requestId": "emitdecl",
+                  "orbitals": [
+                    {
+                      "name": "EmdAOrbital",
+                      "traits": [
+                        {
+                          "name": "EmdT",
+                          "emits": [
+                            {
+                              "event": "EXT",
+                              "scope": "external",
+                              "payloadSchema": [
+                                {
+                                  "name": "a",
+                                  "required": true
+                                },
+                                {
+                                  "name": "b"
+                                }
+                              ]
+                            },
+                            {
+                              "event": "INT",
+                              "payloadSchema": [
+                                {
+                                  "name": "a",
+                                  "required": true
+                                }
+                              ]
+                            }
+                          ],
+                          "stateMachine": {
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT"
+                              },
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "GO",
+                                "effects": [
+                                  [
+                                    "emit",
+                                    "EXT",
+                                    {
+                                      "a": "x",
+                                      "b": "y"
+                                    }
+                                  ],
+                                  [
+                                    "emit",
+                                    "EXT"
+                                  ],
+                                  [
+                                    "emit",
+                                    "INT",
+                                    {
+                                      "b": "y"
+                                    }
+                                  ],
+                                  [
+                                    "emit",
+                                    "INT"
+                                  ],
+                                  [
+                                    "do",
+                                    [
+                                      "emit",
+                                      "EXT",
+                                      {
+                                        "a": "k"
+                                      }
+                                    ]
+                                  ],
+                                  [
+                                    "set",
+                                    "@entity.n",
+                                    1
+                                  ],
+                                  [
+                                    "emit",
+                                    [
+                                      "x"
+                                    ]
+                                  ],
+                                  [
+                                    "emit",
+                                    "EXT",
+                                    {
+                                      "a": "x"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          },
+                          "ticks": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmitDeclaration",
+          "from": "ready",
+          "event": "EFFECT_LEAVES_HEARD",
+          "payload": {
+            "requestId": "emitdecl",
+            "leaves": [
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[0]",
+                "e": [
+                  "emit",
+                  "EXT",
+                  {
+                    "a": "x",
+                    "b": "y"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[1]",
+                "e": [
+                  "emit",
+                  "EXT"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[2]",
+                "e": [
+                  "emit",
+                  "INT",
+                  {
+                    "b": "y"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[3]",
+                "e": [
+                  "emit",
+                  "INT"
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[4].do[0]",
+                "e": [
+                  "emit",
+                  "EXT",
+                  {
+                    "a": "k"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[5]",
+                "e": [
+                  "set",
+                  "@entity.n",
+                  1
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[6]",
+                "e": [
+                  "emit",
+                  [
+                    "x"
+                  ]
+                ],
+                "oi": 0,
+                "ti": 0
+              },
+              {
+                "p": "orbitals[0 (EmdAOrbital)].traits[0 (EmdT)].stateMachine.transitions[1].effects[7]",
+                "e": [
+                  "emit",
+                  "EXT",
+                  {
+                    "a": "x"
+                  }
+                ],
+                "oi": 0,
+                "ti": 0
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmitDeclaration",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "emit-declaration",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

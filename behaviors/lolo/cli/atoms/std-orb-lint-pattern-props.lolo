@@ -1,0 +1,281 @@
+app std-orb-lint-pattern-props [
+  version: "1.0.0",
+  inbound: ["cli-lint-pattern-props"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-pattern-props — the `orb lint pattern-props <file>` command, the port of three registry-driven checks of the render-ui pattern walk: ORB_RUI_UNKNOWN_ITEM_ACTION_PROP (item_actions.rs validate_item_actions, the unknown-prop half), ORB_X_UNRESOLVED_PATTERN_FIELD_REF (field_path.rs validate_pattern_field_ref) and ORB_X_ENTITY_PROP_CONTRACT (pattern.rs validate_entity_prop_contract). It lowers the file with program/read and walks the pattern of every render-ui effect of every inline trait transition (an array effect's pattern at [2], an object effect's at .render_ui.pattern) the way the compiler's pattern validator does: a trait value is skipped, a typed object is checked and its children walked, a mapped (array/map c (fn x node)) child is checked as its node, an operator call or conditional in a children position is flattened to the literal fragments it combines, and the arms of a conditional node are walked. An itemAction prop is valid when it is one of the base props (label, event, icon, variant, disabled, hidden, confirm, payload, navigatesTo) or an itemActions item property declared by any pattern of the installed registry (LINT_PATTERNS). A prop the registry marks kind or itemKind field-ref must name a field of the entity the node binds (the field, or its name plus Id), or the entity-prop-contract applies: every prop whose registry schema declares requiredFields and is bound at the node needs each required field provided by the bound entity, a columns or fields map, a prop slot of that name or an @entity.<field> reference inside the node. Entity definitions are the primary and auxiliary entities of every orbital, a later one replacing an earlier one of the same name and a primary name declared in two orbitals dropped, as the compiler builds them. Findings come out in the compiler's depth-first order with its path, message and suggestion (status 500, exit 1). Clean answers `lint pattern-props: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-pattern-props"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type PtVal = string | number | boolean | [PtVal?] | Map string PtVal?
+type PtHit = { c : string!, p : string!, m : string!, s : string! }
+type PtItem = { v : [PtHit]!, m : [PtHit]!, mp : boolean! }
+type PtRes = { v : [PtHit]!, e : [PtItem]!, lb : [PtHit]!, mv : [PtHit]!, mp : boolean!, op : boolean!, cd : boolean!, ar : boolean! }
+type PtTransition = { effects : [PtVal?] }
+type PtMachine = { transitions : [PtTransition] }
+type PtTrait = { name : string, linkedEntity : string, stateMachine : PtMachine? }
+type PtField = { name : string, type : string }
+type PtEntity = { name : string, fields : [PtField] }
+type PtOrbital = { name : string, entity : PtEntity?, auxiliaryEntities : [PtEntity], traits : [PtTrait] }
+type PtProgram = { orbitals : [PtOrbital] }
+type PtPropShape = { types : [string], requiredOnParent : boolean, requiredNames : [string], enumValues : [string], kind : string, itemKind : string, requiredFields : [string], items : PtPropShape, properties : Map string PtPropShape }
+type PtPatternShape = { drawHost : boolean, drawable : boolean, fieldsContract : string, accessibleName : [string], props : Map string PtPropShape }
+
+orbital OrbLintPatternPropsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintPatternPropsRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    fieldRefs : Map string (Map string string) = {}
+    reqFields : Map string (Map string [string]) = {}
+    itemSet : Map string boolean = {}
+    opSet : Map string boolean = {}
+  }
+
+  trait OrbLintPatternProps -> OrbLintPatternPropsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_PATTERNS_HEARD -> ready
+        (set @entity.fieldRefs (object/mapValues @payload.patterns (fn e (object/mapValues (object/get @e "props" {}) (fn pr (str/concat (if (= (object/get @pr "kind" "") "field-ref") "s" "") (if (= (object/get @pr "itemKind" "") "field-ref") "a" ""))))))) 
+        (set @entity.reqFields (object/mapValues @payload.patterns (fn e (object/mapValues (object/get @e "props" {}) (fn pr (object/get @pr "requiredFields" []))))))
+        (set @entity.itemSet (object/fromEntries (array/map (array/unique (array/concat ["label", "event", "icon", "variant", "disabled", "hidden", "confirm", "payload", "navigatesTo"] (array/flatten (array/map (object/keys @payload.patterns) (fn pn (object/keys (object/get @payload.patterns (str/concat @pn ".props.itemActions.items.properties") {}))))))) (fn x [@x, true]))))
+      LINT_OPERATOR_NAMES_HEARD -> ready
+        (set @entity.opSet (object/fromEntries (array/map @payload.names (fn x [@x, true]))))
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (noh : [PtHit] []) (noe : [PtEntity] []) (nof : [OrbFinding] [])
+ (ops @entity.opSet) (itemSet @entity.itemSet) (fieldRefs @entity.fieldRefs) (reqFields @entity.reqFields)
+ (allEnts (array/flatten (array/map @orbitals (fn o (array/concat
+      (let ((en (object/get @o "entity" null))) (if (and (validate/object @en) (validate/string (object/get @en "name" null))) [@en] @noe))
+      (array/filter (object/get @o "auxiliaryEntities" @noe) (fn x (and (validate/object @x) (validate/string (object/get @x "name" null))))))))))
+ (pnames (array/flatten (array/map @orbitals (fn o (let ((en (object/get @o "entity" null))) (if (and (validate/object @en) (validate/string (object/get @en "name" null))) [(object/get @en "name")] (array/take [""] 0)))))))
+ (dups (array/filter @pnames (fn nm (> (array/len (array/filter @pnames (fn x (= @x @nm)))) 1))))
+ (entIdx (object/fromEntries (array/map (array/filter @allEnts (fn e (not (array/includes @dups (object/get @e "name"))))) (fn e [(object/get @e "name"), @e])))))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((orb (array/nth @orbitals @oi)))
+              (let ((trs (object/get @orb "traits" [])))
+                (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
+                  (let ((td (array/nth @trs @tj)))
+                    (if (not (object/has @td "stateMachine")) @nof
+                    (let ((trans (object/get (object/get @td "stateMachine" {}) "transitions" [])) (lnk (object/get @td "linkedEntity" "")))
+                      (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ti
+                        (let ((effs (object/get (array/nth @trans @ti) "effects" [])))
+                          (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
+                            (let ((e (array/nth @effs @ej)))
+                              (let ((ea (if (validate/array @e) @e [])) (eo (if (validate/object @e) @e {})))
+                              (let ((ehd (if (> (array/len @ea) 0) (let ((h0 (array/nth @ea 0))) (if (validate/string @h0) @h0 "")) ""))
+                                    (r1 (object/get @eo "render_ui" null)) (r2 (object/get @eo "render-ui" null)))
+                              (let ((r1o (if (validate/object @r1) @r1 {})) (r2o (if (validate/object @r2) @r2 {})))
+                              (let ((isArr (and (> (array/len @ea) 2) (array/includes ["render-ui", "render_ui"] @ehd)))
+                                    (rk (if (validate/object @r1) "render_ui" (if (validate/object @r2) "render-ui" ""))))
+                              (let ((ro (if (= @rk "render_ui") @r1o @r2o)))
+                              (let ((isObj (and (validate/object @e) (!= @rk "") (object/has @ro "pattern"))))
+                                (if (not (or @isArr @isObj)) @nof
+                                  (let ((pat (if @isArr (array/nth @ea 2) (object/get @ro "pattern" null))) (sfx (if @isArr "[2]" (str/concat "." @rk ".pattern"))))
+                                    (let ((fr (tree/fold @pat (fn (n k)
+  (let ((nr : PtRes { v: [], e: [], lb: [], mv: [], mp: false, op: false, cd: false, ar: false }))
+    (if (validate/array @n)
+      (let ((len (array/len @n))
+            (hd (let ((h0 (if (> (array/len @n) 0) (array/nth @n 0) null))) (if (validate/string @h0) @h0 "")))
+            (kids (array/map (array/range 0 (array/len @n)) (fn i (let ((r0 (array/nth @k @i))) (if (= @r0 null) @nr @r0))))))
+        (let ((lv (if (= @len 3) (array/nth @n 2) null)))
+        (let ((la (if (validate/array @lv) @lv [])))
+        (let ((lh (let ((h1 (if (> (array/len @la) 0) (array/nth @la 0) null))) (if (validate/string @h1) @h1 "")))
+              (pv (if (= (array/len @la) 3) (array/nth @la 1) null)))
+        (let ((pa (if (validate/array @pv) @pv [])))
+        (let ((isCond (and (or (= @len 3) (= @len 4)) (= @hd "if")))
+              (isMapped (and (= @len 3) (= @hd "array/map") (= (array/len @la) 3) (array/includes ["fn", "lambda"] @lh) (or (validate/string @pv) (array/some @pa (fn q (validate/string @q))))))
+              (isLam (and (= @len 3) (array/includes ["fn", "lambda"] @hd)))
+              (isOp (and (!= @hd "") (object/has @ops @hd))))
+          { v: (if @isCond
+                 (array/flatten (array/map (array/range 2 @len) (fn ix
+                   (let ((c (array/nth @kids @ix)) (av (array/nth @n @ix)))
+                     (let ((ce (object/get @c "e")))
+                       (if (object/get @c "mp")
+                         (array/map (object/get @c "mv") (fn h { c: (object/get @h "c"), p: (str/concat "[" @ix "]" (object/get @h "p")), m: (object/get @h "m"), s: (object/get @h "s") }))
+                         (if (and (validate/array @av) (not (object/get @c "cd")))
+                           (array/flatten (array/map (array/range 0 (array/len @ce)) (fn j
+                             (array/map (object/get (array/nth @ce @j) "v") (fn h { c: (object/get @h "c"), p: (str/concat "[" @ix "][" @j "]" (object/get @h "p")), m: (object/get @h "m"), s: (object/get @h "s") })))))
+                           (array/map (object/get @c "v") (fn h { c: (object/get @h "c"), p: (str/concat "[" @ix "]" (object/get @h "p")), m: (object/get @h "m"), s: (object/get @h "s") })))))))))
+                 @noh),
+            e: (if @isMapped
+                 (array/map @kids (fn c { v: (object/get @c "v"), m: (object/get @c "mv"), mp: (object/get @c "mp") }))
+                 (if @isCond
+                   (array/flatten (array/map (array/slice @kids 2) (fn c (object/get @c "e"))))
+                   (if @isOp
+                     (array/flatten (array/map (array/slice @kids 1) (fn c (object/get @c "e"))))
+                     (if (array/some @kids (fn c (object/get @c "op")))
+                       (array/flatten (array/map @kids (fn c (if (and (object/get @c "op") (not (object/get @c "mp")) (not (object/get @c "cd"))) (object/get @c "e") [{ v: (object/get @c "v"), m: (object/get @c "mv"), mp: (object/get @c "mp") }]))))
+                       (array/map @kids (fn c { v: (object/get @c "v"), m: (object/get @c "mv"), mp: (object/get @c "mp") })))))),
+            lb: (if @isLam (object/get (array/nth @kids 2) "v") @noh),
+            mv: (if @isMapped (object/get (array/nth @kids 2) "lb") @noh),
+            mp: @isMapped, op: @isOp, cd: @isCond, ar: true }))))))
+      (if (validate/object @n)
+        (let ((t (object/get @n "type" null)) (b0 (object/get @n "behavior" null)) (t0 (object/get @n "trait" null)) (okeys (object/keys @n)))
+         (let ((pt (if (validate/string @t) @t "")) (b0s (if (validate/string @b0) @b0 "")) (t0s (if (validate/string @t0) @t0 "")))
+          (let ((isTrait (and (validate/string @b0) (validate/string @t0) (validate/pattern @t0s "^[A-Z][A-Za-z0-9]*$") (or (validate/pattern @b0s "^\\./([A-Za-z0-9_-]+/)+[A-Za-z0-9][A-Za-z0-9_-]*$") (validate/pattern @b0s "^[a-z0-9][a-z0-9-]*/(behaviors/)?[a-z0-9][a-z0-9-]*$")))))
+           (let ((ownV : [PtHit] (if (and (validate/string @t) (not @isTrait))
+                (array/concat
+                  (let ((ia (object/get @n "itemActions" null)))
+                    (if (validate/array @ia)
+                      (array/flatten (array/map (array/range 0 (array/len @ia)) (fn i (let ((a (array/nth @ia @i))) (if (validate/object @a) (array/map (array/filter (object/keys @a) (fn kk (not (object/has @itemSet @kk)))) (fn kk { c: "ORB_RUI_UNKNOWN_ITEM_ACTION_PROP", p: (str/concat ".itemActions[" @i "]"), m: (str/concat "Unknown itemAction prop: '" @kk "'"), s: "Remove the unknown prop" })) @noh)))))
+                      @noh))
+                  (let ((en2 (object/get @n "entity" null)))
+                    (if (not (validate/string @en2)) @noh
+                      (let ((def (object/get @entIdx @en2 null)) (frm (object/get @fieldRefs @pt {})))
+                        (if (= @def null) @noh
+                          (let ((fnames (object/get @def "fields" [])))
+                            (array/flatten (array/map (array/filter @okeys (fn pk (and (!= @pk "type") (!= @pk "entity") (!= (object/get @frm @pk "") "")))) (fn pk
+                              (let ((mode (object/get @frm @pk "")) (pvv (object/get @n @pk null)))
+                                (let ((pvs (if (validate/string @pvv) @pvv "")) (pva (if (validate/array @pvv) @pvv [])))
+                                  (array/flatten (array/map
+                                    (array/concat
+                                      (if (and (str/includes @mode "s") (validate/string @pvv) (not (str/startsWith @pvs (quote "@")))) [@pvs] (array/take [""] 0))
+                                      (if (str/includes @mode "a") (array/filter (array/map @pva (fn el (if (validate/string @el) @el (quote "@")))) (fn el (not (str/startsWith @el (quote "@"))))) (array/take [""] 0)))
+                                    (fn nm (if (or (str/includes @nm ".") (array/some @fnames (fn x (let ((fnm (object/get @x "name" null))) (and (validate/string @fnm) (or (= @fnm @nm) (= @fnm (str/concat @nm "Id"))))))))
+                                      @noh
+                                      [{ c: "ORB_X_UNRESOLVED_PATTERN_FIELD_REF", p: "", m: (str/concat "Pattern '" @pt "' prop '" @pk "' references field '" @nm "' which does not exist on entity '" @en2 "'"), s: (str/concat "Use a field declared on '" @en2 "' or add the field to the entity schema") }]))))))))))))))
+                  (let ((hasEn (object/has @n "entity")) (en3 (object/get @n "entity" null)))
+                    (let ((en3s (if (validate/string @en3) @en3 "")))
+                    (let ((bound (if (not @hasEn) @lnk (if (validate/string @en3)
+                                    (if (not (str/startsWith @en3s (quote "@"))) @en3s
+                                      (if (or (validate/pattern @en3s "^@+(payload|data)($|\\.)") (validate/pattern @en3s "^@+entity$")) @lnk ""))
+                                    ""))))
+                      (if (= @bound "") @noh
+                        (let ((def2 (object/get @entIdx @bound null)) (rfm (object/get @reqFields @pt {})))
+                          (let ((dfields (if (= @def2 null) [] (object/get @def2 "fields" []))))
+                            (array/flatten (array/map (object/keys @rfm) (fn pk
+                              (if (not (object/has @n @pk)) @noh
+                                (array/flatten (array/map (object/get @rfm @pk []) (fn f
+                                  (if (or (array/some @dfields (fn x (= (object/get @x "name" null) @f)))
+                                          (let ((cs (object/get @n "columns" null))) (and (validate/array @cs) (array/some @cs (fn cc (and (validate/object @cc) (= (object/get @cc "field" null) @f))))))
+                                          (let ((fs (object/get @n "fields" null))) (and (validate/array @fs) (array/includes @fs @f)))
+                                          (object/has @n @f)
+                                          (let ((needle (str/concat (quote "@") "entity." @f)))
+                                            (tree/fold @n (fn (nn kk) (if (validate/string @nn) (or (= @nn @needle) (str/startsWith @nn (str/concat @needle "."))) (if (validate/array @nn) (array/some @kk (fn x @x)) (if (validate/object @nn) (array/some (object/values @kk) (fn x @x)) false)))) PtVal)))
+                                    @noh
+                                    [{ c: "ORB_X_ENTITY_PROP_CONTRACT", p: "", m: (str/concat "Component '" @pt "' requires entity field '" @f "', but the bound entity '" @bound "' does not provide it (declare the field, or remap one with a field map)"), s: (str/concat "Add field '" @f "' to entity '" @bound "', or remap an existing field onto '" @f "' via the pattern's columns/fields map") }])))))))))))))))
+                @noh)))
+            (let ((chk (let ((r0 (object/get @k "children" null))) (if (= @r0 null) @nr @r0))) (ch (object/get @n "children" null)))
+              (let ((kidV : [PtHit] (if (not (validate/string @t)) @noh (if @isTrait @noh
+                      (if (object/get @chk "mp")
+                        (array/map (object/get @chk "mv") (fn h { c: (object/get @h "c"), p: (str/concat ".children" (object/get @h "p")), m: (object/get @h "m"), s: (object/get @h "s") }))
+                        (if (validate/array @ch)
+                          (let ((ce (object/get @chk "e")))
+                            (array/flatten (array/map (array/range 0 (array/len @ce)) (fn j
+                              (let ((it (array/nth @ce @j)))
+                                (array/map (if (object/get @it "mp") (object/get @it "m") (object/get @it "v")) (fn h { c: (object/get @h "c"), p: (str/concat ".children[" @j "]" (object/get @h "p")), m: (object/get @h "m"), s: (object/get @h "s") })))))))
+                          (if (validate/object @ch)
+                            (array/map (object/get @chk "v") (fn h { c: (object/get @h "c"), p: (str/concat ".children" (object/get @h "p")), m: (object/get @h "m"), s: (object/get @h "s") }))
+                            @noh)))))))
+                (let ((tv (array/concat @ownV @kidV)))
+                  { v: @tv, e: [{ v: @tv, m: [], mp: false }], lb: [], mv: [], mp: false, op: false, cd: false, ar: false })))))))
+        @nr)))) PtVal)))
+                                      (if (= @fr null) @nof (array/map (object/get @fr "v") (fn h { code: (object/get @h "c"), path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")].stateMachine.transitions[" @ti "].effects[" @ej "]" @sfx (object/get @h "p")), message: (object/get @h "m"), suggestion: (object/get @h "s"), severity: "error" })))))))))))))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "pattern-props", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PtProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      LINT_PATTERNS_HEARD { patterns : Map string PtPatternShape! }
+        @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry."
+      OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD
+      LINT_OPERATOR_NAMES_HEARD { names : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_NAMES: every installed operator name."
+      OrbLintInput.LINT_OPERATOR_NAMES -> LINT_OPERATOR_NAMES_HEARD
+    }
+  }
+
+  trait OrbLintPatternPropsCli -> OrbLintPatternPropsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint pattern-props <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "pattern-props") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint pattern-props: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "pattern-props") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint pattern-props: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-pattern-props" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint pattern-props` with its arguments and working directory."
+        @synonyms "orb lint pattern-props"
+      OrbLintPatternProps.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintPatternPropsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintPatternPropsOrbitalStart -> OrbLintPatternProps, OrbLintPatternPropsCli, OrbLintInput, Packs, Versions
+}

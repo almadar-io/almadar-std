@@ -1,0 +1,21 @@
+app lint-placement-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint placement <file>`: it reports ORB_PLACEMENT_UNIT_EMPTY, ORB_PLACEMENT_ORBITAL_UNKNOWN, ORB_PLACEMENT_ORBITAL_DUPLICATE and ORB_PLACEMENT_ORBITAL_UNPLACED for a program that declares a deployment, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint placement: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintPlacementSpec {
+  expects trait OrbLintPlacement {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintPlacementCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintPlacement, OrbLintPlacementCli
+}

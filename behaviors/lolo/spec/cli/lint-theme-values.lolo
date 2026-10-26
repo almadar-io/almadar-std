@@ -1,0 +1,21 @@
+app lint-theme-values-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint theme-values <file>`. It lowers the file with program/read and reports ORB_GEN_INVALID_VALUE for inline-theme token colors, radii, spacing and font-family stacks that are not valid CSS, and ORB_E_MISSING_NAME for an unnamed inline theme (status 500, exit 1). Clean answers `lint theme-values: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintThemeValuesSpec {
+  expects trait OrbLintThemeValues {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintThemeValuesCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintThemeValues, OrbLintThemeValuesCli
+}

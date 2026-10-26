@@ -1,0 +1,1119 @@
+{
+ "atom": "cli/atoms/std-orb-value-leaves.lolo",
+ "trait": "OrbValueLeaves",
+ "note": "Cases mirror the value-source walk (value_walk.rs all_sources, core sexpr walk tests): each returnSemantics kind with a paired control for the opaque and absent-argument cases. The semantics are the installed operator table's declared kinds.",
+ "cases": [
+  {
+   "id": "a-literal-list-of-descriptors-is-its-own-leaf",
+   "steps": [
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {
+       "%": "integer-closed",
+       "*": "integer-closed",
+       "+": "integer-closed",
+       "-": "integer-closed",
+       "array/append": "union-of-args<0,1>",
+       "array/concat": "union-of-args",
+       "array/drop": "identity-of-arg<0>",
+       "array/dropLast": "identity-of-arg<0>",
+       "array/filter": "identity-of-arg<0>",
+       "array/insert": "union-of-args<0,2>",
+       "array/map": "lambda-result",
+       "array/nth": "tuple-element",
+       "array/prepend": "union-of-args<0,1>",
+       "array/reduce": "lambda-result",
+       "array/reject": "identity-of-arg<0>",
+       "array/remove": "identity-of-arg<0>",
+       "array/removeItem": "identity-of-arg<0>",
+       "array/reverse": "identity-of-arg<0>",
+       "array/shuffle": "identity-of-arg<0>",
+       "array/slice": "identity-of-arg<0>",
+       "array/sort": "identity-of-arg<0>",
+       "array/take": "identity-of-arg<0>",
+       "array/takeLast": "identity-of-arg<0>",
+       "array/unique": "identity-of-arg<0>",
+       "behavior/apply": "identity-of-arg<0>",
+       "brotli/compress": "option-branch<1,result>",
+       "brotli/decompress": "option-branch<2,result>",
+       "do": "last-of-args",
+       "gzip/compress": "option-branch<1,result>",
+       "gzip/decompress": "option-branch<2,result>",
+       "if": "branch-union",
+       "let": "identity-of-arg<1>",
+       "math/abs": "integer-closed",
+       "math/ceil": "integer-result",
+       "math/clamp": "integer-closed",
+       "math/floor": "integer-result",
+       "math/max": "integer-closed",
+       "math/min": "integer-closed",
+       "math/mod": "integer-closed",
+       "math/round": "integer-result",
+       "or": "coalesce",
+       "str/default": "coalesce",
+       "tree/fold": "lambda-result",
+       "typed": "identity-of-arg<0>"
+      },
+      "functions": [
+       "fn"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_LEAVES_ASK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r1",
+      "values": [
+       [
+        {
+         "a": 1
+        },
+        {
+         "b": 2
+        }
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALUE_LEAVES",
+        "payload": {
+         "requestId": "r1",
+         "leaves": [
+          [
+           "[{\"a\":1},{\"b\":2}]"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-string-and-an-object-are-their-own-leaf",
+   "steps": [
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {
+       "%": "integer-closed",
+       "*": "integer-closed",
+       "+": "integer-closed",
+       "-": "integer-closed",
+       "array/append": "union-of-args<0,1>",
+       "array/concat": "union-of-args",
+       "array/drop": "identity-of-arg<0>",
+       "array/dropLast": "identity-of-arg<0>",
+       "array/filter": "identity-of-arg<0>",
+       "array/insert": "union-of-args<0,2>",
+       "array/map": "lambda-result",
+       "array/nth": "tuple-element",
+       "array/prepend": "union-of-args<0,1>",
+       "array/reduce": "lambda-result",
+       "array/reject": "identity-of-arg<0>",
+       "array/remove": "identity-of-arg<0>",
+       "array/removeItem": "identity-of-arg<0>",
+       "array/reverse": "identity-of-arg<0>",
+       "array/shuffle": "identity-of-arg<0>",
+       "array/slice": "identity-of-arg<0>",
+       "array/sort": "identity-of-arg<0>",
+       "array/take": "identity-of-arg<0>",
+       "array/takeLast": "identity-of-arg<0>",
+       "array/unique": "identity-of-arg<0>",
+       "behavior/apply": "identity-of-arg<0>",
+       "brotli/compress": "option-branch<1,result>",
+       "brotli/decompress": "option-branch<2,result>",
+       "do": "last-of-args",
+       "gzip/compress": "option-branch<1,result>",
+       "gzip/decompress": "option-branch<2,result>",
+       "if": "branch-union",
+       "let": "identity-of-arg<1>",
+       "math/abs": "integer-closed",
+       "math/ceil": "integer-result",
+       "math/clamp": "integer-closed",
+       "math/floor": "integer-result",
+       "math/max": "integer-closed",
+       "math/min": "integer-closed",
+       "math/mod": "integer-closed",
+       "math/round": "integer-result",
+       "or": "coalesce",
+       "str/default": "coalesce",
+       "tree/fold": "lambda-result",
+       "typed": "identity-of-arg<0>"
+      },
+      "functions": [
+       "fn"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_LEAVES_ASK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r1",
+      "values": [
+       "x",
+       {
+        "k": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALUE_LEAVES",
+        "payload": {
+         "requestId": "r1",
+         "leaves": [
+          [
+           "\"x\""
+          ],
+          [
+           "{\"k\":1}"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "branch-union-takes-both-branches-never-the-condition",
+   "steps": [
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {
+       "%": "integer-closed",
+       "*": "integer-closed",
+       "+": "integer-closed",
+       "-": "integer-closed",
+       "array/append": "union-of-args<0,1>",
+       "array/concat": "union-of-args",
+       "array/drop": "identity-of-arg<0>",
+       "array/dropLast": "identity-of-arg<0>",
+       "array/filter": "identity-of-arg<0>",
+       "array/insert": "union-of-args<0,2>",
+       "array/map": "lambda-result",
+       "array/nth": "tuple-element",
+       "array/prepend": "union-of-args<0,1>",
+       "array/reduce": "lambda-result",
+       "array/reject": "identity-of-arg<0>",
+       "array/remove": "identity-of-arg<0>",
+       "array/removeItem": "identity-of-arg<0>",
+       "array/reverse": "identity-of-arg<0>",
+       "array/shuffle": "identity-of-arg<0>",
+       "array/slice": "identity-of-arg<0>",
+       "array/sort": "identity-of-arg<0>",
+       "array/take": "identity-of-arg<0>",
+       "array/takeLast": "identity-of-arg<0>",
+       "array/unique": "identity-of-arg<0>",
+       "behavior/apply": "identity-of-arg<0>",
+       "brotli/compress": "option-branch<1,result>",
+       "brotli/decompress": "option-branch<2,result>",
+       "do": "last-of-args",
+       "gzip/compress": "option-branch<1,result>",
+       "gzip/decompress": "option-branch<2,result>",
+       "if": "branch-union",
+       "let": "identity-of-arg<1>",
+       "math/abs": "integer-closed",
+       "math/ceil": "integer-result",
+       "math/clamp": "integer-closed",
+       "math/floor": "integer-result",
+       "math/max": "integer-closed",
+       "math/min": "integer-closed",
+       "math/mod": "integer-closed",
+       "math/round": "integer-result",
+       "or": "coalesce",
+       "str/default": "coalesce",
+       "tree/fold": "lambda-result",
+       "typed": "identity-of-arg<0>"
+      },
+      "functions": [
+       "fn"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_LEAVES_ASK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r1",
+      "values": [
+       [
+        "if",
+        "@c",
+        [
+         {
+          "event": "EDIT"
+         }
+        ],
+        [
+         {
+          "event": "VIEW"
+         }
+        ]
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALUE_LEAVES",
+        "payload": {
+         "requestId": "r1",
+         "leaves": [
+          [
+           "[{\"event\":\"EDIT\"}]",
+           "[{\"event\":\"VIEW\"}]"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "union-of-args-covers-every-argument",
+   "steps": [
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {
+       "%": "integer-closed",
+       "*": "integer-closed",
+       "+": "integer-closed",
+       "-": "integer-closed",
+       "array/append": "union-of-args<0,1>",
+       "array/concat": "union-of-args",
+       "array/drop": "identity-of-arg<0>",
+       "array/dropLast": "identity-of-arg<0>",
+       "array/filter": "identity-of-arg<0>",
+       "array/insert": "union-of-args<0,2>",
+       "array/map": "lambda-result",
+       "array/nth": "tuple-element",
+       "array/prepend": "union-of-args<0,1>",
+       "array/reduce": "lambda-result",
+       "array/reject": "identity-of-arg<0>",
+       "array/remove": "identity-of-arg<0>",
+       "array/removeItem": "identity-of-arg<0>",
+       "array/reverse": "identity-of-arg<0>",
+       "array/shuffle": "identity-of-arg<0>",
+       "array/slice": "identity-of-arg<0>",
+       "array/sort": "identity-of-arg<0>",
+       "array/take": "identity-of-arg<0>",
+       "array/takeLast": "identity-of-arg<0>",
+       "array/unique": "identity-of-arg<0>",
+       "behavior/apply": "identity-of-arg<0>",
+       "brotli/compress": "option-branch<1,result>",
+       "brotli/decompress": "option-branch<2,result>",
+       "do": "last-of-args",
+       "gzip/compress": "option-branch<1,result>",
+       "gzip/decompress": "option-branch<2,result>",
+       "if": "branch-union",
+       "let": "identity-of-arg<1>",
+       "math/abs": "integer-closed",
+       "math/ceil": "integer-result",
+       "math/clamp": "integer-closed",
+       "math/floor": "integer-result",
+       "math/max": "integer-closed",
+       "math/min": "integer-closed",
+       "math/mod": "integer-closed",
+       "math/round": "integer-result",
+       "or": "coalesce",
+       "str/default": "coalesce",
+       "tree/fold": "lambda-result",
+       "typed": "identity-of-arg<0>"
+      },
+      "functions": [
+       "fn"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_LEAVES_ASK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r1",
+      "values": [
+       [
+        "array/concat",
+        [
+         {
+          "event": "EDIT"
+         }
+        ],
+        [
+         {
+          "event": "VIEW"
+         }
+        ]
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALUE_LEAVES",
+        "payload": {
+         "requestId": "r1",
+         "leaves": [
+          [
+           "[{\"event\":\"EDIT\"}]",
+           "[{\"event\":\"VIEW\"}]"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lambda-result-yields-the-lambda-body",
+   "steps": [
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {
+       "%": "integer-closed",
+       "*": "integer-closed",
+       "+": "integer-closed",
+       "-": "integer-closed",
+       "array/append": "union-of-args<0,1>",
+       "array/concat": "union-of-args",
+       "array/drop": "identity-of-arg<0>",
+       "array/dropLast": "identity-of-arg<0>",
+       "array/filter": "identity-of-arg<0>",
+       "array/insert": "union-of-args<0,2>",
+       "array/map": "lambda-result",
+       "array/nth": "tuple-element",
+       "array/prepend": "union-of-args<0,1>",
+       "array/reduce": "lambda-result",
+       "array/reject": "identity-of-arg<0>",
+       "array/remove": "identity-of-arg<0>",
+       "array/removeItem": "identity-of-arg<0>",
+       "array/reverse": "identity-of-arg<0>",
+       "array/shuffle": "identity-of-arg<0>",
+       "array/slice": "identity-of-arg<0>",
+       "array/sort": "identity-of-arg<0>",
+       "array/take": "identity-of-arg<0>",
+       "array/takeLast": "identity-of-arg<0>",
+       "array/unique": "identity-of-arg<0>",
+       "behavior/apply": "identity-of-arg<0>",
+       "brotli/compress": "option-branch<1,result>",
+       "brotli/decompress": "option-branch<2,result>",
+       "do": "last-of-args",
+       "gzip/compress": "option-branch<1,result>",
+       "gzip/decompress": "option-branch<2,result>",
+       "if": "branch-union",
+       "let": "identity-of-arg<1>",
+       "math/abs": "integer-closed",
+       "math/ceil": "integer-result",
+       "math/clamp": "integer-closed",
+       "math/floor": "integer-result",
+       "math/max": "integer-closed",
+       "math/min": "integer-closed",
+       "math/mod": "integer-closed",
+       "math/round": "integer-result",
+       "or": "coalesce",
+       "str/default": "coalesce",
+       "tree/fold": "lambda-result",
+       "typed": "identity-of-arg<0>"
+      },
+      "functions": [
+       "fn"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_LEAVES_ASK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r1",
+      "values": [
+       [
+        "array/map",
+        "@xs",
+        [
+         "fn",
+         "x",
+         {
+          "event": "E"
+         }
+        ]
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALUE_LEAVES",
+        "payload": {
+         "requestId": "r1",
+         "leaves": [
+          [
+           "{\"event\":\"E\"}"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "identity-of-arg-sees-through-the-sorted-list",
+   "steps": [
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {
+       "%": "integer-closed",
+       "*": "integer-closed",
+       "+": "integer-closed",
+       "-": "integer-closed",
+       "array/append": "union-of-args<0,1>",
+       "array/concat": "union-of-args",
+       "array/drop": "identity-of-arg<0>",
+       "array/dropLast": "identity-of-arg<0>",
+       "array/filter": "identity-of-arg<0>",
+       "array/insert": "union-of-args<0,2>",
+       "array/map": "lambda-result",
+       "array/nth": "tuple-element",
+       "array/prepend": "union-of-args<0,1>",
+       "array/reduce": "lambda-result",
+       "array/reject": "identity-of-arg<0>",
+       "array/remove": "identity-of-arg<0>",
+       "array/removeItem": "identity-of-arg<0>",
+       "array/reverse": "identity-of-arg<0>",
+       "array/shuffle": "identity-of-arg<0>",
+       "array/slice": "identity-of-arg<0>",
+       "array/sort": "identity-of-arg<0>",
+       "array/take": "identity-of-arg<0>",
+       "array/takeLast": "identity-of-arg<0>",
+       "array/unique": "identity-of-arg<0>",
+       "behavior/apply": "identity-of-arg<0>",
+       "brotli/compress": "option-branch<1,result>",
+       "brotli/decompress": "option-branch<2,result>",
+       "do": "last-of-args",
+       "gzip/compress": "option-branch<1,result>",
+       "gzip/decompress": "option-branch<2,result>",
+       "if": "branch-union",
+       "let": "identity-of-arg<1>",
+       "math/abs": "integer-closed",
+       "math/ceil": "integer-result",
+       "math/clamp": "integer-closed",
+       "math/floor": "integer-result",
+       "math/max": "integer-closed",
+       "math/min": "integer-closed",
+       "math/mod": "integer-closed",
+       "math/round": "integer-result",
+       "or": "coalesce",
+       "str/default": "coalesce",
+       "tree/fold": "lambda-result",
+       "typed": "identity-of-arg<0>"
+      },
+      "functions": [
+       "fn"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_LEAVES_ASK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r1",
+      "values": [
+       [
+        "array/sort",
+        [
+         {
+          "event": "EDIT"
+         }
+        ],
+        "@k"
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALUE_LEAVES",
+        "payload": {
+         "requestId": "r1",
+         "leaves": [
+          [
+           "[{\"event\":\"EDIT\"}]"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "let-yields-its-body",
+   "steps": [
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {
+       "%": "integer-closed",
+       "*": "integer-closed",
+       "+": "integer-closed",
+       "-": "integer-closed",
+       "array/append": "union-of-args<0,1>",
+       "array/concat": "union-of-args",
+       "array/drop": "identity-of-arg<0>",
+       "array/dropLast": "identity-of-arg<0>",
+       "array/filter": "identity-of-arg<0>",
+       "array/insert": "union-of-args<0,2>",
+       "array/map": "lambda-result",
+       "array/nth": "tuple-element",
+       "array/prepend": "union-of-args<0,1>",
+       "array/reduce": "lambda-result",
+       "array/reject": "identity-of-arg<0>",
+       "array/remove": "identity-of-arg<0>",
+       "array/removeItem": "identity-of-arg<0>",
+       "array/reverse": "identity-of-arg<0>",
+       "array/shuffle": "identity-of-arg<0>",
+       "array/slice": "identity-of-arg<0>",
+       "array/sort": "identity-of-arg<0>",
+       "array/take": "identity-of-arg<0>",
+       "array/takeLast": "identity-of-arg<0>",
+       "array/unique": "identity-of-arg<0>",
+       "behavior/apply": "identity-of-arg<0>",
+       "brotli/compress": "option-branch<1,result>",
+       "brotli/decompress": "option-branch<2,result>",
+       "do": "last-of-args",
+       "gzip/compress": "option-branch<1,result>",
+       "gzip/decompress": "option-branch<2,result>",
+       "if": "branch-union",
+       "let": "identity-of-arg<1>",
+       "math/abs": "integer-closed",
+       "math/ceil": "integer-result",
+       "math/clamp": "integer-closed",
+       "math/floor": "integer-result",
+       "math/max": "integer-closed",
+       "math/min": "integer-closed",
+       "math/mod": "integer-closed",
+       "math/round": "integer-result",
+       "or": "coalesce",
+       "str/default": "coalesce",
+       "tree/fold": "lambda-result",
+       "typed": "identity-of-arg<0>"
+      },
+      "functions": [
+       "fn"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_LEAVES_ASK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r1",
+      "values": [
+       [
+        "let",
+        [
+         [
+          "a",
+          1
+         ]
+        ],
+        [
+         {
+          "event": "VIEW"
+         }
+        ]
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALUE_LEAVES",
+        "payload": {
+         "requestId": "r1",
+         "leaves": [
+          [
+           "[{\"event\":\"VIEW\"}]"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "coalesce-covers-both-arguments",
+   "steps": [
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {
+       "%": "integer-closed",
+       "*": "integer-closed",
+       "+": "integer-closed",
+       "-": "integer-closed",
+       "array/append": "union-of-args<0,1>",
+       "array/concat": "union-of-args",
+       "array/drop": "identity-of-arg<0>",
+       "array/dropLast": "identity-of-arg<0>",
+       "array/filter": "identity-of-arg<0>",
+       "array/insert": "union-of-args<0,2>",
+       "array/map": "lambda-result",
+       "array/nth": "tuple-element",
+       "array/prepend": "union-of-args<0,1>",
+       "array/reduce": "lambda-result",
+       "array/reject": "identity-of-arg<0>",
+       "array/remove": "identity-of-arg<0>",
+       "array/removeItem": "identity-of-arg<0>",
+       "array/reverse": "identity-of-arg<0>",
+       "array/shuffle": "identity-of-arg<0>",
+       "array/slice": "identity-of-arg<0>",
+       "array/sort": "identity-of-arg<0>",
+       "array/take": "identity-of-arg<0>",
+       "array/takeLast": "identity-of-arg<0>",
+       "array/unique": "identity-of-arg<0>",
+       "behavior/apply": "identity-of-arg<0>",
+       "brotli/compress": "option-branch<1,result>",
+       "brotli/decompress": "option-branch<2,result>",
+       "do": "last-of-args",
+       "gzip/compress": "option-branch<1,result>",
+       "gzip/decompress": "option-branch<2,result>",
+       "if": "branch-union",
+       "let": "identity-of-arg<1>",
+       "math/abs": "integer-closed",
+       "math/ceil": "integer-result",
+       "math/clamp": "integer-closed",
+       "math/floor": "integer-result",
+       "math/max": "integer-closed",
+       "math/min": "integer-closed",
+       "math/mod": "integer-closed",
+       "math/round": "integer-result",
+       "or": "coalesce",
+       "str/default": "coalesce",
+       "tree/fold": "lambda-result",
+       "typed": "identity-of-arg<0>"
+      },
+      "functions": [
+       "fn"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_LEAVES_ASK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r1",
+      "values": [
+       [
+        "or",
+        "@x",
+        [
+         {
+          "event": "VIEW"
+         }
+        ]
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALUE_LEAVES",
+        "payload": {
+         "requestId": "r1",
+         "leaves": [
+          [
+           "\"@x\"",
+           "[{\"event\":\"VIEW\"}]"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-undeclared-operator-is-opaque",
+   "steps": [
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {
+       "%": "integer-closed",
+       "*": "integer-closed",
+       "+": "integer-closed",
+       "-": "integer-closed",
+       "array/append": "union-of-args<0,1>",
+       "array/concat": "union-of-args",
+       "array/drop": "identity-of-arg<0>",
+       "array/dropLast": "identity-of-arg<0>",
+       "array/filter": "identity-of-arg<0>",
+       "array/insert": "union-of-args<0,2>",
+       "array/map": "lambda-result",
+       "array/nth": "tuple-element",
+       "array/prepend": "union-of-args<0,1>",
+       "array/reduce": "lambda-result",
+       "array/reject": "identity-of-arg<0>",
+       "array/remove": "identity-of-arg<0>",
+       "array/removeItem": "identity-of-arg<0>",
+       "array/reverse": "identity-of-arg<0>",
+       "array/shuffle": "identity-of-arg<0>",
+       "array/slice": "identity-of-arg<0>",
+       "array/sort": "identity-of-arg<0>",
+       "array/take": "identity-of-arg<0>",
+       "array/takeLast": "identity-of-arg<0>",
+       "array/unique": "identity-of-arg<0>",
+       "behavior/apply": "identity-of-arg<0>",
+       "brotli/compress": "option-branch<1,result>",
+       "brotli/decompress": "option-branch<2,result>",
+       "do": "last-of-args",
+       "gzip/compress": "option-branch<1,result>",
+       "gzip/decompress": "option-branch<2,result>",
+       "if": "branch-union",
+       "let": "identity-of-arg<1>",
+       "math/abs": "integer-closed",
+       "math/ceil": "integer-result",
+       "math/clamp": "integer-closed",
+       "math/floor": "integer-result",
+       "math/max": "integer-closed",
+       "math/min": "integer-closed",
+       "math/mod": "integer-closed",
+       "math/round": "integer-result",
+       "or": "coalesce",
+       "str/default": "coalesce",
+       "tree/fold": "lambda-result",
+       "typed": "identity-of-arg<0>"
+      },
+      "functions": [
+       "fn"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_LEAVES_ASK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r1",
+      "values": [
+       [
+        "frobnicate",
+        [
+         {
+          "event": "EDIT"
+         }
+        ]
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALUE_LEAVES",
+        "payload": {
+         "requestId": "r1",
+         "leaves": [
+          [
+           "[\"frobnicate\",[{\"event\":\"EDIT\"}]]"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-declared-kind-naming-an-absent-argument-is-opaque",
+   "steps": [
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {
+       "%": "integer-closed",
+       "*": "integer-closed",
+       "+": "integer-closed",
+       "-": "integer-closed",
+       "array/append": "union-of-args<0,1>",
+       "array/concat": "union-of-args",
+       "array/drop": "identity-of-arg<0>",
+       "array/dropLast": "identity-of-arg<0>",
+       "array/filter": "identity-of-arg<0>",
+       "array/insert": "union-of-args<0,2>",
+       "array/map": "lambda-result",
+       "array/nth": "tuple-element",
+       "array/prepend": "union-of-args<0,1>",
+       "array/reduce": "lambda-result",
+       "array/reject": "identity-of-arg<0>",
+       "array/remove": "identity-of-arg<0>",
+       "array/removeItem": "identity-of-arg<0>",
+       "array/reverse": "identity-of-arg<0>",
+       "array/shuffle": "identity-of-arg<0>",
+       "array/slice": "identity-of-arg<0>",
+       "array/sort": "identity-of-arg<0>",
+       "array/take": "identity-of-arg<0>",
+       "array/takeLast": "identity-of-arg<0>",
+       "array/unique": "identity-of-arg<0>",
+       "behavior/apply": "identity-of-arg<0>",
+       "brotli/compress": "option-branch<1,result>",
+       "brotli/decompress": "option-branch<2,result>",
+       "do": "last-of-args",
+       "gzip/compress": "option-branch<1,result>",
+       "gzip/decompress": "option-branch<2,result>",
+       "if": "branch-union",
+       "let": "identity-of-arg<1>",
+       "math/abs": "integer-closed",
+       "math/ceil": "integer-result",
+       "math/clamp": "integer-closed",
+       "math/floor": "integer-result",
+       "math/max": "integer-closed",
+       "math/min": "integer-closed",
+       "math/mod": "integer-closed",
+       "math/round": "integer-result",
+       "or": "coalesce",
+       "str/default": "coalesce",
+       "tree/fold": "lambda-result",
+       "typed": "identity-of-arg<0>"
+      },
+      "functions": [
+       "fn"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_LEAVES_ASK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r1",
+      "values": [
+       [
+        "array/append"
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALUE_LEAVES",
+        "payload": {
+         "requestId": "r1",
+         "leaves": [
+          [
+           "[\"array/append\"]"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nested-branches-flatten-in-order",
+   "steps": [
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {
+       "%": "integer-closed",
+       "*": "integer-closed",
+       "+": "integer-closed",
+       "-": "integer-closed",
+       "array/append": "union-of-args<0,1>",
+       "array/concat": "union-of-args",
+       "array/drop": "identity-of-arg<0>",
+       "array/dropLast": "identity-of-arg<0>",
+       "array/filter": "identity-of-arg<0>",
+       "array/insert": "union-of-args<0,2>",
+       "array/map": "lambda-result",
+       "array/nth": "tuple-element",
+       "array/prepend": "union-of-args<0,1>",
+       "array/reduce": "lambda-result",
+       "array/reject": "identity-of-arg<0>",
+       "array/remove": "identity-of-arg<0>",
+       "array/removeItem": "identity-of-arg<0>",
+       "array/reverse": "identity-of-arg<0>",
+       "array/shuffle": "identity-of-arg<0>",
+       "array/slice": "identity-of-arg<0>",
+       "array/sort": "identity-of-arg<0>",
+       "array/take": "identity-of-arg<0>",
+       "array/takeLast": "identity-of-arg<0>",
+       "array/unique": "identity-of-arg<0>",
+       "behavior/apply": "identity-of-arg<0>",
+       "brotli/compress": "option-branch<1,result>",
+       "brotli/decompress": "option-branch<2,result>",
+       "do": "last-of-args",
+       "gzip/compress": "option-branch<1,result>",
+       "gzip/decompress": "option-branch<2,result>",
+       "if": "branch-union",
+       "let": "identity-of-arg<1>",
+       "math/abs": "integer-closed",
+       "math/ceil": "integer-result",
+       "math/clamp": "integer-closed",
+       "math/floor": "integer-result",
+       "math/max": "integer-closed",
+       "math/min": "integer-closed",
+       "math/mod": "integer-closed",
+       "math/round": "integer-result",
+       "or": "coalesce",
+       "str/default": "coalesce",
+       "tree/fold": "lambda-result",
+       "typed": "identity-of-arg<0>"
+      },
+      "functions": [
+       "fn"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbValueLeaves",
+     "event": "VALUE_LEAVES_ASK",
+     "from": "ready",
+     "payload": {
+      "requestId": "r1",
+      "values": [
+       [
+        "if",
+        "@c",
+        [
+         "array/concat",
+         [
+          {
+           "event": "EDIT"
+          }
+         ],
+         [
+          {
+           "event": "VIEW"
+          }
+         ]
+        ],
+        [
+         "if",
+         "@d",
+         [
+          {
+           "event": "VIEW"
+          }
+         ],
+         [
+          {
+           "event": "EDIT"
+          }
+         ]
+        ]
+       ]
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALUE_LEAVES",
+        "payload": {
+         "requestId": "r1",
+         "leaves": [
+          [
+           "[{\"event\":\"EDIT\"}]",
+           "[{\"event\":\"VIEW\"}]",
+           "[{\"event\":\"VIEW\"}]",
+           "[{\"event\":\"EDIT\"}]"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

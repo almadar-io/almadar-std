@@ -1,0 +1,1631 @@
+{
+  "atom": "cli/atoms/std-orb-lint-slot-tick.lolo",
+  "trait": "OrbLintSlotTick",
+  "note": "Cases pin ORB_SLOT_CONTENTION_TICK of slot.rs validate_tick_slot_contention; expected findings are what `orb validate --json` reports on the same fixtures (stk-*.lolo/.orb, the resolved program the rule reads). The tick guards follow the kernel's is_statically_false table.",
+  "cases": [
+    {
+      "id": "two-traits-both-painting-main-from-ticks",
+      "steps": [
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "traits": [
+                    {
+                      "name": "StkOne",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {}
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "StkTwo",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {}
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "path": "",
+                      "traits": [
+                        {
+                          "ref": "StkOne",
+                          "refId": "trt_GXEA5NY91C4GP4GC6PVF0C51M9"
+                        },
+                        {
+                          "ref": "StkTwo",
+                          "refId": "trt_1656C9AJMD9A6W3DFAMKMVCRZ8"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot-tick",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_SLOT_CONTENTION_TICK",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "page \"\": traits 'StkOne' and 'StkTwo' both render into slot 'main' from inside a ticks block, and no tick guard switches either one off — a ticks block runs EVERY frame, so they paint slot 'main' on every frame and the runtime stacks them into one growing column instead of showing either",
+                      "suggestion": "Give exactly one trait slot 'main': set config { running: false } on the others at this call site, or send them to different slots by making the slot a config knob on the atom (write (render-ui @config.surface ...) in the atom's .lolo, declare `surface` in its config, then set a different value per trait here)",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "guard-false-config-and-or-excludes-writers",
+      "steps": [
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "traits": [
+                    {
+                      "name": "A",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {}
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": false
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "C",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "and",
+                            true,
+                            false
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        },
+                        {
+                          "ref": "C"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot-tick",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "literal-comparison-and-or-guards-make-writers-dead",
+      "steps": [
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "traits": [
+                    {
+                      "name": "A",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "or",
+                            false,
+                            0.0
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "or",
+                            false,
+                            "@entity.on"
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "C",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "=",
+                            "a",
+                            "b"
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "D",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "!=",
+                            "a",
+                            "a"
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "side",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        },
+                        {
+                          "ref": "C"
+                        },
+                        {
+                          "ref": "D"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot-tick",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "not-and-binding-comparison-guards",
+      "steps": [
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "traits": [
+                    {
+                      "name": "A",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "not",
+                            true
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "=",
+                            "@config.x",
+                            "b"
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "C",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "not",
+                            [
+                              "=",
+                              "a",
+                              "a"
+                            ]
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "D",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": ""
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        },
+                        {
+                          "ref": "C"
+                        },
+                        {
+                          "ref": "D"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot-tick",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "different-slots-and-tickless-trait-are-no-contention",
+      "steps": [
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "traits": [
+                    {
+                      "name": "A",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {}
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {}
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "side",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "C",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": []
+                    },
+                    {
+                      "name": "D",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {}
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "side",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {}
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        },
+                        {
+                          "ref": "C"
+                        },
+                        {
+                          "ref": "D"
+                        },
+                        {
+                          "ref": "E"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot-tick",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_SLOT_CONTENTION_TICK",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "page \"/p\": traits 'A' and 'E' both render into slot 'main' from inside a ticks block, and no tick guard switches either one off — a ticks block runs EVERY frame, so they paint slot 'main' on every frame and the runtime stacks them into one growing column instead of showing either",
+                      "suggestion": "Give exactly one trait slot 'main': set config { running: false } on the others at this call site, or send them to different slots by making the slot a config knob on the atom (write (render-ui @config.surface ...) in the atom's .lolo, declare `surface` in its config, then set a different value per trait here)",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_SLOT_CONTENTION_TICK",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "page \"/p\": traits 'B' and 'D' both render into slot 'side' from inside a ticks block, and no tick guard switches either one off — a ticks block runs EVERY frame, so they paint slot 'side' on every frame and the runtime stacks them into one growing column instead of showing either",
+                      "suggestion": "Give exactly one trait slot 'side': set config { running: false } on the others at this call site, or send them to different slots by making the slot a config knob on the atom (write (render-ui @config.surface ...) in the atom's .lolo, declare `surface` in its config, then set a different value per trait here)",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "page-mounts-unresolved-duplicate-and-single",
+      "steps": [
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "traits": [
+                    {
+                      "name": "A",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {}
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {}
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        }
+                      ]
+                    },
+                    {
+                      "path": "/q",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        },
+                        {
+                          "ref": "Zed"
+                        }
+                      ]
+                    },
+                    {
+                      "path": "/r",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "A"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot-tick",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_SLOT_CONTENTION_TICK",
+                      "path": "orbitals[0].pages[1]",
+                      "message": "page \"/q\": traits 'A' and 'B' both render into slot 'main' from inside a ticks block, and no tick guard switches either one off — a ticks block runs EVERY frame, so they paint slot 'main' on every frame and the runtime stacks them into one growing column instead of showing either",
+                      "suggestion": "Give exactly one trait slot 'main': set config { running: false } on the others at this call site, or send them to different slots by making the slot a config knob on the atom (write (render-ui @config.surface ...) in the atom's .lolo, declare `surface` in its config, then set a different value per trait here)",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_SLOT_CONTENTION_TICK",
+                      "path": "orbitals[0].pages[2]",
+                      "message": "page \"/r\": traits 'A' and 'A' both render into slot 'main' from inside a ticks block, and no tick guard switches either one off — a ticks block runs EVERY frame, so they paint slot 'main' on every frame and the runtime stacks them into one growing column instead of showing either",
+                      "suggestion": "Give exactly one trait slot 'main': set config { running: false } on the others at this call site, or send them to different slots by making the slot a config knob on the atom (write (render-ui @config.surface ...) in the atom's .lolo, declare `surface` in its config, then set a different value per trait here)",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "live-guards-group-names-sorted-six-writers",
+      "steps": [
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "traits": [
+                    {
+                      "name": "A",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "or",
+                            false,
+                            "@entity.on"
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "!=",
+                            "a",
+                            "b"
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "C",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "not",
+                            [
+                              "=",
+                              "a",
+                              "b"
+                            ]
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "D",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "and",
+                            true,
+                            "@entity.x"
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "=",
+                            "@config.x",
+                            "b"
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "F",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "not",
+                            false
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        },
+                        {
+                          "ref": "C"
+                        },
+                        {
+                          "ref": "D"
+                        },
+                        {
+                          "ref": "E"
+                        },
+                        {
+                          "ref": "F"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot-tick",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_SLOT_CONTENTION_TICK",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "page \"/p\": traits 'A', 'B', 'C', 'D', 'E' and 'F' both render into slot 'main' from inside a ticks block, and no tick guard switches either one off — a ticks block runs EVERY frame, so they paint slot 'main' on every frame and the runtime stacks them into one growing column instead of showing either",
+                      "suggestion": "Give exactly one trait slot 'main': set config { running: false } on the others at this call site, or send them to different slots by making the slot a config knob on the atom (write (render-ui @config.surface ...) in the atom's .lolo, declare `surface` in its config, then set a different value per trait here)",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "literal-equality-guards-kernel-truth-table",
+      "steps": [
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "traits": [
+                    {
+                      "name": "A",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "=",
+                            1.0,
+                            1.0
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "==",
+                            "x",
+                            "x"
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "C",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "=",
+                            null,
+                            null
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "D",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "=",
+                            1.0,
+                            2.0
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "E",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "or"
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "F",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "and"
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        },
+                        {
+                          "ref": "C"
+                        },
+                        {
+                          "ref": "D"
+                        },
+                        {
+                          "ref": "E"
+                        },
+                        {
+                          "ref": "F"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot-tick",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_SLOT_CONTENTION_TICK",
+                      "path": "orbitals[0].pages[0]",
+                      "message": "page \"/p\": traits 'A', 'B', 'C', 'E' and 'F' both render into slot 'main' from inside a ticks block, and no tick guard switches either one off — a ticks block runs EVERY frame, so they paint slot 'main' on every frame and the runtime stacks them into one growing column instead of showing either",
+                      "suggestion": "Give exactly one trait slot 'main': set config { running: false } on the others at this call site, or send them to different slots by making the slot a config knob on the atom (write (render-ui @config.surface ...) in the atom's .lolo, declare `surface` in its config, then set a different value per trait here)",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unresolved-config-slot-is-no-identity",
+      "steps": [
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "traits": [
+                    {
+                      "name": "A",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "or",
+                            false,
+                            "@entity.on"
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resolved": false,
+                          "resource": "@config.s",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "B",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "guard": [
+                            "!=",
+                            "a",
+                            "b"
+                          ]
+                        }
+                      ],
+                      "effectRow": [
+                        {
+                          "kind": "render-ui",
+                          "resource": "main",
+                          "site": "tick"
+                        },
+                        {
+                          "kind": "ticks",
+                          "site": "tick"
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSlotTick",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot-tick",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

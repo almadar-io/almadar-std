@@ -1,0 +1,19 @@
+app lint-host-calls-spec [
+  version: "1.0.0",
+  description: "Design contract for the shared host-call collector: HOST_CALLS_COLLECT { requestId, orbitals, heads, operators, fields } is answered by HOST_CALLS_COLLECTED { requestId, unread, calls, facts }, the calls headed by one of the heads at any depth of a guard or effect of an inline trait, parent before children, (the heads plus every operator whose table entry has one of the fields) and the installed operator table's entry of each requested operator."
+]
+type HcVal = string | number | boolean | [HcVal?] | Map string HcVal?
+type HcCall = { head : string!, path : string!, call : [HcVal?]!, tname : string!, tick : string!, bg : boolean!, declared : [string]! }
+
+orbital LintHostCallsSpec {
+  expects entity OrbLintHostCallsRun [runtime] {
+    id : string!
+  }
+  expects trait HostCalls {
+    state ready
+    emits {
+      HOST_CALLS_COLLECTED { requestId : string!  unread : boolean!  calls : [HcCall]!  facts : Map string HcVal! }
+    }
+  }
+  expects page boot -> HostCalls
+}

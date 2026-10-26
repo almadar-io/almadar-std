@@ -1,0 +1,21 @@
+app lint-trait-mounts-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-trait-mounts - the `orb lint trait-mounts <file>` command, the port of the mount checks of traits/trait_validator.rs (traits/mounts.rs). Per orbital it reads which traits its pages list: a route page (no protocol) lists a trait for the route, a page of another protocol lists it for an endpoint; a trait embedded (`@trait.<Name>` in a config default, a guard, an effect or a tick) by a route-listed trait is route-mounted too. A trait listed on an endpoint and on a route is ORB_T_TRAIT_ON_ROUTE_AND_ENDPOINT, and one mounted only on endpoints that renders UI (a render-ui anywhere in its transition or tick effects) is ORB_T_ENDPOINT_TRAIT_RENDERS. ORB_T_INIT_MISSING_FETCH is reported once per persistent entity read by route-mounted traits that paint a body slot (main, content, screen, an unreadable slot or a `@config` slot) and that neither create the entity nor lack an initial state, when no trait of the orbital fetches (or refs) the entity in a top-level effect of an INIT transition leaving its initial state; the path names the first such trait. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint trait-mounts: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintTraitMountsSpec {
+  expects trait OrbLintTraitMounts {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintTraitMountsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintTraitMounts, OrbLintTraitMountsCli
+}

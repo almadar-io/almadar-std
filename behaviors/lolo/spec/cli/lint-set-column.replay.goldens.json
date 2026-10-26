@@ -1,0 +1,3931 @@
+{
+ "atom": "cli/atoms/std-orb-lint-set-column.lolo",
+ "trait": "OrbLintSetColumn",
+ "note": "Cases built from entities/entity_mutation.rs validate_trait_set_column_without_row (ORB_SET_COLUMN_WITHOUT_ROW), one resolved .orb orbital per case, each a positive or a paired control, and the expected findings the ones the core checks report (`program/validate`). The positives are a set with no persist, id or row payload anywhere (also across transitions and inside an `if`), a non-shared entity whose sibling persists, an entity with no persistence declared, a restate-persistor sibling that persists a different payload than the field is set from, an emit payload overridden by the event's own declared payload and a payload stamped with another entity. The controls are a persist create or update in the trait or a tick, a bound `(set @entity.id)`, a payload with an id or row field, a payload typed @entity, the entity or a list of it, a payload stamped with the entity, an @intrinsic field, a field that only scopes a fetch filter, a runtime entity, a [shared] entity persisted by a sibling, the restate-persistor idiom and a transition with no effects.",
+ "cases": [
+  {
+   "id": "two-sets-with-no-persist-id-or-row-payload",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A1",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce1s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_7TCW23VN4NTJAVG8M8PP7Y0NG0",
+          "name": "ScE1",
+          "persistence": "persistent"
+         },
+         "id": "orb_M9HNZYAX06EG38D88WAY2CGVWH",
+         "name": "A1",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.y"
+            }
+           ],
+           "entityRefIds": {
+            "ScE1": "ent_7TCW23VN4NTJAVG8M8PP7Y0NG0"
+           },
+           "id": "trt_A229EPSG5WR2Y3BDS7FGM1A5TD",
+           "linkedEntity": "ScE1",
+           "linkedEntityId": "ent_7TCW23VN4NTJAVG8M8PP7Y0NG0",
+           "name": "A1T",
+           "sourceDeclaration": {
+            "fingerprint": "5ab15bddf4d26e2bda1854b31342e6f936cabf1f0d264378b50dc9e120b64b32",
+            "traitId": "trt_A229EPSG5WR2Y3BDS7FGM1A5TD"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_N7RAHAMXZJEZSA2AZBHGQA9TSG",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ],
+               [
+                "set",
+                "@entity.y",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_N7RAHAMXZJEZSA2AZBHGQA9TSG",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A1)].traits[0 (A1T)].stateMachine.transitions[0]",
+           "message": "trait \"A1T\" sets '@entity.x' on event \"GO\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE1\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE1 ...) or (persist update ScE1 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'x' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A1)].traits[0 (A1T)].stateMachine.transitions[0]",
+           "message": "trait \"A1T\" sets '@entity.y' on event \"GO\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE1\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE1 ...) or (persist update ScE1 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'y' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sets-across-two-transitions",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A2",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce2s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_2WCP4GJSTACX56DCSE8NA29K8J",
+          "name": "ScE2",
+          "persistence": "persistent"
+         },
+         "id": "orb_2272NQYDXE6YQBQB9WBSM9C27R",
+         "name": "A2",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.y"
+            }
+           ],
+           "entityRefIds": {
+            "ScE2": "ent_2WCP4GJSTACX56DCSE8NA29K8J"
+           },
+           "id": "trt_69E8C9KDDKPPSRFZBGTT8ABD30",
+           "linkedEntity": "ScE2",
+           "linkedEntityId": "ent_2WCP4GJSTACX56DCSE8NA29K8J",
+           "name": "A2T",
+           "sourceDeclaration": {
+            "fingerprint": "4acb142e27429313bda802ee40e789f2e8b4a22a9b1c4652ddc512dbb81ad217",
+            "traitId": "trt_69E8C9KDDKPPSRFZBGTT8ABD30"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_ESNY9ZN7K8KSM3ATXZA318PB58",
+              "key": "GO"
+             },
+             {
+              "id": "evt_QK8BBF2B9Q5MVZ4ZHQH6FS4YWE",
+              "key": "GO2"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_ESNY9ZN7K8KSM3ATXZA318PB58",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.y",
+                "1"
+               ],
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO2",
+              "eventId": "evt_QK8BBF2B9Q5MVZ4ZHQH6FS4YWE",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A2)].traits[0 (A2T)].stateMachine.transitions[0]",
+           "message": "trait \"A2T\" sets '@entity.x' on event \"GO\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE2\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE2 ...) or (persist update ScE2 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'x' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A2)].traits[0 (A2T)].stateMachine.transitions[1]",
+           "message": "trait \"A2T\" sets '@entity.x' on event \"GO2\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE2\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE2 ...) or (persist update ScE2 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'x' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A2)].traits[0 (A2T)].stateMachine.transitions[1]",
+           "message": "trait \"A2T\" sets '@entity.y' on event \"GO2\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE2\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE2 ...) or (persist update ScE2 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'y' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-persist-create-in-the-trait",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A3",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce3s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_38Q9TFZN8DTM6R7WHHYVQ192XG",
+          "name": "ScE3",
+          "persistence": "persistent"
+         },
+         "id": "orb_WG6ESZSFDSQPWTQ4S6Z7CT8QMM",
+         "name": "A3",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "ScE3"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE3": "ent_38Q9TFZN8DTM6R7WHHYVQ192XG"
+           },
+           "id": "trt_90W713EBB65NK7XFF6Z434HWKY",
+           "linkedEntity": "ScE3",
+           "linkedEntityId": "ent_38Q9TFZN8DTM6R7WHHYVQ192XG",
+           "name": "A3T",
+           "sourceDeclaration": {
+            "fingerprint": "5845b6fef3e01a5a20929358a97a17c6ec86477df27ae73072640afef0bffe4f",
+            "traitId": "trt_90W713EBB65NK7XFF6Z434HWKY"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_MKB5SPVF41QJ0TGFXY684KAB2G",
+              "key": "GO"
+             },
+             {
+              "id": "evt_SZA06KXM7NT3TZG74CNQYMGAG1",
+              "key": "SAVE"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_MKB5SPVF41QJ0TGFXY684KAB2G",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "persist",
+                "create",
+                "ScE3",
+                {
+                 "x": 1
+                }
+               ]
+              ],
+              "event": "SAVE",
+              "eventId": "evt_SZA06KXM7NT3TZG74CNQYMGAG1",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-entity-id-bound-in-the-trait",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A4",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce4s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_VS0C36TRBKC5SHDTF4F3SHVHPC",
+          "name": "ScE4",
+          "persistence": "persistent"
+         },
+         "id": "orb_JWJF9B0RYGCF80G5GHRJYZR708",
+         "name": "A4",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.id"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE4": "ent_VS0C36TRBKC5SHDTF4F3SHVHPC"
+           },
+           "id": "trt_0ZMDSERMFMA7T93CVP094XW3PG",
+           "linkedEntity": "ScE4",
+           "linkedEntityId": "ent_VS0C36TRBKC5SHDTF4F3SHVHPC",
+           "name": "A4T",
+           "sourceDeclaration": {
+            "fingerprint": "d95ec2b1e251004f20b714a4abde8162d2189ebbbf2ca0176e2ac3d28af668a6",
+            "traitId": "trt_0ZMDSERMFMA7T93CVP094XW3PG"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_4AVC9X6PTJBD976JPNSRV9RE32",
+              "key": "GO"
+             },
+             {
+              "id": "evt_JEKQ5QRCQM6BT0FFWT2439K3ZV",
+              "key": "BIND"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_4AVC9X6PTJBD976JPNSRV9RE32",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.id",
+                "i"
+               ]
+              ],
+              "event": "BIND",
+              "eventId": "evt_JEKQ5QRCQM6BT0FFWT2439K3ZV",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-payload-with-an-id-field",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A5",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce5s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_64CXKQF288H44DV260J1XKJ6V2",
+          "name": "ScE5",
+          "persistence": "persistent"
+         },
+         "id": "orb_XBF07Q6Q8TBMD0Y8Z6Y30TKD22",
+         "name": "A5",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE5": "ent_64CXKQF288H44DV260J1XKJ6V2"
+           },
+           "id": "trt_4P4BBYTBPG5V81G6E1F0XNK9PV",
+           "linkedEntity": "ScE5",
+           "linkedEntityId": "ent_64CXKQF288H44DV260J1XKJ6V2",
+           "name": "A5T",
+           "sourceDeclaration": {
+            "fingerprint": "aac6eb1b415e008bb2d5b9fcec067e5c859df08a7a5dbd1b9374f53025e3739e",
+            "traitId": "trt_4P4BBYTBPG5V81G6E1F0XNK9PV"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_GVC4XRDPZKVFSWP27CSPAQM7N9",
+              "key": "GO",
+              "payloadSchema": [
+               {
+                "name": "id",
+                "type": "string"
+               }
+              ]
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_GVC4XRDPZKVFSWP27CSPAQM7N9",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-payload-with-a-row-field",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A6",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce6s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_QJA5VJGFPA7V52WDZFACTNPZHN",
+          "name": "ScE6",
+          "persistence": "persistent"
+         },
+         "id": "orb_KKBKHMYG1080GEQE9VGB77V98V",
+         "name": "A6",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE6": "ent_QJA5VJGFPA7V52WDZFACTNPZHN"
+           },
+           "id": "trt_KE7SK5YETT7DD3BZCE1CSZGA4N",
+           "linkedEntity": "ScE6",
+           "linkedEntityId": "ent_QJA5VJGFPA7V52WDZFACTNPZHN",
+           "name": "A6T",
+           "sourceDeclaration": {
+            "fingerprint": "97b4801764fe07ea9ed5686e7f840ed9d350c8525b872639b58e25b58715bb98",
+            "traitId": "trt_KE7SK5YETT7DD3BZCE1CSZGA4N"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_J7K0275QH9VRMT8D77A1BS4TGX",
+              "key": "GO",
+              "payloadSchema": [
+               {
+                "name": "row",
+                "type": "object"
+               }
+              ]
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_J7K0275QH9VRMT8D77A1BS4TGX",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-payload-typed-at-entity",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A7",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce7s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_4M3A1M9ZYGZZ8B0PQTHJB8W917",
+          "name": "ScE7",
+          "persistence": "persistent"
+         },
+         "id": "orb_43SH1TN1GSGRCMZH2AHRKF9X8W",
+         "name": "A7",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE7": "ent_4M3A1M9ZYGZZ8B0PQTHJB8W917"
+           },
+           "id": "trt_JDBN8YH7X7KYKNVASGJTMP39A1",
+           "linkedEntity": "ScE7",
+           "linkedEntityId": "ent_4M3A1M9ZYGZZ8B0PQTHJB8W917",
+           "name": "A7T",
+           "sourceDeclaration": {
+            "fingerprint": "613d3de83198cf37cd7b55116019db249f383e0d504fb65b36a725dc8654fc35",
+            "traitId": "trt_JDBN8YH7X7KYKNVASGJTMP39A1"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_KWVVGZRZERFQC3XFFVN437K5WJ",
+              "key": "GO",
+              "payloadSchema": [
+               {
+                "entity": "ScE7",
+                "name": "data",
+                "properties": [
+                 {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                 },
+                 {
+                  "name": "x",
+                  "type": "number"
+                 },
+                 {
+                  "name": "y",
+                  "type": "number"
+                 },
+                 {
+                  "name": "scratch",
+                  "type": "string"
+                 },
+                 {
+                  "name": "owner",
+                  "type": "string"
+                 }
+                ],
+                "type": "object"
+               }
+              ]
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_KWVVGZRZERFQC3XFFVN437K5WJ",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-payload-typed-as-the-entity",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A8",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce8s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_ENC33H7DK5PSJPPTZ9B8YE3E61",
+          "name": "ScE8",
+          "persistence": "persistent"
+         },
+         "id": "orb_TJTBXJ27TD3X6NQMPDKC2J7GY1",
+         "name": "A8",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE8": "ent_ENC33H7DK5PSJPPTZ9B8YE3E61"
+           },
+           "id": "trt_HKQGXT4B8V5MDG2655QRQZG8M1",
+           "linkedEntity": "ScE8",
+           "linkedEntityId": "ent_ENC33H7DK5PSJPPTZ9B8YE3E61",
+           "name": "A8T",
+           "sourceDeclaration": {
+            "fingerprint": "d0b809d2016fd89bbdc79b1620e780c0cea3cf402ee3f5e4c70aebfb9928020b",
+            "traitId": "trt_HKQGXT4B8V5MDG2655QRQZG8M1"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_CAVAS8QSPXWVENA7QMYEK4GK0H",
+              "key": "GO",
+              "payloadSchema": [
+               {
+                "name": "data",
+                "type": "ScE8"
+               }
+              ]
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_CAVAS8QSPXWVENA7QMYEK4GK0H",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-payload-typed-as-a-list-of-the-entity",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A9",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce9s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_Q2HC3AGD3G6HR3PTZVH7XXJM13",
+          "name": "ScE9",
+          "persistence": "persistent"
+         },
+         "id": "orb_NRH494ZK74SKJ6ZCBDQ7MF8P3Z",
+         "name": "A9",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE9": "ent_Q2HC3AGD3G6HR3PTZVH7XXJM13"
+           },
+           "id": "trt_QMFDHFM1290H4P1EBSG5K2RXZR",
+           "linkedEntity": "ScE9",
+           "linkedEntityId": "ent_Q2HC3AGD3G6HR3PTZVH7XXJM13",
+           "name": "A9T",
+           "sourceDeclaration": {
+            "fingerprint": "cc7957ecc80835a0418af69abee3b61148febd006b29124fa51f511c3939bb99",
+            "traitId": "trt_QMFDHFM1290H4P1EBSG5K2RXZR"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_ERB4KJFEZ7QFKGW6GWNSEP4F11",
+              "key": "GO",
+              "payloadSchema": [
+               {
+                "name": "data",
+                "type": "[ScE9]"
+               }
+              ]
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_ERB4KJFEZ7QFKGW6GWNSEP4F11",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-payload-stamped-with-the-entity",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A10",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce10s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_V9B640KXJ9YS4X3E8F220V9GR3",
+          "name": "ScE10",
+          "persistence": "persistent"
+         },
+         "id": "orb_C1DN2V9ZJTZSD274DVX788MZ3F",
+         "name": "A10",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE10": "ent_V9B640KXJ9YS4X3E8F220V9GR3"
+           },
+           "id": "trt_VF2MBJG4T02D0APFQY5S31PNYR",
+           "linkedEntity": "ScE10",
+           "linkedEntityId": "ent_V9B640KXJ9YS4X3E8F220V9GR3",
+           "name": "A10T",
+           "sourceDeclaration": {
+            "fingerprint": "30b87a860f7318c9ef8cb4d204814ffd91f88b379ce9ac442fecf31a9f9099b9",
+            "traitId": "trt_VF2MBJG4T02D0APFQY5S31PNYR"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_SKCTY1MR3RC1W6N9C0CCCKJEMB",
+              "key": "GO",
+              "payloadSchema": [
+               {
+                "entity": "ScE10",
+                "name": "data",
+                "properties": [
+                 {
+                  "name": "id",
+                  "type": "string"
+                 },
+                 {
+                  "name": "x",
+                  "type": "number"
+                 },
+                 {
+                  "name": "y",
+                  "type": "number"
+                 },
+                 {
+                  "name": "owner",
+                  "type": "string"
+                 }
+                ],
+                "type": "object"
+               }
+              ]
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_SKCTY1MR3RC1W6N9C0CCCKJEMB",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "payload-stamped-with-another-entity",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A11",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce11s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_G98Q7J8AS65CKEV90VEHM39F7K",
+          "name": "ScE11",
+          "persistence": "persistent"
+         },
+         "id": "orb_JFKNWBEJCQ96BKPFS7NNR1Q6NJ",
+         "name": "A11",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE11": "ent_G98Q7J8AS65CKEV90VEHM39F7K"
+           },
+           "id": "trt_8A0P22S9JJMS961EJE2MFSQ794",
+           "linkedEntity": "ScE11",
+           "linkedEntityId": "ent_G98Q7J8AS65CKEV90VEHM39F7K",
+           "name": "A11T",
+           "sourceDeclaration": {
+            "fingerprint": "1f966b0cea7a5461aff53b17064d411d156d29bd9a62a26e75b41e30d5f0b3d8",
+            "traitId": "trt_8A0P22S9JJMS961EJE2MFSQ794"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_BCGC6Q1MJMT9A0G2RSF5SS4SXF",
+              "key": "GO",
+              "payloadSchema": [
+               {
+                "entity": "Other",
+                "name": "data",
+                "type": "object"
+               }
+              ]
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_BCGC6Q1MJMT9A0G2RSF5SS4SXF",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A11)].traits[0 (A11T)].stateMachine.transitions[0]",
+           "message": "trait \"A11T\" sets '@entity.x' on event \"GO\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE11\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE11 ...) or (persist update ScE11 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'x' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "intrinsic-field-exempt-and-persisted-field-reported",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A12",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce12s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_PCDHD5MDJW6SE72N38K0M06G5E",
+          "name": "ScE12",
+          "persistence": "persistent"
+         },
+         "id": "orb_2P6VVJJZ07FG3YQC5GM3J8SSHJ",
+         "name": "A12",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.scratch"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE12": "ent_PCDHD5MDJW6SE72N38K0M06G5E"
+           },
+           "id": "trt_NAS2PXG0NV0AXY8TVJJXDE47Q7",
+           "linkedEntity": "ScE12",
+           "linkedEntityId": "ent_PCDHD5MDJW6SE72N38K0M06G5E",
+           "name": "A12T",
+           "sourceDeclaration": {
+            "fingerprint": "67fce5380824deda5ab5a82549a6973d2842a1c6ab40e71215868b51ceb07d35",
+            "traitId": "trt_NAS2PXG0NV0AXY8TVJJXDE47Q7"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_7C22ADDB3QNHVSDPBFX4P5P716",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.scratch",
+                "a"
+               ],
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_7C22ADDB3QNHVSDPBFX4P5P716",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A12)].traits[0 (A12T)].stateMachine.transitions[0]",
+           "message": "trait \"A12T\" sets '@entity.x' on event \"GO\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE12\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE12 ...) or (persist update ScE12 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'x' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-field-scopes-a-fetch-filter-via-object-get",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A13",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce13s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_VH181Z6X70EKG42DNW5MF2ZDB2",
+          "name": "ScE13",
+          "persistence": "persistent"
+         },
+         "id": "orb_4XR0CB9851M2GTTGKF2RCFTKFZ",
+         "name": "A13",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "ScE13"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.owner"
+            }
+           ],
+           "entityRefIds": {
+            "ScE13": "ent_VH181Z6X70EKG42DNW5MF2ZDB2"
+           },
+           "id": "trt_SPTBXKR7JH3S8W451QJYHCQZ36",
+           "linkedEntity": "ScE13",
+           "linkedEntityId": "ent_VH181Z6X70EKG42DNW5MF2ZDB2",
+           "name": "A13T",
+           "sourceDeclaration": {
+            "fingerprint": "994f05af8209cd199574bb7c523b8b078ec1bb7fc77293a38ea6b915b4e6bda0",
+            "traitId": "trt_SPTBXKR7JH3S8W451QJYHCQZ36"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_5R4EVHGSQ6CVK6DV38XNHRC3KN",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.owner",
+                "@user.id"
+               ],
+               [
+                "fetch",
+                "ScE13",
+                {
+                 "filter": [
+                  "=",
+                  [
+                   "object/get",
+                   "@entity",
+                   "owner"
+                  ],
+                  "@user.id"
+                 ]
+                }
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_5R4EVHGSQ6CVK6DV38XNHRC3KN",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "field-scopes-a-fetch-filter-only-through-the-exact-binding-string",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A14",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce14s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_6CBZ77ZFM4QT22TRD9VEZ8Q3E0",
+          "name": "ScE14",
+          "persistence": "persistent"
+         },
+         "id": "orb_64H7CSCVKPDSV6XP1BRA5B9GFR",
+         "name": "A14",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "ScE14"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.owner"
+            }
+           ],
+           "entityRefIds": {
+            "ScE14": "ent_6CBZ77ZFM4QT22TRD9VEZ8Q3E0"
+           },
+           "id": "trt_GS8BJYDQ0XVGEW9A6MF2J2KN9Y",
+           "linkedEntity": "ScE14",
+           "linkedEntityId": "ent_6CBZ77ZFM4QT22TRD9VEZ8Q3E0",
+           "name": "A14T",
+           "sourceDeclaration": {
+            "fingerprint": "88760e9e22c8b547df759b03541cb14b7ad9c42fef2ef2a750cf1e72475920cc",
+            "traitId": "trt_GS8BJYDQ0XVGEW9A6MF2J2KN9Y"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_Y1P5V269TN4XAGGEKSNAHEEYMK",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.owner",
+                "a"
+               ],
+               [
+                "fetch",
+                "ScE14",
+                {
+                 "filter": [
+                  "=",
+                  "@entity.owner",
+                  "@user.id"
+                 ]
+                }
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_Y1P5V269TN4XAGGEKSNAHEEYMK",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-runtime-entity",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A15",
+       "orbitals": [
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_0GDN8AEDYJ6Z9BYJA4CFQVT7D6",
+          "name": "ScE15",
+          "persistence": "runtime"
+         },
+         "id": "orb_SRATTKP5YV2ZDSTVWEJQ3ZKQ3F",
+         "name": "A15",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE15": "ent_0GDN8AEDYJ6Z9BYJA4CFQVT7D6"
+           },
+           "id": "trt_2Q5HE6QBZENZQ3JRNW1Z1XCAW4",
+           "linkedEntity": "ScE15",
+           "linkedEntityId": "ent_0GDN8AEDYJ6Z9BYJA4CFQVT7D6",
+           "name": "A15T",
+           "sourceDeclaration": {
+            "fingerprint": "dcc68ca08856b600050b401819ae494c236cd4822d618327573564bf7c93c157",
+            "traitId": "trt_2Q5HE6QBZENZQ3JRNW1Z1XCAW4"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_3YVJHK6B5V5JXREH937Z82F3XE",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_3YVJHK6B5V5JXREH937Z82F3XE",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entity-with-no-persistence-is-persistent",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A16",
+       "orbitals": [
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_C00RDGSCQGPBRE6YPB5Y7R81QA",
+          "name": "ScE16"
+         },
+         "id": "orb_6W739RXGYKRF9TRH5HEVTDHSZ1",
+         "name": "A16",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE16": "ent_C00RDGSCQGPBRE6YPB5Y7R81QA"
+           },
+           "id": "trt_1HWVZ3P8EB475N89YEJ6J7PD6W",
+           "linkedEntity": "ScE16",
+           "linkedEntityId": "ent_C00RDGSCQGPBRE6YPB5Y7R81QA",
+           "name": "A16T",
+           "sourceDeclaration": {
+            "fingerprint": "839b2b2c6f47e7b590a67b6e4655d56e0113ada4cc773a934658a5998932ea80",
+            "traitId": "trt_1HWVZ3P8EB475N89YEJ6J7PD6W"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_PY6Q4M608M04ACAJC00DHB1BZV",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_PY6Q4M608M04ACAJC00DHB1BZV",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A16)].traits[0 (A16T)].stateMachine.transitions[0]",
+           "message": "trait \"A16T\" sets '@entity.x' on event \"GO\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE16\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE16 ...) or (persist update ScE16 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'x' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-shared-entity-persisted-by-a-sibling",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A17",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce17s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_PVRQ595DSCPWPAC0NDHGA73FB3",
+          "name": "ScE17",
+          "persistence": "persistent",
+          "shared": true
+         },
+         "id": "orb_SDMS7BE37W1KY97AM01F5JSQSB",
+         "name": "A17",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE17": "ent_PVRQ595DSCPWPAC0NDHGA73FB3"
+           },
+           "id": "trt_5AMHBSK2R0HC0B0AMGTE9AK0KV",
+           "linkedEntity": "ScE17",
+           "linkedEntityId": "ent_PVRQ595DSCPWPAC0NDHGA73FB3",
+           "name": "A17T",
+           "sourceDeclaration": {
+            "fingerprint": "7303f0d33c070fb3ac5312048eb21000006b58f2dd5192f53eef8e0ec08128c1",
+            "traitId": "trt_5AMHBSK2R0HC0B0AMGTE9AK0KV"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_Z1BH7SMBH55RJVPH6KSAM4EB5Y",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_Z1BH7SMBH55RJVPH6KSAM4EB5Y",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "ScE17"
+            }
+           ],
+           "entityRefIds": {
+            "ScE17": "ent_PVRQ595DSCPWPAC0NDHGA73FB3"
+           },
+           "id": "trt_H4GG5MKE0NQ0ANSJ1RWF9TTGKQ",
+           "linkedEntity": "ScE17",
+           "linkedEntityId": "ent_PVRQ595DSCPWPAC0NDHGA73FB3",
+           "name": "A17P",
+           "sourceDeclaration": {
+            "fingerprint": "8d4dfe376e92baf880f5d4a34013d58486406b7405f66f2ada646d9c8b517b0c",
+            "traitId": "trt_H4GG5MKE0NQ0ANSJ1RWF9TTGKQ"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_SX0D4D3S6VWKDWPQHR7HF7HSMS",
+              "key": "SAVE"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "update",
+                "ScE17",
+                "@payload.row"
+               ]
+              ],
+              "event": "SAVE",
+              "eventId": "evt_SX0D4D3S6VWKDWPQHR7HF7HSMS",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "non-shared-entity-persisted-by-a-sibling-is-reported",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A18",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce18s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_AGAM0RPWXKEESSY61Z9FXFWRAW",
+          "name": "ScE18",
+          "persistence": "persistent"
+         },
+         "id": "orb_CB6QG9AKDF9PQK5AAMY8T00YQ6",
+         "name": "A18",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE18": "ent_AGAM0RPWXKEESSY61Z9FXFWRAW"
+           },
+           "id": "trt_0761M30N5PAJVEKWVKDWFJV948",
+           "linkedEntity": "ScE18",
+           "linkedEntityId": "ent_AGAM0RPWXKEESSY61Z9FXFWRAW",
+           "name": "A18T",
+           "sourceDeclaration": {
+            "fingerprint": "1667be695f6b4181e2ac8ce40e463d7db379e25b2ef82e08128919529223be29",
+            "traitId": "trt_0761M30N5PAJVEKWVKDWFJV948"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_P4SANEQTCXX6EWXN3Q13AM6BS1",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_P4SANEQTCXX6EWXN3Q13AM6BS1",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "ScE18"
+            }
+           ],
+           "entityRefIds": {
+            "ScE18": "ent_AGAM0RPWXKEESSY61Z9FXFWRAW"
+           },
+           "id": "trt_5GXQPJ9BPYNVF3AV2VWCCJKWC6",
+           "linkedEntity": "ScE18",
+           "linkedEntityId": "ent_AGAM0RPWXKEESSY61Z9FXFWRAW",
+           "name": "A18P",
+           "sourceDeclaration": {
+            "fingerprint": "26c2241e3a1184bb15bd6ad69b9ee0bccc3d3cce481703d198a8065494b7624b",
+            "traitId": "trt_5GXQPJ9BPYNVF3AV2VWCCJKWC6"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_2F7M99E0A3051XAH9Q39PTTSBS",
+              "key": "SAVE"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "update",
+                "ScE18",
+                "@payload.row"
+               ]
+              ],
+              "event": "SAVE",
+              "eventId": "evt_2F7M99E0A3051XAH9Q39PTTSBS",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A18)].traits[0 (A18T)].stateMachine.transitions[0]",
+           "message": "trait \"A18T\" sets '@entity.x' on event \"GO\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE18\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE18 ...) or (persist update ScE18 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'x' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-restate-persistor-sibling-persists-the-payload",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A19",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce19s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_C663AY5YZXZFYXQSW6G23569R7",
+          "name": "ScE19",
+          "persistence": "persistent"
+         },
+         "id": "orb_3GRVG76E2H718H88DWEX5WFKQS",
+         "name": "A19",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE19": "ent_C663AY5YZXZFYXQSW6G23569R7"
+           },
+           "id": "trt_HH8SWBFQ14VGJFYF1BGMV0YGG1",
+           "linkedEntity": "ScE19",
+           "linkedEntityId": "ent_C663AY5YZXZFYXQSW6G23569R7",
+           "name": "A19T",
+           "sourceDeclaration": {
+            "fingerprint": "59268317939aa63cc6932b7bf09458a3c06f8673309951c2122bc73a047063ca",
+            "traitId": "trt_HH8SWBFQ14VGJFYF1BGMV0YGG1"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_Y52XVERNCHAP8GKYVYKN8XYWS6",
+              "key": "NEXT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "@payload.data.x"
+               ]
+              ],
+              "event": "NEXT",
+              "eventId": "evt_Y52XVERNCHAP8GKYVYKN8XYWS6",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "ScE19"
+            }
+           ],
+           "entityRefIds": {
+            "ScE19": "ent_C663AY5YZXZFYXQSW6G23569R7"
+           },
+           "id": "trt_R2Z0JEACHD68PMJ38AYRX7QX1E",
+           "linkedEntity": "ScE19",
+           "linkedEntityId": "ent_C663AY5YZXZFYXQSW6G23569R7",
+           "listens": [
+            {
+             "event": "NEXT",
+             "eventId": "evt_Y52XVERNCHAP8GKYVYKN8XYWS6",
+             "source": {
+              "kind": "trait",
+              "trait": "A19T",
+              "traitId": "trt_HH8SWBFQ14VGJFYF1BGMV0YGG1"
+             },
+             "triggers": "DO",
+             "triggersId": "evt_KVDCHCPX3TEHX02PAAMJ49BQP9"
+            }
+           ],
+           "name": "A19P",
+           "sourceDeclaration": {
+            "fingerprint": "d8476ba7efee7ff1a384a9f612e9b271bbf4cab85fce4d0c30f135d6a155a801",
+            "traitId": "trt_R2Z0JEACHD68PMJ38AYRX7QX1E"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_KVDCHCPX3TEHX02PAAMJ49BQP9",
+              "key": "DO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "update",
+                "ScE19",
+                "@payload.data",
+                {}
+               ]
+              ],
+              "event": "DO",
+              "eventId": "evt_KVDCHCPX3TEHX02PAAMJ49BQP9",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "restate-persistor-persists-a-different-payload",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A20",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce20s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_FGVNZ3WK0V9GDJRRC3ATV0ANEV",
+          "name": "ScE20",
+          "persistence": "persistent"
+         },
+         "id": "orb_A22WG0VGSWRCY5D9JTKY6TWV80",
+         "name": "A20",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "ScE20": "ent_FGVNZ3WK0V9GDJRRC3ATV0ANEV"
+           },
+           "id": "trt_YT5CDTPPMWBAEE8NFGSKZDGV65",
+           "linkedEntity": "ScE20",
+           "linkedEntityId": "ent_FGVNZ3WK0V9GDJRRC3ATV0ANEV",
+           "name": "A20T",
+           "sourceDeclaration": {
+            "fingerprint": "bfc4ca6b681a9753103c780fc08adf4786cdc099f8f765de82493e9ae2566dbb",
+            "traitId": "trt_YT5CDTPPMWBAEE8NFGSKZDGV65"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_VEDM6PBKZESZQ6QHQ7077NFRDX",
+              "key": "NEXT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "@payload.other"
+               ]
+              ],
+              "event": "NEXT",
+              "eventId": "evt_VEDM6PBKZESZQ6QHQ7077NFRDX",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "ScE20"
+            }
+           ],
+           "entityRefIds": {
+            "ScE20": "ent_FGVNZ3WK0V9GDJRRC3ATV0ANEV"
+           },
+           "id": "trt_PBTM0HHA62N316MH1CFDAZAJZN",
+           "linkedEntity": "ScE20",
+           "linkedEntityId": "ent_FGVNZ3WK0V9GDJRRC3ATV0ANEV",
+           "listens": [
+            {
+             "event": "NEXT",
+             "eventId": "evt_VEDM6PBKZESZQ6QHQ7077NFRDX",
+             "source": {
+              "kind": "trait",
+              "trait": "A20T",
+              "traitId": "trt_YT5CDTPPMWBAEE8NFGSKZDGV65"
+             },
+             "triggers": "DO",
+             "triggersId": "evt_PCT28BYFYB7Z5GQMZ9RQ2DMXAJ"
+            }
+           ],
+           "name": "A20P",
+           "sourceDeclaration": {
+            "fingerprint": "d8598a3857060a690eca1f95aa82267d9c3ac94fa814cb004e8783535447c35e",
+            "traitId": "trt_PBTM0HHA62N316MH1CFDAZAJZN"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_PCT28BYFYB7Z5GQMZ9RQ2DMXAJ",
+              "key": "DO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "update",
+                "ScE20",
+                "@payload.data",
+                {}
+               ]
+              ],
+              "event": "DO",
+              "eventId": "evt_PCT28BYFYB7Z5GQMZ9RQ2DMXAJ",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A20)].traits[0 (A20T)].stateMachine.transitions[0]",
+           "message": "trait \"A20T\" sets '@entity.x' on event \"NEXT\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE20\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE20 ...) or (persist update ScE20 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'x' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "restate-persistor-over-an-orbital-source-leaves-the-other-field",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A21",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce21s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_P466TY76ANK5AHANME7NFXDH7K",
+          "name": "ScE21",
+          "persistence": "persistent"
+         },
+         "id": "orb_6QN334NSZ6WZK0MNTAH4P8G4V4",
+         "name": "A21",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.y"
+            }
+           ],
+           "entityRefIds": {
+            "ScE21": "ent_P466TY76ANK5AHANME7NFXDH7K"
+           },
+           "id": "trt_6KRXEPEQC8BP433PR1AF1YE4VY",
+           "linkedEntity": "ScE21",
+           "linkedEntityId": "ent_P466TY76ANK5AHANME7NFXDH7K",
+           "name": "A21T",
+           "sourceDeclaration": {
+            "fingerprint": "bdd01911843b0f9aae23f4e6cfea3dc92121a15f69e4a6716fea8ad3cf86149e",
+            "traitId": "trt_6KRXEPEQC8BP433PR1AF1YE4VY"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_NXD5H2CKQD9VPSTHCGBYV26ASZ",
+              "key": "NEXT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "@payload.data"
+               ],
+               [
+                "set",
+                "@entity.y",
+                1
+               ]
+              ],
+              "event": "NEXT",
+              "eventId": "evt_NXD5H2CKQD9VPSTHCGBYV26ASZ",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "ScE21"
+            }
+           ],
+           "entityRefIds": {
+            "ScE21": "ent_P466TY76ANK5AHANME7NFXDH7K"
+           },
+           "id": "trt_3N5XY1XGSGRCR2RV032AECWHS2",
+           "linkedEntity": "ScE21",
+           "linkedEntityId": "ent_P466TY76ANK5AHANME7NFXDH7K",
+           "listens": [
+            {
+             "event": "NEXT",
+             "eventId": "evt_NXD5H2CKQD9VPSTHCGBYV26ASZ",
+             "source": {
+              "kind": "orbital",
+              "orbital": "A21",
+              "trait": "A21T",
+              "traitId": "trt_6KRXEPEQC8BP433PR1AF1YE4VY"
+             }
+            }
+           ],
+           "name": "A21P",
+           "sourceDeclaration": {
+            "fingerprint": "dc0c2ad5ce5427f58d4b1b4cac9ca157e5aabe0a6d6c089ae88db40eb3fec667",
+            "traitId": "trt_3N5XY1XGSGRCR2RV032AECWHS2"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_G8QV527G65R32YVA9H9KVP3HF8",
+              "key": "DO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "create",
+                "ScE21",
+                "@payload.data"
+               ]
+              ],
+              "event": "DO",
+              "eventId": "evt_G8QV527G65R32YVA9H9KVP3HF8",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A21)].traits[0 (A21T)].stateMachine.transitions[0]",
+           "message": "trait \"A21T\" sets '@entity.x' on event \"NEXT\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE21\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE21 ...) or (persist update ScE21 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'x' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A21)].traits[0 (A21T)].stateMachine.transitions[0]",
+           "message": "trait \"A21T\" sets '@entity.y' on event \"NEXT\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE21\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE21 ...) or (persist update ScE21 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'y' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-emit-payload-with-an-id",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A22",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce22s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_9W7PQYD5AAJN56CYE2F6EH9XS0",
+          "name": "ScE22",
+          "persistence": "persistent"
+         },
+         "id": "orb_021Z7698PXMBEY9Q4MKXNBXB11",
+         "name": "A22",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "emits": [
+            {
+             "event": "GO",
+             "eventId": "evt_MJDT7087CM3PA9WHTCZ6EM7T2C",
+             "payloadSchema": [
+              {
+               "name": "id",
+               "type": "string"
+              }
+             ]
+            }
+           ],
+           "entityRefIds": {
+            "ScE22": "ent_9W7PQYD5AAJN56CYE2F6EH9XS0"
+           },
+           "id": "trt_BNCE4A2WTREDCB0T4DXN6VXVPB",
+           "linkedEntity": "ScE22",
+           "linkedEntityId": "ent_9W7PQYD5AAJN56CYE2F6EH9XS0",
+           "name": "A22T",
+           "sourceDeclaration": {
+            "fingerprint": "29e31fed51e5c3d575b91f5d1cb67b4cb56ac2bc95c2818e8c53ce267f1d145f",
+            "traitId": "trt_BNCE4A2WTREDCB0T4DXN6VXVPB"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_MJDT7087CM3PA9WHTCZ6EM7T2C",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_MJDT7087CM3PA9WHTCZ6EM7T2C",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "event-payload-overrides-the-emit-payload",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A23",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce23s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_HGDY9M3ZW1ZY0HBAWA7784RYKB",
+          "name": "ScE23",
+          "persistence": "persistent"
+         },
+         "id": "orb_EHGQ1NQRA8W54E503Q9W26TBGG",
+         "name": "A23",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "emits": [
+            {
+             "event": "GO",
+             "eventId": "evt_VFE8H9N705KG2T9JB0CPYNXJMS",
+             "payloadSchema": [
+              {
+               "name": "id",
+               "type": "string"
+              }
+             ]
+            }
+           ],
+           "entityRefIds": {
+            "ScE23": "ent_HGDY9M3ZW1ZY0HBAWA7784RYKB"
+           },
+           "id": "trt_R4VGBAX0GBG85XRT7RRJREG5AP",
+           "linkedEntity": "ScE23",
+           "linkedEntityId": "ent_HGDY9M3ZW1ZY0HBAWA7784RYKB",
+           "name": "A23T",
+           "sourceDeclaration": {
+            "fingerprint": "37e4f2d5e8e9ab5b01ded136599afc49596dac3bc86a3d73634e963489511e39",
+            "traitId": "trt_R4VGBAX0GBG85XRT7RRJREG5AP"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_VFE8H9N705KG2T9JB0CPYNXJMS",
+              "key": "GO",
+              "payloadSchema": [
+               {
+                "name": "q",
+                "type": "string"
+               }
+              ]
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_VFE8H9N705KG2T9JB0CPYNXJMS",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A23)].traits[0 (A23T)].stateMachine.transitions[0]",
+           "message": "trait \"A23T\" sets '@entity.x' on event \"GO\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE23\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE23 ...) or (persist update ScE23 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'x' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-persist-update-in-a-tick",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A24",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce24s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_ZQT51NYBCP5PB0DY4T7QAZXJV6",
+          "name": "ScE24",
+          "persistence": "persistent"
+         },
+         "id": "orb_VYQ99T5QTKVX9XAZHX15HVMWA8",
+         "name": "A24",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "ScE24",
+             "site": "tick"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            },
+            {
+             "kind": "ticks",
+             "site": "tick"
+            }
+           ],
+           "entityRefIds": {
+            "ScE24": "ent_ZQT51NYBCP5PB0DY4T7QAZXJV6"
+           },
+           "id": "trt_JAZC9XGWJBE95HMX1V87GNV28N",
+           "linkedEntity": "ScE24",
+           "linkedEntityId": "ent_ZQT51NYBCP5PB0DY4T7QAZXJV6",
+           "name": "A24T",
+           "sourceDeclaration": {
+            "fingerprint": "3ce0866806e4203c2fbc1410beda146fd15ecc34bdb7780b3f0b37ae9586b2c8",
+            "traitId": "trt_JAZC9XGWJBE95HMX1V87GNV28N"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_DW3V0EKX6DYK6XT8FKG0ZWSZ4J",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_DW3V0EKX6DYK6XT8FKG0ZWSZ4J",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "effects": [
+              [
+               "persist",
+               "update",
+               "ScE24",
+               "i",
+               {}
+              ]
+             ],
+             "interval": 1000,
+             "name": "t"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "set-nested-in-an-if",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A25",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce25s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_WZNDEM9QMSVTCGBAV3K2GTXE28",
+          "name": "ScE25",
+          "persistence": "persistent"
+         },
+         "id": "orb_APKZMJPEB075G3PCW5YANHNB14",
+         "name": "A25",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.y"
+            }
+           ],
+           "entityRefIds": {
+            "ScE25": "ent_WZNDEM9QMSVTCGBAV3K2GTXE28"
+           },
+           "id": "trt_CF6HBFPYB6F5KACNC7A3BJ6T8D",
+           "linkedEntity": "ScE25",
+           "linkedEntityId": "ent_WZNDEM9QMSVTCGBAV3K2GTXE28",
+           "name": "A25T",
+           "sourceDeclaration": {
+            "fingerprint": "db5850455aae88e3c78ffa786b453ec4c1fe67d34a8169eee925a77a4e199202",
+            "traitId": "trt_CF6HBFPYB6F5KACNC7A3BJ6T8D"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_CDN1KZ7HEYRQF5X0SHWXG86JQJ",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "if",
+                true,
+                [
+                 "set",
+                 "@entity.x",
+                 "1"
+                ],
+                [
+                 "set",
+                 "@entity.y",
+                 "1"
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_CDN1KZ7HEYRQF5X0SHWXG86JQJ",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A25)].traits[0 (A25T)].stateMachine.transitions[0]",
+           "message": "trait \"A25T\" sets '@entity.x' on event \"GO\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE25\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE25 ...) or (persist update ScE25 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'x' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_SET_COLUMN_WITHOUT_ROW",
+           "path": "orbitals[0 (A25)].traits[0 (A25T)].stateMachine.transitions[0]",
+           "message": "trait \"A25T\" sets '@entity.y' on event \"GO\" with no row in scope (no id/row-bearing event payload, no @entity.id bound anywhere in the trait), and never runs persist create/update on \"ScE25\" anywhere \u2014 this write can never land",
+           "suggestion": "Run (persist create ScE25 ...) or (persist update ScE25 ...) somewhere in this trait, bind a row (set @entity.id ...) before this transition, or declare 'y' @intrinsic if it is trait-local scratch state",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-transition-without-effects",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A26",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce26s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_APK8NDA2RE1C760V65SWQF88S8",
+          "name": "ScE26",
+          "persistence": "persistent"
+         },
+         "id": "orb_E4JKN9JDDP6PV78GZ9MT3MJVMV",
+         "name": "A26",
+         "traits": [
+          {
+           "entityRefIds": {
+            "ScE26": "ent_APK8NDA2RE1C760V65SWQF88S8"
+           },
+           "id": "trt_GGVRXPVJKJS9S9SX7P4SW0RP1X",
+           "linkedEntity": "ScE26",
+           "linkedEntityId": "ent_APK8NDA2RE1C760V65SWQF88S8",
+           "name": "A26T",
+           "sourceDeclaration": {
+            "fingerprint": "105afb62b5df540476aa237f343dc5b2ad8f2ffe8867462b76b4120e199d663e",
+            "traitId": "trt_GGVRXPVJKJS9S9SX7P4SW0RP1X"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_12B0YS41520JH3C16Y9AH7G4K0",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "event": "GO",
+              "eventId": "evt_12B0YS41520JH3C16Y9AH7G4K0",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-stamped-emit-wins-over-a-later-plain-emit",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "scx_A27",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "sce27s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           },
+           {
+            "intrinsic": true,
+            "name": "scratch",
+            "type": "string"
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "id": "ent_KR55ZJ86TH3D8JM7MFA1DSJGRF",
+          "name": "ScE27",
+          "persistence": "persistent"
+         },
+         "id": "orb_DC27M0M5ZY2ZZ4A6YBPXPQDVRT",
+         "name": "A27",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "emits": [
+            {
+             "event": "GO",
+             "eventId": "evt_ND51EY2P3EB1QCZD02PYTF9R3E",
+             "payloadSchema": [
+              {
+               "entity": "ScE27",
+               "name": "d",
+               "properties": [
+                {
+                 "name": "id",
+                 "type": "string"
+                },
+                {
+                 "name": "x",
+                 "type": "number"
+                },
+                {
+                 "name": "y",
+                 "type": "number"
+                },
+                {
+                 "name": "owner",
+                 "type": "string"
+                }
+               ],
+               "type": "object"
+              }
+             ]
+            },
+            {
+             "event": "GO",
+             "eventId": "evt_ND51EY2P3EB1QCZD02PYTF9R3E",
+             "payloadSchema": [
+              {
+               "name": "q",
+               "type": "string"
+              }
+             ]
+            }
+           ],
+           "entityRefIds": {
+            "ScE27": "ent_KR55ZJ86TH3D8JM7MFA1DSJGRF"
+           },
+           "id": "trt_Z64APC8TB5D5JK2STZ8CKD9EVV",
+           "linkedEntity": "ScE27",
+           "linkedEntityId": "ent_KR55ZJ86TH3D8JM7MFA1DSJGRF",
+           "name": "A27T",
+           "sourceDeclaration": {
+            "fingerprint": "8f1ebfd37a6a82d9b4a139d997ff53c7d8daad23b3d9f688da31b868d6a8982d",
+            "traitId": "trt_Z64APC8TB5D5JK2STZ8CKD9EVV"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_ND51EY2P3EB1QCZD02PYTF9R3E",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_ND51EY2P3EB1QCZD02PYTF9R3E",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "set-column",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,4009 @@
+{
+ "atom": "cli/atoms/std-orb-lint-trait-mounts.lolo",
+ "trait": "OrbLintTraitMounts",
+ "note": "Cases built from traits/trait_validator.rs and traits/mounts.rs: validate_endpoint_mounts (a trait on a protocol page and a route page, or only on an endpoint and rendering UI) and validate_orbital_init_fetch (a persistent entity read by route-mounted body traits that no trait fetches on INIT). The programs are resolved .orb fixtures and the expected findings are the ones the core checks report (`program/validate`). The first case covers the embed closure (a trait embedded by a route trait is route-mounted), a toast-only helper and a trait with no render. The third and fourth cover the controls of the INIT rule: a datasource fetch, `ref`, a fetch below a `do`, an INIT arm leaving another state or `*`, an array `from`, a runtime entity, an entity with no persistence declared, a toast slot, a content slot, a `@config` slot, a creating trait, guard, tick and whole-entity reads, and a fetch of another entity.",
+ "cases": [
+  {
+   "id": "endpoint-and-route-mounts-through-the-embed-closure",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "tm1",
+       "orbitals": [
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_9GAAPBRFYC7Z6106VKD14HCJMF",
+          "name": "Task",
+          "persistence": "runtime"
+         },
+         "id": "orb_TT72PG0PDEB6QEW7HF0Y48DJXJ",
+         "name": "O",
+         "pages": [
+          {
+           "id": "pag_0GRSC0R38W1ME1DJZSDPQFCZZX",
+           "name": "a",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "A",
+             "refId": "trt_PA5HPD2Y7MF3T6PGS9Y2517K08"
+            },
+            {
+             "ref": "D",
+             "refId": "trt_AG9369AS41CJ0NCMB8A6T9VAEJ"
+            }
+           ]
+          },
+          {
+           "id": "pag_W1VN90NQD5VPJWMH992AYJ7RKD",
+           "name": "b",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "B",
+             "refId": "trt_AW1JHX4GJX89EKM0ET83X92VD3"
+            },
+            {
+             "ref": "C",
+             "refId": "trt_YFV33XNBF7NQKH0K7GW5NZZTRJ"
+            },
+            {
+             "ref": "D",
+             "refId": "trt_AG9369AS41CJ0NCMB8A6T9VAEJ"
+            },
+            {
+             "ref": "E",
+             "refId": "trt_HB9PXXBG57R2KXNAHJCYYE9ZX4"
+            },
+            {
+             "ref": "G",
+             "refId": "trt_9HC1426M9BA4NNC59HHYFEDQ48"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "Task": "ent_9GAAPBRFYC7Z6106VKD14HCJMF"
+           },
+           "id": "trt_PA5HPD2Y7MF3T6PGS9Y2517K08",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_9GAAPBRFYC7Z6106VKD14HCJMF",
+           "name": "A",
+           "sourceDeclaration": {
+            "fingerprint": "c3c8f134aee168c72b579f67b34f5aca71a05e0f01ee1badf882f17156b2419c",
+            "traitId": "trt_PA5HPD2Y7MF3T6PGS9Y2517K08"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_WTZXPCX0HNG8THFR0ZX2GRR4A1",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [
+                  "@trait.E"
+                 ],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_WTZXPCX0HNG8THFR0ZX2GRR4A1",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           },
+           "traitEmbedIds": {
+            "E": "trt_HB9PXXBG57R2KXNAHJCYYE9ZX4"
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "X"
+            }
+           ],
+           "entityRefIds": {
+            "Task": "ent_9GAAPBRFYC7Z6106VKD14HCJMF"
+           },
+           "id": "trt_AW1JHX4GJX89EKM0ET83X92VD3",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_9GAAPBRFYC7Z6106VKD14HCJMF",
+           "name": "B",
+           "sourceDeclaration": {
+            "fingerprint": "d4fdbceddddf8da31b38b7383a49b0b5f080af85708b18d02f76020ad9fbd60e",
+            "traitId": "trt_AW1JHX4GJX89EKM0ET83X92VD3"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_4EW6RT1QSVVWXW75EM8F9Z6AMW",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "emit",
+                "X",
+                {}
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_4EW6RT1QSVVWXW75EM8F9Z6AMW",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "Task": "ent_9GAAPBRFYC7Z6106VKD14HCJMF"
+           },
+           "id": "trt_YFV33XNBF7NQKH0K7GW5NZZTRJ",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_9GAAPBRFYC7Z6106VKD14HCJMF",
+           "name": "C",
+           "sourceDeclaration": {
+            "fingerprint": "7f75a53f33cdc227a62f86f3e340f3ffc7f8b83026d149428859f825ab12f9a2",
+            "traitId": "trt_YFV33XNBF7NQKH0K7GW5NZZTRJ"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_MKZ17GN8NTMAXDZTT6K2EYEFZY",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [
+                  "@trait.F"
+                 ],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_MKZ17GN8NTMAXDZTT6K2EYEFZY",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           },
+           "traitEmbedIds": {
+            "F": "trt_EKSD3BXGA2R51573F479MS1XEZ"
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "Task": "ent_9GAAPBRFYC7Z6106VKD14HCJMF"
+           },
+           "id": "trt_AG9369AS41CJ0NCMB8A6T9VAEJ",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_9GAAPBRFYC7Z6106VKD14HCJMF",
+           "name": "D",
+           "sourceDeclaration": {
+            "fingerprint": "5bccfb14a6d12e0a2721faf29ce0d665d805e5b3b49ca58cbbe6989a1fbee9f1",
+            "traitId": "trt_AG9369AS41CJ0NCMB8A6T9VAEJ"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_WG4NRE6XMBET5XJD6ZC2VP57NQ",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_WG4NRE6XMBET5XJD6ZC2VP57NQ",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "Task": "ent_9GAAPBRFYC7Z6106VKD14HCJMF"
+           },
+           "id": "trt_HB9PXXBG57R2KXNAHJCYYE9ZX4",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_9GAAPBRFYC7Z6106VKD14HCJMF",
+           "name": "E",
+           "sourceDeclaration": {
+            "fingerprint": "1313e65d7964bf12cccfafa4ca5469f1367315f202b1a0980f185085d336914b",
+            "traitId": "trt_HB9PXXBG57R2KXNAHJCYYE9ZX4"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_29QKSSTN31AHGVZP8YSV2PHEBB",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_29QKSSTN31AHGVZP8YSV2PHEBB",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "Task": "ent_9GAAPBRFYC7Z6106VKD14HCJMF"
+           },
+           "id": "trt_EKSD3BXGA2R51573F479MS1XEZ",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_9GAAPBRFYC7Z6106VKD14HCJMF",
+           "name": "F",
+           "sourceDeclaration": {
+            "fingerprint": "39cf0e0de9ecd852ba7960b85ef5f9f5ee32737071ae7e5b00b6e1865858f2fc",
+            "traitId": "trt_EKSD3BXGA2R51573F479MS1XEZ"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_NB5S6A0PHTB8X3R8RCNDPEYJH2",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_NB5S6A0PHTB8X3R8RCNDPEYJH2",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "toast"
+            }
+           ],
+           "entityRefIds": {
+            "Task": "ent_9GAAPBRFYC7Z6106VKD14HCJMF"
+           },
+           "id": "trt_9HC1426M9BA4NNC59HHYFEDQ48",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_9GAAPBRFYC7Z6106VKD14HCJMF",
+           "name": "G",
+           "sourceDeclaration": {
+            "fingerprint": "46790d8720e1ac5f57d3f10e7dfb667d7c8e6639258269c672cbc19c59d9ba94",
+            "traitId": "trt_9HC1426M9BA4NNC59HHYFEDQ48"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_4EW0AVJZ9AFMN2YPCE1KXS84JS",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "do",
+                [
+                 "if",
+                 true,
+                 [
+                  "render-ui",
+                  "toast",
+                  {
+                   "children": [],
+                   "type": "stack"
+                  }
+                 ]
+                ]
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_4EW0AVJZ9AFMN2YPCE1KXS84JS",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "X"
+            }
+           ],
+           "entityRefIds": {
+            "Task": "ent_9GAAPBRFYC7Z6106VKD14HCJMF"
+           },
+           "id": "trt_EY4V4MSZHCZRP95G0GJP4G59K5",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_9GAAPBRFYC7Z6106VKD14HCJMF",
+           "name": "H",
+           "sourceDeclaration": {
+            "fingerprint": "fd16e86144aca75942f6e57944ba51aecd37d7a29f32e624d2e52bab2d4810ce",
+            "traitId": "trt_EY4V4MSZHCZRP95G0GJP4G59K5"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_RFW5EA3KXNSYTZD6AZ40NKZNQW",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "emit",
+                "X",
+                {}
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_RFW5EA3KXNSYTZD6AZ40NKZNQW",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "trait-mounts",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_T_ENDPOINT_TRAIT_RENDERS",
+           "path": "orbitals[0 (O)].traits[2 (C)]",
+           "message": "Trait 'C' is mounted only on protocol endpoints but renders UI; an endpoint has no viewer",
+           "suggestion": "Remove the render-ui effects, or list the trait on a route page",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_TRAIT_ON_ROUTE_AND_ENDPOINT",
+           "path": "orbitals[0 (O)].traits[3 (D)]",
+           "message": "Trait 'D' is listed on a route page and on a protocol endpoint",
+           "suggestion": "A route trait paints for a viewer and an endpoint trait has none; split it into two traits",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_TRAIT_ON_ROUTE_AND_ENDPOINT",
+           "path": "orbitals[0 (O)].traits[4 (E)]",
+           "message": "Trait 'E' is listed on a route page and on a protocol endpoint",
+           "suggestion": "A route trait paints for a viewer and an endpoint trait has none; split it into two traits",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_ENDPOINT_TRAIT_RENDERS",
+           "path": "orbitals[0 (O)].traits[6 (G)]",
+           "message": "Trait 'G' is mounted only on protocol endpoints but renders UI; an endpoint has no viewer",
+           "suggestion": "Remove the render-ui effects, or list the trait on a route page",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "page-trait-keys-by-ref-name-and-ref-id",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "tm2",
+       "orbitals": [
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_7N4VCFFZXCZYPE636J37MV8BPM",
+          "name": "Task",
+          "persistence": "runtime"
+         },
+         "id": "orb_NK7VSF5MVXTDYSRBQ7RFN9DE38",
+         "name": "O",
+         "pages": [
+          {
+           "id": "pag_3RCJTRYFYP7ZB6ZAGVBZAZP54Y",
+           "name": "a",
+           "path": "/a",
+           "traits": [
+            {
+             "ref": "J",
+             "refId": "trt_CJY9SNYM80A40ANBK0XDT0YNJ1"
+            }
+           ]
+          },
+          {
+           "id": "pag_B1KB0R4TWYDEFEFAQHQQ085632",
+           "name": "b",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "X"
+            },
+            {
+             "ref": "J",
+             "refId": "trt_CJY9SNYM80A40ANBK0XDT0YNJ1"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "Task": "ent_7N4VCFFZXCZYPE636J37MV8BPM"
+           },
+           "id": "trt_14ZZ1KAQRZBWFQAXFZN8VEC000",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_7N4VCFFZXCZYPE636J37MV8BPM",
+           "name": "I",
+           "sourceDeclaration": {
+            "fingerprint": "88385320d068496fb0f3cd76acd4e2b62d28e27bb5ed8081da619eb665aff957",
+            "traitId": "trt_14ZZ1KAQRZBWFQAXFZN8VEC000"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_2MAB495QFAVQN0EMXYG66Z694T",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_2MAB495QFAVQN0EMXYG66Z694T",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "Task": "ent_7N4VCFFZXCZYPE636J37MV8BPM"
+           },
+           "id": "trt_CJY9SNYM80A40ANBK0XDT0YNJ1",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_7N4VCFFZXCZYPE636J37MV8BPM",
+           "name": "J",
+           "sourceDeclaration": {
+            "fingerprint": "859dc125de3a9d1fa1b1257cea953bef2e43129ff9fc7b04e05c10731dd0d38f",
+            "traitId": "trt_CJY9SNYM80A40ANBK0XDT0YNJ1"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_J7HZK07ZANZNAHWCK68QAY3F2S",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_J7HZK07ZANZNAHWCK68QAY3F2S",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "trait-mounts",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_T_TRAIT_ON_ROUTE_AND_ENDPOINT",
+           "path": "orbitals[0 (O)].traits[1 (J)]",
+           "message": "Trait 'J' is listed on a route page and on a protocol endpoint",
+           "suggestion": "A route trait paints for a viewer and an endpoint trait has none; split it into two traits",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "init-fetch-per-entity-and-persistence-controls",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "tm3",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "emisss",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_GMW52WX8DPM6V8QDMAZGP15NNF",
+          "name": "EMiss",
+          "persistence": "persistent"
+         },
+         "id": "orb_0NK94Y4EHT78X7CM8C73ZBVMC3",
+         "name": "Miss",
+         "pages": [
+          {
+           "id": "pag_JQEEYWSEE8Q740K33JJVKXVS4V",
+           "name": "pmiss",
+           "path": "/pmiss",
+           "traits": [
+            {
+             "ref": "VMiss",
+             "refId": "trt_DMVR2Y55SQJWVWDG8ZZHXW9D5Y"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "EMiss": "ent_GMW52WX8DPM6V8QDMAZGP15NNF"
+           },
+           "id": "trt_DMVR2Y55SQJWVWDG8ZZHXW9D5Y",
+           "linkedEntity": "EMiss",
+           "linkedEntityId": "ent_GMW52WX8DPM6V8QDMAZGP15NNF",
+           "name": "VMiss",
+           "sourceDeclaration": {
+            "fingerprint": "8928257a40acc91607db2ad7b64a35f3e55e5ea298d599b522b83527765966e0",
+            "traitId": "trt_DMVR2Y55SQJWVWDG8ZZHXW9D5Y"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_2Q62DNH7TZKXFGYYWZJCPMYPQ0",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_6C9330RXEYEQFENMJT55F7PMQB",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_2Q62DNH7TZKXFGYYWZJCPMYPQ0",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_6C9330RXEYEQFENMJT55F7PMQB",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "eoks",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_D4G87HATDYD6Z6MW7VSR8VR7V5",
+          "name": "EOk",
+          "persistence": "persistent"
+         },
+         "id": "orb_Z6D297AJJG9986EQSM752TMVDN",
+         "name": "Ok",
+         "pages": [
+          {
+           "id": "pag_0RMEPFHDEMPQA5CH8CCFRTWCAZ",
+           "name": "pok",
+           "path": "/pok",
+           "traits": [
+            {
+             "ref": "VOk",
+             "refId": "trt_G22D113FQ0QVG3MSSWM98YTJZC"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "EOk": "ent_D4G87HATDYD6Z6MW7VSR8VR7V5"
+           },
+           "id": "trt_G22D113FQ0QVG3MSSWM98YTJZC",
+           "linkedEntity": "EOk",
+           "linkedEntityId": "ent_D4G87HATDYD6Z6MW7VSR8VR7V5",
+           "name": "VOk",
+           "sourceDeclaration": {
+            "fingerprint": "eb661a0e05e6f023b21bc55ef461ed105fbb70b0e4961aaa58222e5027a002de",
+            "traitId": "trt_G22D113FQ0QVG3MSSWM98YTJZC"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_9F7S5A36A6K538T18E9TNFCG9P",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_M7A222FPEXV7EJ78N103KVW6V3",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_9F7S5A36A6K538T18E9TNFCG9P",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_M7A222FPEXV7EJ78N103KVW6V3",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "EOk"
+            }
+           ],
+           "entityRefIds": {
+            "EOk": "ent_D4G87HATDYD6Z6MW7VSR8VR7V5"
+           },
+           "id": "trt_VADSCPEWQ4EBJ2GVF6WSAWHV07",
+           "linkedEntity": "EOk",
+           "linkedEntityId": "ent_D4G87HATDYD6Z6MW7VSR8VR7V5",
+           "name": "DSOk",
+           "sourceDeclaration": {
+            "fingerprint": "c860aa31b1432e3f1043c4846033475506791e63d0ff2dcbabf10a28ec80b4a3",
+            "traitId": "trt_VADSCPEWQ4EBJ2GVF6WSAWHV07"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_R3VWKC5K3ASHNBGEHZMCAHP1EN",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "EOk"
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_R3VWKC5K3ASHNBGEHZMCAHP1EN",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_MR21FPAZDJFPS92R2XHCXSN07M",
+          "name": "ERt",
+          "persistence": "runtime"
+         },
+         "id": "orb_MFYX1YD6WYKEFF450PAASR2393",
+         "name": "Rt",
+         "pages": [
+          {
+           "id": "pag_Z5FARG88KD49PKAEAT334PYFZE",
+           "name": "prt",
+           "path": "/prt",
+           "traits": [
+            {
+             "ref": "VRt",
+             "refId": "trt_7DMCP2NDVYPXZ1ZZXA8Q1TM8RS"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "ERt": "ent_MR21FPAZDJFPS92R2XHCXSN07M"
+           },
+           "id": "trt_7DMCP2NDVYPXZ1ZZXA8Q1TM8RS",
+           "linkedEntity": "ERt",
+           "linkedEntityId": "ent_MR21FPAZDJFPS92R2XHCXSN07M",
+           "name": "VRt",
+           "sourceDeclaration": {
+            "fingerprint": "b4a1fe4094405dd5ea846c94815b1986bd9d634699f3f81f563b229a73d83678",
+            "traitId": "trt_7DMCP2NDVYPXZ1ZZXA8Q1TM8RS"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_N3W90GH0W2GE19WCSHEZCR7W4K",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_PVVW8Z7NGETR763GKJXRNB3EXV",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_N3W90GH0W2GE19WCSHEZCR7W4K",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_PVVW8Z7NGETR763GKJXRNB3EXV",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_5D683E7NC0TP027RQ7FJSHRA6V",
+          "name": "ENoPersist"
+         },
+         "id": "orb_YG2Y5KWKVM9XT2D2W9K5WT4WKQ",
+         "name": "NoPersist",
+         "pages": [
+          {
+           "id": "pag_Y50F9MKNFGTQR6HXGZQHC6BAHG",
+           "name": "pnopersist",
+           "path": "/pnopersist",
+           "traits": [
+            {
+             "ref": "VNoPersist",
+             "refId": "trt_DA417RET6KD39SP7D69EZ0GN7W"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "ENoPersist": "ent_5D683E7NC0TP027RQ7FJSHRA6V"
+           },
+           "id": "trt_DA417RET6KD39SP7D69EZ0GN7W",
+           "linkedEntity": "ENoPersist",
+           "linkedEntityId": "ent_5D683E7NC0TP027RQ7FJSHRA6V",
+           "name": "VNoPersist",
+           "sourceDeclaration": {
+            "fingerprint": "628ee48b083ae3c3595de7fa1c86fd4bb255d69aa149407ab9e57394d131e5f1",
+            "traitId": "trt_DA417RET6KD39SP7D69EZ0GN7W"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_QQCX1YSE0MQ0ADP5WD186PCQRE",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_HTZDPR8WF6E7KCNSP39PW8BKTY",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_QQCX1YSE0MQ0ADP5WD186PCQRE",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_HTZDPR8WF6E7KCNSP39PW8BKTY",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "etoasts",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_BSGQHVGPGRB8CFEQQX1Z25TSRB",
+          "name": "EToast",
+          "persistence": "persistent"
+         },
+         "id": "orb_Q1CQ6BDFXZQYZXM2TCX370NR80",
+         "name": "Toast",
+         "pages": [
+          {
+           "id": "pag_SNC4E18XEFEQ7JWPTMEE9XBHTP",
+           "name": "ptoast",
+           "path": "/ptoast",
+           "traits": [
+            {
+             "ref": "VToast",
+             "refId": "trt_2KWQKBDE55Q2JX8YK53FCXAV45"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "toast"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "EToast": "ent_BSGQHVGPGRB8CFEQQX1Z25TSRB"
+           },
+           "id": "trt_2KWQKBDE55Q2JX8YK53FCXAV45",
+           "linkedEntity": "EToast",
+           "linkedEntityId": "ent_BSGQHVGPGRB8CFEQQX1Z25TSRB",
+           "name": "VToast",
+           "sourceDeclaration": {
+            "fingerprint": "24ff6722bed9245bbc9cbafe2ba635556a308be572b92e1681908259863fcba0",
+            "traitId": "trt_2KWQKBDE55Q2JX8YK53FCXAV45"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_YX1TED127DH3PT05K5PT22201Z",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_93535BF3MVHTDHWW41N2AT8NH9",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "toast",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_YX1TED127DH3PT05K5PT22201Z",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_93535BF3MVHTDHWW41N2AT8NH9",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "ecreatess",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_SZV354K7AYKNFEYZH2QKCYGBTN",
+          "name": "ECreates",
+          "persistence": "persistent"
+         },
+         "id": "orb_2VRHHG4RNJCAS9XFVBD6WWWXYK",
+         "name": "Creates",
+         "pages": [
+          {
+           "id": "pag_3HKTJ37T99X4MR1QF6DA6GRZ5G",
+           "name": "pcreates",
+           "path": "/pcreates",
+           "traits": [
+            {
+             "ref": "VCreates",
+             "refId": "trt_WZ7T9HVNX8TYM6CH6A61VTHMTP"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "ECreates"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "ECreates": "ent_SZV354K7AYKNFEYZH2QKCYGBTN"
+           },
+           "id": "trt_WZ7T9HVNX8TYM6CH6A61VTHMTP",
+           "linkedEntity": "ECreates",
+           "linkedEntityId": "ent_SZV354K7AYKNFEYZH2QKCYGBTN",
+           "name": "VCreates",
+           "sourceDeclaration": {
+            "fingerprint": "1f5b0cbadee3f197c01be9ba447d2f1783c157e88cc692105b4c12b335e15cf8",
+            "traitId": "trt_WZ7T9HVNX8TYM6CH6A61VTHMTP"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_TZVJMEBSN9WTMQ6XCG6532414C",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_6J6YJKGTVRDDW70051C9T8DK1R",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_TZVJMEBSN9WTMQ6XCG6532414C",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "persist",
+                "create",
+                "ECreates",
+                {
+                 "n": 1
+                }
+               ],
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_6J6YJKGTVRDDW70051C9T8DK1R",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "enoreads",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_5R5SHTJJCG96888X89CVH9YH7M",
+          "name": "ENoRead",
+          "persistence": "persistent"
+         },
+         "id": "orb_VCR5RT25TF2X7GNQR4TVP15SGE",
+         "name": "NoRead",
+         "pages": [
+          {
+           "id": "pag_4B1S0JPCM26A19VN67D12Z8744",
+           "name": "pnoread",
+           "path": "/pnoread",
+           "traits": [
+            {
+             "ref": "VNoRead",
+             "refId": "trt_A9Q0KR2MAEA57AGEP9MHWWJD6J"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "ENoRead": "ent_5R5SHTJJCG96888X89CVH9YH7M"
+           },
+           "id": "trt_A9Q0KR2MAEA57AGEP9MHWWJD6J",
+           "linkedEntity": "ENoRead",
+           "linkedEntityId": "ent_5R5SHTJJCG96888X89CVH9YH7M",
+           "name": "VNoRead",
+           "sourceDeclaration": {
+            "fingerprint": "f628cd20f0aa7a9d83a7201711eee6ac7daea9936fc7d19a5ca40b469ad06f16",
+            "traitId": "trt_A9Q0KR2MAEA57AGEP9MHWWJD6J"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_0XM4X4V0CDG66HD9810XNJJG4C",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_0XM4X4V0CDG66HD9810XNJJG4C",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "eboots",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_PJ1TW7APMHBA8QZES4R4FH88CG",
+          "name": "EBoot",
+          "persistence": "persistent"
+         },
+         "id": "orb_G2V4X6DJYKSF9MYARAD68CTTEH",
+         "name": "Boot",
+         "pages": [
+          {
+           "id": "pag_27YVABS860M30CY63N65TATB6H",
+           "name": "pboot",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "VBoot",
+             "refId": "trt_DC095BVKJHSS8GZSHDHPQBYN7S"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "EBoot": "ent_PJ1TW7APMHBA8QZES4R4FH88CG"
+           },
+           "id": "trt_DC095BVKJHSS8GZSHDHPQBYN7S",
+           "linkedEntity": "EBoot",
+           "linkedEntityId": "ent_PJ1TW7APMHBA8QZES4R4FH88CG",
+           "name": "VBoot",
+           "sourceDeclaration": {
+            "fingerprint": "2c6957c0c13589881ec278dd9f5fd656e6dc455d257d1bdef807f84fa0f90a17",
+            "traitId": "trt_DC095BVKJHSS8GZSHDHPQBYN7S"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_KA317ZD53PJHV5TGCN8BKRFS3E",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_N4SN5BBA9XN4YGXSFA3Y9E1RXV",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_KA317ZD53PJHV5TGCN8BKRFS3E",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_N4SN5BBA9XN4YGXSFA3Y9E1RXV",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "trait-mounts",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_T_INIT_MISSING_FETCH",
+           "path": "orbitals[0].traits[0].stateMachine.transitions",
+           "message": "no trait in this orbital fetches persistent entity \"EMiss\" on INIT \u2014 interaction traits read it but nothing loads it",
+           "suggestion": "Add [\"fetch\", \"EMiss\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_INIT_MISSING_FETCH",
+           "path": "orbitals[3].traits[0].stateMachine.transitions",
+           "message": "no trait in this orbital fetches persistent entity \"ENoPersist\" on INIT \u2014 interaction traits read it but nothing loads it",
+           "suggestion": "Add [\"fetch\", \"ENoPersist\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_ENDPOINT_TRAIT_RENDERS",
+           "path": "orbitals[7 (Boot)].traits[0 (VBoot)]",
+           "message": "Trait 'VBoot' is mounted only on protocol endpoints but renders UI; an endpoint has no viewer",
+           "suggestion": "Remove the render-ui effects, or list the trait on a route page",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "init-fetch-top-level-ops-initial-state-slots-and-reads",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "tm4",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "erefops",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_EZQJRE230X1GEN4DEJ27R8DH1E",
+          "name": "ERefOp",
+          "persistence": "persistent"
+         },
+         "id": "orb_Y2HQEX156XJKEH5TX3J2H3ZEWH",
+         "name": "RefOp",
+         "pages": [
+          {
+           "id": "pag_0YVTCYA89M44T08WRC3ATQ4Y4P",
+           "name": "prefop",
+           "path": "/prefop",
+           "traits": [
+            {
+             "ref": "VRefOp",
+             "refId": "trt_BHDHR8SECAQ6576XCDD41GB3QY"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "ERefOp": "ent_EZQJRE230X1GEN4DEJ27R8DH1E"
+           },
+           "id": "trt_BHDHR8SECAQ6576XCDD41GB3QY",
+           "linkedEntity": "ERefOp",
+           "linkedEntityId": "ent_EZQJRE230X1GEN4DEJ27R8DH1E",
+           "name": "VRefOp",
+           "sourceDeclaration": {
+            "fingerprint": "ef213e06169495080408a855646e96a2cd25b5403d9d49b19871144cd2a8d71d",
+            "traitId": "trt_BHDHR8SECAQ6576XCDD41GB3QY"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_W5V9DX6KMD9T6R3YGF9TNEW5DJ",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_7PRPBA4MNCAAP94W3P5Z3S342X",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_W5V9DX6KMD9T6R3YGF9TNEW5DJ",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_7PRPBA4MNCAAP94W3P5Z3S342X",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "entityRefIds": {
+            "ERefOp": "ent_EZQJRE230X1GEN4DEJ27R8DH1E"
+           },
+           "id": "trt_VFKEQXZD18PGM8AWMAPYTWJWVF",
+           "linkedEntity": "ERefOp",
+           "linkedEntityId": "ent_EZQJRE230X1GEN4DEJ27R8DH1E",
+           "name": "DSRefOp",
+           "sourceDeclaration": {
+            "fingerprint": "b271b8141699fb0f281957814675f3f604a081ab4ebbf64164c209c94053b67e",
+            "traitId": "trt_VFKEQXZD18PGM8AWMAPYTWJWVF"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_MJVFZCEZ07FG3QHF49KJDAMBG7",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "ref",
+                "ERefOp"
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_MJVFZCEZ07FG3QHF49KJDAMBG7",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "enesteds",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_JDYTZY7RFHW7RPWYJ60KV026PF",
+          "name": "ENested",
+          "persistence": "persistent"
+         },
+         "id": "orb_F9M0CGP3WB1Y5SYSEWEAKRXBQ3",
+         "name": "Nested",
+         "pages": [
+          {
+           "id": "pag_C3F42R52A9H54KSVQ8YQVD3ZEY",
+           "name": "pnested",
+           "path": "/pnested",
+           "traits": [
+            {
+             "ref": "VNested",
+             "refId": "trt_J7K9AGDBEJNQ92ECJ3BBDE8NBD"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "ENested": "ent_JDYTZY7RFHW7RPWYJ60KV026PF"
+           },
+           "id": "trt_J7K9AGDBEJNQ92ECJ3BBDE8NBD",
+           "linkedEntity": "ENested",
+           "linkedEntityId": "ent_JDYTZY7RFHW7RPWYJ60KV026PF",
+           "name": "VNested",
+           "sourceDeclaration": {
+            "fingerprint": "7916f415f3c77c156f3635bc9f90dd03bcf3ac0ac2a9e7b3e80264e4b905b036",
+            "traitId": "trt_J7K9AGDBEJNQ92ECJ3BBDE8NBD"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_WZ6TG8P9YT4ZD0Q8HW6SD9KBC9",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_EXPMCMPYGPF8BD61QN0C69T6TK",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_WZ6TG8P9YT4ZD0Q8HW6SD9KBC9",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_EXPMCMPYGPF8BD61QN0C69T6TK",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "ENested"
+            }
+           ],
+           "entityRefIds": {
+            "ENested": "ent_JDYTZY7RFHW7RPWYJ60KV026PF"
+           },
+           "id": "trt_NCQSNZ9S5MWJT2N43JZ1KWFVE3",
+           "linkedEntity": "ENested",
+           "linkedEntityId": "ent_JDYTZY7RFHW7RPWYJ60KV026PF",
+           "name": "DSNested",
+           "sourceDeclaration": {
+            "fingerprint": "d75377c48aeab899513c16cc84d1c77f7f78f8bafc4daed2934dd1fb0f02bb7f",
+            "traitId": "trt_NCQSNZ9S5MWJT2N43JZ1KWFVE3"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_P4MY0WWMZJAFS6MN81S2SJPFE3",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "do",
+                [
+                 "fetch",
+                 "ENested"
+                ]
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_P4MY0WWMZJAFS6MN81S2SJPFE3",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "enotinits",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_M90X4WJNPYAVF04NC5XJ8REE16",
+          "name": "ENotInit",
+          "persistence": "persistent"
+         },
+         "id": "orb_3VYJZGQ12GGH84EAWVN8KW5JRF",
+         "name": "NotInit",
+         "pages": [
+          {
+           "id": "pag_BRPSAM5K9BSMNYD4EKDW2Y00WE",
+           "name": "pnotinit",
+           "path": "/pnotinit",
+           "traits": [
+            {
+             "ref": "VNotInit",
+             "refId": "trt_QGFBDCN5J7JS3S8CDFVZR43WXS"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "ENotInit": "ent_M90X4WJNPYAVF04NC5XJ8REE16"
+           },
+           "id": "trt_QGFBDCN5J7JS3S8CDFVZR43WXS",
+           "linkedEntity": "ENotInit",
+           "linkedEntityId": "ent_M90X4WJNPYAVF04NC5XJ8REE16",
+           "name": "VNotInit",
+           "sourceDeclaration": {
+            "fingerprint": "4d2df14df9f73f5fa3d250a057577d7a74a6a437eabd80ded0e5122cbbc43edb",
+            "traitId": "trt_QGFBDCN5J7JS3S8CDFVZR43WXS"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_XHC32KSFS7QWKKFR3D8VVYP3GT",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_CD1WATWKQN9VTNCQFW4BZ4D6VJ",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_XHC32KSFS7QWKKFR3D8VVYP3GT",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_CD1WATWKQN9VTNCQFW4BZ4D6VJ",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "ENotInit"
+            }
+           ],
+           "entityRefIds": {
+            "ENotInit": "ent_M90X4WJNPYAVF04NC5XJ8REE16"
+           },
+           "id": "trt_KCQFX43950MJG0Y4XAKHSXW9XP",
+           "linkedEntity": "ENotInit",
+           "linkedEntityId": "ent_M90X4WJNPYAVF04NC5XJ8REE16",
+           "name": "DSNotInit",
+           "sourceDeclaration": {
+            "fingerprint": "80218ab82eaceb33595952f4cfa498f69b4788d2bb53aa246f21cd718ceedae0",
+            "traitId": "trt_KCQFX43950MJG0Y4XAKHSXW9XP"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_ADB0RYWGMF8A7H43R4K5D4Y60B",
+              "key": "LOAD"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "ENotInit"
+               ]
+              ],
+              "event": "LOAD",
+              "eventId": "evt_ADB0RYWGMF8A7H43R4K5D4Y60B",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "estars",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_9GAN191ATHND8XKXVAVN2WXP8K",
+          "name": "EStar",
+          "persistence": "persistent"
+         },
+         "id": "orb_N6JQHS4VNHDTRMQQJ2SZD8B0YX",
+         "name": "Star",
+         "pages": [
+          {
+           "id": "pag_MSG503FRTHWD8NZB0EQWGDANAE",
+           "name": "pstar",
+           "path": "/pstar",
+           "traits": [
+            {
+             "ref": "VStar",
+             "refId": "trt_A4P4HBQJ7ES3Q2F4ZWX57CQNMW"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "EStar": "ent_9GAN191ATHND8XKXVAVN2WXP8K"
+           },
+           "id": "trt_A4P4HBQJ7ES3Q2F4ZWX57CQNMW",
+           "linkedEntity": "EStar",
+           "linkedEntityId": "ent_9GAN191ATHND8XKXVAVN2WXP8K",
+           "name": "VStar",
+           "sourceDeclaration": {
+            "fingerprint": "f3d0d9a088e0b411613c0847214abbb3a5418f60e4b842b4731ac95272c4626e",
+            "traitId": "trt_A4P4HBQJ7ES3Q2F4ZWX57CQNMW"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_TA036XQJVJSDSDCHXZYG5WPPKZ",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_WBEPNA4VSVDWXNYGRPGXPNAR2W",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_TA036XQJVJSDSDCHXZYG5WPPKZ",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_WBEPNA4VSVDWXNYGRPGXPNAR2W",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "EStar"
+            }
+           ],
+           "entityRefIds": {
+            "EStar": "ent_9GAN191ATHND8XKXVAVN2WXP8K"
+           },
+           "id": "trt_S5A8R4BW5QY2VHAQ4QSR7AFBQQ",
+           "linkedEntity": "EStar",
+           "linkedEntityId": "ent_9GAN191ATHND8XKXVAVN2WXP8K",
+           "name": "DSStar",
+           "sourceDeclaration": {
+            "fingerprint": "b40b9de80aa2fbfca77108e44514401dc9d642471b568fed2e835ddcdc673353",
+            "traitId": "trt_S5A8R4BW5QY2VHAQ4QSR7AFBQQ"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_MTJ16146Y13F0W4GNZ9CMFWZDP",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "EStar"
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_MTJ16146Y13F0W4GNZ9CMFWZDP",
+              "from": "*",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "earrfroms",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_H419ETBJ6ZS3FXBSJQ2AY3ZXC4",
+          "name": "EArrFrom",
+          "persistence": "persistent"
+         },
+         "id": "orb_44FX6S4DCS6PCXE4FZYA761VW2",
+         "name": "ArrFrom",
+         "pages": [
+          {
+           "id": "pag_ERK8VVRZN8FTMFZYVTE49EHDCA",
+           "name": "parrfrom",
+           "path": "/parrfrom",
+           "traits": [
+            {
+             "ref": "VArrFrom",
+             "refId": "trt_MG7A27JDBN6NTWP05G128ETPCG"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "EArrFrom": "ent_H419ETBJ6ZS3FXBSJQ2AY3ZXC4"
+           },
+           "id": "trt_MG7A27JDBN6NTWP05G128ETPCG",
+           "linkedEntity": "EArrFrom",
+           "linkedEntityId": "ent_H419ETBJ6ZS3FXBSJQ2AY3ZXC4",
+           "name": "VArrFrom",
+           "sourceDeclaration": {
+            "fingerprint": "aea1d3fa5b2681e94e3491a456ce6bf0be32cc66cdee19241072e39747a23b62",
+            "traitId": "trt_MG7A27JDBN6NTWP05G128ETPCG"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_EC94DYTTWYDEF33PW663H5X6WG",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_FK6EY6VJPTSBDB5QCZPNKEEV3F",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_EC94DYTTWYDEF33PW663H5X6WG",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_FK6EY6VJPTSBDB5QCZPNKEEV3F",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "EArrFrom"
+            }
+           ],
+           "entityRefIds": {
+            "EArrFrom": "ent_H419ETBJ6ZS3FXBSJQ2AY3ZXC4"
+           },
+           "id": "trt_14DZ6CD0BKG5SZWKWY2HC0ZN1F",
+           "linkedEntity": "EArrFrom",
+           "linkedEntityId": "ent_H419ETBJ6ZS3FXBSJQ2AY3ZXC4",
+           "name": "DSArrFrom",
+           "sourceDeclaration": {
+            "fingerprint": "0d02ddf8b61d88a76780ea7ac2ae8b0d579eeb9c6fb4f698310e6f94ee9d1f68",
+            "traitId": "trt_14DZ6CD0BKG5SZWKWY2HC0ZN1F"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_JDYE0JGD766KK6YJ2M7Q923DKA",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             },
+             {
+              "isInitial": false,
+              "name": "other"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "EArrFrom"
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_JDYE0JGD766KK6YJ2M7Q923DKA",
+              "from": [
+               "idle",
+               "other"
+              ],
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "enotinitialstates",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_FQPZ0P5MN0TAG4DA06TZWJ178P",
+          "name": "ENotInitialState",
+          "persistence": "persistent"
+         },
+         "id": "orb_T1YBX466QN3BTY36JZE48V4JYZ",
+         "name": "NotInitialState",
+         "pages": [
+          {
+           "id": "pag_A9TNJWYFR57W2TSA55KKTPAEV0",
+           "name": "pnotinitialstate",
+           "path": "/pnotinitialstate",
+           "traits": [
+            {
+             "ref": "VNotInitialState",
+             "refId": "trt_3XNBJG1H2WRHED7QNR3XBJPP36"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "ENotInitialState": "ent_FQPZ0P5MN0TAG4DA06TZWJ178P"
+           },
+           "id": "trt_3XNBJG1H2WRHED7QNR3XBJPP36",
+           "linkedEntity": "ENotInitialState",
+           "linkedEntityId": "ent_FQPZ0P5MN0TAG4DA06TZWJ178P",
+           "name": "VNotInitialState",
+           "sourceDeclaration": {
+            "fingerprint": "7cff253aa92708bb23a8f39689b7a9108e71378a38c39b18f7b4bf767fb26db4",
+            "traitId": "trt_3XNBJG1H2WRHED7QNR3XBJPP36"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_VA3KZSFY5XZ2YSF1AAVKVQ462K",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_Y2GG989Z3QZHVSF0586137FS7Z",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_VA3KZSFY5XZ2YSF1AAVKVQ462K",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_Y2GG989Z3QZHVSF0586137FS7Z",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "ENotInitialState"
+            }
+           ],
+           "entityRefIds": {
+            "ENotInitialState": "ent_FQPZ0P5MN0TAG4DA06TZWJ178P"
+           },
+           "id": "trt_MBXEY5PKZ09ZG03B2YPEMDPYEG",
+           "linkedEntity": "ENotInitialState",
+           "linkedEntityId": "ent_FQPZ0P5MN0TAG4DA06TZWJ178P",
+           "name": "DSNotInitialState",
+           "sourceDeclaration": {
+            "fingerprint": "2ec4b54feaeb171e426c812cc234e08da5a24f397abc90d0d9d5172e8aede216",
+            "traitId": "trt_MBXEY5PKZ09ZG03B2YPEMDPYEG"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_4KZPVJRYA4F52BFH0RDZN7YG0W",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             },
+             {
+              "isInitial": false,
+              "name": "other"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "ENotInitialState"
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_4KZPVJRYA4F52BFH0RDZN7YG0W",
+              "from": "other",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "eotherentitys",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_F5SQ9K3DSYPWZ6XSEEFSSF1BYZ",
+          "name": "EOtherEntity",
+          "persistence": "persistent"
+         },
+         "id": "orb_K91S1AG6Z83FMA2WACZ0M63EZ8",
+         "name": "OtherEntity",
+         "pages": [
+          {
+           "id": "pag_NYS7M0807R03W8R9BYFZ2YT24N",
+           "name": "potherentity",
+           "path": "/potherentity",
+           "traits": [
+            {
+             "ref": "VOtherEntity",
+             "refId": "trt_VCMPFB69K34SHX1H071QM0AJ67"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "EOtherEntity": "ent_F5SQ9K3DSYPWZ6XSEEFSSF1BYZ"
+           },
+           "id": "trt_VCMPFB69K34SHX1H071QM0AJ67",
+           "linkedEntity": "EOtherEntity",
+           "linkedEntityId": "ent_F5SQ9K3DSYPWZ6XSEEFSSF1BYZ",
+           "name": "VOtherEntity",
+           "sourceDeclaration": {
+            "fingerprint": "eb199e69d9134e1301d68cf6a3d35598a257202a5d62b393325b626c1457d5ac",
+            "traitId": "trt_VCMPFB69K34SHX1H071QM0AJ67"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_XXFF1NK6SFKCQPHP80SDJTBRH7",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_G48098G4HE28Q9VWBJHC71F6SZ",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_XXFF1NK6SFKCQPHP80SDJTBRH7",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_G48098G4HE28Q9VWBJHC71F6SZ",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Task"
+            }
+           ],
+           "entityRefIds": {
+            "EOtherEntity": "ent_F5SQ9K3DSYPWZ6XSEEFSSF1BYZ"
+           },
+           "id": "trt_8HTQFF5NXYTYZ7WDBE0BGS78TH",
+           "linkedEntity": "EOtherEntity",
+           "linkedEntityId": "ent_F5SQ9K3DSYPWZ6XSEEFSSF1BYZ",
+           "name": "DSOtherEntity",
+           "sourceDeclaration": {
+            "fingerprint": "0158bc1585a64ebd975aa8a9cbf189c6b963f3f8393d8db56f33fda9e029cea5",
+            "traitId": "trt_8HTQFF5NXYTYZ7WDBE0BGS78TH"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_4V1G9ZKK3ASHN37PP7KPDE51AQ",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "Task"
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_4V1G9ZKK3ASHN37PP7KPDE51AQ",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "econfigslots",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_KQ9SC7T7H83RM9ACAD7RVZJEPB",
+          "name": "EConfigSlot",
+          "persistence": "persistent"
+         },
+         "id": "orb_KETHH9C8SY4CZ4TDKV2E4BEWJ6",
+         "name": "ConfigSlot",
+         "pages": [
+          {
+           "id": "pag_7SCR7WSP7EV3Q3736G2H4E3FCQ",
+           "name": "pconfigslot",
+           "path": "/pconfigslot",
+           "traits": [
+            {
+             "ref": "VConfigSlot",
+             "refId": "trt_3537CPY07603KEQRBBYFW0GBY3"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resolved": false,
+             "resource": "@config.slot"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "EConfigSlot": "ent_KQ9SC7T7H83RM9ACAD7RVZJEPB"
+           },
+           "id": "trt_3537CPY07603KEQRBBYFW0GBY3",
+           "linkedEntity": "EConfigSlot",
+           "linkedEntityId": "ent_KQ9SC7T7H83RM9ACAD7RVZJEPB",
+           "name": "VConfigSlot",
+           "sourceDeclaration": {
+            "fingerprint": "49d050048c8ec04a3ced0e6ea78df7ba4693ed70d879664cf6fdc832d7667527",
+            "traitId": "trt_3537CPY07603KEQRBBYFW0GBY3"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_GYJT4K4BT25X116MH9D6ZSCA5R",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_5M5D9W7Y2HZ18QN2PX0BK2GB09",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "@config.slot",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_GYJT4K4BT25X116MH9D6ZSCA5R",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_5M5D9W7Y2HZ18QN2PX0BK2GB09",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "econtentslots",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_NZFPC1DKFQSQVSGVD20WDDBNCQ",
+          "name": "EContentSlot",
+          "persistence": "persistent"
+         },
+         "id": "orb_1KNG0Q9YM2ZA1DHEKX0S3084M8",
+         "name": "ContentSlot",
+         "pages": [
+          {
+           "id": "pag_P58832DTRTXCDBTMYKHXEGSC6P",
+           "name": "pcontentslot",
+           "path": "/pcontentslot",
+           "traits": [
+            {
+             "ref": "VContentSlot",
+             "refId": "trt_03ZMV8FVMGXT8B81S7E3MSCSG9"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "content"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "EContentSlot": "ent_NZFPC1DKFQSQVSGVD20WDDBNCQ"
+           },
+           "id": "trt_03ZMV8FVMGXT8B81S7E3MSCSG9",
+           "linkedEntity": "EContentSlot",
+           "linkedEntityId": "ent_NZFPC1DKFQSQVSGVD20WDDBNCQ",
+           "name": "VContentSlot",
+           "sourceDeclaration": {
+            "fingerprint": "ffca68df76770014ca656ebea29f8be910fdbbe991c7da3f9245ce3de331ef26",
+            "traitId": "trt_03ZMV8FVMGXT8B81S7E3MSCSG9"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_STQ7ZJM3WM1YA1FKB5MEKQQW72",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_TT824GWNB4ANJ30AD7MVK98AJV",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "content",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_STQ7ZJM3WM1YA1FKB5MEKQQW72",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_TT824GWNB4ANJ30AD7MVK98AJV",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "eguardreads",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_1GRGJV8W9XE4YP0966W8NHCR3X",
+          "name": "EGuardRead",
+          "persistence": "persistent"
+         },
+         "id": "orb_QBKKM0NJSJSCS11XBAVEY147SZ",
+         "name": "GuardRead",
+         "pages": [
+          {
+           "id": "pag_1F55KKM0T20D13STYBJDBCAFPJ",
+           "name": "pguardread",
+           "path": "/pguardread",
+           "traits": [
+            {
+             "ref": "VGuardRead",
+             "refId": "trt_WY386ZN8K8M9MBZ2G9PE9SZE51"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "X"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "EGuardRead": "ent_1GRGJV8W9XE4YP0966W8NHCR3X"
+           },
+           "id": "trt_WY386ZN8K8M9MBZ2G9PE9SZE51",
+           "linkedEntity": "EGuardRead",
+           "linkedEntityId": "ent_1GRGJV8W9XE4YP0966W8NHCR3X",
+           "name": "VGuardRead",
+           "sourceDeclaration": {
+            "fingerprint": "eb70d8967de90f4b8f222dc25e9518109cd90dc9797b503ebbced7eacd33918a",
+            "traitId": "trt_WY386ZN8K8M9MBZ2G9PE9SZE51"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_AB4BA0RG3B81NZRTYREBHKVCE9",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_C34F2B91S1GWGYTAR9JXBP4CC0",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_AB4BA0RG3B81NZRTYREBHKVCE9",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "emit",
+                "X",
+                {}
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_C34F2B91S1GWGYTAR9JXBP4CC0",
+              "from": "idle",
+              "guard": [
+               ">",
+               "@entity.n",
+               0
+              ],
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "etworeaderss",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_JPMGG52D3J6HS7H1BT4T1WTEHK",
+          "name": "ETwoReaders",
+          "persistence": "persistent"
+         },
+         "id": "orb_D3YAEVP9YM4ZA28E0540J6778K",
+         "name": "TwoReaders",
+         "pages": [
+          {
+           "id": "pag_5JAE6V7968MK4CD4DYQSE51A85",
+           "name": "ptworeaders",
+           "path": "/ptworeaders",
+           "traits": [
+            {
+             "ref": "V1TwoReaders",
+             "refId": "trt_2DAG4X347SJ3WSAYKX65XPFZJW"
+            },
+            {
+             "ref": "V2TwoReaders",
+             "refId": "trt_HFBGEEREN17AGS94YND3EDZN5Q"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "ETwoReaders": "ent_JPMGG52D3J6HS7H1BT4T1WTEHK"
+           },
+           "id": "trt_2DAG4X347SJ3WSAYKX65XPFZJW",
+           "linkedEntity": "ETwoReaders",
+           "linkedEntityId": "ent_JPMGG52D3J6HS7H1BT4T1WTEHK",
+           "name": "V1TwoReaders",
+           "sourceDeclaration": {
+            "fingerprint": "000b6c1292d3959d16b610208b06fe063b7ed546ba996c387597b5d6929b3536",
+            "traitId": "trt_2DAG4X347SJ3WSAYKX65XPFZJW"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_CA16TK05FW2QY7XKPN8XXCAE9T",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_J6TBFTDQNBVTNYE1H9V3HR8MX0",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_CA16TK05FW2QY7XKPN8XXCAE9T",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_J6TBFTDQNBVTNYE1H9V3HR8MX0",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "ETwoReaders": "ent_JPMGG52D3J6HS7H1BT4T1WTEHK"
+           },
+           "id": "trt_HFBGEEREN17AGS94YND3EDZN5Q",
+           "linkedEntity": "ETwoReaders",
+           "linkedEntityId": "ent_JPMGG52D3J6HS7H1BT4T1WTEHK",
+           "name": "V2TwoReaders",
+           "sourceDeclaration": {
+            "fingerprint": "9505a098f82cb5b02da8ec04cd68af5124116f15f51763430a6a98b95318cf26",
+            "traitId": "trt_HFBGEEREN17AGS94YND3EDZN5Q"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_YF80TYC1BT0NX2JEH8B984DB0D",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_JVYE579FHSQRWNTQGEK01R84K0",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_YF80TYC1BT0NX2JEH8B984DB0D",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_JVYE579FHSQRWNTQGEK01R84K0",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "eembeddeds",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_1H8FV7MREDC76ZN8ZDEH07XWQ6",
+          "name": "EEmbedded",
+          "persistence": "persistent"
+         },
+         "id": "orb_92F9MX3S5PWJV7E3SF86J1RBHW",
+         "name": "Embedded",
+         "pages": [
+          {
+           "id": "pag_RVF95ZSY8XZ4ENH8CJ53NP56KA",
+           "name": "pembedded",
+           "path": "/pembedded",
+           "traits": [
+            {
+             "ref": "HostEmbedded",
+             "refId": "trt_KSG8JRT24Z12FYF7GXKA1C5ARY"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "EEmbedded": "ent_1H8FV7MREDC76ZN8ZDEH07XWQ6"
+           },
+           "id": "trt_KSG8JRT24Z12FYF7GXKA1C5ARY",
+           "linkedEntity": "EEmbedded",
+           "linkedEntityId": "ent_1H8FV7MREDC76ZN8ZDEH07XWQ6",
+           "name": "HostEmbedded",
+           "sourceDeclaration": {
+            "fingerprint": "8042b69a489494e604f3d06f285f91eed6878eb68a2fe1284d98786499bbdedb",
+            "traitId": "trt_KSG8JRT24Z12FYF7GXKA1C5ARY"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_5EGABY6NWXAYETRAB9WJS8K1CQ",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [
+                  "@trait.ChildEmbedded"
+                 ],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_5EGABY6NWXAYETRAB9WJS8K1CQ",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           },
+           "traitEmbedIds": {
+            "ChildEmbedded": "trt_A9WV1NWSHTCRXBFHAF3TEKZF0N"
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n"
+            }
+           ],
+           "entityRefIds": {
+            "EEmbedded": "ent_1H8FV7MREDC76ZN8ZDEH07XWQ6"
+           },
+           "id": "trt_A9WV1NWSHTCRXBFHAF3TEKZF0N",
+           "linkedEntity": "EEmbedded",
+           "linkedEntityId": "ent_1H8FV7MREDC76ZN8ZDEH07XWQ6",
+           "name": "ChildEmbedded",
+           "sourceDeclaration": {
+            "fingerprint": "964f1dace02c34074b0c15a29a37956ab6a3a9067060aadec18b398b4fbbc621",
+            "traitId": "trt_A9WV1NWSHTCRXBFHAF3TEKZF0N"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_8M4VNC3K3ASHN7FJK58S3VVEG5",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_4KY9YKJ03F01QH4V3W59YDPEKZ",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_8M4VNC3K3ASHN7FJK58S3VVEG5",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                [
+                 "+",
+                 "@entity.n",
+                 1
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_4KY9YKJ03F01QH4V3W59YDPEKZ",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "etickreads",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_ZYE53E5MADT56HAB7H3EHE3XCS",
+          "name": "ETickRead",
+          "persistence": "persistent"
+         },
+         "id": "orb_SSQX4JN7ENKQAN1RCNVFD7XXNZ",
+         "name": "TickRead",
+         "pages": [
+          {
+           "id": "pag_10CKT7MY58F2MCZ0TTY0SAMXJB",
+           "name": "ptickread",
+           "path": "/ptickread",
+           "traits": [
+            {
+             "ref": "VTickRead",
+             "refId": "trt_37FEYJTWJWE9E8827RJHTZP0PS"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.n",
+             "site": "tick"
+            },
+            {
+             "kind": "ticks",
+             "site": "tick"
+            }
+           ],
+           "entityRefIds": {
+            "ETickRead": "ent_ZYE53E5MADT56HAB7H3EHE3XCS"
+           },
+           "id": "trt_37FEYJTWJWE9E8827RJHTZP0PS",
+           "linkedEntity": "ETickRead",
+           "linkedEntityId": "ent_ZYE53E5MADT56HAB7H3EHE3XCS",
+           "name": "VTickRead",
+           "sourceDeclaration": {
+            "fingerprint": "859357128196d4adeccfad8a8855db6c87e6eb98c67ba2c00c73544e5d122908",
+            "traitId": "trt_37FEYJTWJWE9E8827RJHTZP0PS"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_0Y8YA8DFR2QW1CD9HB9PQJYX1N",
+              "key": "INIT"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_0Y8YA8DFR2QW1CD9HB9PQJYX1N",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "effects": [
+              [
+               "set",
+               "@entity.n",
+               [
+                "+",
+                "@entity.n",
+                1
+               ]
+              ]
+             ],
+             "interval": 1000,
+             "name": "t"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "eallreadss",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_TM1N44SSDCWPP3EFNHK28SZRBJ",
+          "name": "EAllReads",
+          "persistence": "persistent"
+         },
+         "id": "orb_WWZ84XZ25AH2N05C6C5A7Y8MMP",
+         "name": "AllReads",
+         "pages": [
+          {
+           "id": "pag_0BQWCJFRKCW9PFK8M3BDQ1MNWY",
+           "name": "pallreads",
+           "path": "/pallreads",
+           "traits": [
+            {
+             "ref": "VAllReads",
+             "refId": "trt_PEZ5Q8HVC2XP12Z2M1N22S4N12"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "X"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "EAllReads": "ent_TM1N44SSDCWPP3EFNHK28SZRBJ"
+           },
+           "id": "trt_PEZ5Q8HVC2XP12Z2M1N22S4N12",
+           "linkedEntity": "EAllReads",
+           "linkedEntityId": "ent_TM1N44SSDCWPP3EFNHK28SZRBJ",
+           "name": "VAllReads",
+           "sourceDeclaration": {
+            "fingerprint": "b345066a0b83d1bfecd1733ae84c69de9fadaa4962f4c7760d766a4efa6986c1",
+            "traitId": "trt_PEZ5Q8HVC2XP12Z2M1N22S4N12"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_319QXF44C7263X2A71DQEWWHFC",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_29V29Z6X56EJKDZ1TKPNRJA9F9",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_319QXF44C7263X2A71DQEWWHFC",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "emit",
+                "X",
+                {
+                 "a": "@entity"
+                }
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_29V29Z6X56EJKDZ1TKPNRJA9F9",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "ereadsidxs",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_EPW28CCQJ7BS3Y3BVGQZE1BMA3",
+          "name": "EReadsIdx",
+          "persistence": "persistent"
+         },
+         "id": "orb_0ESHYVBC7TP3XFP32EN9DJNVX3",
+         "name": "ReadsIdx",
+         "pages": [
+          {
+           "id": "pag_EQJHD5NBHHNRRMJ4FRB9Y3X4M1",
+           "name": "preadsidx",
+           "path": "/preadsidx",
+           "traits": [
+            {
+             "ref": "VReadsIdx",
+             "refId": "trt_CKCRTDDQS0VWG67MVTQ9KK6PPW"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "X"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "EReadsIdx": "ent_EPW28CCQJ7BS3Y3BVGQZE1BMA3"
+           },
+           "id": "trt_CKCRTDDQS0VWG67MVTQ9KK6PPW",
+           "linkedEntity": "EReadsIdx",
+           "linkedEntityId": "ent_EPW28CCQJ7BS3Y3BVGQZE1BMA3",
+           "name": "VReadsIdx",
+           "sourceDeclaration": {
+            "fingerprint": "eb1b088c66424ab2361ba851b29420baa3a6ad541f30faa1aa552d26b60a43a9",
+            "traitId": "trt_CKCRTDDQS0VWG67MVTQ9KK6PPW"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_CVHJ7FHMPTTBD92SBF1CDPH42V",
+              "key": "INIT"
+             },
+             {
+              "id": "evt_Q0YBRRTX8AEM53QFSVQAW11HN8",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "INIT",
+              "eventId": "evt_CVHJ7FHMPTTBD92SBF1CDPH42V",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "emit",
+                "X",
+                {
+                 "a": "@entity[0]"
+                }
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_Q0YBRRTX8AEM53QFSVQAW11HN8",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "trait-mounts",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_T_INIT_MISSING_FETCH",
+           "path": "orbitals[1].traits[0].stateMachine.transitions",
+           "message": "no trait in this orbital fetches persistent entity \"ENested\" on INIT \u2014 interaction traits read it but nothing loads it",
+           "suggestion": "Add [\"fetch\", \"ENested\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_INIT_MISSING_FETCH",
+           "path": "orbitals[2].traits[0].stateMachine.transitions",
+           "message": "no trait in this orbital fetches persistent entity \"ENotInit\" on INIT \u2014 interaction traits read it but nothing loads it",
+           "suggestion": "Add [\"fetch\", \"ENotInit\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_INIT_MISSING_FETCH",
+           "path": "orbitals[5].traits[0].stateMachine.transitions",
+           "message": "no trait in this orbital fetches persistent entity \"ENotInitialState\" on INIT \u2014 interaction traits read it but nothing loads it",
+           "suggestion": "Add [\"fetch\", \"ENotInitialState\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_INIT_MISSING_FETCH",
+           "path": "orbitals[6].traits[0].stateMachine.transitions",
+           "message": "no trait in this orbital fetches persistent entity \"EOtherEntity\" on INIT \u2014 interaction traits read it but nothing loads it",
+           "suggestion": "Add [\"fetch\", \"EOtherEntity\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_INIT_MISSING_FETCH",
+           "path": "orbitals[7].traits[0].stateMachine.transitions",
+           "message": "no trait in this orbital fetches persistent entity \"EConfigSlot\" on INIT \u2014 interaction traits read it but nothing loads it",
+           "suggestion": "Add [\"fetch\", \"EConfigSlot\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_INIT_MISSING_FETCH",
+           "path": "orbitals[8].traits[0].stateMachine.transitions",
+           "message": "no trait in this orbital fetches persistent entity \"EContentSlot\" on INIT \u2014 interaction traits read it but nothing loads it",
+           "suggestion": "Add [\"fetch\", \"EContentSlot\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_INIT_MISSING_FETCH",
+           "path": "orbitals[9].traits[0].stateMachine.transitions",
+           "message": "no trait in this orbital fetches persistent entity \"EGuardRead\" on INIT \u2014 interaction traits read it but nothing loads it",
+           "suggestion": "Add [\"fetch\", \"EGuardRead\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_INIT_MISSING_FETCH",
+           "path": "orbitals[10].traits[0].stateMachine.transitions",
+           "message": "no trait in this orbital fetches persistent entity \"ETwoReaders\" on INIT \u2014 interaction traits read it but nothing loads it",
+           "suggestion": "Add [\"fetch\", \"ETwoReaders\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_INIT_MISSING_FETCH",
+           "path": "orbitals[11].traits[1].stateMachine.transitions",
+           "message": "no trait in this orbital fetches persistent entity \"EEmbedded\" on INIT \u2014 interaction traits read it but nothing loads it",
+           "suggestion": "Add [\"fetch\", \"EEmbedded\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_INIT_MISSING_FETCH",
+           "path": "orbitals[12].traits[0].stateMachine.transitions",
+           "message": "no trait in this orbital fetches persistent entity \"ETickRead\" on INIT \u2014 interaction traits read it but nothing loads it",
+           "suggestion": "Add [\"fetch\", \"ETickRead\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_INIT_MISSING_FETCH",
+           "path": "orbitals[13].traits[0].stateMachine.transitions",
+           "message": "no trait in this orbital fetches persistent entity \"EAllReads\" on INIT \u2014 interaction traits read it but nothing loads it",
+           "suggestion": "Add [\"fetch\", \"EAllReads\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_INIT_MISSING_FETCH",
+           "path": "orbitals[14].traits[0].stateMachine.transitions",
+           "message": "no trait in this orbital fetches persistent entity \"EReadsIdx\" on INIT \u2014 interaction traits read it but nothing loads it",
+           "suggestion": "Add [\"fetch\", \"EReadsIdx\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

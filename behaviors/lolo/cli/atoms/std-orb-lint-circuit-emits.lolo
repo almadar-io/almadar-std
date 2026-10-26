@@ -1,0 +1,235 @@
+app std-orb-lint-circuit-emits [
+  version: "1.0.0",
+  inbound: ["cli-lint-circuit-emits"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-circuit-emits - the `orb lint circuit-emits <file>` command, the port of three per-trait checks of validate_all_circuits (circuit/closed_circuit.rs): ORB_RENDER_ACTION_LIFECYCLE_EVENT (a rendered pattern's event-bearing prop, found by the installed pattern registry's event prop names at any depth of the render-ui props, that names an event the bus never delivers: the operator table's emit busExcluded list), ORB_CIRCUIT_LIFECYCLE_EMIT_UNDELIVERED (an `(emit EVENT)` effect, nested at any depth of the transition's effect arrays, of such an event) and ORB_CIRCUIT_SELF_EMIT_LOOP (a transition arm that re-emits its own trigger event while a same-event arm is enterable from its target state and the emit's payload shows no per-hop progress: no @payload reference, and no @entity reference together with an @entity set in the same arm). Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint circuit-emits: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-circuit-emits"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type CeNode = string | number | boolean | [CeNode?] | Map string CeNode?
+type CeFrom = string | [string]
+type CeTransition = { from : CeFrom, to : string, event : string, effects : [CeNode?] }
+type CeMachine = { transitions : [CeTransition] }
+type CeTrait = { name : string, stateMachine : CeMachine }
+type CeOrbital = { name : string, traits : [CeTrait] }
+type CeProgram = { orbitals : [CeOrbital] }
+type CeR = { s : [string]!, c : number!, m : boolean!, p : boolean!, en : boolean!, h : [CeHit]! }
+type CeHit = { key : string!, ev : string!, ty : string! }
+type CeTr = { e : string!, f : [string]!, fs : string!, to : string! }
+
+orbital OrbLintCircuitEmitsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+
+  entity OrbLintCircuitEmitsRun [runtime] {
+    id : string!
+    scope : string = ""
+    program : CeProgram = {}
+    names : [string] = []
+    busExcluded : [string] = []
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintCircuitEmits -> OrbLintCircuitEmitsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.program @payload.program)
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((nos : [string] [])
+                (nof : [OrbFinding] [])
+                (notr : [CeTransition] [])
+                (nohit : [CeHit] [])
+                (nr : CeR { s: [], c: 0, m: false, p: false, en: false, h: [] })
+                (busSet (or (object/fromEntries (array/map @entity.busExcluded (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
+                (nameSet (or (object/fromEntries (array/map @entity.names (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
+            (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn (o oi)
+              (array/flatten (array/map (object/get @o "traits" []) (fn (t ti)
+                (if (not (object/has @t "stateMachine")) @nof
+                  (let ((on (object/get @o "name" "")) (tn (object/get @t "name" "")))
+                    (let ((tp (str/concat "orbitals[" @oi " (" @on ")].traits[" @ti " (" @tn ")]"))
+                          (trs : [CeTransition] (object/get @t "stateMachine.transitions" @notr)))
+                      (let ((tl : [CeTr] (array/map @trs (fn x (let ((fr (object/get @x "from" ""))) { e: (object/get @x "event" ""), f: (if (validate/string @fr) (array/append @nos @fr) @fr), fs: (if (validate/string @fr) @fr (str/concat "[" (str/join @fr ", ") "]")), to: (object/get @x "to" "") })))))
+                        (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
+                          (let ((x (array/nth @tl @tj)) (effs (object/get (array/nth @trs @tj) "effects" [])))
+                            (let ((ep (str/concat @tp ".stateMachine.transitions[" @tj "].effects[")))
+                              (array/concat
+                                (array/concat
+                                  (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
+                                    (let ((r (tree/fold (array/nth @effs @ej) (fn (n k)
+                                          (if (validate/array @n)
+                                            (let ((kr (array/map @k (fn q (if (= @q null) @nr @q)))))
+                                              { s: (array/concat (if (and (>= (array/len @n) 2) (let ((h0 (array/nth @n 0))) (if (validate/string @h0) (= @h0 "emit") false))) (let ((ev (array/nth @n 1))) (if (validate/string @ev) (if (object/has @busSet (str/replaceAll (str/replaceAll @ev "~" "~t") "." "~d")) (array/append @nos @ev) @nos) @nos)) @nos) (array/flatten (array/map @kr (fn q (object/get @q "s"))))), c: 0, m: false, p: false, en: false, h: @nohit })
+                                            @nr)) "CeNode")))
+                                      (array/map (object/get (if (= @r null) @nr @r) "s") (fn ev
+                                        { code: "ORB_CIRCUIT_LIFECYCLE_EMIT_UNDELIVERED", path: (str/concat @ep @ej "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " emits lifecycle event '" @ev "' — the bus never delivers it"), suggestion: "route a named event whose arm re-enters via `EVENT -> ...`, or inline the target state's own effects directly into this arm; lifecycle events are never delivered through (emit ...)", severity: "error" }))))))
+                                  (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
+                                    (let ((e (array/nth @effs @ej)))
+                                      (if (and (validate/array @e) (> (array/len @e) 2) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (= @h0 "render-ui") false)) (validate/string (array/nth @e 1)))
+                                        (let ((props (array/nth @e 2)))
+                                          (if (validate/object @props)
+                                            (let ((outer (let ((ot (object/get @props "type" null))) (if (validate/string @ot) @ot "<unknown>")))
+                                                  (hr (tree/fold @props (fn (n k)
+                                                    (if (validate/array @n)
+                                                      { s: @nos, c: 0, m: false, p: false, en: false, h: (array/flatten (array/map @k (fn q (object/get (if (= @q null) @nr @q) "h")))) }
+                                                      (if (validate/object @n)
+                                                        (let ((ty (let ((tv (object/get @n "type" null))) (if (validate/string @tv) @tv "")))
+                                                              (kids (array/flatten (array/map (object/values @k) (fn q (object/get (if (= @q null) @nr @q) "h"))))))
+                                                          { s: @nos, c: 0, m: false, p: false, en: false,
+                                                            h: (array/concat
+                                                                 (array/flatten (array/map (array/filter (object/keys @n) (fn key (and (not (str/includes @key ".")) (object/has @nameSet (str/replaceAll (str/replaceAll @key "~" "~t") "." "~d")))))
+                                                                   (fn key (let ((v (object/get @n @key null))) (if (validate/string @v) (if (object/has @busSet (str/replaceAll (str/replaceAll @v "~" "~t") "." "~d")) [{ key: @key, ev: @v, ty: @ty }] @nohit) @nohit)))))
+                                                                 (array/map @kids (fn hh { key: (object/get @hh "key"), ev: (object/get @hh "ev"), ty: (if (= (object/get @hh "ty") "") @ty (object/get @hh "ty")) }))) })
+                                                        @nr))) "CeNode")))
+                                              (array/map (object/get (if (= @hr null) @nr @hr) "h") (fn hh
+                                                { code: "ORB_RENDER_ACTION_LIFECYCLE_EVENT", path: (str/concat @ep @ej "].props." (object/get @hh "key")), message: (str/concat "'" @on "." @tn "': prop '" (object/get @hh "key") "' on rendered '" (if (= (object/get @hh "ty") "") @outer (object/get @hh "ty")) "' targets lifecycle event '" (object/get @hh "ev") "' — the bus never delivers it"), suggestion: "route a named event (e.g. REFRESH) whose arm re-enters via `EVENT -> loading`; lifecycle events are never affordance targets", severity: "error" })))
+                                            @nof))
+                                        @nof))))))
+                                (if (not (array/some @tl (fn t2 (and (= (object/get @t2 "e") (object/get @x "e")) (array/includes (object/get @t2 "f") (object/get @x "to")))))) @nof
+                                  (let ((mut (object/get (let ((q (tree/fold @effs (fn (n k)
+                                              (if (validate/array @n)
+                                                { s: @nos, c: 0, m: (or (and (>= (array/len @n) 2) (let ((h0 (array/nth @n 0))) (if (validate/string @h0) (= @h0 "set") false)) (let ((tg (array/nth @n 1))) (if (validate/string @tg) (or (= @tg (quote "@entity")) (str/startsWith @tg (quote "@entity."))) false))) (array/some @k (fn q2 (object/get (if (= @q2 null) @nr @q2) "m")))), p: false, en: false, h: @nohit }
+                                                @nr)) "CeNode"))) (if (= @q null) @nr @q)) "m")))
+                                    (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
+                                      (let ((cnt (object/get (let ((q (tree/fold (array/nth @effs @ej) (fn (n k)
+                                              (if (validate/array @n)
+                                                (let ((kr (array/map @k (fn q2 (if (= @q2 null) @nr @q2)))))
+                                                  { s: @nos, m: false, p: false, en: false, h: @nohit,
+                                                    c: (+ (array/reduce @kr 0 (fn (acc q2) (+ @acc (object/get @q2 "c"))))
+                                                          (if (and (>= (array/len @n) 2) (let ((h0 (array/nth @n 0))) (if (validate/string @h0) (= @h0 "emit") false)) (let ((h1 (array/nth @n 1))) (if (validate/string @h1) (= @h1 (object/get @x "e")) false)))
+                                                            (if (< (array/len @n) 3) 1
+                                                              (let ((pl (array/nth @n 2)))
+                                                                (let ((pf (object/get (let ((q3 (tree/fold @pl (fn (n2 k2)
+                                                                                (if (validate/string @n2)
+                                                                                  { s: @nos, c: 0, m: false, h: @nohit, p: (or (= @n2 (quote "@payload")) (str/startsWith @n2 (quote "@payload."))), en: (or (= @n2 (quote "@entity")) (str/startsWith @n2 (quote "@entity."))) }
+                                                                                  (if (validate/array @n2)
+                                                                                    { s: @nos, c: 0, m: false, h: @nohit, p: (array/some @k2 (fn q4 (object/get (if (= @q4 null) @nr @q4) "p"))), en: (array/some @k2 (fn q4 (object/get (if (= @q4 null) @nr @q4) "en"))) }
+                                                                                    (if (validate/object @n2)
+                                                                                      { s: @nos, c: 0, m: false, h: @nohit, p: (array/some (object/values @k2) (fn q4 (object/get (if (= @q4 null) @nr @q4) "p"))), en: (array/some (object/values @k2) (fn q4 (object/get (if (= @q4 null) @nr @q4) "en"))) }
+                                                                                      @nr)))) "CeNode"))) (if (= @q3 null) @nr @q3)) "p"))
+                                                                      (ef (object/get (let ((q3 (tree/fold @pl (fn (n2 k2)
+                                                                                (if (validate/string @n2)
+                                                                                  { s: @nos, c: 0, m: false, h: @nohit, p: false, en: (or (= @n2 (quote "@entity")) (str/startsWith @n2 (quote "@entity."))) }
+                                                                                  (if (validate/array @n2)
+                                                                                    { s: @nos, c: 0, m: false, h: @nohit, p: false, en: (array/some @k2 (fn q4 (object/get (if (= @q4 null) @nr @q4) "en"))) }
+                                                                                    (if (validate/object @n2)
+                                                                                      { s: @nos, c: 0, m: false, h: @nohit, p: false, en: (array/some (object/values @k2) (fn q4 (object/get (if (= @q4 null) @nr @q4) "en"))) }
+                                                                                      @nr)))) "CeNode"))) (if (= @q3 null) @nr @q3)) "en")))
+                                                                  (if (or @pf (and @mut @ef)) 0 1))))
+                                                            0)) }) 
+                                                @nr)) "CeNode"))) (if (= @q null) @nr @q)) "c")))
+                                        (array/map (array/range 0 @cnt) (fn z
+                                          { code: "ORB_CIRCUIT_SELF_EMIT_LOOP", path: (str/concat @ep @ej "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " re-emits its own trigger event '" (object/get @x "e") "' with a constant payload and a same-event arm is reachable at the target state — the runtime path loops forever re-entering this arm"), suggestion: "this arm re-emits its own trigger event and a same-event arm is reachable at the target state (this very arm, when it is a self-transition) with a constant payload — the runtime path loops forever re-entering this arm. Transition directly, emit a differently-named event, or make the payload derive from @payload / a mutated @entity so each hop makes progress.", severity: "error" }))))))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      PROPS_HEARD -> ready
+        (set @entity.names @payload.names)
+      SEMANTICS_HEARD -> ready
+        (set @entity.busExcluded @payload.busExcluded)
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "circuit-emits", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CeProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      PROPS_HEARD { names : [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      SEMANTICS_HEARD { busExcluded : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the events the bus never delivers."
+      OrbLintInput.LINT_EVENT_PROPS -> PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> SEMANTICS_HEARD
+    }
+
+  }
+
+  trait OrbLintCircuitEmitsCli -> OrbLintCircuitEmitsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint circuit-emits <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "circuit-emits") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint circuit-emits: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "circuit-emits") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint circuit-emits: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-circuit-emits" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint circuit-emits` with its arguments and working directory."
+        @synonyms "orb lint circuit-emits"
+      OrbLintCircuitEmits.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintCircuitEmitsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintCircuitEmitsOrbitalStart -> OrbLintCircuitEmits, OrbLintCircuitEmitsCli, OrbLintInput, Packs, Versions
+}

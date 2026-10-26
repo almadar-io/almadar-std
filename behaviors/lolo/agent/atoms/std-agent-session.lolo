@@ -2,6 +2,7 @@ app std-agent-session [
   version: "3.0.0",
   description: "std-agent-session — the conversation with an in-app assistant. AgentThread owns the persisted AgentMessage rows (role, content, ownerId stamped with the real @user, createdAt): SEND stores the user's message, reloads the thread and emits CONVERSE with the whole conversation, oldest first, for std-agent-tool-loop to answer; REPLIED stores the reply. AgentConversation is what the user sees, in the browser: the thread as chat bubbles with every step the assistant takes interleaved live (STEP: each model call, each tool it used and what the app answered), a thinking row while it works, and a chat bar. The two talk over the assistant contract, from any orbital: AgentConversation emits ASSISTANT_SEND and hears AgentMessagesLoaded, ASSISTANT_THREAD_FAILED, ASSISTANT_STEP, ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED; AgentThread hears ASSISTANT_SEND. So a conversation placed on any section's page reaches the app's one assistant (std-agent-assistant) with no wiring. Rows are meant to be private to their owner: owner-scoped access needs an [identity] roster, so the binding organism declares the @read/@create scoping on AgentMessage — this generic atom cannot."
 ]
+uses Lifecycle from "std/behaviors/std-lifecycle"
 
 type AgentChatMessage = {
   role : "user" | "assistant"!
@@ -111,6 +112,22 @@ orbital AgentSessionOrbital {
   type AgentMessagesLoadFailed = Event { error : string, code : string } "Fired when the conversation fails to load"
   type AgentMessageSaved = Event AgentMessage "Fired after a message persists"
   type AgentMessageSaveFailed = Event { error : string, code : string } "Fired when a message fails to persist"
+
+  config {
+    keepDays : number = 0
+      @label "Days to keep conversation messages"
+      @description "Stored conversation messages older than this many days are deleted. 0 turns the clean-up off and keeps them all."
+      @synonyms "retention, retention days, ttl, expire, delete old, keep for"
+      @tier "policy"
+  }
+
+  entity AgentMessageRetentionLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+    createdAt : number = 0
+  }
 
   entity AgentMessage [persistent: agentMessages] {
     id : string!
@@ -1399,7 +1416,17 @@ orbital AgentSessionOrbital {
     }
   }
 
-  page "/agent-session" as AgentSessionPage -> AgentConversation, AgentThread
+  trait AgentMessageRetention = Lifecycle.traits.LifecycleScheduler -> AgentMessageRetentionLog {
+    config {
+      enabled: true
+      action: delete
+      targetEntity: AgentMessage
+      dateField: createdAt
+      ageDays: @config.keepDays
+    }
+  }
+
+  page "/agent-session" as AgentSessionPage -> AgentConversation, AgentThread, AgentMessageRetention
 }
 
 ;; Conversations: each person's kept chats, the current one (most recently
@@ -1408,6 +1435,22 @@ orbital AgentChatsOrbital {
   type ChatReadyForSend = Event AgentChat "Fired when the current conversation exists and is marked active"
   type NewChatStarted = Event AgentChat "Fired after a new conversation persists"
   type ChatSelected = Event AgentChat "Fired after a past conversation is reopened"
+
+  config {
+    keepDays : number = 0
+      @label "Days to keep conversations"
+      @description "Stored conversations older than this many days are deleted. 0 turns the clean-up off and keeps them all."
+      @synonyms "retention, retention days, ttl, expire, delete old, keep for"
+      @tier "policy"
+  }
+
+  entity AgentChatRetentionLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+    lastActiveAt : number = 0
+  }
 
   entity AgentChat [persistent: agentChats] {
     id : string!
@@ -1852,5 +1895,15 @@ orbital AgentChatsOrbital {
     }
   }
 
-  page "/agent-session/chats" as AgentChatsPage -> AgentChatList, AgentChatKeeper
+  trait AgentChatRetention = Lifecycle.traits.LifecycleScheduler -> AgentChatRetentionLog {
+    config {
+      enabled: true
+      action: delete
+      targetEntity: AgentChat
+      dateField: lastActiveAt
+      ageDays: @config.keepDays
+    }
+  }
+
+  page "/agent-session/chats" as AgentChatsPage -> AgentChatList, AgentChatKeeper, AgentChatRetention
 }

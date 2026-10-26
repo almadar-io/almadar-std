@@ -121,50 +121,6 @@
    ]
   },
   {
-   "id": "instances-cli-unauthenticated-still-reads-volumes",
-   "now": "2026-10-15T12:30:45.678Z",
-   "config": {
-    "region": "us-east-1"
-   },
-   "steps": [
-    {
-     "event": "AWS_LOAD",
-     "payload": {}
-    },
-    {
-     "event": "AWS_CLI_FAILED",
-     "payload": {
-      "stage": "instances",
-      "error": "no aws",
-      "code": "cli_failed"
-     },
-     "from": "reading",
-     "expect": {
-      "emits": [
-       {
-        "event": "AWS_RUN",
-        "payload": {
-         "stage": "volumes",
-         "argv": [
-          "ec2",
-          "describe-volumes",
-          "--query",
-          "Volumes[*].[VolumeId,Size,State,VolumeType,AvailabilityZone,Tags[?Key==`Name`].Value|[0],Attachments[0].InstanceId,Iops]",
-          "--output",
-          "json",
-          "--region",
-          "us-east-1",
-          "--output",
-          "json"
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
    "id": "volumes-answered-then-images",
    "now": "2026-10-15T12:30:45.678Z",
    "config": {
@@ -259,6 +215,76 @@
      }
     }
    ]
+  },
+  {
+   "id": "aws-not-installed-shows-a-named-error-and-stops",
+   "steps": [
+    {
+     "event": "AWS_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "AWS_CLI_FAILED",
+     "payload": {
+      "stage": "instances",
+      "error": "No such file or directory (os error 2)",
+      "code": "cli_spawn_failed"
+     },
+     "from": "reading",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "render-ui"
+       }
+      ],
+      "neverEmits": [
+       "AWS_RUN"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "aws-exits-nonzero-at-instances-names-its-stderr-and-reads-on",
+   "steps": [
+    {
+     "event": "AWS_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "AWS_RAN",
+     "payload": {
+      "signal": 0,
+      "stdoutBytes": "",
+      "stage": "instances",
+      "exitCode": 255,
+      "stdout": "",
+      "stderr": "Unable to locate credentials"
+     },
+     "from": "reading",
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "emits": [
+       {
+        "event": "AWS_RUN"
+       }
+      ],
+      "effects": [
+       {
+        "type": "when"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
   }
  ]
 }

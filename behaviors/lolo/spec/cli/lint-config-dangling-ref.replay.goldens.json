@@ -1,0 +1,3579 @@
+{
+  "atom": "cli/atoms/std-orb-lint-config-dangling-ref.lolo",
+  "trait": "OrbLintConfigDanglingRef",
+  "note": "Cases mirror validate_dangling_config_refs: an @config.<key> no knob supplies (app, orbital, the trait, or any trait connected by @trait embeds in either direction), with controls for a pattern's self-named declaration default, guards (not collected), a self-forward declared by the embedder, path suffixes and malformed keys. Expectations are the compiler's findings on the same program (orb validate --json). The pattern registry is a hand-written subset of LINT_PATTERNS (prop names only matter).",
+  "cases": [
+    {
+      "id": "undeclared",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.missing"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[0 (T)]",
+                      "message": "`@config.missing` \u2014 no trait in T's referrer chain declares config knob 'missing'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `missing` on the owning trait (or its embedder) or remove the reference",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "declared-by-trait",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "x"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pattern-self-named-default",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stat-display",
+                                  "label": "@config.label",
+                                  "value": "1"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pattern-other-prop",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stat-display",
+                                  "label": "@config.heading",
+                                  "value": "1"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[0 (T)]",
+                      "message": "`@config.heading` \u2014 no trait in T's referrer chain declares config knob 'heading'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `heading` on the owning trait (or its embedder) or remove the reference",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "non-pattern-self-named",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "not-a-pattern",
+                                  "label": "@config.label"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[0 (T)]",
+                      "message": "`@config.label` \u2014 no trait in T's referrer chain declares config knob 'label'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `label` on the owning trait (or its embedder) or remove the reference",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "array-resets-context",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@config.label",
+                                    {
+                                      "type": "stat-display",
+                                      "label": "@config.label"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[0 (T)]",
+                      "message": "`@config.label` \u2014 no trait in T's referrer chain declares config knob 'label'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `label` on the owning trait (or its embedder) or remove the reference",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "referrer-declares",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.fields"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Parent",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "fields": {
+                          "type": "string",
+                          "default": "x"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "Parent"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "child-declares",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "x": {
+                          "type": "string",
+                          "default": "x"
+                        }
+                      }
+                    },
+                    {
+                      "name": "Parent",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child",
+                                    {
+                                      "type": "typography",
+                                      "content": "@config.x"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "Parent"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "self-forward-undeclared",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "@config.title"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[0 (T)]",
+                      "message": "`@config.title` \u2014 no trait in T's referrer chain declares config knob 'title'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `title` on the owning trait (or its embedder) or remove the reference",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "self-forward-declared-by-embedder",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "@config.title"
+                        }
+                      }
+                    },
+                    {
+                      "name": "Parent",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "x"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "Parent"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "indexed-path-key",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.items[0].name"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[0 (T)]",
+                      "message": "`@config.items` \u2014 no trait in T's referrer chain declares config knob 'items'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `items` on the owning trait (or its embedder) or remove the reference",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dotted-path-key",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.row.name"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[0 (T)]",
+                      "message": "`@config.row` \u2014 no trait in T's referrer chain declares config knob 'row'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `row` on the owning trait (or its embedder) or remove the reference",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tick-effect",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "name": "tk",
+                          "interval": 1000,
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.id",
+                              "@config.tickKey"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[0 (T)]",
+                      "message": "`@config.tickKey` \u2014 no trait in T's referrer chain declares config knob 'tickKey'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `tickKey` on the owning trait (or its embedder) or remove the reference",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "guard-not-collected",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ],
+                            "guard": [
+                              "=",
+                              "@config.inguard",
+                              1
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "config-default-collected",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "a": {
+                          "type": "string",
+                          "default": "@config.fromdefault"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[0 (T)]",
+                      "message": "`@config.fromdefault` \u2014 no trait in T's referrer chain declares config knob 'fromdefault'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `fromdefault` on the owning trait (or its embedder) or remove the reference",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-keys-sorted",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@config.zeta",
+                                    "@config.alpha"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[0 (T)]",
+                      "message": "`@config.alpha` \u2014 no trait in T's referrer chain declares config knob 'alpha'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `alpha` on the owning trait (or its embedder) or remove the reference",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[0 (T)]",
+                      "message": "`@config.zeta` \u2014 no trait in T's referrer chain declares config knob 'zeta'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `zeta` on the owning trait (or its embedder) or remove the reference",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "app-level-config",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.appKnob"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "config": {
+                "appKnob": {
+                  "type": "string",
+                  "default": "x"
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "orbital-level-config",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.orbKnob"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ],
+                  "config": {
+                    "orbKnob": {
+                      "type": "string",
+                      "default": "x"
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "transitive-chain",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.deep"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.A"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "C",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.B"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "deep": {
+                          "type": "string",
+                          "default": "x"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        },
+                        {
+                          "ref": "C"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "sibling-not-connected",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.other"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "other": {
+                          "type": "string",
+                          "default": "x"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[0 (A)]",
+                      "message": "`@config.other` \u2014 no trait in A's referrer chain declares config knob 'other'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `other` on the owning trait (or its embedder) or remove the reference",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "invalid-key-chars",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.a-b"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty-key",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config."
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+app lint-dispatch-contract-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-dispatch-contract - the `orb lint dispatch-contract <file>` command, the port of the dispatch-contract checks of entities/entity_mutation.rs. A `[client]` trait (dispatch client): ORB_T_LOCAL_TRAIT_TOUCHES_SERVER for a transition whose guard reads `@user` and for each transition or tick effect that runs a server-bound effect (a transition whose guard is statically false is skipped); ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT when it writes its linked entity (a `set @entity.<f>` anywhere, or a `persist create|upsert|update` of it in a transition, following `persist batch` list builders) while that entity is neither `[shared]` nor client-resident (`[runtime]` or browser-stored). An `[optimistic]` trait: ORB_T_CLIENT_TICK_SERVER_EFFECT for a tick that is not `[background]` and carries a server-bound effect, reported at the tick's effects. A trait with a declared dispatch: ORB_AUTH_GUARD_CLIENT_ONLY (a warning) for a transition guard that reads `@user` while the transition runs server-bound effects, unless every arm of its (from, event) pair runs the same server-bound effects. Where an effect runs follows effect_site (the sites and entity params come from LINT_OPERATOR_SHAPES, the browser-stored entities from the resolved program): an operator whose installed runsOn is server stays server except an `http` with a keyless request, a `persist batch` whose named entities are all browser-stored and a data effect on a literal browser-stored entity; an `if` or `when` branch whose condition is statically false is dead, and a `let` pair name or `fn` parameter list is never a call. It needs the RESOLVED program (program/read resolve). Findings print as `[code] path: message` (status 500, exit 1); clean answers `lint dispatch-contract: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintDispatchContractSpec {
+  expects trait OrbLintDispatchContract {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintDispatchContractCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintDispatchContract, OrbLintDispatchContractCli
+}

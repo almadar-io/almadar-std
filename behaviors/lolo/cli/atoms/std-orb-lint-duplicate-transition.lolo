@@ -4,7 +4,7 @@ app std-orb-lint-duplicate-transition [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-duplicate-transition — the `orb lint duplicate-transition <file>` command, the port of ORB_T_DUPLICATE_TRANSITION (trait_validator.rs validate_transitions). It lowers the file with program/read and, for every inline trait, groups the transitions that name one source state (a single-state `from`; list sources are not tracked, as in Rust) and one event. A group of more than one with fewer than size-1 guarded arms reports duplicates without guards; otherwise a group where two guarded arms carry an equal guard reports the same guard. One finding per group at its first arm, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint duplicate-transition: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-duplicate-transition — the `orb lint duplicate-transition <file>` command, the port of ORB_T_DUPLICATE_TRANSITION (trait_validator.rs validate_transitions). It lowers the file with program/read and, for every inline trait, groups the transitions that name one source state and one event (each state of a list `from` is its own source). A group of more than one with fewer than size-1 guarded arms reports duplicates without guards; otherwise a group where two guarded arms carry an equal guard reports the same guard. One finding per group at its first arm, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint duplicate-transition: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-duplicate-transition"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -41,18 +41,18 @@ orbital OrbLintDuplicateTransitionOrbital {
                   (if (not (validate/object (object/get @td "stateMachine" null)))
                     []
                     (let ((tx (object/get (object/get @td "stateMachine") "transitions" [])) (where (str/concat "orbitals[" @oi "].traits[" @ti "].stateMachine.transitions")))
-                      (array/flatten (array/map (array/range 0 (array/len @tx)) (fn k
-                        (let ((tk (array/nth @tx @k)) (fr (object/get (array/nth @tx @k) "from" null)))
-                          (if (not (validate/string @fr))
-                            []
-                            (let ((grp (array/filter (array/range 0 (array/len @tx)) (fn j (and (= (object/get (array/nth @tx @j) "from" null) (object/get @tk "from")) (= (object/get (array/nth @tx @j) "event" "") (object/get @tk "event" "")))))))
-                              (if (or (< (array/len @grp) 2) (!= (array/first @grp) @k))
-                                []
-                                (if (< (array/len (array/filter @grp (fn j (object/has (array/nth @tx @j) "guard")))) (- (array/len @grp) 1))
-                                  [{ code: "ORB_T_DUPLICATE_TRANSITION", path: @where, message: (str/concat "Duplicate transitions from '" @fr "' on event '" (object/get @tk "event" "") "' without guards"), suggestion: "Add guard conditions to distinguish transitions", severity: "error" }]
-                                  (if (array/some @grp (fn a (and (object/has (array/nth @tx @a) "guard") (array/some @grp (fn b (and (> @b @a) (= (json/stringify (object/get (array/nth @tx @a) "guard")) (json/stringify (object/get (array/nth @tx @b) "guard")))))))))
-                                    [{ code: "ORB_T_DUPLICATE_TRANSITION", path: @where, message: (str/concat "Duplicate transitions from '" @fr "' on event '" (object/get @tk "event" "") "' with the same guard"), suggestion: "Remove the repeated arm, or give each arm its own guard", severity: "error" }]
-                                    [])))))))))))))))))))))
+                      (let ((srcs (array/map (array/range 0 (array/len @tx)) (fn j (let ((f (object/get (array/nth @tx @j) "from" null))) (if (validate/array @f) @f (if (validate/string @f) [@f] [])))))))
+                        (array/flatten (array/map (array/range 0 (array/len @tx)) (fn k
+                          (let ((tk (array/nth @tx @k)))
+                            (array/flatten (array/map (array/unique (array/nth @srcs @k)) (fn fr
+                              (let ((grp (array/filter (array/range 0 (array/len @tx)) (fn j (and (array/includes (array/nth @srcs @j) @fr) (= (object/get (array/nth @tx @j) "event" "") (object/get @tk "event" "")))))))
+                                (if (or (< (array/len @grp) 2) (!= (array/first @grp) @k))
+                                  []
+                                  (if (< (array/len (array/filter @grp (fn j (object/has (array/nth @tx @j) "guard")))) (- (array/len @grp) 1))
+                                    [{ code: "ORB_T_DUPLICATE_TRANSITION", path: @where, message: (str/concat "Duplicate transitions from '" @fr "' on event '" (object/get @tk "event" "") "' without guards"), suggestion: "Add guard conditions to distinguish transitions", severity: "error" }]
+                                    (if (array/some @grp (fn a (and (object/has (array/nth @tx @a) "guard") (array/some @grp (fn b (and (> @b @a) (= (json/stringify (object/get (array/nth @tx @a) "guard")) (json/stringify (object/get (array/nth @tx @b) "guard")))))))))
+                                      [{ code: "ORB_T_DUPLICATE_TRANSITION", path: @where, message: (str/concat "Duplicate transitions from '" @fr "' on event '" (object/get @tk "event" "") "' with the same guard"), suggestion: "Remove the repeated arm, or give each arm its own guard", severity: "error" }]
+                                      []))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "duplicate-transition", scope: @entity.scope, findings: @entity.findings })

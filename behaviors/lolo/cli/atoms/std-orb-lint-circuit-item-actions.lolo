@@ -1,0 +1,254 @@
+app std-orb-lint-circuit-item-actions [
+  version: "1.0.0",
+  inbound: ["cli-lint-circuit-item-actions"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-circuit-item-actions - the `orb lint circuit-item-actions <file>` command, the port of the item-action checks of validate_closed_circuit (circuit/closed_circuit.rs). For every render-ui effect of a transition (a top-level effect painting a typed pattern payload) it reads the descriptors of the pattern's `itemActions` and `actions` props through std-orb-value-leaves (every leaf of the value, a descriptor list or a single descriptor; an action is a descriptor with an event string and an action, event or label string) and reports CIRCUIT_ORPHAN_EVENT (an action whose event no transition of the trait, no transition or listens route of the orbital and no declared emit of the trait carries), CIRCUIT_DEAD_HANDLER (an action whose event the trait handles, but not from the state the action is rendered in nor from a wildcard) and CIRCUIT_DUPLICATE_EVENT (the same event twice in one render-ui effect, branch and slot). A value with several leaves reports its paths with a .branch[i] suffix. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint circuit-item-actions: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-circuit-item-actions"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type CiNode = string | number | boolean | [CiNode?] | Map string CiNode?
+type CiFrom = string | [string]
+type CiEmit = { event : string }
+type CiListen = { event : string }
+type CiTransition = { from : CiFrom, to : string, event : string, effects : [CiNode?] }
+type CiMachine = { transitions : [CiTransition] }
+type CiTrait = { name : string, emits : [CiEmit], listens : [CiListen], stateMachine : CiMachine }
+type CiOrbital = { name : string, traits : [CiTrait] }
+type CiProgram = { orbitals : [CiOrbital] }
+type CiSite = { oi : number!, ti : number!, tj : number!, ej : number!, prop : string!, ty : string!, to : string!, slot : string! }
+type CiAct = { action : string!, event : string!, ty : string!, to : string!, slot : string!, path : string!, oi : number!, ti : number!, tk : string!, dk : string! }
+type CiTr = { f : [string]!, e : string! }
+type CiActMap = Map string [CiAct]
+type CiSiteV = { oi : number!, ti : number!, tj : number!, ej : number!, prop : string!, ty : string!, to : string!, slot : string!, val : CiNode? }
+
+orbital OrbLintCircuitItemActionsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Leaves from "std/behaviors/std-orb-value-leaves"
+
+  entity OrbLintCircuitItemActionsRun [runtime] {
+    id : string!
+    scope : string = ""
+    program : CiProgram = {}
+    sites : [CiSite] = []
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintCircuitItemActions -> OrbLintCircuitItemActionsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.program @payload.program)
+        (set @entity.scope @payload.scope)
+        (set @entity.sites (let ((nos0 : [CiSite] [])) (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn (o oi)
+  (array/flatten (array/map (object/get @o "traits" []) (fn (t ti)
+    (if (not (object/has @t "stateMachine")) @nos0
+      (let ((trs (object/get @t "stateMachine.transitions" [])))
+        (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
+          (let ((effs (object/get (array/nth @trs @tj) "effects" [])) (to (object/get (array/nth @trs @tj) "to" "")))
+            (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
+              (let ((e (array/nth @effs @ej)))
+                (if (and (validate/array @e) (> (array/len @e) 2) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (= @h0 "render-ui") false)))
+                  (let ((sl (array/nth @e 1)) (pl (array/nth @e 2)))
+                    (if (and (validate/string @sl) (validate/object @pl))
+                      (let ((tv (object/get @pl "type" null)))
+                        (if (validate/string @tv)
+                          (array/flatten (array/map ["itemActions", "actions"] (fn prop
+                            (if (object/has @pl @prop)
+                              [{ oi: @oi, ti: @ti, tj: @tj, ej: @ej, prop: @prop, ty: @tv, to: @to, slot: @sl }]
+                              @nos0))))
+                          @nos0))
+                      @nos0))
+                  @nos0)))))))))))))))))))
+        (emit VALUE_LEAVES_ASK { requestId: @payload.scope, values: (array/map (let ((nos0 : [CiSiteV] [])) (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn (o oi)
+  (array/flatten (array/map (object/get @o "traits" []) (fn (t ti)
+    (if (not (object/has @t "stateMachine")) @nos0
+      (let ((trs (object/get @t "stateMachine.transitions" [])))
+        (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
+          (let ((effs (object/get (array/nth @trs @tj) "effects" [])) (to (object/get (array/nth @trs @tj) "to" "")))
+            (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
+              (let ((e (array/nth @effs @ej)))
+                (if (and (validate/array @e) (> (array/len @e) 2) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (= @h0 "render-ui") false)))
+                  (let ((sl (array/nth @e 1)) (pl (array/nth @e 2)))
+                    (if (and (validate/string @sl) (validate/object @pl))
+                      (let ((tv (object/get @pl "type" null)))
+                        (if (validate/string @tv)
+                          (array/flatten (array/map ["itemActions", "actions"] (fn prop
+                            (if (object/has @pl @prop)
+                              [{ oi: @oi, ti: @ti, tj: @tj, ej: @ej, prop: @prop, ty: @tv, to: @to, slot: @sl, val: (object/get @pl @prop) }]
+                              @nos0))))
+                          @nos0))
+                      @nos0))
+                  @nos0)))))))))))))))))) (fn s (object/get @s "val"))) })
+      LEAVES_HEARD -> ready when (= @payload.requestId @entity.scope)
+        (set @entity.findings (let ((nos : [string] [])
+                (nof : [OrbFinding] [])
+                (noact : [CiAct] [])
+                (notd : [CiTrait] [])
+                (notr : [CiTransition] [])
+                (noem : [CiEmit] [])
+                (nolis : [CiListen] [])
+                (nonode : [CiNode?] [])
+                (orbitals (object/get @entity.program "orbitals" []))
+                (sites : [CiSite] @entity.sites)
+                (lv @payload.leaves))
+  (let ((acts : [CiAct] (array/flatten (array/map (array/range 0 (array/len @sites)) (fn i
+            (let ((s (array/nth @sites @i)) (ls (array/nth @lv @i)))
+              (let ((o (array/nth @orbitals (object/get @s "oi"))))
+                (let ((t (array/nth (object/get @o "traits" @notd) (object/get @s "ti"))))
+                  (let ((tp (str/concat "orbitals[" (object/get @s "oi") " (" (object/get @o "name" "") ")].traits[" (object/get @s "ti") " (" (object/get @t "name" "") ")]"))
+                        (multi (> (array/len @ls) 1)))
+                    (let ((base (str/concat @tp ".stateMachine.transitions[" (object/get @s "tj") "].effects[" (object/get @s "ej") "]")))
+                      (array/flatten (array/map (array/range 0 (array/len @ls)) (fn li
+                        (let ((node (json/parse (array/nth @ls @li) CiNode)))
+                          (let ((descs (if (validate/array @node) @node (if (validate/object @node) [@node] @nonode))))
+                            (array/flatten (array/map @descs (fn d
+                              (if (not (validate/object @d)) @noact
+                                (let ((av (if (object/has @d "action") (object/get @d "action") (if (object/has @d "event") (object/get @d "event") (object/get @d "label" null))))
+                                      (ev (object/get @d "event" null)))
+                                  (if (and (validate/string @av) (validate/string @ev))
+                                    [{ action: @av, event: @ev, ty: (object/get @s "ty"), to: (object/get @s "to"), slot: (object/get @s "slot"),
+                                       path: (str/concat @base ".props." (object/get @s "prop") (if @multi (str/concat ".branch[" @li "]") "")),
+                                       oi: (object/get @s "oi"), ti: (object/get @s "ti"),
+                                       tk: (str/concat (object/get @s "oi") "-" (object/get @s "ti")),
+                                       dk: (str/replaceAll (str/replaceAll (str/concat (object/get @s "oi") "-" (object/get @s "ti") ":" @base ":" (if @multi (str/concat @li "]") "") ":" (object/get @s "slot") ":" @ev) "~" "~t") "." "~d") }]
+                                    @noact)))))))))))))))))))))
+    (let ((byTk : CiActMap (array/groupBy @acts "tk")) (byDk : CiActMap (array/groupBy @acts "dk")))
+      (array/concat
+        (array/flatten (array/map (array/unique (array/map @acts (fn a (object/get @a "tk")))) (fn k
+          (let ((grp (object/get @byTk @k @noact)))
+            (let ((o (array/nth @orbitals (object/get (array/first @grp) "oi"))))
+              (let ((t (array/nth (object/get @o "traits" @notd) (object/get (array/first @grp) "ti"))))
+                (let ((tl : [CiTr] (array/map (object/get @t "stateMachine.transitions" @notr) (fn x (let ((fr (object/get @x "from" ""))) { f: (if (validate/string @fr) (array/append @nos @fr) @fr), e: (object/get @x "event" "") }))))
+                      (orbH (array/flatten (array/map (object/get @o "traits" @notd) (fn t2 (array/concat (array/map (object/get @t2 "stateMachine.transitions" @notr) (fn x (object/get @x "event" ""))) (array/map (object/get @t2 "listens" @nolis) (fn l (object/get @l "event" ""))))))))
+                      (em (array/map (object/get @t "emits" @noem) (fn e (object/get @e "event" "")))))
+                  (let ((handled (array/map @tl (fn x (object/get @x "e")))))
+                    (array/flatten (array/map @grp (fn a
+                      (let ((ev (object/get @a "event")))
+                        (array/concat
+                          (if (or (array/includes @handled @ev) (array/includes @orbH @ev) (array/includes @em @ev)) @nof
+                            [{ code: "CIRCUIT_ORPHAN_EVENT", path: (object/get @a "path"), message: (str/concat "Action '" (object/get @a "action") "' emits event '" @ev "' which has no transition handler"), suggestion: (str/concat "Add a transition with event '" @ev "' or remove this action"), severity: "error" }])
+                          (if (or (not (array/includes @handled @ev)) (array/some @tl (fn x (and (= (object/get @x "e") @ev) (or (array/includes (object/get @x "f") (object/get @a "to")) (array/includes (object/get @x "f") "*"))))))
+                            @nof
+                            (let ((valid (array/sort (array/unique (array/flatten (array/map (array/filter @tl (fn x (= (object/get @x "e") @ev))) (fn x (object/get @x "f"))))))))
+                              [{ code: "CIRCUIT_DEAD_HANDLER", path: (object/get @a "path"), message: (str/concat "Action '" (object/get @a "action") "' fires event '" @ev "' in state '" (object/get @a "to") "' but no transition handles '" @ev "' from '" (object/get @a "to") "'"), suggestion: (str/concat "Add a transition `from: '" (object/get @a "to") "', event: '" @ev "'` or move this render-ui to a state that handles '" @ev "' (valid states: " (if (= (array/len @valid) 0) "none" (str/join @valid ", ")) ")"), severity: "error" }])))))))))))))))
+        (array/flatten (array/map (array/sort (object/keys @byDk)) (fn dk
+          (let ((g (object/get @byDk @dk @noact)))
+            (array/map (array/drop @g 1) (fn a
+              { code: "CIRCUIT_DUPLICATE_EVENT", path: (object/get @a "path"), message: (str/concat "Event '" (object/get @a "event") "' is emitted multiple times in the same render-ui effect (actions '" (object/get (array/first @g) "action") "' and '" (object/get @a "action") "')"), suggestion: "Remove duplicate action or use unique event names", severity: "error" })))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "circuit-item-actions", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+      VALUE_LEAVES_ASK -> external { requestId : string!  values : [CiNode?]! }
+        @description "Ask std-orb-value-leaves for the leaves of the itemActions and actions values."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CiProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      LEAVES_HEARD { requestId : string!  leaves : [[string]]! }
+        @description "std-orb-value-leaves' VALUE_LEAVES: the JSON text of each leaf of each asked value."
+      OrbValueLeaves.VALUE_LEAVES -> LEAVES_HEARD
+    }
+
+  }
+
+  trait OrbLintCircuitItemActionsCli -> OrbLintCircuitItemActionsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint circuit-item-actions <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "circuit-item-actions") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint circuit-item-actions: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "circuit-item-actions") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint circuit-item-actions: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-circuit-item-actions" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint circuit-item-actions` with its arguments and working directory."
+        @synonyms "orb lint circuit-item-actions"
+      OrbLintCircuitItemActions.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait OrbValueLeaves = Leaves.traits.OrbValueLeaves {
+    listens {
+      VALUE_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      VALUE_LEAVES_ASK { requestId : string!  values : [CiNode?]! }
+        @description "The rule offers the values whose leaves it needs."
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> VALUE_SEMANTICS_HEARD
+      OrbLintCircuitItemActions.VALUE_LEAVES_ASK -> VALUE_LEAVES_ASK
+    }
+  }
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintCircuitItemActionsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintCircuitItemActionsOrbitalStart -> OrbLintCircuitItemActions, OrbLintCircuitItemActionsCli, OrbLintInput, OrbValueLeaves, Packs, Versions
+}

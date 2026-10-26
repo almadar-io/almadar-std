@@ -60,31 +60,25 @@ orbital OtelOrbital {
     id : string!
     headId : string = ""
     headStatus : string = ""
-    status : string = ""
-    timestamp : number = 0
   }
 
   entity OtelSpanRetentionLog [runtime] {
     id : string!
     headId : string = ""
     headStatus : string = ""
-    status : string = ""
-    state : string = ""
-    endTime : number = 0
   }
 
   entity OtelSpanEventRetentionLog [runtime] {
     id : string!
     headId : string = ""
     headStatus : string = ""
-    status : string = ""
-    timestamp : number = 0
   }
 
   entity OtelExport [runtime] {
     id : string!
     spans : [OtelSpan] = []
     moreSpans : boolean = false
+    batchLimit : number = 0
   }
 
   trait OtelExporter -> OtelExport [optimistic] {
@@ -141,14 +135,18 @@ orbital OtelOrbital {
         (emit END_SPAN_RESULT { ended: false, error: @payload.error })
       OTEL_SPAN_STAMPED -> idle
         (emit END_SPAN_RESULT { ended: true })
-        (fetch OtelSpan { filter: { state: "ending" }, orderBy: "startTime", limit: @config.batchSize, emit: { success: OTEL_ENDING_LOADED, failure: OTEL_READ_FAILED } })
+        (fetch OtelSpan { filter: { state: "ending" }, orderBy: "startTime", limit: (if (> @entity.batchLimit 0) @entity.batchLimit @config.batchSize), emit: { success: OTEL_ENDING_LOADED, failure: OTEL_READ_FAILED } })
       OTEL_ENDING_LOADED -> idle when (> (array/count @payload.data) 0)
         (set @entity.spans @payload.data)
         (set @entity.moreSpans (> @payload.totalCount (array/count @payload.data)))
         (fetch OtelSpanEvent { filter: (and (= (object/get @entity shipped) false) (array/includes (array/map @payload.data (fn s (object/get @s id ""))) (object/get @entity spanId))), orderBy: "timestamp", limit: @config.maxBatchEvents, emit: { success: OTEL_EVENTS_LOADED, failure: OTEL_READ_FAILED } })
       OTEL_ENDING_LOADED -> idle when (= (array/count @payload.data) 0)
+      OTEL_EVENTS_LOADED -> idle when (and (> @payload.totalCount (array/count @payload.data)) (> (array/count @entity.spans) 1))
+        (set @entity.batchLimit (math/ceil (/ (array/count @entity.spans) 2)))
+        (fetch OtelSpan { filter: { state: "ending" }, orderBy: "startTime", limit: @entity.batchLimit, emit: { success: OTEL_ENDING_LOADED, failure: OTEL_READ_FAILED } })
       OTEL_EVENTS_LOADED -> idle when (> @payload.totalCount (array/count @payload.data))
-        (emit OTEL_READ_FAILED { error: (str/concat "OtelSpanEvent has " @payload.totalCount " unshipped events for one export batch, over the maxBatchEvents cap of " @config.maxBatchEvents ", so the batch is not exported; lower batchSize"), code: "OTEL_OVER_CAP" })
+        (set @entity.batchLimit 0)
+        (emit OTEL_READ_FAILED { error: (str/concat "OtelSpanEvent has " @payload.totalCount " unshipped events for a single span, over the maxBatchEvents cap of " @config.maxBatchEvents ", so the span is not exported"), code: "OTEL_OVER_CAP" })
       OTEL_EVENTS_LOADED -> idle
         (let ((evs (array/filter @payload.data (fn ev (array/some @entity.spans (fn s (= @s.id @ev.spanId)))))))
           (emit OTEL_SEND {
@@ -251,8 +249,9 @@ orbital OtelOrbital {
         (emit OTEL_EXPORTED { signal: "metrics", count: 1 })
       OTEL_TRACES_MARKED -> idle when @entity.moreSpans
         (set @entity.moreSpans false)
-        (fetch OtelSpan { filter: { state: "ending" }, orderBy: "startTime", limit: @config.batchSize, emit: { success: OTEL_ENDING_LOADED, failure: OTEL_READ_FAILED } })
+        (fetch OtelSpan { filter: { state: "ending" }, orderBy: "startTime", limit: (if (> @entity.batchLimit 0) @entity.batchLimit @config.batchSize), emit: { success: OTEL_ENDING_LOADED, failure: OTEL_READ_FAILED } })
       OTEL_TRACES_MARKED -> idle
+        (set @entity.batchLimit 0)
       OTEL_METRIC_MARKED -> idle
       OTEL_MARK_FAILED -> idle
         (emit OTEL_EXPORT_FAILED { signal: "store", kind: "store", error: @payload.error })
@@ -677,7 +676,7 @@ orbital OtelOrbital {
         @tier "infra"
       maxBatchEvents : number = 10000
         @label "Event cap per export batch"
-        @description "Most unshipped events one export batch may read, for exactly the spans in that batch. The batch's events must all be read before its spans are marked exported, or the missing events would never ship; a batch over the cap is refused through OTEL_READ_FAILED and stays unexported until batchSize is lowered."
+        @description "Most unshipped events one export batch may read, for exactly the spans in that batch. The batch's events must all be read before its spans are marked exported, or the missing events would never ship; a batch over the cap is retried with half as many spans, down to one span, and only a single span whose own events are over the cap is refused through OTEL_READ_FAILED, staying unexported."
         @synonyms "batch event cap, export event limit"
         @tier "infra"
       maxRows : number = 1000

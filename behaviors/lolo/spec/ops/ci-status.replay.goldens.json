@@ -183,6 +183,66 @@
     }
    ],
    "now": 1760531445678
+  },
+  {
+   "id": "a-failing-row-click-emits-its-run-for-the-log-reader",
+   "steps": [
+    {
+     "event": "CI_RUN_OPEN",
+     "payload": {
+      "id": "almadar-io/kflow",
+      "row": {
+       "id": "almadar-io/kflow",
+       "repo": "kflow",
+       "name": "CI",
+       "status": "completed",
+       "conclusion": "failure",
+       "createdAt": "2026-10-26T10:00:00Z",
+       "runId": 4242
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "CI_RUN_SELECTED",
+        "payload": {
+         "owner": "almadar-io",
+         "repo": "kflow",
+         "runId": "4242"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-passing-row-click-emits-nothing",
+   "steps": [
+    {
+     "event": "CI_RUN_OPEN",
+     "payload": {
+      "id": "almadar-io/kflow",
+      "row": {
+       "id": "almadar-io/kflow",
+       "repo": "kflow",
+       "name": "CI",
+       "status": "completed",
+       "conclusion": "success",
+       "createdAt": "2026-10-26T10:00:00Z",
+       "runId": 4242
+      }
+     },
+     "expect": {
+      "neverEmits": [
+       "CI_RUN_SELECTED"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
   }
  ]
 }

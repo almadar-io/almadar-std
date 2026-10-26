@@ -1,0 +1,21 @@
+app lint-fetch-deliver-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-fetch-deliver - the `orb lint fetch-deliver <file>` command, the port of the option checks of entities/fetch_deliver.rs. For every inline trait it finds each `(fetch X { … })` in the transition effects (through nested arrays, not through objects) whose options carry `deliver: \"ids\"`: with an `include` option it is ORB_FETCH_DELIVER_IDS_ENTITY_REFS, without a non-empty `emit.success` it is ORB_FETCH_DELIVER_IDS_NO_SUCCESS. Both are reported at `orbitals[i (O)].traits[j (T)].stateMachine.transitions[n].effects` with the Rust message and suggestion, the include findings first, once per fetch (status 500, exit 1). ORB_FETCH_DELIVER_IDS_ROWS_READ and ORB_FETCH_TOTAL_NONE_READ are not part of this rule: they need the operators' value-source slots, field projections and function-returning flags. Clean answers `lint fetch-deliver: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintFetchDeliverSpec {
+  expects trait OrbLintFetchDeliver {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintFetchDeliverCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintFetchDeliver, OrbLintFetchDeliverCli
+}

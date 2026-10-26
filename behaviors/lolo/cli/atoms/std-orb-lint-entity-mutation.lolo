@@ -1,0 +1,138 @@
+app std-orb-lint-entity-mutation [
+  version: "1.0.0",
+  inbound: ["cli-lint-entity-mutation"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-entity-mutation - the `orb lint entity-mutation <file>` command, the port of the multi-trait entity mutation trio of entities/entity_mutation.rs. Per orbital, over its inline traits: a trait's mutated fields are the `(set @entity.<f> …)` targets in its guards, transition effects and tick effects, and its reads are every `@entity.<f>` it names there (id, createdAt and updatedAt aside). On a `[shared]` entity, a field written by two or more traits is ORB_SHARED_ENTITY_FIELD_CONFLICT, and a slot that two or more render roots read it into is ORB_SHARED_ENTITY_RENDER_AUTHORITY: a top-level render-ui effect counts as a read only when it names a field of the entity that is not `@intrinsic` (an intrinsic field is the trait's own frame, never persisted, so reading it is not a render read of the shared row — this is a deliberate difference from the Rust check), each reader is attributed to the root trait that embeds it through `@trait.<Name>` in render-ui effects. On a `[runtime]` entity that is not shared, two or more mutating traits that are not instances of one source trait and that can share a page (page membership closes over `@trait.<Name>` embeds in effects) are ORB_ENTITY_SPLIT_MUTATION when one of them reads a field it never writes that another writes. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-mutation: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-entity-mutation"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
+type EmVal = string | number | boolean | [EmVal?] | Map string EmVal?
+type EmField = { name : string, intrinsic : boolean }
+type EmEntity = { name : string, shared : boolean, persistence : string, fields : [EmField] }
+type EmSrc = { behavior : string, originalName : string }
+type EmTransition = { guard : EmVal?, effects : [EmVal?] }
+type EmTick = { effects : [EmVal?] }
+type EmMachine = { transitions : [EmTransition] }
+type EmTrait = { name : string, linkedEntity : string, sourceBehavior : EmSrc, stateMachine : EmMachine, ticks : [EmTick] }
+type EmPage = { name : string, traits : [EmVal?] }
+type EmOrbital = { name : string, entity : EmEntity, auxiliaryEntities : [EmEntity], traits : [EmTrait], pages : [EmPage] }
+type EmProgram = { orbitals : [EmOrbital] }
+type EmStrs = [string]
+type EmRec = { nm : string, lk : string, sets : [string], reads : [string], rslots : [string], refs : [string], prefs : [string], sb : string }
+type EmPageClos = { pg : string, members : [string] }
+type EmClos = { vis : [string], front : [string] }
+orbital OrbLintEntityMutationOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintEntityMutationRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintEntityMutation -> OrbLintEntityMutationRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" []))) (let ((defs (let ((pn (array/map (array/flatten (array/map @orbitals (fn o (if (validate/object (object/get @o "entity" {  })) [(object/get @o "entity")] [])))) (fn x (object/get @x "name" ""))))) (let ((dups (array/filter @pn (fn n (> (array/len (array/filter @pn (fn m (= @m @n)))) 1))))) (object/fromEntries (array/map (array/filter (array/flatten (array/map @orbitals (fn o (array/concat (if (validate/object (object/get @o "entity" {  })) [(object/get @o "entity")] []) (array/filter (object/get @o "auxiliaryEntities" []) (fn x (validate/object @x))))))) (fn x (not (array/includes @dups (object/get @x "name" ""))))) (fn x [(object/get @x "name" ""), @x]))))))) (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((o (array/nth @orbitals @oi))) (let ((trs : [EmTrait] (object/get @o "traits" [])) (pgs : [EmPage] (object/get @o "pages" []))) (let ((recs : [EmRec] (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj (let ((t (array/nth @trs @tj))) (if (object/has @t "stateMachine") [(let ((trans : [EmTransition] (object/get @t "stateMachine.transitions" [])) (tks : [EmTick] (object/get @t "ticks" [])) (lk (object/get @t "linkedEntity" ""))) (let ((teffs (array/concat (array/flatten (array/map @trans (fn x (object/get @x "effects" [])))) (array/flatten (array/map @tks (fn x (object/get @x "effects" []))))))) (let ((roots (array/concat (array/map (array/filter @trans (fn x (!= (object/get @x "guard" null) null))) (fn x (object/get @x "guard" null))) (array/concat (array/flatten (array/map @trans (fn x (object/get @x "effects" [])))) (array/flatten (array/map @tks (fn x (object/get @x "effects" []))))))) (intr (array/map (array/filter (object/get (object/get @defs @lk {  }) "fields" []) (fn f (= (object/get @f "intrinsic" false) true))) (fn f (object/get @f "name" ""))))) { nm: (object/get @t "name" ""), lk: @lk, sets: (array/unique (array/map (array/filter (array/flatten (array/map @roots (fn rt (or (json/parse (json/stringify (or (tree/fold @rt (fn (n k) (if (validate/string @n) (if (str/startsWith @n (quote "@entity.")) (let ((fl (array/first (str/split (array/first (str/split (str/slice @n 8 (str/len @n)) ".")) "[")))) (if (or (= @fl "") (= @fl "id") (= @fl "createdAt") (= @fl "updatedAt")) [] [(str/concat "r:" @fl)])) []) (if (validate/array @n) (array/concat (if (and (>= (array/len @n) 2) (let ((sq (array/nth @n 0))) (if (validate/string @sq) (= @sq "set") false))) (let ((tg (array/nth @n 1))) (if (and (validate/string @tg) (str/startsWith @tg (quote "@entity."))) (let ((sf (array/first (str/split (array/first (str/split (str/slice @tg 8 (str/len @tg)) ".")) "[")))) (if (= @sf "") [] [(str/concat "s:" @sf)])) [])) []) (array/flatten (array/filter @k (fn zz (!= @zz null))))) (if (validate/object @n) (array/flatten (array/filter (object/values @k) (fn zz (!= @zz null)))) [])))) "EmVal") [])) EmStrs) [])))) (fn z (str/startsWith @z "s:"))) (fn z (str/slice @z 2 (str/len @z))))), reads: (array/unique (array/map (array/filter (array/flatten (array/map @roots (fn rt (or (json/parse (json/stringify (or (tree/fold @rt (fn (n k) (if (validate/string @n) (if (str/startsWith @n (quote "@entity.")) (let ((fl (array/first (str/split (array/first (str/split (str/slice @n 8 (str/len @n)) ".")) "[")))) (if (or (= @fl "") (= @fl "id") (= @fl "createdAt") (= @fl "updatedAt")) [] [(str/concat "r:" @fl)])) []) (if (validate/array @n) (array/concat (if (and (>= (array/len @n) 2) (let ((sq (array/nth @n 0))) (if (validate/string @sq) (= @sq "set") false))) (let ((tg (array/nth @n 1))) (if (and (validate/string @tg) (str/startsWith @tg (quote "@entity."))) (let ((sf (array/first (str/split (array/first (str/split (str/slice @tg 8 (str/len @tg)) ".")) "[")))) (if (= @sf "") [] [(str/concat "s:" @sf)])) [])) []) (array/flatten (array/filter @k (fn zz (!= @zz null))))) (if (validate/object @n) (array/flatten (array/filter (object/values @k) (fn zz (!= @zz null)))) [])))) "EmVal") [])) EmStrs) [])))) (fn z (str/startsWith @z "r:"))) (fn z (str/slice @z 2 (str/len @z))))), rslots: (array/unique (array/flatten (array/map (array/filter @teffs (fn ef (and (validate/array @ef) (or (if (> (array/len @ef) 0) (let ((sq (array/nth @ef 0))) (if (validate/string @sq) (= @sq "render-ui") false)) false) (if (> (array/len @ef) 0) (let ((sq (array/nth @ef 0))) (if (validate/string @sq) (= @sq "render_ui") false)) false))))) (fn ef (let ((rf (array/map (array/filter (or (json/parse (json/stringify (or (tree/fold @ef (fn (n k) (if (validate/string @n) (if (str/startsWith @n (quote "@entity.")) (let ((fl (array/first (str/split (array/first (str/split (str/slice @n 8 (str/len @n)) ".")) "[")))) (if (or (= @fl "") (= @fl "id") (= @fl "createdAt") (= @fl "updatedAt")) [] [(str/concat "r:" @fl)])) []) (if (validate/array @n) (array/concat (if (and (>= (array/len @n) 2) (let ((sq (array/nth @n 0))) (if (validate/string @sq) (= @sq "set") false))) (let ((tg (array/nth @n 1))) (if (and (validate/string @tg) (str/startsWith @tg (quote "@entity."))) (let ((sf (array/first (str/split (array/first (str/split (str/slice @tg 8 (str/len @tg)) ".")) "[")))) (if (= @sf "") [] [(str/concat "s:" @sf)])) [])) []) (array/flatten (array/filter @k (fn zz (!= @zz null))))) (if (validate/object @n) (array/flatten (array/filter (object/values @k) (fn zz (!= @zz null)))) [])))) "EmVal") [])) EmStrs) []) (fn z (str/startsWith @z "r:"))) (fn z (str/slice @z 2 (str/len @z))))) (sl (if (validate/array @ef) (if (>= (array/len @ef) 2) (let ((sl (array/nth @ef 1))) (if (validate/string @sl) @sl null)) null) null))) (if (and (validate/string @sl) (!= (array/len (array/filter @rf (fn f (not (array/includes @intr @f))))) 0)) [@sl] [])))))), refs: (array/unique (array/flatten (array/map (array/filter @teffs (fn ef (and (validate/array @ef) (or (if (> (array/len @ef) 0) (let ((sq (array/nth @ef 0))) (if (validate/string @sq) (= @sq "render-ui") false)) false) (if (> (array/len @ef) 0) (let ((sq (array/nth @ef 0))) (if (validate/string @sq) (= @sq "render_ui") false)) false))))) (fn ef (or (json/parse (json/stringify (or (tree/fold @ef (fn (n k) (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) (let ((nm (str/slice @n 7 (str/len @n)))) (if (and (!= @nm "") (not (str/includes @nm "."))) [@nm] [])) []) (if (validate/array @n) (array/flatten (array/filter @k (fn zz (!= @zz null)))) (if (validate/object @n) (array/flatten (array/filter (object/values @k) (fn zz (!= @zz null)))) [])))) "EmVal") [])) EmStrs) []))))), prefs: (array/filter (array/unique (array/flatten (array/map @teffs (fn ef (or (json/parse (json/stringify (or (tree/fold @ef (fn (n k) (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) (let ((nm (str/slice @n 7 (str/len @n)))) (if (and (!= @nm "") (not (str/includes @nm "."))) [@nm] [])) []) (if (validate/array @n) (array/flatten (array/filter @k (fn zz (!= @zz null)))) (if (validate/object @n) (array/flatten (array/filter (object/values @k) (fn zz (!= @zz null)))) [])))) "EmVal") [])) EmStrs) []))))) (fn z (!= @z (object/get @t "name" "")))), sb: (if (object/has @t "sourceBehavior") (str/concat (object/get (object/get @t "sourceBehavior" {  }) "behavior" "") "|" (object/get (object/get @t "sourceBehavior" {  }) "originalName" "")) "") })))] (array/slice [{ nm: "", lk: "", sets: (array/slice [""] 0 0), reads: (array/slice [""] 0 0), rslots: (array/slice [""] 0 0), refs: (array/slice [""] 0 0), prefs: (array/slice [""] 0 0), sb: "" }] 0 0)))))))) (let ((prefmap (object/fromEntries (array/map @recs (fn r [(object/get @r "nm" ""), (object/get @r "prefs" [])]))))) (let ((pclos : [EmPageClos] (array/map @pgs (fn pg (let ((seed (array/filter (or (json/parse (json/stringify (array/map (object/get @pg "traits" []) (fn pt (if (validate/object @pt) (if (object/has @pt "stateMachine") (object/get @pt "name" "") (if (object/has @pt "ref") (object/get @pt "ref" "") (object/get @pt "name" ""))) "")))) EmStrs) []) (fn z (!= @z ""))))) (let ((init1 : EmClos { vis: @seed, front: @seed })) { pg: (object/get @pg "name" ""), members: (object/get (array/reduce (array/range 0 (+ (array/len @recs) 1)) @init1 (fn (acc i) (if (= (array/len (object/get @acc "front" [])) 0) @acc (let ((nxt (array/filter (array/unique (array/flatten (array/map (object/get @acc "front" []) (fn x (object/get @prefmap @x []))))) (fn c (not (array/includes (object/get @acc "vis" []) @c)))))) { vis: (array/concat (object/get @acc "vis" []) @nxt), front: @nxt })))) "vis" []) })))))) (array/flatten (array/map (array/unique (array/map (array/filter @recs (fn r (and (!= (object/get @r "lk" "") "") (or (!= (array/len (object/get @r "sets" [])) 0) (!= (array/len (object/get @r "rslots" [])) 0))))) (fn r (object/get @r "lk" "")))) (fn e (let ((ed (object/get @defs @e null))) (if (= @ed null) [] (if (= (object/get @ed "shared" false) true) (array/concat (array/flatten (array/map (array/sort (array/unique (array/flatten (array/map (array/filter @recs (fn r (= (object/get @r "lk" "") @e))) (fn r (object/get @r "rslots" [])))))) (fn sl (let ((rts (array/unique (array/flatten (array/map (array/filter (array/filter @recs (fn r (= (object/get @r "lk" "") @e))) (fn r (array/includes (object/get @r "rslots" []) @sl))) (fn r (let ((rn (object/get @r "nm" ""))) (let ((anc (let ((init0 : EmClos { vis: [@rn], front: [@rn] })) (object/get (array/reduce (array/range 0 (+ (array/len @recs) 1)) @init0 (fn (acc i) (if (= (array/len (object/get @acc "front" [])) 0) @acc (let ((nxt (array/filter (array/unique (array/flatten (array/map (object/get @acc "front" []) (fn x (array/unique (array/map (array/filter @recs (fn p (and (array/includes (object/get @p "refs" []) @x) (!= (object/get @p "nm" "") @x)))) (fn p (object/get @p "nm" "")))))))) (fn c (not (array/includes (object/get @acc "vis" []) @c)))))) { vis: (array/concat (object/get @acc "vis" []) @nxt), front: @nxt })))) "vis" [])))) (let ((rts (array/filter @anc (fn a (= (array/len (array/unique (array/map (array/filter @recs (fn p (and (array/includes (object/get @p "refs" []) @a) (!= (object/get @p "nm" "") @a)))) (fn p (object/get @p "nm" ""))))) 0))))) (if (= (array/len @rts) 0) [@rn] @rts)))))))))) (if (> (array/len @rts) 1) [{ code: "ORB_SHARED_ENTITY_RENDER_AUTHORITY", path: (str/concat "orbitals[" @oi "].entity[" @e "]"), message: (str/concat "Shared entity '" @e "' is render-ui-read into slot '" @sl "' by " (array/len @rts) " traits: " (str/concat "[" (str/join (array/map (array/sort @rts) (fn x (str/concat "\"" @x "\""))) ", ") "]") " — exactly one render authority is allowed per (entity, slot)"), suggestion: "Keep a single trait's render-ui reading this shared entity into this slot; route the others through it, or give them a different slot", severity: "error" }] []))))) (array/flatten (array/map (array/sort (array/unique (array/flatten (array/map (array/filter @recs (fn r (= (object/get @r "lk" "") @e))) (fn r (object/get @r "sets" [])))))) (fn f (let ((wr (array/sort (array/unique (array/map (array/filter (array/filter @recs (fn r (= (object/get @r "lk" "") @e))) (fn r (array/includes (object/get @r "sets" []) @f))) (fn r (object/get @r "nm" ""))))))) (if (> (array/len @wr) 1) [{ code: "ORB_SHARED_ENTITY_FIELD_CONFLICT", path: (str/concat "orbitals[" @oi "].entity[" @e "]"), message: (str/concat "Shared entity '" @e "' field '" @f "' is written by " (array/len @wr) " traits: " (str/concat "[" (str/join (array/map @wr (fn x (str/concat "\"" @x "\""))) ", ") "]") " — coupled mechanics writing one field must be one ordered pipeline, not parallel writers"), suggestion: "Route the write through a single ordered pipeline instead of writing the same field from multiple traits", severity: "error" }] [])))))) (if (!= (array/len (array/filter (array/filter @recs (fn r (= (object/get @r "lk" "") @e))) (fn r (!= (array/len (object/get @r "sets" [])) 0)))) 0) (let ((mut (array/sort (array/unique (array/map (array/filter (array/filter @recs (fn r (= (object/get @r "lk" "") @e))) (fn r (!= (array/len (object/get @r "sets" [])) 0))) (fn r (object/get @r "nm" ""))))))) (if (and (>= (array/len @mut) 2) (= (object/get @ed "persistence" "") "runtime") (not (let ((sbs (array/map @mut (fn m (object/get (array/last (array/filter @recs (fn r (= (object/get @r "nm" "") @m)))) "sb" ""))))) (and (array/every @sbs (fn s (!= @s ""))) (= (array/len (array/unique @sbs)) 1)))) (not (and (array/every @mut (fn m (!= (array/len (array/map (array/filter @pclos (fn pc (array/includes (object/get @pc "members" []) @m))) (fn pc (object/get @pc "pg" "")))) 0))) (array/every (array/range 0 (array/len @mut)) (fn i (array/every (array/range (+ @i 1) (array/len @mut)) (fn j (= (array/len (array/filter (array/map (array/filter @pclos (fn pc (array/includes (object/get @pc "members" []) (array/nth @mut @i)))) (fn pc (object/get @pc "pg" ""))) (fn p (array/includes (array/map (array/filter @pclos (fn pc (array/includes (object/get @pc "members" []) (array/nth @mut @j)))) (fn pc (object/get @pc "pg" ""))) @p)))) 0)))))))) (let ((cs (array/flatten (array/map (array/sort (array/unique (array/map (array/filter (array/filter @recs (fn r (= (object/get @r "lk" "") @e))) (fn r (!= (array/len (object/get @r "reads" [])) 0))) (fn r (object/get @r "nm" ""))))) (fn rd (let ((rr (array/last (array/filter @recs (fn r (= (object/get @r "nm" "") @rd)))))) (array/flatten (array/map (array/sort (object/get @rr "reads" [])) (fn f (let ((wr (array/sort (array/unique (array/map (array/filter (array/filter @recs (fn r (= (object/get @r "lk" "") @e))) (fn r (array/includes (object/get @r "sets" []) @f))) (fn r (object/get @r "nm" ""))))))) (if (and (!= (array/len @wr) 0) (not (array/includes @wr @rd))) [{ reader: @rd, field: @f, writer: (array/nth @wr 0) }] []))))))))))) (if (= (array/len @cs) 0) [] (let ((w (array/nth @cs 0))) [{ code: "ORB_ENTITY_SPLIT_MUTATION", path: (str/concat "orbitals[" @oi "].entity[" @e "]"), message: (str/concat "Entity '" @e "' (runtime, not [shared]) is mutated by " (array/len @mut) " distinct traits " (str/concat "[" (str/join (array/map @mut (fn x (str/concat "\"" @x "\""))) ", ") "]") " on ISOLATED per-trait copies, and trait '" (object/get @w "reader" "") "' reads '@entity." (object/get @w "field" "") "' which it never writes — only '" (object/get @w "writer" "") "' writes it, on a copy '" (object/get @w "reader" "") "' can't see; that read provably misses the write"), suggestion: (str/concat "If these traits are meant to co-mutate one instance, add [shared] to entity '" @e "'"), severity: "error" }]))) [])) []))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "entity-mutation", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EmProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintEntityMutationCli -> OrbLintEntityMutationRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint entity-mutation <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "entity-mutation") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint entity-mutation: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "entity-mutation") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint entity-mutation: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-entity-mutation" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint entity-mutation` with its arguments and working directory."
+        @synonyms "orb lint entity-mutation"
+      OrbLintEntityMutation.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintEntityMutationCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintEntityMutationOrbitalStart -> OrbLintEntityMutation, OrbLintEntityMutationCli, OrbLintInput, Packs, Versions
+}

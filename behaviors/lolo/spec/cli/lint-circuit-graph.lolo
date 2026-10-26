@@ -1,0 +1,21 @@
+app lint-circuit-graph-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint circuit-graph <file>`, the port of the state-graph and overlay-exit checks of validate_closed_circuit: CIRCUIT_UNREACHABLE_STATE, CIRCUIT_DEAD_END_STATE, CIRCUIT_NO_OVERLAY_EXIT and CIRCUIT_MODAL_EXIT_INCOMPLETE. Findings are reported at the trait path (status 500, exit 1). A clean program answers `lint circuit-graph: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintCircuitGraphSpec {
+  expects trait OrbLintCircuitGraph {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintCircuitGraphCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintCircuitGraph, OrbLintCircuitGraphCli
+}

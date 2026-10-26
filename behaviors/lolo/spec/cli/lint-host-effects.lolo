@@ -1,0 +1,21 @@
+app lint-host-effects-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint host-effects <file>`: it reports ORB_RANDOM_BYTES_COUNT, ORB_CREDENTIAL_REQUEST_INVALID, ORB_HOST_EFFECT_ARITY and ORB_HOST_EFFECT_OPTION_UNKNOWN for the closedCall host effects of the installed operator table, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint host-effects: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintHostEffectsSpec {
+  expects trait OrbLintHostEffects {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintHostEffectsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintHostEffects, OrbLintHostEffectsCli
+}

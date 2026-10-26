@@ -1,0 +1,144 @@
+app std-orb-lint-merged-fields [
+  version: "1.0.0",
+  inbound: ["cli-lint-merged-fields"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-merged-fields - the `orb lint merged-fields <file>` command, the port of ORB_E_MERGED_FIELD_UNREFERENCED (validate_all_merged_field_usage in entities/entity_mutation.rs). A field a rebind merged onto an entity (`mergedFrom`) that no trait of the whole program uses is reported at `orbitals[i].entity[E].fields.<field>` of the orbital that declares the entity, sorted by field name. A trait uses an entity field when it is linked to the entity and names `@entity.<field>` or sets it anywhere (guards, effects, tick guards and effects, config defaults), lists it in a `fetch` include, writes it in a `persist` data literal (a `persist batch` too), a render-ui node of a pattern whose prop declares it required binds the entity (its own entity by default), or its entity contract requires it; a trait linked to another entity uses the fields it fetch-includes or persists, every field when it fetches or persists the entity with no data to name. The pattern requirements come from LINT_PATTERNS. Reported with the Rust message and suggestion (status 500, exit 1). Clean answers `lint merged-fields: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-merged-fields"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
+type MgVal = string | number | boolean | [MgVal?] | Map string MgVal?
+type MgField = { name : string, type : string, mergedFrom : string }
+type MgEntity = { name : string, fields : [MgField] }
+type MgContract = { requires : [string] }
+type MgCfg = { default : MgVal? }
+type MgTransition = { guard : MgVal?, effects : [MgVal?] }
+type MgTick = { guard : MgVal?, effects : [MgVal?] }
+type MgMachine = { transitions : [MgTransition] }
+type MgTrait = { name : string, linkedEntity : string, entityContract : MgContract, config : Map string MgCfg, stateMachine : MgMachine, ticks : [MgTick] }
+type MgOrbital = { name : string, entity : MgEntity, auxiliaryEntities : [MgEntity], traits : [MgTrait] }
+type MgProgram = { orbitals : [MgOrbital] }
+type MgProp = { requiredFields : [string]? }
+type MgPattern = { props : Map string MgProp? }
+type EmStrs = [string]
+type MgW = { a : string, e : string, d : MgVal? }
+orbital OrbLintMergedFieldsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintMergedFieldsRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    pats : Map string MgPattern = {}
+  }
+
+  trait OrbLintMergedFields -> OrbLintMergedFieldsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_PATTERNS_HEARD -> ready
+        (set @entity.pats @payload.patterns)
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (pats @entity.pats)) (let ((defs (let ((pn (array/map (array/flatten (array/map @orbitals (fn o (if (validate/object (object/get @o "entity" {  })) [(object/get @o "entity")] [])))) (fn x (object/get @x "name" ""))))) (let ((dups (array/filter @pn (fn n (> (array/len (array/filter @pn (fn m (= @m @n)))) 1))))) (object/fromEntries (array/map (array/filter (array/flatten (array/map @orbitals (fn o (array/concat (if (validate/object (object/get @o "entity" {  })) [(object/get @o "entity")] []) (array/filter (object/get @o "auxiliaryEntities" []) (fn x (validate/object @x))))))) (fn x (not (array/includes @dups (object/get @x "name" ""))))) (fn x [(object/get @x "name" ""), @x]))))))) (let ((mnames (array/map (array/filter (object/values @defs) (fn d (!= (array/len (array/filter (object/get @d "fields" []) (fn f (and (validate/string (object/get @f "mergedFrom" null)) (!= (object/get @f "name" "") ""))))) 0))) (fn d (object/get @d "name" ""))))) (if (= (array/len @mnames) 0) [] (let ((contribs (array/flatten (array/map @orbitals (fn o (let ((trs : [MgTrait] (object/get @o "traits" []))) (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj (let ((t (array/nth @trs @tj))) (if (object/has @t "stateMachine") (let ((trans : [MgTransition] (object/get @t "stateMachine.transitions" [])) (tks : [MgTick] (object/get @t "ticks" [])) (cfg (object/get @t "config" {  })) (lk (object/get @t "linkedEntity" ""))) (let ((roots (array/concat (array/map (array/filter @trans (fn x (!= (object/get @x "guard" null) null))) (fn x (object/get @x "guard" null))) (array/flatten (array/map @trans (fn x (object/get @x "effects" [])))) (array/map (array/filter @tks (fn x (!= (object/get @x "guard" null) null))) (fn x (object/get @x "guard" null))) (array/flatten (array/map @tks (fn x (object/get @x "effects" [])))) (array/map (array/filter (object/keys @cfg) (fn kk (!= (object/get (object/get @cfg @kk {  }) "default" null) null))) (fn kk (object/get (object/get @cfg @kk {  }) "default" null)))))) (array/map @mnames (fn mn (let ((ed (object/get @defs @mn {  }))) (let ((en @mn) (efn (array/map (object/get @ed "fields" []) (fn f (object/get @f "name" "")))) (rels (array/map (array/filter (object/get @ed "fields" []) (fn f (= (object/get @f "type" "") "relation"))) (fn f (object/get @f "name" ""))))) { mn: @mn, fs: (if (= @lk @mn) (array/concat (array/unique (array/map (array/filter (array/flatten (array/map @roots (fn rt (or (json/parse (json/stringify (or (tree/fold @rt (fn (n k) (if (validate/string @n) (if (str/startsWith @n (quote "@entity.")) (let ((fl (array/first (str/split (array/first (str/split (str/slice @n 8 (str/len @n)) ".")) "[")))) (if (or (= @fl "") (= @fl "id") (= @fl "createdAt") (= @fl "updatedAt")) [] [(str/concat "r:" @fl)])) []) (if (validate/array @n) (array/concat (if (and (>= (array/len @n) 2) (let ((sq (array/nth @n 0))) (if (validate/string @sq) (= @sq "set") false))) (let ((tg (array/nth @n 1))) (if (and (validate/string @tg) (str/startsWith @tg (quote "@entity."))) (let ((sf (array/first (str/split (array/first (str/split (str/slice @tg 8 (str/len @tg)) ".")) "[")))) (if (= @sf "") [] [(str/concat "s:" @sf)])) [])) []) (array/flatten (array/filter @k (fn zz (!= @zz null))))) (if (validate/object @n) (array/flatten (array/filter (object/values @k) (fn zz (!= @zz null)))) [])))) "MgVal") [])) EmStrs) [])))) (fn z (or (str/startsWith @z "r:") (str/startsWith @z "s:")))) (fn z (str/slice @z 2 (str/len @z))))) (array/map (array/filter (array/flatten (array/map @roots (fn rt (or (json/parse (json/stringify (or (tree/fold @rt (fn (n k) (if (validate/array @n) (let ((ln (array/len @n))) (array/concat (if (> (array/len @n) 1) (if (let ((sq (array/nth @n 0))) (if (validate/string @sq) (= @sq "fetch") false)) (if (and (>= (array/len @n) 2) (let ((e1 (array/nth @n 1))) (and (validate/string @e1) (= @e1 @en)))) (array/concat ["m"] (if (> (array/len @n) 2) (let ((opt (array/nth @n 2))) (if (and (validate/object @opt) (object/has @opt "include")) (let ((inc (object/get @opt "include" null))) (if (validate/array @inc) (let ((body (if (and (> (array/len @inc) 0) (let ((sq (array/nth @inc 0))) (if (validate/string @sq) (= @sq "list") false))) (array/slice @inc 1 (array/len @inc)) @inc))) (array/flatten (array/map (array/filter @body (fn s (validate/string @s))) (fn s (if (validate/string @s) (array/map (let ((hit (array/filter @rels (fn rn (= @rn @s))))) (if (!= (array/len @hit) 0) [(array/nth @hit 0)] (let ((hb (array/filter @rels (fn rn (= (if (str/endsWith @rn "Id") (str/slice @rn 0 (- (str/len @rn) 2)) @rn) @s))))) (if (!= (array/len @hb) 0) [(array/nth @hb 0)] (array/slice [""] 0 0))))) (fn rf (str/concat "f:" @rf))) (array/slice [""] 0 0)))))) (array/slice [""] 0 0))) (array/slice [""] 0 0))) (array/slice [""] 0 0))) (array/slice [""] 0 0)) (if (and (let ((sq (array/nth @n 0))) (if (validate/string @sq) (= @sq "persist") false)) (> (array/len @n) 2) (let ((sq (array/nth @n 1))) (if (validate/string @sq) (= @sq "batch") false))) (let ((ops (array/nth @n 2))) (array/flatten (array/map (array/filter (if (not (validate/array @ops)) (let ((nw : [MgW] [])) @nw) (if (= (array/len @ops) 0) (let ((nw : [MgW] [])) @nw) (let ((oh (array/nth @ops 0))) (if (validate/string @oh) (if (= @oh "list") (array/flatten (array/map (array/slice @ops 1 (array/len @ops)) (fn e (if (and (validate/array @e) (> (array/len @e) 1)) (let ((e0 (array/nth @e 0)) (e1 (array/nth @e 1))) (if (and (validate/string @e0) (array/includes ["create", "update", "delete"] @e0) (validate/string @e1) (not (str/startsWith @e1 (quote "@")))) [{ a: @e0, e: @e1, d: (if (= @e0 "create") (if (> (array/len @e) 2) (array/nth @e 2) null) (if (= @e0 "update") (if (> (array/len @e) 3) (array/nth @e 3) null) null)) }] (let ((nw : [MgW] [])) @nw))) (let ((nw : [MgW] [])) @nw))))) (if (and (= @oh "array/map") (= (array/len @ops) 3)) (let ((lam (array/nth @ops 2))) (if (and (validate/array @lam) (>= (array/len @lam) 3)) (let ((lh (array/nth @lam 0)) (body (array/last @lam))) (if (and (validate/string @lh) (array/includes ["fn", "lambda"] @lh) (validate/array @body) (> (array/len @body) 0)) (array/flatten (array/map [@body] (fn e (if (and (validate/array @e) (> (array/len @e) 1)) (let ((e0 (array/nth @e 0)) (e1 (array/nth @e 1))) (if (and (validate/string @e0) (array/includes ["create", "update", "delete"] @e0) (validate/string @e1) (not (str/startsWith @e1 (quote "@")))) [{ a: @e0, e: @e1, d: (if (= @e0 "create") (if (> (array/len @e) 2) (array/nth @e 2) null) (if (= @e0 "update") (if (> (array/len @e) 3) (array/nth @e 3) null) null)) }] (let ((nw : [MgW] [])) @nw))) (let ((nw : [MgW] [])) @nw))))) (let ((nw : [MgW] [])) @nw))) (let ((nw : [MgW] [])) @nw))) (let ((nw : [MgW] [])) @nw))) (array/flatten (array/map @ops (fn e (if (and (validate/array @e) (> (array/len @e) 1)) (let ((e0 (array/nth @e 0)) (e1 (array/nth @e 1))) (if (and (validate/string @e0) (array/includes ["create", "update", "delete"] @e0) (validate/string @e1) (not (str/startsWith @e1 (quote "@")))) [{ a: @e0, e: @e1, d: (if (= @e0 "create") (if (> (array/len @e) 2) (array/nth @e 2) null) (if (= @e0 "update") (if (> (array/len @e) 3) (array/nth @e 3) null) null)) }] (let ((nw : [MgW] [])) @nw))) (let ((nw : [MgW] [])) @nw))))))))) (fn w (= (object/get @w "e" "") @en))) (fn w (array/concat ["m"] (let ((dd (object/get @w "d" null))) (if (validate/object @dd) (array/map (object/keys @dd) (fn kk (str/concat "f:" @kk))) (array/slice [""] 0 0)))))))) (if (let ((sq (array/nth @n 0))) (if (validate/string @sq) (= @sq "persist") false)) (let ((a1 (array/nth @n 1))) (let ((ix (if (and (validate/string @a1) (array/includes ["create", "upsert", "update", "delete"] @a1)) 2 1))) (let ((ee (if (> (array/len @n) @ix) (array/nth @n @ix) null))) (if (and (validate/string @ee) (= @ee @en)) (array/concat ["m"] (let ((dd (if (> (array/len @n) (+ @ix 1)) (array/nth @n (+ @ix 1)) null))) (if (validate/object @dd) (array/map (object/keys @dd) (fn kk (str/concat "f:" @kk))) (array/slice [""] 0 0)))) (array/slice [""] 0 0))))) (array/slice [""] 0 0)))) (array/slice [""] 0 0)) (array/flatten (array/filter @k (fn zz (!= @zz null)))))) (if (validate/object @n) (array/concat (let ((ty (object/get @n "type" null))) (if (and (validate/string @ty) (object/has @pats @ty)) (let ((bound (if (object/has @n "entity") (let ((ev (object/get @n "entity" null))) (if (validate/string @ev) (if (not (str/startsWith @ev (quote "@"))) @ev (if (let ((segs (str/split (str/slice @ev 1 (str/len @ev)) "."))) (or (= (array/nth @segs 0) "payload") (= (array/nth @segs 0) "data") (and (= (array/nth @segs 0) "entity") (= (array/len @segs) 1)))) @lk "")) "")) @lk))) (if (= @bound @en) (let ((pp (object/get (object/get @pats @ty {  }) "props" {  }))) (let ((req (array/flatten (array/map (array/filter (object/keys @pp) (fn pn (and (object/has @n @pn) (!= (array/len (object/get (object/get @pp @pn {  }) "requiredFields" [])) 0)))) (fn pn (object/get (object/get @pp @pn {  }) "requiredFields" [])))))) (array/concat (if (!= (array/len @req) 0) ["m"] (array/slice [""] 0 0)) (array/map @req (fn rf (str/concat "f:" @rf)))))) (array/slice [""] 0 0))) (array/slice [""] 0 0))) (array/flatten (array/filter (object/values @k) (fn zz (!= @zz null))))) (array/slice [""] 0 0)))) "MgVal") [])) EmStrs) [])))) (fn z (str/startsWith @z "f:"))) (fn z (str/slice @z 2 (str/len @z)))) (object/get (object/get @t "entityContract" {  }) "requires" [])) (if (= @lk @mn) (array/slice [""] 0 0) (let ((tags (array/flatten (array/map @roots (fn rt (or (json/parse (json/stringify (or (tree/fold @rt (fn (n k) (if (validate/array @n) (let ((ln (array/len @n))) (array/concat (if (> (array/len @n) 1) (if (let ((sq (array/nth @n 0))) (if (validate/string @sq) (= @sq "fetch") false)) (if (and (>= (array/len @n) 2) (let ((e1 (array/nth @n 1))) (and (validate/string @e1) (= @e1 @en)))) (array/concat ["m"] (if (> (array/len @n) 2) (let ((opt (array/nth @n 2))) (if (and (validate/object @opt) (object/has @opt "include")) (let ((inc (object/get @opt "include" null))) (if (validate/array @inc) (let ((body (if (and (> (array/len @inc) 0) (let ((sq (array/nth @inc 0))) (if (validate/string @sq) (= @sq "list") false))) (array/slice @inc 1 (array/len @inc)) @inc))) (array/flatten (array/map (array/filter @body (fn s (validate/string @s))) (fn s (if (validate/string @s) (array/map (let ((hit (array/filter @rels (fn rn (= @rn @s))))) (if (!= (array/len @hit) 0) [(array/nth @hit 0)] (let ((hb (array/filter @rels (fn rn (= (if (str/endsWith @rn "Id") (str/slice @rn 0 (- (str/len @rn) 2)) @rn) @s))))) (if (!= (array/len @hb) 0) [(array/nth @hb 0)] (array/slice [""] 0 0))))) (fn rf (str/concat "f:" @rf))) (array/slice [""] 0 0)))))) (array/slice [""] 0 0))) (array/slice [""] 0 0))) (array/slice [""] 0 0))) (array/slice [""] 0 0)) (if (and (let ((sq (array/nth @n 0))) (if (validate/string @sq) (= @sq "persist") false)) (> (array/len @n) 2) (let ((sq (array/nth @n 1))) (if (validate/string @sq) (= @sq "batch") false))) (let ((ops (array/nth @n 2))) (array/flatten (array/map (array/filter (if (not (validate/array @ops)) (let ((nw : [MgW] [])) @nw) (if (= (array/len @ops) 0) (let ((nw : [MgW] [])) @nw) (let ((oh (array/nth @ops 0))) (if (validate/string @oh) (if (= @oh "list") (array/flatten (array/map (array/slice @ops 1 (array/len @ops)) (fn e (if (and (validate/array @e) (> (array/len @e) 1)) (let ((e0 (array/nth @e 0)) (e1 (array/nth @e 1))) (if (and (validate/string @e0) (array/includes ["create", "update", "delete"] @e0) (validate/string @e1) (not (str/startsWith @e1 (quote "@")))) [{ a: @e0, e: @e1, d: (if (= @e0 "create") (if (> (array/len @e) 2) (array/nth @e 2) null) (if (= @e0 "update") (if (> (array/len @e) 3) (array/nth @e 3) null) null)) }] (let ((nw : [MgW] [])) @nw))) (let ((nw : [MgW] [])) @nw))))) (if (and (= @oh "array/map") (= (array/len @ops) 3)) (let ((lam (array/nth @ops 2))) (if (and (validate/array @lam) (>= (array/len @lam) 3)) (let ((lh (array/nth @lam 0)) (body (array/last @lam))) (if (and (validate/string @lh) (array/includes ["fn", "lambda"] @lh) (validate/array @body) (> (array/len @body) 0)) (array/flatten (array/map [@body] (fn e (if (and (validate/array @e) (> (array/len @e) 1)) (let ((e0 (array/nth @e 0)) (e1 (array/nth @e 1))) (if (and (validate/string @e0) (array/includes ["create", "update", "delete"] @e0) (validate/string @e1) (not (str/startsWith @e1 (quote "@")))) [{ a: @e0, e: @e1, d: (if (= @e0 "create") (if (> (array/len @e) 2) (array/nth @e 2) null) (if (= @e0 "update") (if (> (array/len @e) 3) (array/nth @e 3) null) null)) }] (let ((nw : [MgW] [])) @nw))) (let ((nw : [MgW] [])) @nw))))) (let ((nw : [MgW] [])) @nw))) (let ((nw : [MgW] [])) @nw))) (let ((nw : [MgW] [])) @nw))) (array/flatten (array/map @ops (fn e (if (and (validate/array @e) (> (array/len @e) 1)) (let ((e0 (array/nth @e 0)) (e1 (array/nth @e 1))) (if (and (validate/string @e0) (array/includes ["create", "update", "delete"] @e0) (validate/string @e1) (not (str/startsWith @e1 (quote "@")))) [{ a: @e0, e: @e1, d: (if (= @e0 "create") (if (> (array/len @e) 2) (array/nth @e 2) null) (if (= @e0 "update") (if (> (array/len @e) 3) (array/nth @e 3) null) null)) }] (let ((nw : [MgW] [])) @nw))) (let ((nw : [MgW] [])) @nw))))))))) (fn w (= (object/get @w "e" "") @en))) (fn w (array/concat ["m"] (let ((dd (object/get @w "d" null))) (if (validate/object @dd) (array/map (object/keys @dd) (fn kk (str/concat "f:" @kk))) (array/slice [""] 0 0)))))))) (if (let ((sq (array/nth @n 0))) (if (validate/string @sq) (= @sq "persist") false)) (let ((a1 (array/nth @n 1))) (let ((ix (if (and (validate/string @a1) (array/includes ["create", "upsert", "update", "delete"] @a1)) 2 1))) (let ((ee (if (> (array/len @n) @ix) (array/nth @n @ix) null))) (if (and (validate/string @ee) (= @ee @en)) (array/concat ["m"] (let ((dd (if (> (array/len @n) (+ @ix 1)) (array/nth @n (+ @ix 1)) null))) (if (validate/object @dd) (array/map (object/keys @dd) (fn kk (str/concat "f:" @kk))) (array/slice [""] 0 0)))) (array/slice [""] 0 0))))) (array/slice [""] 0 0)))) (array/slice [""] 0 0)) (array/flatten (array/filter @k (fn zz (!= @zz null)))))) (if (validate/object @n) (array/concat (let ((ty (object/get @n "type" null))) (if (and (validate/string @ty) (object/has @pats @ty)) (let ((bound (if (object/has @n "entity") (let ((ev (object/get @n "entity" null))) (if (validate/string @ev) (if (not (str/startsWith @ev (quote "@"))) @ev (if (let ((segs (str/split (str/slice @ev 1 (str/len @ev)) "."))) (or (= (array/nth @segs 0) "payload") (= (array/nth @segs 0) "data") (and (= (array/nth @segs 0) "entity") (= (array/len @segs) 1)))) @lk "")) "")) @lk))) (if (= @bound @en) (let ((pp (object/get (object/get @pats @ty {  }) "props" {  }))) (let ((req (array/flatten (array/map (array/filter (object/keys @pp) (fn pn (and (object/has @n @pn) (!= (array/len (object/get (object/get @pp @pn {  }) "requiredFields" [])) 0)))) (fn pn (object/get (object/get @pp @pn {  }) "requiredFields" [])))))) (array/concat (if (!= (array/len @req) 0) ["m"] (array/slice [""] 0 0)) (array/map @req (fn rf (str/concat "f:" @rf)))))) (array/slice [""] 0 0))) (array/slice [""] 0 0))) (array/flatten (array/filter (object/values @k) (fn zz (!= @zz null))))) (array/slice [""] 0 0)))) "MgVal") [])) EmStrs) [])))))) (let ((fl (array/map (array/filter @tags (fn z (str/startsWith @z "f:"))) (fn z (str/slice @z 2 (str/len @z)))))) (if (and (array/includes @tags "m") (= (array/len @fl) 0)) @efn @fl))))) })))))) (array/slice [{ mn: "", fs: (array/slice [""] 0 0) }] 0 0)))))))))))) (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((o (array/nth @orbitals @oi))) (array/flatten (array/map (array/sort (array/unique (array/filter (array/concat (if (validate/object (object/get @o "entity" {  })) [(object/get (object/get @o "entity" {  }) "name" "")] (array/slice [""] 0 0)) (array/map (array/filter (object/get @o "auxiliaryEntities" []) (fn x (validate/object @x))) (fn x (object/get @x "name" "")))) (fn z (!= @z ""))))) (fn en (let ((ed (object/get @defs @en null))) (if (= @ed null) [] (let ((mf (array/sort (array/filter (object/get @ed "fields" []) (fn f (and (validate/string (object/get @f "mergedFrom" null)) (!= (object/get @f "name" "") ""))))))) (array/flatten (array/map @mf (fn fl (let ((fname (object/get @fl "name" ""))) (if (array/includes (array/unique (array/flatten (array/map (array/filter @contribs (fn c (= (object/get @c "mn" "") @en))) (fn c (object/get @c "fs" (array/slice [""] 0 0)))))) @fname) [] [{ code: "ORB_E_MERGED_FIELD_UNREFERENCED", path: (str/concat "orbitals[" @oi "].entity[" @en "].fields." @fname), message: (str/concat "Entity '" @en "' field '" @fname "' was merged from '" (object/get @fl "mergedFrom" "") "' but no trait of this orbital reads, writes, fetch-includes, or persists it"), suggestion: "Compose a trait that uses it, or drop the rebind", severity: "error" }])))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "merged-fields", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : MgProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      LINT_PATTERNS_HEARD { patterns : Map string MgPattern! }
+        @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry, each prop with the entity fields it requires."
+      OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD
+    }
+  }
+
+  trait OrbLintMergedFieldsCli -> OrbLintMergedFieldsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint merged-fields <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "merged-fields") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint merged-fields: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "merged-fields") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint merged-fields: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-merged-fields" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint merged-fields` with its arguments and working directory."
+        @synonyms "orb lint merged-fields"
+      OrbLintMergedFields.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintMergedFieldsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintMergedFieldsOrbitalStart -> OrbLintMergedFields, OrbLintMergedFieldsCli, OrbLintInput, Packs, Versions
+}

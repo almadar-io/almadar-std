@@ -1,0 +1,2646 @@
+{
+  "atom": "cli/atoms/std-orb-lint-embed-config-forward.lolo",
+  "trait": "OrbLintEmbedConfigForward",
+  "note": "Cases mirror validate_embed_config_forward_multi_referrer: a trait embedded by two or more others that declares an @config forward, with paired controls (one embedder, nested forward naming an own knob, literal config, no config, self-embed). Expectations are the compiler's findings on the same program (orb validate --json).",
+  "cases": [
+    {
+      "id": "multi",
+      "steps": [
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ef",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "@config.heading"
+                        }
+                      }
+                    },
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "embed-config-forward",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EMBED_CONFIG_FORWARD_MULTI_REFERRER",
+                      "path": "Child.@trait",
+                      "message": "Child declares @config forwards and is embedded via @trait by 2 referrers (A, B) \u2014 one declaration cannot serve two embedders: its forwards chain to the first referrer only, and the client keys rendered content by trait name, so the second embedder shows the first's resolved config",
+                      "suggestion": "declare Child once per embedder (the sibling pull does exactly this for imported atoms), or move the forwarded knobs to literals so the render no longer depends on which trait embeds it",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "single",
+      "steps": [
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ef",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "@config.heading"
+                        }
+                      }
+                    },
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "embed-config-forward",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "three-sorted",
+      "steps": [
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ef",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "@config.heading"
+                        }
+                      }
+                    },
+                    {
+                      "name": "Z",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "M",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "Z"
+                        },
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "M"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "embed-config-forward",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EMBED_CONFIG_FORWARD_MULTI_REFERRER",
+                      "path": "Child.@trait",
+                      "message": "Child declares @config forwards and is embedded via @trait by 3 referrers (A, M, Z) \u2014 one declaration cannot serve two embedders: its forwards chain to the first referrer only, and the client keys rendered content by trait name, so the second embedder shows the first's resolved config",
+                      "suggestion": "declare Child once per embedder (the sibling pull does exactly this for imported atoms), or move the forwarded knobs to literals so the render no longer depends on which trait embeds it",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "nested-own-knob",
+      "steps": [
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ef",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "rows": {
+                          "type": "string",
+                          "default": [
+                            {
+                              "label": "@config.label"
+                            }
+                          ]
+                        },
+                        "label": {
+                          "type": "string",
+                          "default": "x"
+                        }
+                      }
+                    },
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "embed-config-forward",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "nested-foreign-knob",
+      "steps": [
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ef",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "rows": {
+                          "type": "string",
+                          "default": [
+                            {
+                              "label": "@config.foreign"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "embed-config-forward",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EMBED_CONFIG_FORWARD_MULTI_REFERRER",
+                      "path": "Child.@trait",
+                      "message": "Child declares @config forwards and is embedded via @trait by 2 referrers (A, B) \u2014 one declaration cannot serve two embedders: its forwards chain to the first referrer only, and the client keys rendered content by trait name, so the second embedder shows the first's resolved config",
+                      "suggestion": "declare Child once per embedder (the sibling pull does exactly this for imported atoms), or move the forwarded knobs to literals so the render no longer depends on which trait embeds it",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "literal-config",
+      "steps": [
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ef",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "plain"
+                        }
+                      }
+                    },
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "embed-config-forward",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-config",
+      "steps": [
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ef",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "embed-config-forward",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "bare-self-forward",
+      "steps": [
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ef",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "@config.title"
+                        }
+                      }
+                    },
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "embed-config-forward",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EMBED_CONFIG_FORWARD_MULTI_REFERRER",
+                      "path": "Child.@trait",
+                      "message": "Child declares @config forwards and is embedded via @trait by 2 referrers (A, B) \u2014 one declaration cannot serve two embedders: its forwards chain to the first referrer only, and the client keys rendered content by trait name, so the second embedder shows the first's resolved config",
+                      "suggestion": "declare Child once per embedder (the sibling pull does exactly this for imported atoms), or move the forwarded knobs to literals so the render no longer depends on which trait embeds it",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "config-channel-embed",
+      "steps": [
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ef",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "@config.heading"
+                        }
+                      }
+                    },
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "body": {
+                          "type": "string",
+                          "default": "@trait.Child"
+                        }
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "embed-config-forward",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EMBED_CONFIG_FORWARD_MULTI_REFERRER",
+                      "path": "Child.@trait",
+                      "message": "Child declares @config forwards and is embedded via @trait by 2 referrers (A, B) \u2014 one declaration cannot serve two embedders: its forwards chain to the first referrer only, and the client keys rendered content by trait name, so the second embedder shows the first's resolved config",
+                      "suggestion": "declare Child once per embedder (the sibling pull does exactly this for imported atoms), or move the forwarded knobs to literals so the render no longer depends on which trait embeds it",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dotted-token",
+      "steps": [
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ef",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "@config.heading"
+                        }
+                      }
+                    },
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child.x"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "embed-config-forward",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EMBED_CONFIG_FORWARD_MULTI_REFERRER",
+                      "path": "Child.@trait",
+                      "message": "Child declares @config forwards and is embedded via @trait by 2 referrers (A, B) \u2014 one declaration cannot serve two embedders: its forwards chain to the first referrer only, and the client keys rendered content by trait name, so the second embedder shows the first's resolved config",
+                      "suggestion": "declare Child once per embedder (the sibling pull does exactly this for imported atoms), or move the forwarded knobs to literals so the render no longer depends on which trait embeds it",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "self-embed-ignored",
+      "steps": [
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ef",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "@config.heading"
+                        }
+                      }
+                    },
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "A"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "embed-config-forward",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "embedder-without-trait",
+      "steps": [
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ef",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "@config.heading"
+                        }
+                      }
+                    },
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Ghost"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "embed-config-forward",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "forward-in-guard-embed",
+      "steps": [
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ef",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Child",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "@config.heading"
+                        }
+                      }
+                    },
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@trait.Child",
+                                    "@trait.Other"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Other",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "hi"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "Child"
+                        },
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        },
+                        {
+                          "ref": "Other"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintEmbedConfigForward",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "embed-config-forward",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EMBED_CONFIG_FORWARD_MULTI_REFERRER",
+                      "path": "Child.@trait",
+                      "message": "Child declares @config forwards and is embedded via @trait by 2 referrers (A, B) \u2014 one declaration cannot serve two embedders: its forwards chain to the first referrer only, and the client keys rendered content by trait name, so the second embedder shows the first's resolved config",
+                      "suggestion": "declare Child once per embedder (the sibling pull does exactly this for imported atoms), or move the forwarded knobs to literals so the render no longer depends on which trait embeds it",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

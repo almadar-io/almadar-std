@@ -1,0 +1,261 @@
+app std-orb-lint-binding-traits [
+  version: "1.0.0",
+  inbound: ["cli-lint-binding-traits"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-binding-traits - the `orb lint binding-traits <file>` command, the port of the @trait.<Name> binding rules of binding.rs (validate_trait_binding_usage, detect_trait_binding_cycles): ORB_BINDING_TRAIT_MISSING_NAME, ORB_BINDING_TRAIT_INVALID_FORMAT, ORB_BINDING_TRAIT_SELF_REFERENCE, ORB_BINDING_TRAIT_UNKNOWN, ORB_BINDING_TRAIT_OUTSIDE_RENDER_UI and ORB_BINDING_TRAIT_CYCLE. It lowers the file with program/read and walks every inline trait: a trait-typed config knob bound to @trait.<Name> must name a trait of the orbital, and an @trait binding is allowed only inside a render-ui effect (a guard, a non-render effect and a tick get the outside-render-ui error); an allowed binding must be single-segment, name a PascalCase trait of the orbital and not the trait itself. The @trait references of an orbital's transition and tick effects form a graph; the first cycle found by a depth-first walk in declaration order is reported once per orbital. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint binding-traits: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-binding-traits"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type BtShape = string | number | boolean | [BtShape?] | Map string BtShape?
+type BtCfg = { type : string, default : BtShape? }
+type BtTransition = { guard : BtShape?, effects : [BtShape] }
+type BtTick = { guard : BtShape?, effects : [BtShape] }
+type BtMachine = { transitions : [BtTransition] }
+type BtTrait = { name : string, stateMachine : BtMachine, ticks : [BtTick], config : Map string BtCfg }
+type BtOrbital = { name : string, traits : [BtTrait] }
+type BtProgram = { orbitals : [BtOrbital] }
+type BtHit = { rel : string, s : string, rd : boolean }
+type BtRoot = { x : BtShape?, w : string!, allow : boolean!, tn : string!, oi : number!, only : boolean! }
+type BtWalk = { st : [string], ix : [number], col : Map string number, done : boolean, res : [string] }
+
+orbital OrbLintBindingTraitsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintBindingTraitsRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+
+  }
+
+  trait OrbLintBindingTraits -> OrbLintBindingTraitsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((nohits : [BtHit] []) (noroots : [BtRoot] []) (nostr : [string] []) (nonum : [number] []) (nof : [OrbFinding] []) (tP : string (str/concat (quote "@") "trait")) (tP2 : string (str/concat (quote "@") "trait.")) (orbitals : [BtOrbital] (object/get @payload.program "orbitals" [])))
+  (let ((knownAll : [[string]] (array/map @orbitals (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "name"))) (fn t (object/get @t "name" ""))))))
+        (roots : [BtRoot] (array/flatten
+  (array/map (array/range 0 (array/len @orbitals))
+    (fn oi
+      (let ((o (array/nth @orbitals @oi)) (trts : [BtTrait] (object/get (array/nth @orbitals @oi) "traits" [])))
+        (array/flatten
+          (array/map (array/range 0 (array/len @trts))
+            (fn ti
+              (let ((t (array/nth @trts @ti)))
+                (if (not (object/has @t "stateMachine"))
+                  @noroots
+                  (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tn (object/get @t "name" "")) (trs : [BtTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (tks : [BtTick] (object/get @t "ticks" [])) (cfg : Map string BtCfg (object/get @t "config" {})))
+                    (array/concat
+                      (array/flatten
+                        (array/map (array/sort (object/keys @cfg))
+                          (fn kn
+                            (let ((cf (object/get @cfg @kn)) (dv (object/get (object/get @cfg @kn) "default" null)))
+                              (if (= (object/get @cf "type" "") "trait")
+                                (if (validate/string @dv)
+                                  (if (str/startsWith @dv @tP2)
+                                    [{ x: @dv, w: (str/concat @tp ".config." @kn), allow: true, tn: @tn, oi: @oi, only: true }]
+                                    @noroots)
+                                  @noroots)
+                                @noroots)))))
+                      (array/concat
+                        (array/flatten
+                          (array/map (array/range 0 (array/len @trs))
+                            (fn xi
+                              (let ((tr (array/nth @trs @xi)) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
+                                (let ((effs : [BtShape] (object/get @tr "effects" [])) (g (object/get @tr "guard" null)))
+                                  (array/concat
+                                    (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard"), allow: false, tn: @tn, oi: @oi, only: false }] @noroots)
+                                    (array/map (array/range 0 (array/len @effs)) (fn ei { x: (array/nth @effs @ei), w: (str/concat @xp ".effects[" @ei "]"), allow: (let ((e (array/nth @effs @ei))) (and (validate/object @e) (or (object/has @e "render_ui") (object/has @e "render-ui")))), tn: @tn, oi: @oi, only: false }))))))))
+                        (array/flatten
+                          (array/map (array/range 0 (array/len @tks))
+                            (fn ki
+                              (let ((tk (array/nth @tks @ki)) (teffs : [BtShape] (object/get (array/nth @tks @ki) "effects" [])) (tg (object/get (array/nth @tks @ki) "guard" null)))
+                                (array/concat
+                                  (if (!= @tg null) [{ x: @tg, w: (str/concat @tp ".ticks[" @ki "].guard"), allow: false, tn: @tn, oi: @oi, only: false }] @noroots)
+                                  (array/map (array/range 0 (array/len @teffs)) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]"), allow: false, tn: @tn, oi: @oi, only: false })))))))))))))))))))))
+    (array/concat
+      (array/flatten
+        (array/map @roots
+          (fn x
+            (let ((hs (or (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
+  (if (and (str/startsWith @n @tP) (>= (str/len @n) 6)) [{ rel: "", s: @n, rd: false }] @nohits)
+  (if (validate/array @n)
+    (let ((op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
+      (array/flatten
+        (array/map (array/range 0 (array/len @n))
+          (fn i
+            (array/map (let ((r : [BtHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")), rd: (or (object/get @h "rd" false) (= @op "render-ui") (= @op "render_ui")) })))))))
+    (if (validate/object @n)
+      (array/flatten
+        (array/map (object/keys @k)
+          (fn key
+            (array/map (let ((r : [BtHit]? (object/get @k @key))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
+      @nohits)))) BtShape) @nohits)))
+              (array/flatten
+                (array/map @hs
+                  (fn h
+                    (let ((s (object/get @h "s")) (p (str/concat (object/get @x "w") (object/get @h "rel"))) (tn (object/get @x "tn")) (known : [string] (array/nth @knownAll (object/get @x "oi"))))
+              (if (not (or (object/get @x "allow") (object/get @h "rd")))
+                (if (object/get @x "only") @nof [{ code: "ORB_BINDING_TRAIT_OUTSIDE_RENDER_UI", path: @p, message: (str/concat (quote "@") "trait binding '" @s "' appears outside a render-ui effect; @trait references are render-only composition primitives and may only be used inside a (render-ui ...) pattern tree"), suggestion: "Move the @trait reference into a render-ui children array, or replace it with the intended data/payload binding", severity: "error" }])
+                (let ((fnds : [OrbFinding] (if (not (validate/pattern @s "^@[\\p{L}_][\\p{L}0-9_]*(\\.[\\p{L}0-9_]+|\\[\\d+\\])*$"))
+                    [{ code: "ORB_BINDING_TRAIT_INVALID_FORMAT", path: @p, message: (str/concat "Invalid " (quote "@") "trait binding format: '" @s "'"), suggestion: (str/concat "Use " (quote "@") "trait.<PascalCaseTraitName> — a .slot suffix is not supported"), severity: "error" }]
+                    (let ((parts (str/split (str/slice @s 1) ".")))
+                      (if (= (array/len @parts) 1)
+                        [{ code: "ORB_BINDING_TRAIT_MISSING_NAME", path: @p, message: (str/concat (quote "@") "trait binding missing trait name"), suggestion: (str/concat "Use " (quote "@") "trait.<TraitName> to reference another trait's current frame"), severity: "error" }]
+                        (let ((nm (array/nth @parts 1)))
+                          (if (not (validate/pattern @nm "^[A-Z][a-zA-Z0-9]*$"))
+                            [{ code: "ORB_BINDING_TRAIT_INVALID_FORMAT", path: @p, message: (str/concat (quote "@") "trait binding trait name '" @nm "' is not PascalCase"), suggestion: (str/concat "Trait names must be PascalCase (e.g., " (quote "@") "trait.ItemSearch)"), severity: "error" }]
+                            (if (= @nm @tn)
+                              [{ code: "ORB_BINDING_TRAIT_SELF_REFERENCE", path: @p, message: (str/concat "Trait '" @nm "' references itself via " (quote "@") "trait"), suggestion: "A trait's render-ui cannot embed its own frame; restructure to avoid self-reference", severity: "error" }]
+                              (if (and (> (array/len @known) 0) (not (array/includes @known @nm)))
+                                [{ code: "ORB_BINDING_TRAIT_UNKNOWN", path: @p, message: (str/concat (quote "@") "trait." @nm " references a trait not declared in this orbital"), suggestion: "Declare the trait in the orbital, or check spelling", severity: "error" }]
+                                (if (> (array/len @parts) 2) [{ code: "ORB_BINDING_TRAIT_INVALID_FORMAT", path: @p, message: (str/concat (quote "@") "trait binding has too many segments: '" @s "' (expected " (quote "@") "trait.<Name>)"), suggestion: "", severity: "error" }] @nof))))))))))
+                  (if (object/get @x "only") (array/filter @fnds (fn f (= (object/get @f "code") "ORB_BINDING_TRAIT_UNKNOWN"))) @fnds)))))))))))
+      (array/flatten
+  (array/map (array/range 0 (array/len @orbitals))
+    (fn oi
+      (let ((trts : [BtTrait] (object/get (array/nth @orbitals @oi) "traits" [])))
+        (let ((inl (array/filter (array/range 0 (array/len @trts)) (fn ti (object/has (array/nth @trts @ti) "stateMachine")))))
+          (let ((names : [string] (array/map @inl (fn ti (object/get (array/nth @trts @ti) "name" "")))))
+            (let ((adj : Map string [string] (or (object/fromEntries (array/map @inl (fn ti
+                    (let ((t (array/nth @trts @ti)))
+                      [(object/get @t "name" ""),
+                       (array/unique (array/flatten (array/map
+                         (array/concat
+                           (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn tr (object/get @tr "effects" []))))
+                           (array/flatten (array/map (object/get @t "ticks" []) (fn tk (object/get @tk "effects" [])))))
+                         (fn e (tree/fold @e (fn (n k) (if (validate/string @n) (if (and (str/startsWith @n @tP2) (!= (array/first (str/split (array/first (str/split (str/slice @n 7) ".")) "[")) "")) [(array/first (str/split (str/slice @n 7) "."))] @nostr) (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nostr @r)))) (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @nostr @r)))) @nostr)))) BtShape)))))]))))
+   {})))
+              (if (= (array/len (array/flatten (object/values @adj))) 0)
+                @nof
+                (let ((w (array/reduce (array/range 0 (+ (* 3 (array/len @names)) (array/len (array/flatten (object/values @adj))) 2)) { stack: @nostr, idx: @nonum, vis: @nostr, found: @nostr }
+                  (fn (acc step)
+                    (if (> (array/len (object/get @acc "found")) 0)
+                      @acc
+                      (let ((stack (object/get @acc "stack")) (idx (object/get @acc "idx")) (vis (object/get @acc "vis")))
+                        (if (= (array/len @stack) 0)
+                          (let ((rts (array/filter @names (fn nm (not (array/includes @vis @nm))))))
+                            (if (= (array/len @rts) 0)
+                              @acc
+                              (let ((r0 (array/first @rts))) { stack: [@r0], idx: [0], vis: (array/append @vis @r0), found: @nostr })))
+                          (let ((top (array/last @stack)) (i (array/last @idx)))
+                            (let ((kids (object/get @adj @top @nostr)))
+                              (if (>= @i (array/len @kids))
+                                { stack: (array/dropLast @stack 1), idx: (array/dropLast @idx 1), vis: @vis, found: @nostr }
+                                (let ((d (array/nth @kids @i)))
+                                  (if (not (object/has @adj @d))
+                                    { stack: @stack, idx: (array/append (array/dropLast @idx 1) (+ @i 1)), vis: @vis, found: @nostr }
+                                    (if (array/includes @stack @d)
+                                      { stack: @stack, idx: (array/append (array/dropLast @idx 1) (+ @i 1)), vis: @vis, found: (array/append (array/slice @stack (array/indexOf @stack @d) (array/len @stack)) @d) }
+                                      (if (array/includes @vis @d)
+                                        { stack: @stack, idx: (array/append (array/dropLast @idx 1) (+ @i 1)), vis: @vis, found: @nostr }
+                                        { stack: (array/append @stack @d), idx: (array/append (array/append (array/dropLast @idx 1) (+ @i 1)) 0), vis: (array/append @vis @d), found: @nostr }))))))))))))))
+                  (let ((cy : [string] (object/get @w "found")))
+                    (if (> (array/len @cy) 0)
+                      [{ code: "ORB_BINDING_TRAIT_CYCLE", path: (str/concat "orbitals[" @oi "].traits[" (array/nth @inl (array/indexOf @names (array/first @cy))) " (" (array/first @cy) ")]"), message: (str/concat (quote "@") "trait reference cycle detected: " (str/join @cy " -> ")), suggestion: (str/concat "Break the cycle by removing one of the " (quote "@") "trait.X references"), severity: "error" }]
+                      @nof)
+                    ))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "binding-traits", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BtProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+
+    }
+  }
+
+  trait OrbLintBindingTraitsCli -> OrbLintBindingTraitsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint binding-traits <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "binding-traits") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint binding-traits: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "binding-traits") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint binding-traits: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string!  error : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-binding-traits" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint binding-traits` with its arguments and working directory."
+        @synonyms "orb lint binding-traits"
+      OrbLintBindingTraits.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string!  error : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintBindingTraitsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintBindingTraitsOrbitalStart -> OrbLintBindingTraits, OrbLintBindingTraitsCli, OrbLintInput, Packs, Versions
+}

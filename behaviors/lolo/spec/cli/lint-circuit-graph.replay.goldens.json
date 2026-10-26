@@ -1,0 +1,3002 @@
+{
+ "atom": "cli/atoms/std-orb-lint-circuit-graph.lolo",
+ "trait": "OrbLintCircuitGraph",
+ "note": "Cases mirror closed_circuit.rs validate_unreachable_states, validate_dead_end_states, validate_overlay_exit_transitions, validate_modal_exit_completeness and validate_overlay_close_on_exit, each with paired controls (terminal marks, wildcard arms, closing self-transitions, from lists, undeclared target states, payloads that are not patterns). Expected findings are the code, path, message and suggestion the Rust validator reports for the same program.",
+ "cases": [
+  {
+   "id": "unreachable-and-dead-end-orphan-state",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "a"
+             },
+             {
+              "name": "orphan"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "a",
+              "event": "GO"
+             },
+             {
+              "from": "a",
+              "to": "idle",
+              "event": "BACK"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_UNREACHABLE_STATE",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.states",
+           "message": "State 'orphan' has no incoming transitions and cannot be reached",
+           "suggestion": "Add a transition to this state or remove it",
+           "severity": "error"
+          },
+          {
+           "code": "CIRCUIT_DEAD_END_STATE",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.states",
+           "message": "State 'orphan' has no outgoing transitions - it may be a dead end",
+           "suggestion": "Add outgoing transitions or mark as terminal state with isTerminal: true",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-terminal-state-is-not-a-dead-end",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "done",
+              "isTerminal": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "done",
+              "event": "FINISH"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "dead-end-state-without-terminal-mark",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "done"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "done",
+              "event": "FINISH"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_DEAD_END_STATE",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.states",
+           "message": "State 'done' has no outgoing transitions - it may be a dead end",
+           "suggestion": "Add outgoing transitions or mark as terminal state with isTerminal: true",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-initial-state-flags-the-first-state",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s1"
+             },
+             {
+              "name": "s2"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "s1",
+              "to": "s2",
+              "event": "GO"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_UNREACHABLE_STATE",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.states",
+           "message": "State 's1' has no incoming transitions and cannot be reached",
+           "suggestion": "Add a transition to this state or remove it",
+           "severity": "error"
+          },
+          {
+           "code": "CIRCUIT_DEAD_END_STATE",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.states",
+           "message": "State 's2' has no outgoing transitions - it may be a dead end",
+           "suggestion": "Add outgoing transitions or mark as terminal state with isTerminal: true",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-wildcard-arm-is-not-an-outgoing-edge",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "x"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "x",
+              "event": "GO"
+             },
+             {
+              "from": "*",
+              "to": "idle",
+              "event": "ANY"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_DEAD_END_STATE",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.states",
+           "message": "State 'x' has no outgoing transitions - it may be a dead end",
+           "suggestion": "Add outgoing transitions or mark as terminal state with isTerminal: true",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-self-transition-state-is-reachable",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "a"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "a",
+              "event": "GO"
+             },
+             {
+              "from": "a",
+              "to": "idle",
+              "event": "BACK"
+             },
+             {
+              "from": "a",
+              "to": "a",
+              "event": "SELF"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-overlay-with-a-closing-exit",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "idle",
+              "event": "CLOSE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ],
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "overlay-state-with-no-way-out",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_NO_OVERLAY_EXIT",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "State 'open' renders to 'modal' slot but has no exit transition. Users will be stuck in this overlay.",
+           "suggestion": "Add a transition from 'open' that goes to a state not rendering to 'modal' slot. Common exit events: CLOSE, CANCEL, DISMISS, SAVE, SUBMIT, CONFIRM",
+           "severity": "error"
+          },
+          {
+           "code": "CIRCUIT_DEAD_END_STATE",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.states",
+           "message": "State 'open' has no outgoing transitions - it may be a dead end",
+           "suggestion": "Add outgoing transitions or mark as terminal state with isTerminal: true",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "overlay-state-with-only-a-self-transition",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "open",
+              "event": "AGAIN"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_NO_OVERLAY_EXIT",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "State 'open' renders to 'modal' slot but has no exit transition. Users will be stuck in this overlay.",
+           "suggestion": "Add a transition from 'open' that goes to a state not rendering to 'modal' slot. Common exit events: CLOSE, CANCEL, DISMISS, SAVE, SUBMIT, CONFIRM",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "overlay-exits-only-into-another-overlay-state",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             },
+             {
+              "name": "open2"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "open2",
+              "event": "NEXT",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open2",
+              "to": "open",
+              "event": "BACK",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_NO_OVERLAY_EXIT",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "State 'open' renders to 'modal' slot but has no exit transition. Users will be stuck in this overlay.",
+           "suggestion": "Add a transition from 'open' that goes to a state not rendering to 'modal' slot. Common exit events: CLOSE, CANCEL, DISMISS, SAVE, SUBMIT, CONFIRM",
+           "severity": "error"
+          },
+          {
+           "code": "CIRCUIT_NO_OVERLAY_EXIT",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[2].effects[0]",
+           "message": "State 'open2' renders to 'modal' slot but has no exit transition. Users will be stuck in this overlay.",
+           "suggestion": "Add a transition from 'open2' that goes to a state not rendering to 'modal' slot. Common exit events: CLOSE, CANCEL, DISMISS, SAVE, SUBMIT, CONFIRM",
+           "severity": "error"
+          },
+          {
+           "code": "CIRCUIT_NO_OVERLAY_EXIT",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[3].effects[0]",
+           "message": "State 'open' renders to 'modal' slot but has no exit transition. Users will be stuck in this overlay.",
+           "suggestion": "Add a transition from 'open' that goes to a state not rendering to 'modal' slot. Common exit events: CLOSE, CANCEL, DISMISS, SAVE, SUBMIT, CONFIRM",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-self-transition-that-closes-the-overlay-is-an-exit",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "open",
+              "event": "SAVE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "modal-closed-without-repainting-main",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "idle",
+              "event": "CLOSE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_MODAL_EXIT_INCOMPLETE",
+           "path": "orbitals[0 (O)].traits[0 (T)].transitions[open->CLOSE->idle]",
+           "message": "Transition open--[CLOSE]-->idle closes modal but doesn't re-render main slot. Main view will show stale content.",
+           "suggestion": "Add render-ui(\"main\", {...}) alongside render-ui(\"modal\", null) to refresh the main view after closing the modal",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "overlay-left-without-a-close-effect",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "idle",
+              "event": "CANCEL"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_MODAL_EXIT_INCOMPLETE",
+           "path": "orbitals[0 (O)].traits[0 (T)].transitions[open->CANCEL->idle]",
+           "message": "Transition open--[CANCEL]-->idle leaves a state mounting 'modal' but doesn't include `(render-ui modal null)` to close it. The overlay will stay mounted across the transition.",
+           "suggestion": "Add `(render-ui modal null)` to the transition's effects to explicitly close the overlay before the new state renders.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-modal-closed-and-main-repainted",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "idle",
+              "event": "CLOSE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ],
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "several-overlay-slots-each-need-their-own-close",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             },
+             {
+              "name": "drawer1"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "drawer1",
+              "event": "DRAW",
+              "effects": [
+               [
+                "render-ui",
+                "drawer",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ],
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "idle",
+              "event": "CLOSE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ]
+              ]
+             },
+             {
+              "from": "drawer1",
+              "to": "idle",
+              "event": "DCLOSE",
+              "effects": [
+               [
+                "render-ui",
+                "drawer",
+                null
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_MODAL_EXIT_INCOMPLETE",
+           "path": "orbitals[0 (O)].traits[0 (T)].transitions[drawer1->DCLOSE->idle]",
+           "message": "Transition drawer1--[DCLOSE]-->idle leaves a state mounting 'modal' but doesn't include `(render-ui modal null)` to close it. The overlay will stay mounted across the transition.",
+           "suggestion": "Add `(render-ui modal null)` to the transition's effects to explicitly close the overlay before the new state renders.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-from-list-closing-both-overlay-states",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             },
+             {
+              "name": "open2"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "open2",
+              "event": "OPEN2",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": [
+               "open",
+               "open2"
+              ],
+              "to": "idle",
+              "event": "CLOSE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "overlay-painted-into-an-undeclared-state",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "ghost",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_NO_OVERLAY_EXIT",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "State 'ghost' renders to 'modal' slot but has no exit transition. Users will be stuck in this overlay.",
+           "suggestion": "Add a transition from 'ghost' that goes to a state not rendering to 'modal' slot. Common exit events: CLOSE, CANCEL, DISMISS, SAVE, SUBMIT, CONFIRM",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "overlay-payload-without-a-type-is-not-a-pattern",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "title": "no type"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_DEAD_END_STATE",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.states",
+           "message": "State 'open' has no outgoing transitions - it may be a dead end",
+           "suggestion": "Add outgoing transitions or mark as terminal state with isTerminal: true",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "overlay-payload-trait-marker-has-no-type",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                "@trait.Other"
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_DEAD_END_STATE",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.states",
+           "message": "State 'open' has no outgoing transitions - it may be a dead end",
+           "suggestion": "Add outgoing transitions or mark as terminal state with isTerminal: true",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-close-to-a-state-that-is-not-inline",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-exit-through-a-state-painting-nothing",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             },
+             {
+              "name": "other"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "other",
+              "event": "GOTO"
+             },
+             {
+              "from": "other",
+              "to": "idle",
+              "event": "BACK"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_MODAL_EXIT_INCOMPLETE",
+           "path": "orbitals[0 (O)].traits[0 (T)].transitions[open->GOTO->other]",
+           "message": "Transition open--[GOTO]-->other leaves a state mounting 'modal' but doesn't include `(render-ui modal null)` to close it. The overlay will stay mounted across the transition.",
+           "suggestion": "Add `(render-ui modal null)` to the transition's effects to explicitly close the overlay before the new state renders.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "overlay-and-dock-slots-count-as-overlays",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "overlay",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ],
+               [
+                "render-ui",
+                "dock",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "idle",
+              "event": "CLOSE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_MODAL_EXIT_INCOMPLETE",
+           "path": "orbitals[0 (O)].traits[0 (T)].transitions[open->CLOSE->idle]",
+           "message": "Transition open--[CLOSE]-->idle closes modal but doesn't re-render main slot. Main view will show stale content.",
+           "suggestion": "Add render-ui(\"main\", {...}) alongside render-ui(\"modal\", null) to refresh the main view after closing the modal",
+           "severity": "error"
+          },
+          {
+           "code": "CIRCUIT_MODAL_EXIT_INCOMPLETE",
+           "path": "orbitals[0 (O)].traits[0 (T)].transitions[open->CLOSE->idle]",
+           "message": "Transition open--[CLOSE]-->idle leaves a state mounting 'dock' but doesn't include `(render-ui dock null)` to close it. The overlay will stay mounted across the transition.",
+           "suggestion": "Add `(render-ui dock null)` to the transition's effects to explicitly close the overlay before the new state renders.",
+           "severity": "error"
+          },
+          {
+           "code": "CIRCUIT_MODAL_EXIT_INCOMPLETE",
+           "path": "orbitals[0 (O)].traits[0 (T)].transitions[open->CLOSE->idle]",
+           "message": "Transition open--[CLOSE]-->idle leaves a state mounting 'overlay' but doesn't include `(render-ui overlay null)` to close it. The overlay will stay mounted across the transition.",
+           "suggestion": "Add `(render-ui overlay null)` to the transition's effects to explicitly close the overlay before the new state renders.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

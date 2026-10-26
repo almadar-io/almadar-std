@@ -1,0 +1,134 @@
+app std-orb-lint-embed-config-forward [
+  version: "1.0.0",
+  inbound: ["cli-lint-embed-config-forward"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-embed-config-forward — the `orb lint embed-config-forward <file>` command, the port of ORB_EMBED_CONFIG_FORWARD_MULTI_REFERRER (validate_embed_config_forward_multi_referrer, types/config_type.rs). It lowers the file with program/read and, per orbital, finds the inline traits embedded through `@trait.<Name>` (in a config default, a transition guard or effect, or a tick guard or effect; the token ends at a `.` or `[`) by two or more other traits; when such a trait declares an `@config.<knob>` forward (a knob whose whole default is one, or one nested in a default naming a knob the trait does not declare itself) it reports the trait once at `<trait>.@trait` with the referrers sorted, the compiler's message and suggestion (status 500, exit 1). Clean answers `lint embed-config-forward: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-embed-config-forward"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type EfNode = string | number | boolean | [EfNode?] | Map string EfNode?
+type EfKnob = { default : EfNode? }
+type EfTransition = { guard : EfNode?, effects : [EfNode?] }
+type EfMachine = { transitions : [EfTransition] }
+type EfTrait = { name : string, stateMachine : EfMachine?, ticks : [EfTransition], config : Map string EfKnob? }
+type EfOrbital = { name : string, traits : [EfTrait] }
+type EfProgram = { orbitals : [EfOrbital] }
+type EfRow = { name : string, children : [string] }
+
+orbital OrbLintEmbedConfigForwardOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintEmbedConfigForwardRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+
+  }
+
+  trait OrbLintEmbedConfigForward -> OrbLintEmbedConfigForwardRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn orb (let ((trs (array/filter (object/get @orb "traits" []) (fn t (object/has @t "stateMachine"))))) (let ((rows (array/map @trs (fn t { name: (object/get @t "name" ""), children: (array/unique (array/filter (let ((nr : [string] [])) (tree/fold (array/concat (array/concat (array/concat (array/concat (array/map (object/values (object/get @t "config" {})) (fn f { x: (object/get @f "default" null) })) (array/map (object/get (object/get @t "stateMachine" {}) "transitions" []) (fn x { x: (object/get @x "guard" null) }))) (array/map (object/get (object/get @t "stateMachine" {}) "transitions" []) (fn x { x: (object/get @x "effects" []) }))) (array/map (object/get @t "ticks" []) (fn x { x: (object/get @x "guard" null) }))) (array/map (object/get @t "ticks" []) (fn x { x: (object/get @x "effects" []) }))) (fn (n k) (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nr @r)))) (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @nr @r)))) (if (and (validate/string @n) (str/startsWith @n (quote "@trait."))) [(array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "["))] @nr)))) "EfNode")) (fn c (and (!= @c "") (!= @c (object/get @t "name" "")))))) })))) (let ((order (array/unique (array/flatten (array/map @rows (fn r (object/get @r "children" []))))))) (array/flatten (array/map @order (fn c (let ((refs (array/map (array/filter @rows (fn r (array/includes (object/get @r "children" []) @c))) (fn r (object/get @r "name" ""))))) (if (< (array/len @refs) 2) [] (let ((decl (array/find @trs (fn t (= (object/get @t "name" "") @c))))) (if (= @decl null) [] (let ((tr @decl)) (if (array/some (object/values (object/get @tr "config" {})) (fn f (let ((d (object/get @f "default" null))) (if (validate/string @d) (> (array/len (let ((nr : [string] [])) (tree/fold @d (fn (n k) (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nr @r)))) (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @nr @r)))) (if (and (validate/string @n) (validate/pattern @n "^@config[.][A-Za-z_][A-Za-z0-9_]*$")) [(str/slice @n 8 (str/len @n))] @nr)))) "EfNode"))) 0) (if (or (validate/array @d) (validate/object @d)) (array/some (let ((nr : [string] [])) (tree/fold @d (fn (n k) (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nr @r)))) (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @nr @r)))) (if (and (validate/string @n) (validate/pattern @n "^@config[.][A-Za-z_][A-Za-z0-9_]*$")) [(str/slice @n 8 (str/len @n))] @nr)))) "EfNode")) (fn kk (not (object/has (object/get @tr "config" {}) @kk)))) false))))) [{ code: "ORB_EMBED_CONFIG_FORWARD_MULTI_REFERRER", path: (str/concat @c ".@trait"), message: (str/concat @c " declares @config forwards and is embedded via @trait by " (array/len @refs) " referrers (" (str/join (array/sort @refs) ", ") ") — one declaration cannot serve two embedders: its forwards chain to the first referrer only, and the client keys rendered content by trait name, so the second embedder shows the first's resolved config"), suggestion: (str/concat "declare " @c " once per embedder (the sibling pull does exactly this for imported atoms), or move the forwarded knobs to literals so the render no longer depends on which trait embeds it"), severity: "error" }] []))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "embed-config-forward", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EfProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintEmbedConfigForwardCli -> OrbLintEmbedConfigForwardRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint embed-config-forward <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "embed-config-forward") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint embed-config-forward: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "embed-config-forward") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint embed-config-forward: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-embed-config-forward" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint embed-config-forward` with its arguments and working directory."
+        @synonyms "orb lint embed-config-forward"
+      OrbLintEmbedConfigForward.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintEmbedConfigForwardCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintEmbedConfigForwardOrbitalStart -> OrbLintEmbedConfigForward, OrbLintEmbedConfigForwardCli, OrbLintInput, Packs, Versions
+}

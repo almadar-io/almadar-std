@@ -1,0 +1,21 @@
+app lint-emit-declaration-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint emit-declaration <file>`; see the atom."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintEmitDeclarationSpec {
+  expects trait OrbLintEmitDeclaration {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintEmitDeclarationCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintEmitDeclaration, OrbLintEmitDeclarationCli
+}

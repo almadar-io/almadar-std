@@ -1,0 +1,223 @@
+app std-orb-lint-circuit-graph [
+  version: "1.0.0",
+  inbound: ["cli-lint-circuit-graph"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-circuit-graph - the `orb lint circuit-graph <file>` command, the port of the state-graph and overlay-exit checks of validate_closed_circuit (circuit/closed_circuit.rs). For every inline trait it reports CIRCUIT_UNREACHABLE_STATE (a non-initial state no transition enters), CIRCUIT_DEAD_END_STATE (a state no transition leaves by name that is not marked isTerminal), CIRCUIT_NO_OVERLAY_EXIT (a state that paints a pattern into an overlay slot and has no transition that closes the slot or lands in a state that does not paint it) and CIRCUIT_MODAL_EXIT_INCOMPLETE (a transition from an overlay state into a main-painting state that closes the overlay without repainting main, and a transition that leaves a state mounting an overlay slot without a `(render-ui <slot> null)` for it). The overlay slot names are the rule's overlaySlots knob and the exit events of the suggestion its exitEvents knob. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint circuit-graph: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-circuit-graph"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type CgNode = string | number | boolean | [CgNode?] | Map string CgNode?
+type CgFrom = string | [string]
+type CgState = { name : string, isInitial : boolean, isTerminal : boolean }
+type CgTransition = { from : CgFrom, to : string, event : string, effects : [CgNode?] }
+type CgMachine = { states : [CgState], transitions : [CgTransition] }
+type CgTrait = { name : string, stateMachine : CgMachine }
+type CgOrbital = { name : string, traits : [CgTrait] }
+type CgProgram = { orbitals : [CgOrbital] }
+type CgRu = { s : string!, p : boolean!, ej : number! }
+type CgTr = { f : [string]!, e : string!, to : string!, fs : string!, cls : [string]!, hm : boolean!, ru : [CgRu]! }
+type CgRl = { s : string!, p : boolean!, to : string!, path : string! }
+
+orbital OrbLintCircuitGraphOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+
+  entity OrbLintCircuitGraphRun [runtime] {
+    id : string!
+    scope : string = ""
+    program : CgProgram = {}
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintCircuitGraph -> OrbLintCircuitGraphRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.program @payload.program)
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((nos : [string] [])
+                (nof : [OrbFinding] [])
+                (noru : [CgRu] [])
+                (notr : [CgTransition] [])
+                (nost : [CgState] [])
+                (ov @config.overlaySlots)
+                (ovSet (or (object/fromEntries (array/map @config.overlaySlots (fn x [@x, true]))) {})))
+            (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn (o oi)
+              (array/flatten (array/map (object/get @o "traits" []) (fn (t ti)
+                (if (not (object/has @t "stateMachine")) @nof
+                  (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]"))
+                        (sts : [CgState] (object/get @t "stateMachine.states" @nost))
+                        (trs : [CgTransition] (object/get @t "stateMachine.transitions" @notr)))
+                    (let ((names (array/unique (array/map @sts (fn s (object/get @s "name" ""))))))
+                      (let ((tl : [CgTr] (array/map @trs (fn x
+                              (let ((fr (object/get @x "from" "")) (effs (object/get @x "effects" [])))
+                                { f: (if (validate/string @fr) (array/append @nos @fr) @fr),
+                                  e: (object/get @x "event" ""),
+                                  to: (object/get @x "to" ""),
+                                  fs: (if (validate/string @fr) @fr (str/concat "[" (str/join @fr ", ") "]")),
+                                  cls: (array/flatten (array/map @effs (fn e (if (and (validate/array @e) (>= (array/len @e) 3) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (= @h0 "render-ui") false)) (= (array/nth @e 2) null)) (let ((sl (array/nth @e 1))) (if (validate/string @sl) (array/append @nos @sl) @nos)) @nos)))),
+                                  hm: (array/some @effs (fn e (and (validate/array @e) (>= (array/len @e) 3) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (= @h0 "render-ui") false)) (let ((h1 (array/nth @e 1))) (if (validate/string @h1) (= @h1 "main") false)) (!= (array/nth @e 2) null)))),
+                                  ru: (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
+                                        (let ((e (array/nth @effs @ej)))
+                                          (if (and (validate/array @e) (> (array/len @e) 1) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (= @h0 "render-ui") false)))
+                                            (let ((sl (array/nth @e 1)))
+                                              (if (validate/string @sl)
+                                                [{ s: @sl, p: (let ((third (array/nth @e 2))) (if (validate/object @third) (validate/string (object/get @third "type" null)) false)), ej: @ej }]
+                                                @noru))
+                                            @noru))))) })))))
+                        (let ((rl : [CgRl] (array/flatten (array/map (array/range 0 (array/len @tl)) (fn tj
+                                (array/map (object/get (array/nth @tl @tj) "ru") (fn r { s: (object/get @r "s"), p: (object/get @r "p"), to: (object/get (array/nth @tl @tj) "to"), path: (str/concat @tp ".stateMachine.transitions[" @tj "].effects[" (object/get @r "ej") "]") })))))))
+                          (let ((initRow (array/find @sts (fn s (= (object/get @s "isInitial" false) true))))
+                                (termNames (array/map (array/filter @sts (fn s (= (object/get @s "isTerminal" false) true))) (fn s (object/get @s "name" ""))))
+                                (closers (array/filter @tl (fn x (array/some (object/get @x "cls") (fn c (object/has @ovSet @c))))))
+                                (ovPaint (array/filter @rl (fn r (and (object/get @r "p") (object/has @ovSet (object/get @r "s")))))))
+                            (let ((initName (if (= @initRow null) null (object/get @initRow "name" "")))
+                                  (ovStates (array/unique (array/map @ovPaint (fn r (object/get @r "to")))))
+                                  (inlStates (array/unique (array/map (array/filter @rl (fn r (and (object/get @r "p") (= (object/get @r "s") "main")))) (fn r (object/get @r "to"))))))
+                              (array/concat
+                                (array/concat
+                                  (array/concat
+                                    (array/flatten (array/map (array/sort @names) (fn n
+                                      (if (or (= @n @initName) (array/some @tl (fn x (= (object/get @x "to") @n)))) @nof
+                                        [{ code: "CIRCUIT_UNREACHABLE_STATE", path: (str/concat @tp ".stateMachine.states"), message: (str/concat "State '" @n "' has no incoming transitions and cannot be reached"), suggestion: "Add a transition to this state or remove it", severity: "error" }]))))
+                                    (array/map (array/filter @ovPaint (fn r
+                                        (not (let ((tg (object/get @r "to")) (sl (object/get @r "s")))
+                                          (and (array/includes @names @tg)
+                                            (array/some (array/filter @tl (fn x (array/includes (object/get @x "f") @tg)))
+                                              (fn x
+                                                (or (array/some @closers (fn c2 (and (= (object/get @c2 "e") (object/get @x "e")) (array/includes (object/get @c2 "f") @tg))))
+                                                    (and (!= (object/get @x "to") @tg)
+                                                         (let ((sa (array/unique (array/map (array/filter @rl (fn q (and (object/get @q "p") (= (object/get @q "to") (object/get @x "to"))))) (fn q (object/get @q "s"))))))
+                                                           (or (= (array/len @sa) 0) (not (array/includes @sa @sl)))))))))))))
+                                      (fn r { code: "CIRCUIT_NO_OVERLAY_EXIT", path: (object/get @r "path"), message: (str/concat "State '" (object/get @r "to") "' renders to '" (object/get @r "s") "' slot but has no exit transition. Users will be stuck in this overlay."), suggestion: (str/concat "Add a transition from '" (object/get @r "to") "' that goes to a state not rendering to '" (object/get @r "s") "' slot. Common exit events: " (str/join @config.exitEvents ", ")), severity: "error" })))
+                                  (if (= (array/len @ovStates) 0) @nof
+                                    (array/flatten (array/map (array/range 0 (array/len @tl)) (fn tj
+                                      (let ((x (array/nth @tl @tj)))
+                                        (if (and (array/some @ovStates (fn s (array/includes (object/get @x "f") @s))) (array/includes @inlStates (object/get @x "to")) (array/some (object/get @x "cls") (fn c (object/has @ovSet @c))) (not (object/get @x "hm")))
+                                          [{ code: "CIRCUIT_MODAL_EXIT_INCOMPLETE", path: (str/concat @tp ".transitions[" (object/get @x "fs") "->" (object/get @x "e") "->" (object/get @x "to") "]"), message: (str/concat "Transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " closes modal but doesn't re-render main slot. Main view will show stale content."), suggestion: "Add render-ui(\"main\", {...}) alongside render-ui(\"modal\", null) to refresh the main view after closing the modal", severity: "error" }]
+                                          @nof)))))))
+                                (array/concat
+                                  (if (= (array/len @ovStates) 0) @nof
+                                    (array/flatten (array/map @tl (fn x
+                                      (array/flatten (array/map (object/get @x "f") (fn from
+                                        (let ((mounted (array/sort (array/unique (array/map (array/filter @ovPaint (fn r (= (object/get @r "to") @from))) (fn r (object/get @r "s")))))))
+                                          (if (or (= (array/len @mounted) 0) (= @from (object/get @x "to"))) @nof
+                                            (let ((dest (array/map (array/filter @ovPaint (fn r (= (object/get @r "to") (object/get @x "to")))) (fn r (object/get @r "s")))))
+                                              (array/flatten (array/map (array/filter @mounted (fn ovl (and (not (array/includes @dest @ovl)) (not (array/includes (object/get @x "cls") @ovl))))) (fn ovl
+                                                [{ code: "CIRCUIT_MODAL_EXIT_INCOMPLETE", path: (str/concat @tp ".transitions[" (object/get @x "fs") "->" (object/get @x "e") "->" (object/get @x "to") "]"), message: (str/concat "Transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " leaves a state mounting '" @ovl "' but doesn't include `(render-ui " @ovl " null)` to close it. The overlay will stay mounted across the transition."), suggestion: (str/concat "Add `(render-ui " @ovl " null)` to the transition's effects to explicitly close the overlay before the new state renders."), severity: "error" }])))))))))))))
+                                  (array/flatten (array/map (array/sort @names) (fn n
+                                    (if (or (array/includes @termNames @n) (array/some @tl (fn x (array/includes (object/get @x "f") @n)))) @nof
+                                      [{ code: "CIRCUIT_DEAD_END_STATE", path: (str/concat @tp ".stateMachine.states"), message: (str/concat "State '" @n "' has no outgoing transitions - it may be a dead end"), suggestion: "Add outgoing transitions or mark as terminal state with isTerminal: true", severity: "error" }])))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "circuit-graph", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CgProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+
+    }
+
+    config {
+      overlaySlots : [string] = ["modal", "drawer", "dock", "overlay"]
+        @label "Overlay slots"
+        @description "The slots the portal shell wraps; a state painting one needs a way out."
+      exitEvents : [string] = ["CLOSE", "CANCEL", "DISMISS", "SAVE", "SUBMIT", "CONFIRM"]
+        @label "Overlay exit events"
+        @description "The events the overlay-exit suggestion names."
+    }
+
+  }
+
+  trait OrbLintCircuitGraphCli -> OrbLintCircuitGraphRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint circuit-graph <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "circuit-graph") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint circuit-graph: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "circuit-graph") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint circuit-graph: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-circuit-graph" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint circuit-graph` with its arguments and working directory."
+        @synonyms "orb lint circuit-graph"
+      OrbLintCircuitGraph.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintCircuitGraphCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintCircuitGraphOrbitalStart -> OrbLintCircuitGraph, OrbLintCircuitGraphCli, OrbLintInput, Packs, Versions
+}

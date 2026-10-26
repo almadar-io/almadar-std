@@ -1,0 +1,21 @@
+app lint-effect-forms-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-effect-forms - the `orb lint effect-forms <file>` command, the port of the structural checks of the set, fetch, fetch-stream and persist effects (expressions/effect/set.rs, fetch.rs, persist.rs). The effects of every inline trait transition and tick are flattened by std-orb-effect-leaves (through do, if, when and let). set: ORB_EFF_SET_INVALID_BINDING, ORB_EFF_SET_PAYLOAD_NOT_ALLOWED, ORB_BINDING_SET_TARGET_MISSING_PATH and ORB_X_ENUM_VALUE_NOT_MEMBER (a string literal assigned to an enum field of the trait's linked entity). fetch and fetch-stream: ORB_EFF_FETCH_INVALID_ENTITY (an undeclared entity, a non-string name, a raw binding as third argument, too many arguments), ORB_EFF_FETCH_INVALID_INCLUDE and ORB_EFF_FETCH_INVALID_OPTION (deliver, total and the nearest structure). persist: ORB_EFF_FETCH_INVALID_ENTITY, ORB_PERSIST_ID_NOT_A_PATH, ORB_PERSIST_CREATE_LITERAL_ID, ORB_ENTITY_INTRINSIC_FIELD_PERSISTED, ORB_PERSIST_CREATE_MISSING_POLICY_FIELD and ORB_PERSIST_WHERE_NOT_A_PREDICATE. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint effect-forms: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintEffectFormsSpec {
+  expects trait OrbLintEffectForms {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintEffectFormsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintEffectForms, OrbLintEffectFormsCli
+}

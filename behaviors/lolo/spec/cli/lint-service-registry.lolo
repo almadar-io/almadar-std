@@ -1,0 +1,21 @@
+app lint-service-registry-spec [
+  version: "1.0.0",
+  description: "Design contract for the shared services registry reader: SERVICE_REGISTRY_ASK { requestId } is answered by SERVICE_REGISTRY_ANSWER { requestId, unread, services }, the services registry of the installed @almadar/core with, per action, its declared params, the kind each literal must have and whether the response shape names a key field."
+]
+type SrVal = string | number | boolean | [SrVal?] | Map string SrVal?
+type SrParam = { name : string!, type : string!, required : boolean!, kind : string! }
+type SrAction = { params : [SrParam]!, hasKey : boolean! }
+type SrService = { actions : Map string SrAction! }
+
+orbital LintServiceRegistrySpec {
+  expects entity OrbLintServiceRegistryRun [runtime] {
+    id : string!
+  }
+  expects trait ServiceRegistry {
+    state ready
+    emits {
+      SERVICE_REGISTRY_ANSWER { requestId : string!  unread : boolean!  services : Map string SrService! }
+    }
+  }
+  expects page boot -> ServiceRegistry
+}

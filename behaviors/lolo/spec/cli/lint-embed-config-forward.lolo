@@ -1,0 +1,21 @@
+app lint-embed-config-forward-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint embed-config-forward <file>`; see the atom."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintEmbedConfigForwardSpec {
+  expects trait OrbLintEmbedConfigForward {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintEmbedConfigForwardCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintEmbedConfigForward, OrbLintEmbedConfigForwardCli
+}

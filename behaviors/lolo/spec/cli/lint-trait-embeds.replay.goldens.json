@@ -1,0 +1,1978 @@
+{
+ "atom": "cli/atoms/std-orb-lint-trait-embeds.lolo",
+ "trait": "OrbLintTraitEmbeds",
+ "note": "Cases built from traits/trait_validator.rs: the trait-typed config default check (ORB_BINDING_TRAIT_INVALID_FORMAT), the unbound trait knob embed check over `@config.<knob>` and over `trait`/`behavior`-typed entity fields (ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED) and the orbital-typed field embed check (ORB_RENDER_ORBITAL_VALUE_EMBEDDED). The first, second, third and fourth cases are .orb programs whose expected findings are the ones the core checks report (`program/validate`). The last case has no Rust file counterpart: the inline phase substitutes a `none` knob before validation, so a file never reaches the knob check with `@config.<knob>` intact; its expectation is the Rust check applied to the trait as the Rust unit tests build it (guarded then-branches exempt only their own knob, the else branch and a condition on another binding stay checked, an in-payload `if`/`when` condition is never an embed, strings below an object are checked only inside a render-ui, an object-wrapped render-ui is not walked).",
+ "cases": [
+  {
+   "id": "trait-typed-config-defaults",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "te1",
+       "orbitals": [
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_7N6E96ECDR66W845QR1EXWBQQG",
+          "name": "Task",
+          "persistence": "runtime"
+         },
+         "id": "orb_W3GMDATZSHFWRGXR4SNCZ59YZ4",
+         "name": "O",
+         "pages": [
+          {
+           "id": "pag_CZ6QQFTDGB6R5H079YV1TWCD8Q",
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T",
+             "refId": "trt_6P72V9X4FPJ7V8VT10VKRBY40E"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "config": {
+            "bad_arr": {
+             "default": [],
+             "type": "trait"
+            },
+            "bad_bool": {
+             "default": true,
+             "type": "trait"
+            },
+            "bad_num": {
+             "default": 5,
+             "type": "trait"
+            },
+            "bad_obj": {
+             "default": {
+              "behavior": "x"
+             },
+             "type": "trait"
+            },
+            "bad_spec": {
+             "default": {
+              "behavior": "P/n",
+              "trait": "Foo"
+             },
+             "type": "trait"
+            },
+            "bad_str": {
+             "default": "foo",
+             "type": "trait"
+            },
+            "bad_trait": {
+             "default": {
+              "behavior": "std/behaviors/x",
+              "trait": "foo"
+             },
+             "type": "trait"
+            },
+            "dotted": {
+             "default": "@trait.Child.x",
+             "type": "trait"
+            },
+            "low": {
+             "default": "@trait.child",
+             "type": "trait"
+            },
+            "nodef": {
+             "type": "trait"
+            },
+            "ok_null": {
+             "default": null,
+             "type": "trait"
+            },
+            "ok_ref": {
+             "default": "@trait.Child",
+             "type": "trait"
+            },
+            "ok_val": {
+             "default": {
+              "behavior": "almadar-std/ui-typography",
+              "trait": "TypographyRender"
+             },
+             "type": "trait"
+            },
+            "other": {
+             "default": "foo",
+             "type": "string"
+            }
+           },
+           "entityRefIds": {
+            "Task": "ent_7N6E96ECDR66W845QR1EXWBQQG"
+           },
+           "id": "trt_6P72V9X4FPJ7V8VT10VKRBY40E",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_7N6E96ECDR66W845QR1EXWBQQG",
+           "name": "T",
+           "sourceDeclaration": {
+            "fingerprint": "49551fdd177060be699ef38a005d722d34ad7868f1758cf1dcc0b0a334567fe6",
+            "traitId": "trt_6P72V9X4FPJ7V8VT10VKRBY40E"
+           },
+           "stateMachine": {
+            "events": [],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": []
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "trait-embeds",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_BINDING_TRAIT_INVALID_FORMAT",
+           "path": "orbitals[0 (O)].traits[0 (T)].config.bad_arr.default",
+           "message": "trait-typed config field 'bad_arr' default must be a string `@trait.<TraitName>` reference, a trait value, or `none`",
+           "suggestion": "",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_BINDING_TRAIT_INVALID_FORMAT",
+           "path": "orbitals[0 (O)].traits[0 (T)].config.bad_bool.default",
+           "message": "trait-typed config field 'bad_bool' default must be a string `@trait.<TraitName>` reference, a trait value, or `none`",
+           "suggestion": "",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_BINDING_TRAIT_INVALID_FORMAT",
+           "path": "orbitals[0 (O)].traits[0 (T)].config.bad_num.default",
+           "message": "trait-typed config field 'bad_num' default must be a string `@trait.<TraitName>` reference, a trait value, or `none`",
+           "suggestion": "",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_BINDING_TRAIT_INVALID_FORMAT",
+           "path": "orbitals[0 (O)].traits[0 (T)].config.bad_obj.default",
+           "message": "trait-typed config field 'bad_obj' default must be a string `@trait.<TraitName>` reference, a trait value, or `none`",
+           "suggestion": "",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_BINDING_TRAIT_INVALID_FORMAT",
+           "path": "orbitals[0 (O)].traits[0 (T)].config.bad_spec.default",
+           "message": "trait-typed config field 'bad_spec' default must be a string `@trait.<TraitName>` reference, a trait value, or `none`",
+           "suggestion": "",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_BINDING_TRAIT_INVALID_FORMAT",
+           "path": "orbitals[0 (O)].traits[0 (T)].config.bad_str.default",
+           "message": "trait-typed config field 'bad_str' has invalid default 'foo' \u2014 must be `@trait.<TraitName>` or `none`",
+           "suggestion": "Set the default to a `@trait.PascalCaseName` reference, to `none` (unbound), or remove the default and require the consumer to override.",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_BINDING_TRAIT_INVALID_FORMAT",
+           "path": "orbitals[0 (O)].traits[0 (T)].config.bad_trait.default",
+           "message": "trait-typed config field 'bad_trait' default must be a string `@trait.<TraitName>` reference, a trait value, or `none`",
+           "suggestion": "",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_BINDING_TRAIT_INVALID_FORMAT",
+           "path": "orbitals[0 (O)].traits[0 (T)].config.dotted.default",
+           "message": "trait-typed config field 'dotted' has invalid default '@trait.Child.x' \u2014 must be `@trait.<TraitName>` or `none`",
+           "suggestion": "Set the default to a `@trait.PascalCaseName` reference, to `none` (unbound), or remove the default and require the consumer to override.",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_BINDING_TRAIT_INVALID_FORMAT",
+           "path": "orbitals[0 (O)].traits[0 (T)].config.low.default",
+           "message": "trait-typed config field 'low' has invalid default '@trait.child' \u2014 must be `@trait.<TraitName>` or `none`",
+           "suggestion": "Set the default to a `@trait.PascalCaseName` reference, to `none` (unbound), or remove the default and require the consumer to override.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "entity-field-embeds-trait-behavior-and-orbital-values",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "te3",
+       "orbitals": [
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           },
+           {
+            "name": "view",
+            "type": "trait"
+           },
+           {
+            "name": "bh",
+            "type": "behavior"
+           },
+           {
+            "name": "orb",
+            "type": "orbital"
+           },
+           {
+            "name": "s",
+            "type": "string"
+           }
+          ],
+          "id": "ent_7928XGWM6QA3BQTHQE12JEF91A",
+          "name": "Task",
+          "persistence": "runtime"
+         },
+         "id": "orb_6ZS0G4ZBYDNZ6YTP0QHZ5TN757",
+         "name": "O",
+         "pages": [
+          {
+           "id": "pag_TXGYZF2DCG6P862WTTADRTJZJM",
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T",
+             "refId": "trt_GEEH6ZS5JNJSAHXVYRG3FB7GNQ"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "X"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "main",
+             "site": "tick"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.s"
+            },
+            {
+             "kind": "ticks",
+             "site": "tick"
+            }
+           ],
+           "entityRefIds": {
+            "Task": "ent_7928XGWM6QA3BQTHQE12JEF91A"
+           },
+           "id": "trt_GEEH6ZS5JNJSAHXVYRG3FB7GNQ",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_7928XGWM6QA3BQTHQE12JEF91A",
+           "name": "T",
+           "sourceDeclaration": {
+            "fingerprint": "d94a7a837f21c643c7583f4de0215bb7b66a8048cbd270142025eb780a36e556",
+            "traitId": "trt_GEEH6ZS5JNJSAHXVYRG3FB7GNQ"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_27ZWMPQD0RPGC61FTVVGXSZQFK",
+              "key": "E0"
+             },
+             {
+              "id": "evt_6VF7KC307SG3WQJ269DM0CD63W",
+              "key": "E1"
+             },
+             {
+              "id": "evt_C5777Z241E20Q8027SE0QJ5SZS",
+              "key": "E2"
+             },
+             {
+              "id": "evt_VHCEGJXT4HX28M3K8JGWFQ5FC3",
+              "key": "E3"
+             },
+             {
+              "id": "evt_DR40QJ59X6MYKBZJCHMXFJSQRJ",
+              "key": "E4"
+             },
+             {
+              "id": "evt_NY59HZ5C6CP364XCE3N5C2VSXD",
+              "key": "E5"
+             },
+             {
+              "id": "evt_1XSCH8KAHVN8XXZ824XMH7833K",
+              "key": "E6"
+             },
+             {
+              "id": "evt_60KFSCCJ1290H0RBEQFY0FMVJZ",
+              "key": "E7"
+             },
+             {
+              "id": "evt_NSAA7XWWV2EDHA2TSMVZMRS3MV",
+              "key": "E8"
+             },
+             {
+              "id": "evt_JZRF84PENT7AX9C02615E98V2G",
+              "key": "E9"
+             },
+             {
+              "id": "evt_M6STJ4GKGA9R57W6TTX4RHJATT",
+              "key": "E10"
+             },
+             {
+              "id": "evt_MBSWQ44S7TCKX0QEECRK9D6RNV",
+              "key": "E11"
+             },
+             {
+              "id": "evt_VYCX8AX5DYJPZFED6W5CMKMEKG",
+              "key": "E12"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [
+                  "@entity.view"
+                 ],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "E0",
+              "eventId": "evt_27ZWMPQD0RPGC61FTVVGXSZQFK",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [
+                  "@entity.bh",
+                  "@entity.s"
+                 ],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "E1",
+              "eventId": "evt_6VF7KC307SG3WQJ269DM0CD63W",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "if",
+                "@entity.view",
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "children": [
+                   "@entity.view",
+                   "@entity.bh"
+                  ],
+                  "type": "stack"
+                 }
+                ]
+               ]
+              ],
+              "event": "E2",
+              "eventId": "evt_C5777Z241E20Q8027SE0QJ5SZS",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [
+                  "@entity.orb"
+                 ],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "E3",
+              "eventId": "evt_VHCEGJXT4HX28M3K8JGWFQ5FC3",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "if",
+                "@entity.orb",
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "children": [
+                   "@entity.orb"
+                  ],
+                  "type": "stack"
+                 }
+                ]
+               ]
+              ],
+              "event": "E4",
+              "eventId": "evt_DR40QJ59X6MYKBZJCHMXFJSQRJ",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [
+                  "@entity.view.x"
+                 ],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "E5",
+              "eventId": "evt_NY59HZ5C6CP364XCE3N5C2VSXD",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [
+                  [
+                   "if",
+                   "@entity.bh",
+                   "@entity.bh",
+                   "@entity.view"
+                  ]
+                 ],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "E6",
+              "eventId": "evt_1XSCH8KAHVN8XXZ824XMH7833K",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "emit",
+                "X",
+                {
+                 "p": [
+                  "render-ui",
+                  "main",
+                  {
+                   "children": [
+                    "@entity.orb"
+                   ],
+                   "type": "stack"
+                  }
+                 ]
+                }
+               ]
+              ],
+              "event": "E7",
+              "eventId": "evt_60KFSCCJ1290H0RBEQFY0FMVJZ",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "do",
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "children": [
+                   "@entity.orb",
+                   "@entity.view"
+                  ],
+                  "type": "stack"
+                 }
+                ]
+               ]
+              ],
+              "event": "E8",
+              "eventId": "evt_NSAA7XWWV2EDHA2TSMVZMRS3MV",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "if",
+                [
+                 "validate/required",
+                 "@entity.bh"
+                ],
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "children": [
+                   "@entity.bh"
+                  ],
+                  "type": "stack"
+                 }
+                ]
+               ]
+              ],
+              "event": "E9",
+              "eventId": "evt_JZRF84PENT7AX9C02615E98V2G",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "render_ui",
+                "main",
+                {
+                 "children": [
+                  "@entity.orb",
+                  "@entity.view"
+                 ]
+                }
+               ]
+              ],
+              "event": "E10",
+              "eventId": "evt_M6STJ4GKGA9R57W6TTX4RHJATT",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.s",
+                [
+                 "x",
+                 "@entity.orb"
+                ]
+               ]
+              ],
+              "event": "E11",
+              "eventId": "evt_MBSWQ44S7TCKX0QEECRK9D6RNV",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [
+                  {
+                   "a": "@entity.orb"
+                  }
+                 ],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "E12",
+              "eventId": "evt_VYCX8AX5DYJPZFED6W5CMKMEKG",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "effects": [
+              [
+               "render-ui",
+               "main",
+               {
+                "children": [
+                 "@entity.orb"
+                ],
+                "type": "stack"
+               }
+              ]
+             ],
+             "interval": 1000,
+             "name": "tick0"
+            },
+            {
+             "effects": [
+              [
+               "render-ui",
+               "main",
+               {
+                "children": [
+                 "@entity.view"
+                ],
+                "type": "stack"
+               }
+              ]
+             ],
+             "interval": 1000,
+             "name": "tick1"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "trait-embeds",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+           "message": "render-ui embeds '@entity.view', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @entity.view (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "render-ui embeds '@entity.bh', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @entity.bh (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[2].effects[0]",
+           "message": "render-ui embeds '@entity.bh', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @entity.bh (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_ORBITAL_VALUE_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[3].effects[0]",
+           "message": "render-ui embeds '@entity.orb', an orbital value \u2014 only trait values render",
+           "suggestion": "Bind a trait value to render, or evaluate the orbital value into a program with `program/eval`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_ORBITAL_VALUE_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[4].effects[0]",
+           "message": "render-ui embeds '@entity.orb', an orbital value \u2014 only trait values render",
+           "suggestion": "Bind a trait value to render, or evaluate the orbital value into a program with `program/eval`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[6].effects[0]",
+           "message": "render-ui embeds '@entity.view', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @entity.view (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[8].effects[0]",
+           "message": "render-ui embeds '@entity.view', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @entity.view (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_ORBITAL_VALUE_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[8].effects[0]",
+           "message": "render-ui embeds '@entity.orb', an orbital value \u2014 only trait values render",
+           "suggestion": "Bind a trait value to render, or evaluate the orbital value into a program with `program/eval`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[10].effects[0]",
+           "message": "render-ui embeds '@entity.view', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @entity.view (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_ORBITAL_VALUE_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[10].effects[0]",
+           "message": "render-ui embeds '@entity.orb', an orbital value \u2014 only trait values render",
+           "suggestion": "Bind a trait value to render, or evaluate the orbital value into a program with `program/eval`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_ORBITAL_VALUE_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[12].effects[0]",
+           "message": "render-ui embeds '@entity.orb', an orbital value \u2014 only trait values render",
+           "suggestion": "Bind a trait value to render, or evaluate the orbital value into a program with `program/eval`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_ORBITAL_VALUE_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].ticks[0].effects[0]",
+           "message": "render-ui embeds '@entity.orb', an orbital value \u2014 only trait values render",
+           "suggestion": "Bind a trait value to render, or evaluate the orbital value into a program with `program/eval`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].ticks[1].effects[0]",
+           "message": "render-ui embeds '@entity.view', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @entity.view (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "config-knob-and-entity-field-embeds-together",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "te4",
+       "orbitals": [
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           },
+           {
+            "name": "view",
+            "type": "trait"
+           },
+           {
+            "name": "bh",
+            "type": "behavior"
+           },
+           {
+            "name": "orb",
+            "type": "orbital"
+           },
+           {
+            "name": "s",
+            "type": "string"
+           }
+          ],
+          "id": "ent_JW7EG0QHT5RX2S7CDKTZ5ZRNP2",
+          "name": "Task",
+          "persistence": "runtime"
+         },
+         "id": "orb_KM101DZ0R4GC25DS1E1V7QM15T",
+         "name": "O",
+         "pages": [
+          {
+           "id": "pag_S6E1N1DAJQN9BJK8DQ8MYCJ8PD",
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T",
+             "refId": "trt_9MB1NT3ADWN6YEEN5EKZ0N5QBR"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "config": {
+            "a": {
+             "default": null,
+             "type": "trait"
+            },
+            "b": {
+             "default": null,
+             "type": "trait"
+            },
+            "c": {
+             "default": "@trait.X",
+             "type": "trait"
+            },
+            "s": {
+             "default": null,
+             "type": "string"
+            }
+           },
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "main",
+             "site": "tick"
+            },
+            {
+             "kind": "ticks",
+             "site": "tick"
+            }
+           ],
+           "entityRefIds": {
+            "Task": "ent_JW7EG0QHT5RX2S7CDKTZ5ZRNP2"
+           },
+           "id": "trt_9MB1NT3ADWN6YEEN5EKZ0N5QBR",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_JW7EG0QHT5RX2S7CDKTZ5ZRNP2",
+           "name": "T",
+           "sourceDeclaration": {
+            "fingerprint": "d2ea3b0638d5e1f4a7eeb146cd65ac04332abac9787e32cd65f0a70f38abae24",
+            "traitId": "trt_9MB1NT3ADWN6YEEN5EKZ0N5QBR"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_EKJBY23BNANTN2F572M5BEYP7M",
+              "key": "E0"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [
+                  null,
+                  "@entity.view",
+                  "@entity.orb",
+                  "@entity.s"
+                 ],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "E0",
+              "eventId": "evt_EKJBY23BNANTN2F572M5BEYP7M",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "effects": [
+              [
+               "if",
+               "@entity.view",
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [
+                  "@entity.view",
+                  null
+                 ],
+                 "type": "stack"
+                }
+               ]
+              ]
+             ],
+             "interval": 1000,
+             "name": "tick0"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "trait-embeds",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+           "message": "render-ui embeds '@entity.view', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @entity.view (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_ORBITAL_VALUE_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+           "message": "render-ui embeds '@entity.orb', an orbital value \u2014 only trait values render",
+           "suggestion": "Bind a trait value to render, or evaluate the orbital value into a program with `program/eval`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-bound-knob-embeds-are-never-flagged",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "te5",
+       "orbitals": [
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ],
+          "id": "ent_PWHQ59DYFKZ7SQ9ZT9B1BYRFEM",
+          "name": "Task",
+          "persistence": "runtime"
+         },
+         "id": "orb_CJAN5GW9SC4WP2K2TSGZZ9V1JS",
+         "name": "O",
+         "pages": [
+          {
+           "id": "pag_YKB6GDT5GH2R8HZ3GEEM1VTBC5",
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T",
+             "refId": "trt_BBNKTAF95GMJR1F6C4G75HF6KT"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "config": {
+            "a": {
+             "default": "@trait.Child",
+             "type": "trait"
+            }
+           },
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "Task": "ent_PWHQ59DYFKZ7SQ9ZT9B1BYRFEM"
+           },
+           "id": "trt_BBNKTAF95GMJR1F6C4G75HF6KT",
+           "linkedEntity": "Task",
+           "linkedEntityId": "ent_PWHQ59DYFKZ7SQ9ZT9B1BYRFEM",
+           "name": "T",
+           "sourceDeclaration": {
+            "fingerprint": "06bc9f2b77b905411fc57ba86d11b259c9c08d4c4665d3017b2ce1c9c4f6bd5f",
+            "traitId": "trt_BBNKTAF95GMJR1F6C4G75HF6KT"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_490RC241EX0QEZZ24GK3QFDWN5",
+              "key": "E0"
+             },
+             {
+              "id": "evt_KJCEER5KPFSV7RSE953R89S2ZD",
+              "key": "E1"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [
+                  "@trait.Child"
+                 ],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "E0",
+              "eventId": "evt_490RC241EX0QEZZ24GK3QFDWN5",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [
+                  "@entity.s"
+                 ],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "E1",
+              "eventId": "evt_KJCEER5KPFSV7RSE953R89S2ZD",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "trait-embeds",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unbound-knob-embeds-guards-and-payload-conditions",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "te2raw",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             },
+             {
+              "key": "E1"
+             },
+             {
+              "key": "E2"
+             },
+             {
+              "key": "E3"
+             },
+             {
+              "key": "E4"
+             },
+             {
+              "key": "E5"
+             },
+             {
+              "key": "E6"
+             },
+             {
+              "key": "E7"
+             },
+             {
+              "key": "E8"
+             },
+             {
+              "key": "E9"
+             },
+             {
+              "key": "E10"
+             },
+             {
+              "key": "E11"
+             },
+             {
+              "key": "E12"
+             },
+             {
+              "key": "E13"
+             },
+             {
+              "key": "E14"
+             },
+             {
+              "key": "E15"
+             },
+             {
+              "key": "E16"
+             },
+             {
+              "key": "E17"
+             },
+             {
+              "key": "E18"
+             },
+             {
+              "key": "E19"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  "@config.a"
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E1",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  "@config.a",
+                  "@config.b",
+                  "@config.c"
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E2",
+              "effects": [
+               [
+                "if",
+                "@config.a",
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "type": "stack",
+                  "children": [
+                   "@config.a",
+                   "@config.b"
+                  ]
+                 }
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E3",
+              "effects": [
+               [
+                "when",
+                "@config.a",
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "type": "stack",
+                  "children": [
+                   "@config.a"
+                  ]
+                 }
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E4",
+              "effects": [
+               [
+                "if",
+                [
+                 "validate/required",
+                 "@config.a"
+                ],
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "type": "stack",
+                  "children": [
+                   "@config.a"
+                  ]
+                 }
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E5",
+              "effects": [
+               [
+                "if",
+                "@config.a",
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "type": "stack",
+                  "children": [
+                   "@config.a"
+                  ]
+                 }
+                ],
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "type": "stack",
+                  "children": [
+                   "@config.a"
+                  ]
+                 }
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E6",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  [
+                   "if",
+                   "@config.a",
+                   "@config.a",
+                   "@config.b"
+                  ]
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E7",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  [
+                   "when",
+                   "@config.a",
+                   "@config.a",
+                   "@config.b"
+                  ]
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E8",
+              "effects": [
+               [
+                "do",
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "type": "stack",
+                  "children": [
+                   "@config.a"
+                  ]
+                 }
+                ],
+                [
+                 "if",
+                 "@config.b",
+                 [
+                  "render-ui",
+                  "main",
+                  {
+                   "type": "stack",
+                   "children": [
+                    "@config.b",
+                    "@config.a"
+                   ]
+                  }
+                 ]
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E9",
+              "effects": [
+               [
+                "emit",
+                "X",
+                {
+                 "p": [
+                  "render-ui",
+                  "main",
+                  {
+                   "type": "stack",
+                   "children": [
+                    "@config.a"
+                   ]
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E10",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  "@config.a.x"
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E11",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "deep": "@config.a",
+                   "more": [
+                    "@config.b"
+                   ]
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E12",
+              "effects": [
+               [
+                "render_ui",
+                "main",
+                {
+                 "children": [
+                  "@config.a"
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E13",
+              "effects": [
+               [
+                "if",
+                "@config.c",
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "type": "stack",
+                  "children": [
+                   "@config.a"
+                  ]
+                 }
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E14",
+              "effects": [
+               [
+                "if",
+                "@config.s",
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "type": "stack",
+                  "children": [
+                   "@config.a"
+                  ]
+                 }
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E15",
+              "effects": [
+               [
+                "if",
+                [
+                 "validate/required",
+                 "@config.a"
+                ],
+                [
+                 "do",
+                 [
+                  "render-ui",
+                  "main",
+                  {
+                   "type": "stack",
+                   "children": [
+                    "@config.a"
+                   ]
+                  }
+                 ]
+                ],
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "type": "stack",
+                  "children": [
+                   "@config.b"
+                  ]
+                 }
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E16",
+              "effects": [
+               [
+                "if",
+                "@config.a"
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E17",
+              "effects": [
+               [
+                "if",
+                "@config.a",
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "type": "stack",
+                  "children": [
+                   "@config.b"
+                  ]
+                 }
+                ],
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "type": "stack",
+                  "children": [
+                   "@config.a"
+                  ]
+                 }
+                ],
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "type": "stack",
+                  "children": [
+                   "@config.a"
+                  ]
+                 }
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E18",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  [
+                   "if",
+                   "@config.a"
+                  ]
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E19",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  [
+                   "if",
+                   "@config.a",
+                   "@config.a",
+                   "@config.b",
+                   "@config.b"
+                  ]
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "a": {
+             "type": "trait",
+             "default": null
+            },
+            "b": {
+             "type": "trait",
+             "default": null
+            },
+            "c": {
+             "type": "trait",
+             "default": "@trait.X"
+            },
+            "s": {
+             "type": "string",
+             "default": null
+            }
+           },
+           "ticks": [
+            {
+             "name": "tick0",
+             "interval": 1000,
+             "effects": [
+              [
+               "render-ui",
+               "main",
+               {
+                "type": "stack",
+                "children": [
+                 "@config.a"
+                ]
+               }
+              ]
+             ]
+            },
+            {
+             "name": "tick1",
+             "interval": 1000,
+             "effects": [
+              [
+               "if",
+               "@config.b",
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  "@config.b"
+                 ]
+                }
+               ]
+              ]
+             ]
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "trait-embeds",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+           "message": "render-ui embeds '@config.a', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.a (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "render-ui embeds '@config.a', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.a (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "render-ui embeds '@config.b', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.b (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[2].effects[0]",
+           "message": "render-ui embeds '@config.b', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.b (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[5].effects[0]",
+           "message": "render-ui embeds '@config.a', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.a (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[6].effects[0]",
+           "message": "render-ui embeds '@config.b', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.b (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[7].effects[0]",
+           "message": "render-ui embeds '@config.b', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.b (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[8].effects[0]",
+           "message": "render-ui embeds '@config.a', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.a (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[8].effects[0]",
+           "message": "render-ui embeds '@config.a', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.a (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[11].effects[0]",
+           "message": "render-ui embeds '@config.a', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.a (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[11].effects[0]",
+           "message": "render-ui embeds '@config.b', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.b (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[12].effects[0]",
+           "message": "render-ui embeds '@config.a', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.a (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[13].effects[0]",
+           "message": "render-ui embeds '@config.a', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.a (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[14].effects[0]",
+           "message": "render-ui embeds '@config.a', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.a (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[15].effects[0]",
+           "message": "render-ui embeds '@config.b', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.b (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[17].effects[0]",
+           "message": "render-ui embeds '@config.b', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.b (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[17].effects[0]",
+           "message": "render-ui embeds '@config.a', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.a (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[18].effects[0]",
+           "message": "render-ui embeds '@config.a', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.a (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[19].effects[0]",
+           "message": "render-ui embeds '@config.b', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.b (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[19].effects[0]",
+           "message": "render-ui embeds '@config.b', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.b (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED",
+           "path": "orbitals[0 (O)].traits[0 (T)].ticks[0].effects[0]",
+           "message": "render-ui embeds '@config.a', a trait- or behavior-typed value that may be `none` (unbound) \u2014 an unguarded embed renders nothing",
+           "suggestion": "Wrap this render-ui in `(if @config.a (render-ui ...))` so the unbound case renders nothing instead of a dangling embed",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,267 @@
+app std-orb-lint-binding-fields [
+  version: "1.0.0",
+  inbound: ["cli-lint-binding-fields"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-binding-fields - the `orb lint binding-fields <file>` command, the port of ORB_BINDING_PAYLOAD_FIELD_UNDECLARED (direct @payload.<path> reads) and ORB_BINDING_ENTITY_FIELD_NOT_FOUND of binding.rs (validate_payload_field_references, validate_entity_field_references). It lowers the file with program/read and walks, in every inline trait, the guard, the effects and the ensures of each transition (payload and entity-field reads), the state holds and the tick effects (entity-field reads), and the entity invariants. A @payload.<path> read must resolve through the payload schema the transition's event declares, descending into each matched field's properties; an event without a schema gets the lifecycle or the declare-in-emits suggestion. An @entity.<field> read must name a field of the trait's linked entity (id, createdAt and updatedAt are runtime-managed), an @EntityName.<field> read a field of that entity; an @fromEntity.<field> read in an ensures is checked as @entity.<field>. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint binding-fields: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-binding-fields"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type BfShape = string | number | boolean | [BfShape?] | Map string BfShape?
+type BfField = { name : string, properties : [BfField]? }
+type BfEvent = { key : string, payloadSchema : [BfField]? }
+type BfTransition = { event : string, guard : BfShape?, effects : [BfShape], ensures : [BfShape] }
+type BfState = { holds : BfShape? }
+type BfTick = { effects : [BfShape] }
+type BfMachine = { states : [BfState], events : [BfEvent], transitions : [BfTransition] }
+type BfTrait = { name : string, linkedEntity : string, stateMachine : BfMachine, ticks : [BfTick] }
+type BfName = { name : string }
+type BfEntity = { name : string, fields : [BfName], invariants : [BfShape] }
+type BfOrbital = { name : string, entity : BfEntity, auxiliaryEntities : [BfEntity], traits : [BfTrait] }
+type BfProgram = { orbitals : [BfOrbital] }
+type BfDef = { name : string, fields : [string] }
+type BfHit = { rel : string, s : string }
+type BfRoot = { x : BfShape?, w : string!, c : string!, ev : string!, pk : string!, lk : string! }
+type BfAcc = { lv : [BfField], miss : string, stop : boolean }
+
+orbital OrbLintBindingFieldsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintBindingFieldsRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+
+  }
+
+  trait OrbLintBindingFields -> OrbLintBindingFieldsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((nohits : [BfHit] []) (noroots : [BfRoot] []) (nof : [OrbFinding] []) (pP : string (str/concat (quote "@") "payload.")) (fP : string (str/concat (quote "@") "fromEntity.")) (eP : string (str/concat (quote "@") "entity.")) (orbitals : [BfOrbital] (object/get @payload.program "orbitals" [])))
+  (let ((defIdx : Map string BfDef (or (object/fromEntries
+  (array/flatten (array/map @orbitals (fn o
+    (array/map
+      (array/filter (array/concat [(object/get @o "entity" null)] (object/get @o "auxiliaryEntities" [])) (fn e (validate/object @e)))
+      (fn e [(object/get @e "name" ""), { name: (object/get @e "name" ""), fields: (array/map (object/get @e "fields" []) (fn f (object/get @f "name" ""))) }]))))))
+  {})) (plIdx : Map string [BfField] (or (object/fromEntries
+  (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+    (let ((trts : [BfTrait] (object/get (array/nth @orbitals @oi) "traits" [])))
+      (array/flatten (array/map (array/range 0 (array/len @trts)) (fn ti
+        (array/flatten (array/map (object/get (array/nth @trts @ti) "stateMachine.events" []) (fn e
+          (if (object/has @e "payloadSchema")
+            [[(str/concat @oi "/" @ti "/" (object/get @e "key" "")), (object/get @e "payloadSchema")]]
+            []))))))))))))
+  {})) (roots : [BfRoot] (array/concat (array/flatten
+  (array/map (array/range 0 (array/len @orbitals))
+    (fn oi
+      (let ((o (array/nth @orbitals @oi)))
+        (let ((trts : [BfTrait] (object/get @o "traits" [])))
+          (array/flatten
+            (array/map (array/range 0 (array/len @trts))
+              (fn ti
+                (let ((t (array/nth @trts @ti)))
+                  (if (not (object/has @t "stateMachine"))
+                    @noroots
+                    (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (lk (object/get @t "linkedEntity" "")) (trs : [BfTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (sts : [BfState] (object/get (object/get @t "stateMachine" { states: [] }) "states" [])) (tks : [BfTick] (object/get @t "ticks" [])))
+                      (array/concat
+                        (array/flatten
+                          (array/map (array/range 0 (array/len @trs))
+                            (fn xi
+                              (let ((tr (array/nth @trs @xi)) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
+                                (let ((effs : [BfShape] (object/get @tr "effects" [])) (ens : [BfShape] (object/get @tr "ensures" [])) (g (object/get @tr "guard" null)) (ev (object/get @tr "event" "")) (pk (str/concat @oi "/" @ti "/" (object/get @tr "event" ""))))
+                                  (array/concat
+                                    (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard"), c: "g", ev: @ev, pk: @pk, lk: @lk }] @noroots)
+                                    (array/concat
+                                      (array/map (array/range 0 (array/len @effs)) (fn ei { x: (array/nth @effs @ei), w: (str/concat @xp ".effects[" @ei "]"), c: "e", ev: @ev, pk: @pk, lk: @lk }))
+                                      (array/map (array/range 0 (array/len @ens)) (fn ki { x: (array/nth @ens @ki), w: (str/concat @xp ".ensures[" @ki "]"), c: "k", ev: @ev, pk: @pk, lk: @lk })))))))))
+                        (array/concat
+                          (array/flatten
+                            (array/map (array/range 0 (array/len @sts))
+                              (fn si
+                                (let ((h (object/get (array/nth @sts @si) "holds" null)))
+                                  (if (!= @h null) [{ x: @h, w: (str/concat @tp ".stateMachine.states[" @si "].holds"), c: "h", ev: "", pk: "", lk: @lk }] @noroots)))))
+                          (array/flatten
+                            (array/map (array/range 0 (array/len @tks))
+                              (fn ki
+                                (let ((teffs : [BfShape] (object/get (array/nth @tks @ki) "effects" [])))
+                                  (array/map (array/range 0 (array/len @teffs)) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]"), c: "t", ev: "", pk: "", lk: @lk }))))))))))))))))))) (array/concat
+  (array/flatten
+    (array/map (array/range 0 (array/len @orbitals))
+      (fn oi
+        (let ((ent (object/get (array/nth @orbitals @oi) "entity" null)))
+          (if (validate/object @ent)
+            (let ((invs : [BfShape] (object/get @ent "invariants" [])) (en (object/get @ent "name" "")))
+              (array/map (array/range 0 (array/len @invs)) (fn ni { x: (array/nth @invs @ni), w: (str/concat "orbitals[" @oi "].entity.invariants[" @ni "]"), c: "i", ev: "", pk: "", lk: @en })))
+            @noroots)))))
+  (array/flatten
+    (array/map (array/range 0 (array/len @orbitals))
+      (fn oi
+        (let ((auxs : [BfEntity] (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
+          (array/flatten
+            (array/map (array/range 0 (array/len @auxs))
+              (fn ai
+                (let ((invs : [BfShape] (object/get (array/nth @auxs @ai) "invariants" [])) (en (object/get (array/nth @auxs @ai) "name" "")))
+                  (if (validate/object (array/nth @auxs @ai))
+                    (array/map (array/range 0 (array/len @invs)) (fn ni { x: (array/nth @invs @ni), w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @ni "]"), c: "i", ev: "", pk: "", lk: @en }))
+                    @noroots)))))))))))))
+    (array/flatten
+      (array/map @roots
+        (fn x
+          (let ((hs (or (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
+  (if (str/startsWith @n (quote "@")) [{ rel: "", s: @n }] @nohits)
+  (if (validate/array @n)
+    (array/flatten
+      (array/map (array/range 0 (array/len @n))
+        (fn i
+          (array/map (let ((r : [BfHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) }))))))
+    (if (validate/object @n)
+      (array/flatten
+        (array/map (object/keys @k)
+          (fn key
+            (array/map (let ((r : [BfHit]? (object/get @k @key))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
+      @nohits)))) BfShape) @nohits)))
+            (array/flatten
+              (array/map @hs
+                (fn h
+                  (let ((s (object/get @h "s")) (c (object/get @x "c")) (p (str/concat (object/get @x "w") (object/get @h "rel"))))
+              (array/concat
+                (if (and (array/includes ["g", "e", "k"] @c) (str/startsWith @s @pP))
+                  (let ((segs : [string] (array/filter (array/map (str/split (str/slice @s 9) ".") (fn q (array/first (str/split @q "[")))) (fn q (!= @q "")))))
+  (if (= (array/len @segs) 0)
+    @nof
+    (let ((schema : [BfField]? (object/get @plIdx (object/get @x "pk") null)) (f0 (array/first @segs)) (ev (object/get @x "ev")))
+      (let ((hybrid (and (>= (array/len @segs) 2) (= @f0 "payload") (or (= @schema null) (= (array/len (array/filter @schema (fn q (= (object/get @q "name") "payload")))) 0))))
+            (restPath (str/join (array/slice @segs 1 (array/len @segs)) ".")))
+        (if (!= @schema null)
+          (let ((res (array/reduce @segs { lv: @schema, miss: "", stop: false } (fn (acc sg)
+                       (if (or (object/get @acc "stop") (!= (object/get @acc "miss") ""))
+                         @acc
+                         (let ((fm (array/find (object/get @acc "lv") (fn q (= (object/get @q "name") @sg)))))
+                           (if (= @fm null)
+                             { lv: (object/get @acc "lv"), miss: @sg, stop: false }
+                             (let ((props (object/get @fm "properties" null)))
+                               (if (= @props null) { lv: (object/get @acc "lv"), miss: "", stop: true } { lv: @props, miss: "", stop: false })))))))))
+            (if (= (object/get @res "miss") "")
+              @nof
+              [{ code: "ORB_BINDING_PAYLOAD_FIELD_UNDECLARED", path: @p, message: (str/concat "Payload field '" (object/get @res "miss") "' is not declared in event '" @ev "' payload schema"), suggestion: (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "Add { \"name\": \"" (object/get @res "miss") "\", \"type\": \"...\" } to the event's payload array")), severity: "error" }]))
+          [{ code: "ORB_BINDING_PAYLOAD_FIELD_UNDECLARED", path: @p, message: (str/concat "Event '" @ev "' uses @payload." @f0 " (.lolo spelling: `?" @f0 "` or `@payload." @f0 "`) but has no payload schema defined"), suggestion: (if (array/includes ["INIT", "LOAD", "$MOUNT"] @ev) (str/concat "'" @ev "' is a lifecycle event and carries NO payload — @payload." @f0 " (written `?" @f0 "` in .lolo) can never resolve here. Read entity/config state instead, or move this logic to the transition for the event that actually delivers '" @f0 "'.") (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "declare the field in the event's `emits` payload block: `" @ev " -> external { " @f0 " : <type> }` — an event read via @payload." @f0 " must declare that field"))), severity: "error" }])))))
+                  @nof)
+                (let ((s2 (if (and (= @c "k") (str/startsWith @s @fP)) (str/concat @eP (str/slice @s 12)) @s)))
+  (if (str/startsWith @s2 @eP)
+    (let ((fld (array/first (str/split (array/first (str/split (str/slice @s2 8) ".")) "[")))
+          (lent (object/get @defIdx (object/get @x "lk") null)))
+      (if (or (= @fld "") (array/includes ["id", "createdAt", "updatedAt"] @fld) (= @lent null) (array/includes (object/get @lent "fields" []) @fld))
+        @nof
+        [{ code: "ORB_BINDING_ENTITY_FIELD_NOT_FOUND", path: @p, message: (str/concat (quote "@") "entity." @fld " — field '" @fld "' not found on entity '" (object/get @lent "name") "'"), suggestion: (str/concat "Add field '" @fld "' to entity '" (object/get @lent "name") "' or fix the binding path"), severity: "error" }]))
+    (let ((parts (str/split (str/slice @s2 1) ".")))
+      (if (< (array/len @parts) 2)
+        @nof
+        (let ((root (array/first (str/split (array/first @parts) "["))) (fld (array/first (str/split (array/nth @parts 1) "["))))
+          (let ((pent (object/get @defIdx @root null)))
+            (if (or (not (validate/pattern @root "^[A-Z][a-zA-Z0-9]*$")) (= @pent null) (array/includes ["id", "createdAt", "updatedAt"] @fld) (array/includes (object/get @pent "fields" []) @fld))
+              @nof
+              [{ code: "ORB_BINDING_ENTITY_FIELD_NOT_FOUND", path: @p, message: (str/concat (quote "@") @root "." @fld " — field '" @fld "' not found on entity '" @root "'"), suggestion: (str/concat "Add field '" @fld "' to entity '" @root "' or fix the binding path"), severity: "error" }])))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "binding-fields", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BfProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+
+    }
+  }
+
+  trait OrbLintBindingFieldsCli -> OrbLintBindingFieldsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint binding-fields <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "binding-fields") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint binding-fields: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "binding-fields") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint binding-fields: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string!  error : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-binding-fields" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint binding-fields` with its arguments and working directory."
+        @synonyms "orb lint binding-fields"
+      OrbLintBindingFields.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string!  error : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintBindingFieldsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintBindingFieldsOrbitalStart -> OrbLintBindingFields, OrbLintBindingFieldsCli, OrbLintInput, Packs, Versions
+}

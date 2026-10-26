@@ -1,0 +1,5922 @@
+{
+ "atom": "cli/atoms/std-orb-lint-dispatch-contract.lolo",
+ "trait": "OrbLintDispatchContract",
+ "note": "Cases built from entities/entity_mutation.rs validate_trait_local_dispatch (ORB_T_LOCAL_TRAIT_TOUCHES_SERVER, ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT), validate_all_client_tick_server_effects (ORB_T_CLIENT_TICK_SERVER_EFFECT) and validate_trait_auth_guard_client_only (ORB_AUTH_GUARD_CLIENT_ONLY, a warning). Each program is a resolved .orb fixture and the expected findings are the ones the core checks report (`program/validate`). The first step of every case is the operator shapes the rule hears from std-orb-lint-input (a subset of the installed table: the server data and request effects with their entity params, the client effects, emit and set). The controls are a fetch or persist of a browser-stored entity, a keyless http, a `persist batch` of browser-stored entities, branches with a statically false condition, a `let` pair name or `fn` parameter named like a server effect, a statically false guard, a [shared] or [runtime] or browser-stored linked entity, a `persist batch` that only deletes or takes nothing, a [background] tick, undeclared, server and [client] traits for the tick rule, and equal-server-work arms for the guard rule.",
+ "cases": [
+  {
+   "id": "client-trait-server-effects-sites-and-dead-branches",
+   "steps": [
+    {
+     "event": "SHAPES_HEARD",
+     "from": "ready",
+     "payload": {
+      "operators": {
+       "fetch": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "entity",
+          "type": {
+           "kind": "entity"
+          }
+         },
+         {
+          "name": "options",
+          "type": {
+           "kind": "object"
+          }
+         }
+        ]
+       },
+       "persist": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "action",
+          "type": {
+           "kind": "union"
+          }
+         },
+         {
+          "name": "entity",
+          "type": {
+           "kind": "entity"
+          }
+         }
+        ]
+       },
+       "http": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "method",
+          "type": "string"
+         }
+        ]
+       },
+       "call-service": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "service",
+          "type": "string"
+         }
+        ]
+       },
+       "navigate": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "path",
+          "type": "string"
+         }
+        ]
+       },
+       "render-ui": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "slot",
+          "type": {
+           "kind": "uiSlot"
+          }
+         }
+        ]
+       },
+       "send-server": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "event",
+          "type": "string"
+         }
+        ]
+       },
+       "emit": {
+        "runsOn": "any",
+        "params": [
+         {
+          "name": "event",
+          "type": {
+           "kind": "eventKey"
+          }
+         }
+        ]
+       },
+       "set": {
+        "runsOn": "any",
+        "params": [
+         {
+          "name": "binding",
+          "type": {
+           "kind": "binding"
+          }
+         }
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "dc1",
+       "orbitals": [
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_Z0XJSZ5E3ZQ1ZW86EYYMKNX63C",
+          "name": "CliE",
+          "persistence": "runtime"
+         },
+         "id": "orb_BWCJNFYJJE997EQQFHXCJY8Q59",
+         "name": "C1",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "X"
+            },
+            {
+             "kind": "fetch"
+            },
+            {
+             "kind": "fetch",
+             "resource": "@payload.e"
+            },
+            {
+             "kind": "fetch",
+             "resource": "Bro"
+            },
+            {
+             "kind": "fetch",
+             "resource": "Bro",
+             "site": "tick"
+            },
+            {
+             "kind": "fetch",
+             "resource": "Srv"
+            },
+            {
+             "kind": "fetch",
+             "resource": "Srv",
+             "site": "tick"
+            },
+            {
+             "kind": "http",
+             "resource": "https://a.b"
+            },
+            {
+             "kind": "navigate",
+             "resource": "/x"
+            },
+            {
+             "kind": "persist"
+            },
+            {
+             "kind": "persist",
+             "resource": "Bro"
+            },
+            {
+             "kind": "persist",
+             "resource": "Srv"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            },
+            {
+             "kind": "ticks",
+             "site": "tick"
+            }
+           ],
+           "entityRefIds": {
+            "CliE": "ent_Z0XJSZ5E3ZQ1ZW86EYYMKNX63C"
+           },
+           "id": "trt_Y0MNEWEBQ65VKBMX0JAE3G68V3",
+           "linkedEntity": "CliE",
+           "linkedEntityId": "ent_Z0XJSZ5E3ZQ1ZW86EYYMKNX63C",
+           "name": "C1T",
+           "sourceDeclaration": {
+            "fingerprint": "4e2969558903414fc611b30700a85064fa358dbb2e1924c6b46be64733770cf8",
+            "traitId": "trt_Y0MNEWEBQ65VKBMX0JAE3G68V3"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_H1E363SYTAZD503D7EBDVMWQP3",
+              "key": "E0"
+             },
+             {
+              "id": "evt_KRCE6D8Y7KF3SPPY1JBZ749EB3",
+              "key": "E1"
+             },
+             {
+              "id": "evt_J2JFR4QK3CSHP9KH7A78SQARFD",
+              "key": "E2"
+             },
+             {
+              "id": "evt_VWQZ9J3Q3VVHXG2Y55VP1K59FF",
+              "key": "E3"
+             },
+             {
+              "id": "evt_MEZ22J97J1KS0V2Q9TZW7BHZST",
+              "key": "E4"
+             },
+             {
+              "id": "evt_R8BW01REMY7AF2633MXFGPCGZ4",
+              "key": "E5"
+             },
+             {
+              "id": "evt_91D9AR3MVWTDY9DQ3V2PEKG3YY",
+              "key": "E6"
+             },
+             {
+              "id": "evt_G748D91JCYS6FDGAS06BM0ZNMX",
+              "key": "E7"
+             },
+             {
+              "id": "evt_DD5TW76ZVFFXQWH788T4F2E0RJ",
+              "key": "E8"
+             },
+             {
+              "id": "evt_FJYB83P4KS29WN96281Y3018RS",
+              "key": "E9"
+             },
+             {
+              "id": "evt_8Y6B4VEFHP7RVFHEM1S47ABJJC",
+              "key": "E10"
+             },
+             {
+              "id": "evt_80CRX8V29TH4XAQZ7J60FZNB3M",
+              "key": "E11"
+             },
+             {
+              "id": "evt_PTWB88XNSPTWV2X14ZFRPBF59S",
+              "key": "E12"
+             },
+             {
+              "id": "evt_SK0MHY5XKKYSSZ8P3PY2PZE8XK",
+              "key": "E13"
+             },
+             {
+              "id": "evt_PRE0D1VWPXYBEQCKR8044J2R21",
+              "key": "E14"
+             },
+             {
+              "id": "evt_P832RBNRZRWFWC2PZMV54FTA01",
+              "key": "E15"
+             },
+             {
+              "id": "evt_TRJ3YWK8T1MD0Q6B71HG5FQVP0",
+              "key": "E16"
+             },
+             {
+              "id": "evt_ZJPA2PC82S41CQ9KWX3KJSB9SZ",
+              "key": "E17"
+             },
+             {
+              "id": "evt_D3X55A4KZP9ZV37G4D3EKPWQRT",
+              "key": "E18"
+             },
+             {
+              "id": "evt_5AJTEHK66YK3FEQTGA3A0Y6WZT",
+              "key": "E19"
+             },
+             {
+              "id": "evt_V4J6K00X0FEG7G66MC4G15R4QK",
+              "key": "E20"
+             },
+             {
+              "id": "evt_0Q60TM705JG2S7YR527S5RJPB3",
+              "key": "E21"
+             },
+             {
+              "id": "evt_2M0NEGAARJ5C94NMXRGGV5DM0Y",
+              "key": "E22"
+             },
+             {
+              "id": "evt_DAN0RETM7BA3NGM3ZA5WZK5ZT7",
+              "key": "E23"
+             },
+             {
+              "id": "evt_3QNFH81W27Y13H2HDARQTCM9WS",
+              "key": "E24"
+             },
+             {
+              "id": "evt_ZN549G2BPE5V71SC12WGQZ40TN",
+              "key": "E25"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "E0",
+              "eventId": "evt_H1E363SYTAZD503D7EBDVMWQP3",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fetch",
+                "Bro"
+               ]
+              ],
+              "event": "E1",
+              "eventId": "evt_KRCE6D8Y7KF3SPPY1JBZ749EB3",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Srv",
+                {
+                 "x": 1
+                }
+               ]
+              ],
+              "event": "E2",
+              "eventId": "evt_J2JFR4QK3CSHP9KH7A78SQARFD",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Bro",
+                {
+                 "x": 1
+                }
+               ]
+              ],
+              "event": "E3",
+              "eventId": "evt_VWQZ9J3Q3VVHXG2Y55VP1K59FF",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "http",
+                "GET",
+                "https://a.b",
+                "/p"
+               ]
+              ],
+              "event": "E4",
+              "eventId": "evt_MEZ22J97J1KS0V2Q9TZW7BHZST",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "http",
+                "GET",
+                "https://a.b",
+                "/p",
+                {
+                 "auth": {
+                  "scheme": "bearer"
+                 }
+                }
+               ]
+              ],
+              "event": "E5",
+              "eventId": "evt_R8BW01REMY7AF2633MXFGPCGZ4",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "http",
+                "GET",
+                "https://a.b",
+                "/p",
+                null
+               ]
+              ],
+              "event": "E6",
+              "eventId": "evt_91D9AR3MVWTDY9DQ3V2PEKG3YY",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "if",
+                false,
+                [
+                 "fetch",
+                 "Srv"
+                ],
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "children": [],
+                  "type": "stack"
+                 }
+                ]
+               ]
+              ],
+              "event": "E7",
+              "eventId": "evt_G748D91JCYS6FDGAS06BM0ZNMX",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "if",
+                true,
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "children": [],
+                  "type": "stack"
+                 }
+                ],
+                [
+                 "fetch",
+                 "Srv"
+                ]
+               ]
+              ],
+              "event": "E8",
+              "eventId": "evt_DD5TW76ZVFFXQWH788T4F2E0RJ",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "when",
+                false,
+                [
+                 "fetch",
+                 "Srv"
+                ]
+               ]
+              ],
+              "event": "E9",
+              "eventId": "evt_FJYB83P4KS29WN96281Y3018RS",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "let",
+                [
+                 [
+                  "fetch",
+                  [
+                   "fetch",
+                   "Srv"
+                  ]
+                 ]
+                ],
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "children": [],
+                  "type": "stack"
+                 }
+                ]
+               ]
+              ],
+              "event": "E10",
+              "eventId": "evt_8Y6B4VEFHP7RVFHEM1S47ABJJC",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fn",
+                "fetch",
+                [
+                 "fetch",
+                 "Srv"
+                ]
+               ]
+              ],
+              "event": "E11",
+              "eventId": "evt_80CRX8V29TH4XAQZ7J60FZNB3M",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 [
+                  "create",
+                  "Bro",
+                  {
+                   "x": 1
+                  }
+                 ]
+                ]
+               ]
+              ],
+              "event": "E12",
+              "eventId": "evt_PTWB88XNSPTWV2X14ZFRPBF59S",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 [
+                  "create",
+                  "Bro",
+                  {
+                   "x": 1
+                  }
+                 ],
+                 [
+                  "delete",
+                  "Srv",
+                  "i"
+                 ]
+                ]
+               ]
+              ],
+              "event": "E13",
+              "eventId": "evt_SK0MHY5XKKYSSZ8P3PY2PZE8XK",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 "array/map",
+                 "@ids",
+                 [
+                  "fn",
+                  "i",
+                  [
+                   "create",
+                   "Bro",
+                   {}
+                  ]
+                 ]
+                ]
+               ]
+              ],
+              "event": "E14",
+              "eventId": "evt_PRE0D1VWPXYBEQCKR8044J2R21",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                "@ops"
+               ]
+              ],
+              "event": "E15",
+              "eventId": "evt_P832RBNRZRWFWC2PZMV54FTA01",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fetch",
+                "@payload.e"
+               ]
+              ],
+              "event": "E16",
+              "eventId": "evt_TRJ3YWK8T1MD0Q6B71HG5FQVP0",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "navigate",
+                "/x"
+               ]
+              ],
+              "event": "E17",
+              "eventId": "evt_ZJPA2PC82S41CQ9KWX3KJSB9SZ",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "do",
+                [
+                 "set",
+                 "@entity.x",
+                 1
+                ],
+                [
+                 "fetch",
+                 "Srv"
+                ]
+               ]
+              ],
+              "event": "E18",
+              "eventId": "evt_D3X55A4KZP9ZV37G4D3EKPWQRT",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "emit",
+                "X",
+                {}
+               ],
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "E19",
+              "eventId": "evt_5AJTEHK66YK3FEQTGA3A0Y6WZT",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "send-server",
+                "EV"
+               ]
+              ],
+              "event": "E20",
+              "eventId": "evt_V4J6K00X0FEG7G66MC4G15R4QK",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "when",
+                [
+                 "and",
+                 true,
+                 false
+                ],
+                [
+                 "fetch",
+                 "Srv"
+                ]
+               ]
+              ],
+              "event": "E21",
+              "eventId": "evt_0Q60TM705JG2S7YR527S5RJPB3",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "if",
+                [
+                 "or",
+                 false,
+                 0
+                ],
+                [
+                 "fetch",
+                 "Srv"
+                ],
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "children": [],
+                  "type": "stack"
+                 }
+                ]
+               ]
+              ],
+              "event": "E22",
+              "eventId": "evt_2M0NEGAARJ5C94NMXRGGV5DM0Y",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "if",
+                [
+                 "=",
+                 "a",
+                 "b"
+                ],
+                [
+                 "fetch",
+                 "Srv"
+                ],
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "children": [],
+                  "type": "stack"
+                 }
+                ]
+               ]
+              ],
+              "event": "E23",
+              "eventId": "evt_DAN0RETM7BA3NGM3ZA5WZK5ZT7",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "if",
+                [
+                 "!=",
+                 "a",
+                 "a"
+                ],
+                [
+                 "fetch",
+                 "Srv"
+                ],
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "children": [],
+                  "type": "stack"
+                 }
+                ]
+               ]
+              ],
+              "event": "E24",
+              "eventId": "evt_3QNFH81W27Y13H2HDARQTCM9WS",
+              "from": "idle",
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "if",
+                [
+                 "not",
+                 1
+                ],
+                [
+                 "fetch",
+                 "Srv"
+                ],
+                [
+                 "render-ui",
+                 "main",
+                 {
+                  "children": [],
+                  "type": "stack"
+                 }
+                ]
+               ]
+              ],
+              "event": "E25",
+              "eventId": "evt_ZN549G2BPE5V71SC12WGQZ40TN",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "effects": [
+              [
+               "fetch",
+               "Srv"
+              ]
+             ],
+             "interval": 1000,
+             "name": "k1"
+            },
+            {
+             "effects": [
+              [
+               "fetch",
+               "Bro"
+              ]
+             ],
+             "interval": 1000,
+             "name": "k2"
+            },
+            {
+             "effects": [
+              [
+               "fetch",
+               "Srv"
+              ]
+             ],
+             "interval": 1000,
+             "name": "k3",
+             "runsInBackground": true
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "srvs",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_VNXXCH65QS2VWHP51ERDT4C3KP",
+          "name": "Srv",
+          "persistence": "persistent"
+         },
+         "id": "orb_46TNTHNQFHVQRRGYQ295E1DNTH",
+         "name": "Sv",
+         "traits": [
+          {
+           "entityRefIds": {
+            "Srv": "ent_VNXXCH65QS2VWHP51ERDT4C3KP"
+           },
+           "id": "trt_A5AAFX0HRB8W5KHMCV47XM5Q89",
+           "linkedEntity": "Srv",
+           "linkedEntityId": "ent_VNXXCH65QS2VWHP51ERDT4C3KP",
+           "name": "SvT",
+           "sourceDeclaration": {
+            "fingerprint": "1f5d8a644cc35055784f988914c8d76a99e7ef051b179c6bed320c17d4336a47",
+            "traitId": "trt_A5AAFX0HRB8W5KHMCV47XM5Q89"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_DQ7TBJ3GHCR8P6NE80TB9GQK14",
+              "key": "X"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [],
+              "event": "X",
+              "eventId": "evt_DQ7TBJ3GHCR8P6NE80TB9GQK14",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "browser": true,
+          "collection": "bros",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_7F40VEBJKFS9QNNKPWMEYHGWH6",
+          "name": "Bro",
+          "persistence": "persistent"
+         },
+         "id": "orb_SC0385BACHN68GJ721QBQ2ZPGW",
+         "name": "Br",
+         "traits": [
+          {
+           "entityRefIds": {
+            "Bro": "ent_7F40VEBJKFS9QNNKPWMEYHGWH6"
+           },
+           "id": "trt_PA9BY41B2CNH6DA29CT1ACJXNW",
+           "linkedEntity": "Bro",
+           "linkedEntityId": "ent_7F40VEBJKFS9QNNKPWMEYHGWH6",
+           "name": "BrT",
+           "sourceDeclaration": {
+            "fingerprint": "fec6539fc6e18d6af8053b92d72f2b28e7683d36f30d3f7e57535b3132293e8e",
+            "traitId": "trt_PA9BY41B2CNH6DA29CT1ACJXNW"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_AFM9N9N22QH1BZ29FJ5THFHNN4",
+              "key": "X"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [],
+              "event": "X",
+              "eventId": "evt_AFM9N9N22QH1BZ29FJ5THFHNN4",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "dispatch-contract",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C1)].traits[0 (C1T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"C1T\" is [client] but transition 'E0' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C1)].traits[0 (C1T)].stateMachine.transitions[2].effects[0]",
+           "message": "trait \"C1T\" is [client] but transition 'E2' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C1)].traits[0 (C1T)].stateMachine.transitions[5].effects[0]",
+           "message": "trait \"C1T\" is [client] but transition 'E5' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C1)].traits[0 (C1T)].stateMachine.transitions[8].effects[0]",
+           "message": "trait \"C1T\" is [client] but transition 'E8' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C1)].traits[0 (C1T)].stateMachine.transitions[10].effects[0]",
+           "message": "trait \"C1T\" is [client] but transition 'E10' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C1)].traits[0 (C1T)].stateMachine.transitions[11].effects[0]",
+           "message": "trait \"C1T\" is [client] but transition 'E11' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C1)].traits[0 (C1T)].stateMachine.transitions[13].effects[0]",
+           "message": "trait \"C1T\" is [client] but transition 'E13' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C1)].traits[0 (C1T)].stateMachine.transitions[15].effects[0]",
+           "message": "trait \"C1T\" is [client] but transition 'E15' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C1)].traits[0 (C1T)].stateMachine.transitions[16].effects[0]",
+           "message": "trait \"C1T\" is [client] but transition 'E16' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C1)].traits[0 (C1T)].stateMachine.transitions[18].effects[0]",
+           "message": "trait \"C1T\" is [client] but transition 'E18' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C1)].traits[0 (C1T)].ticks[0].effects[0]",
+           "message": "trait \"C1T\" is [client] but tick 'k1' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C1)].traits[0 (C1T)].ticks[2].effects[0]",
+           "message": "trait \"C1T\" is [client] but tick 'k3' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "client-guards-on-user-and-auth-guard-warnings",
+   "steps": [
+    {
+     "event": "SHAPES_HEARD",
+     "from": "ready",
+     "payload": {
+      "operators": {
+       "fetch": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "entity",
+          "type": {
+           "kind": "entity"
+          }
+         },
+         {
+          "name": "options",
+          "type": {
+           "kind": "object"
+          }
+         }
+        ]
+       },
+       "persist": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "action",
+          "type": {
+           "kind": "union"
+          }
+         },
+         {
+          "name": "entity",
+          "type": {
+           "kind": "entity"
+          }
+         }
+        ]
+       },
+       "http": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "method",
+          "type": "string"
+         }
+        ]
+       },
+       "call-service": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "service",
+          "type": "string"
+         }
+        ]
+       },
+       "navigate": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "path",
+          "type": "string"
+         }
+        ]
+       },
+       "render-ui": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "slot",
+          "type": {
+           "kind": "uiSlot"
+          }
+         }
+        ]
+       },
+       "send-server": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "event",
+          "type": "string"
+         }
+        ]
+       },
+       "emit": {
+        "runsOn": "any",
+        "params": [
+         {
+          "name": "event",
+          "type": {
+           "kind": "eventKey"
+          }
+         }
+        ]
+       },
+       "set": {
+        "runsOn": "any",
+        "params": [
+         {
+          "name": "binding",
+          "type": {
+           "kind": "binding"
+          }
+         }
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "dc2",
+       "orbitals": [
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_QGTEPFFVWDXY6SB6YZVK8XJS2T",
+          "name": "CliE2",
+          "persistence": "runtime"
+         },
+         "id": "orb_ZFZ6VBDDAMPNA2JDTFXAS4YFKE",
+         "name": "C2",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Srv"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "CliE2": "ent_QGTEPFFVWDXY6SB6YZVK8XJS2T"
+           },
+           "id": "trt_MQGB8Q84JA2957VNHHZYYSV87S",
+           "linkedEntity": "CliE2",
+           "linkedEntityId": "ent_QGTEPFFVWDXY6SB6YZVK8XJS2T",
+           "name": "C2T",
+           "sourceDeclaration": {
+            "fingerprint": "76a40b2cc13e435139d40b0b8c19d766dbe6f2be3d9e617c99988ba9f5eb5f2f",
+            "traitId": "trt_MQGB8Q84JA2957VNHHZYYSV87S"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_G4MHF9XE4TQ2D4Y4BNCYWQ37W5",
+              "key": "G0"
+             },
+             {
+              "id": "evt_AX2SWX3MCXT6ETCG0CWSZT3YRQ",
+              "key": "G1"
+             },
+             {
+              "id": "evt_2TZ8PVMXWDEY6YXECXKZ4VFEF9",
+              "key": "G2"
+             },
+             {
+              "id": "evt_DHAD2166S93CMR3F13XS2R8KKP",
+              "key": "G3"
+             },
+             {
+              "id": "evt_Q4B47NRQZ9BZMN7RE5PNPCKNN2",
+              "key": "G4"
+             },
+             {
+              "id": "evt_S1TM2FVNFRTQW0T04YXK1KKFGK",
+              "key": "G5"
+             },
+             {
+              "id": "evt_5GYE3EY3641K289D91CRT62M6G",
+              "key": "G6"
+             },
+             {
+              "id": "evt_9V7J5NETFND7TTH8YEVFVC8MX0",
+              "key": "G7"
+             },
+             {
+              "id": "evt_HZYQBFY6E5372RGA84X8VSP1PD",
+              "key": "G8"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "G0",
+              "eventId": "evt_G4MHF9XE4TQ2D4Y4BNCYWQ37W5",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "G1",
+              "eventId": "evt_AX2SWX3MCXT6ETCG0CWSZT3YRQ",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "G2",
+              "eventId": "evt_2TZ8PVMXWDEY6YXECXKZ4VFEF9",
+              "from": "idle",
+              "guard": [
+               "object/get",
+               "@user",
+               "role"
+              ],
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "G3",
+              "eventId": "evt_DHAD2166S93CMR3F13XS2R8KKP",
+              "from": "idle",
+              "guard": false,
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "G4",
+              "eventId": "evt_Q4B47NRQZ9BZMN7RE5PNPCKNN2",
+              "from": "idle",
+              "guard": [
+               "and",
+               true,
+               [
+                "=",
+                "@user.id",
+                "x"
+               ]
+              ],
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "G5",
+              "eventId": "evt_S1TM2FVNFRTQW0T04YXK1KKFGK",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@userx",
+               1
+              ],
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ],
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "G6",
+              "eventId": "evt_5GYE3EY3641K289D91CRT62M6G",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@user",
+               null
+              ],
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "G7",
+              "eventId": "evt_9V7J5NETFND7TTH8YEVFVC8MX0",
+              "from": "idle",
+              "guard": [
+               "and",
+               false,
+               [
+                "=",
+                "@user.id",
+                "x"
+               ]
+              ],
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "G8",
+              "eventId": "evt_HZYQBFY6E5372RGA84X8VSP1PD",
+              "from": "idle",
+              "guard": "@user.ok",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "srvs",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_D04DWTDRY3WF1YT59XNTEBBDJN",
+          "name": "Srv",
+          "persistence": "persistent"
+         },
+         "id": "orb_T6GBXR8XB5ENJVRDGF22TS3Q5R",
+         "name": "Sv",
+         "traits": [
+          {
+           "entityRefIds": {
+            "Srv": "ent_D04DWTDRY3WF1YT59XNTEBBDJN"
+           },
+           "id": "trt_7JXZJJT5YA2Z51KR2RG3S5FXQ2",
+           "linkedEntity": "Srv",
+           "linkedEntityId": "ent_D04DWTDRY3WF1YT59XNTEBBDJN",
+           "name": "SvT",
+           "sourceDeclaration": {
+            "fingerprint": "9ea173452d36d01b5880bde99cbc3a0257c53e9e87925438b9c7b882595c9c71",
+            "traitId": "trt_7JXZJJT5YA2Z51KR2RG3S5FXQ2"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_YNZVF304SZ2CZTRF25NFPHHPD5",
+              "key": "X"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [],
+              "event": "X",
+              "eventId": "evt_YNZVF304SZ2CZTRF25NFPHHPD5",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "dispatch-contract",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[0].guard",
+           "message": "trait \"C2T\" is [client] but transition 'G0' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[1].guard",
+           "message": "trait \"C2T\" is [client] but transition 'G1' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[1].effects[0]",
+           "message": "trait \"C2T\" is [client] but transition 'G1' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[2].guard",
+           "message": "trait \"C2T\" is [client] but transition 'G2' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[2].effects[0]",
+           "message": "trait \"C2T\" is [client] but transition 'G2' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[4].guard",
+           "message": "trait \"C2T\" is [client] but transition 'G4' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[4].effects[0]",
+           "message": "trait \"C2T\" is [client] but transition 'G4' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[5].effects[0]",
+           "message": "trait \"C2T\" is [client] but transition 'G5' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[6].guard",
+           "message": "trait \"C2T\" is [client] but transition 'G6' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[6].effects[0]",
+           "message": "trait \"C2T\" is [client] but transition 'G6' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[8].guard",
+           "message": "trait \"C2T\" is [client] but transition 'G8' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[8].effects[0]",
+           "message": "trait \"C2T\" is [client] but transition 'G8' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[1].guard",
+           "message": "trait \"C2T\" transition 'G1' guards on @user, but this trait's dispatch is client-only ([client]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[2].guard",
+           "message": "trait \"C2T\" transition 'G2' guards on @user, but this trait's dispatch is client-only ([client]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[4].guard",
+           "message": "trait \"C2T\" transition 'G4' guards on @user, but this trait's dispatch is client-only ([client]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[6].guard",
+           "message": "trait \"C2T\" transition 'G6' guards on @user, but this trait's dispatch is client-only ([client]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[7].guard",
+           "message": "trait \"C2T\" transition 'G7' guards on @user, but this trait's dispatch is client-only ([client]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[0 (C2)].traits[0 (C2T)].stateMachine.transitions[8].guard",
+           "message": "trait \"C2T\" transition 'G8' guards on @user, but this trait's dispatch is client-only ([client]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "client-trait-writing-a-non-shared-persistent-entity",
+   "steps": [
+    {
+     "event": "SHAPES_HEARD",
+     "from": "ready",
+     "payload": {
+      "operators": {
+       "fetch": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "entity",
+          "type": {
+           "kind": "entity"
+          }
+         },
+         {
+          "name": "options",
+          "type": {
+           "kind": "object"
+          }
+         }
+        ]
+       },
+       "persist": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "action",
+          "type": {
+           "kind": "union"
+          }
+         },
+         {
+          "name": "entity",
+          "type": {
+           "kind": "entity"
+          }
+         }
+        ]
+       },
+       "http": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "method",
+          "type": "string"
+         }
+        ]
+       },
+       "call-service": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "service",
+          "type": "string"
+         }
+        ]
+       },
+       "navigate": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "path",
+          "type": "string"
+         }
+        ]
+       },
+       "render-ui": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "slot",
+          "type": {
+           "kind": "uiSlot"
+          }
+         }
+        ]
+       },
+       "send-server": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "event",
+          "type": "string"
+         }
+        ]
+       },
+       "emit": {
+        "runsOn": "any",
+        "params": [
+         {
+          "name": "event",
+          "type": {
+           "kind": "eventKey"
+          }
+         }
+        ]
+       },
+       "set": {
+        "runsOn": "any",
+        "params": [
+         {
+          "name": "binding",
+          "type": {
+           "kind": "binding"
+          }
+         }
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "dc3",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "npe1s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_HZ44H7NS7QWKVJADVTNJBW4SKW",
+          "name": "NpE1",
+          "persistence": "persistent"
+         },
+         "id": "orb_BK6DN39QVSVXWYK1EREXSFBG3Z",
+         "name": "N1",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "NpE1": "ent_HZ44H7NS7QWKVJADVTNJBW4SKW"
+           },
+           "id": "trt_CQMDSQJVKVDSXHA5SDB9Q38CD5",
+           "linkedEntity": "NpE1",
+           "linkedEntityId": "ent_HZ44H7NS7QWKVJADVTNJBW4SKW",
+           "name": "N1T",
+           "sourceDeclaration": {
+            "fingerprint": "648754a347af727dc16a15c03cb037d4408615ed3de4834791db927d85d0b79c",
+            "traitId": "trt_CQMDSQJVKVDSXHA5SDB9Q38CD5"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_DSSSKSNQ7GVKRB1CCQCCZ4KHAF",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_DSSSKSNQ7GVKRB1CCQCCZ4KHAF",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe2s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_474F2YQ3J0HS00YGB2028S9DVS",
+          "name": "NpE2",
+          "persistence": "persistent"
+         },
+         "id": "orb_1E1N4K2T1GD0RF29PSREHTHXBN",
+         "name": "N2",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "NpE2"
+            }
+           ],
+           "entityRefIds": {
+            "NpE2": "ent_474F2YQ3J0HS00YGB2028S9DVS"
+           },
+           "id": "trt_PHC70M8R2FC17SQYQBN7WMGXZ0",
+           "linkedEntity": "NpE2",
+           "linkedEntityId": "ent_474F2YQ3J0HS00YGB2028S9DVS",
+           "name": "N2T",
+           "sourceDeclaration": {
+            "fingerprint": "d7776aad615811df06e419311b6c63830ac240e833c4214d2e75fdd413253622",
+            "traitId": "trt_PHC70M8R2FC17SQYQBN7WMGXZ0"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_852FQVK4AHJ58W3VCVQ4H79BYK",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "create",
+                "NpE2",
+                {
+                 "x": 1
+                }
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_852FQVK4AHJ58W3VCVQ4H79BYK",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe3s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_MH64R6J1MR0TC8T1W9XKXJ0MHV",
+          "name": "NpE3",
+          "persistence": "persistent"
+         },
+         "id": "orb_G4JBM23C0XP0ERPNC5F0HZR6SX",
+         "name": "N3",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "NpE3"
+            }
+           ],
+           "entityRefIds": {
+            "NpE3": "ent_MH64R6J1MR0TC8T1W9XKXJ0MHV"
+           },
+           "id": "trt_12MFYGZCDRP6W3SXA7ACR0RKS4",
+           "linkedEntity": "NpE3",
+           "linkedEntityId": "ent_MH64R6J1MR0TC8T1W9XKXJ0MHV",
+           "name": "N3T",
+           "sourceDeclaration": {
+            "fingerprint": "f98de5609d027abcf2ead1df2bc2e7c40214e9d83543ee7f8300f029d76ef4a5",
+            "traitId": "trt_12MFYGZCDRP6W3SXA7ACR0RKS4"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_7HRW4S1Z67ZK3WKJ0866T02PKK",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "delete",
+                "NpE3",
+                "i"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_7HRW4S1Z67ZK3WKJ0866T02PKK",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe4s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_MPQY11G9R94W4RBP9PZSRJ0HVA",
+          "name": "NpE4",
+          "persistence": "persistent",
+          "shared": true
+         },
+         "id": "orb_SAP42QB4ZJJFS0TS8CPQ8GWDWE",
+         "name": "N4",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "NpE4": "ent_MPQY11G9R94W4RBP9PZSRJ0HVA"
+           },
+           "id": "trt_JVST3BQW41Y20VH4ZF3TXRYWMW",
+           "linkedEntity": "NpE4",
+           "linkedEntityId": "ent_MPQY11G9R94W4RBP9PZSRJ0HVA",
+           "name": "N4T",
+           "sourceDeclaration": {
+            "fingerprint": "6b71bcf7df9bdd152858d4d82507fdcc1af589928d7c19c2ba651d48ee55cffc",
+            "traitId": "trt_JVST3BQW41Y20VH4ZF3TXRYWMW"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_FJ7BH01RHXW8YZY49BBW5JS238",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_FJ7BH01RHXW8YZY49BBW5JS238",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_QJS5DQV2G6H83477TH8YKC530N",
+          "name": "NpE5",
+          "persistence": "runtime"
+         },
+         "id": "orb_40FNPX3XV2YXH0SR7ERV2Y3FHE",
+         "name": "N5",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "NpE5": "ent_QJS5DQV2G6H83477TH8YKC530N"
+           },
+           "id": "trt_K1GWNSZ2YJHF98HAAYE710134N",
+           "linkedEntity": "NpE5",
+           "linkedEntityId": "ent_QJS5DQV2G6H83477TH8YKC530N",
+           "name": "N5T",
+           "sourceDeclaration": {
+            "fingerprint": "8f48edf74b3b7f47b0c8a9985774bf8f1837cf05cca7923b7c5f4df03fb74c6c",
+            "traitId": "trt_K1GWNSZ2YJHF98HAAYE710134N"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_6987XY9GC1R60YK45PV3W7D4Q1",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_6987XY9GC1R60YK45PV3W7D4Q1",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "browser": true,
+          "collection": "npe6s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_GTDHRFARYYCFF9ASNFN76TPQMD",
+          "name": "NpE6",
+          "persistence": "persistent"
+         },
+         "id": "orb_YAJT02QGQ8RBM7WAAK2ZDXCCSQ",
+         "name": "N6",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "set",
+             "resource": "@entity.x"
+            }
+           ],
+           "entityRefIds": {
+            "NpE6": "ent_GTDHRFARYYCFF9ASNFN76TPQMD"
+           },
+           "id": "trt_GJVEV7GK169GK36Q7TNV4324WK",
+           "linkedEntity": "NpE6",
+           "linkedEntityId": "ent_GTDHRFARYYCFF9ASNFN76TPQMD",
+           "name": "N6T",
+           "sourceDeclaration": {
+            "fingerprint": "37d4ed1c34603b5946ba6cb8b2b3c65fc15bae710acd6c688adcfe61a317ea51",
+            "traitId": "trt_GJVEV7GK169GK36Q7TNV4324WK"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_RSYDAFWKVQ9XVZ18298Y627RSF",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.x",
+                "1"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_RSYDAFWKVQ9XVZ18298Y627RSF",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe7s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_RSQ179TH868M35DZZWWW6AHMA4",
+          "name": "NpE7",
+          "persistence": "persistent"
+         },
+         "id": "orb_T2ZXTV2QXRBYW0G745F35VVR70",
+         "name": "N7",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "NpE7"
+            }
+           ],
+           "entityRefIds": {
+            "NpE7": "ent_RSQ179TH868M35DZZWWW6AHMA4"
+           },
+           "id": "trt_CGV7TGX24ZH2FTQREM54KZE9BJ",
+           "linkedEntity": "NpE7",
+           "linkedEntityId": "ent_RSQ179TH868M35DZZWWW6AHMA4",
+           "name": "N7T",
+           "sourceDeclaration": {
+            "fingerprint": "06b7d3d0d11b2216b19072c5e61c11cbd78a1da4e4f357be003af7e856562606",
+            "traitId": "trt_CGV7TGX24ZH2FTQREM54KZE9BJ"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_1GZNXEH1WXGYEH8EEJ20X4HMMV",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 [
+                  "update",
+                  "NpE7",
+                  "i",
+                  {
+                   "x": 1
+                  }
+                 ]
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_1GZNXEH1WXGYEH8EEJ20X4HMMV",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe8s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_DGVKC68D056G2Y8RMQ2Q4SGM3S",
+          "name": "NpE8",
+          "persistence": "persistent"
+         },
+         "id": "orb_6S29QM88KG49RCAFZ5AN6KVD15",
+         "name": "N8",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "NpE8"
+            }
+           ],
+           "entityRefIds": {
+            "NpE8": "ent_DGVKC68D056G2Y8RMQ2Q4SGM3S"
+           },
+           "id": "trt_87NG8GKVFQXQVP7ACM2QHH8925",
+           "linkedEntity": "NpE8",
+           "linkedEntityId": "ent_DGVKC68D056G2Y8RMQ2Q4SGM3S",
+           "name": "N8T",
+           "sourceDeclaration": {
+            "fingerprint": "2828334610cdb2afc734e2f7d1ecdb77db4f57aba96c514f29c39dc13eac4473",
+            "traitId": "trt_87NG8GKVFQXQVP7ACM2QHH8925"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_HFGZN8T5VW2XYFWXAP7J0JVXXR",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 [
+                  "delete",
+                  "NpE8",
+                  "i"
+                 ]
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_HFGZN8T5VW2XYFWXAP7J0JVXXR",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe9s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_NDR87M229M14TAY0EVE3EEHFNJ",
+          "name": "NpE9",
+          "persistence": "persistent"
+         },
+         "id": "orb_WDB45X5P4PV2B66GMPW2RH37CK",
+         "name": "N9",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "persist"
+            }
+           ],
+           "entityRefIds": {
+            "NpE9": "ent_NDR87M229M14TAY0EVE3EEHFNJ"
+           },
+           "id": "trt_9WXF6SVCWDPE6W19BJR40VDG16",
+           "linkedEntity": "NpE9",
+           "linkedEntityId": "ent_NDR87M229M14TAY0EVE3EEHFNJ",
+           "name": "N9T",
+           "sourceDeclaration": {
+            "fingerprint": "d9b5fce7b7419d1e8178e58911c09850c3562d08b4e99562e24c52afc49d7d9c",
+            "traitId": "trt_9WXF6SVCWDPE6W19BJR40VDG16"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_FPHY17B7H7KRKS89Q3AY934VBT",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 "array/concat",
+                 [
+                  [
+                   "create",
+                   "NpE9",
+                   {
+                    "x": 1
+                   }
+                  ]
+                 ],
+                 [
+                  [
+                   "delete",
+                   "NpE9",
+                   "i"
+                  ]
+                 ]
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_FPHY17B7H7KRKS89Q3AY934VBT",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe10s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_VK9N81NK73SKHQES1JHPD9AVRP",
+          "name": "NpE10",
+          "persistence": "persistent"
+         },
+         "id": "orb_PEF7N2Z2CSH6CTM7CKCR6NN41B",
+         "name": "N10",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "persist"
+            }
+           ],
+           "entityRefIds": {
+            "NpE10": "ent_VK9N81NK73SKHQES1JHPD9AVRP"
+           },
+           "id": "trt_1DEPE79G3KR1SMDFQEHRF4VVVT",
+           "linkedEntity": "NpE10",
+           "linkedEntityId": "ent_VK9N81NK73SKHQES1JHPD9AVRP",
+           "name": "N10T",
+           "sourceDeclaration": {
+            "fingerprint": "5487ad8a8761933fecbb92d6c049fea869da01571dfd40e22428edb188f9f738",
+            "traitId": "trt_1DEPE79G3KR1SMDFQEHRF4VVVT"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_ZJXFGM2MS1ACGR5FWFEWTG0VBD",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 "array/flatten",
+                 [
+                  [
+                   [
+                    "delete",
+                    "NpE10",
+                    "i"
+                   ]
+                  ],
+                  [
+                   "if",
+                   "@c",
+                   [
+                    [
+                     "create",
+                     "NpE10",
+                     {}
+                    ]
+                   ],
+                   [
+                    "array/take",
+                    [
+                     [
+                      "delete",
+                      "NpE10",
+                      "i"
+                     ]
+                    ],
+                    0
+                   ]
+                  ]
+                 ]
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_ZJXFGM2MS1ACGR5FWFEWTG0VBD",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe11s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_0JRE573N5ETJQCFVE9X4XYTQ5M",
+          "name": "NpE11",
+          "persistence": "persistent"
+         },
+         "id": "orb_WSSNB4FYV6ZDKFGYQ5YFZDBF0V",
+         "name": "N11",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "NpE11"
+            }
+           ],
+           "entityRefIds": {
+            "NpE11": "ent_0JRE573N5ETJQCFVE9X4XYTQ5M"
+           },
+           "id": "trt_SDRFX2Y2JR19C5D1TRN6059HZE",
+           "linkedEntity": "NpE11",
+           "linkedEntityId": "ent_0JRE573N5ETJQCFVE9X4XYTQ5M",
+           "name": "N11T",
+           "sourceDeclaration": {
+            "fingerprint": "128982222135a3ae6d8e61825d7afbabacd79ebfe284019f3094d6eb4fa8ab4f",
+            "traitId": "trt_SDRFX2Y2JR19C5D1TRN6059HZE"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_5QM81DMZMXFTEWKNZDCWVN4K9V",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 "array/map",
+                 "@ids",
+                 [
+                  "fn",
+                  "i",
+                  [
+                   "update",
+                   "NpE11",
+                   "i",
+                   {
+                    "x": 1
+                   }
+                  ]
+                 ]
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_5QM81DMZMXFTEWKNZDCWVN4K9V",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe12s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_S0H5BKRQKKBSSY2B69RQ1RZNBN",
+          "name": "NpE12",
+          "persistence": "persistent"
+         },
+         "id": "orb_4BTS4BF418J0M30R8ZC1NXXMB5",
+         "name": "N12",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "persist"
+            }
+           ],
+           "entityRefIds": {
+            "NpE12": "ent_S0H5BKRQKKBSSY2B69RQ1RZNBN"
+           },
+           "id": "trt_FQ5NAH2PY3BF1R2886SFVW85JW",
+           "linkedEntity": "NpE12",
+           "linkedEntityId": "ent_S0H5BKRQKKBSSY2B69RQ1RZNBN",
+           "name": "N12T",
+           "sourceDeclaration": {
+            "fingerprint": "32758bc28e50f083a397e8845e09fca50698058c5f1959632be558c005286466",
+            "traitId": "trt_FQ5NAH2PY3BF1R2886SFVW85JW"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_34XVSHQS71WKGH2CZJ332GJDZ3",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                "@ops"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_34XVSHQS71WKGH2CZJ332GJDZ3",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe13s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_JHJCV6FE7HQ3RSBGQBPK8N51BF",
+          "name": "NpE13",
+          "persistence": "persistent"
+         },
+         "id": "orb_4F3VVFADKZ6SZJXGCZSCG19K1G",
+         "name": "N13",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "persist"
+            }
+           ],
+           "entityRefIds": {
+            "NpE13": "ent_JHJCV6FE7HQ3RSBGQBPK8N51BF"
+           },
+           "id": "trt_435PNRR4FS27WSZQNMJ243AH4J",
+           "linkedEntity": "NpE13",
+           "linkedEntityId": "ent_JHJCV6FE7HQ3RSBGQBPK8N51BF",
+           "name": "N13T",
+           "sourceDeclaration": {
+            "fingerprint": "b543db6d1931fffba037c3e515e3ceaac90724a64eb45beff498c80453570e5f",
+            "traitId": "trt_435PNRR4FS27WSZQNMJ243AH4J"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_NPHKQ0DT9WX4Y04N6CETN9KSDF",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 "array/flatten",
+                 [
+                  [
+                   [
+                    "delete",
+                    "NpE13",
+                    "i"
+                   ]
+                  ],
+                  [
+                   "if",
+                   "@c",
+                   [
+                    [
+                     "create",
+                     "NpE13",
+                     {}
+                    ]
+                   ],
+                   [
+                    "array/take",
+                    [
+                     [
+                      "delete",
+                      "NpE13",
+                      "i"
+                     ]
+                    ],
+                    0
+                   ]
+                  ]
+                 ]
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_NPHKQ0DT9WX4Y04N6CETN9KSDF",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe14s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_X7V8T5FG0FR07P0E60PGDNN95V",
+          "name": "NpE14",
+          "persistence": "persistent"
+         },
+         "id": "orb_4JJ1V8Q76XKKEX374CDWEPDWMF",
+         "name": "N14",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "X"
+            }
+           ],
+           "entityRefIds": {
+            "NpE14": "ent_X7V8T5FG0FR07P0E60PGDNN95V"
+           },
+           "id": "trt_V23Z02PMJ4A92572DE6TMQEN2F",
+           "linkedEntity": "NpE14",
+           "linkedEntityId": "ent_X7V8T5FG0FR07P0E60PGDNN95V",
+           "name": "N14T",
+           "sourceDeclaration": {
+            "fingerprint": "b8728c3135f72580a8dd4f0b747df30806d2b52814cfab0e34c2d2daca5c3fae",
+            "traitId": "trt_V23Z02PMJ4A92572DE6TMQEN2F"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_D11S9GT7M83T49RYYYXBXD9ATV",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "emit",
+                "X",
+                {}
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_D11S9GT7M83T49RYYYXBXD9ATV",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe15s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_2WM2DB5Q45VJ2VXQ9GF57MKD7N",
+          "name": "NpE15",
+          "persistence": "persistent"
+         },
+         "id": "orb_BS2EZ7EMK2A9HAC5GVYGWNPERE",
+         "name": "N15",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "NpE15"
+            }
+           ],
+           "entityRefIds": {
+            "NpE15": "ent_2WM2DB5Q45VJ2VXQ9GF57MKD7N"
+           },
+           "id": "trt_NVT49WMZHYFRZ5N9T8Y89ZME76",
+           "linkedEntity": "NpE15",
+           "linkedEntityId": "ent_2WM2DB5Q45VJ2VXQ9GF57MKD7N",
+           "name": "N15T",
+           "sourceDeclaration": {
+            "fingerprint": "b8dc74dfec4dabfe74d971c4b45e4e17393640ef4ec6a4cb8d635e107e63dc50",
+            "traitId": "trt_NVT49WMZHYFRZ5N9T8Y89ZME76"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_R9B4NBNJ6YS3F2SQ2E90SPP6NP",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "upsert",
+                "NpE15",
+                {
+                 "x": 1
+                }
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_R9B4NBNJ6YS3F2SQ2E90SPP6NP",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe16s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_0SWZPGQKV3SXHM1NEPEWRNJ7N8",
+          "name": "NpE16",
+          "persistence": "persistent"
+         },
+         "id": "orb_SKVM3V5EABQ55SYD8MN7NQFF4Y",
+         "name": "N16",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "X"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.x",
+             "site": "tick"
+            },
+            {
+             "kind": "ticks",
+             "site": "tick"
+            }
+           ],
+           "entityRefIds": {
+            "NpE16": "ent_0SWZPGQKV3SXHM1NEPEWRNJ7N8"
+           },
+           "id": "trt_HMVKPH769YK4Z4S218JCFSSACR",
+           "linkedEntity": "NpE16",
+           "linkedEntityId": "ent_0SWZPGQKV3SXHM1NEPEWRNJ7N8",
+           "name": "N16T",
+           "sourceDeclaration": {
+            "fingerprint": "e2f1fd82f6b4cee8450e8d83d89d2575135f8010b08015a5c50adb0ce733702d",
+            "traitId": "trt_HMVKPH769YK4Z4S218JCFSSACR"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_P1Q9NBKVWEXY7B6E4NNXAR4AF2",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "emit",
+                "X",
+                {}
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_P1Q9NBKVWEXY7B6E4NNXAR4AF2",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "effects": [
+              [
+               "set",
+               "@entity.x",
+               "1"
+              ]
+             ],
+             "interval": 1000,
+             "name": "k"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe17s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_J8G3R780C00603NJB3RRK5SXB0",
+          "name": "NpE17",
+          "persistence": "persistent"
+         },
+         "id": "orb_KWT0GG8J8V94DK9X1KMHC7MSP9",
+         "name": "N17",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "persist"
+            }
+           ],
+           "entityRefIds": {
+            "NpE17": "ent_J8G3R780C00603NJB3RRK5SXB0"
+           },
+           "id": "trt_BFXNCW7Z6AZK5351XCNDQC0YV8",
+           "linkedEntity": "NpE17",
+           "linkedEntityId": "ent_J8G3R780C00603NJB3RRK5SXB0",
+           "name": "N17T",
+           "sourceDeclaration": {
+            "fingerprint": "b6dffc22c4156f3ac878548dff45ef63bb604747417fa5966f81eae61030d2ca",
+            "traitId": "trt_BFXNCW7Z6AZK5351XCNDQC0YV8"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_VAVYWYFBK5NSJJ2QBGAHZYAVJW",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 "array/prepend",
+                 [
+                  [
+                   "delete",
+                   "NpE17",
+                   "i"
+                  ]
+                 ],
+                 [
+                  "create",
+                  "NpE17",
+                  {}
+                 ]
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_VAVYWYFBK5NSJJ2QBGAHZYAVJW",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe18s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_FMJWWSTQVTBXX0F5P5N1NPCMTM",
+          "name": "NpE18",
+          "persistence": "persistent"
+         },
+         "id": "orb_XHER33BZ2JZH968PV5BZAJBFMM",
+         "name": "N18",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "NpE18"
+            }
+           ],
+           "entityRefIds": {
+            "NpE18": "ent_FMJWWSTQVTBXX0F5P5N1NPCMTM"
+           },
+           "id": "trt_C50AQN1VH3XRHK6YBS88C7R19Z",
+           "linkedEntity": "NpE18",
+           "linkedEntityId": "ent_FMJWWSTQVTBXX0F5P5N1NPCMTM",
+           "name": "N18T",
+           "sourceDeclaration": {
+            "fingerprint": "be44cd5e305bfb54ff25d20d4b522e2a7f39d1ba9d74a34f68deb89684283cad",
+            "traitId": "trt_C50AQN1VH3XRHK6YBS88C7R19Z"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_RV9SX00Y5YF2ZBRY9M54BQH6FZ",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 "list",
+                 [
+                  "create",
+                  "NpE18",
+                  {}
+                 ]
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_RV9SX00Y5YF2ZBRY9M54BQH6FZ",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe19s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_YZ1Q24WZBGFNR0AQ9203S6G5GR",
+          "name": "NpE19",
+          "persistence": "persistent"
+         },
+         "id": "orb_M0P0VQXA3EN1Q3PPXS02SQW9C6",
+         "name": "N19",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "persist"
+            }
+           ],
+           "entityRefIds": {
+            "NpE19": "ent_YZ1Q24WZBGFNR0AQ9203S6G5GR"
+           },
+           "id": "trt_DNN1JVPX1GEGR606H6B4NWH3JY",
+           "linkedEntity": "NpE19",
+           "linkedEntityId": "ent_YZ1Q24WZBGFNR0AQ9203S6G5GR",
+           "name": "N19T",
+           "sourceDeclaration": {
+            "fingerprint": "88a55ada09afcf76ea162df0b9f3b202572c478c2a49bdb4127ddb19c3153409",
+            "traitId": "trt_DNN1JVPX1GEGR606H6B4NWH3JY"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_ST7JHACP9HB4RYTMG3P971NZ45",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 "array/filter",
+                 [
+                  [
+                   "update",
+                   "NpE19",
+                   "i",
+                   {}
+                  ]
+                 ],
+                 [
+                  "fn",
+                  "r",
+                  true
+                 ]
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_ST7JHACP9HB4RYTMG3P971NZ45",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "npe20s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_JHWPC02ADB56NHRMFRHKB7CRE6",
+          "name": "NpE20",
+          "persistence": "persistent"
+         },
+         "id": "orb_Y6B45SHYS3ZCHK3SK67Z0VTAFC",
+         "name": "N20",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "persist"
+            }
+           ],
+           "entityRefIds": {
+            "NpE20": "ent_JHWPC02ADB56NHRMFRHKB7CRE6"
+           },
+           "id": "trt_3AV3NHF095G4JQCF7ME92P2G18",
+           "linkedEntity": "NpE20",
+           "linkedEntityId": "ent_JHWPC02ADB56NHRMFRHKB7CRE6",
+           "name": "N20T",
+           "sourceDeclaration": {
+            "fingerprint": "390eb26d84d0a0ddb123bbacbad8cf855b81b3d8bcdb300a29286a9c2b16274c",
+            "traitId": "trt_3AV3NHF095G4JQCF7ME92P2G18"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_ZK121S8C1C60P8AM3KCSW01X4F",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 "let",
+                 [
+                  [
+                   "a",
+                   1
+                  ]
+                 ],
+                 [
+                  [
+                   "create",
+                   "NpE20",
+                   {}
+                  ]
+                 ]
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_ZK121S8C1C60P8AM3KCSW01X4F",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "dispatch-contract",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT",
+           "path": "orbitals[0 (N1)].traits[0 (N1T)]",
+           "message": "trait \"N1T\" is [client] but its linked entity \"NpE1\" is neither [shared] nor client-resident ([runtime] or [persistent: x, browser]) \u2014 local dispatch would silently hide server-gated writes behind client-only optimism",
+           "suggestion": "Add [shared] or a `runtime` persistence tag to entity \"NpE1\", or drop [client] from trait \"N1T\"",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT",
+           "path": "orbitals[1 (N2)].traits[0 (N2T)]",
+           "message": "trait \"N2T\" is [client] but its linked entity \"NpE2\" is neither [shared] nor client-resident ([runtime] or [persistent: x, browser]) \u2014 local dispatch would silently hide server-gated writes behind client-only optimism",
+           "suggestion": "Add [shared] or a `runtime` persistence tag to entity \"NpE2\", or drop [client] from trait \"N2T\"",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[1 (N2)].traits[0 (N2T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"N2T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[2 (N3)].traits[0 (N3T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"N3T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT",
+           "path": "orbitals[6 (N7)].traits[0 (N7T)]",
+           "message": "trait \"N7T\" is [client] but its linked entity \"NpE7\" is neither [shared] nor client-resident ([runtime] or [persistent: x, browser]) \u2014 local dispatch would silently hide server-gated writes behind client-only optimism",
+           "suggestion": "Add [shared] or a `runtime` persistence tag to entity \"NpE7\", or drop [client] from trait \"N7T\"",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[6 (N7)].traits[0 (N7T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"N7T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[7 (N8)].traits[0 (N8T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"N8T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT",
+           "path": "orbitals[8 (N9)].traits[0 (N9T)]",
+           "message": "trait \"N9T\" is [client] but its linked entity \"NpE9\" is neither [shared] nor client-resident ([runtime] or [persistent: x, browser]) \u2014 local dispatch would silently hide server-gated writes behind client-only optimism",
+           "suggestion": "Add [shared] or a `runtime` persistence tag to entity \"NpE9\", or drop [client] from trait \"N9T\"",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[8 (N9)].traits[0 (N9T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"N9T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT",
+           "path": "orbitals[9 (N10)].traits[0 (N10T)]",
+           "message": "trait \"N10T\" is [client] but its linked entity \"NpE10\" is neither [shared] nor client-resident ([runtime] or [persistent: x, browser]) \u2014 local dispatch would silently hide server-gated writes behind client-only optimism",
+           "suggestion": "Add [shared] or a `runtime` persistence tag to entity \"NpE10\", or drop [client] from trait \"N10T\"",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[9 (N10)].traits[0 (N10T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"N10T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT",
+           "path": "orbitals[10 (N11)].traits[0 (N11T)]",
+           "message": "trait \"N11T\" is [client] but its linked entity \"NpE11\" is neither [shared] nor client-resident ([runtime] or [persistent: x, browser]) \u2014 local dispatch would silently hide server-gated writes behind client-only optimism",
+           "suggestion": "Add [shared] or a `runtime` persistence tag to entity \"NpE11\", or drop [client] from trait \"N11T\"",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[10 (N11)].traits[0 (N11T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"N11T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[11 (N12)].traits[0 (N12T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"N12T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT",
+           "path": "orbitals[12 (N13)].traits[0 (N13T)]",
+           "message": "trait \"N13T\" is [client] but its linked entity \"NpE13\" is neither [shared] nor client-resident ([runtime] or [persistent: x, browser]) \u2014 local dispatch would silently hide server-gated writes behind client-only optimism",
+           "suggestion": "Add [shared] or a `runtime` persistence tag to entity \"NpE13\", or drop [client] from trait \"N13T\"",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[12 (N13)].traits[0 (N13T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"N13T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT",
+           "path": "orbitals[14 (N15)].traits[0 (N15T)]",
+           "message": "trait \"N15T\" is [client] but its linked entity \"NpE15\" is neither [shared] nor client-resident ([runtime] or [persistent: x, browser]) \u2014 local dispatch would silently hide server-gated writes behind client-only optimism",
+           "suggestion": "Add [shared] or a `runtime` persistence tag to entity \"NpE15\", or drop [client] from trait \"N15T\"",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[14 (N15)].traits[0 (N15T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"N15T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT",
+           "path": "orbitals[15 (N16)].traits[0 (N16T)]",
+           "message": "trait \"N16T\" is [client] but its linked entity \"NpE16\" is neither [shared] nor client-resident ([runtime] or [persistent: x, browser]) \u2014 local dispatch would silently hide server-gated writes behind client-only optimism",
+           "suggestion": "Add [shared] or a `runtime` persistence tag to entity \"NpE16\", or drop [client] from trait \"N16T\"",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT",
+           "path": "orbitals[16 (N17)].traits[0 (N17T)]",
+           "message": "trait \"N17T\" is [client] but its linked entity \"NpE17\" is neither [shared] nor client-resident ([runtime] or [persistent: x, browser]) \u2014 local dispatch would silently hide server-gated writes behind client-only optimism",
+           "suggestion": "Add [shared] or a `runtime` persistence tag to entity \"NpE17\", or drop [client] from trait \"N17T\"",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[16 (N17)].traits[0 (N17T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"N17T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT",
+           "path": "orbitals[17 (N18)].traits[0 (N18T)]",
+           "message": "trait \"N18T\" is [client] but its linked entity \"NpE18\" is neither [shared] nor client-resident ([runtime] or [persistent: x, browser]) \u2014 local dispatch would silently hide server-gated writes behind client-only optimism",
+           "suggestion": "Add [shared] or a `runtime` persistence tag to entity \"NpE18\", or drop [client] from trait \"N18T\"",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[17 (N18)].traits[0 (N18T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"N18T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT",
+           "path": "orbitals[18 (N19)].traits[0 (N19T)]",
+           "message": "trait \"N19T\" is [client] but its linked entity \"NpE19\" is neither [shared] nor client-resident ([runtime] or [persistent: x, browser]) \u2014 local dispatch would silently hide server-gated writes behind client-only optimism",
+           "suggestion": "Add [shared] or a `runtime` persistence tag to entity \"NpE19\", or drop [client] from trait \"N19T\"",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[18 (N19)].traits[0 (N19T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"N19T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_ON_NON_SHARED_PERSISTENT",
+           "path": "orbitals[19 (N20)].traits[0 (N20T)]",
+           "message": "trait \"N20T\" is [client] but its linked entity \"NpE20\" is neither [shared] nor client-resident ([runtime] or [persistent: x, browser]) \u2014 local dispatch would silently hide server-gated writes behind client-only optimism",
+           "suggestion": "Add [shared] or a `runtime` persistence tag to entity \"NpE20\", or drop [client] from trait \"N20T\"",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[19 (N20)].traits[0 (N20T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"N20T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "optimistic-ticks-reaching-the-server",
+   "steps": [
+    {
+     "event": "SHAPES_HEARD",
+     "from": "ready",
+     "payload": {
+      "operators": {
+       "fetch": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "entity",
+          "type": {
+           "kind": "entity"
+          }
+         },
+         {
+          "name": "options",
+          "type": {
+           "kind": "object"
+          }
+         }
+        ]
+       },
+       "persist": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "action",
+          "type": {
+           "kind": "union"
+          }
+         },
+         {
+          "name": "entity",
+          "type": {
+           "kind": "entity"
+          }
+         }
+        ]
+       },
+       "http": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "method",
+          "type": "string"
+         }
+        ]
+       },
+       "call-service": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "service",
+          "type": "string"
+         }
+        ]
+       },
+       "navigate": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "path",
+          "type": "string"
+         }
+        ]
+       },
+       "render-ui": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "slot",
+          "type": {
+           "kind": "uiSlot"
+          }
+         }
+        ]
+       },
+       "send-server": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "event",
+          "type": "string"
+         }
+        ]
+       },
+       "emit": {
+        "runsOn": "any",
+        "params": [
+         {
+          "name": "event",
+          "type": {
+           "kind": "eventKey"
+          }
+         }
+        ]
+       },
+       "set": {
+        "runsOn": "any",
+        "params": [
+         {
+          "name": "binding",
+          "type": {
+           "kind": "binding"
+          }
+         }
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "dc4",
+       "orbitals": [
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_XS1RNESR27W13S8XDADV3GFMMH",
+          "name": "OpE1",
+          "persistence": "runtime"
+         },
+         "id": "orb_E7JJKPAM83A41S473F5DGF8CBV",
+         "name": "O1",
+         "traits": [
+          {
+           "dispatch": "optimistic",
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "E",
+             "site": "tick"
+            },
+            {
+             "kind": "fetch",
+             "resource": "Bro",
+             "site": "tick"
+            },
+            {
+             "kind": "fetch",
+             "resource": "Srv",
+             "site": "tick"
+            },
+            {
+             "kind": "ticks",
+             "site": "tick"
+            }
+           ],
+           "entityRefIds": {
+            "OpE1": "ent_XS1RNESR27W13S8XDADV3GFMMH"
+           },
+           "id": "trt_WXDV7G315ZGJZS7STRPYA63XYM",
+           "linkedEntity": "OpE1",
+           "linkedEntityId": "ent_XS1RNESR27W13S8XDADV3GFMMH",
+           "name": "O1T",
+           "sourceDeclaration": {
+            "fingerprint": "c18f90cdd970ffb74aaa917b9e228009b5ca96a0767286bab220473304e019aa",
+            "traitId": "trt_WXDV7G315ZGJZS7STRPYA63XYM"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_WQ1TGKG3HP1RV8G0BEB5RH7YJV",
+              "key": "X"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [],
+              "event": "X",
+              "eventId": "evt_WQ1TGKG3HP1RV8G0BEB5RH7YJV",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "effects": [
+              [
+               "fetch",
+               "Srv"
+              ]
+             ],
+             "interval": 1000,
+             "name": "a"
+            },
+            {
+             "effects": [
+              [
+               "fetch",
+               "Bro"
+              ]
+             ],
+             "interval": 1000,
+             "name": "b"
+            },
+            {
+             "effects": [
+              [
+               "fetch",
+               "Srv"
+              ]
+             ],
+             "interval": 1000,
+             "name": "c",
+             "runsInBackground": true
+            },
+            {
+             "effects": [
+              [
+               "emit",
+               "E",
+               {}
+              ]
+             ],
+             "interval": 1000,
+             "name": "d"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_1CR8FA583DM1PYK8H99WMCJSFV",
+          "name": "OpE2",
+          "persistence": "runtime"
+         },
+         "id": "orb_YQ1R7SAESD7CPSGD2YA3F1JRX0",
+         "name": "O2",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Srv",
+             "site": "tick"
+            },
+            {
+             "kind": "ticks",
+             "site": "tick"
+            }
+           ],
+           "entityRefIds": {
+            "OpE2": "ent_1CR8FA583DM1PYK8H99WMCJSFV"
+           },
+           "id": "trt_9X3582CHT98X4RXBX0QKT65K9F",
+           "linkedEntity": "OpE2",
+           "linkedEntityId": "ent_1CR8FA583DM1PYK8H99WMCJSFV",
+           "name": "O2T",
+           "sourceDeclaration": {
+            "fingerprint": "c5e79833416eeef6d0a7abcf6e1aa2f1928afda0bcdaf90ad0b59fefe86af1ce",
+            "traitId": "trt_9X3582CHT98X4RXBX0QKT65K9F"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_DYJ5AP0EM47A27YMYC5BCZX3VW",
+              "key": "X"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [],
+              "event": "X",
+              "eventId": "evt_DYJ5AP0EM47A27YMYC5BCZX3VW",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "effects": [
+              [
+               "fetch",
+               "Srv"
+              ]
+             ],
+             "interval": 1000,
+             "name": "a"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_STJR0X1PQ5VBJPT4S7V458HMSH",
+          "name": "OpE3",
+          "persistence": "runtime"
+         },
+         "id": "orb_7ZY1W2DTG8X84AHSPHJ9CG9VAF",
+         "name": "O3",
+         "traits": [
+          {
+           "dispatch": "server",
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Srv",
+             "site": "tick"
+            },
+            {
+             "kind": "ticks",
+             "site": "tick"
+            }
+           ],
+           "entityRefIds": {
+            "OpE3": "ent_STJR0X1PQ5VBJPT4S7V458HMSH"
+           },
+           "id": "trt_MA031EKD6CPK69ZD20EYKA6CBK",
+           "linkedEntity": "OpE3",
+           "linkedEntityId": "ent_STJR0X1PQ5VBJPT4S7V458HMSH",
+           "name": "O3T",
+           "sourceDeclaration": {
+            "fingerprint": "8cb8155ea98865586b21e5ddf13c33ca73b4d7e312fb5533a0ecaea088c12005",
+            "traitId": "trt_MA031EKD6CPK69ZD20EYKA6CBK"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_HWM750F296H4KCCX0FBQYMZ1T6",
+              "key": "X"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [],
+              "event": "X",
+              "eventId": "evt_HWM750F296H4KCCX0FBQYMZ1T6",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "effects": [
+              [
+               "fetch",
+               "Srv"
+              ]
+             ],
+             "interval": 1000,
+             "name": "a"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_N4MP58JDVV6XXRQP6ER2H23XM1",
+          "name": "OpE4",
+          "persistence": "runtime"
+         },
+         "id": "orb_Q4AC05WZ84FM2AMNYZ14VV9XX5",
+         "name": "O4",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Srv",
+             "site": "tick"
+            },
+            {
+             "kind": "ticks",
+             "site": "tick"
+            }
+           ],
+           "entityRefIds": {
+            "OpE4": "ent_N4MP58JDVV6XXRQP6ER2H23XM1"
+           },
+           "id": "trt_4ENZESXXTTYXD9CJ4JJPXAT85X",
+           "linkedEntity": "OpE4",
+           "linkedEntityId": "ent_N4MP58JDVV6XXRQP6ER2H23XM1",
+           "name": "O4T",
+           "sourceDeclaration": {
+            "fingerprint": "2bd1775ab7866f962e49f32e10ab5f63de198483ec162627cc6ea043f1436d4b",
+            "traitId": "trt_4ENZESXXTTYXD9CJ4JJPXAT85X"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_K68F3A35DAJPNF6ESYKCFQNAKG",
+              "key": "X"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [],
+              "event": "X",
+              "eventId": "evt_K68F3A35DAJPNF6ESYKCFQNAKG",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "effects": [
+              [
+               "fetch",
+               "Srv"
+              ]
+             ],
+             "interval": 1000,
+             "name": "a"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "srvs",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_17JP82SHFRRQWF88JARYASKBPH",
+          "name": "Srv",
+          "persistence": "persistent"
+         },
+         "id": "orb_T86HG0BHK5RSJWV2H6TD0XATWB",
+         "name": "Sv",
+         "traits": [
+          {
+           "entityRefIds": {
+            "Srv": "ent_17JP82SHFRRQWF88JARYASKBPH"
+           },
+           "id": "trt_SEDVXP47CF3P7Q835PNKDEX4YT",
+           "linkedEntity": "Srv",
+           "linkedEntityId": "ent_17JP82SHFRRQWF88JARYASKBPH",
+           "name": "SvT",
+           "sourceDeclaration": {
+            "fingerprint": "4bf1635b3c5aad83bd5088003d87486f6baeef2b5ea783f0d06e5d7bd43f7687",
+            "traitId": "trt_SEDVXP47CF3P7Q835PNKDEX4YT"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_2G24E0FSW9WY4YRZFXTMFPF1BS",
+              "key": "X"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [],
+              "event": "X",
+              "eventId": "evt_2G24E0FSW9WY4YRZFXTMFPF1BS",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "browser": true,
+          "collection": "bros",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_95DZA0555WJJY8HKVPQJZW163D",
+          "name": "Bro",
+          "persistence": "persistent"
+         },
+         "id": "orb_QGJPEDVZPSZVCM11AFC5D7J450",
+         "name": "Br",
+         "traits": [
+          {
+           "entityRefIds": {
+            "Bro": "ent_95DZA0555WJJY8HKVPQJZW163D"
+           },
+           "id": "trt_VJ23H85NYJTZ97CP8K1YRXVRW9",
+           "linkedEntity": "Bro",
+           "linkedEntityId": "ent_95DZA0555WJJY8HKVPQJZW163D",
+           "name": "BrT",
+           "sourceDeclaration": {
+            "fingerprint": "5208b243a12ab9c1754d298ad51c5208684d9e6a5ee602062b9c06d2fc3ea1e0",
+            "traitId": "trt_VJ23H85NYJTZ97CP8K1YRXVRW9"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_5JXZ1P3VSKXWSWC9MTBZBX9KJ1",
+              "key": "X"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [],
+              "event": "X",
+              "eventId": "evt_5JXZ1P3VSKXWSWC9MTBZBX9KJ1",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "dispatch-contract",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_T_CLIENT_TICK_SERVER_EFFECT",
+           "path": "orbitals[0 (O1)].traits[0 (O1T)].ticks[0].effects",
+           "message": "trait \"O1T\" tick 'a' runs in the browser but its effects reach the server \u2014 nothing replays a tick on the server, so that work would be dropped",
+           "suggestion": "Emit an event from the tick and handle it in a trait that runs on the server (linked to a server-stored entity), which does the server work; or mark the tick [background] to run it on the server.",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[3 (O4)].traits[0 (O4T)].ticks[0].effects[0]",
+           "message": "trait \"O4T\" is [client] but tick 'a' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "auth-guard-arms-with-equal-server-work",
+   "steps": [
+    {
+     "event": "SHAPES_HEARD",
+     "from": "ready",
+     "payload": {
+      "operators": {
+       "fetch": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "entity",
+          "type": {
+           "kind": "entity"
+          }
+         },
+         {
+          "name": "options",
+          "type": {
+           "kind": "object"
+          }
+         }
+        ]
+       },
+       "persist": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "action",
+          "type": {
+           "kind": "union"
+          }
+         },
+         {
+          "name": "entity",
+          "type": {
+           "kind": "entity"
+          }
+         }
+        ]
+       },
+       "http": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "method",
+          "type": "string"
+         }
+        ]
+       },
+       "call-service": {
+        "runsOn": "server",
+        "params": [
+         {
+          "name": "service",
+          "type": "string"
+         }
+        ]
+       },
+       "navigate": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "path",
+          "type": "string"
+         }
+        ]
+       },
+       "render-ui": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "slot",
+          "type": {
+           "kind": "uiSlot"
+          }
+         }
+        ]
+       },
+       "send-server": {
+        "runsOn": "client",
+        "params": [
+         {
+          "name": "event",
+          "type": "string"
+         }
+        ]
+       },
+       "emit": {
+        "runsOn": "any",
+        "params": [
+         {
+          "name": "event",
+          "type": {
+           "kind": "eventKey"
+          }
+         }
+        ]
+       },
+       "set": {
+        "runsOn": "any",
+        "params": [
+         {
+          "name": "binding",
+          "type": {
+           "kind": "binding"
+          }
+         }
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "dc5",
+       "orbitals": [
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_XGRB9X4VXBDYNTH0FRSGC5DAAM",
+          "name": "AgE1",
+          "persistence": "runtime"
+         },
+         "id": "orb_RPKJHN0DAK6N9R2HWVCJRXQV51",
+         "name": "A1",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Srv"
+            }
+           ],
+           "entityRefIds": {
+            "AgE1": "ent_XGRB9X4VXBDYNTH0FRSGC5DAAM"
+           },
+           "id": "trt_YBE7SW4X73EKHKY5NTXW0JQAM7",
+           "linkedEntity": "AgE1",
+           "linkedEntityId": "ent_XGRB9X4VXBDYNTH0FRSGC5DAAM",
+           "name": "A1T",
+           "sourceDeclaration": {
+            "fingerprint": "5139f7999e1ad3870fd1b0e9ca87ca3a0f21afefdb256f505a752f39b017a1f2",
+            "traitId": "trt_YBE7SW4X73EKHKY5NTXW0JQAM7"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_F4ST30A66W33E9FEXPE7JF5X4F",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_F4ST30A66W33E9FEXPE7JF5X4F",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_AZ04APXVYVXZDNKXNNYXE0T33P",
+          "name": "AgE2",
+          "persistence": "runtime"
+         },
+         "id": "orb_H07X1TBW2FY17N3EMHB0K1GQH7",
+         "name": "A2",
+         "traits": [
+          {
+           "dispatch": "optimistic",
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Srv"
+            }
+           ],
+           "entityRefIds": {
+            "AgE2": "ent_AZ04APXVYVXZDNKXNNYXE0T33P"
+           },
+           "id": "trt_6KAQMNPAEP57B68JYNMKZKX4S2",
+           "linkedEntity": "AgE2",
+           "linkedEntityId": "ent_AZ04APXVYVXZDNKXNNYXE0T33P",
+           "name": "A2T",
+           "sourceDeclaration": {
+            "fingerprint": "291de405a7d5487d03adabb7d5eeb681fb5ca20eac9999f1584c19cdbf033446",
+            "traitId": "trt_6KAQMNPAEP57B68JYNMKZKX4S2"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_RR6GXTTXCFEP7JJQ8X4GYXNVJ8",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_RR6GXTTXCFEP7JJQ8X4GYXNVJ8",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_7N8FS54NDTAPX46AZC94Z33P3P",
+          "name": "AgE3",
+          "persistence": "runtime"
+         },
+         "id": "orb_NPYNYT269A34N3X1BXMQAPH5KX",
+         "name": "A3",
+         "traits": [
+          {
+           "dispatch": "server",
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Srv"
+            }
+           ],
+           "entityRefIds": {
+            "AgE3": "ent_7N8FS54NDTAPX46AZC94Z33P3P"
+           },
+           "id": "trt_Q8Y29FNR4BW25PN0W1X4SVCVBE",
+           "linkedEntity": "AgE3",
+           "linkedEntityId": "ent_7N8FS54NDTAPX46AZC94Z33P3P",
+           "name": "A3T",
+           "sourceDeclaration": {
+            "fingerprint": "d4a64c6fc421877d29b289654cee80101fe0be0379e4ac516b0912db4403e26a",
+            "traitId": "trt_Q8Y29FNR4BW25PN0W1X4SVCVBE"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_FA213D808W04E0V6AVSQ99HQCY",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_FA213D808W04E0V6AVSQ99HQCY",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_N6AP54X7SYKWZ2CZ2A19CF9E4S",
+          "name": "AgE4",
+          "persistence": "runtime"
+         },
+         "id": "orb_XCZNKHQ7SYKWZ8GCKGFMFQP8RV",
+         "name": "A4",
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Srv"
+            }
+           ],
+           "entityRefIds": {
+            "AgE4": "ent_N6AP54X7SYKWZ2CZ2A19CF9E4S"
+           },
+           "id": "trt_7S2E5NJ024012DZ6DMRMNKBQ6Y",
+           "linkedEntity": "AgE4",
+           "linkedEntityId": "ent_N6AP54X7SYKWZ2CZ2A19CF9E4S",
+           "name": "A4T",
+           "sourceDeclaration": {
+            "fingerprint": "574ba98cf6eb795e5ab040a1a52e5c6ca28f7a07368652f8d66e2081d7259132",
+            "traitId": "trt_7S2E5NJ024012DZ6DMRMNKBQ6Y"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_4Y10TFV03TG1X7E67ZN622NG92",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_4Y10TFV03TG1X7E67ZN622NG92",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_S6BYAS5QE0VQ0CYD3F1VJ4SZDF",
+          "name": "AgE5",
+          "persistence": "runtime"
+         },
+         "id": "orb_5JGFXWDKVVSXXK2H0Q2N8Q9H2E",
+         "name": "A5",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            }
+           ],
+           "entityRefIds": {
+            "AgE5": "ent_S6BYAS5QE0VQ0CYD3F1VJ4SZDF"
+           },
+           "id": "trt_C94V5B3QFAVQN7T9K1NRHMECQ0",
+           "linkedEntity": "AgE5",
+           "linkedEntityId": "ent_S6BYAS5QE0VQ0CYD3F1VJ4SZDF",
+           "name": "A5T",
+           "sourceDeclaration": {
+            "fingerprint": "f20546fe470c72dcdcc9da200501147e485b0b52292ab46591862a1d5276bc5d",
+            "traitId": "trt_C94V5B3QFAVQN7T9K1NRHMECQ0"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_2JAC72PRSWCCY0B7BG25HYDRP5",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_2JAC72PRSWCCY0B7BG25HYDRP5",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_251ZXNC5MK2T9M132EJ4N7MX2K",
+          "name": "AgE6",
+          "persistence": "runtime"
+         },
+         "id": "orb_3ZKV0ZT4YC2F67V8QTW18Y9FY6",
+         "name": "A6",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Srv"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "a"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "b"
+            }
+           ],
+           "entityRefIds": {
+            "AgE6": "ent_251ZXNC5MK2T9M132EJ4N7MX2K"
+           },
+           "id": "trt_J6WPVYDXEJYQ9925D9MK8H4DBK",
+           "linkedEntity": "AgE6",
+           "linkedEntityId": "ent_251ZXNC5MK2T9M132EJ4N7MX2K",
+           "name": "A6T",
+           "sourceDeclaration": {
+            "fingerprint": "6dac83385a5f22f69ca25f0a9b7bff30db8565460d20452c03917552d164fe36",
+            "traitId": "trt_J6WPVYDXEJYQ9925D9MK8H4DBK"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_ZREQMQQDFZPQZM67VVN11S67AX",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ],
+               [
+                "render-ui",
+                "a",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_ZREQMQQDFZPQZM67VVN11S67AX",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ],
+               [
+                "render-ui",
+                "b",
+                {
+                 "children": [],
+                 "type": "stack"
+                }
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_ZREQMQQDFZPQZM67VVN11S67AX",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_VQ0GJPSY07Z03TJWY7ZH3WT333",
+          "name": "AgE7",
+          "persistence": "runtime"
+         },
+         "id": "orb_J7SRN7A4A225133WZR6HRG3Y5P",
+         "name": "A7",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Srv"
+            },
+            {
+             "kind": "persist",
+             "resource": "Srv"
+            }
+           ],
+           "entityRefIds": {
+            "AgE7": "ent_VQ0GJPSY07Z03TJWY7ZH3WT333"
+           },
+           "id": "trt_3CAFN4DTCFX67GY1YMGWE1HXGX",
+           "linkedEntity": "AgE7",
+           "linkedEntityId": "ent_VQ0GJPSY07Z03TJWY7ZH3WT333",
+           "name": "A7T",
+           "sourceDeclaration": {
+            "fingerprint": "dbe03a924d422f3ee1eba432a67706cfb11ca2b73d619bc7a00c4ed49b5ae9ac",
+            "traitId": "trt_3CAFN4DTCFX67GY1YMGWE1HXGX"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_2Q6YCJ8DWZ6YFVGCT27T4C9GHJ",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_2Q6YCJ8DWZ6YFVGCT27T4C9GHJ",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Srv",
+                {}
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_2Q6YCJ8DWZ6YFVGCT27T4C9GHJ",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_87MK8S7G46R23C2B39VQEJCCTX",
+          "name": "AgE8",
+          "persistence": "runtime"
+         },
+         "id": "orb_8NPAHYNE1SQ0WRT401E0A1H5F6",
+         "name": "A8",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Srv"
+            }
+           ],
+           "entityRefIds": {
+            "AgE8": "ent_87MK8S7G46R23C2B39VQEJCCTX"
+           },
+           "id": "trt_RE1Y6SD386HM342C9524963V6K",
+           "linkedEntity": "AgE8",
+           "linkedEntityId": "ent_87MK8S7G46R23C2B39VQEJCCTX",
+           "name": "A8T",
+           "sourceDeclaration": {
+            "fingerprint": "679dc0521aaa6b002a9f3a9b132aa22521eecc8ca6500f369e4b840c45353f71",
+            "traitId": "trt_RE1Y6SD386HM342C9524963V6K"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_0T52BHE82W41E46ZSJ2HX2XVR3",
+              "key": "GO"
+             },
+             {
+              "id": "evt_Y5HAJ5H5FVJQXGQ0JHD57WWBAP",
+              "key": "OTHER"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_0T52BHE82W41E46ZSJ2HX2XVR3",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "OTHER",
+              "eventId": "evt_Y5HAJ5H5FVJQXGQ0JHD57WWBAP",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_24WMC0H6SQKCVW8MB7SVRKR3E2",
+          "name": "AgE9",
+          "persistence": "runtime"
+         },
+         "id": "orb_N6SH4R30X0GEG4G769039VSQ8Q",
+         "name": "A9",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Srv"
+            }
+           ],
+           "entityRefIds": {
+            "AgE9": "ent_24WMC0H6SQKCVW8MB7SVRKR3E2"
+           },
+           "id": "trt_6F50D6WFZH7ZRYWJJ8SJYGPQ48",
+           "linkedEntity": "AgE9",
+           "linkedEntityId": "ent_24WMC0H6SQKCVW8MB7SVRKR3E2",
+           "name": "A9T",
+           "sourceDeclaration": {
+            "fingerprint": "51d719e87ab45eb5570f54dea3e33aff05cdb999e9908972897fe301e013962c",
+            "traitId": "trt_6F50D6WFZH7ZRYWJJ8SJYGPQ48"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_D431SK6XGCER626D87TNPA6NX3",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             },
+             {
+              "isInitial": false,
+              "name": "other"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_D431SK6XGCER626D87TNPA6NX3",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_D431SK6XGCER626D87TNPA6NX3",
+              "from": "other",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_GK37NC9MDQT6VHV1Z2H8PZKSZ0",
+          "name": "AgE10",
+          "persistence": "runtime"
+         },
+         "id": "orb_GZ6K1ZQQPDVV6PKBS2XE8NJVCV",
+         "name": "A10",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Srv"
+            }
+           ],
+           "entityRefIds": {
+            "AgE10": "ent_GK37NC9MDQT6VHV1Z2H8PZKSZ0"
+           },
+           "id": "trt_BT97V3J0QP0BVF8MHHGB4G1CF3",
+           "linkedEntity": "AgE10",
+           "linkedEntityId": "ent_GK37NC9MDQT6VHV1Z2H8PZKSZ0",
+           "name": "A10T",
+           "sourceDeclaration": {
+            "fingerprint": "7ec4970e2488cc33d6780bea4f89729d9fb73a7082bdc4fceeb7149528b7536f",
+            "traitId": "trt_BT97V3J0QP0BVF8MHHGB4G1CF3"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_DW46214CM46A2DZ915KR9BYVFF",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_DW46214CM46A2DZ915KR9BYVFF",
+              "from": "idle",
+              "guard": [
+               "object/get",
+               "@user",
+               "role"
+              ],
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_TMJFVE374TKJDA2GZNNG58VH1H",
+          "name": "AgE11",
+          "persistence": "runtime"
+         },
+         "id": "orb_HX19K6RGJY89F1VR137YRZ2T8Q",
+         "name": "A11",
+         "traits": [
+          {
+           "dispatch": "client",
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "Srv"
+            }
+           ],
+           "entityRefIds": {
+            "AgE11": "ent_TMJFVE374TKJDA2GZNNG58VH1H"
+           },
+           "id": "trt_GCYMBEDMM8TA44VQ30R67SJ5WF",
+           "linkedEntity": "AgE11",
+           "linkedEntityId": "ent_TMJFVE374TKJDA2GZNNG58VH1H",
+           "name": "A11T",
+           "sourceDeclaration": {
+            "fingerprint": "6c6ee357620150bbd60c17347dd996e9f3c21faa96b6b34161bab3ab695e2185",
+            "traitId": "trt_GCYMBEDMM8TA44VQ30R67SJ5WF"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_Z9BP97HX04YG20P4E0PG73PX39",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ],
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_Z9BP97HX04YG20P4E0PG73PX39",
+              "from": "idle",
+              "guard": [
+               "=",
+               "@user.role",
+               "admin"
+              ],
+              "to": "idle"
+             },
+             {
+              "effects": [
+               [
+                "fetch",
+                "Srv"
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_Z9BP97HX04YG20P4E0PG73PX39",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "srvs",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_F59DW5MS3MCHTCXTE9FS1PZMWV",
+          "name": "Srv",
+          "persistence": "persistent"
+         },
+         "id": "orb_XGJV6AQPKFV9QVWTEHHMY7YYY8",
+         "name": "Sv",
+         "traits": [
+          {
+           "entityRefIds": {
+            "Srv": "ent_F59DW5MS3MCHTCXTE9FS1PZMWV"
+           },
+           "id": "trt_4FPY78SCR2PC116Z9SAGMVTPH1",
+           "linkedEntity": "Srv",
+           "linkedEntityId": "ent_F59DW5MS3MCHTCXTE9FS1PZMWV",
+           "name": "SvT",
+           "sourceDeclaration": {
+            "fingerprint": "88f1f4b59d0dc0aad962c60a330acf8b896ea764c64934557d24a533ebf3b249",
+            "traitId": "trt_4FPY78SCR2PC116Z9SAGMVTPH1"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_HGPJ62FY6WZ3E4RE0ZDE3CW6AB",
+              "key": "X"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [],
+              "event": "X",
+              "eventId": "evt_HGPJ62FY6WZ3E4RE0ZDE3CW6AB",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "browser": true,
+          "collection": "bros",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "x",
+            "type": "number"
+           },
+           {
+            "name": "y",
+            "type": "number"
+           }
+          ],
+          "id": "ent_BJCFHZTGWS8ECWA4KFSY1ZAGRD",
+          "name": "Bro",
+          "persistence": "persistent"
+         },
+         "id": "orb_HH8R58MA7553JWBWSJPGRM3PVF",
+         "name": "Br",
+         "traits": [
+          {
+           "entityRefIds": {
+            "Bro": "ent_BJCFHZTGWS8ECWA4KFSY1ZAGRD"
+           },
+           "id": "trt_JKETZW5F9YQMZ4HQ8EVS6V71KZ",
+           "linkedEntity": "Bro",
+           "linkedEntityId": "ent_BJCFHZTGWS8ECWA4KFSY1ZAGRD",
+           "name": "BrT",
+           "sourceDeclaration": {
+            "fingerprint": "e7a175469c19280d916d8c2b2264430f7df41fce9429936feb457ba948ef11f0",
+            "traitId": "trt_JKETZW5F9YQMZ4HQ8EVS6V71KZ"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_BSAWVFN6YMKFAF4791KEMWNT1Y",
+              "key": "X"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [],
+              "event": "X",
+              "eventId": "evt_BSAWVFN6YMKFAF4791KEMWNT1Y",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "dispatch-contract",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (A1)].traits[0 (A1T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A1T\" is [client] but transition 'GO' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[0 (A1)].traits[0 (A1T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"A1T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[0 (A1)].traits[0 (A1T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A1T\" transition 'GO' guards on @user, but this trait's dispatch is client-only ([client]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[1 (A2)].traits[0 (A2T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A2T\" transition 'GO' guards on @user, but this trait's dispatch is client-only ([optimistic]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[2 (A3)].traits[0 (A3T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A3T\" transition 'GO' guards on @user, but this trait's dispatch is client-only ([optimistic]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[4 (A5)].traits[0 (A5T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A5T\" is [client] but transition 'GO' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[5 (A6)].traits[0 (A6T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A6T\" is [client] but transition 'GO' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[5 (A6)].traits[0 (A6T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"A6T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[5 (A6)].traits[0 (A6T)].stateMachine.transitions[1].effects[0]",
+           "message": "trait \"A6T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[6 (A7)].traits[0 (A7T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A7T\" is [client] but transition 'GO' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[6 (A7)].traits[0 (A7T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"A7T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[6 (A7)].traits[0 (A7T)].stateMachine.transitions[1].effects[0]",
+           "message": "trait \"A7T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[6 (A7)].traits[0 (A7T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A7T\" transition 'GO' guards on @user, but this trait's dispatch is client-only ([client]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[7 (A8)].traits[0 (A8T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A8T\" is [client] but transition 'GO' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[7 (A8)].traits[0 (A8T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"A8T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[7 (A8)].traits[0 (A8T)].stateMachine.transitions[1].guard",
+           "message": "trait \"A8T\" is [client] but transition 'OTHER' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[7 (A8)].traits[0 (A8T)].stateMachine.transitions[1].effects[0]",
+           "message": "trait \"A8T\" is [client] but transition 'OTHER' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[7 (A8)].traits[0 (A8T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A8T\" transition 'GO' guards on @user, but this trait's dispatch is client-only ([client]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[7 (A8)].traits[0 (A8T)].stateMachine.transitions[1].guard",
+           "message": "trait \"A8T\" transition 'OTHER' guards on @user, but this trait's dispatch is client-only ([client]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[8 (A9)].traits[0 (A9T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A9T\" is [client] but transition 'GO' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[8 (A9)].traits[0 (A9T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"A9T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[8 (A9)].traits[0 (A9T)].stateMachine.transitions[1].effects[0]",
+           "message": "trait \"A9T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[8 (A9)].traits[0 (A9T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A9T\" transition 'GO' guards on @user, but this trait's dispatch is client-only ([client]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[9 (A10)].traits[0 (A10T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A10T\" is [client] but transition 'GO' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[9 (A10)].traits[0 (A10T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"A10T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[9 (A10)].traits[0 (A10T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A10T\" transition 'GO' guards on @user, but this trait's dispatch is client-only ([client]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[10 (A11)].traits[0 (A11T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A11T\" is [client] but transition 'GO' guards on @user \u2014 a client trait's transitions never await a server round trip, so a viewer-identity read here is either unreachable or a false authorization boundary",
+           "suggestion": "Drop [client] from this trait, or remove the @user read from the guard",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[10 (A11)].traits[0 (A11T)].stateMachine.transitions[0].effects[0]",
+           "message": "trait \"A11T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[10 (A11)].traits[0 (A11T)].stateMachine.transitions[0].effects[1]",
+           "message": "trait \"A11T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+           "path": "orbitals[10 (A11)].traits[0 (A11T)].stateMachine.transitions[1].effects[0]",
+           "message": "trait \"A11T\" is [client] but transition 'GO' runs a server-bound effect \u2014 a client trait's transitions never await a server round trip",
+           "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_AUTH_GUARD_CLIENT_ONLY",
+           "path": "orbitals[10 (A11)].traits[0 (A11T)].stateMachine.transitions[0].guard",
+           "message": "trait \"A11T\" transition 'GO' guards on @user, but this trait's dispatch is client-only ([client]) \u2014 the client state machine advances optimistically before the server evaluates this guard; the effects stay server-gated, the UI transition does not, since the client can construct any @user value it likes",
+           "suggestion": "If this guard is meant as an authorization boundary, move the mutation to a server-gated (not `[client]` or `[optimistic]`) trait; otherwise treat it as a UX precondition only.",
+           "severity": "warning"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

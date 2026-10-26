@@ -1,0 +1,1284 @@
+{
+ "atom": "cli/atoms/std-orb-lint-fetch-deliver.lolo",
+ "trait": "OrbLintFetchDeliver",
+ "note": "Cases built from the option checks of entities/fetch_deliver.rs: `deliver: ids` with `include` (ORB_FETCH_DELIVER_IDS_ENTITY_REFS) and without a non-empty `emit.success` (ORB_FETCH_DELIVER_IDS_NO_SUCCESS), each program lowered from an .orb fixture and the expected findings the ones `orb validate --json` reports. The controls are rows delivery and a fetch below an unknown head; an empty success and a failure-only emit count as no success, and a fetch inside an object is not found (the Rust walk descends arrays only). ORB_FETCH_DELIVER_IDS_ROWS_READ and ORB_FETCH_TOTAL_NONE_READ are not part of the rule.",
+ "cases": [
+  {
+   "id": "ids-with-include-and-without-success-per-trait",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fd1",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "name": "ownerId",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           }
+          ],
+          "collection": "tasks"
+         },
+         "traits": [
+          {
+           "name": "T0",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             },
+             {
+              "key": "E1"
+             },
+             {
+              "key": "E2"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "fetch",
+                "Task",
+                {
+                 "deliver": "ids",
+                 "include": [
+                  "owner"
+                 ],
+                 "emit": {
+                  "success": "Loaded"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E1",
+              "effects": [
+               [
+                "fetch",
+                "Task",
+                {
+                 "deliver": "ids"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E2",
+              "effects": [
+               [
+                "fetch",
+                "Task",
+                {
+                 "deliver": "ids",
+                 "include": [
+                  "owner"
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T0"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "U",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "fetch-deliver",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_ENTITY_REFS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[0].effects",
+           "message": "`deliver: ids` with `include`: included relations are row content, and `ids` delivers no rows",
+           "suggestion": "Drop `include`, or drop `deliver: ids`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_ENTITY_REFS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[2].effects",
+           "message": "`deliver: ids` with `include`: included relations are row content, and `ids` delivers no rows",
+           "suggestion": "Drop `include`, or drop `deliver: ids`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_NO_SUCCESS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[1].effects",
+           "message": "`deliver: ids` without `emit.success`: the reference is only usable passed whole to a `render-ui` prop, and no event carries it",
+           "suggestion": "Declare `emit: { success: <Event> }` and pass `@payload.data` whole to a `render-ui` prop in that event's arm, or drop `deliver: ids`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_NO_SUCCESS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[2].effects",
+           "message": "`deliver: ids` without `emit.success`: the reference is only usable passed whole to a `render-ui` prop, and no event carries it",
+           "suggestion": "Declare `emit: { success: <Event> }` and pass `@payload.data` whole to a `render-ui` prop in that event's arm, or drop `deliver: ids`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-rows-delivery-and-empty-success",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fd2",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "name": "ownerId",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           }
+          ],
+          "collection": "tasks"
+         },
+         "traits": [
+          {
+           "name": "T0",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             },
+             {
+              "key": "E1"
+             },
+             {
+              "key": "E2"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "fetch",
+                "Task",
+                {
+                 "deliver": "rows",
+                 "include": [
+                  "owner"
+                 ],
+                 "emit": {
+                  "success": "Loaded"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E1",
+              "effects": [
+               [
+                "fetch",
+                "Task",
+                {
+                 "deliver": "ids",
+                 "emit": {
+                  "success": ""
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E2",
+              "effects": [
+               [
+                "fetch",
+                "Task",
+                {
+                 "include": [
+                  "owner"
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T0"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "U",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "fetch-deliver",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_NO_SUCCESS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[1].effects",
+           "message": "`deliver: ids` without `emit.success`: the reference is only usable passed whole to a `render-ui` prop, and no event carries it",
+           "suggestion": "Declare `emit: { success: <Event> }` and pass `@payload.data` whole to a `render-ui` prop in that event's arm, or drop `deliver: ids`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nested-in-if-and-do-orders-include-findings-first",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fd3",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "name": "ownerId",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           }
+          ],
+          "collection": "tasks"
+         },
+         "traits": [
+          {
+           "name": "T0",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "if",
+                true,
+                [
+                 "fetch",
+                 "Task",
+                 {
+                  "deliver": "ids",
+                  "include": [
+                   "owner"
+                  ]
+                 }
+                ],
+                [
+                 "do",
+                 [
+                  "fetch",
+                  "Task",
+                  {
+                   "deliver": "ids"
+                  }
+                 ],
+                 [
+                  "if",
+                  true,
+                  [
+                   "fetch",
+                   "Task",
+                   {
+                    "deliver": "ids",
+                    "include": [
+                     "x"
+                    ]
+                   }
+                  ]
+                 ]
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T0"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "U",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "fetch-deliver",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_ENTITY_REFS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[0].effects",
+           "message": "`deliver: ids` with `include`: included relations are row content, and `ids` delivers no rows",
+           "suggestion": "Drop `include`, or drop `deliver: ids`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_ENTITY_REFS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[0].effects",
+           "message": "`deliver: ids` with `include`: included relations are row content, and `ids` delivers no rows",
+           "suggestion": "Drop `include`, or drop `deliver: ids`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_NO_SUCCESS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[0].effects",
+           "message": "`deliver: ids` without `emit.success`: the reference is only usable passed whole to a `render-ui` prop, and no event carries it",
+           "suggestion": "Declare `emit: { success: <Event> }` and pass `@payload.data` whole to a `render-ui` prop in that event's arm, or drop `deliver: ids`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_NO_SUCCESS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[0].effects",
+           "message": "`deliver: ids` without `emit.success`: the reference is only usable passed whole to a `render-ui` prop, and no event carries it",
+           "suggestion": "Declare `emit: { success: <Event> }` and pass `@payload.data` whole to a `render-ui` prop in that event's arm, or drop `deliver: ids`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_NO_SUCCESS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[0].effects",
+           "message": "`deliver: ids` without `emit.success`: the reference is only usable passed whole to a `render-ui` prop, and no event carries it",
+           "suggestion": "Declare `emit: { success: <Event> }` and pass `@payload.data` whole to a `render-ui` prop in that event's arm, or drop `deliver: ids`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-fetch-below-an-unknown-head",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fd3b",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "name": "ownerId",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           }
+          ],
+          "collection": "tasks"
+         },
+         "traits": [
+          {
+           "name": "T0",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "x",
+                [
+                 "fetch",
+                 "Task",
+                 {
+                  "deliver": "ids"
+                 }
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T0"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "U",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "fetch-deliver",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_NO_SUCCESS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[0].effects",
+           "message": "`deliver: ids` without `emit.success`: the reference is only usable passed whole to a `render-ui` prop, and no event carries it",
+           "suggestion": "Declare `emit: { success: <Event> }` and pass `@payload.data` whole to a `render-ui` prop in that event's arm, or drop `deliver: ids`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "fetch-inside-an-object-is-skipped-and-failure-only-emit-has-no-success",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fd4",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "name": "ownerId",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           }
+          ],
+          "collection": "tasks"
+         },
+         "traits": [
+          {
+           "name": "T0",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             },
+             {
+              "key": "E1"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "children": [
+                  [
+                   "fetch",
+                   "Task",
+                   {
+                    "deliver": "ids"
+                   }
+                  ]
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E1",
+              "effects": [
+               [
+                "fetch",
+                "Task",
+                {
+                 "deliver": "ids",
+                 "emit": {
+                  "failure": "Failed"
+                 }
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          },
+          {
+           "name": "T1",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             },
+             {
+              "key": "E1"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "fetch",
+                "Task",
+                {
+                 "deliver": "ids",
+                 "include": [
+                  "owner"
+                 ],
+                 "emit": {
+                  "success": "L"
+                 }
+                },
+                {
+                 "deliver": "ids"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E1",
+              "effects": [
+               [
+                "fetch",
+                "Task",
+                {
+                 "total": "none",
+                 "emit": {
+                  "success": "L"
+                 }
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T0"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "U",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "fetch-deliver",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_NO_SUCCESS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[1].effects",
+           "message": "`deliver: ids` without `emit.success`: the reference is only usable passed whole to a `render-ui` prop, and no event carries it",
+           "suggestion": "Declare `emit: { success: <Event> }` and pass `@payload.data` whole to a `render-ui` prop in that event's arm, or drop `deliver: ids`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_ENTITY_REFS",
+           "path": "orbitals[0 (O)].traits[1 (T1)].stateMachine.transitions[0].effects",
+           "message": "`deliver: ids` with `include`: included relations are row content, and `ids` delivers no rows",
+           "suggestion": "Drop `include`, or drop `deliver: ids`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_NO_SUCCESS",
+           "path": "orbitals[0 (O)].traits[1 (T1)].stateMachine.transitions[0].effects",
+           "message": "`deliver: ids` without `emit.success`: the reference is only usable passed whole to a `render-ui` prop, and no event carries it",
+           "suggestion": "Declare `emit: { success: <Event> }` and pass `@payload.data` whole to a `render-ui` prop in that event's arm, or drop `deliver: ids`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-option-objects-of-one-fetch",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fd5",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "name": "ownerId",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           }
+          ],
+          "collection": "tasks"
+         },
+         "traits": [
+          {
+           "name": "T0",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "fetch",
+                "Task",
+                {
+                 "deliver": "ids",
+                 "include": [
+                  "owner"
+                 ]
+                },
+                {
+                 "deliver": "ids",
+                 "include": [
+                  "a"
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T0"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "U",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "fetch-deliver",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_ENTITY_REFS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[0].effects",
+           "message": "`deliver: ids` with `include`: included relations are row content, and `ids` delivers no rows",
+           "suggestion": "Drop `include`, or drop `deliver: ids`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_ENTITY_REFS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[0].effects",
+           "message": "`deliver: ids` with `include`: included relations are row content, and `ids` delivers no rows",
+           "suggestion": "Drop `include`, or drop `deliver: ids`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_NO_SUCCESS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[0].effects",
+           "message": "`deliver: ids` without `emit.success`: the reference is only usable passed whole to a `render-ui` prop, and no event carries it",
+           "suggestion": "Declare `emit: { success: <Event> }` and pass `@payload.data` whole to a `render-ui` prop in that event's arm, or drop `deliver: ids`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_FETCH_DELIVER_IDS_NO_SUCCESS",
+           "path": "orbitals[0 (O)].traits[0 (T0)].stateMachine.transitions[0].effects",
+           "message": "`deliver: ids` without `emit.success`: the reference is only usable passed whole to a `render-ui` prop, and no event carries it",
+           "suggestion": "Declare `emit: { success: <Event> }` and pass `@payload.data` whole to a `render-ui` prop in that event's arm, or drop `deliver: ids`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,21 @@
+app lint-rui-effects-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint rui-effects <file>`. It lowers the file with program/read and reports ORB_RUI_INVALID_SLOT, ORB_EFF_MISSING_FETCH_FOR_ENTITY and ORB_BINDING_TRAIT_INVALID_POSITION over the top-level render-ui effects of every inline trait transition (status 500, exit 1). Clean answers `lint rui-effects: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintRuiEffectsSpec {
+  expects trait OrbLintRuiEffects {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintRuiEffectsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintRuiEffects, OrbLintRuiEffectsCli
+}

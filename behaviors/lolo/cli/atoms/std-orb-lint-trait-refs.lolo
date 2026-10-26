@@ -1,0 +1,133 @@
+app std-orb-lint-trait-refs [
+  version: "1.0.0",
+  inbound: ["cli-lint-trait-refs"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-trait-refs - the `orb lint trait-refs <file>` command, the port of the trait reference, rebind and uniqueness checks of traits/trait_validator.rs. A trait entry of an orbital without a state machine is a reference: with neither `ref` nor `name` it is ORB_T_INVALID_FORMAT, naming a trait no orbital defines inline (and not a `std/` trait) it is ORB_T_UNDEFINED_TRAIT, and a `linkedEntity` no orbital declares (primary, auxiliary or expected entity) is ORB_E_INVALID_RELATION. An inline trait with an empty name is ORB_T_UNDEFINED_TRAIT at `.name` and an undeclared `linkedEntity` ORB_E_INVALID_RELATION. An inline trait imported from an atom (`sourceBehavior`) and rebound to an entity other than the atom's own is ORB_T_REBIND_TARGET_UNRESOLVED when the target names no entity of the program, else ORB_T_ENTITY_NOT_REBINDABLE when the atom's binding is not `@rebindable`, else ORB_T_REBIND_MISSING_FIELDS for the contract `requires` fields the target entity lacks. A trait name defined by more than one inline trait of the program is ORB_T_DUPLICATE_NAME at `orbitals`, once per name. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint trait-refs: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-trait-refs"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
+type TrVal = string | number | boolean | [TrVal?] | Map string TrVal?
+type TrField = { name : string }
+type TrEntity = { name : string, fields : [TrField] }
+type TrExpect = { kind : string, name : string }
+type TrSrc = { behavior : string }
+type TrSrcEnt = { name : string }
+type TrContract = { requires : [string] }
+type TrTrait = { name : string, id : string, linkedEntity : string, ref : string, sourceBehavior : TrSrc, sourceEntityDefinition : TrSrcEnt, entityRebindable : boolean, entityContract : TrContract, stateMachine : TrVal }
+type TrOrbital = { name : string, entity : TrEntity, auxiliaryEntities : [TrEntity], expects : [TrExpect], traits : [TrTrait] }
+type TrProgram = { orbitals : [TrOrbital] }
+orbital OrbLintTraitRefsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintTraitRefsRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintTraitRefs -> OrbLintTraitRefsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" []))) (let ((known (array/unique (array/filter (array/concat (array/map (array/flatten (array/map @orbitals (fn o (array/concat (if (validate/object (object/get @o "entity" {  })) [(object/get @o "entity")] []) (array/filter (object/get @o "auxiliaryEntities" []) (fn x (validate/object @x))))))) (fn x (object/get @x "name" ""))) (array/flatten (array/map @orbitals (fn o (array/map (array/filter (object/get @o "expects" []) (fn x (or (= (object/get @x "kind" "") "entity") (= (object/get @x "kind" "") "identity")))) (fn x (object/get @x "name" ""))))))) (fn n (!= @n "")))))) (let ((defs (let ((pn (array/map (array/flatten (array/map @orbitals (fn o (if (validate/object (object/get @o "entity" {  })) [(object/get @o "entity")] [])))) (fn x (object/get @x "name" ""))))) (let ((dups (array/filter @pn (fn n (> (array/len (array/filter @pn (fn m (= @m @n)))) 1))))) (object/fromEntries (array/map (array/filter (array/flatten (array/map @orbitals (fn o (array/concat (if (validate/object (object/get @o "entity" {  })) [(object/get @o "entity")] []) (array/filter (object/get @o "auxiliaryEntities" []) (fn x (validate/object @x))))))) (fn x (not (array/includes @dups (object/get @x "name" ""))))) (fn x [(object/get @x "name" ""), @x])))))) (inl (array/flatten (array/map @orbitals (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t { n: (object/get @t "name" ""), o: (object/get @o "name" "") }))))))) (let ((names (array/unique (array/map @inl (fn x (object/get @x "n" "")))))) (let ((inames @names)) (array/concat (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((o (array/nth @orbitals @oi))) (array/flatten (array/map (array/range 0 (array/len (object/get @o "traits" []))) (fn ti (let ((t (array/nth (object/get @o "traits" []) @ti))) (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (if (object/has @t "stateMachine") (object/get @t "name" "") (if (object/has @t "name") (object/get @t "name" "") (if (object/has @t "ref") (object/get @t "ref" "") "<anonymous>"))) ")]")) (tname (if (object/has @t "ref") (object/get @t "ref" "") (object/get @t "name" "")))) (if (object/has @t "stateMachine") (array/concat (if (= (object/get @t "name" "") "") [{ code: "ORB_T_UNDEFINED_TRAIT", path: (str/concat @tp ".name"), message: "Trait name is required", suggestion: "Add a descriptive name for the trait", severity: "error" }] []) (if (object/has @t "linkedEntity") (if (array/includes @known (object/get @t "linkedEntity" "")) [] [{ code: "ORB_E_INVALID_RELATION", path: (str/concat @tp ".linkedEntity"), message: (str/concat "Linked entity '" (object/get @t "linkedEntity" "") "' does not exist"), suggestion: "Ensure the linked entity is defined in the schema", severity: "error" }]) []) (if (and (object/has @t "sourceBehavior") (object/has @t "linkedEntity") (object/has (object/get @t "sourceEntityDefinition" {  }) "name") (!= (object/get (object/get @t "sourceEntityDefinition" {  }) "name" "") (object/get @t "linkedEntity" ""))) (if (not (array/includes @known (object/get @t "linkedEntity" ""))) [{ code: "ORB_T_REBIND_TARGET_UNRESOLVED", path: (str/concat @tp ".linkedEntity"), message: (str/concat "Trait '" (object/get @t "name" "") "' (from " (object/get (object/get @t "sourceBehavior" {  }) "behavior" "") ") rebinds to '" (object/get @t "linkedEntity" "") "', which names no primary or auxiliary entity anywhere in this schema; the merge has no target to land its fields on."), suggestion: "Fix the linkedEntity rebind target's spelling, or declare/import the entity it should name.", severity: "error" }] (if (not (= (object/get @t "entityRebindable" false) true)) [{ code: "ORB_T_ENTITY_NOT_REBINDABLE", path: (str/concat @tp ".linkedEntity"), message: (str/concat "Trait '" (object/get @t "name" "") "' (from " (object/get (object/get @t "sourceBehavior" {  }) "behavior" "") ") has a fixed entity binding and cannot be rebound to '" (object/get @t "linkedEntity" "") "'; the atom's binding is not marked `@rebindable`."), suggestion: "Mark the atom trait's binding `-> @rebindable Entity` in its .lolo source, or remove the linkedEntity rebind.", severity: "error" }] (let ((req (object/get (object/get @t "entityContract" {  }) "requires" [])) (tg (object/get @defs (object/get @t "linkedEntity" "") null))) (if (or (= (array/len @req) 0) (= @tg null)) [] (let ((have (array/map (object/get @tg "fields" []) (fn f (object/get @f "name" ""))))) (let ((miss (array/filter @req (fn r (not (array/includes @have @r)))))) (if (= (array/len @miss) 0) [] [{ code: "ORB_T_REBIND_MISSING_FIELDS", path: (str/concat @tp ".linkedEntity"), message: (str/concat "Entity '" (object/get @t "linkedEntity" "") "' is missing fields required by trait '" (object/get @t "name" "") "': " (str/join @miss ", ")), suggestion: "Add the missing fields to the entity, or rebind to an entity that already has them.", severity: "error" }]))))))) [])) (array/concat (if (or (object/has @t "name") (object/has @t "ref")) (if (or (array/includes @inames @tname) (str/startsWith @tname "std/")) [] [{ code: "ORB_T_UNDEFINED_TRAIT", path: @tp, message: (str/concat "Trait '" @tname "' is not defined"), suggestion: "Define traits inline within orbitals or use a std library trait", severity: "error" }]) [{ code: "ORB_T_INVALID_FORMAT", path: @tp, message: "Trait reference must have 'ref' or 'name' property", suggestion: "Add ref: 'TraitName' to reference a defined trait", severity: "error" }]) (if (object/has @t "linkedEntity") (if (array/includes @known (object/get @t "linkedEntity" "")) [] [{ code: "ORB_E_INVALID_RELATION", path: (str/concat @tp ".linkedEntity"), message: (str/concat "Linked entity '" (object/get @t "linkedEntity" "") "' does not exist"), suggestion: "Ensure the linked entity is defined in the schema", severity: "error" }]) [])))))))))))) (array/flatten (array/map @names (fn nm (let ((os (array/map (array/filter @inl (fn x (= (object/get @x "n" "") @nm))) (fn x (object/get @x "o" ""))))) (if (> (array/len @os) 1) [{ code: "ORB_T_DUPLICATE_NAME", path: "orbitals", message: (str/concat "Trait '" @nm "' is defined in multiple orbitals: [" (str/join (array/map @os (fn x (str/concat "\"" @x "\""))) ", ") "]"), suggestion: "Use unique trait names per orbital or define traits inline within orbitals", severity: "error" }] []))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "trait-refs", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : TrProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintTraitRefsCli -> OrbLintTraitRefsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint trait-refs <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "trait-refs") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint trait-refs: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "trait-refs") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint trait-refs: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-trait-refs" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint trait-refs` with its arguments and working directory."
+        @synonyms "orb lint trait-refs"
+      OrbLintTraitRefs.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintTraitRefsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintTraitRefsOrbitalStart -> OrbLintTraitRefs, OrbLintTraitRefsCli, OrbLintInput, Packs, Versions
+}

@@ -1,0 +1,21 @@
+app lint-circuit-emits-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint circuit-emits <file>`, the port of ORB_RENDER_ACTION_LIFECYCLE_EVENT, ORB_CIRCUIT_LIFECYCLE_EMIT_UNDELIVERED and ORB_CIRCUIT_SELF_EMIT_LOOP. Findings are reported at the transition effect path (status 500, exit 1). A clean program answers `lint circuit-emits: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintCircuitEmitsSpec {
+  expects trait OrbLintCircuitEmits {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintCircuitEmitsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintCircuitEmits, OrbLintCircuitEmitsCli
+}

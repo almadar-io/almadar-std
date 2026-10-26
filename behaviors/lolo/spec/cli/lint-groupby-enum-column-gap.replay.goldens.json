@@ -1,0 +1,1783 @@
+{
+  "atom": "cli/atoms/std-orb-lint-groupby-enum-column-gap.lolo",
+  "trait": "OrbLintGroupbyEnumColumnGap",
+  "note": "Cases mirror validate_groupby_enum_column_gap (types/config_type.rs): the hidden enum values of a groupByField/columns pair, with paired controls for each early exit. Expectations are the compiler's findings on the same program (orb validate --json). Entities are named Task (not Card) to avoid the unrelated UI-name collision error.",
+  "cases": [
+    {
+      "id": "hidden-enum-value",
+      "steps": [
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "enum",
+                        "values": [
+                          "todo",
+                          "doing",
+                          "done",
+                          "cancelled"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Task",
+                      "config": {
+                        "groupByField": {
+                          "type": "string",
+                          "default": "status"
+                        },
+                        "columns": {
+                          "type": "[Col]",
+                          "default": [
+                            {
+                              "key": "todo"
+                            },
+                            {
+                              "key": "doing"
+                            },
+                            {
+                              "key": "done"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AP",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "Board"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "groupby-enum-column-gap",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_RENDER_GROUPBY_ENUM_COLUMN_GAP",
+                      "path": "Board.config.groupByField",
+                      "message": "Board buckets Task rows by 'status' into columns [todo, doing, done], but the field's enum also allows [cancelled] \u2014 rows with those values match no column and silently disappear",
+                      "suggestion": "add a column entry for each missing key (cancelled) or narrow the Task.status enum",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "hidden-two-values",
+      "steps": [
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "enum",
+                        "values": [
+                          "todo",
+                          "doing",
+                          "done",
+                          "cancelled"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Task",
+                      "config": {
+                        "groupByField": {
+                          "type": "string",
+                          "default": "status"
+                        },
+                        "columns": {
+                          "type": "[Col]",
+                          "default": [
+                            {
+                              "key": "todo"
+                            },
+                            {
+                              "key": "doing"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AP",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "Board"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "groupby-enum-column-gap",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_RENDER_GROUPBY_ENUM_COLUMN_GAP",
+                      "path": "Board.config.groupByField",
+                      "message": "Board buckets Task rows by 'status' into columns [todo, doing], but the field's enum also allows [done, cancelled] \u2014 rows with those values match no column and silently disappear",
+                      "suggestion": "add a column entry for each missing key (done, cancelled) or narrow the Task.status enum",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-all-values-keyed",
+      "steps": [
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "enum",
+                        "values": [
+                          "todo",
+                          "doing",
+                          "done",
+                          "cancelled"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Task",
+                      "config": {
+                        "groupByField": {
+                          "type": "string",
+                          "default": "status"
+                        },
+                        "columns": {
+                          "type": "[Col]",
+                          "default": [
+                            {
+                              "key": "todo"
+                            },
+                            {
+                              "key": "doing"
+                            },
+                            {
+                              "key": "done"
+                            },
+                            {
+                              "key": "cancelled"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AP",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "Board"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "groupby-enum-column-gap",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-extra-column-key",
+      "steps": [
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "enum",
+                        "values": [
+                          "todo",
+                          "doing",
+                          "done",
+                          "cancelled"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Task",
+                      "config": {
+                        "groupByField": {
+                          "type": "string",
+                          "default": "status"
+                        },
+                        "columns": {
+                          "type": "[Col]",
+                          "default": [
+                            {
+                              "key": "todo"
+                            },
+                            {
+                              "key": "doing"
+                            },
+                            {
+                              "key": "done"
+                            },
+                            {
+                              "key": "cancelled"
+                            },
+                            {
+                              "key": "archived"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AP",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "Board"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "groupby-enum-column-gap",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-groupby-empty",
+      "steps": [
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "enum",
+                        "values": [
+                          "todo",
+                          "doing",
+                          "done",
+                          "cancelled"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Task",
+                      "config": {
+                        "groupByField": {
+                          "type": "string",
+                          "default": ""
+                        },
+                        "columns": {
+                          "type": "[Col]",
+                          "default": [
+                            {
+                              "key": "todo"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AP",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "Board"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "groupby-enum-column-gap",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-columns",
+      "steps": [
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "enum",
+                        "values": [
+                          "todo",
+                          "doing",
+                          "done",
+                          "cancelled"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Task",
+                      "config": {
+                        "groupByField": {
+                          "type": "string",
+                          "default": "status"
+                        },
+                        "columns": {
+                          "type": "[Col]",
+                          "default": []
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AP",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "Board"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "groupby-enum-column-gap",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-columns-without-key",
+      "steps": [
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "enum",
+                        "values": [
+                          "todo",
+                          "doing",
+                          "done",
+                          "cancelled"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Task",
+                      "config": {
+                        "groupByField": {
+                          "type": "string",
+                          "default": "status"
+                        },
+                        "columns": {
+                          "type": "[Col]",
+                          "default": [
+                            {
+                              "label": "x"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AP",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "Board"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "groupby-enum-column-gap",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-field-not-enum",
+      "steps": [
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Task",
+                      "config": {
+                        "groupByField": {
+                          "type": "string",
+                          "default": "status"
+                        },
+                        "columns": {
+                          "type": "[Col]",
+                          "default": [
+                            {
+                              "key": "todo"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AP",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "Board"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "groupby-enum-column-gap",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-groupby-field-undeclared",
+      "steps": [
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "enum",
+                        "values": [
+                          "todo",
+                          "doing",
+                          "done",
+                          "cancelled"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Task",
+                      "config": {
+                        "groupByField": {
+                          "type": "string",
+                          "default": "phase"
+                        },
+                        "columns": {
+                          "type": "[Col]",
+                          "default": [
+                            {
+                              "key": "todo"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AP",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "Board"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "groupby-enum-column-gap",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-linked-entity-unknown",
+      "steps": [
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "enum",
+                        "values": [
+                          "todo",
+                          "doing",
+                          "done",
+                          "cancelled"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Ghost",
+                      "config": {
+                        "groupByField": {
+                          "type": "string",
+                          "default": "status"
+                        },
+                        "columns": {
+                          "type": "[Col]",
+                          "default": [
+                            {
+                              "key": "todo"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AP",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "Board"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "groupby-enum-column-gap",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "aux-entity-resolves",
+      "steps": [
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Main",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Task",
+                      "config": {
+                        "groupByField": {
+                          "type": "string",
+                          "default": "status"
+                        },
+                        "columns": {
+                          "type": "[Col]",
+                          "default": [
+                            {
+                              "key": "todo"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AP",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "Board"
+                        }
+                      ]
+                    }
+                  ],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Task",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "status",
+                          "type": "enum",
+                          "values": [
+                            "todo",
+                            "doing",
+                            "done",
+                            "cancelled"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "groupby-enum-column-gap",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_RENDER_GROUPBY_ENUM_COLUMN_GAP",
+                      "path": "Board.config.groupByField",
+                      "message": "Board buckets Task rows by 'status' into columns [todo], but the field's enum also allows [doing, done, cancelled] \u2014 rows with those values match no column and silently disappear",
+                      "suggestion": "add a column entry for each missing key (doing, done, cancelled) or narrow the Task.status enum",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-duplicate-primary-skipped",
+      "steps": [
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "enum",
+                        "values": [
+                          "todo",
+                          "doing",
+                          "done",
+                          "cancelled"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Task",
+                      "config": {
+                        "groupByField": {
+                          "type": "string",
+                          "default": "status"
+                        },
+                        "columns": {
+                          "type": "[Col]",
+                          "default": [
+                            {
+                              "key": "todo"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AP",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "Board"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "enum",
+                        "values": [
+                          "todo",
+                          "doing",
+                          "done",
+                          "cancelled"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Other",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Task"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "BP",
+                      "path": "/b",
+                      "traits": [
+                        {
+                          "ref": "Other"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "groupby-enum-column-gap",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "later-orbital-entity-wins",
+      "steps": [
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "Main",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Board",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Task",
+                      "config": {
+                        "groupByField": {
+                          "type": "string",
+                          "default": "status"
+                        },
+                        "columns": {
+                          "type": "[Col]",
+                          "default": [
+                            {
+                              "key": "todo"
+                            },
+                            {
+                              "key": "doing"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AP",
+                      "path": "/a",
+                      "traits": [
+                        {
+                          "ref": "Board"
+                        }
+                      ]
+                    }
+                  ],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Task",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "status",
+                          "type": "enum",
+                          "values": [
+                            "todo",
+                            "doing"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "Task2",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "status",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Other",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          }
+                        ]
+                      },
+                      "linkedEntity": "Task2"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "BP",
+                      "path": "/b",
+                      "traits": [
+                        {
+                          "ref": "Other"
+                        }
+                      ]
+                    }
+                  ],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Task",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "status",
+                          "type": "enum",
+                          "values": [
+                            "todo",
+                            "doing",
+                            "done",
+                            "cancelled"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintGroupbyEnumColumnGap",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "groupby-enum-column-gap",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_RENDER_GROUPBY_ENUM_COLUMN_GAP",
+                      "path": "Board.config.groupByField",
+                      "message": "Board buckets Task rows by 'status' into columns [todo, doing], but the field's enum also allows [done, cancelled] \u2014 rows with those values match no column and silently disappear",
+                      "suggestion": "add a column entry for each missing key (done, cancelled) or narrow the Task.status enum",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -41,16 +41,7 @@
    ]
   },
   {
-   "id": "aws-cannot-list-none-walks-nothing",
-   "config": {
-    "region": "us-east-1",
-    "instanceTypes": [
-     "g4dn.*",
-     "g5.*",
-     "p3.*",
-     "p4d.*"
-    ]
-   },
+   "id": "aws-not-installed-shows-a-named-error-and-stops",
    "steps": [
     {
      "event": "TRAINING_LOAD",
@@ -60,11 +51,87 @@
      "event": "TR_CLI_FAILED",
      "payload": {
       "stage": "list",
-      "error": "no aws",
-      "code": "cli_failed"
+      "error": "No such file or directory (os error 2)",
+      "code": "cli_spawn_failed"
      },
      "from": "reading",
      "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "render-ui"
+       }
+      ],
+      "neverEmits": [
+       "TR_NEXT"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "aws-exits-nonzero-shows-its-stderr-and-stops",
+   "steps": [
+    {
+     "event": "TRAINING_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "TR_RAN",
+     "payload": {
+      "exitCode": 255,
+      "signal": 0,
+      "stderr": "Unable to locate credentials",
+      "stdoutBytes": "",
+      "stage": "list",
+      "stdout": ""
+     },
+     "from": "reading",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "render-ui"
+       }
+      ],
+      "neverEmits": [
+       "TR_NEXT"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-aws-lists-nothing-cleanly-walks-on",
+   "steps": [
+    {
+     "event": "TRAINING_LOAD",
+     "payload": {}
+    },
+    {
+     "event": "TR_RAN",
+     "payload": {
+      "exitCode": 0,
+      "signal": 0,
+      "stderr": "",
+      "stdoutBytes": "",
+      "stage": "list",
+      "stdout": "[]"
+     },
+     "from": "reading",
+     "expect": {
+      "fired": true,
+      "state": "reading",
       "emits": [
        {
         "event": "TR_NEXT",
@@ -73,7 +140,8 @@
       ]
      }
     }
-   ]
+   ],
+   "now": 1760531445678
   }
  ]
 }

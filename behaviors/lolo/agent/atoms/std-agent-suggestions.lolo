@@ -3,6 +3,7 @@ app std-agent-suggestions [
   description: "std-agent-suggestions — an agent that proactively proposes things to the signed-in person, who accepts or dismisses each one. The agent proposes through one declared input, PROPOSE_SUGGESTION (its @description is the tool text): a kind, a title, a body that gives its reasoning, an optional action (a name the app routes) with a payload, an optional href, and a subject (what it is about). A suggestion's signature is kind:action:subject; a signature that was ever proposed to this person, accepted or dismissed included, is never stored again (SUGGESTION_DUPLICATE), and no more than `maxPending` wait at once (SUGGESTION_LIMIT_REACHED). `kinds` and `actions`, when listed, are the only values accepted (SUGGESTION_REJECTED). The agent runs on its own: any trait emitting SUGGESTIONS_TRIGGERED (or an app event routed into AgentSuggestionTrigger's TRIGGERED by re-binding that trait in the import body with `omit { AgentSuggestionTrigger }` and its own `listens`) asks for a run, and once `cooldownMinutes` have passed since this person's last run a second std-agent-tool-loop answers `prompt` with `tools` as the signed-in person — `quiet`, so it streams no live steps and toasts no failure, and its reply and failure are renamed PROACTIVE_REPLIED / PROACTIVE_FAILED so they never reach the assistant's chat. AgentSuggestionInbox lists the pending suggestions with Accept and Dismiss and an empty state that offers to look again (SUGGESTIONS_ANALYZE_REQUESTED). Accept stores accepted, emits SUGGESTION_ACCEPTED { action, payload, href, … } for the app to route (and navigates to `href` when the suggestion has one); Dismiss stores dismissed and emits SUGGESTION_DISMISSED. The inbox renders into `panelSlot`: `main` inline (the content of a std-panel-launcher), or `modal`/`drawer` opened with OPEN and closed with CLOSE (set std-app-layout's notificationClickEvent, or a topBarActions event, to SUGGESTIONS_OPEN_REQUESTED). Import the orbital once per app: `orbital Suggestions = Suggest.orbitals.AgentSuggestionsOrbital { entity MySuggestion  entities { AgentSuggestionRun: MySuggestionRun } config { … } }`, retargeting the records onto owner-scoped entities (`ownerId` a relation to your [identity] roster, with @read/@create/@update); a suggestion's proposer, inbox and trigger read only the rows whose ownerId is the signed-in person. PROPOSE_SUGGESTION's refusals (SUGGESTION_DUPLICATE, SUGGESTION_LIMIT_REACHED, SUGGESTION_REJECTED) are the agent's tool response; no trait listens to them. Suggestion kinds, actions and prompts are the app's vocabulary, declared in config.",
   egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
+uses Lifecycle from "std/behaviors/std-lifecycle"
 ;; @capabilities "proactive suggestions, agent recommendations, suggestion inbox, next best action, accept or dismiss suggestions, notification bell suggestions, agent proposals"
 
 type AgentToolScope = {
@@ -959,6 +960,30 @@ orbital AgentSuggestionsOrbital {
 ;; importing that orbital retargets them onto its own owner-scoped entities:
 ;; `entities { AgentSuggestion: MySuggestion, AgentSuggestionRun: MySuggestionRun }`.
 orbital AgentSuggestionRecordsOrbital {
+  config {
+    keepDays : number = 0
+      @label "Days to keep suggestions and their runs"
+      @description "Stored suggestions and their runs older than this many days are deleted. 0 turns the clean-up off and keeps them all."
+      @synonyms "retention, retention days, ttl, expire, delete old, keep for"
+      @tier "policy"
+  }
+
+  entity AgentSuggestionRetentionLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+    createdAt : number = 0
+  }
+
+  entity AgentSuggestionRunRetentionLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+    ranAt : number = 0
+  }
+
   entity AgentSuggestion [persistent: agentSuggestions] {
     id : string!
     ownerId : string! @description "Whom this is proposed to (the real @user). The binding organism scopes @read/@create/@update to it." @synonyms "user, owner, account"
@@ -1073,5 +1098,25 @@ orbital AgentSuggestionRecordsOrbital {
     }
   }
 
-  page "/agent-suggestions/history" as AgentSuggestionHistoryPage -> AgentSuggestionHistory
+  trait AgentSuggestionRetention = Lifecycle.traits.LifecycleScheduler -> AgentSuggestionRetentionLog {
+    config {
+      enabled: true
+      action: delete
+      targetEntity: AgentSuggestion
+      dateField: createdAt
+      ageDays: @config.keepDays
+    }
+  }
+
+  trait AgentSuggestionRunRetention = Lifecycle.traits.LifecycleScheduler -> AgentSuggestionRunRetentionLog {
+    config {
+      enabled: true
+      action: delete
+      targetEntity: AgentSuggestionRun
+      dateField: ranAt
+      ageDays: @config.keepDays
+    }
+  }
+
+  page "/agent-suggestions/history" as AgentSuggestionHistoryPage -> AgentSuggestionHistory, AgentSuggestionRetention, AgentSuggestionRunRetention
 }

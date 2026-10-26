@@ -1,0 +1,6741 @@
+{
+ "atom": "cli/atoms/std-orb-lint-event-wiring.lolo",
+ "trait": "OrbLintEventWiring",
+ "note": "Cases mirror event_wiring.rs: the orphan-listener, unused-emission (dead control, broadcast, stale, runtime-bound, imported-trait skips, external and config-knob exemptions) and unrouted-handler checks, each with a paired control. Every case carries the FIRED_HEARD and PRODUCED_HEARD answers of the program's helper traits. Expected findings are the code, path, message and suggestion the Rust validator reports for the same program.",
+ "cases": [
+  {
+   "id": "orphan-listener-no-emitter",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "P",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "PING",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "PING"
+            },
+            {
+             "event": "GO2"
+            }
+           ]
+          },
+          {
+           "name": "C",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "NEXT"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "listens": [
+            {
+             "event": "GHOST",
+             "triggers": "NEXT",
+             "source": {
+              "kind": "trait",
+              "trait": "P"
+             }
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "P"
+            },
+            {
+             "ref": "C"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [],
+       "C": []
+      },
+      "byEffect": {
+       "P": [
+        "PING"
+       ],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [],
+       "C": []
+      },
+      "byEffect": {
+       "P": [],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_X_ORPHAN_LISTENER",
+           "path": "traits.C",
+           "message": "Trait 'C' listens for event 'GHOST' but no trait emits it",
+           "suggestion": "Ensure the event is emitted by another trait or remove the listener",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.P",
+           "message": "Trait 'P' emits event 'GO2' but no trait listens for it (nothing in this composition fires it, so this is a stale declaration rather than a dead control)",
+           "suggestion": "Consume it where it fires: add a transition arm `GO2 -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.P",
+           "message": "Trait 'P' emits event 'PING' but no trait listens for it \u2014 this composition broadcasts it programmatically, and the collector for it was not composed here",
+           "suggestion": "Consume it where it fires: add a transition arm `PING -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-listen-source-trigger-exists",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "P",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "PING",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "PING"
+            },
+            {
+             "event": "GO2"
+            }
+           ]
+          },
+          {
+           "name": "C",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "NEXT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GHOST"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "listens": [
+            {
+             "event": "GHOST",
+             "triggers": "NEXT",
+             "source": {
+              "kind": "trait",
+              "trait": "P"
+             }
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "P"
+            },
+            {
+             "ref": "C"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [],
+       "C": []
+      },
+      "byEffect": {
+       "P": [
+        "PING"
+       ],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [],
+       "C": []
+      },
+      "byEffect": {
+       "P": [],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.P",
+           "message": "Trait 'P' emits event 'GO2' but no trait listens for it (nothing in this composition fires it, so this is a stale declaration rather than a dead control)",
+           "suggestion": "Consume it where it fires: add a transition arm `GO2 -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.P",
+           "message": "Trait 'P' emits event 'PING' but no trait listens for it \u2014 this composition broadcasts it programmatically, and the collector for it was not composed here",
+           "suggestion": "Consume it where it fires: add a transition arm `PING -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-listen-event-produced-by-a-control",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "P",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "GHOST"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": []
+          },
+          {
+           "name": "C",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "NEXT"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "listens": [
+            {
+             "event": "GHOST",
+             "triggers": "NEXT",
+             "source": {
+              "kind": "trait",
+              "trait": "P"
+             }
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "P"
+            },
+            {
+             "ref": "C"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [
+        "GHOST"
+       ],
+       "C": []
+      },
+      "byEffect": {
+       "P": [],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [
+        "GHOST"
+       ],
+       "C": []
+      },
+      "byEffect": {
+       "P": [],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-wildcard-listen-is-not-an-orphan",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "P",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "PING",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "PING"
+            },
+            {
+             "event": "GO2"
+            }
+           ]
+          },
+          {
+           "name": "C",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "NEXT"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "listens": [
+            {
+             "event": "GHOST",
+             "triggers": "NEXT",
+             "source": {
+              "kind": "any"
+             }
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "P"
+            },
+            {
+             "ref": "C"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [],
+       "C": []
+      },
+      "byEffect": {
+       "P": [
+        "PING"
+       ],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [],
+       "C": []
+      },
+      "byEffect": {
+       "P": [],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.P",
+           "message": "Trait 'P' emits event 'GO2' but no trait listens for it (nothing in this composition fires it, so this is a stale declaration rather than a dead control)",
+           "suggestion": "Consume it where it fires: add a transition arm `GO2 -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.P",
+           "message": "Trait 'P' emits event 'PING' but no trait listens for it \u2014 this composition broadcasts it programmatically, and the collector for it was not composed here",
+           "suggestion": "Consume it where it fires: add a transition arm `PING -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-cross-orbital-listen-is-not-an-orphan",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "P",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "PING",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "PING"
+            },
+            {
+             "event": "GO2"
+            }
+           ]
+          },
+          {
+           "name": "C",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "NEXT"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "listens": [
+            {
+             "event": "GHOST",
+             "triggers": "NEXT",
+             "source": {
+              "kind": "orbital",
+              "orbital": "Z",
+              "trait": "P"
+             }
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "P"
+            },
+            {
+             "ref": "C"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [],
+       "C": []
+      },
+      "byEffect": {
+       "P": [
+        "PING"
+       ],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [],
+       "C": []
+      },
+      "byEffect": {
+       "P": [],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.P",
+           "message": "Trait 'P' emits event 'GO2' but no trait listens for it (nothing in this composition fires it, so this is a stale declaration rather than a dead control)",
+           "suggestion": "Consume it where it fires: add a transition arm `GO2 -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.P",
+           "message": "Trait 'P' emits event 'PING' but no trait listens for it \u2014 this composition broadcasts it programmatically, and the collector for it was not composed here",
+           "suggestion": "Consume it where it fires: add a transition arm `PING -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-external-listen-is-not-an-orphan",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "P",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "PING",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "PING"
+            },
+            {
+             "event": "GO2"
+            }
+           ]
+          },
+          {
+           "name": "C",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "NEXT"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "listens": [
+            {
+             "event": "GHOST",
+             "triggers": "NEXT",
+             "scope": "external",
+             "source": {
+              "kind": "trait",
+              "trait": "P"
+             }
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "P"
+            },
+            {
+             "ref": "C"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [],
+       "C": []
+      },
+      "byEffect": {
+       "P": [
+        "PING"
+       ],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [],
+       "C": []
+      },
+      "byEffect": {
+       "P": [],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.P",
+           "message": "Trait 'P' emits event 'GO2' but no trait listens for it (nothing in this composition fires it, so this is a stale declaration rather than a dead control)",
+           "suggestion": "Consume it where it fires: add a transition arm `GO2 -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.P",
+           "message": "Trait 'P' emits event 'PING' but no trait listens for it \u2014 this composition broadcasts it programmatically, and the collector for it was not composed here",
+           "suggestion": "Consume it where it fires: add a transition arm `PING -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-emit-map-slot-produces-the-event",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "P",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "fetch",
+                "Task",
+                {
+                 "emit": {
+                  "success": "GHOST",
+                  "failure": "GF"
+                 }
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": []
+          },
+          {
+           "name": "C",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "NEXT"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "listens": [
+            {
+             "event": "GHOST",
+             "triggers": "NEXT",
+             "source": {
+              "kind": "trait",
+              "trait": "P"
+             }
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "P"
+            },
+            {
+             "ref": "C"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [],
+       "C": []
+      },
+      "byEffect": {
+       "P": [],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [],
+       "C": []
+      },
+      "byEffect": {
+       "P": [
+        "GHOST",
+        "GF"
+       ],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-internal-emit-does-not-satisfy-the-listener",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "P",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "GHOST",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "GHOST",
+             "scope": "internal"
+            }
+           ]
+          },
+          {
+           "name": "C",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "NEXT"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "listens": [
+            {
+             "event": "GHOST",
+             "triggers": "NEXT",
+             "source": {
+              "kind": "trait",
+              "trait": "P"
+             }
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "P"
+            },
+            {
+             "ref": "C"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [],
+       "C": []
+      },
+      "byEffect": {
+       "P": [
+        "GHOST"
+       ],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "P": [],
+       "C": []
+      },
+      "byEffect": {
+       "P": [],
+       "C": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_X_ORPHAN_LISTENER",
+           "path": "traits.C",
+           "message": "Trait 'C' listens for event 'GHOST' but no trait emits it",
+           "suggestion": "Ensure the event is emitted by another trait or remove the listener",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unused-emission-rendered-dead-control",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "EV"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "EV"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.T",
+           "message": "Trait 'T' emits event 'EV' but no trait listens for it \u2014 and a RENDERED control here fires it, so the affordance is dead and the value it carries is discarded",
+           "suggestion": "Consume it where it fires: add a transition arm `EV -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unused-emission-programmatic-broadcast",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "EV",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "EV"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": []
+      },
+      "byEffect": {
+       "T": [
+        "EV"
+       ]
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": []
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.T",
+           "message": "Trait 'T' emits event 'EV' but no trait listens for it \u2014 this composition broadcasts it programmatically, and the collector for it was not composed here",
+           "suggestion": "Consume it where it fires: add a transition arm `EV -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unused-emission-stale-declaration",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "EV"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": []
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": []
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.T",
+           "message": "Trait 'T' emits event 'EV' but no trait listens for it (nothing in this composition fires it, so this is a stale declaration rather than a dead control)",
+           "suggestion": "Consume it where it fires: add a transition arm `EV -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unused-emission-runtime-bound-name",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "EV"
+                }
+               ],
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "@config.act"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "EV"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.T",
+           "message": "Trait 'T' emits event 'EV' but no trait listens for it (the event name is bound at runtime, so reachability cannot be decided statically)",
+           "suggestion": "Consume it where it fires: add a transition arm `EV -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-external-scope-defers-the-consumer",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "EV"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "EV",
+             "scope": "external"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-handled-by-a-transition",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "EV"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "EV"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "EV"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-init-is-never-an-unused-emission",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "INIT"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": []
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": []
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "imported-dead-control-reports",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "EV"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "EV"
+            }
+           ],
+           "sourceBehavior": {
+            "behavior": "std-x",
+            "alias": "X",
+            "originalName": "T"
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.T",
+           "message": "Trait 'T' emits event 'EV' but no trait listens for it \u2014 and a RENDERED control here fires it, so the affordance is dead and the value it carries is discarded",
+           "suggestion": "This trait is composed from an imported behavior, so THIS file is the consumer its `-> external` emit was declared for. Wire it at the call site: rename the event onto one you handle (`events { EV: <YOUR_EVENT> }`) and add a matching transition arm, or add `listens { T.EV -> <TRIGGER> }`. Re-declaring it `-> external` no longer suppresses this \u2014 that only defers an emit whose trait is DECLARED here.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "imported-external-declared-still-reports",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "EV"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "EV",
+             "scope": "external"
+            }
+           ],
+           "sourceBehavior": {
+            "behavior": "std-x",
+            "alias": "X",
+            "originalName": "T"
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.T",
+           "message": "Trait 'T' emits event 'EV' but no trait listens for it \u2014 and a RENDERED control here fires it, so the affordance is dead and the value it carries is discarded",
+           "suggestion": "This trait is composed from an imported behavior, so THIS file is the consumer its `-> external` emit was declared for. Wire it at the call site: rename the event onto one you handle (`events { EV: <YOUR_EVENT> }`) and add a matching transition arm, or add `listens { T.EV -> <TRIGGER> }`. Re-declaring it `-> external` no longer suppresses this \u2014 that only defers an emit whose trait is DECLARED here.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-imported-call-site-external-forwards",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "EV"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "EV",
+             "scope": "external",
+             "scopeOverridden": true
+            }
+           ],
+           "sourceBehavior": {
+            "behavior": "std-x",
+            "alias": "X",
+            "originalName": "T"
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-imported-broadcast-is-skipped",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "EV",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "EV"
+            }
+           ],
+           "sourceBehavior": {
+            "behavior": "std-x",
+            "alias": "X",
+            "originalName": "T"
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": []
+      },
+      "byEffect": {
+       "T": [
+        "EV"
+       ]
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": []
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-imported-runtime-bound-name-is-skipped",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "EV"
+                }
+               ],
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "@config.act"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "EV"
+            }
+           ],
+           "sourceBehavior": {
+            "behavior": "std-x",
+            "alias": "X",
+            "originalName": "T"
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-imported-unexercised-offer-is-skipped",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "EV"
+            }
+           ],
+           "sourceBehavior": {
+            "behavior": "std-x",
+            "alias": "X",
+            "originalName": "T"
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": []
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": []
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "imported-offer-named-in-a-persist-reports",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "persist",
+                "save",
+                "Task",
+                {
+                 "where": "EV"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "EV"
+            }
+           ],
+           "sourceBehavior": {
+            "behavior": "std-x",
+            "alias": "X",
+            "originalName": "T"
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": []
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": []
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_X_UNUSED_EMISSION",
+           "path": "traits.T",
+           "message": "Trait 'T' emits event 'EV' but no trait listens for it (nothing in this composition fires it, so this is a stale declaration rather than a dead control)",
+           "suggestion": "This trait is composed from an imported behavior, so THIS file is the consumer its `-> external` emit was declared for. Wire it at the call site: rename the event onto one you handle (`events { EV: <YOUR_EVENT> }`) and add a matching transition arm, or add `listens { T.EV -> <TRIGGER> }`. Re-declaring it `-> external` no longer suppresses this \u2014 that only defers an emit whose trait is DECLARED here.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-config-knob-offer-is-skipped",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "EV"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "EV",
+             "definerKnob": "act"
+            }
+           ],
+           "sourceBehavior": {
+            "behavior": "std-x",
+            "alias": "X",
+            "originalName": "T"
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": [
+        "EV"
+       ]
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unrouted-handler-arm-without-a-route",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "SIG",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "SIG"
+            }
+           ]
+          },
+          {
+           "name": "B",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SIG"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "A"
+            },
+            {
+             "ref": "B"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "A": [],
+       "B": []
+      },
+      "byEffect": {
+       "A": [
+        "SIG"
+       ],
+       "B": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "A": [],
+       "B": []
+      },
+      "byEffect": {
+       "A": [],
+       "B": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_EMIT_UNROUTED_TO_HANDLER",
+           "path": "orbitals.O.traits.A",
+           "message": "Trait 'A' emits 'SIG' and trait 'B' has an arm for it, but no declared route delivers it \u2014 events reach another trait only through `listens`",
+           "suggestion": "Add `listens { A.SIG -> SIG }` on 'B'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-declared-route-delivers-the-event",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "SIG",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "SIG"
+            }
+           ]
+          },
+          {
+           "name": "B",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SIG"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "listens": [
+            {
+             "event": "SIG",
+             "triggers": "SIG",
+             "source": {
+              "kind": "trait",
+              "trait": "A"
+             }
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "A"
+            },
+            {
+             "ref": "B"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "A": [],
+       "B": []
+      },
+      "byEffect": {
+       "A": [
+        "SIG"
+       ],
+       "B": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "A": [],
+       "B": []
+      },
+      "byEffect": {
+       "A": [],
+       "B": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-both-traits-self-consume-the-event",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "SIG",
+                {}
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SIG"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "SIG"
+            }
+           ]
+          },
+          {
+           "name": "B",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO2",
+              "effects": [
+               [
+                "emit",
+                "SIG",
+                {}
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SIG"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "SIG"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "A"
+            },
+            {
+             "ref": "B"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "A": [],
+       "B": []
+      },
+      "byEffect": {
+       "A": [
+        "SIG"
+       ],
+       "B": [
+        "SIG"
+       ]
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "A": [],
+       "B": []
+      },
+      "byEffect": {
+       "A": [],
+       "B": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-handler-routes-from-another-trait",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "SIG",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "SIG"
+            }
+           ]
+          },
+          {
+           "name": "B",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SIG"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "listens": [
+            {
+             "event": "SIG",
+             "triggers": "SIG",
+             "source": {
+              "kind": "trait",
+              "trait": "Z"
+             }
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "A"
+            },
+            {
+             "ref": "B"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "A": [],
+       "B": []
+      },
+      "byEffect": {
+       "A": [
+        "SIG"
+       ],
+       "B": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "A": [],
+       "B": []
+      },
+      "byEffect": {
+       "A": [],
+       "B": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_EMIT_UNROUTED_TO_HANDLER",
+           "path": "orbitals.O.traits.A",
+           "message": "Trait 'A' emits 'SIG' and trait 'B' has an arm for it, but no declared route delivers it \u2014 events reach another trait only through `listens`",
+           "suggestion": "Add `listens { A.SIG -> SIG }` on 'B'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unrouted-async-result-event",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "fetch",
+                "Task",
+                {
+                 "emit": {
+                  "success": "SIG"
+                 }
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": []
+          },
+          {
+           "name": "B",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SIG"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "A"
+            },
+            {
+             "ref": "B"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "A": [],
+       "B": []
+      },
+      "byEffect": {
+       "A": [],
+       "B": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "A": [],
+       "B": []
+      },
+      "byEffect": {
+       "A": [],
+       "B": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_EMIT_UNROUTED_TO_HANDLER",
+           "path": "orbitals.O.traits.A",
+           "message": "Trait 'A' emits 'SIG' and trait 'B' has an arm for it, but no declared route delivers it \u2014 events reach another trait only through `listens`",
+           "suggestion": "Add `listens { A.SIG -> SIG }` on 'B'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-bus-excluded-event-is-never-delivered",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "INIT",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": []
+          },
+          {
+           "name": "B",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "A"
+            },
+            {
+             "ref": "B"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "A": [],
+       "B": []
+      },
+      "byEffect": {
+       "A": [
+        "INIT"
+       ],
+       "B": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "A": [],
+       "B": []
+      },
+      "byEffect": {
+       "A": [],
+       "B": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "unrouted-self-fed-handler-still-needs-a-route",
+   "steps": [
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent",
+       "cancelEvent",
+       "dismissEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "A",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "SIG",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "emits": [
+            {
+             "event": "SIG"
+            }
+           ]
+          },
+          {
+           "name": "B",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SIG",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "SIG"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "A"
+            },
+            {
+             "ref": "B"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "A": [],
+       "B": [
+        "SIG"
+       ]
+      },
+      "byEffect": {
+       "A": [
+        "SIG"
+       ],
+       "B": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "PRODUCED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "A": [],
+       "B": []
+      },
+      "byEffect": {
+       "A": [],
+       "B": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintEventWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "event-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_EMIT_UNROUTED_TO_HANDLER",
+           "path": "orbitals.O.traits.A",
+           "message": "Trait 'A' emits 'SIG' and trait 'B' has an arm for it, but no declared route delivers it \u2014 events reach another trait only through `listens`",
+           "suggestion": "Add `listens { A.SIG -> SIG }` on 'B'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

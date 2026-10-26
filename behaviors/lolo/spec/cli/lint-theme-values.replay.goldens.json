@@ -1,0 +1,1642 @@
+{
+  "atom": "cli/atoms/std-orb-lint-theme-values.lolo",
+  "trait": "OrbLintThemeValues",
+  "note": "Cases mirror validate_theme_definition in theme.rs (test_valid_css_color, test_valid_css_length, test_validate_theme_definition) plus the edge values checked against `orb validate --json` on thm-edge-ok, thm-edge-bad, thm-bad and thm-two-orbitals. Findings follow the map order of the program handed to the rule (authored order in these cases); `orb lint` on a file reads maps key-sorted, so within one token map the order can differ from Rust, the set is identical; variants are in name order. ORB_X_UNKNOWN_THEME is not ported (needs the installed theme registry keys). A non-ASCII font name or color word is judged by \\p{L}\\p{N}, a superset-free approximation of Rust's Unicode \\w and is_alphabetic.",
+  "cases": [
+    {
+      "id": "a color that is not a CSS color is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {
+                      "colors": {
+                        "primary": "#zz1"
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.colors.primary",
+                      "message": "Color value '#zz1' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "control valid colors are clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {
+                      "colors": {
+                        "a": "#abc",
+                        "b": "#abcd",
+                        "c": "#aabbcc",
+                        "d": "#AABBCCDD",
+                        "e": "rgba(0,0,0,.5)",
+                        "f": "hsl(1 2% 3%)",
+                        "g": "var(--x)",
+                        "h": "blue",
+                        "i": "light-gray",
+                        "j": "",
+                        "k": "  #fff  "
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "a hex color of 5 or 7 digits, a non-hex digit or a bare number is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {
+                      "colors": {
+                        "a": "#12345",
+                        "b": "#1234567",
+                        "c": "#ggg",
+                        "d": "12px",
+                        "e": "#",
+                        "f": "red!",
+                        "g": "(red)",
+                        "h": "RGB(1,2,3)"
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.colors.a",
+                      "message": "Color value '#12345' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.colors.b",
+                      "message": "Color value '#1234567' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.colors.c",
+                      "message": "Color value '#ggg' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.colors.d",
+                      "message": "Color value '12px' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.colors.e",
+                      "message": "Color value '#' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.colors.f",
+                      "message": "Color value 'red!' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.colors.g",
+                      "message": "Color value '(red)' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.colors.h",
+                      "message": "Color value 'RGB(1,2,3)' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "a radius that is not a CSS length is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {
+                      "radii": {
+                        "md": "8px",
+                        "lg": "big"
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.radii.lg",
+                      "message": "Radius value 'big' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "control valid lengths are clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {
+                      "radii": {
+                        "a": "0",
+                        "b": "5",
+                        "c": "-1.5px",
+                        "d": "+2rem",
+                        "e": ".5em",
+                        "f": "5.%",
+                        "g": "1e3px",
+                        "h": "inf",
+                        "i": "var(--r)",
+                        "j": " 4px ",
+                        "k": "1.5vh",
+                        "l": "3pt",
+                        "m": "2ch",
+                        "n": "1ex",
+                        "o": "10vw",
+                        "p": "50%"
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "a spacing that is not a CSS length is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {
+                      "spacing": {
+                        "sm": "4 px",
+                        "md": "auto",
+                        "lg": "calc(1px)",
+                        "xs": "px",
+                        "xl": ""
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.spacing.sm",
+                      "message": "Spacing value '4 px' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.spacing.md",
+                      "message": "Spacing value 'auto' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.spacing.lg",
+                      "message": "Spacing value 'calc(1px)' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.spacing.xs",
+                      "message": "Spacing value 'px' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.spacing.xl",
+                      "message": "Spacing value '' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "a unit without a number or a double sign is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {
+                      "radii": {
+                        "a": "1 rem",
+                        "b": "1.2.3px",
+                        "c": "5xx",
+                        "d": "e3",
+                        "e": "--1px",
+                        "f": "1,5px"
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.radii.a",
+                      "message": "Radius value '1 rem' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.radii.b",
+                      "message": "Radius value '1.2.3px' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.radii.c",
+                      "message": "Radius value '5xx' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.radii.d",
+                      "message": "Radius value 'e3' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.radii.e",
+                      "message": "Radius value '--1px' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.radii.f",
+                      "message": "Radius value '1,5px' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "a malformed typeScale font stack is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {
+                      "typeScale": {
+                        "displayFamily": "'Unclosed, serif",
+                        "bodyFamily": "Inter, sans-serif",
+                        "monoFamily": "Fira  Code"
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.typeScale.displayFamily",
+                      "message": "Malformed CSS font-family stack ''Unclosed, serif' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.typeScale.monoFamily",
+                      "message": "Malformed CSS font-family stack 'Fira  Code' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "a malformed typography font-family stack is an error and other typography keys are not checked",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {
+                      "typography": {
+                        "font-family": "Open Sans, sans-serif",
+                        "font-family-mono": "Fira Code, monospace,",
+                        "font-size": "bogus("
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.typography.font-family-mono",
+                      "message": "Malformed CSS font-family stack 'Fira Code, monospace,' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "control well formed font stacks are clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {
+                      "typography": {
+                        "font-family": "-apple-system, 'Segoe UI', \"Open Sans\", var(--f, serif), sans-serif",
+                        "font-family-a": "Inter",
+                        "font-family-b": "var(--body)"
+                      },
+                      "typeScale": {
+                        "displayFamily": "Segoe UI Variable Text",
+                        "bodyFamily": "var(--b)",
+                        "monoFamily": "ui-monospace, Menlo"
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "an empty stack, a comma inside parens, an unbalanced paren, a leading digit and a doubled comma are errors",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {
+                      "typography": {
+                        "font-family-a": "",
+                        "font-family-b": "(a, b)",
+                        "font-family-c": "var(--x",
+                        "font-family-d": "2font",
+                        "font-family-e": "a,,b",
+                        "font-family-f": "\"Fira Code",
+                        "font-family-g": "'a' 'b'",
+                        "font-family-h": "x)",
+                        "font-family-i": "\"\""
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.typography.font-family-a",
+                      "message": "Malformed CSS font-family stack '' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.typography.font-family-b",
+                      "message": "Malformed CSS font-family stack '(a, b)' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.typography.font-family-c",
+                      "message": "Malformed CSS font-family stack 'var(--x' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.typography.font-family-d",
+                      "message": "Malformed CSS font-family stack '2font' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.typography.font-family-e",
+                      "message": "Malformed CSS font-family stack 'a,,b' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.typography.font-family-f",
+                      "message": "Malformed CSS font-family stack '\"Fira Code' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.typography.font-family-g",
+                      "message": "Malformed CSS font-family stack ''a' 'b'' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.typography.font-family-h",
+                      "message": "Malformed CSS font-family stack 'x)' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.typography.font-family-i",
+                      "message": "Malformed CSS font-family stack '\"\"' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "variants are checked in name order with stacks before colors",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {},
+                    "variants": {
+                      "zeta": {
+                        "colors": {
+                          "x": "1px"
+                        },
+                        "typography": {
+                          "font-family-z": "a b,"
+                        }
+                      },
+                      "alpha": {
+                        "colors": {
+                          "y": "#xyz"
+                        },
+                        "typeScale": {
+                          "monoFamily": "'"
+                        }
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.variants.alpha.typeScale.monoFamily",
+                      "message": "Malformed CSS font-family stack ''' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.variants.alpha.colors.y",
+                      "message": "Color value '#xyz' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.variants.zeta.typography.font-family-z",
+                      "message": "Malformed CSS font-family stack 'a b,' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.variants.zeta.colors.x",
+                      "message": "Color value '1px' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "control valid variants are clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {},
+                    "variants": {
+                      "dark": {
+                        "colors": {
+                          "bg": "#000"
+                        },
+                        "typeScale": {
+                          "bodyFamily": "Inter, sans-serif"
+                        }
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "tokens are checked in the order colors radii spacing and fonts",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {
+                      "spacing": {
+                        "s": "x"
+                      },
+                      "radii": {
+                        "r": "x"
+                      },
+                      "colors": {
+                        "c": "1"
+                      },
+                      "typography": {
+                        "font-family": ""
+                      },
+                      "typeScale": {
+                        "bodyFamily": ""
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.colors.c",
+                      "message": "Color value '1' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.radii.r",
+                      "message": "Radius value 'x' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.spacing.s",
+                      "message": "Spacing value 'x' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.typeScale.bodyFamily",
+                      "message": "Malformed CSS font-family stack '' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].theme.tokens.typography.font-family",
+                      "message": "Malformed CSS font-family stack '' — separate every family with a comma and fully quote multi-word names",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "the app theme and each orbital theme are checked at their own path",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": "clay-dark",
+                  "traits": []
+                },
+                {
+                  "name": "B",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {
+                      "radii": {
+                        "r": "x"
+                      }
+                    }
+                  },
+                  "traits": []
+                }
+              ],
+              "theme": {
+                "name": "t",
+                "tokens": {
+                  "colors": {
+                    "p": "#zzz"
+                  }
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "theme.tokens.colors.p",
+                      "message": "Color value '#zzz' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[1].theme.tokens.radii.r",
+                      "message": "Radius value 'x' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "control a theme reference is not an inline theme",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": "terminal-dark",
+                  "traits": []
+                }
+              ],
+              "theme": "clay-dark"
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "control a program with no theme is clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "an inline theme with no name is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "",
+                    "tokens": {}
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [
+                    {
+                      "code": "ORB_E_MISSING_NAME",
+                      "path": "orbitals[0].theme.name",
+                      "message": "Theme name is required",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "control a named theme with empty tokens is clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "theme": {
+                    "name": "t",
+                    "tokens": {}
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintThemeValuesCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint theme-values <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no file argument is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintThemeValuesCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "{\"argv\": [], \"cwd\": \"/\"}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint theme-values <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two file arguments are the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintThemeValuesCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "{\"argv\": [\"a\", \"b\"], \"cwd\": \"/\"}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint theme-values <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "one file argument asks the lint input to read it",
+      "steps": [
+        {
+          "trait": "OrbLintThemeValuesCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/\"}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "waiting",
+            "emits": [
+              {
+                "event": "LINT_REQUEST",
+                "payload": {
+                  "file": "a.lolo"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

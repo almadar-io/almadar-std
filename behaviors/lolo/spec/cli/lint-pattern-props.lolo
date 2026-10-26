@@ -1,0 +1,21 @@
+app lint-pattern-props-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint pattern-props <file>`. It lowers the file with program/read and walks the render-ui patterns of every inline trait, reporting ORB_RUI_UNKNOWN_ITEM_ACTION_PROP, ORB_X_UNRESOLVED_PATTERN_FIELD_REF and ORB_X_ENTITY_PROP_CONTRACT with the compiler path, message and suggestion (status 500, exit 1). Clean answers `lint pattern-props: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintPatternPropsSpec {
+  expects trait OrbLintPatternProps {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintPatternPropsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintPatternProps, OrbLintPatternPropsCli
+}

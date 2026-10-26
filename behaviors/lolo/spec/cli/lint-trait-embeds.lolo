@@ -1,0 +1,21 @@
+app lint-trait-embeds-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-trait-embeds - the `orb lint trait-embeds <file>` command, the port of the trait-typed and orbital-typed embed checks of traits/trait_validator.rs. For every inline trait: a `trait`-typed config field whose default is neither `none`, an `@trait.<PascalName>` string nor a trait value (an object with a behavior specifier and a PascalCase trait) is ORB_BINDING_TRAIT_INVALID_FORMAT. A `render-ui` of the trait's transitions and ticks that embeds `@config.<knob>` for a `trait`-typed knob defaulting to `none`, or `@entity.<field>` for a `trait`- or `behavior`-typed field of the linked entity, is ORB_RENDER_UNBOUND_TRAIT_KNOB_EMBEDDED unless it sits in the then-branch of an `if` or `when` whose condition is that binding (or `(validate/required <binding>)` at the effect level); an embed of `@entity.<field>` for an `orbital`-typed field is ORB_RENDER_ORBITAL_VALUE_EMBEDDED whatever the guard. Each finding carries the Rust path (the effect), message and suggestion (status 500, exit 1). Clean answers `lint trait-embeds: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintTraitEmbedsSpec {
+  expects trait OrbLintTraitEmbeds {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintTraitEmbedsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintTraitEmbeds, OrbLintTraitEmbedsCli
+}

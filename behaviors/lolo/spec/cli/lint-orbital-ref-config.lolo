@@ -1,0 +1,21 @@
+app lint-orbital-ref-config-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint orbital-ref-config <file>`; see the atom."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintOrbitalRefConfigSpec {
+  expects trait OrbLintOrbitalRefConfig {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintOrbitalRefConfigCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintOrbitalRefConfig, OrbLintOrbitalRefConfigCli
+}

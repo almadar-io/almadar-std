@@ -1,0 +1,21 @@
+app lint-event-wiring-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint event-wiring <file>`, the port of validate_event_wiring: ORB_X_ORPHAN_LISTENER, ORB_X_UNUSED_EMISSION and ORB_EMIT_UNROUTED_TO_HANDLER. Findings are reported at traits.<Trait> (orphan listener, unused emission) and orbitals.<Orbital>.traits.<Trait> (unrouted handler) (status 500, exit 1). A clean program answers `lint event-wiring: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintEventWiringSpec {
+  expects trait OrbLintEventWiring {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintEventWiringCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintEventWiring, OrbLintEventWiringCli
+}

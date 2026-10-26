@@ -1,0 +1,143 @@
+app std-orb-lint-trait-mounts [
+  version: "1.0.0",
+  inbound: ["cli-lint-trait-mounts"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-trait-mounts - the `orb lint trait-mounts <file>` command, the port of the mount checks of traits/trait_validator.rs (traits/mounts.rs). Per orbital it reads which traits its pages list: a route page (no protocol) lists a trait for the route, a page of another protocol lists it for an endpoint; a trait embedded (`@trait.<Name>` in a config default, a guard, an effect or a tick) by a route-listed trait is route-mounted too. A trait listed on an endpoint and on a route is ORB_T_TRAIT_ON_ROUTE_AND_ENDPOINT, and one mounted only on endpoints that renders UI (a render-ui anywhere in its transition or tick effects) is ORB_T_ENDPOINT_TRAIT_RENDERS. ORB_T_INIT_MISSING_FETCH is reported once per persistent entity read by route-mounted traits that paint a body slot (main, content, screen, an unreadable slot or a `@config` slot) and that neither create the entity nor lack an initial state, when no trait of the orbital fetches (or refs) the entity in a top-level effect of an INIT transition leaving its initial state; the path names the first such trait. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint trait-mounts: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-trait-mounts"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
+type TmVal = string | number | boolean | [TmVal?] | Map string TmVal?
+type TmCfg = { default : TmVal? }
+type TmState = { name : string, isInitial : boolean }
+type TmTransition = { event : string, from : TmVal, guard : TmVal?, effects : [TmVal?] }
+type TmTick = { guard : TmVal?, effects : [TmVal?] }
+type TmMachine = { states : [TmState], transitions : [TmTransition] }
+type TmTrait = { name : string, id : string, linkedEntity : string, config : Map string TmCfg, stateMachine : TmMachine, ticks : [TmTick] }
+type TmPage = { protocol : string?, traits : [TmVal?] }
+type TmEntity = { name : string, persistence : string }
+type TmOrbital = { name : string, entity : TmEntity, auxiliaryEntities : [TmEntity], traits : [TmTrait], pages : [TmPage] }
+type TmProgram = { orbitals : [TmOrbital] }
+type TmStrs = [string]
+type TmClos = { vis : [string], front : [string] }
+type TmRec = { j : number, nm : string, id : string, lk : string, ui : boolean, body : boolean, reads : boolean, creates : boolean, kids : [string], itg : [string], hasInit : boolean }
+orbital OrbLintTraitMountsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintTraitMountsRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintTraitMounts -> OrbLintTraitMountsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" []))) (let ((defs (let ((pn (array/map (array/flatten (array/map @orbitals (fn o (if (validate/object (object/get @o "entity" {  })) [(object/get @o "entity")] [])))) (fn x (object/get @x "name" ""))))) (let ((dups (array/filter @pn (fn n (> (array/len (array/filter @pn (fn m (= @m @n)))) 1))))) (object/fromEntries (array/map (array/filter (array/flatten (array/map @orbitals (fn o (array/concat (if (validate/object (object/get @o "entity" {  })) [(object/get @o "entity")] []) (array/filter (object/get @o "auxiliaryEntities" []) (fn x (validate/object @x))))))) (fn x (not (array/includes @dups (object/get @x "name" ""))))) (fn x [(object/get @x "name" ""), @x])))))) (mainSlots @config.mainSlots)) (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((o (array/nth @orbitals @oi))) (let ((trs : [TmTrait] (object/get @o "traits" []))) (let ((recs : [TmRec] (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj (let ((t (array/nth @trs @tj))) (if (object/has @t "stateMachine") [(let ((trans : [TmTransition] (object/get @t "stateMachine.transitions" [])) (tks : [TmTick] (object/get @t "ticks" [])) (cfg (object/get @t "config" {  })) (states : [TmState] (object/get @t "stateMachine.states" []))) (let ((effs (array/concat (array/flatten (array/map @trans (fn x (object/get @x "effects" [])))) (array/flatten (array/map @tks (fn x (object/get @x "effects" [])))))) (guards (array/concat (array/map (array/filter @trans (fn x (!= (object/get @x "guard" null) null))) (fn x (object/get @x "guard" null))) (array/map (array/filter @tks (fn x (!= (object/get @x "guard" null) null))) (fn x (object/get @x "guard" null))))) (cfgdefs (array/map (array/filter (object/keys @cfg) (fn kk (!= (object/get (object/get @cfg @kk {  }) "default" null) null))) (fn kk (object/get (object/get @cfg @kk {  }) "default" null)))) (teffs (array/flatten (array/map @trans (fn x (object/get @x "effects" []))))) (lk (object/get @t "linkedEntity" "")) (init (let ((is (array/filter @states (fn s (= (object/get @s "isInitial" false) true))))) (if (= (array/len @is) 0) null (object/get (array/nth @is 0) "name" ""))))) { j: @tj, nm: (object/get @t "name" ""), id: (object/get @t "id" ""), lk: @lk, ui: (= (tree/fold @effs (fn (n k) (if (validate/string @n) false (if (validate/array @n) (or (if (> (array/len @n) 0) (let ((sq (array/nth @n 0))) (if (validate/string @sq) (= @sq "render-ui") false)) false) (array/some @k (fn z (if (validate/boolean @z) @z false)))) (if (validate/object @n) (array/some (object/values @k) (fn z (if (validate/boolean @z) @z false))) false)))) "TmVal") true), body: (= (tree/fold @effs (fn (n k) (if (validate/string @n) false (if (validate/array @n) (or (and (if (> (array/len @n) 0) (let ((sq (array/nth @n 0))) (if (validate/string @sq) (= @sq "render-ui") false)) false) (if (< (array/len @n) 2) true (let ((a1 (array/nth @n 1))) (if (validate/string @a1) (or (str/startsWith @a1 (quote "@config.")) (array/includes @mainSlots @a1)) true)))) (array/some @k (fn z (if (validate/boolean @z) @z false)))) (if (validate/object @n) (array/some (object/values @k) (fn z (if (validate/boolean @z) @z false))) false)))) "TmVal") true), reads: (= (tree/fold (array/concat @guards @effs) (fn (n k) (if (validate/string @n) (or (= @n (quote "@entity")) (str/startsWith @n (quote "@entity.")) (str/startsWith @n (quote "@entity["))) (if (validate/array @n) (array/some @k (fn z (if (validate/boolean @z) @z false))) (if (validate/object @n) (array/some (object/values @k) (fn z (if (validate/boolean @z) @z false))) false)))) "TmVal") true), creates: (= (tree/fold @teffs (fn (n k) (if (validate/string @n) false (if (validate/array @n) (or (and (>= (array/len @n) 3) (if (> (array/len @n) 0) (let ((sq (array/nth @n 0))) (if (validate/string @sq) (= @sq "persist") false)) false) (let ((sq (array/nth @n 1))) (if (validate/string @sq) (= @sq "create") false)) (let ((sq (array/nth @n 2))) (if (validate/string @sq) (= @sq @lk) false))) (array/some @k (fn z (if (validate/boolean @z) @z false)))) (if (validate/object @n) (array/some (object/values @k) (fn z (if (validate/boolean @z) @z false))) false)))) "TmVal") true), kids: (array/filter (array/unique (or (json/parse (json/stringify (or (tree/fold (array/concat @cfgdefs @guards @effs) (fn (n k) (if (validate/string @n) (if (str/startsWith @n (quote "@trait.")) [(array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "["))] []) (if (validate/array @n) (array/flatten (array/filter @k (fn z (!= @z null)))) (if (validate/object @n) (array/flatten (array/filter (object/values @k) (fn z (!= @z null)))) [])))) "TmVal") [])) TmStrs) [])) (fn c (and (!= @c "") (!= @c (object/get @t "name" ""))))), itg: (array/flatten (array/map @trans (fn tr (if (and (validate/string @init) (= (object/get @tr "event" "") "INIT") (array/some (let ((fr (object/get @tr "from" null))) (if (validate/string @fr) [@fr] (if (validate/array @fr) (array/map (array/filter @fr (fn z (validate/string @z))) (fn z (if (validate/string @z) @z ""))) (array/slice [""] 0 0)))) (fn s (or (= @s @init) (= @s "*"))))) (array/flatten (array/map (object/get @tr "effects" []) (fn e (if (and (validate/array @e) (>= (array/len @e) 2)) (let ((e0 (array/nth @e 0)) (e1 (array/nth @e 1))) (if (and (validate/string @e0) (validate/string @e1) (or (= @e0 "fetch") (= @e0 "ref"))) [@e1] (array/slice [""] 0 0))) (array/slice [""] 0 0))))) (array/slice [""] 0 0))))), hasInit: (!= (array/len (array/filter @states (fn s (= (object/get @s "isInitial" false) true)))) 0) }))] (array/slice [{ j: 0, nm: "", id: "", lk: "", ui: false, body: false, reads: false, creates: false, kids: (array/slice [""] 0 0), itg: (array/slice [""] 0 0), hasInit: false }] 0 0)))))))) (let ((nms (array/map @recs (fn r (object/get @r "nm" "")))) (kidx (object/fromEntries (array/map @recs (fn r [(object/get @r "nm" ""), (object/get @r "kids" [])]))))) (let ((dupn (array/unique (array/filter @nms (fn a (> (array/len (array/filter @nms (fn b (= @b @a)))) 1)))))) (let ((r0 (or (json/parse (json/stringify (array/flatten (array/map (array/filter (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" null) null))) (fn pg (array/flatten (array/map (object/get @pg "traits" []) (fn pt (if (validate/object @pt) (if (object/has @pt "stateMachine") (array/concat [(object/get @pt "name" "")] (if (object/has @pt "id") [(object/get @pt "id" "")] [])) (array/concat (if (object/has @pt "ref") [(object/get @pt "ref" "")] []) (if (object/has @pt "name") [(object/get @pt "name" "")] []) (if (object/has @pt "refId") [(object/get @pt "refId" "")] []))) [])))))))) TmStrs) [])) (endSet (or (json/parse (json/stringify (array/flatten (array/map (array/filter (object/get @o "pages" []) (fn pg (!= (object/get @pg "protocol" null) null))) (fn pg (array/flatten (array/map (object/get @pg "traits" []) (fn pt (if (validate/object @pt) (if (object/has @pt "stateMachine") (array/concat [(object/get @pt "name" "")] (if (object/has @pt "id") [(object/get @pt "id" "")] [])) (array/concat (if (object/has @pt "ref") [(object/get @pt "ref" "")] []) (if (object/has @pt "name") [(object/get @pt "name" "")] []) (if (object/has @pt "refId") [(object/get @pt "refId" "")] []))) [])))))))) TmStrs) []))) (let ((fwd (object/fromEntries (array/map (array/unique @nms) (fn nm [@nm, (if (array/includes @dupn @nm) (array/unique (array/flatten (array/map (array/filter @recs (fn r (= (object/get @r "nm" "") @nm))) (fn r (object/get @r "kids" []))))) (object/get @kidx @nm []))]))))) (let ((routeSet (let ((init0 : TmClos { vis: @r0, front: @r0 })) (object/get (array/reduce (array/range 0 (+ (array/len @recs) 1)) @init0 (fn (acc i) (if (= (array/len (object/get @acc "front" [])) 0) @acc (let ((nxt (array/filter (array/unique (array/flatten (array/map (object/get @acc "front" []) (fn x (object/get @fwd @x []))))) (fn c (not (array/includes (object/get @acc "vis" []) @c)))))) { vis: (array/concat (object/get @acc "vis" []) @nxt), front: @nxt })))) "vis" [])))) (let ((fetched (array/unique (array/flatten (array/map @recs (fn r (object/get @r "itg" [])))))) (cands (array/filter @recs (fn r (and (!= (object/get @r "lk" "") "") (or (array/includes @routeSet (object/get @r "nm" "")) (and (!= (object/get @r "id" "") "") (array/includes @routeSet (object/get @r "id" "")))) (object/get @r "body" false) (object/get @r "reads" false) (not (object/get @r "creates" false)) (object/get @r "hasInit" false) (let ((ed (object/get @defs (object/get @r "lk" "") null))) (if (= @ed null) false (or (not (object/has @ed "persistence")) (let ((sq (object/get @ed "persistence" null))) (if (validate/string @sq) (= @sq "persistent") false)))))))))) (let ((firsts (array/unique (array/map @cands (fn r (object/get @r "lk" "")))))) (array/concat (array/flatten (array/map (array/filter @recs (fn r (or (array/includes @endSet (object/get @r "nm" "")) (and (!= (object/get @r "id" "") "") (array/includes @endSet (object/get @r "id" "")))))) (fn r (if (or (array/includes @routeSet (object/get @r "nm" "")) (and (!= (object/get @r "id" "") "") (array/includes @routeSet (object/get @r "id" "")))) [{ code: "ORB_T_TRAIT_ON_ROUTE_AND_ENDPOINT", path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" (object/get @r "j" 0) " (" (object/get @r "nm" "") ")]"), message: (str/concat "Trait '" (object/get @r "nm" "") "' is listed on a route page and on a protocol endpoint"), suggestion: "A route trait paints for a viewer and an endpoint trait has none; split it into two traits", severity: "error" }] (if (object/get @r "ui" false) [{ code: "ORB_T_ENDPOINT_TRAIT_RENDERS", path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" (object/get @r "j" 0) " (" (object/get @r "nm" "") ")]"), message: (str/concat "Trait '" (object/get @r "nm" "") "' is mounted only on protocol endpoints but renders UI; an endpoint has no viewer"), suggestion: "Remove the render-ui effects, or list the trait on a route page", severity: "error" }] []))))) (array/flatten (array/map @firsts (fn en (if (array/includes @fetched @en) [] (let ((r (array/find @cands (fn r (= (object/get @r "lk" "") @en))))) [{ code: "ORB_T_INIT_MISSING_FETCH", path: (str/concat "orbitals[" @oi "].traits[" (object/get @r "j" 0) "].stateMachine.transitions"), message: (str/concat "no trait in this orbital fetches persistent entity \"" @en "\" on INIT — interaction traits read it but nothing loads it"), suggestion: (str/concat "Add [\"fetch\", \"" @en "\"] to one datasource trait's INIT transition; sibling render traits read the loaded data and do not each need their own fetch"), severity: "error" }]))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "trait-mounts", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    config {
+      mainSlots : [string] = ["main", "content", "screen"]
+        @label "Body slots"
+        @description "The slots that paint a page body; a trait rendering one counts as the page body for the INIT fetch rule."
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : TmProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintTraitMountsCli -> OrbLintTraitMountsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint trait-mounts <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "trait-mounts") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint trait-mounts: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "trait-mounts") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint trait-mounts: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-trait-mounts" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint trait-mounts` with its arguments and working directory."
+        @synonyms "orb lint trait-mounts"
+      OrbLintTraitMounts.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintTraitMountsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintTraitMountsOrbitalStart -> OrbLintTraitMounts, OrbLintTraitMountsCli, OrbLintInput, Packs, Versions
+}

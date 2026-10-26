@@ -92,13 +92,16 @@ orbital TrainingBoardOrbital {
       TRAINING_LOAD -> reading
       TRAINING_REFRESH -> reading
 
-      TR_RAN -> reading when (= @payload.stage "list")
-        (set @entity.found (if (and (= @payload.exitCode 0) (json/valid @payload.stdout)) (array/map (json/parse @payload.stdout TrListing) (fn i { instanceId: @i.Id, instanceType: @i.Type, publicIp: (or @i.IP ""), launchTime: @i.Launch })) []))
+      TR_RAN -> reading when (and (= @payload.stage "list") (= @payload.exitCode 0) (json/valid @payload.stdout))
+        (set @entity.found (array/map (json/parse @payload.stdout TrListing) (fn i { instanceId: @i.Id, instanceType: @i.Type, publicIp: (or @i.IP ""), launchTime: @i.Launch })))
         (set @entity.cursor 0)
         (emit TR_NEXT { })
-      TR_CLI_FAILED -> reading when (= @payload.stage "list")
-        (set @entity.cursor 0)
-        (emit TR_NEXT { })
+      TR_RAN -> idle when (and (= @payload.stage "list") (not (and (= @payload.exitCode 0) (json/valid @payload.stdout))))
+        (set @entity.loading false)
+        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: TRAINING_REFRESH }] }, { type: alert, variant: error, title: "The training board could not be read", message: (if (= @payload.exitCode 0) "aws answered something that is not JSON" (str/concat "aws failed (exit " @payload.exitCode "): " (if (= (str/trim @payload.stderr) "") "no error text" (str/trim @payload.stderr)))) }] })
+      TR_CLI_FAILED -> idle when (= @payload.stage "list")
+        (set @entity.loading false)
+        (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: TRAINING_REFRESH }] }, { type: alert, variant: error, title: "The training board could not be read", message: (str/concat "aws is not installed or could not run: " @payload.error) }] })
       TR_NEXT -> reading when (and (< @entity.cursor (array/len @entity.found)) (!= (object/get (array/nth @entity.found @entity.cursor) "publicIp" "") ""))
         (emit TR_SSH { stage: "visit", argv: ["-i", @config.sshKey, "-o", "ConnectTimeout=5", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", "-l", @config.sshUser, (object/get (array/nth @entity.found @entity.cursor) "publicIp" ""), (str/concat "echo \"===GPU===\"; nvidia-smi --query-gpu=name,temperature.gpu,memory.used,memory.total,utilization.gpu --format=csv,noheader 2>/dev/null || echo \"N/A\"; echo \"===PROCESS===\"; ps aux | grep -E \"" @config.processPattern "\" | grep -v grep | head -1 || echo \"NONE\"; echo \"===UPTIME===\"; uptime -p 2>/dev/null || uptime; echo \"===LOG===\"; " (str/join (array/map @config.logPaths (fn p (str/concat "tail -" @config.logLines " " @p " 2>/dev/null"))) " || ") " || echo \"NO LOG\"")] })
       TR_NEXT -> reading when (and (< @entity.cursor (array/len @entity.found)) (= (object/get (array/nth @entity.found @entity.cursor) "publicIp" "") ""))

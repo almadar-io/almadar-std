@@ -1,0 +1,21 @@
+app lint-circuit-client-bound-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint circuit-client-bound <file>`, the port of the client-bound wiring checks: ORB_CIRCUIT_FAILURE_ARM_MISSING, ORB_CIRCUIT_FAILURE_ARM_RENDERS_NOTHING, ORB_CIRCUIT_MODAL_SHELL_CLOSE_DEAF, ORB_CIRCUIT_SELF_OVERLAY_IN_SHELL and ORB_CIRCUIT_DEAD_BODILESS_ACTION. Findings are reported at the trait path (status 500, exit 1). A clean program answers `lint circuit-client-bound: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintCircuitClientBoundSpec {
+  expects trait OrbLintCircuitClientBound {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintCircuitClientBoundCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintCircuitClientBound, OrbLintCircuitClientBoundCli
+}

@@ -1,0 +1,170 @@
+app std-orb-lint-service-def [
+  version: "1.0.0",
+  inbound: ["cli-lint-service-def"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-service-def — the `orb lint service-def <file>` command, the port of service.rs validate_all_services: for each orbital service, a string or `ref` object that is not Alias.services.ServiceName is ORB_GEN_INVALID_REFERENCE; an inline rest, socket or mcp service reports ORB_E_MISSING_NAME for an empty name, ORB_GEN_INVALID_VALUE for a missing or non-http baseUrl, a secretEnv that is not UPPER_SNAKE_CASE, a zero timeout, a missing or non-ws socket url and a missing mcp serverPath, and ORB_GEN_MISSING_FIELD for an api-key auth without keyName, a socket with no events and an mcp service with no capabilities; a service named like an earlier inline service is ORB_GEN_DUPLICATE. A .lolo program never carries services (the lowering sets none), so the rule fires on .orb files. It lowers the file with program/read (status 500, exit 1 on findings). Clean answers `lint service-def: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-service-def"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type SvAuth = { type : string, keyName : string?, secretEnv : string? }
+type SvEvents = { inbound : [string], outbound : [string] }
+type SvDef = { type : string, name : string, baseUrl : string, url : string, serverPath : string, ref : string?, timeout : number?, auth : SvAuth?, events : SvEvents, capabilities : [string] }
+type SvOrbital = { services : [string | SvDef] }
+type SvProgram = { orbitals : [SvOrbital] }
+orbital OrbLintServiceDefOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintServiceDefRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintServiceDef -> OrbLintServiceDefRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (nd : SvDef { type: "", name: "", baseUrl: "", url: "", serverPath: "", ref: null, timeout: null, auth: null, events: { inbound: [], outbound: [] }, capabilities: [] }))
+          (let ((all (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                  (let ((svs (object/get (array/nth @orbitals @oi) "services" [])))
+                    (array/map (array/range 0 (array/len @svs)) (fn sj { path: (str/concat "orbitals[" @oi "].services[" @sj "]"), s: (array/nth @svs @sj) }))))))))
+            (let ((names (array/map @all (fn r (let ((s (object/get @r "s"))) (let ((o (if (validate/object @s) @s @nd))) (if (or (= (object/get @o "type" "") "rest") (= (object/get @o "type" "") "socket") (= (object/get @o "type" "") "mcp")) (object/get @o "name" "") null)))))))
+              (array/flatten (array/map (array/range 0 (array/len @all)) (fn k
+                (let ((r (array/nth @all @k)))
+                  (let ((s (object/get @r "s")) (p (object/get @r "path")))
+                    (let ((o (if (validate/object @s) @s @nd)))
+                    (let ((ty (object/get @o "type" "")) (rf (if (validate/string @s) @s (object/get @o "ref" null))))
+                      (array/map
+                        (array/concat
+                          (if (and (validate/string @rf) (not (or (= @ty "rest") (= @ty "socket") (= @ty "mcp"))) (not (validate/pattern @rf "^[A-Z][a-zA-Z0-9]*\\.services\\.[a-zA-Z][a-zA-Z0-9]*$")))
+                            [["ORB_GEN_INVALID_REFERENCE" "" (str/concat "Invalid service reference '" @rf "'. Must be in format 'Alias.services.ServiceName'")]] [])
+                          (if (= @ty "rest")
+                            (let ((u (object/get @o "baseUrl" "")) (au (object/get @o "auth" null)))
+                              (array/concat
+                                (if (= (object/get @o "name" "") "") [["ORB_E_MISSING_NAME" ".name" "Service name is required"]] [])
+                                (if (= @u "") [["ORB_GEN_INVALID_VALUE" ".baseUrl" "REST service requires a baseUrl"]]
+                                  (if (or (str/startsWith @u "http://") (str/startsWith @u "https://") (str/startsWith @u "${")) [] [["ORB_GEN_INVALID_VALUE" ".baseUrl" (str/concat "Invalid URL: '" @u "'")]]))
+                                (if (validate/object @au)
+                                  (array/concat
+                                    (if (and (= (object/get @au "type" "") "api-key") (= (object/get @au "keyName" null) null)) [["ORB_GEN_MISSING_FIELD" ".auth.keyName" "api-key auth should specify keyName"]] [])
+                                    (let ((se (object/get @au "secretEnv" null)))
+                                      (if (and (validate/string @se) (not (validate/pattern @se "^[A-Z_][A-Z0-9_]*$"))) [["ORB_GEN_INVALID_VALUE" ".auth.secretEnv" (str/concat "secretEnv '" @se "' should be UPPER_SNAKE_CASE")]] [])))
+                                  [])
+                                (if (= (object/get @o "timeout" null) 0) [["ORB_GEN_INVALID_VALUE" ".timeout" "Timeout of 0 may cause immediate failures"]] [])))
+                            (if (= @ty "socket")
+                              (let ((u (object/get @o "url" "")) (ev (object/get @o "events" {})))
+                                (array/concat
+                                  (if (= (object/get @o "name" "") "") [["ORB_E_MISSING_NAME" ".name" "Service name is required"]] [])
+                                  (if (= @u "") [["ORB_GEN_INVALID_VALUE" ".url" "Socket service requires a url"]]
+                                    (if (or (str/startsWith @u "ws://") (str/startsWith @u "wss://")) [] [["ORB_GEN_INVALID_VALUE" ".url" (str/concat "Socket URL must start with ws:// or wss://, got: '" @u "'")]]))
+                                  (if (and (= (array/len (object/get @ev "inbound" [])) 0) (= (array/len (object/get @ev "outbound" [])) 0)) [["ORB_GEN_MISSING_FIELD" ".events" "Socket service has no inbound or outbound events defined"]] [])))
+                              (if (= @ty "mcp")
+                                (array/concat
+                                  (if (= (object/get @o "name" "") "") [["ORB_E_MISSING_NAME" ".name" "Service name is required"]] [])
+                                  (if (= (object/get @o "serverPath" "") "") [["ORB_GEN_INVALID_VALUE" ".serverPath" "MCP service requires a serverPath"]] [])
+                                  (if (= (array/len (object/get @o "capabilities" [])) 0) [["ORB_GEN_MISSING_FIELD" ".capabilities" "MCP service has no capabilities defined"]] []))
+                                [])))
+                          (if (and (or (= @ty "rest") (= @ty "socket") (= @ty "mcp")) (array/includes (array/slice @names 0 @k) (array/nth @names @k)))
+                            [["ORB_GEN_DUPLICATE" "" (str/concat "Duplicate service name '" (array/nth @names @k) "'")]] []))
+                        (fn f { code: (array/nth @f 0), path: (str/concat @p (array/nth @f 1)), message: (array/nth @f 2), suggestion: "", severity: "error" })))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "service-def", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SvProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintServiceDefCli -> OrbLintServiceDefRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint service-def <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "service-def") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint service-def: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "service-def") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint service-def: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-service-def" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint service-def` with its arguments and working directory."
+        @synonyms "orb lint service-def"
+      OrbLintServiceDef.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintServiceDefCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintServiceDefOrbitalStart -> OrbLintServiceDef, OrbLintServiceDefCli, OrbLintInput, Packs, Versions
+}

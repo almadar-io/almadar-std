@@ -1,0 +1,271 @@
+app std-orb-lint-composed-wiring [
+  version: "1.0.0",
+  inbound: ["cli-lint-composed-wiring"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-composed-wiring - the `orb lint composed-wiring <file>` command, the port of ORB_COMPOSED_STATE_UNREACHABLE and ORB_COMPOSED_TRANSITION_UNREACHABLE (composition/composed_wiring.rs validate_composed_wiring). For every composed trait (one with sourceBehavior) with a state machine it follows the transitions from the initial state (the first isInitial state, else the first state) over the events the program can produce: std-orb-fired-events' control and effect events of every trait, the strings of every event-typed config default, the bus-excluded events, the trait's listens triggers, its events declared input and, when a transition paints a non-self-overlaying pattern into an overlay slot, the shell dismiss events. A transition whose guard folds statically false with the trait's literal config knobs substituted is off. ORB_COMPOSED_STATE_UNREACHABLE reports the states no event leads to that a live transition on an unproduced event enters; ORB_COMPOSED_TRANSITION_UNREACHABLE reports the unproduced, undeclared events a live transition from a reached state into a reached state waits on. The overlay, self-overlay and shell dismiss vocabularies are the rule's knobs. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint composed-wiring: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-composed-wiring"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type CwNode = string | number | boolean | [CwNode?] | Map string CwNode?
+type CwLit = string | number | boolean
+type CwFrom = string | [string]
+type CwState = { name : string, isInitial : boolean }
+type CwListen = { event : string, triggers : string }
+type CwEvent = { key : string, input : boolean, listened : boolean }
+type CwTransition = { from : CwFrom, to : string, event : string, guard : CwNode?, effects : [CwNode?] }
+type CwMachine = { states : [CwState], transitions : [CwTransition], events : [CwEvent] }
+type CwField = { type : string, default : CwNode? }
+type CwSb = { behavior : string }
+type CwTrait = { name : string, sourceBehavior : CwSb?, stateMachine : CwMachine, listens : [CwListen], config : Map string CwField? }
+type CwOrbital = { name : string, traits : [CwTrait] }
+type CwProgram = { orbitals : [CwOrbital] }
+type CwG = { f : boolean!, t : boolean!, lit : boolean!, v : string! }
+type CwS = { s : [string]!, b : boolean! }
+type CwTr = { f : [string]!, e : string!, to : string!, live : boolean! }
+type CwStrs = Map string [string]
+
+orbital OrbLintComposedWiringOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Fired from "std/behaviors/std-orb-fired-events"
+
+  entity OrbLintComposedWiringRun [runtime] {
+    id : string!
+    scope : string = ""
+    program : CwProgram = {}
+    progScope : string = "<p>"
+    firedScope : string = "<f>"
+    byControl : Map string [string] = {}
+    byEffect : Map string [string] = {}
+    busExcluded : [string] = []
+    haveBus : boolean = false
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintComposedWiring -> OrbLintComposedWiringRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.program @payload.program)
+        (set @entity.progScope @payload.scope)
+        (set @entity.scope @payload.scope)
+        (emit LINT_TRY { })
+      FIRED_HEARD -> ready
+        (set @entity.byControl @payload.byControl)
+        (set @entity.byEffect @payload.byEffect)
+        (set @entity.firedScope @payload.scope)
+        (emit LINT_TRY { })
+      SEMANTICS_HEARD -> ready
+        (set @entity.busExcluded @payload.busExcluded)
+        (set @entity.haveBus true)
+        (emit LINT_TRY { })
+      LINT_TRY -> ready when (and (= @entity.progScope @entity.firedScope) @entity.haveBus)
+        (set @entity.findings (let ((nos : [string] [])
+                (nof : [OrbFinding] [])
+                (notd : [CwTrait] [])
+                (notr : [CwTransition] [])
+                (nost : [CwState] [])
+                (noev : [CwEvent] [])
+                (nolis : [CwListen] [])
+                (ng : CwG { f: false, t: false, lit: false, v: "" })
+                (ns : CwS { s: @nos, b: false })
+                (orbitals (object/get @entity.program "orbitals" []))
+                (prodList : [string] (array/concat
+                    (array/flatten (object/values @entity.byControl))
+                    (array/concat
+                      (array/flatten (object/values @entity.byEffect))
+                      (array/flatten (array/map @orbitals (fn o (array/flatten (array/map (object/get @o "traits" @notd) (fn t
+                        (array/flatten (array/map (object/values (object/get @t "config" {})) (fn f
+                          (if (= (object/get (or @f {}) "type" "") "event")
+                            (let ((d (object/get (or @f {}) "default" null)))
+                              (if (= @d null) @nos
+                                (let ((q (tree/fold @d (fn (n k) (if (validate/string @n) { s: (array/append @nos @n), b: false } (if (validate/array @n) { s: (array/flatten (array/map @k (fn q (object/get (if (= @q null) @ns @q) "s")))), b: false } @ns))) "CwNode"))) (if (= @q null) @nos (object/get @q "s")))))
+                            @nos)))))))))))))
+                (prodSet (or (object/fromEntries (array/map @prodList (fn e [@e, true]))) {})))
+            (array/flatten (array/map @orbitals (fn (o oi)
+              (array/flatten (array/map (object/get @o "traits" @notd) (fn (t ti)
+                (if (or (not (object/has @t "stateMachine")) (not (object/has @t "sourceBehavior"))) @nof
+                  (let ((tn (object/get @t "name" ""))
+                        (tp (str/concat "orbitals[" @oi "].traits[" @ti "]"))
+                        (sts : [CwState] (object/get @t "stateMachine.states" @nost))
+                        (trs : [CwTransition] (object/get @t "stateMachine.transitions" @notr))
+                        (cfg (object/get @t "config" {})))
+                    (if (= (array/len @sts) 0) @nof
+                      (let ((kn (or (object/fromEntries (array/map (array/filter (object/keys @cfg) (fn key (and (not (str/includes @key ".")) (let ((d (object/get (or (object/get @cfg @key null) {}) "default" null))) (or (validate/string @d) (validate/number @d) (validate/boolean @d)))))) (fn key [@key, (json/stringify (object/get (object/get @cfg @key) "default"))]))) {}))
+                            (initRow (array/find @sts (fn s (= (object/get @s "isInitial" false) true)))))
+                        (let ((initial (if (= @initRow null) (object/get (array/first @sts) "name" "") (object/get @initRow "name" "")))
+                              (tl : [CwTr] (array/map @trs (fn x
+                                (let ((fr (object/get @x "from" "")) (g (object/get @x "guard" null)))
+                                  { f: (if (validate/string @fr) (array/append @nos @fr) @fr),
+                                    e: (object/get @x "event" ""),
+                                    to: (object/get @x "to" ""),
+                                    live: (if (= @g null) true (not (object/get (let ((q (tree/fold @g (fn (n k)
+  (if (validate/boolean @n) { f: (not @n), t: @n, lit: true, v: (json/stringify @n) }
+  (if (= @n null) { f: true, t: false, lit: true, v: "null" }
+  (if (validate/number @n) { f: (= @n 0), t: (!= @n 0), lit: true, v: (json/stringify @n) }
+  (if (validate/string @n)
+    (if (and (str/startsWith @n (quote "@config.")) (object/has @kn (str/slice @n 8)))
+      (let ((tx (object/get @kn (str/slice @n 8)))) (if (str/startsWith @tx "\"") { f: (= @tx "\"\""), t: (and (!= @tx "\"\"") (not (str/startsWith @tx "\"@"))), lit: (not (str/startsWith @tx "\"@")), v: @tx } (if (or (= @tx "true") (= @tx "false")) { f: (= @tx "false"), t: (= @tx "true"), lit: true, v: @tx } { f: (= (str/to-number @tx) 0), t: (!= (str/to-number @tx) 0), lit: true, v: @tx })))
+      { f: (= @n ""), t: (and (!= @n "") (not (str/startsWith @n (quote "@")))), lit: (not (str/startsWith @n (quote "@"))), v: (json/stringify @n) })
+  (if (validate/object @n) { f: (= (array/len (object/keys @n)) 0), t: (> (array/len (object/keys @n)) 0), lit: false, v: "" }
+  (if (validate/array @n)
+    (let ((len (array/len @n)) (hd (array/nth @n 0)))
+      (if (not (validate/string @hd)) { f: (= @len 0), t: (> @len 0), lit: false, v: "" }
+        (let ((rs (array/map (array/range 1 @len) (fn i (let ((r (array/nth @k @i))) (if (= @r null) @ng @r))))))
+          (if (= @hd "and") { f: (array/some @rs (fn r (object/get @r "f"))), t: (and (> (array/len @rs) 0) (array/every @rs (fn r (object/get @r "t")))), lit: false, v: "" }
+          (if (= @hd "or") { f: (and (> (array/len @rs) 0) (array/every @rs (fn r (object/get @r "f")))), t: (array/some @rs (fn r (object/get @r "t"))), lit: false, v: "" }
+          (if (= @hd "not") { f: (and (= (array/len @rs) 1) (object/get (array/nth @rs 0) "t")), t: (and (= (array/len @rs) 1) (object/get (array/nth @rs 0) "f")), lit: false, v: "" }
+          (if (or (= @hd "=") (= @hd "==") (= @hd "!="))
+            (if (and (= (array/len @rs) 2) (object/get (array/nth @rs 0) "lit") (object/get (array/nth @rs 1) "lit"))
+              (let ((eq (= (object/get (array/nth @rs 0) "v") (object/get (array/nth @rs 1) "v")))) { f: (= @eq (= @hd "!=")), t: (= @eq (!= @hd "!=")), lit: false, v: "" })
+              { f: false, t: false, lit: false, v: "" })
+            { f: false, t: false, lit: false, v: "" })))))))
+    { f: false, t: false, lit: false, v: "" }))))))) "CwNode"))) (if (= @q null) @ng @q)) "f"))) }))))
+                              (shell (array/some @trs (fn x (object/get (let ((q (tree/fold (object/get @x "effects" []) (fn (n k) (if (validate/array @n) (let ((kr (array/map @k (fn q (if (= @q null) @ns @q)))) (h0 (if (> (array/len @n) 0) (array/nth @n 0) null)) (h1 (if (> (array/len @n) 1) (array/nth @n 1) null))) (if (and (>= (array/len @n) 3) (validate/string @h0) (= @h0 "render-ui") (validate/string @h1) (array/includes @config.overlaySlots @h1)) (let ((p (array/nth @n 2))) { s: @nos, b: (and (!= @p null) (not (validate/string @p)) (not (and (validate/object @p) (let ((tv (object/get @p "type" null))) (if (validate/string @tv) (array/includes @config.selfOverlayPatterns @tv) false))))) }) { s: @nos, b: (array/some @kr (fn q (object/get @q "b"))) })) { s: @nos, b: false })) "CwNode"))) (if (= @q null) @ns @q)) "b")))))
+                          (let ((locIn (array/concat (array/concat (array/concat @entity.busExcluded (array/map (object/get @t "listens" @nolis) (fn l (object/get @l "triggers" (object/get @l "event" ""))))) (array/map (array/filter (object/get @t "stateMachine.events" @noev) (fn e (= (object/get @e "input" false) true))) (fn e (object/get @e "key" "")))) (if @shell @config.shellDismissEvents @nos)))
+                                (declared (array/map (array/filter (object/get @t "stateMachine.events" @noev) (fn e (= (object/get @e "listened" false) true))) (fn e (object/get @e "key" "")))))
+                            (let ((live (array/filter @tl (fn x (object/get @x "live")))))
+                              (let ((reached (array/reduce (array/range 0 (array/len @sts)) (array/append @nos @initial) (fn (acc i) (array/unique (array/concat @acc (array/map (array/filter @live (fn x (and (or (array/includes (object/get @x "f") "*") (array/some (object/get @x "f") (fn s (array/includes @acc @s)))) (or (object/has @prodSet (object/get @x "e")) (array/includes @locIn (object/get @x "e")))))) (fn x (object/get @x "to")))))))))
+                                (let ((dead (array/filter (array/unique (array/map @sts (fn s (object/get @s "name" "")))) (fn s (and (not (array/includes @reached @s)) (array/some @live (fn x (and (= (object/get @x "to") @s) (not (object/has @prodSet (object/get @x "e"))) (not (array/includes @locIn (object/get @x "e")))))))))))
+                                  (array/concat
+                                    (if (= (array/len @dead) 0) @nof
+                                      (let ((missing (array/sort (array/unique (array/map (array/filter @live (fn x (and (array/includes @dead (object/get @x "to")) (not (object/has @prodSet (object/get @x "e"))) (not (array/includes @locIn (object/get @x "e")))))) (fn x (object/get @x "e")))))))
+                                        [{ code: "ORB_COMPOSED_STATE_UNREACHABLE", path: @tp, message: (str/concat "'" @tn "' can never enter " (str/join (array/map @dead (fn s (str/concat "'" @s "'"))) ", ") " — it is entered only on " (str/join @missing ", ") ", which nothing in the program sends: no listens route, no control or effect fires it, and it is not a declared input"), suggestion: (str/concat "route a control's event to it: `listens { <Trait>.<EVENT> -> " (if (> (array/len @missing) 0) (array/first @missing) "<EVENT>") " }` on '" @tn "'"), severity: "error" }]))
+                                    (let ((deadEv (array/sort (array/unique (array/map (array/filter @live (fn x (and (not (object/has @prodSet (object/get @x "e"))) (not (array/includes @locIn (object/get @x "e"))) (not (array/includes @declared (object/get @x "e"))) (array/includes @reached (object/get @x "to")) (or (array/includes (object/get @x "f") "*") (array/some (object/get @x "f") (fn s (array/includes @reached @s))))))) (fn x (object/get @x "e")))))))
+                                      (if (= (array/len @deadEv) 0) @nof
+                                        [{ code: "ORB_COMPOSED_TRANSITION_UNREACHABLE", path: @tp, message: (str/concat "'" @tn "' handles " (str/join @deadEv ", ") " but nothing in the program sends " (if (= (array/len @deadEv) 1) "it" "them") ": no listens route, no control or effect fires it under this composition's config, it is not a lifecycle event and the trait does not declare it in `listens`"), suggestion: (str/concat "route a control's event to it: `listens { <Trait>.<EVENT> -> " (array/first @deadEv) " }` on '" @tn "'"), severity: "error" }]))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_TRY -> ready when (not (and (= @entity.progScope @entity.firedScope) @entity.haveBus))
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "composed-wiring", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+      LINT_TRY { }
+        @description "Internal: compute once every answer is in for the scope."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CwProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
+        @description "std-orb-fired-events' FIRED_EVENTS: the events each trait's controls and effects fire."
+      SEMANTICS_HEARD { busExcluded : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the events the bus never delivers."
+      OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> SEMANTICS_HEARD
+    }
+
+    config {
+      overlaySlots : [string] = ["modal", "drawer", "dock", "overlay"]
+        @label "Overlay slots"
+        @description "The slots the generic portal shell wraps."
+      selfOverlayPatterns : [string] = ["modal", "confirm-dialog"]
+        @label "Self-overlaying patterns"
+        @description "The patterns that draw their own overlay chrome."
+      shellDismissEvents : [string] = ["CLOSE", "CANCEL"]
+        @label "Shell dismiss events"
+        @description "The events the portal shell fires at a trait that mounts it."
+    }
+
+  }
+
+  trait OrbLintComposedWiringCli -> OrbLintComposedWiringRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint composed-wiring <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "composed-wiring") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint composed-wiring: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "composed-wiring") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint composed-wiring: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-composed-wiring" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint composed-wiring` with its arguments and working directory."
+        @synonyms "orb lint composed-wiring"
+      OrbLintComposedWiring.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait OrbFiredEvents = Fired.traits.OrbFiredEvents {
+    listens {
+      FIRED_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      FIRED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : CwProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD
+      OrbLintInput.LINT_INPUT -> FIRED_INPUT_HEARD
+    }
+  }
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintComposedWiringCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintComposedWiringOrbitalStart -> OrbLintComposedWiring, OrbLintComposedWiringCli, OrbLintInput, OrbFiredEvents, Packs, Versions
+}

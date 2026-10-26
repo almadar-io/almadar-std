@@ -313,6 +313,161 @@
     }
    ],
    "now": 1760531445678
+  },
+  {
+   "id": "opening-the-playground-starts-its-catalog",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "TAB_OPEN",
+     "entity": {
+      "id": "l",
+      "openTabs": [],
+      "recents": [],
+      "tabs": [],
+      "active": ""
+     },
+     "payload": {
+      "behavior": "almadar-std/std-behavior-playground",
+      "label": "std-behavior-playground",
+      "topic": "dev"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PLAYGROUND_OPENED"
+       },
+       {
+        "event": "TABS_PUSH"
+       },
+       {
+        "event": "TABS_SHOWN"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "opening-a-board-leaves-the-catalog-unread",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "TAB_OPEN",
+     "entity": {
+      "id": "l",
+      "openTabs": [],
+      "recents": [],
+      "tabs": [],
+      "active": ""
+     },
+     "payload": {
+      "behavior": "almadar-std/std-aws-board",
+      "label": "std-aws-board",
+      "topic": "ops"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "PLAYGROUND_OPENED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-failing-ci-row-opens-the-run-log-tab-and-hands-it-the-run",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "LOGS_OPEN",
+     "payload": {
+      "owner": "almadar-io",
+      "repo": "kflow",
+      "runId": "4242"
+     },
+     "entity": {
+      "id": "l",
+      "openTabs": [],
+      "recents": [],
+      "tabs": [],
+      "active": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TABS_PUSH"
+       },
+       {
+        "event": "TABS_SHOWN"
+       },
+       {
+        "event": "RUN_LOGS_LOAD",
+        "payload": {
+         "owner": "almadar-io",
+         "repo": "kflow",
+         "runId": "4242"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-failing-ci-row-focuses-the-run-log-tab-when-it-is-already-open",
+   "steps": [
+    {
+     "trait": "LaunchpadStage",
+     "event": "LOGS_OPEN",
+     "payload": {
+      "owner": "almadar-io",
+      "repo": "kflow",
+      "runId": "4242"
+     },
+     "entity": {
+      "id": "l",
+      "openTabs": [],
+      "recents": [],
+      "tabs": [
+       {
+        "id": "almadar-std/std-ci-run-logs",
+        "label": "std-ci-run-logs",
+        "topic": "ops"
+       },
+       {
+        "id": "almadar-std/std-ci-status",
+        "label": "std-ci-status",
+        "topic": "ops"
+       }
+      ],
+      "active": "almadar-std/std-ci-status"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TABS_PUSH"
+       },
+       {
+        "event": "TABS_SHOWN"
+       },
+       {
+        "event": "RUN_LOGS_LOAD",
+        "payload": {
+         "owner": "almadar-io",
+         "repo": "kflow",
+         "runId": "4242"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
   }
  ]
 }

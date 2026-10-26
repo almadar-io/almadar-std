@@ -1,0 +1,140 @@
+app std-orb-lint-config-dangling-ref [
+  version: "1.0.0",
+  inbound: ["cli-lint-config-dangling-ref"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-config-dangling-ref — the `orb lint config-dangling-ref <file>` command, the port of ORB_CONFIG_DANGLING_REF (validate_dangling_config_refs, types/config_type.rs). It lowers the file with program/read and, per orbital, collects the `@config.<key>` tokens an inline trait uses in its config defaults, transition effects and tick effects (a token that is the self-named default of a prop the installed pattern registry declares for its pattern is a declaration default, not a forward), and reports each key (sorted) that no knob can supply: not an app-level or orbital-level `config {}` knob, and not declared by the trait itself (unless the key is the trait's own self-forward) or by any trait connected to it through `@trait.<Name>` embeds in either direction. It reports at `orbitals[<i> (<orbital>)].traits[<j> (<trait>)]` with the compiler's message and suggestion (status 500, exit 1). Clean answers `lint config-dangling-ref: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-config-dangling-ref"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type DrNode = string | number | boolean | [DrNode?] | Map string DrNode?
+type DrKnob = { default : DrNode? }
+type DrTransition = { guard : DrNode?, effects : [DrNode?] }
+type DrMachine = { transitions : [DrTransition] }
+type DrTrait = { name : string, stateMachine : DrMachine?, ticks : [DrTransition], config : Map string DrKnob? }
+type DrOrbital = { name : string, config : Map string DrKnob?, traits : [DrTrait] }
+type DrProgram = { config : Map string DrKnob?, orbitals : [DrOrbital] }
+type DrPattern = { drawHost : boolean, props : Map string DrNode? }
+type DrRow = { name : string, ti : number, children : [string], keys : [string], used : [string], selfFwd : [string] }
+
+orbital OrbLintConfigDanglingRefOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintConfigDanglingRefRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    patternProps : Map string [string] = {}
+  }
+
+  trait OrbLintConfigDanglingRef -> OrbLintConfigDanglingRefRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_PATTERNS_HEARD -> ready
+        (set @entity.patternProps (object/fromEntries (array/map (object/keys @payload.patterns) (fn p [@p, (object/keys (object/get (object/get @payload.patterns @p) "props" {}))]))))
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (array/flatten (array/map (array/range 0 (array/len (object/get @payload.program "orbitals" []))) (fn oi (let ((orb (array/nth (object/get @payload.program "orbitals" []) @oi))) (let ((rows (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti (let ((t (array/nth (object/get @orb "traits" []) @ti))) (if (object/has @t "stateMachine") [{ name: (object/get @t "name" ""), ti: @ti, children: (array/unique (array/filter (let ((nr : [string] [])) (tree/fold (array/concat (array/concat (array/concat (array/concat (array/map (object/values (object/get @t "config" {})) (fn f { x: (object/get @f "default" null) })) (array/map (object/get (object/get @t "stateMachine" {}) "transitions" []) (fn x { x: (object/get @x "guard" null) }))) (array/map (object/get (object/get @t "stateMachine" {}) "transitions" []) (fn x { x: (object/get @x "effects" []) }))) (array/map (object/get @t "ticks" []) (fn x { x: (object/get @x "guard" null) }))) (array/map (object/get @t "ticks" []) (fn x { x: (object/get @x "effects" []) }))) (fn (n k) (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nr @r)))) (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @nr @r)))) (if (and (validate/string @n) (str/startsWith @n (quote "@trait."))) [(array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "["))] @nr)))) "DrNode")) (fn c (and (!= @c "") (!= @c (object/get @t "name" "")))))), keys: (object/keys (object/get @t "config" {})), used: (let ((nr : [string] [])) (tree/fold (array/concat (array/concat (array/map (object/values (object/get @t "config" {})) (fn f { x: (object/get @f "default" null) })) (array/map (object/get (object/get @t "stateMachine" {}) "transitions" []) (fn x { x: (object/get @x "effects" []) }))) (array/map (object/get @t "ticks" []) (fn x { x: (object/get @x "effects" []) }))) (fn (n k) (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nr @r)))) (if (validate/object @n) (let ((ty (let ((t0 (object/get @n "type" ""))) (if (validate/string @t0) @t0 "")))) (let ((props (object/get @entity.patternProps @ty []))) (array/flatten (array/map (object/keys @n) (fn kk (let ((v (object/get @n @kk)) (res (object/get @k @kk))) (if (and (validate/string @v) (array/includes @props @kk) (= (if (str/startsWith @v (quote "@config.")) (let ((kk (array/first (str/split (array/first (str/split (str/slice @v 8 (str/len @v)) ".")) "[")))) (if (and (!= @kk "") (validate/pattern @kk "^[A-Za-z0-9_]+$")) @kk "")) "") @kk)) @nr (if (= @res null) @nr @res)))))))) (if (validate/string @n) (if (!= (if (str/startsWith @n (quote "@config.")) (let ((kk (array/first (str/split (array/first (str/split (str/slice @n 8 (str/len @n)) ".")) "[")))) (if (and (!= @kk "") (validate/pattern @kk "^[A-Za-z0-9_]+$")) @kk "")) "") "") [(if (str/startsWith @n (quote "@config.")) (let ((kk (array/first (str/split (array/first (str/split (str/slice @n 8 (str/len @n)) ".")) "[")))) (if (and (!= @kk "") (validate/pattern @kk "^[A-Za-z0-9_]+$")) @kk "")) "")] @nr) @nr)))) "DrNode")), selfFwd: (array/map (array/filter (object/keys (object/get @t "config" {})) (fn kn (let ((dv (object/get (object/get (object/get @t "config" {}) @kn {}) "default" null))) (and (validate/string @dv) (= (if (str/startsWith @dv (quote "@config.")) (let ((kk (array/first (str/split (array/first (str/split (str/slice @dv 8 (str/len @dv)) ".")) "[")))) (if (and (!= @kk "") (validate/pattern @kk "^[A-Za-z0-9_]+$")) @kk "")) "") @kn))))) (fn kn @kn)) }] []))))))) (let ((declared (array/concat (object/keys (object/get @payload.program "config" {})) (object/keys (object/get @orb "config" {}))))) (array/flatten (array/map @rows (fn row (let ((comp (array/reduce (array/range 0 (array/len @rows)) [(object/get @row "name" "")] (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map @acc (fn nm (array/unique (array/concat (array/flatten (array/map (array/filter @rows (fn r (= (object/get @r "name" "") @nm))) (fn r (object/get @r "children" [])))) (array/map (array/filter @rows (fn r (array/includes (object/get @r "children" []) @nm))) (fn r (object/get @r "name" "")))))))))))))) (array/map (array/sort (array/filter (array/unique (object/get @row "used" [])) (fn key (not (or (array/includes @declared @key) (array/some @comp (fn nm (and (or (!= @nm (object/get @row "name" "")) (not (array/includes (object/get @row "selfFwd" []) @key))) (array/includes (array/flatten (array/map (array/filter @rows (fn r (= (object/get @r "name" "") @nm))) (fn r (object/get @r "keys" [])))) @key))))))))) (fn key { code: "ORB_CONFIG_DANGLING_REF", path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" (object/get @row "ti" 0) " (" (object/get @row "name" "") ")]"), message: (str/concat "`@config." @key "` — no trait in " (object/get @row "name" "") "'s referrer chain declares config knob '" @key "'; the forward cannot resolve and renders as the literal string"), suggestion: (str/concat "Declare `" @key "` on the owning trait (or its embedder) or remove the reference"), severity: "error" })))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "config-dangling-ref", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : DrProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      LINT_PATTERNS_HEARD { patterns : Map string DrPattern! }
+        @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry."
+      OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD
+    }
+  }
+
+  trait OrbLintConfigDanglingRefCli -> OrbLintConfigDanglingRefRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint config-dangling-ref <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "config-dangling-ref") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint config-dangling-ref: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "config-dangling-ref") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint config-dangling-ref: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-config-dangling-ref" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint config-dangling-ref` with its arguments and working directory."
+        @synonyms "orb lint config-dangling-ref"
+      OrbLintConfigDanglingRef.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintConfigDanglingRefCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintConfigDanglingRefOrbitalStart -> OrbLintConfigDanglingRef, OrbLintConfigDanglingRefCli, OrbLintInput, Packs, Versions
+}

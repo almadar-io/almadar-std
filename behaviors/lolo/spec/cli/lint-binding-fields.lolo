@@ -1,0 +1,21 @@
+app lint-binding-fields-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-binding-fields - the `orb lint binding-fields <file>` command, the port of ORB_BINDING_PAYLOAD_FIELD_UNDECLARED (direct @payload.<path> reads) and ORB_BINDING_ENTITY_FIELD_NOT_FOUND of binding.rs (validate_payload_field_references, validate_entity_field_references). It lowers the file with program/read and walks, in every inline trait, the guard, the effects and the ensures of each transition (payload and entity-field reads), the state holds and the tick effects (entity-field reads), and the entity invariants. A @payload.<path> read must resolve through the payload schema the transition's event declares, descending into each matched field's properties; an event without a schema gets the lifecycle or the declare-in-emits suggestion. An @entity.<field> read must name a field of the trait's linked entity (id, createdAt and updatedAt are runtime-managed), an @EntityName.<field> read a field of that entity; an @fromEntity.<field> read in an ensures is checked as @entity.<field>. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint binding-fields: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintBindingFieldsSpec {
+  expects trait OrbLintBindingFields {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintBindingFieldsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintBindingFields, OrbLintBindingFieldsCli
+}

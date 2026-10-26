@@ -1,0 +1,261 @@
+app std-orb-lint-rui-binding [
+  version: "1.0.0",
+  inbound: ["cli-lint-rui-binding"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-rui-binding — the `orb lint rui-binding <file>` command, the port of two render_ui/binding.rs checks over every inline trait: ORB_X_RENDER_UI_EVENT_LITERAL_STALE (a render-ui pattern, found at any depth of a transition effect, whose string prop is an event-bearing one in the installed pattern registry (kind event, event-ref, event-listen or callback) and names an event the trait does not declare in its emits, listens, event list or transitions; an empty or `@`-bound value and a trait with no declared event are skipped; the same walk runs over the pattern literals a `set` writes into a node-typed entity field) and ORB_RUI_RENDERABLE_IN_GENERIC_FIELD (a `set @entity.<field>` of a field not typed node, [node] or a container of node that receives a render-ui pattern literal, resolved through one `let` binding, at any depth through let, do, if and other call arguments). ORB_RUI_BINDING_TYPE_MISMATCH is not ported: it needs the compiler's binding type resolver (operator return types, entity and payload field types, element kinds) on arbitrary expressions. Entity definitions are the primary and auxiliary entities of every orbital, a later one replacing an earlier one of the same name and a primary name declared in two orbitals dropped. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint rui-binding: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-rui-binding"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type EfVal = string | number | boolean | [EfVal?] | Map string EfVal?
+type EfEvt = { event : string }
+type EfListen = { event : string, triggers : string }
+type EfKey = { key : string }
+type EfTransition = { event : string, effects : [EfVal?] }
+type EfMachine = { events : [EfKey], transitions : [EfTransition] }
+type EfTrait = { name : string, linkedEntity : string, emits : [EfEvt], listens : [EfListen], stateMachine : EfMachine }
+type EfEntity = { name : string, fields : [EfVal?] }
+type EfOrbital = { name : string, entity : EfEntity, auxiliaryEntities : [EfEntity], traits : [EfTrait] }
+type EfProgram = { orbitals : [EfOrbital] }
+type EfStale = { pat : string!, prop : string!, ev : string! }
+type EfSetHit = { f : string!, v : EfVal?, nm : string! }
+type EfPropShape = { kind : string? }
+type EfPatternShape = { props : Map string EfPropShape? }
+
+orbital OrbLintRuiBindingOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintRuiBindingRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    evProps : Map string [string] = {}
+    propNames : Map string [string] = {}
+  }
+
+  trait OrbLintRuiBinding -> OrbLintRuiBindingRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_PATTERNS_HEARD -> ready
+        (set @entity.propNames (object/mapValues @payload.patterns (fn e (object/keys (object/get @e "props" {})))))
+        (set @entity.evProps (object/mapValues @payload.patterns (fn e (let ((ps (object/get @e "props" {}))) (array/filter (object/keys @ps) (fn pn (array/includes @config.eventKinds (object/get (object/get @ps @pn {}) "kind" ""))))))))
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals : [EfOrbital] (object/get @payload.program "orbitals" [])) (evp @entity.evProps) (pnm @entity.propNames) (noe : [EfEntity] []) (noS : [string] []) (noSt : [EfStale] []) (noPat : [EfVal?] []) (noSh : [EfSetHit] []) (noL : [EfVal?] []) (noF : [OrbFinding] [])
+ (allEnts (array/flatten (array/map @orbitals (fn o (array/concat
+      (let ((en (object/get @o "entity" null))) (if (and (validate/object @en) (validate/string (object/get @en "name" null))) [@en] @noe))
+      (array/filter (object/get @o "auxiliaryEntities" @noe) (fn x (and (validate/object @x) (validate/string (object/get @x "name" null))))))))))
+ (pnames (array/flatten (array/map @orbitals (fn o (let ((en (object/get @o "entity" null))) (if (and (validate/object @en) (validate/string (object/get @en "name" null))) [(object/get @en "name")] (array/take [""] 0)))))))
+ (dups (array/filter @pnames (fn nm (> (array/len (array/filter @pnames (fn x (= @x @nm)))) 1))))
+ (ents (array/reverse (array/filter @allEnts (fn e (not (array/includes @dups (object/get @e "name"))))))))
+  (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+    (let ((orb (array/nth @orbitals @oi)))
+      (let ((trs (object/get @orb "traits" [])))
+        (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
+          (let ((td (array/nth @trs @tj)))
+            (if (not (object/has @td "stateMachine")) @noF
+              (let ((tpath (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")]"))
+                    (sm (object/get @td "stateMachine" {})))
+                (let ((trans (object/get @sm "transitions" []))
+                      (dc (array/unique (array/filter (array/concat
+                            (array/map (object/get @td "emits" []) (fn x (object/get @x "event" "")))
+                            (array/flatten (array/map (object/get @td "listens" []) (fn x [(object/get @x "event" ""), (object/get @x "triggers" "")])))
+                            (array/map (object/get @sm "events" []) (fn x (object/get @x "key" "")))
+                            (array/map (object/get @sm "transitions" []) (fn x (object/get @x "event" "")))) (fn s (!= @s "")))))
+                      (linked (object/get @td "linkedEntity" "")))
+                  (let ((ent (array/find @ents (fn e (= (object/get @e "name") @linked)))))
+                    (let ((fields (if (= @ent null) [] (object/get @ent "fields" []))))
+                      (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ti
+                        (let ((effs (object/get (array/nth @trans @ti) "effects" [])))
+                          (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
+                            (let ((e (array/nth @effs @ej)) (ep (str/concat @tpath ".stateMachine.transitions[" @ti "].effects[" @ej "]")))
+  (array/concat
+    (if (= (array/len @dc) 0) @noF
+      (array/map (array/flatten (array/map (let ((h1 (tree/fold @e (fn (n k)
+  (if (validate/array @n)
+    (let ((hd (array/nth @n 0)))
+      (array/concat (if (and (validate/string @hd) (= @hd "render-ui") (>= (array/len @n) 3) (validate/object (array/nth @n 2))) [(array/nth @n 2)] @noPat)
+        (array/flatten (array/map @k (fn r (if (= @r null) @noPat @r))))))
+    (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @noPat @r)))) @noPat))) EfVal))) (if (validate/array @h1) @h1 @noPat)) (fn p (if (validate/object @p) (let ((h0 (tree/fold @p (fn (n k)
+  (if (validate/object @n)
+    (let ((tyv (let ((t0 (object/get @n "type" null))) (if (validate/string @t0) @t0 ""))))
+    (let ((evl (if (!= @tyv "") (object/get @evp @tyv @noS) @noS)))
+      (array/flatten (array/map (array/filter (object/keys @n) (fn kk (!= @kk "type"))) (fn kk
+        (let ((cv (let ((r0 (object/get @k @kk null))) (if (= @r0 null) @noSt @r0))) (pv (object/get @n @kk null)))
+          (array/concat @cv
+            (if (and (validate/string @pv) (not (str/startsWith @pv (quote "@"))) (!= @pv "") (array/includes @evl @kk) (not (array/includes @dc @pv)))
+              [{ pat: @tyv, prop: @kk, ev: @pv }] @noSt))))))))
+    (if (validate/array @n)
+      (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (let ((r (array/nth @k @i))) (if (= @r null) @noSt @r)))))
+      @noSt))) EfVal))) (if (validate/array @h0) @h0 @noSt)) @noSt)))) (fn h { code: "ORB_X_RENDER_UI_EVENT_LITERAL_STALE", path: @ep,
+  message: (str/concat "Prop '" (object/get @h "prop") "' on '" (object/get @h "pat") "' references event '" (object/get @h "ev") "' but the trait's event set has no such key — literal is stale (likely missed by an `events: { OLD: NEW }` override rewrite, or an authoring rename that didn't reach this call site)"),
+  suggestion: (str/concat "Either add '" (object/get @h "ev") "' to the trait's `emits` / `listens` / transition events, or rewrite the literal to match an existing event key"), severity: "error" })))
+    (array/flatten (array/map (let ((h2 (tree/fold @e (fn (n k)
+  (if (validate/array @n)
+    (let ((hd (array/nth @n 0)) (len (array/len @n)) (ks @k))
+      (if (not (validate/string @hd)) @noSh
+        (if (= @hd "set") (let ((tg (array/nth @n 1)) (vl (array/nth @n 2)))
+            (if (and (validate/string @tg) (str/startsWith @tg (quote "@entity.")) (> @len 2))
+              [{ f: (str/slice @tg 8 (str/len @tg)), v: @vl, nm: (if (and (validate/string @vl) (str/startsWith @vl (quote "@")) (not (str/startsWith @vl (quote "@entity.")))) (str/slice @vl 1 (str/len @vl)) "") }]
+              @noSh))
+          (if (= @hd "let") (let ((bnd (array/nth @n 1)) (body (array/flatten (array/map (array/range 2 @len) (fn i (let ((r (array/nth @ks @i))) (if (= @r null) @noSh @r)))))))
+              (let ((bl (array/map (if (validate/array @bnd) @bnd @noL) (fn b (if (validate/array @b) @b @noL)))))
+                (array/map @body (fn h
+                  (if (= (object/get @h "nm") "") @h
+                    (let ((hit (array/find (array/reverse @bl) (fn b (and (validate/string (array/nth @b 0)) (= (array/nth @b 0) (object/get @h "nm")) (> (array/len @b) 1))))))
+                      (if (= @hit null) @h
+                        { f: (object/get @h "f"), v: (array/nth @hit 1), nm: "" })))))))
+            (array/flatten (array/map (array/range 1 @len) (fn i (let ((r (array/nth @ks @i))) (if (= @r null) @noSh @r)))))))))
+    @noSh)) EfVal))) (if (validate/array @h2) @h2 @noSh)) (fn h
+      (let ((fname (object/get @h "f")) (v (object/get @h "v")))
+        (let ((fd (array/find @fields (fn f (= (object/get (if (validate/object @f) @f {}) "name" "") @fname)))))
+          (let ((fdO (if (validate/object @fd) @fd {})) (sp (str/concat @ep ".set(@entity." @fname ")")))
+            (if (and (!= @fd null) (let ((r (tree/fold @fdO (fn (n kk)
+  (if (validate/object @n)
+    (let ((ty (let ((t0 (object/get @n "type" null))) (if (validate/string @t0) @t0 ""))))
+      (if (= @ty "node") true (if (and (or (= @ty "array") (= @ty "object")) (validate/object (object/get @n "items" null))) (= (object/get @kk "items" false) true) false)))
+    false)) EfVal))) (= @r true)))
+              (if (or (= (array/len @dc) 0) (not (or (validate/object @v) (and (validate/array @v) (not (validate/string (array/nth @v 0)))))))
+                @noF
+                (array/flatten (array/map (let ((fin (array/reduce (array/range 0 12) [{ v: @v, fd: @fdO, done: false }]
+  (fn (cur i) (array/flatten (array/map @cur (fn en
+    (if (object/get @en "done") [@en]
+      (let ((fdx (object/get @en "fd")) (vv (object/get @en "v")))
+        (let ((itm (object/get @fdx "items" null)))
+          (if (not (validate/object @itm)) [{ v: @vv, fd: @fdx, done: true }]
+            (let ((ty (object/get @fdx "type" "")))
+              (if (and (= @ty "array") (validate/array @vv))
+                (array/map @vv (fn x { v: @x, fd: @itm, done: false }))
+                (if (and (= @ty "object") (validate/object @vv))
+                  (array/map (array/sort (object/keys @vv)) (fn q { v: (object/get @vv @q), fd: @itm, done: false }))
+                  [{ v: @vv, fd: @fdx, done: true }])))))))))))))) (array/map @fin (fn en (object/get @en "v")))) (fn el (if (validate/object @el) (array/map (let ((h0 (tree/fold @el (fn (n k)
+  (if (validate/object @n)
+    (let ((tyv (let ((t0 (object/get @n "type" null))) (if (validate/string @t0) @t0 ""))))
+    (let ((evl (if (!= @tyv "") (object/get @evp @tyv @noS) @noS)))
+      (array/flatten (array/map (array/filter (object/keys @n) (fn kk (!= @kk "type"))) (fn kk
+        (let ((cv (let ((r0 (object/get @k @kk null))) (if (= @r0 null) @noSt @r0))) (pv (object/get @n @kk null)))
+          (array/concat @cv
+            (if (and (validate/string @pv) (not (str/startsWith @pv (quote "@"))) (!= @pv "") (array/includes @evl @kk) (not (array/includes @dc @pv)))
+              [{ pat: @tyv, prop: @kk, ev: @pv }] @noSt))))))))
+    (if (validate/array @n)
+      (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (let ((r (array/nth @k @i))) (if (= @r null) @noSt @r)))))
+      @noSt))) EfVal))) (if (validate/array @h0) @h0 @noSt)) (fn h { code: "ORB_X_RENDER_UI_EVENT_LITERAL_STALE", path: @sp,
+  message: (str/concat "Prop '" (object/get @h "prop") "' on '" (object/get @h "pat") "' references event '" (object/get @h "ev") "' but the trait's event set has no such key — literal is stale (likely missed by an `events: { OLD: NEW }` override rewrite, or an authoring rename that didn't reach this call site)"),
+  suggestion: (str/concat "Either add '" (object/get @h "ev") "' to the trait's `emits` / `listens` / transition events, or rewrite the literal to match an existing event key"), severity: "error" })) @noF)))))
+              (if (and (!= @v null) (let ((r (tree/fold @v (fn (n kk)
+  (if (validate/object @n)
+    (let ((ty (object/get @n "type" null)))
+      (or (and (validate/string @ty) (array/some (object/keys @n) (fn q (and (!= @q "type") (array/includes (object/get @pnm @ty []) @q))))) (array/some (object/values @kk) (fn c (= @c true)))))
+    (if (validate/array @n) (array/some @kk (fn c (= @c true))) false))) EfVal))) (= @r true)))
+                [{ code: "ORB_RUI_RENDERABLE_IN_GENERIC_FIELD", path: @sp,
+                   message: (str/concat "field '" @fname "' is not typed `node` but receives a render-ui pattern literal — renderable content in a generic/structured field escapes every render-ui check"),
+                   suggestion: (str/concat "Type the field: `" @fname " : node` (or `[node]` for a fragment list)."), severity: "error" }]
+                @noF)))))))))))))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "rui-binding", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    config {
+      eventKinds : [string] = ["event", "event-ref", "event-listen", "callback"]
+        @label "Event-bearing prop kinds"
+        @description "The registry prop kinds whose string value names an event of the trait."
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EfProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      LINT_PATTERNS_HEARD { patterns : Map string EfPatternShape! }
+        @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry projected for the render-ui checks."
+      OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD
+    }
+  }
+
+  trait OrbLintRuiBindingCli -> OrbLintRuiBindingRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint rui-binding <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "rui-binding") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint rui-binding: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "rui-binding") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint rui-binding: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-rui-binding" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint rui-binding` with its arguments and working directory."
+        @synonyms "orb lint rui-binding"
+      OrbLintRuiBinding.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintRuiBindingCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintRuiBindingOrbitalStart -> OrbLintRuiBinding, OrbLintRuiBindingCli, OrbLintInput, Packs, Versions
+}

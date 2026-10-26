@@ -1,0 +1,21 @@
+app lint-binding-setters-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-binding-setters - the `orb lint binding-setters <file>` command, the port of the write-side binding rules of binding.rs: ORB_BINDING_ENTITY_FIELD_NEVER_SET, ORB_BINDING_PERSIST_ROW_ID_NEVER_SET (validate_entity_fields_have_setters), ORB_BINDING_EMBED_READS_ARM_WRITE (validate_embed_reads_arm_writes) and the call-site capture half of ORB_BINDING_PAYLOAD_FIELD_UNDECLARED (validate_callsite_payload_captures). It lowers the file with program/read and, per orbital, indexes the sites where a transition renders an embedded trait (`@trait.<Child>` in its guard or effects) with the fields that transition sets, the values it sets and the payload its event declares. Every @entity.<field> a trait reads (guard, effects, tick effects) must be set by a (set @entity.<field> ...) somewhere in the trait, unless the field is intrinsic or has a declared default, a trait on the same [shared] entity sets it, or a rendering parent on the same entity sets it. A persist update or delete of the whole @entity needs a (set @entity.id ...). A render-only child of a persistent, non-shared entity that reads an @entity field its composing transition writes shows the value from before the write. A @callsitePayload.<path> capture must resolve in the payload of some composing event up the embed chain. The lifecycle events the bus never delivers are read from LINT_OPERATOR_SEMANTICS. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint binding-setters: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintBindingSettersSpec {
+  expects trait OrbLintBindingSetters {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintBindingSettersCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintBindingSetters, OrbLintBindingSettersCli
+}

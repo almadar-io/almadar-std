@@ -13,7 +13,7 @@ type SlotExpr = string | number | boolean | [SlotExpr?] | Map string SlotExpr?
 type SlotState = { name : string, isInitial : boolean }
 type SlotArm = { from : SlotExpr, to : string, guard : SlotExpr?, effects : [SlotExpr?], event : string }
 type SlotMachine = { states : [SlotState], transitions : [SlotArm] }
-type SlotConfigKnob = { default : SlotExpr }
+type SlotConfigKnob = { default : SlotExpr? }
 type SlotForm = [SlotExpr?]
 type SlotText = { v : string }
 type SlotTick = { guard : SlotExpr?, effects : [SlotExpr?] }
@@ -75,7 +75,9 @@ orbital OrbLintSlotOrbital {
                                                 (let ((sv (array/nth @f 1)))
                                                   (if (validate/string @sv)
                                                     (if (= (str/slice @sv 0 8) (quote "@config."))
-                                                      { s: (let ((dv (object/get (object/get (object/get @t "config" {}) (str/slice @sv 8 (str/len @sv)) {}) "default" @sv))) (if (validate/string @dv) @dv @sv)), p: (!= (array/nth @f 2) null) }
+                                                      (let ((kb (object/get (object/get @t "config" {}) (str/slice @sv 8 (str/len @sv)) {})))
+                                                        (if (and (object/has @kb "default") (= (object/get @kb "default" @sv) null)) null
+                                                        { s: (let ((dv (object/get @kb "default" @sv))) (if (validate/string @dv) @dv @sv)), p: (!= (array/nth @f 2) null) }))
                                                       { s: @sv, p: (!= (array/nth @f 2) null) })
                                                     null))
                                                 null)

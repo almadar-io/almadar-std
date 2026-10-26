@@ -1,0 +1,131 @@
+app std-orb-lint-fetch-deliver [
+  version: "1.0.0",
+  inbound: ["cli-lint-fetch-deliver"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-fetch-deliver - the `orb lint fetch-deliver <file>` command, the port of the option checks of entities/fetch_deliver.rs. For every inline trait it finds each `(fetch X { … })` in the transition effects (through nested arrays, not through objects) whose options carry `deliver: \"ids\"`: with an `include` option it is ORB_FETCH_DELIVER_IDS_ENTITY_REFS, without a non-empty `emit.success` it is ORB_FETCH_DELIVER_IDS_NO_SUCCESS. Both are reported at `orbitals[i (O)].traits[j (T)].stateMachine.transitions[n].effects` with the Rust message and suggestion, the include findings first, once per fetch (status 500, exit 1). ORB_FETCH_DELIVER_IDS_ROWS_READ and ORB_FETCH_TOTAL_NONE_READ are not part of this rule: they need the operators' value-source slots, field projections and function-returning flags. Clean answers `lint fetch-deliver: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-fetch-deliver"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
+type FdVal = string | number | boolean | [FdVal?] | Map string FdVal?
+type FdTransition = { effects : [FdVal?] }
+type FdMachine = { transitions : [FdTransition] }
+type FdTrait = { name : string, stateMachine : FdMachine }
+type FdOrbital = { name : string, traits : [FdTrait] }
+type FdProgram = { orbitals : [FdOrbital] }
+type FdHit = { k : number }
+type FdHits = [FdHit]
+orbital OrbLintFetchDeliverOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintFetchDeliverRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintFetchDeliver -> OrbLintFetchDeliverRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" []))) (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((o (array/nth @orbitals @oi))) (let ((trs (object/get @o "traits" []))) (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti (let ((t (array/nth @trs @ti))) (let ((trans (object/get (object/get @t "stateMachine" {  }) "transitions" []))) (let ((hits (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i (array/map (or (json/parse (json/stringify (or (tree/fold (object/get (array/nth @trans @i) "effects" []) (fn (n k) (if (validate/array @n) (array/concat (if (and (> (array/len @n) 0) (let ((sq (array/nth @n 0))) (if (validate/string @sq) (= @sq "fetch") false))) (array/flatten (array/map (array/slice @n 2 (array/len @n)) (fn a (if (validate/object @a) (let ((em (object/get @a "emit" null)) (dv (object/get @a "deliver" null))) (let ((sx (if (validate/object @em) (object/get @em "success" null) null))) (if (and (validate/string @dv) (= @dv "ids")) (array/concat (if (object/has @a "include") [{ k: 1 }] []) (if (and (validate/string @sx) (!= @sx "")) [] [{ k: 2 }])) []))) [])))) []) (array/flatten (array/filter @k (fn c (!= @c null))))) [])) "FdVal") [])) FdHits) []) (fn h { i: @i, k: (object/get @h "k" 0) }))))))) (array/concat (array/map (array/filter @hits (fn h (= (object/get @h "k" 0) 1))) (fn h { code: "ORB_FETCH_DELIVER_IDS_ENTITY_REFS", path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" (object/get @h "i" 0) "].effects"), message: "`deliver: ids` with `include`: included relations are row content, and `ids` delivers no rows", suggestion: "Drop `include`, or drop `deliver: ids`", severity: "error" })) (array/map (array/filter @hits (fn h (= (object/get @h "k" 0) 2))) (fn h { code: "ORB_FETCH_DELIVER_IDS_NO_SUCCESS", path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" (object/get @h "i" 0) "].effects"), message: "`deliver: ids` without `emit.success`: the reference is only usable passed whole to a `render-ui` prop, and no event carries it", suggestion: "Declare `emit: { success: <Event> }` and pass `@payload.data` whole to a `render-ui` prop in that event's arm, or drop `deliver: ids`", severity: "error" }))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "fetch-deliver", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : FdProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintFetchDeliverCli -> OrbLintFetchDeliverRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint fetch-deliver <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "fetch-deliver") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint fetch-deliver: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "fetch-deliver") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint fetch-deliver: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-fetch-deliver" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint fetch-deliver` with its arguments and working directory."
+        @synonyms "orb lint fetch-deliver"
+      OrbLintFetchDeliver.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintFetchDeliverCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintFetchDeliverOrbitalStart -> OrbLintFetchDeliver, OrbLintFetchDeliverCli, OrbLintInput, Packs, Versions
+}

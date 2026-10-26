@@ -1,0 +1,196 @@
+app std-orb-lint-slot-tick [
+  version: "1.0.0",
+  inbound: ["cli-lint-slot-tick"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-slot-tick — the `orb lint slot-tick <file>` command, the port of ORB_SLOT_CONTENTION_TICK (slot.rs validate_tick_slot_contention). It lowers the file with program/read (the resolved program, whose inferred effect rows carry each trait's call-site config substituted) and, for every page with two or more mounted traits (a by-ref mount resolves to the orbital's inline trait of that name, an unresolved mount is dropped), collects per trait whose ticks include one not statically false the slots its effect row paints from inside a ticks block (a literal, resolved render-ui resource at the tick site). A slot two or more mounts paint is reported once at the page (orbitals[i].pages[j]) with the participating trait names sorted (status 500, exit 1). A tick guard is statically false by the kernel's table: false, null, 0, the empty string or object or list, an `and` with a dead operand, an `or` of only dead operands, a `not` of a statically true operand, or a comparison of two differing (or, for !=, equal) literals. Clean answers `lint slot-tick: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-slot-tick"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type SlVal = string | number | boolean | [SlVal?] | Map string SlVal?
+type SlFt = { f : boolean!, t : boolean! }
+type SlRow = { kind : string, resource : string, site : string, resolved : boolean }
+type SlTick = { guard : SlVal }
+type SlTrait = { name : string, ref : string, ticks : [SlTick], effectRow : [SlRow], stateMachine : SlMachine }
+type SlMachine = { states : [SlState] }
+type SlState = { name : string }
+type SlPage = { path : string, traits : [SlTrait] }
+type SlOrbital = { pages : [SlPage], traits : [SlTrait] }
+type SlProgram = { orbitals : [SlOrbital] }
+
+orbital OrbLintSlotTickOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+
+  entity OrbLintSlotTickRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintSlotTick -> OrbLintSlotTickRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (nof : [OrbFinding] []) (nos : [string] []))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((orb (array/nth @orbitals @oi)))
+              (let ((pgs (object/get @orb "pages" []))
+                    (byName (object/fromEntries (array/map (array/filter (object/get @orb "traits" []) (fn t (object/has @t "stateMachine"))) (fn t [(object/get @t "name" ""), { n: (object/get @t "name" ""),
+  slots: (if (array/some (object/get @t "ticks" []) (fn tk (if (object/has @tk "guard") (not (object/get (tree/fold (object/get @tk "guard" null) (fn (n k)
+  (if (validate/boolean @n) { f: (not @n), t: @n }
+  (if (= @n null) { f: true, t: false }
+  (if (validate/number @n) { f: (= @n 0), t: (!= @n 0) }
+  (if (validate/string @n) { f: (= @n ""), t: (and (!= @n "") (not (str/startsWith @n (quote "@")))) }
+  (if (validate/object @n) { f: (= (array/len (object/keys @n)) 0), t: (> (array/len (object/keys @n)) 0) }
+  (if (validate/array @n)
+    (let ((len (array/len @n)) (op (array/nth @n 0)))
+      (if (not (validate/string @op)) { f: (= @len 0), t: (> @len 0) }
+        (let ((rs (array/map (array/range 1 @len) (fn i (array/nth @k @i)))) (lit (and (= @len 3) (let ((a1 (array/nth @n 1))) (or (validate/boolean @a1) (validate/number @a1) (= @a1 null) (and (validate/string @a1) (not (str/startsWith @a1 (quote "@")))))) (let ((a2 (array/nth @n 2))) (or (validate/boolean @a2) (validate/number @a2) (= @a2 null) (and (validate/string @a2) (not (str/startsWith @a2 (quote "@")))))))))
+          (if (= @op "and") { f: (array/some @rs (fn r (object/get @r "f"))), t: (and (> (array/len @rs) 0) (array/every @rs (fn r (object/get @r "t")))) }
+          (if (= @op "or") { f: (and (> (array/len @rs) 0) (array/every @rs (fn r (object/get @r "f")))), t: (array/some @rs (fn r (object/get @r "t"))) }
+          (if (= @op "not") { f: (and (= (array/len @rs) 1) (object/get (array/nth @rs 0) "t")), t: (and (= (array/len @rs) 1) (object/get (array/nth @rs 0) "f")) }
+          (if (or (= @op "=") (= @op "==") (= @op "!="))
+            (let ((eq (= (json/stringify (array/nth @n 1)) (json/stringify (array/nth @n 2)))))
+              { f: (and @lit (= @eq (= @op "!="))), t: (and @lit (= @eq (!= @op "!="))) })
+            { f: false, t: false })))))))
+    { f: false, t: false }))))))) "SlVal") "f")) true)))
+    (array/sort (array/unique (array/map (array/filter (object/get @t "effectRow" []) (fn u (and (= (object/get @u "kind" "") "render-ui") (= (object/get @u "site" "") "tick") (!= (object/get @u "resolved" true) false) (validate/string (object/get @u "resource" null))))) (fn u (object/get @u "resource")))))
+    @nos) }])))))
+                (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
+                  (let ((pg (array/nth @pgs @pj)))
+                    (if (not (validate/object @pg)) @nof
+                      (let ((ms (array/flatten (array/map (object/get @pg "traits" []) (fn m
+                              (if (not (validate/object @m)) []
+                                (if (object/has @m "stateMachine") [{ n: (object/get @m "name" ""),
+  slots: (if (array/some (object/get @m "ticks" []) (fn mk (if (object/has @mk "guard") (not (object/get (tree/fold (object/get @mk "guard" null) (fn (n k)
+  (if (validate/boolean @n) { f: (not @n), t: @n }
+  (if (= @n null) { f: true, t: false }
+  (if (validate/number @n) { f: (= @n 0), t: (!= @n 0) }
+  (if (validate/string @n) { f: (= @n ""), t: (and (!= @n "") (not (str/startsWith @n (quote "@")))) }
+  (if (validate/object @n) { f: (= (array/len (object/keys @n)) 0), t: (> (array/len (object/keys @n)) 0) }
+  (if (validate/array @n)
+    (let ((len (array/len @n)) (op (array/nth @n 0)))
+      (if (not (validate/string @op)) { f: (= @len 0), t: (> @len 0) }
+        (let ((rs (array/map (array/range 1 @len) (fn i (array/nth @k @i)))) (lit (and (= @len 3) (let ((a1 (array/nth @n 1))) (or (validate/boolean @a1) (validate/number @a1) (= @a1 null) (and (validate/string @a1) (not (str/startsWith @a1 (quote "@")))))) (let ((a2 (array/nth @n 2))) (or (validate/boolean @a2) (validate/number @a2) (= @a2 null) (and (validate/string @a2) (not (str/startsWith @a2 (quote "@")))))))))
+          (if (= @op "and") { f: (array/some @rs (fn r (object/get @r "f"))), t: (and (> (array/len @rs) 0) (array/every @rs (fn r (object/get @r "t")))) }
+          (if (= @op "or") { f: (and (> (array/len @rs) 0) (array/every @rs (fn r (object/get @r "f")))), t: (array/some @rs (fn r (object/get @r "t"))) }
+          (if (= @op "not") { f: (and (= (array/len @rs) 1) (object/get (array/nth @rs 0) "t")), t: (and (= (array/len @rs) 1) (object/get (array/nth @rs 0) "f")) }
+          (if (or (= @op "=") (= @op "==") (= @op "!="))
+            (let ((eq (= (json/stringify (array/nth @n 1)) (json/stringify (array/nth @n 2)))))
+              { f: (and @lit (= @eq (= @op "!="))), t: (and @lit (= @eq (!= @op "!="))) })
+            { f: false, t: false })))))))
+    { f: false, t: false }))))))) "SlVal") "f")) true)))
+    (array/sort (array/unique (array/map (array/filter (object/get @m "effectRow" []) (fn u (and (= (object/get @u "kind" "") "render-ui") (= (object/get @u "site" "") "tick") (!= (object/get @u "resolved" true) false) (validate/string (object/get @u "resource" null))))) (fn u (object/get @u "resource")))))
+    @nos) }]
+                                  (let ((sm (object/get @byName (object/get @m "name" (object/get @m "ref" "")) null))) (if (= @sm null) [] [@sm]))))))))
+                            (ppath (object/get @pg "path" "")))
+                        (if (< (array/len @ms) 2) @nof
+                          (array/flatten (array/map (array/sort (array/unique (array/flatten (array/map @ms (fn s (object/get @s "slots")))))) (fn sl
+                            (let ((names (array/sort (array/map (array/filter @ms (fn s (array/includes (object/get @s "slots") @sl))) (fn s (object/get @s "n"))))))
+                              (if (< (array/len @names) 2) @nof
+                                (let ((q (array/map @names (fn nm (str/concat "'" @nm "'")))))
+                                  [{ code: "ORB_SLOT_CONTENTION_TICK", path: (str/concat "orbitals[" @oi "].pages[" @pj "]"),
+                                    message: (str/concat "page \"" @ppath "\": traits " (str/join (array/take @q (- (array/len @q) 1)) ", ") " and " (array/nth @q (- (array/len @q) 1)) " both render into slot '" @sl "' from inside a ticks block, and no tick guard switches either one off — a ticks block runs EVERY frame, so they paint slot '" @sl "' on every frame and the runtime stacks them into one growing column instead of showing either"),
+                                    suggestion: (str/concat "Give exactly one trait slot '" @sl "': set config { running: false } on the others at this call site, or send them to different slots by making the slot a config knob on the atom (write (render-ui @config.surface ...) in the atom's .lolo, declare `surface` in its config, then set a different value per trait here)"), severity: "error" }]))))))))))))))))))))
+        (emit LINT_FINISH { })
+
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "slot-tick", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SlProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintSlotTickCli -> OrbLintSlotTickRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint slot-tick <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "slot-tick") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint slot-tick: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "slot-tick") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint slot-tick: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-slot-tick" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint slot-tick` with its arguments and working directory."
+        @synonyms "orb lint slot-tick"
+      OrbLintSlotTick.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintSlotTickCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintSlotTickOrbitalStart -> OrbLintSlotTick, OrbLintSlotTickCli, OrbLintInput, Packs, Versions
+}

@@ -1,0 +1,21 @@
+app lint-circuit-item-actions-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint circuit-item-actions <file>`, the port of the item-action checks of validate_closed_circuit: CIRCUIT_ORPHAN_EVENT for rendered actions, CIRCUIT_DEAD_HANDLER and CIRCUIT_DUPLICATE_EVENT. Findings are reported at the render-ui effect's props path (status 500, exit 1). A clean program answers `lint circuit-item-actions: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2). A file that cannot be read or lowered fails the run (status 500)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintCircuitItemActionsSpec {
+  expects trait OrbLintCircuitItemActions {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintCircuitItemActionsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintCircuitItemActions, OrbLintCircuitItemActionsCli
+}

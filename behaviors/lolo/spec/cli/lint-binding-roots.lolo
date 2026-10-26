@@ -1,0 +1,21 @@
+app lint-binding-roots-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-binding-roots - the `orb lint binding-roots <file>` command, the port of the root rules of binding.rs validate_binding: ORB_BINDING_INVALID_FORMAT, ORB_BINDING_FROM_ENTITY_OUTSIDE_ENSURES, ORB_BINDING_DISPATCH_ROOT_IN_TICK, ORB_BINDING_ROOT_NO_PATH, ORB_BINDING_EVENT_INVALID_PATH, ORB_BINDING_STATE_NO_PATH, ORB_BINDING_NOW_NO_PATH and ORB_BINDING_UNKNOWN_ENTITY. It lowers the file with program/read and walks the guard (guard context), the effects (effect context), the ensures (ensures context), the state holds and the entity invariants (guard context) of every inline trait, and the tick effects (tick context). Every `@root` binding string is checked unless an enclosing `(fn (x) ...)` / `(lambda ...)` parameter, a sequential `let` name or, inside a collection callback (a collection or std-array operator of two or more arguments in the installed operator table, read from LINT_OPERATOR_SHAPES), `item` / `index` binds its root. The delivery roots (event, prevEvents, prevStates, fromState, toState) and the `@event.source` keys are the language's delivery record. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint binding-roots: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintBindingRootsSpec {
+  expects trait OrbLintBindingRoots {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintBindingRootsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintBindingRoots, OrbLintBindingRootsCli
+}

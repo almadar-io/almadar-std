@@ -1,0 +1,1548 @@
+{
+  "atom": "cli/atoms/std-orb-lint-service-def.lolo",
+  "trait": "OrbLintServiceDef",
+  "note": "Cases mirror service.rs (test_valid_service_reference, test_valid_url, test_valid_env_var_name, test_validate_rest_service*) plus the edge values checked against `orb validate --json` on thm-svc-ok, thm-svc-bad and thm-svc-edge. A .lolo program never carries services, so every case is an .orb document. ORB_GEN_DUPLICATE follows the intent of service.rs (a name already declared by an EARLIER inline service); the installed Rust reports every inline service as a duplicate because validation/mod.rs pre-registers all inline service names before validate_all_services runs.",
+  "cases": [
+    {
+      "id": "control a valid rest service is clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "rest",
+                      "name": "w",
+                      "baseUrl": "https://api.x.com",
+                      "auth": {
+                        "type": "api-key",
+                        "keyName": "appid",
+                        "secretEnv": "API_KEY"
+                      },
+                      "timeout": 30
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "control env url interpolation and a bearer token without keyName are clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "rest",
+                      "name": "w",
+                      "baseUrl": "${BASE}",
+                      "auth": {
+                        "type": "bearer",
+                        "secretEnv": "_OK1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "a rest service with no name is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "rest",
+                      "name": "",
+                      "baseUrl": "https://api.x.com"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [
+                    {
+                      "code": "ORB_E_MISSING_NAME",
+                      "path": "orbitals[0].services[0].name",
+                      "message": "Service name is required",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "a rest service with no baseUrl is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "rest",
+                      "name": "w",
+                      "baseUrl": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].services[0].baseUrl",
+                      "message": "REST service requires a baseUrl",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "a baseUrl that is not http, https or an interpolation is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "rest",
+                      "name": "w",
+                      "baseUrl": "api.example.com"
+                    },
+                    {
+                      "type": "rest",
+                      "name": "w2",
+                      "baseUrl": "HTTP://x"
+                    },
+                    {
+                      "type": "rest",
+                      "name": "w3",
+                      "baseUrl": "ftp://x"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].services[0].baseUrl",
+                      "message": "Invalid URL: 'api.example.com'",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].services[1].baseUrl",
+                      "message": "Invalid URL: 'HTTP://x'",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].services[2].baseUrl",
+                      "message": "Invalid URL: 'ftp://x'",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "an api-key auth with no keyName is an error but an empty keyName is not",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "rest",
+                      "name": "w",
+                      "baseUrl": "https://api.x.com",
+                      "auth": {
+                        "type": "api-key"
+                      }
+                    },
+                    {
+                      "type": "rest",
+                      "name": "w2",
+                      "baseUrl": "https://api.x.com",
+                      "auth": {
+                        "type": "api-key",
+                        "keyName": ""
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_MISSING_FIELD",
+                      "path": "orbitals[0].services[0].auth.keyName",
+                      "message": "api-key auth should specify keyName",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "a secretEnv that is not UPPER_SNAKE_CASE is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "rest",
+                      "name": "w",
+                      "baseUrl": "https://api.x.com",
+                      "auth": {
+                        "type": "bearer",
+                        "secretEnv": "apiKey"
+                      }
+                    },
+                    {
+                      "type": "rest",
+                      "name": "w2",
+                      "baseUrl": "https://api.x.com",
+                      "auth": {
+                        "type": "bearer",
+                        "secretEnv": "1ABC"
+                      }
+                    },
+                    {
+                      "type": "rest",
+                      "name": "w3",
+                      "baseUrl": "https://api.x.com",
+                      "auth": {
+                        "type": "bearer",
+                        "secretEnv": ""
+                      }
+                    },
+                    {
+                      "type": "rest",
+                      "name": "w4",
+                      "baseUrl": "https://api.x.com",
+                      "auth": {
+                        "type": "bearer",
+                        "secretEnv": "A1_b"
+                      }
+                    },
+                    {
+                      "type": "rest",
+                      "name": "w5",
+                      "baseUrl": "https://api.x.com",
+                      "auth": {
+                        "type": "bearer",
+                        "secretEnv": "_"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].services[0].auth.secretEnv",
+                      "message": "secretEnv 'apiKey' should be UPPER_SNAKE_CASE",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].services[1].auth.secretEnv",
+                      "message": "secretEnv '1ABC' should be UPPER_SNAKE_CASE",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].services[2].auth.secretEnv",
+                      "message": "secretEnv '' should be UPPER_SNAKE_CASE",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].services[3].auth.secretEnv",
+                      "message": "secretEnv 'A1_b' should be UPPER_SNAKE_CASE",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "a zero timeout is an error and a positive one is not",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "rest",
+                      "name": "w",
+                      "baseUrl": "https://api.x.com",
+                      "timeout": 0
+                    },
+                    {
+                      "type": "rest",
+                      "name": "w2",
+                      "baseUrl": "https://api.x.com",
+                      "timeout": 5
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].services[0].timeout",
+                      "message": "Timeout of 0 may cause immediate failures",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "control a socket with outbound events only is clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "socket",
+                      "name": "s",
+                      "url": "wss://x",
+                      "events": {
+                        "inbound": [],
+                        "outbound": [
+                          "a"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "a socket with no name, no url and no events is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "socket",
+                      "name": "",
+                      "url": "",
+                      "events": {
+                        "inbound": [],
+                        "outbound": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [
+                    {
+                      "code": "ORB_E_MISSING_NAME",
+                      "path": "orbitals[0].services[0].name",
+                      "message": "Service name is required",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].services[0].url",
+                      "message": "Socket service requires a url",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_MISSING_FIELD",
+                      "path": "orbitals[0].services[0].events",
+                      "message": "Socket service has no inbound or outbound events defined",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "a socket url that is not ws or wss is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "socket",
+                      "name": "s",
+                      "url": "http://x",
+                      "events": {
+                        "inbound": [
+                          "a"
+                        ],
+                        "outbound": []
+                      }
+                    },
+                    {
+                      "type": "socket",
+                      "name": "s2",
+                      "url": "ws:/x",
+                      "events": {
+                        "inbound": [
+                          "a"
+                        ],
+                        "outbound": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].services[0].url",
+                      "message": "Socket URL must start with ws:// or wss://, got: 'http://x'",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].services[1].url",
+                      "message": "Socket URL must start with ws:// or wss://, got: 'ws:/x'",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "control a valid mcp service is clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "mcp",
+                      "name": "m",
+                      "serverPath": "/x",
+                      "capabilities": [
+                        "c"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "an mcp service with no name, serverPath or capabilities is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "mcp",
+                      "name": "",
+                      "serverPath": "",
+                      "capabilities": []
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [
+                    {
+                      "code": "ORB_E_MISSING_NAME",
+                      "path": "orbitals[0].services[0].name",
+                      "message": "Service name is required",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].services[0].serverPath",
+                      "message": "MCP service requires a serverPath",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_MISSING_FIELD",
+                      "path": "orbitals[0].services[0].capabilities",
+                      "message": "MCP service has no capabilities defined",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "a service reference must be Alias.services.Name",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    "bad.ref",
+                    "Alias.services.good",
+                    "A1.services.",
+                    "A.service.b",
+                    "Ab9.services.x9Y",
+                    {
+                      "ref": "nope"
+                    },
+                    {
+                      "ref": "A.services.ok",
+                      "baseUrl": "x"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_REFERENCE",
+                      "path": "orbitals[0].services[0]",
+                      "message": "Invalid service reference 'bad.ref'. Must be in format 'Alias.services.ServiceName'",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_REFERENCE",
+                      "path": "orbitals[0].services[2]",
+                      "message": "Invalid service reference 'A1.services.'. Must be in format 'Alias.services.ServiceName'",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_REFERENCE",
+                      "path": "orbitals[0].services[3]",
+                      "message": "Invalid service reference 'A.service.b'. Must be in format 'Alias.services.ServiceName'",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_REFERENCE",
+                      "path": "orbitals[0].services[5]",
+                      "message": "Invalid service reference 'nope'. Must be in format 'Alias.services.ServiceName'",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "a second inline service with the same name is a duplicate even across kinds",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "rest",
+                      "name": "a",
+                      "baseUrl": "https://api.x.com"
+                    },
+                    {
+                      "type": "mcp",
+                      "name": "a",
+                      "serverPath": "/x",
+                      "capabilities": [
+                        "c"
+                      ]
+                    },
+                    {
+                      "type": "rest",
+                      "name": "b",
+                      "baseUrl": "https://api.x.com"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_DUPLICATE",
+                      "path": "orbitals[0].services[1]",
+                      "message": "Duplicate service name 'a'",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "control distinct names and a reference sharing a name are clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "rest",
+                      "name": "a",
+                      "baseUrl": "https://api.x.com"
+                    },
+                    {
+                      "type": "mcp",
+                      "name": "b",
+                      "serverPath": "/x",
+                      "capabilities": [
+                        "c"
+                      ]
+                    },
+                    "A.services.a"
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "a duplicate across orbitals is reported at the later orbital",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "rest",
+                      "name": "a",
+                      "baseUrl": "https://api.x.com"
+                    }
+                  ]
+                },
+                {
+                  "name": "P",
+                  "services": [
+                    {
+                      "type": "socket",
+                      "name": "a",
+                      "url": "wss://x",
+                      "events": {
+                        "inbound": [
+                          "a"
+                        ],
+                        "outbound": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_DUPLICATE",
+                      "path": "orbitals[1].services[0]",
+                      "message": "Duplicate service name 'a'",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "the definition findings come before the duplicate finding of the same service",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "services": [
+                    {
+                      "type": "rest",
+                      "name": "a",
+                      "baseUrl": "https://api.x.com"
+                    },
+                    {
+                      "type": "rest",
+                      "name": "a",
+                      "baseUrl": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "orbitals[0].services[1].baseUrl",
+                      "message": "REST service requires a baseUrl",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_DUPLICATE",
+                      "path": "orbitals[0].services[1]",
+                      "message": "Duplicate service name 'a'",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "control orbitals without services are clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "orbitals": [
+                {
+                  "name": "O"
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "service-def",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintServiceDef"
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintServiceDefCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint service-def <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no file argument is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintServiceDefCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "{\"argv\": [], \"cwd\": \"/\"}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint service-def <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two file arguments are the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintServiceDefCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "{\"argv\": [\"a\", \"b\"], \"cwd\": \"/\"}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint service-def <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "one file argument asks the lint input to read it",
+      "steps": [
+        {
+          "trait": "OrbLintServiceDefCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "{\"argv\": [\"a.lolo\"], \"cwd\": \"/\"}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "waiting",
+            "emits": [
+              {
+                "event": "LINT_REQUEST",
+                "payload": {
+                  "file": "a.lolo"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -130,6 +130,10 @@ orbital BehaviorCatalogOrbital {
         @label "Starting topic"
         @description "The topic the rows start narrowed to (as TOPIC would); empty lists every behavior."
         @tier "domain"
+      loadOnInit : boolean = true
+        @label "List on start"
+        @description "List the folders as the page mounts; off waits for CATALOG_LOAD, so a host that mounts the catalog before it is shown reads nothing until then."
+        @tier "policy"
     }
     initial: loading
 
@@ -140,7 +144,20 @@ orbital BehaviorCatalogOrbital {
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
-      INIT -> loading
+      INIT -> loading when @config.loadOnInit
+        (set @entity.topicPackage @config.startPackage)
+        (set @entity.topic @config.startTopic)
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) } {
+          vectors: false
+          emit: { success: LISTED, failure: LIST_FAILED }
+        })
+      INIT -> loading when (not @config.loadOnInit)
+        (set @entity.topicPackage @config.startPackage)
+        (set @entity.topic @config.startTopic)
+        (render-ui main <loading-state message="Loading the catalog" />)
+      CATALOG_LOAD -> loading
         (set @entity.topicPackage @config.startPackage)
         (set @entity.topic @config.startTopic)
         (set @entity.status loading)
@@ -485,6 +502,9 @@ orbital BehaviorCatalogOrbital {
         @description "Narrow the rows (and search results) to one package's topic; an empty topic lists every behavior again."
         @synonyms "filter by topic, pick category, browse topic"
       RETRY
+      CATALOG_LOAD
+        @description "List the folders now: the start a catalog mounted with loadOnInit off waits for; heard only while it has not listed yet."
+        @synonyms "load the catalog, start listing"
       SCOPE {
         paths : [string]!
         fingerprints : [string]

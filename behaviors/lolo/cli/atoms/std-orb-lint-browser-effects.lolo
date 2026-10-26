@@ -1,0 +1,169 @@
+app std-orb-lint-browser-effects [
+  version: "1.0.0",
+  inbound: ["cli-lint-browser-effects"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-browser-effects — the `orb lint browser-effects <file>` command, the port of the browser/beacon, browser/page-facts and on-device (browser/prompt, browser/embed) checks of effect/http.rs (check_beacon_call, check_page_facts_call, check_on_device_call), found at any depth of a guard or effect of an inline trait. The keys a beacon request and its options may carry and the facts a page-facts list may name come from the installed operator table through std-orb-lint-host-calls. Reports ORB_BEACON_URL_NOT_ABSOLUTE (a literal beacon URL that does not begin with http:// or https://), ORB_BEACON_TEXT_REQUIRED (no request, or a request without `text`), ORB_BEACON_OPTION_UNKNOWN (a request or options key the table does not declare; `key` given in both), ORB_PAGE_FACTS_FIELD_INVALID (not a list, an empty list, a word that is not a page fact, a fact listed twice), ORB_ON_DEVICE_SCHEMA_INVALID (a literal browser/prompt response schema that is not a JSON object), and the ORB_HOST_EFFECT_ARITY and ORB_HOST_EFFECT_OPTION_UNKNOWN of browser/prompt and browser/embed. The egress check of a beacon URL, the key and emit-block findings, the background-tick findings of the on-device and tab effects (ORB_ON_DEVICE_EFFECT_ON_SERVER, ORB_TAB_EFFECT_ON_SERVER) and the browser/tab-* request (ORB_TAB_REQUEST_INVALID) are not reported here. Findings carry the Rust path (the guard or effect), message and suggestion (status 500, exit 1). Clean answers `lint browser-effects: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-browser-effects"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type HcVal = string | number | boolean | [HcVal?] | Map string HcVal?
+type HcOrbital = { name : string, traits : [HcVal] }
+type HcCall = { head : string!, path : string!, call : [HcVal?]!, tname : string!, tick : string!, bg : boolean!, declared : [string]! }
+type HcType = string | HcTypeNode
+type HcTypeNode = { kind : string!, fields : Map string HcType?, optional : [string]? }
+type HcParam = { name : string!, optional : boolean?, type : HcType }
+type HcIntRange = { arg : number!, min : number!, max : number! }
+type HcClosed = { request : boolean?, intRange : HcIntRange? }
+type HcOauthOp = { name : string!, required : [string]!, optional : [string]!, endpoint : string? }
+type HcOauth = { endpointTarget : string!, endpointKinds : [string]!, ops : [HcOauthOp]! }
+type HcGrantNeed = Map string HcVal
+type HcFact = { minArity : number!, maxArity : number?, runsOn : string?, host : string?, params : [HcParam]!, closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, hasOptions : boolean!, optionKeys : [string]!, emitKeys : [string]!, hasRequest : boolean!, requestFields : [string]!, requestRequired : [string]!, words : Map string [string]!, keys : Map string [string]! }
+type HcValMap = Map string HcVal?
+type LnVal = string | number | boolean | [LnVal?] | Map string LnVal?
+type LnProgram = { orbitals : [HcOrbital] }
+type HcValMap = Map string HcVal?
+type HcStrings = [string]
+type HcLooseList = [HcVal?]
+
+
+orbital OrbLintBrowserEffectsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Calls from "std/behaviors/std-orb-lint-host-calls"
+
+  entity OrbLintBrowserEffectsRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+
+  }
+
+  trait OrbLintBrowserEffects -> OrbLintBrowserEffectsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (emit HOST_CALLS_COLLECT { requestId: (str/concat "browser-effects:" @payload.scope), orbitals: (object/get @payload.program "orbitals" []), heads: ["browser/beacon", "browser/page-facts", "browser/prompt", "browser/embed"], operators: ["browser/beacon", "browser/page-facts"], fields: [] })
+      HOST_CALLS_HEARD -> ready when (and (str/startsWith @payload.requestId "browser-effects:") @payload.unread)
+        (set @entity.findings [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table could not be read, so the browser effects' vocabulary is unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }])
+        (emit LINT_FINISH { })
+      HOST_CALLS_HEARD -> ready when (and (str/startsWith @payload.requestId "browser-effects:") (not @payload.unread))
+        (set @entity.findings (let ((facts @payload.facts) (none : [OrbFinding] []) (nos : [string] []) (nov : [string] []))
+          (let ((fbeacon (object/get @facts "browser/beacon")) (ffacts (object/get @facts "browser/page-facts")))
+            (let ((requestKeys (object/get (object/get @fbeacon "keys") "request" @nos)) (optionKeys (object/get (object/get @fbeacon "keys") "options" @nos)) (factWords (object/get (object/get @ffacts "words") "fields[]" @nos)))
+              (array/flatten (array/map @payload.calls (fn c
+                (let ((a (object/get @c "call")) (p (object/get @c "path")) (h (object/get @c "head")))
+                  (let ((n (array/len @a)))
+                    (if (= @h "browser/beacon") (array/concat (let ((u (if (> @n 1) (array/nth @a 1) null))) (if (and (validate/string @u) (not (or (str/startsWith @u (quote "@")) (str/startsWith @u "?") (str/startsWith @u "$"))) (not (str/startsWith (str/lower @u) "http://")) (not (str/startsWith (str/lower @u) "https://"))) [{ code: "ORB_BEACON_URL_NOT_ABSOLUTE", path: @p, message: (str/concat "browser/beacon URL '" @u "' is not an absolute http(s) URL"), suggestion: "Write the full URL, e.g. https://collector.example.com/e; a relative endpoint is refused", severity: "error" }] @none)) (let ((rv (if (> @n 2) (array/nth @a 2) null))) (if (validate/object @rv) (let ((rm (or (json/parse (json/stringify @rv) HcValMap) {}))) (array/concat (array/map (array/filter (array/sort (object/keys @rm)) (fn key (not (array/includes @requestKeys @key)))) (fn key { code: "ORB_BEACON_OPTION_UNKNOWN", path: @p, message: (str/concat "`" @key "` is not a key of browser/beacon request"), suggestion: "A beacon posts `text` as text/plain: no headers, body kinds, auth, retry, paginate, stream, presign or multipart", severity: "error" })) (if (= (object/get @rm "text" null) null) [{ code: "ORB_BEACON_TEXT_REQUIRED", path: @p, message: (str/concat "browser/beacon needs a request carrying `text`"), suggestion: "Write `{ text: <the body> }` after the URL", severity: "error" }] @none))) (if (<= @n 2) [{ code: "ORB_BEACON_TEXT_REQUIRED", path: @p, message: (str/concat "browser/beacon needs a request carrying `text`"), suggestion: "Write `{ text: <the body> }` after the URL", severity: "error" }] @none))) (let ((ov (if (> @n 3) (array/nth @a 3) null))) (if (validate/object @ov) (let ((om (or (json/parse (json/stringify @ov) HcValMap) {}))) (array/map (array/filter (array/sort (object/keys @om)) (fn key (not (array/includes @optionKeys @key)))) (fn key { code: "ORB_BEACON_OPTION_UNKNOWN", path: @p, message: (str/concat "`" @key "` is not a key of browser/beacon options"), suggestion: "A beacon posts `text` as text/plain: no headers, body kinds, auth, retry, paginate, stream, presign or multipart", severity: "error" }))) @none)) (let ((rv2 (if (> @n 2) (array/nth @a 2) null)) (ov2 (if (> @n 3) (array/nth @a 3) null))) (if (and (validate/object @rv2) (validate/object @ov2) (object/has (or (json/parse (json/stringify @rv2) HcValMap) {}) "key") (object/has (or (json/parse (json/stringify @ov2) HcValMap) {}) "key")) [{ code: "ORB_BEACON_OPTION_UNKNOWN", path: @p, message: (str/concat "browser/beacon `key` is given in both the request and the options"), suggestion: "Name the call once", severity: "error" }] @none))) (if (= @h "browser/page-facts") (let ((wsv (if (> @n 1) (array/nth @a 1) null))) (if (validate/array @wsv) (let ((ws (or (json/parse (json/stringify @wsv) HcLooseList) @nov))) (array/concat (if (= (array/len @ws) 0) [{ code: "ORB_PAGE_FACTS_FIELD_INVALID", path: @p, message: (str/concat "browser/page-facts needs at least one fact"), suggestion: "List the facts to read, e.g. [referrer, screenWidth]", severity: "error" }] @none) (array/flatten (array/map (array/range 0 (array/len @ws)) (fn i (let ((w (array/nth @ws @i))) (if (not (and (validate/string @w) (array/includes @factWords @w))) [{ code: "ORB_PAGE_FACTS_FIELD_INVALID", path: @p, message: (str/concat "" (if (and (validate/number @w) (= @w (math/floor @w))) (str/concat (json/stringify @w) ".0") (json/stringify @w)) " is not a page fact"), suggestion: "List the facts to read, e.g. [referrer, screenWidth]", severity: "error" }] (if (array/includes (array/slice @ws 0 @i) @w) [{ code: "ORB_PAGE_FACTS_FIELD_INVALID", path: @p, message: (str/concat "page fact '" @w "' is listed twice"), suggestion: "List the facts to read, e.g. [referrer, screenWidth]", severity: "error" }] @none)))))))) [{ code: "ORB_PAGE_FACTS_FIELD_INVALID", path: @p, message: (str/concat "browser/page-facts takes a list of page facts"), suggestion: "List the facts to read, e.g. [referrer, screenWidth]", severity: "error" }])) (let ((pos (if (= @h "browser/prompt") 2 1))) (let ((sugg (if (= @h "browser/prompt") "Write (browser/prompt <text> <response schema text> { key: <string>, emit: { success: <EVENT>, failure: <EVENT>, cancelled: <EVENT> } })" "Write (browser/embed [<text>, …] { key: <string>, emit: { success: <EVENT>, failure: <EVENT>, cancelled: <EVENT> } })"))) (if (not (and (>= @n (+ @pos 1)) (<= @n (+ @pos 2)))) [{ code: "ORB_HOST_EFFECT_ARITY", path: @p, message: (str/concat "`" @h "` takes " @pos " argument(s) and an optional options object, got " (- @n 1)), suggestion: @sugg, severity: "error" }] (array/concat (if (= @h "browser/prompt") (let ((sc (if (> @n 2) (array/nth @a 2) null))) (if (and (validate/string @sc) (not (or (str/startsWith @sc (quote "@")) (str/startsWith @sc "?") (str/startsWith @sc "$"))) (= (json/parse @sc HcValMap) null)) [{ code: "ORB_ON_DEVICE_SCHEMA_INVALID", path: @p, message: (str/concat "browser/prompt response schema must be JSON Schema text: a JSON object"), suggestion: "Build it with (json/stringify { type: \"object\", … })", severity: "error" }] @none)) @none) (let ((ov (if (> @n (+ @pos 1)) (array/nth @a (+ @pos 1)) null))) (if (= @ov null) @none (if (validate/object @ov) (let ((bad (array/find (object/keys (or (json/parse (json/stringify @ov) HcValMap) {})) (fn k (not (array/includes ["key", "emit"] @k)))))) (if (= @bad null) @none [{ code: "ORB_HOST_EFFECT_OPTION_UNKNOWN", path: @p, message: (str/concat "`" @h "` options accept only key and emit, got `" @bad "`"), suggestion: "", severity: "error" }])) [{ code: "ORB_HOST_EFFECT_OPTION_UNKNOWN", path: @p, message: (str/concat "`" @h "` options must be an object"), suggestion: @sugg, severity: "error" }]))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "browser-effects", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+      HOST_CALLS_COLLECT -> external { requestId : string!  orbitals : [HcOrbital]!  heads : [string]!  operators : [string]!  fields : [string]! }
+        @description "Ask the shared collector for the calls this rule checks."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LnProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      HOST_CALLS_HEARD { requestId : string!  unread : boolean!  calls : [HcCall]!  facts : Map string HcFact! }
+        @description "The shared collector's answer: the calls of the asked heads and the table entries."
+      HostCalls.HOST_CALLS_COLLECTED -> HOST_CALLS_HEARD
+    }
+  }
+
+  trait OrbLintBrowserEffectsCli -> OrbLintBrowserEffectsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint browser-effects <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "browser-effects") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint browser-effects: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "browser-effects") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint browser-effects: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-browser-effects" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint browser-effects` with its arguments and working directory."
+        @synonyms "orb lint browser-effects"
+      OrbLintBrowserEffects.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintBrowserEffectsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+  trait HostCalls = Calls.traits.HostCalls {
+    listens {
+      OrbLintBrowserEffects.HOST_CALLS_COLLECT -> HOST_CALLS_COLLECT
+      LANGUAGE_PACKS_DONE_HEARD { problem : string!  coreRoot : string!  stdRoot : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished, with the installed @almadar/std root when it is compatible."
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+  page boot as OrbLintBrowserEffectsOrbitalStart -> OrbLintBrowserEffects, OrbLintBrowserEffectsCli, OrbLintInput, Packs, Versions, HostCalls
+}

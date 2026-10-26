@@ -1,0 +1,135 @@
+app std-orb-lint-groupby-enum-column-gap [
+  version: "1.0.0",
+  inbound: ["cli-lint-groupby-enum-column-gap"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-groupby-enum-column-gap — the `orb lint groupby-enum-column-gap <file>` command, the port of ORB_RENDER_GROUPBY_ENUM_COLUMN_GAP (validate_groupby_enum_column_gap, types/config_type.rs). It lowers the file with program/read and, for every inline trait whose config holds a `groupByField` string default and a `columns` array default of `{ key }` objects, looks up the trait's linked entity (a primary or auxiliary inline entity; a primary name declared by more than one orbital is ambiguous and skipped, a later declaration of a name wins) and its field of that name; when the field is an enum whose values include some the columns do not key, it reports the hidden values at `<trait>.config.groupByField` with the compiler's message and suggestion (status 500, exit 1). Clean answers `lint groupby-enum-column-gap: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-groupby-enum-column-gap"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type GbNode = string | number | boolean | [GbNode?] | Map string GbNode?
+type GbField = { name : string, values : [string] }
+type GbEntity = { name : string, fields : [GbField] }
+type GbEntityRef = GbEntity | string
+type GbColumn = { key : string }
+type GbKnob = { default : string | [GbColumn] }
+type GbTrait = { name : string, linkedEntity : string, config : Map string GbKnob }
+type GbOrbital = { name : string, entity : GbEntityRef, auxiliaryEntities : [GbEntity], traits : [GbTrait] }
+type GbProgram = { orbitals : [GbOrbital] }
+
+orbital OrbLintGroupbyEnumColumnGapOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintGroupbyEnumColumnGapRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+
+  }
+
+  trait OrbLintGroupbyEnumColumnGap -> OrbLintGroupbyEnumColumnGapRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbs (object/get @payload.program "orbitals" []))) (let ((ents (array/flatten (array/map @orbs (fn o (array/concat (let ((e (object/get @o "entity" null))) (if (validate/object @e) [@e] [])) (array/flatten (array/map (object/get @o "auxiliaryEntities" []) (fn a (if (validate/object @a) [@a] [])))))))))) (let ((dup (array/filter (array/unique (array/map (array/flatten (array/map @orbs (fn o (let ((e (object/get @o "entity" null))) (if (validate/object @e) [@e] []))))) (fn e (object/get @e "name" "")))) (fn n (> (array/len (array/filter (array/flatten (array/map @orbs (fn o (let ((e (object/get @o "entity" null))) (if (validate/object @e) [@e] []))))) (fn e (= (object/get @e "name" "") @n)))) 1))))) (array/flatten (array/map @orbs (fn o (array/flatten (array/map (object/get @o "traits" []) (fn td (if (not (object/has @td "stateMachine")) [] (let ((gb (object/get (object/get (object/get @td "config" {}) "groupByField" {}) "default" null)) (cols (object/get (object/get (object/get @td "config" {}) "columns" {}) "default" null)) (en (object/get @td "linkedEntity" ""))) (if (and (validate/string @gb) (!= @gb "") (validate/array @cols) (> (array/len @cols) 0) (!= @en "")) (let ((keys (array/unique (array/filter (array/map (array/filter @cols (fn c (validate/object @c))) (fn c (let ((kv (object/get @c "key" ""))) (if (validate/string @kv) @kv "")))) (fn s (!= @s "")))))) (if (= (array/len @keys) 0) [] (let ((cands (array/filter @ents (fn e (and (= (object/get @e "name" "") @en) (not (array/includes @dup @en))))))) (if (= (array/len @cands) 0) [] (let ((ent (array/last @cands))) (let ((fl (array/filter (object/get @ent "fields" []) (fn f (= (object/get @f "name" "") @gb))))) (if (= (array/len @fl) 0) [] (let ((values (object/get (array/first @fl) "values" []))) (if (or (not (validate/array @values)) (= (array/len @values) 0)) [] (let ((hidden (array/filter @values (fn v (not (array/includes @keys @v)))))) (if (= (array/len @hidden) 0) [] [{ code: "ORB_RENDER_GROUPBY_ENUM_COLUMN_GAP", path: (str/concat (object/get @td "name" "") ".config.groupByField"), message: (str/concat (object/get @td "name" "") " buckets " @en " rows by '" @gb "' into columns [" (str/join @keys ", ") "], but the field's enum also allows [" (str/join @hidden ", ") "] — rows with those values match no column and silently disappear"), suggestion: (str/concat "add a column entry for each missing key (" (str/join @hidden ", ") ") or narrow the " @en "." @gb " enum"), severity: "error" }]))))))))))) [])))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "groupby-enum-column-gap", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : GbProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintGroupbyEnumColumnGapCli -> OrbLintGroupbyEnumColumnGapRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint groupby-enum-column-gap <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "groupby-enum-column-gap") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint groupby-enum-column-gap: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "groupby-enum-column-gap") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint groupby-enum-column-gap: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-groupby-enum-column-gap" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint groupby-enum-column-gap` with its arguments and working directory."
+        @synonyms "orb lint groupby-enum-column-gap"
+      OrbLintGroupbyEnumColumnGap.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintGroupbyEnumColumnGapCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintGroupbyEnumColumnGapOrbitalStart -> OrbLintGroupbyEnumColumnGap, OrbLintGroupbyEnumColumnGapCli, OrbLintInput, Packs, Versions
+}

@@ -1,0 +1,125 @@
+app std-orb-lint-orbital-ref-config [
+  version: "1.0.0",
+  inbound: ["cli-lint-orbital-ref-config"],
+  fs: { cwd: "**": [read], "/**": [read] },
+  description: "std-orb-lint-orbital-ref-config — the `orb lint orbital-ref-config <file>` command, the call-site checks of an orbital reference (`orbital X = Alias.orbitals.Y { … }`) that read only the written block and the upstream orbital it names, the port of the matching diagnostics collected in phases/inline/orbital.rs and turned into errors by validate_orbital_ref_diagnostics (composition/orbital_ref_config.rs). Each reference is paired with its resolved upstream orbital and the traits that survive its `omit`/`only` (std-orb-lint-call-site-input), and the lint reports ORB_O_CONFIG_UNKNOWN_KEY (a call-site `config {}` key the upstream orbital never declared, or a `traits { T { config { k } } }` key the upstream trait never declares), ORB_O_OMIT_EMBEDDED_TRAIT (a surviving trait still embeds a dropped one via `@trait.X`), ORB_O_TRAITS_UNKNOWN_TRAIT and ORB_O_TRAITS_OMITTED_TRAIT (a `traits {}` key naming no upstream trait or one `omit`/`only` dropped), ORB_O_PAGE_UNKNOWN_PATH (a `pages {}`, `mounts {}`, page-modifier or `omit` path the upstream orbital does not declare), ORB_O_MOCK_UNKNOWN_FIELD, ORB_O_RETYPE_UNKNOWN_FIELD and ORB_O_RETYPE_FIELD_CONFLICT (against the primary entity's fields after `fields {}` renames and `extend {}`) and ORB_O_ENTITY_PERSISTENCE_LOCKED (a persistence or collection override on a non-persistent upstream entity), at `orbitals[<i>].<clause>(<name>)` with the compiler's messages and suggestions (status 500, exit 1). Clean answers `lint orbital-ref-config: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500. A reference whose import does not resolve is skipped: the compiler reports that failure itself. The entity-closure, roles, expected-entity and field-rename-unapplied diagnostics need the alias-wide inlining state and stay in the compiler."
+]
+uses Spec from "almadar-std/lint-orbital-ref-config"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type RcNode = string | number | boolean | [RcNode?] | Map string RcNode?
+type RcKnob = { type : string, label : string, description : string, synonyms : string, tier : string, default : RcNode? }
+type RcField = { name : string }
+type RcEntity = { persistence : string, fields : [RcField] }
+type RcTransition = { guard : RcNode?, effects : [RcNode?] }
+type RcMachine = { transitions : [RcTransition] }
+type RcTrait = { name : string, stateMachine : RcMachine?, ticks : [RcTransition], config : Map string RcKnob? }
+type RcPage = { path : string }
+type RcOverride = { config : Map string RcKnob? }
+type RcCallSite = { ref : string, config : Map string RcKnob?, traits : Map string RcOverride?, pages : Map string string?, mounts : Map string RcNode?, pageModifiers : Map string RcNode?, omit : [string], extend : [RcField], retype : [RcField], mock : Map string string?, fields : Map string string?, persistence : string, collection : string }
+type RcDecl = { name : string, config : Map string RcKnob?, entity : RcEntity?, traits : [RcTrait], pages : [RcPage] }
+type RcRefRow = { kind : string!, path : string!, callSite : RcCallSite!, declaration : RcDecl! }
+type RcKept = { orbital : number!, traits : [string]! }
+type RcProgram = { orbitals : [RcNode] }
+type RcAcc = { seen : [string], found : [OrbFinding] }
+
+orbital OrbLintOrbitalRefConfigOrbital {
+  uses CsInput from "std/behaviors/std-orb-lint-call-site-input"
+
+  entity OrbLintOrbitalRefConfigRun [runtime] {
+    id : string!
+    findings : [OrbFinding] = []
+
+  }
+
+  trait OrbLintOrbitalRefConfig -> OrbLintOrbitalRefConfigRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALL_SITES -> ready
+        (let ((kept : [RcKept] @payload.kept))
+          (set @entity.findings (array/flatten (array/map (array/filter @payload.references (fn r (and (= (object/get @r "kind" "") "orbital") (str/includes (object/get (object/get @r "callSite" {}) "ref" "") ".orbitals.")))) (fn row (let ((p (object/get @row "path" "")) (cs (object/get @row "callSite" {})) (up (object/get @row "declaration" {}))) (let ((ref (object/get @cs "ref" "")) (oi (str/to-int (str/slice @p 9 (- (str/len @p) 1)))) (upTraits (object/get @up "traits" []))) (let ((upNames (array/map @upTraits (fn t (object/get @t "name" "")))) (keptRow (array/find @kept (fn x (= (object/get @x "orbital" -1) @oi)))) (upPaths (array/map (object/get @up "pages" []) (fn x (object/get @x "path" "")))) (upFieldNames (array/map (object/get (object/get @up "entity" {}) "fields" []) (fn f (object/get @f "name" ""))))) (let ((keptNames (if (= @keptRow null) [] (object/get @keptRow "traits" [])))) (let ((keptTraits (array/filter @upTraits (fn t (array/includes @keptNames (object/get @t "name" ""))))) (removed (array/filter @upNames (fn n (not (array/includes @keptNames @n))))) (renamed (array/map @upFieldNames (fn n (if (object/has (object/get @cs "fields" {}) @n) (object/get (object/get @cs "fields" {}) @n "") @n)))) (extNames (array/filter (array/map (object/get @cs "extend" []) (fn f (object/get @f "name" ""))) (fn s (!= @s ""))))) (let ((added (array/filter @extNames (fn n (and (not (array/includes @renamed @n)) (not (array/includes (object/values (object/get @cs "fields" {})) @n))))))) (let ((allNames (array/concat @renamed @added))) (array/concat (array/concat (array/concat (array/concat (array/concat (array/concat (array/map (array/filter (array/sort (object/keys (object/get @cs "config" {}))) (fn k (not (object/has (object/get @up "config" {}) @k)))) (fn k { code: "ORB_O_CONFIG_UNKNOWN_KEY", path: (str/concat @p ".config(" @k ")"), message: (str/concat "Call-site config key '" @k "' does not match any config knob declared by upstream orbital '" @ref "'. It silently no-ops."), suggestion: (str/concat "Remove '" @k "' or declare it in the upstream orbital's `config {}` block."), severity: "error" })) (array/flatten (array/map @keptTraits (fn kt (array/flatten (array/map (array/filter (array/unique (let ((nr : [string] [])) (tree/fold (array/concat (array/concat (array/concat (array/concat (array/map (object/get (object/get @kt "stateMachine" {}) "transitions" []) (fn x { x: (object/get @x "guard" null) })) (array/map (object/get (object/get @kt "stateMachine" {}) "transitions" []) (fn x { x: (object/get @x "effects" []) }))) (array/map (object/get @kt "ticks" []) (fn x { x: (object/get @x "guard" null) }))) (array/map (object/get @kt "ticks" []) (fn x { x: (object/get @x "effects" []) }))) (array/map (object/values (object/get @kt "config" {})) (fn f { x: (object/get @f "default" null) }))) (fn (n k) (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nr @r)))) (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @nr @r)))) (if (and (validate/string @n) (str/startsWith @n (quote "@trait.")) (> (str/len @n) 7) (not (str/includes (str/slice @n 7 (str/len @n)) "."))) [(str/slice @n 7 (str/len @n))] @nr)))) "RcNode"))) (fn e (array/includes @removed @e))) (fn e [{ code: "ORB_O_OMIT_EMBEDDED_TRAIT", path: (str/concat @p ".omit(" @e ")"), message: (str/concat "Orbital reference '" @ref "' omits trait '" @e "', but trait '" (object/get @kt "name" "") "' still embeds it via '@trait." @e "'. The embed has nothing left to render."), suggestion: (str/concat "Keep '" @e "' (drop it from omit, or add it to only), or remove the '@trait." @e "' embed from '" (object/get @kt "name" "") "'."), severity: "error" }]))))))) (array/flatten (array/map (array/sort (object/keys (object/get @cs "traits" {}))) (fn tn (if (not (array/includes @upNames @tn)) [{ code: "ORB_O_TRAITS_UNKNOWN_TRAIT", path: (str/concat @p ".traits(" @tn ")"), message: (str/concat "`traits {}` key '" @tn "' names no trait of upstream orbital '" @ref "'."), suggestion: "Key each entry by the trait's UPSTREAM name (before the import prefix).", severity: "error" }] (if (array/includes @removed @tn) [{ code: "ORB_O_TRAITS_OMITTED_TRAIT", path: (str/concat @p ".traits(" @tn ")"), message: (str/concat "`traits {}` overrides '" @tn "', but `omit {}` / `only {}` drops that trait from the import."), suggestion: (str/concat "Remove the `traits { " @tn " { … } }` entry, or keep '" @tn "' in the import."), severity: "error" }] (let ((td (array/find @upTraits (fn x (= (object/get @x "name" "") @tn)))) (ovc (object/get (object/get (object/get @cs "traits" {}) @tn {}) "config" {}))) (array/map (array/filter (array/sort (object/keys @ovc)) (fn k (and (not (object/has (object/get @td "config" {}) @k)) (not (not (and (= (object/get (object/get @ovc @k {}) "type" "unknown") "unknown") (= (object/get (object/get @ovc @k {}) "label" "") "") (= (object/get (object/get @ovc @k {}) "description" "") "") (= (object/get (object/get @ovc @k {}) "synonyms" "") "") (= (object/get (object/get @ovc @k {}) "tier" "") ""))))))) (fn k { code: "ORB_O_CONFIG_UNKNOWN_KEY", path: (str/concat @p ".traits(" @tn ").config(" @k ")"), message: (str/concat "`traits { " @tn " }` config key '" @k "' does not match any knob the upstream trait declares. It silently no-ops."), suggestion: (str/concat "Remove '" @k "' or use a knob declared in '" @tn "''s `config {}` block."), severity: "error" }))))))))) (array/map (array/filter (array/concat (array/concat (array/concat (object/keys (object/get @cs "pages" {})) (object/keys (object/get @cs "mounts" {}))) (object/keys (object/get @cs "pageModifiers" {}))) (array/unique (array/filter (object/get @cs "omit" []) (fn e (str/startsWith @e "/"))))) (fn k (not (array/includes @upPaths @k)))) (fn k { code: "ORB_O_PAGE_UNKNOWN_PATH", path: (str/concat @p ".pages(" @k ")"), message: (str/concat "`pages {}` / `mounts {}` key '" @k "' names no page path upstream orbital '" @ref "' declares."), suggestion: (str/concat "Match '" @k "' to a path the upstream orbital's `pages {}` actually declares."), severity: "error" }))) (array/map (array/filter (array/sort (object/keys (object/get @cs "mock" {}))) (fn k (not (array/includes @allNames @k)))) (fn k { code: "ORB_O_MOCK_UNKNOWN_FIELD", path: (str/concat @p ".mock(" @k ")"), message: (str/concat "`mock {}` names '" @k "', which the entity materialized from '" @ref "' does not declare."), suggestion: "Name a field of the imported primary entity as it is after `fields {}` renames, or an `extend {}` field.", severity: "error" }))) (object/get (array/reduce (object/get @cs "retype" []) (let ((e0 : [string] []) (f0 : [OrbFinding] [])) { seen: @e0, found: @f0 }) (fn (acc x) (let ((nm (object/get @x "name" ""))) (if (= @nm "") @acc (if (array/includes @extNames @nm) { seen: (object/get @acc "seen" []), found: (array/append (object/get @acc "found" []) { code: "ORB_O_RETYPE_FIELD_CONFLICT", path: (str/concat @p ".retype(" @nm ")"), message: (str/concat "`retype {}` field '" @nm "' is " "also added by `extend {}`" "."), suggestion: "Declare the field once: either `extend {}` it or `retype {}` it, and list it once.", severity: "error" }) } (if (array/includes (object/get @acc "seen" []) @nm) { seen: (object/get @acc "seen" []), found: (array/append (object/get @acc "found" []) { code: "ORB_O_RETYPE_FIELD_CONFLICT", path: (str/concat @p ".retype(" @nm ")"), message: (str/concat "`retype {}` field '" @nm "' is " "retyped more than once" "."), suggestion: "Declare the field once: either `extend {}` it or `retype {}` it, and list it once.", severity: "error" }) } { seen: (array/append (object/get @acc "seen" []) @nm), found: (if (array/includes @allNames @nm) (object/get @acc "found" []) (array/append (object/get @acc "found" []) { code: "ORB_O_RETYPE_UNKNOWN_FIELD", path: (str/concat @p ".retype(" @nm ")"), message: (str/concat "`retype {}` names '" @nm "', which the entity materialized from '" @ref "' does not declare."), suggestion: "Name a field the upstream primary entity already declares, as it is after `fields {}` renames; add a new field with `extend {}`.", severity: "error" })) })))))) "found")) (if (and (or (object/has @cs "persistence") (object/has @cs "collection")) (object/has (object/get @up "entity" {}) "persistence") (!= (object/get (object/get @up "entity" {}) "persistence" "") "persistent")) [{ code: "ORB_O_ENTITY_PERSISTENCE_LOCKED", path: (str/concat @p ".entity"), message: (str/concat "The `entity [..]` persistence/collection override has no effect: the primary entity of '" @ref "' is `runtime`, and only a `persistent` entity allows its persistence or collection to be overridden."), suggestion: "Remove the persistence/collection from the `entity` line, or import an orbital whose entity is persistent.", severity: "error" }] []))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "orbital-ref-config", scope: "", findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+
+    }
+
+    listens {
+      LINT_CALL_SITES { file : string!  program : RcProgram!  kept : [RcKept]!  references : [RcRefRow]!  stamped : RcNode? }
+        @description "The call sites input: the file lowered unresolved and each aliased import resolved and lowered."
+      CallSiteInput.LINT_CALL_SITES -> LINT_CALL_SITES
+    }
+  }
+
+  trait OrbLintOrbitalRefConfigCli -> OrbLintOrbitalRefConfigRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint orbital-ref-config <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_CALL_SITES_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")), stamp: false, references: true })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "orbital-ref-config") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint orbital-ref-config: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "orbital-ref-config") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_CALL_SITES_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint orbital-ref-config: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_CALL_SITES_REQUEST -> external { file : string!  stamp : boolean!  references : boolean! }
+        @description "Ask the call sites input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_CALL_SITES_UNREAD -> external { file : string!  error : string! }
+        @description "The call sites input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-orbital-ref-config" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint orbital-ref-config` with its arguments and working directory."
+        @synonyms "orb lint orbital-ref-config"
+      OrbLintOrbitalRefConfig.LINT_FOUND -> LINT_FOUND
+      LINT_CALL_SITES_UNREAD { file : string!  error : string! }
+        @description "The call sites input could not read or lower the file."
+      CallSiteInput.LINT_CALL_SITES_UNREAD -> LINT_CALL_SITES_UNREAD
+    }
+  }
+
+  trait CallSiteInput = CsInput.traits.CallSiteInput {
+    listens {
+      OrbLintOrbitalRefConfigCli.LINT_CALL_SITES_REQUEST -> LINT_CALL_SITES_REQUEST
+    }
+  }
+
+  page boot as OrbLintOrbitalRefConfigOrbitalStart -> OrbLintOrbitalRefConfig, OrbLintOrbitalRefConfigCli, CallSiteInput
+}

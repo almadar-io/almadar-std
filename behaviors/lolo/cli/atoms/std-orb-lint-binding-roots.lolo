@@ -1,0 +1,282 @@
+app std-orb-lint-binding-roots [
+  version: "1.0.0",
+  inbound: ["cli-lint-binding-roots"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-binding-roots - the `orb lint binding-roots <file>` command, the port of the root rules of binding.rs validate_binding: ORB_BINDING_INVALID_FORMAT, ORB_BINDING_FROM_ENTITY_OUTSIDE_ENSURES, ORB_BINDING_DISPATCH_ROOT_IN_TICK, ORB_BINDING_ROOT_NO_PATH, ORB_BINDING_EVENT_INVALID_PATH, ORB_BINDING_STATE_NO_PATH, ORB_BINDING_NOW_NO_PATH and ORB_BINDING_UNKNOWN_ENTITY. It lowers the file with program/read and walks the guard (guard context), the effects (effect context), the ensures (ensures context), the state holds and the entity invariants (guard context) of every inline trait, and the tick effects (tick context). Every `@root` binding string is checked unless an enclosing `(fn (x) ...)` / `(lambda ...)` parameter, a sequential `let` name or, inside a collection callback (a collection or std-array operator of two or more arguments in the installed operator table, read from LINT_OPERATOR_SHAPES), `item` / `index` binds its root. The delivery roots (event, prevEvents, prevStates, fromState, toState) and the `@event.source` keys are the language's delivery record. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint binding-roots: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-binding-roots"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type BrShape = string | number | boolean | [BrShape?] | Map string BrShape?
+type BrTransition = { guard : BrShape?, effects : [BrShape], ensures : [BrShape] }
+type BrState = { holds : BrShape? }
+type BrTick = { effects : [BrShape] }
+type BrMachine = { states : [BrState], transitions : [BrTransition] }
+type BrTrait = { name : string, stateMachine : BrMachine, ticks : [BrTick] }
+type BrEntity = { name : string, invariants : [BrShape] }
+type BrExpect = { kind : string, name : string }
+type BrOrbital = { name : string, expects : [BrExpect], entity : BrEntity, auxiliaryEntities : [BrEntity], traits : [BrTrait] }
+type BrProgram = { orbitals : [BrOrbital] }
+type BrOpShape = { category : string, minArity : number }
+type BrHit = { rel : string, r : string, s : string }
+type BrRoot = { x : BrShape?, w : string!, c : string! }
+
+orbital OrbLintBindingRootsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintBindingRootsRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    collOps : [string] = []
+    shapesUnread : boolean = false
+  }
+
+  trait OrbLintBindingRoots -> OrbLintBindingRootsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SHAPES_HEARD -> ready
+        (set @entity.shapesUnread false)
+        (set @entity.collOps (array/filter (object/keys @payload.operators) (fn k (and (or (= (object/get (object/get @payload.operators @k) "category" "") "collection") (= (object/get (object/get @payload.operators @k) "category" "") "std-array")) (>= (object/get (object/get @payload.operators @k) "minArity" 0) 2)))))
+      SHAPES_UNREAD -> ready
+        (set @entity.shapesUnread true)
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((nohits : [BrHit] []) (noroots : [BrRoot] []) (nostr : [string] []) (nof : [OrbFinding] []) (collOps : [string] @entity.collOps) (orbitals : [BrOrbital] (object/get @payload.program "orbitals" [])))
+  (if @entity.shapesUnread
+    [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the collection callback operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
+    (let ((known : [string] (array/flatten (array/map @orbitals (fn o (array/concat
+    (let ((e (object/get @o "entity" null))) (if (validate/object @e) [(object/get @e "name" "")] @nostr))
+    (array/concat
+      (array/flatten (array/map (object/get @o "auxiliaryEntities" []) (fn a (if (validate/object @a) [(object/get @a "name" "")] @nostr))))
+      (array/flatten (array/map (object/get @o "expects" []) (fn ex (if (and (or (= (object/get @ex "kind" "") "entity") (= (object/get @ex "kind" "") "identity")) (object/has @ex "name")) [(object/get @ex "name" "")] @nostr)))))))))) (roots : [BrRoot] (array/concat (array/flatten
+  (array/map (array/range 0 (array/len @orbitals))
+    (fn oi
+      (let ((o (array/nth @orbitals @oi)))
+        (let ((trts : [BrTrait] (object/get @o "traits" [])))
+          (array/flatten
+            (array/map (array/range 0 (array/len @trts))
+              (fn ti
+                (let ((t (array/nth @trts @ti)))
+                  (if (not (object/has @t "stateMachine"))
+                    @noroots
+                    (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (trs : [BrTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (sts : [BrState] (object/get (object/get @t "stateMachine" { states: [] }) "states" [])) (tks : [BrTick] (object/get @t "ticks" [])))
+                      (array/concat
+                        (array/flatten
+                          (array/map (array/range 0 (array/len @trs))
+                            (fn xi
+                              (let ((tr (array/nth @trs @xi)) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
+                                (let ((effs : [BrShape] (object/get @tr "effects" [])) (ens : [BrShape] (object/get @tr "ensures" [])) (g (object/get @tr "guard" null)))
+                                  (array/concat
+                                    (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard"), c: "guard" }] @noroots)
+                                    (array/concat
+                                      (array/map (array/range 0 (array/len @effs)) (fn ei { x: (array/nth @effs @ei), w: (str/concat @xp ".effects[" @ei "]"), c: "effect" }))
+                                      (array/map (array/range 0 (array/len @ens)) (fn ki { x: (array/nth @ens @ki), w: (str/concat @xp ".ensures[" @ki "]"), c: "ensures" })))))))))
+                        (array/concat
+                          (array/flatten
+                            (array/map (array/range 0 (array/len @sts))
+                              (fn si
+                                (let ((h (object/get (array/nth @sts @si) "holds" null)))
+                                  (if (!= @h null) [{ x: @h, w: (str/concat @tp ".stateMachine.states[" @si "].holds"), c: "guard" }] @noroots)))))
+                          (array/flatten
+                            (array/map (array/range 0 (array/len @tks))
+                              (fn ki
+                                (let ((teffs : [BrShape] (object/get (array/nth @tks @ki) "effects" [])))
+                                  (array/map (array/range 0 (array/len @teffs)) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]"), c: "tick" }))))))))))))))))))) (array/concat
+  (array/flatten
+    (array/map (array/range 0 (array/len @orbitals))
+      (fn oi
+        (let ((ent (object/get (array/nth @orbitals @oi) "entity" null)))
+          (if (validate/object @ent)
+            (let ((invs : [BrShape] (object/get @ent "invariants" [])))
+              (array/map (array/range 0 (array/len @invs)) (fn ni { x: (array/nth @invs @ni), w: (str/concat "orbitals[" @oi "].entity.invariants[" @ni "]"), c: "guard" })))
+            @noroots)))))
+  (array/flatten
+    (array/map (array/range 0 (array/len @orbitals))
+      (fn oi
+        (let ((auxs : [BrEntity] (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
+          (array/flatten
+            (array/map (array/range 0 (array/len @auxs))
+              (fn ai
+                (let ((invs : [BrShape] (object/get (array/nth @auxs @ai) "invariants" [])))
+                  (if (validate/object (array/nth @auxs @ai))
+                    (array/map (array/range 0 (array/len @invs)) (fn ni { x: (array/nth @invs @ni), w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @ni "]"), c: "guard" }))
+                    @noroots)))))))))))))
+      (array/flatten
+        (array/map @roots
+          (fn x
+            (let ((hs (or (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
+  (if (str/startsWith @n (quote "@"))
+    [{ rel: "", r: (array/first (str/split (array/first (str/split (str/slice @n 1) ".")) "[")), s: @n }]
+    @nohits)
+  (if (validate/array @n)
+    (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
+      (if (and (= @len 3) (or (= @op "lambda") (= @op "fn")))
+        (let ((p1 (array/nth @n 1)))
+          (let ((params : [string] (if (validate/array @p1) (array/flatten (array/map @p1 (fn x (if (validate/string @x) [@x] @nostr)))) (if (validate/string @p1) [@p1] @nostr))))
+            (array/map (array/filter (let ((r : [BrHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes @params (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) })))))
+        (if (and (= @len 3) (= @op "let"))
+          (let ((p1 (array/nth @n 1)))
+            (if (validate/array @p1)
+              (let ((k1 : [BrHit] (let ((r : [BrHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits))) (allNames (array/flatten (array/map @p1 (fn pr (if (and (validate/array @pr) (> (array/len @pr) 0)) (let ((nm0 (array/nth @pr 0))) (if (validate/string @nm0) [@nm0] @nostr)) @nostr))))))
+                (array/concat
+                  (array/flatten
+                    (array/map (array/range 0 (array/len @p1))
+                      (fn bi
+                        (let ((before (array/flatten (array/map (array/range 0 @bi) (fn bj (let ((pj (array/nth @p1 @bj))) (if (and (validate/array @pj) (> (array/len @pj) 0)) (let ((nm1 (array/nth @pj 0))) (if (validate/string @nm1) [@nm1] @nostr)) @nostr)))))) (pfx (str/concat "[" @bi "][1]")))
+                          (array/map (array/filter (array/filter @k1 (fn h (str/startsWith (object/get @h "rel" "") @pfx))) (fn h (not (array/includes @before (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")) })))))))
+                  (array/map (array/filter (let ((r : [BrHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes @allNames (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) })))))
+              (if (validate/object @p1)
+                (let ((names : [string] (object/keys @p1)) (k1 : [BrHit] (let ((r : [BrHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits))))
+                  (array/concat
+                    (array/map (array/filter @k1 (fn h (not (array/includes @names (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")) })))
+                    (array/map (array/filter (let ((r : [BrHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes @names (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) })))))
+                (array/map (let ((r : [BrHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) }))))))
+          (if (and (>= @len 3) (array/includes @collOps @op))
+            (array/concat
+              (array/map (let ((r : [BrHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")) })))
+              (array/flatten
+                (array/map (array/range 2 @len)
+                  (fn i
+                    (array/map (array/filter (let ((r : [BrHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes ["item", "index"] (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) })))))))
+            (array/flatten
+              (array/map (array/range 0 @len)
+                (fn i
+                  (array/map (let ((r : [BrHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) }))))))))))
+    (if (validate/object @n)
+      (array/flatten
+        (array/map (object/keys @k)
+          (fn key
+            (array/map (let ((r : [BrHit]? (object/get @k @key))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
+      @nohits)))) BrShape) @nohits)))
+              (array/flatten
+                (array/map @hs
+                  (fn h
+                    (let ((s (object/get @h "s")) (r (object/get @h "r")) (c (object/get @x "c")) (p (str/concat (object/get @x "w") (object/get @h "rel"))))
+              (let ((parts (str/split (str/slice @s 1) ".")))
+                (let ((rest (array/slice @parts 1 (array/len @parts))))
+                  (if (not (validate/pattern @s "^@[\\p{L}_][\\p{L}0-9_]*(\\.[\\p{L}0-9_]+|\\[\\d+\\])*$"))
+                    [{ code: "ORB_BINDING_INVALID_FORMAT", path: @p, message: (str/concat "Invalid binding format: '" @s "'"), suggestion: "Use @root.field.nested format", severity: "error" }]
+                    (if (= @r "fromEntity")
+                      (if (!= @c "ensures") [{ code: "ORB_BINDING_FROM_ENTITY_OUTSIDE_ENSURES", path: @p, message: (str/concat (quote "@") "fromEntity is the row before a transition and exists only inside its `@ensures`"), suggestion: "Read the current row with @entity; state a before/after relation in an `@ensures` under the transition", severity: "error" }] @nof)
+                      (if (array/includes ["event", "prevEvents", "prevStates", "fromState", "toState"] @r)
+                        (if (= @c "tick")
+                          [{ code: "ORB_BINDING_DISPATCH_ROOT_IN_TICK", path: @p, message: (str/concat (quote "@") @r " is not available in a tick: a tick firing has no delivery"), suggestion: "Read the trait's own state and entity in a tick", severity: "error" }]
+                          (if (!= @r "event")
+                            (if (> (array/len @rest) 0) [{ code: "ORB_BINDING_ROOT_NO_PATH", path: @p, message: (str/concat (quote "@") @r " takes no path"), suggestion: (str/concat "Use " (quote "@") @r " and read it with an operator"), severity: "error" }] @nof)
+                            (if (or (= (array/len @rest) 0) (= @rest ["event"]) (= (array/first @rest) "payload") (= @rest ["source"]) (and (= (array/first @rest) "source") (= (array/len @rest) 2) (array/includes ["orbital", "orbitalId", "trait", "traitId", "eventId", "transition", "tick", "fromBridge", "dispatched", "originClientId"] (array/nth @rest 1))))
+                              @nof
+                              [{ code: "ORB_BINDING_EVENT_INVALID_PATH", path: @p, message: (str/concat (quote "@") "event." (str/join @rest ".") " does not follow the delivery record"), suggestion: (str/concat (quote "@") "event has `event`, `payload.<field>` and `source.<field>`"), severity: "error" }])))
+                        (if (and (= @r "state") (> (array/len @parts) 1))
+                          [{ code: "ORB_BINDING_STATE_NO_PATH", path: @p, message: (str/concat (quote "@") "state should not have a path - it returns the state name directly"), suggestion: "Use @state without a path", severity: "error" }]
+                          (if (and (= @r "now") (> (array/len @parts) 1))
+                            [{ code: "ORB_BINDING_NOW_NO_PATH", path: @p, message: (str/concat (quote "@") "now should not have a path - it returns the current timestamp directly"), suggestion: "Use @now without a path", severity: "error" }]
+                            (if (and (validate/pattern @r "^[A-Z][a-zA-Z0-9]*$") (> (array/len @known) 0) (not (array/includes @known @r)))
+                              [{ code: "ORB_BINDING_UNKNOWN_ENTITY", path: @p, message: (str/concat "Entity '" @r "' in binding may not exist"), suggestion: "Ensure the entity is defined in the schema", severity: "error" }]
+                              @nof))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "binding-roots", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BrProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      SHAPES_HEARD { operators : Map string BrOpShape! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES: every installed operator with its category and arity; a collection or std-array operator of two or more arguments introduces @item and @index into its callback arguments."
+      SHAPES_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES_UNREAD: the operator table does not match the shape type."
+      OrbLintInput.LINT_OPERATOR_SHAPES -> SHAPES_HEARD
+      OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> SHAPES_UNREAD
+    }
+  }
+
+  trait OrbLintBindingRootsCli -> OrbLintBindingRootsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint binding-roots <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "binding-roots") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint binding-roots: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "binding-roots") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint binding-roots: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string!  error : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-binding-roots" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint binding-roots` with its arguments and working directory."
+        @synonyms "orb lint binding-roots"
+      OrbLintBindingRoots.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string!  error : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintBindingRootsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintBindingRootsOrbitalStart -> OrbLintBindingRoots, OrbLintBindingRootsCli, OrbLintInput, Packs, Versions
+}

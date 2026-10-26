@@ -1,0 +1,904 @@
+{
+ "atom": "cli/atoms/std-orb-lint-merged-fields.lolo",
+ "trait": "OrbLintMergedFields",
+ "note": "Cases built from entities/entity_mutation.rs validate_all_merged_field_usage (ORB_E_MERGED_FIELD_UNREFERENCED). The programs are resolved .orb fixtures and the expected findings are the ones the core checks report (`program/validate`). The first step of each case is the pattern registry the rule hears (the pattern props that require entity fields: calendar-grid `events`, counter-template `entity`). The first case merges fields onto MfE that are used by a trait read or set, a tick guard, a config default, a render-ui node of a pattern requiring them, an entity contract, a persist create and a persist batch create and a fetch include from a trait linked to another entity; it leaves b, j (a persist update names its row id, not its data, in the data position), k (read as @entity.k by a trait of another entity) and deleted (a batch delete names no data) unreferenced. The second case is the control: a bare fetch or a delete-only batch names the entity with no data, so every field survives.",
+ "cases": [
+  {
+   "id": "merged-fields-by-kind-of-use",
+   "steps": [
+    {
+     "event": "LINT_PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {
+       "calendar-grid": {
+        "props": {
+         "events": {
+          "requiredFields": [
+           "title",
+           "startTime"
+          ]
+         },
+         "className": {}
+        }
+       },
+       "counter-template": {
+        "props": {
+         "entity": {
+          "requiredFields": [
+           "id",
+           "count"
+          ]
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "mf1",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "mfes",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "c",
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "a",
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "b",
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "d",
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "e",
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "g",
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "h",
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "i",
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "title",
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "startTime",
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "ownerId",
+            "relation": {
+             "cardinality": "one",
+             "entity": "MfOther"
+            },
+            "type": "relation"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "j",
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "k",
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "deleted",
+            "type": "string"
+           }
+          ],
+          "id": "ent_7GTZZA83SY1WZE2ZWNXVN8HEE7",
+          "name": "MfE",
+          "persistence": "persistent"
+         },
+         "id": "orb_ZTSD6PD59KJMSQYZ5MBZA23KZ2",
+         "name": "MfO",
+         "pages": [
+          {
+           "id": "pag_PE5JXKBPX6VEKETH5HM4X5QSZ2",
+           "name": "p",
+           "path": "/p",
+           "traits": [
+            {
+             "ref": "MfT1",
+             "refId": "trt_MKAF3C1DAHPN8VE0SVFP11HWWC"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "config": {
+            "cfgknob": {
+             "default": "@entity.i",
+             "type": "string"
+            }
+           },
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "X",
+             "site": "tick"
+            },
+            {
+             "kind": "render-ui",
+             "resource": "main"
+            },
+            {
+             "kind": "set",
+             "resource": "@entity.a"
+            },
+            {
+             "kind": "ticks",
+             "site": "tick"
+            }
+           ],
+           "entityContract": {
+            "provides": [],
+            "requires": [
+             "g"
+            ]
+           },
+           "entityRefIds": {
+            "MfE": "ent_7GTZZA83SY1WZE2ZWNXVN8HEE7"
+           },
+           "id": "trt_MKAF3C1DAHPN8VE0SVFP11HWWC",
+           "linkedEntity": "MfE",
+           "linkedEntityId": "ent_7GTZZA83SY1WZE2ZWNXVN8HEE7",
+           "name": "MfT1",
+           "sourceDeclaration": {
+            "fingerprint": "667bb40e9e0259144a46b949e39c95c2b4814883594496334122020e082a28aa",
+            "traitId": "trt_MKAF3C1DAHPN8VE0SVFP11HWWC"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_FTT0K1DKHASRNE6PA5C9X0CD7C",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "set",
+                "@entity.a",
+                1
+               ],
+               [
+                "render-ui",
+                "main",
+                {
+                 "events": "@payload.data",
+                 "type": "calendar-grid"
+                }
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_FTT0K1DKHASRNE6PA5C9X0CD7C",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "effects": [
+              [
+               "emit",
+               "X",
+               {}
+              ]
+             ],
+             "guard": [
+              "=",
+              "@entity.h",
+              1
+             ],
+             "interval": 1000,
+             "name": "tk"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "mfothers",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "id": "ent_0ZHDXF5E8PQ4B2QWBKM7NPNGHH",
+          "name": "MfOther",
+          "persistence": "persistent"
+         },
+         "id": "orb_6ZCNMWR5CQ2PBHX6HH4W7A4CNE",
+         "name": "MfO2",
+         "pages": [
+          {
+           "id": "pag_XAR2D6NJPTSBD3N7BAP7D999Y4",
+           "name": "q",
+           "path": "/q",
+           "traits": [
+            {
+             "ref": "MfT2",
+             "refId": "trt_ZGVQ0ZF6P3KB1SNHCH3ZB7K17S"
+            },
+            {
+             "ref": "MfT3",
+             "refId": "trt_VPXCB0D2JCH96EB6HC6HJB27YY"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "MfE"
+            },
+            {
+             "kind": "persist",
+             "resource": "MfE"
+            }
+           ],
+           "entityRefIds": {
+            "MfOther": "ent_0ZHDXF5E8PQ4B2QWBKM7NPNGHH"
+           },
+           "id": "trt_ZGVQ0ZF6P3KB1SNHCH3ZB7K17S",
+           "linkedEntity": "MfOther",
+           "linkedEntityId": "ent_0ZHDXF5E8PQ4B2QWBKM7NPNGHH",
+           "name": "MfT2",
+           "sourceDeclaration": {
+            "fingerprint": "0751c3b835c8e17f40b6e182c6f36501b3c46e34b790dcc0d85f2a5d7771214d",
+            "traitId": "trt_ZGVQ0ZF6P3KB1SNHCH3ZB7K17S"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_YTKYB181ZK0ZSWQZH25BE5EPAV",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "create",
+                "MfE",
+                {
+                 "d": 1
+                }
+               ],
+               [
+                "fetch",
+                "MfE",
+                {
+                 "include": [
+                  "owner"
+                 ]
+                }
+               ],
+               [
+                "persist",
+                "batch",
+                [
+                 [
+                  "create",
+                  "MfE",
+                  {
+                   "e": 1
+                  }
+                 ],
+                 [
+                  "delete",
+                  "MfE",
+                  "i"
+                 ]
+                ]
+               ],
+               [
+                "persist",
+                "update",
+                "MfE",
+                "i",
+                {
+                 "j": 1
+                }
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_YTKYB181ZK0ZSWQZH25BE5EPAV",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          },
+          {
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "X"
+            }
+           ],
+           "entityRefIds": {
+            "MfOther": "ent_0ZHDXF5E8PQ4B2QWBKM7NPNGHH"
+           },
+           "id": "trt_VPXCB0D2JCH96EB6HC6HJB27YY",
+           "linkedEntity": "MfOther",
+           "linkedEntityId": "ent_0ZHDXF5E8PQ4B2QWBKM7NPNGHH",
+           "name": "MfT3",
+           "sourceDeclaration": {
+            "fingerprint": "5dc9aa2bfbcf26fe5c012c6805508d886809fa7f1efffc0522adfe8ba34251fc",
+            "traitId": "trt_VPXCB0D2JCH96EB6HC6HJB27YY"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_6W1MDMKHQSRVWP60ZWWMYK4AX3",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "emit",
+                "X",
+                {
+                 "k": "@entity.k"
+                }
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_6W1MDMKHQSRVWP60ZWWMYK4AX3",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "merged-fields",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_E_MERGED_FIELD_UNREFERENCED",
+           "path": "orbitals[0].entity[MfE].fields.b",
+           "message": "Entity 'MfE' field 'b' was merged from 'std/behaviors/x' but no trait of this orbital reads, writes, fetch-includes, or persists it",
+           "suggestion": "Compose a trait that uses it, or drop the rebind",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_E_MERGED_FIELD_UNREFERENCED",
+           "path": "orbitals[0].entity[MfE].fields.j",
+           "message": "Entity 'MfE' field 'j' was merged from 'std/behaviors/x' but no trait of this orbital reads, writes, fetch-includes, or persists it",
+           "suggestion": "Compose a trait that uses it, or drop the rebind",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_E_MERGED_FIELD_UNREFERENCED",
+           "path": "orbitals[0].entity[MfE].fields.k",
+           "message": "Entity 'MfE' field 'k' was merged from 'std/behaviors/x' but no trait of this orbital reads, writes, fetch-includes, or persists it",
+           "suggestion": "Compose a trait that uses it, or drop the rebind",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_E_MERGED_FIELD_UNREFERENCED",
+           "path": "orbitals[0].entity[MfE].fields.deleted",
+           "message": "Entity 'MfE' field 'deleted' was merged from 'std/behaviors/x' but no trait of this orbital reads, writes, fetch-includes, or persists it",
+           "suggestion": "Compose a trait that uses it, or drop the rebind",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "whole-row-fetch-and-delete-only-batch-reference-every-field",
+   "steps": [
+    {
+     "event": "LINT_PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {
+       "calendar-grid": {
+        "props": {
+         "events": {
+          "requiredFields": [
+           "title",
+           "startTime"
+          ]
+         },
+         "className": {}
+        }
+       },
+       "counter-template": {
+        "props": {
+         "entity": {
+          "requiredFields": [
+           "id",
+           "count"
+          ]
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "mf2",
+       "orbitals": [
+        {
+         "entity": {
+          "collection": "mfe2s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "m1",
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "m2",
+            "type": "string"
+           }
+          ],
+          "id": "ent_WMAA8J06NX3AYP3NEPTW8WGH51",
+          "name": "MfE2",
+          "persistence": "persistent"
+         },
+         "id": "orb_34S1KM340AJ052MQVWJ578KX6P",
+         "name": "MfP",
+         "pages": [
+          {
+           "id": "pag_Q3TDX80BC65P39MG1SVMS5ZCF9",
+           "name": "r",
+           "path": "/r",
+           "traits": [
+            {
+             "ref": "MfT6",
+             "refId": "trt_N7W25TCCYZ6FFVDMQD1ERYJCAJ"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "X"
+            }
+           ],
+           "entityRefIds": {
+            "MfE2": "ent_WMAA8J06NX3AYP3NEPTW8WGH51"
+           },
+           "id": "trt_N7W25TCCYZ6FFVDMQD1ERYJCAJ",
+           "linkedEntity": "MfE2",
+           "linkedEntityId": "ent_WMAA8J06NX3AYP3NEPTW8WGH51",
+           "name": "MfT6",
+           "sourceDeclaration": {
+            "fingerprint": "92ff6f43cc69419b392c9e6a05333198397a556bd8eec465a002ffa042c5cf43",
+            "traitId": "trt_N7W25TCCYZ6FFVDMQD1ERYJCAJ"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_0BS9JAYM68A34EE78H9VTCQ0M5",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "emit",
+                "X",
+                {}
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_0BS9JAYM68A34EE78H9VTCQ0M5",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "mfother2s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "id": "ent_EC2C6SZDCAPP59TVTCEZACV0TT",
+          "name": "MfOther2",
+          "persistence": "persistent"
+         },
+         "id": "orb_VTJ1XZ5FHNQRTP9S4PW6B6663S",
+         "name": "MfP2",
+         "pages": [
+          {
+           "id": "pag_34M2KKQNSFTWQQK9V6VJ7ZZAZ0",
+           "name": "s",
+           "path": "/s",
+           "traits": [
+            {
+             "ref": "MfT4",
+             "refId": "trt_GV3VTPAXAGEN8EXMP5S3MBEWDX"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "fetch",
+             "resource": "MfE2"
+            }
+           ],
+           "entityRefIds": {
+            "MfOther2": "ent_EC2C6SZDCAPP59TVTCEZACV0TT"
+           },
+           "id": "trt_GV3VTPAXAGEN8EXMP5S3MBEWDX",
+           "linkedEntity": "MfOther2",
+           "linkedEntityId": "ent_EC2C6SZDCAPP59TVTCEZACV0TT",
+           "name": "MfT4",
+           "sourceDeclaration": {
+            "fingerprint": "f0a66bbc6ffebf7c1412a5f8b2f783ff071acd5948cddb8858fdc2bec513d85c",
+            "traitId": "trt_GV3VTPAXAGEN8EXMP5S3MBEWDX"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_2BHZASM6PR3BCD9FNC2HS2EH8D",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "fetch",
+                "MfE2",
+                {}
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_2BHZASM6PR3BCD9FNC2HS2EH8D",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "mfe3s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "mergedFrom": "std/behaviors/x",
+            "name": "n1",
+            "type": "string"
+           }
+          ],
+          "id": "ent_638K8SFTN5XAJTPE2JV58QNAJ5",
+          "name": "MfE3",
+          "persistence": "persistent"
+         },
+         "id": "orb_QRAZF22WQMEBTA70WDZWY8CWX7",
+         "name": "MfP3",
+         "pages": [
+          {
+           "id": "pag_T70K3W84VJ2DSA3XCK2SDT2RJS",
+           "name": "t",
+           "path": "/t",
+           "traits": [
+            {
+             "ref": "MfT7",
+             "refId": "trt_VD0SFHG25C12P68GQJZ22J4FXT"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "emit",
+             "resource": "X"
+            }
+           ],
+           "entityRefIds": {
+            "MfE3": "ent_638K8SFTN5XAJTPE2JV58QNAJ5"
+           },
+           "id": "trt_VD0SFHG25C12P68GQJZ22J4FXT",
+           "linkedEntity": "MfE3",
+           "linkedEntityId": "ent_638K8SFTN5XAJTPE2JV58QNAJ5",
+           "name": "MfT7",
+           "sourceDeclaration": {
+            "fingerprint": "068a72672aaca3e876134baf09591d4e2cf65e83d785aba92aea62ef2b532369",
+            "traitId": "trt_VD0SFHG25C12P68GQJZ22J4FXT"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_NWXSEXME7M73T9AD9FWRFC9Q8A",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "emit",
+                "X",
+                {}
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_NWXSEXME7M73T9AD9FWRFC9Q8A",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "entity": {
+          "collection": "mfother3s",
+          "fields": [
+           {
+            "name": "id",
+            "required": true,
+            "type": "string"
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "id": "ent_BPCSKB59B3MNHJWDR5PFJQJ6Q7",
+          "name": "MfOther3",
+          "persistence": "persistent"
+         },
+         "id": "orb_DASHT96NDFAPQYF4C1ZJG6BQG3",
+         "name": "MfP4",
+         "pages": [
+          {
+           "id": "pag_Q1M3FYJX6AEK5CW0Y0D67SYDX4",
+           "name": "u",
+           "path": "/u",
+           "traits": [
+            {
+             "ref": "MfT5",
+             "refId": "trt_V184F8GA7C53PA6Z9Z2FVKFE7J"
+            }
+           ]
+          }
+         ],
+         "traits": [
+          {
+           "effectRow": [
+            {
+             "kind": "persist",
+             "resource": "MfE3"
+            }
+           ],
+           "entityRefIds": {
+            "MfOther3": "ent_BPCSKB59B3MNHJWDR5PFJQJ6Q7"
+           },
+           "id": "trt_V184F8GA7C53PA6Z9Z2FVKFE7J",
+           "linkedEntity": "MfOther3",
+           "linkedEntityId": "ent_BPCSKB59B3MNHJWDR5PFJQJ6Q7",
+           "name": "MfT5",
+           "sourceDeclaration": {
+            "fingerprint": "5c65081bec4ff6f03395b1b274fcba07c43d476fa39b0ac556a163213190736c",
+            "traitId": "trt_V184F8GA7C53PA6Z9Z2FVKFE7J"
+           },
+           "stateMachine": {
+            "events": [
+             {
+              "id": "evt_PZP8X9Y17T0KX4YZ24H51AG8B0",
+              "key": "GO"
+             }
+            ],
+            "states": [
+             {
+              "isInitial": true,
+              "name": "idle"
+             }
+            ],
+            "transitions": [
+             {
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 [
+                  "delete",
+                  "MfE3",
+                  "i"
+                 ]
+                ]
+               ]
+              ],
+              "event": "GO",
+              "eventId": "evt_PZP8X9Y17T0KX4YZ24H51AG8B0",
+              "from": "idle",
+              "to": "idle"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1,
+       "typeContractVersion": 1,
+       "version": "1.0.0"
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "merged-fields",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

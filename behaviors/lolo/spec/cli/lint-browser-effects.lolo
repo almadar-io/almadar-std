@@ -1,0 +1,21 @@
+app lint-browser-effects-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint browser-effects <file>`: it reports ORB_BEACON_URL_NOT_ABSOLUTE, ORB_BEACON_TEXT_REQUIRED, ORB_BEACON_OPTION_UNKNOWN, ORB_PAGE_FACTS_FIELD_INVALID, ORB_ON_DEVICE_SCHEMA_INVALID and the arity and option findings of browser/prompt and browser/embed, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint browser-effects: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintBrowserEffectsSpec {
+  expects trait OrbLintBrowserEffects {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintBrowserEffectsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintBrowserEffects, OrbLintBrowserEffectsCli
+}

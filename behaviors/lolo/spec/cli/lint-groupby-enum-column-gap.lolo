@@ -1,0 +1,21 @@
+app lint-groupby-enum-column-gap-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint groupby-enum-column-gap <file>`; see the atom."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintGroupbyEnumColumnGapSpec {
+  expects trait OrbLintGroupbyEnumColumnGap {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintGroupbyEnumColumnGapCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintGroupbyEnumColumnGap, OrbLintGroupbyEnumColumnGapCli
+}

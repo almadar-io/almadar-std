@@ -1,0 +1,21 @@
+app lint-entity-mutation-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-entity-mutation - the `orb lint entity-mutation <file>` command, the port of the multi-trait entity mutation trio of entities/entity_mutation.rs. Per orbital, over its inline traits: a trait's mutated fields are the `(set @entity.<f> …)` targets in its guards, transition effects and tick effects, and its reads are every `@entity.<f>` it names there (id, createdAt and updatedAt aside). On a `[shared]` entity, a field written by two or more traits is ORB_SHARED_ENTITY_FIELD_CONFLICT, and a slot that two or more render roots read it into is ORB_SHARED_ENTITY_RENDER_AUTHORITY: a top-level render-ui effect counts as a read only when it names a field of the entity that is not `@intrinsic` (an intrinsic field is the trait's own frame, never persisted, so reading it is not a render read of the shared row — this is a deliberate difference from the Rust check), each reader is attributed to the root trait that embeds it through `@trait.<Name>` in render-ui effects. On a `[runtime]` entity that is not shared, two or more mutating traits that are not instances of one source trait and that can share a page (page membership closes over `@trait.<Name>` embeds in effects) are ORB_ENTITY_SPLIT_MUTATION when one of them reads a field it never writes that another writes. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint entity-mutation: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintEntityMutationSpec {
+  expects trait OrbLintEntityMutation {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintEntityMutationCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintEntityMutation, OrbLintEntityMutationCli
+}

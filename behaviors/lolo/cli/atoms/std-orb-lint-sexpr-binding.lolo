@@ -1,0 +1,248 @@
+app std-orb-lint-sexpr-binding [
+  version: "1.0.0",
+  inbound: ["cli-lint-sexpr-binding"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-sexpr-binding — the `orb lint sexpr-binding <file>` command, the port of the binding checks of sexpr/binding.rs validate_binding (reached from validate_trait_sexprs): SEXPR_INVALID_BINDING (an `@` with no root), SEXPR_UNKNOWN_ENTITY (a capitalized root that is no entity of the program, no `expects entity` name and no enclosing `fn` / `lambda` parameter or sequential `let` name; silent when the program declares no entity) and ORB_BINDING_STATE_NO_PATH (a path after @state or @now, with this pass's own message, distinct from std-orb-lint-binding-roots'). It lowers the file with program/read and walks every `@` string of the guard, effects, ensures, state holds and tick effects of every inline trait and of the `default` of every primary entity field (and its items and properties), reading `fn` / `lambda` and `let` scopes as the compiler does. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint sexpr-binding: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-sexpr-binding"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type SbShape = string | number | boolean | [SbShape?] | Map string SbShape?
+type SbTransition = { guard : SbShape?, effects : [SbShape], ensures : [SbShape] }
+type SbState = { holds : SbShape? }
+type SbTick = { effects : [SbShape] }
+type SbMachine = { states : [SbState], transitions : [SbTransition] }
+type SbTrait = { name : string, stateMachine : SbMachine, ticks : [SbTick] }
+type SbField = { default : SbShape?, items : SbField?, properties : Map string SbField? }
+type SbEntity = { name : string, fields : [SbField] }
+type SbExpect = { kind : string, name : string }
+type SbOrbital = { name : string, expects : [SbExpect], entity : SbEntity, auxiliaryEntities : [SbEntity], traits : [SbTrait] }
+type SbProgram = { orbitals : [SbOrbital] }
+type SbHit = { rel : string, s : string, b : [string] }
+type SbRoot = { x : SbShape?, w : string! }
+type SbFront = { f : SbField, w : string }
+type SbLevel = { front : [SbFront], acc : [SbRoot] }
+
+orbital OrbLintSexprBindingOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+
+  entity OrbLintSexprBindingRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintSexprBinding -> OrbLintSexprBindingRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((nohits : [SbHit] []) (noroots : [SbRoot] []) (nostr : [string] []) (nof : [OrbFinding] []) (nofr : [SbFront] []) (orbitals : [SbOrbital] (object/get @payload.program "orbitals" [])))
+  (let ((known : [string] (array/flatten (array/map @orbitals (fn o (array/concat
+    (let ((e (object/get @o "entity" null))) (if (validate/object @e) [(object/get @e "name" "")] @nostr))
+    (array/concat
+      (array/flatten (array/map (object/get @o "auxiliaryEntities" []) (fn a (if (validate/object @a) [(object/get @a "name" "")] @nostr))))
+      (array/flatten (array/map (object/get @o "expects" []) (fn ex (if (and (or (= (object/get @ex "kind" "") "entity") (= (object/get @ex "kind" "") "identity")) (object/has @ex "name")) [(object/get @ex "name" "")] @nostr)))))))))) (tRoots : [SbRoot] (array/flatten
+  (array/map (array/range 0 (array/len @orbitals))
+    (fn oi
+      (let ((o (array/nth @orbitals @oi)))
+        (let ((trts : [SbTrait] (object/get @o "traits" [])))
+          (array/flatten
+            (array/map (array/range 0 (array/len @trts))
+              (fn ti
+                (let ((t (array/nth @trts @ti)))
+                  (if (not (object/has @t "stateMachine"))
+                    @noroots
+                    (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (trs : [SbTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (sts : [SbState] (object/get (object/get @t "stateMachine" { states: [] }) "states" [])) (tks : [SbTick] (object/get @t "ticks" [])))
+                      (array/concat
+                        (array/flatten
+                          (array/map (array/range 0 (array/len @trs))
+                            (fn xi
+                              (let ((tr (array/nth @trs @xi)) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
+                                (let ((effs : [SbShape] (object/get @tr "effects" [])) (ens : [SbShape] (object/get @tr "ensures" [])) (g (object/get @tr "guard" null)))
+                                  (array/concat
+                                    (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard") }] @noroots)
+                                    (array/concat
+                                      (array/map (array/range 0 (array/len @effs)) (fn ei { x: (array/nth @effs @ei), w: (str/concat @xp ".effects[" @ei "]") }))
+                                      (array/map (array/range 0 (array/len @ens)) (fn ki { x: (array/nth @ens @ki), w: (str/concat @xp ".ensures[" @ki "]") })))))))))
+                        (array/concat
+                          (array/flatten
+                            (array/map (array/range 0 (array/len @sts))
+                              (fn si
+                                (let ((h (object/get (array/nth @sts @si) "holds" null)))
+                                  (if (!= @h null) [{ x: @h, w: (str/concat @tp ".stateMachine.states[" @si "].holds") }] @noroots)))))
+                          (array/flatten
+                            (array/map (array/range 0 (array/len @tks))
+                              (fn ki
+                                (let ((teffs : [SbShape] (object/get (array/nth @tks @ki) "effects" [])))
+                                  (array/map (array/range 0 (array/len @teffs)) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]") })))))))))))))))))))) (fieldRoots : [SbRoot] (array/flatten
+  (array/map (array/range 0 (array/len @orbitals))
+    (fn oi
+      (let ((ent (object/get (array/nth @orbitals @oi) "entity" null)))
+        (if (not (validate/object @ent)) @noroots
+          (let ((fl : [SbField] (object/get @ent "fields" [])) (bound (+ 2 (object/get (tree/fold (object/get @ent "fields" []) (fn (n k) { d: (+ 1 (array/reduce (if (validate/array @n) (array/map @k (fn r (object/get @r "d"))) (if (validate/object @n) (array/map (object/keys @k) (fn q (object/get (object/get @k @q) "d"))) [0])) 0 (fn (m v) (if (> @v @m) @v @m)))) }) "SbShape") "d" 0))))
+            (object/get (array/reduce (array/range 0 @bound)
+              { front: (array/map (array/range 0 (array/len @fl)) (fn fi { f: (array/nth @fl @fi), w: (str/concat "orbitals[" @oi "].entity.fields[" @fi "]") })), acc: @noroots }
+              (fn (st _i)
+                { front: (array/flatten (array/map (object/get @st "front") (fn fr
+                    (array/concat
+                      (let ((it (object/get (object/get @fr "f") "items" null))) (if (validate/object @it) [{ f: @it, w: (str/concat (object/get @fr "w") ".items") }] @nofr))
+                      (let ((pr (object/get (object/get @fr "f") "properties" null))) (if (validate/object @pr) (array/map (object/keys @pr) (fn pk { f: (object/get @pr @pk), w: (str/concat (object/get @fr "w") ".properties." @pk) })) @nofr)))))),
+                  acc: (array/concat (object/get @st "acc") (array/flatten (array/map (object/get @st "front") (fn fr (let ((df (object/get (object/get @fr "f") "default" null))) (if (!= @df null) [{ x: @df, w: (str/concat (object/get @fr "w") ".default") }] @noroots)))))) })) "acc")))))))))
+    (array/flatten
+      (array/map (array/concat @tRoots @fieldRoots)
+        (fn x
+          (let ((hs (or (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
+  (if (str/startsWith @n (quote "@"))
+    [{ rel: "", s: @n, b: @nostr }]
+    @nohits)
+  (if (validate/array @n)
+    (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
+      (if (and (= @len 3) (or (= @op "lambda") (= @op "fn")))
+        (let ((p1 (array/nth @n 1)))
+          (let ((params : [string] (if (validate/array @p1) (array/flatten (array/map @p1 (fn x (if (validate/string @x) [@x] @nostr)))) (if (validate/string @p1) [@p1] @nostr))))
+            (array/map (let ((r : [SbHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")), b: (array/concat (object/get @h "b" []) @params) })))))
+        (if (and (= @len 3) (= @op "let"))
+          (let ((p1 (array/nth @n 1)))
+            (if (validate/array @p1)
+              (let ((k1 : [SbHit] (let ((r : [SbHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits))) (allNames (array/flatten (array/map @p1 (fn pr (if (and (validate/array @pr) (> (array/len @pr) 0)) (let ((nm0 (array/nth @pr 0))) (if (validate/string @nm0) [@nm0] @nostr)) @nostr))))))
+                (array/concat
+                  (array/flatten
+                    (array/map (array/range 0 (array/len @p1))
+                      (fn bi
+                        (let ((before (array/flatten (array/map (array/range 0 @bi) (fn bj (let ((pj (array/nth @p1 @bj))) (if (and (validate/array @pj) (> (array/len @pj) 0)) (let ((nm1 (array/nth @pj 0))) (if (validate/string @nm1) [@nm1] @nostr)) @nostr)))))) (pfx (str/concat "[" @bi "][1]")))
+                          (array/map (array/filter @k1 (fn h (str/startsWith (object/get @h "rel" "") @pfx))) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")), b: (array/concat (object/get @h "b" []) @before) })))))))
+                  (array/map (let ((r : [SbHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")), b: (array/concat (object/get @h "b" []) @allNames) })))))
+              (if (validate/object @p1)
+                (let ((names : [string] (object/keys @p1)) (k1 : [SbHit] (let ((r : [SbHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits))))
+                  (array/concat
+                    (array/map @k1 (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")), b: (array/concat (object/get @h "b" []) @names) })))
+                    (array/map (let ((r : [SbHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")), b: (array/concat (object/get @h "b" []) @names) })))))
+                (array/map (let ((r : [SbHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) }))))))
+          (array/flatten
+            (array/map (array/range (if (and (> @len 0) (str/includes @op "/")) 1 0) @len)
+              (fn i
+                (array/map (let ((r : [SbHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) })))))))))
+    (if (validate/object @n)
+      (array/flatten
+        (array/map (object/keys @k)
+          (fn key
+            (array/map (let ((r : [SbHit]? (object/get @k @key))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
+      @nohits)))) SbShape) @nohits)))
+              (array/flatten
+                (array/map @hs
+                  (fn h
+                    (let ((s (object/get @h "s")) (p (str/concat (object/get @x "w") (object/get @h "rel"))) (bnd (object/get @h "b" [])))
+                      (let ((parts (str/split (str/slice @s 1) ".")))
+                        (let ((root (array/first @parts)))
+                          (if (= @root "")
+                            [{ code: "SEXPR_INVALID_BINDING", path: @p, message: (str/concat "Invalid binding: '" @s "'"), suggestion: "Bindings should be @root.field format", severity: "error" }]
+                            (array/concat
+                              (let ((c0 (str/slice @root 0 1)))
+                                (if (and (!= (str/lower @c0) @c0) (> (array/len @known) 0) (not (array/includes @known @root)) (not (array/includes @bnd @root)))
+                                  [{ code: "SEXPR_UNKNOWN_ENTITY", path: @p, message: (str/concat "Entity '" @root "' in binding may not exist"), suggestion: "Ensure the entity is defined in the schema", severity: "error" }]
+                                  @nof))
+                              (if (and (or (= @root "state") (= @root "now")) (> (array/len @parts) 1))
+                                [{ code: "ORB_BINDING_STATE_NO_PATH", path: @p, message: (str/concat (quote "@") @root " should not have a path"), suggestion: (str/concat "Use " (quote "@") @root " without path"), severity: "error" }]
+                                @nof))))))))))))))))
+        (emit LINT_FINISH { })
+
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "sexpr-binding", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : SbProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintSexprBindingCli -> OrbLintSexprBindingRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint sexpr-binding <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "sexpr-binding") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint sexpr-binding: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "sexpr-binding") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint sexpr-binding: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-sexpr-binding" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint sexpr-binding` with its arguments and working directory."
+        @synonyms "orb lint sexpr-binding"
+      OrbLintSexprBinding.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintSexprBindingCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintSexprBindingOrbitalStart -> OrbLintSexprBinding, OrbLintSexprBindingCli, OrbLintInput, Packs, Versions
+}

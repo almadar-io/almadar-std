@@ -1,0 +1,155 @@
+app std-orb-lint-placement [
+  version: "1.0.0",
+  inbound: ["cli-lint-placement"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-placement — the `orb lint placement <file>` command, the port of validate_placement (effect/os_grants.rs): the program's `deployment` map, which places every orbital in exactly one unit. It lowers the file with program/read and, when a `deployment` is declared, reports in unit order (the map's sorted keys) ORB_PLACEMENT_UNIT_EMPTY (a unit that lists no orbital), ORB_PLACEMENT_ORBITAL_UNKNOWN (a listed name that is no orbital of the program) and ORB_PLACEMENT_ORBITAL_DUPLICATE (an orbital placed a second time, in the same unit or another), then ORB_PLACEMENT_ORBITAL_UNPLACED for each orbital that is in no unit. A program without `deployment` is not checked. Findings carry the Rust path (`deployment.<unit>` or the orbital), message and suggestion (status 500, exit 1). Clean answers `lint placement: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-placement"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type LnVal = string | number | boolean | [LnVal?] | Map string LnVal?
+type PlOrbital = { name : string }
+type PlUnits = Map string [string]
+type PlProgram = { orbitals : [PlOrbital], deployment : PlUnits? }
+type PlEntry = { u : string!, n : string! }
+
+orbital OrbLintPlacementOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+
+  entity OrbLintPlacementRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+
+  }
+
+  trait OrbLintPlacement -> OrbLintPlacementRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((none : [OrbFinding] []) (nos : [string] []))
+          (if (not (object/has @payload.program "deployment"))
+            @none
+            (let ((units (object/get @payload.program "deployment" {})) (orbitals (object/get @payload.program "orbitals" [])))
+              (let ((names (array/map @orbitals (fn o (object/get @o "name" "")))) (seq (array/flatten (array/map (object/keys @units) (fn u (array/map (object/get @units @u) (fn n { u: @u, n: @n })))))))
+                (let ((allN (array/map @seq (fn e (object/get @e "n")))))
+                  (let ((seqF (array/flatten (array/map (array/range 0 (array/len @seq)) (fn i
+                          (let ((e (array/nth @seq @i)))
+                            (let ((nm (object/get @e "n")) (u (object/get @e "u")))
+                              (if (not (array/includes @names @nm))
+                                [{ u: @u, f: { code: "ORB_PLACEMENT_ORBITAL_UNKNOWN", path: (str/concat "deployment." @u), message: (str/concat "deployment unit `" @u "` lists `" @nm "`, which is not an orbital of this program"), suggestion: "", severity: "error" } }]
+                                (if (array/includes (array/slice @allN 0 @i) @nm)
+                                  [{ u: @u, f: { code: "ORB_PLACEMENT_ORBITAL_DUPLICATE", path: (str/concat "deployment." @u), message: (str/concat "orbital `" @nm "` is placed more than once in `deployment`"), suggestion: "An orbital runs in exactly one unit", severity: "error" } }]
+                                  [])))))))))
+                    (array/concat
+                      (array/flatten (array/map (object/keys @units) (fn u
+                        (array/concat
+                          (if (= (array/len (object/get @units @u)) 0)
+                            [{ code: "ORB_PLACEMENT_UNIT_EMPTY", path: (str/concat "deployment." @u), message: (str/concat "deployment unit `" @u "` lists no orbital"), suggestion: "List the orbitals the unit runs, or remove the unit", severity: "error" }]
+                            @none)
+                          (array/map (array/filter @seqF (fn x (= (object/get @x "u") @u))) (fn x (object/get @x "f")))))))
+                      (array/flatten (array/map (array/range 0 (array/len @names)) (fn i
+                        (if (array/includes @allN (array/nth @names @i))
+                          @none
+                          [{ code: "ORB_PLACEMENT_ORBITAL_UNPLACED", path: (str/concat "orbitals[" @i " (" (array/nth @names @i) ")]"), message: (str/concat "`deployment` is declared but orbital `" (array/nth @names @i) "` is in none of its units"), suggestion: "Place every orbital in a unit; nothing is placed on the program's behalf", severity: "error" }]))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "placement", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PlProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintPlacementCli -> OrbLintPlacementRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint placement <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "placement") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint placement: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "placement") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint placement: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-placement" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint placement` with its arguments and working directory."
+        @synonyms "orb lint placement"
+      OrbLintPlacement.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintPlacementCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintPlacementOrbitalStart -> OrbLintPlacement, OrbLintPlacementCli, OrbLintInput, Packs, Versions
+}

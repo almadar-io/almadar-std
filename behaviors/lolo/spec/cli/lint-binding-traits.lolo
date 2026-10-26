@@ -1,0 +1,21 @@
+app lint-binding-traits-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-binding-traits - the `orb lint binding-traits <file>` command, the port of the @trait.<Name> binding rules of binding.rs (validate_trait_binding_usage, detect_trait_binding_cycles): ORB_BINDING_TRAIT_MISSING_NAME, ORB_BINDING_TRAIT_INVALID_FORMAT, ORB_BINDING_TRAIT_SELF_REFERENCE, ORB_BINDING_TRAIT_UNKNOWN, ORB_BINDING_TRAIT_OUTSIDE_RENDER_UI and ORB_BINDING_TRAIT_CYCLE. It lowers the file with program/read and walks every inline trait: a trait-typed config knob bound to @trait.<Name> must name a trait of the orbital, and an @trait binding is allowed only inside a render-ui effect (a guard, a non-render effect and a tick get the outside-render-ui error); an allowed binding must be single-segment, name a PascalCase trait of the orbital and not the trait itself. The @trait references of an orbital's transition and tick effects form a graph; the first cycle found by a depth-first walk in declaration order is reported once per orbital. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint binding-traits: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintBindingTraitsSpec {
+  expects trait OrbLintBindingTraits {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintBindingTraitsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintBindingTraits, OrbLintBindingTraitsCli
+}

@@ -1,0 +1,245 @@
+app std-orb-lint-call-service [
+  version: "1.0.0",
+  inbound: ["cli-lint-call-service"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-call-service — the `orb lint call-service <file>` command, the port of effect/call_service.rs (validate_call_service, check_array_call, check_service_name, check_action, check_params, walk_nested_call_services): every `call-service` (or `call_service`) form of an inline trait's transition or tick, at the path the compiler reports it. A call-service that is itself an effect is checked where it stands, inside the do, if, when and let effect-sequencing forms too (at `<effect>.do[i]`, `.then`, `.else`, `.body[i]`, a branch written as a list adding `[k]`); a call-service nested in the arguments of an effect, in the condition of an if or when, or in a let value is checked at the path of the effect that holds it. Service names, actions, params and the response shape come from the installed services registry (std-orb-lint-service-registry), and the program's own `services` when it declares any. Reports ORB_EFF_CALL_SERVICE_MISSING_SERVICE (fewer than two arguments, a service name that is not text, a service the program's `services` does not define), ORB_EFF_CALL_SERVICE_UNKNOWN_SERVICE (a service the registry does not know), ORB_EFF_CALL_SERVICE_MISSING_ACTION (an action that is not text, or not an action of the service; a declared-only service has no action list to check), ORB_EFF_CALL_SERVICE_UNKNOWN_PARAM (an args key the action does not declare, the envelope keys emit, onSuccess, onError and timeout excepted), ORB_EFF_CALL_SERVICE_MISSING_PARAM (a required param the args object lacks), ORB_EFF_CALL_SERVICE_PARAM_TYPE (a literal of another kind than the declared type; a binding or call is not checked) and ORB_CALL_SERVICE_RESULT_HAS_KEY (a keyed call to an action whose response already has a `key` field). The object form `{ call_service: { … } }` of an effect (written only in .orb documents), the emit-block findings and the key findings are not reported here. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint call-service: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-call-service"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type CsVal = string | number | boolean | [CsVal?] | Map string CsVal?
+type CsMap = Map string CsVal?
+type CsPlaced = { r : string!, e : CsVal, t : string! }
+type CsPlacedList = [CsPlaced]
+type CsFold = { e : CsPlacedList!, s : CsPlacedList! }
+type CsTransition = { effects : [CsVal?]? }
+type CsTick = { effects : [CsVal?]? }
+type CsMachine = { transitions : [CsTransition]? }
+type CsTrait = { name : string, stateMachine : CsMachine?, ticks : [CsTick]? }
+type CsOrbital = { name : string, traits : [CsVal] }
+type CsServiceDef = { name : string }
+type CsProgram = { orbitals : [CsOrbital], services : [CsServiceDef]? }
+type CsTop = { p : string!, e : CsVal }
+type CsTops = [CsTop]
+type CsSite = { path : string!, call : [CsVal?]!, leaf : boolean! }
+type CsSites = [CsSite]
+type CsCalls = [[CsVal?]]
+type SrVal = string | number | boolean | [SrVal?] | Map string SrVal?
+type SrParam = { name : string!, type : string!, required : boolean!, kind : string! }
+type SrAction = { params : [SrParam]!, hasKey : boolean! }
+type SrService = { actions : Map string SrAction! }
+
+
+orbital OrbLintCallServiceOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  uses Reg from "std/behaviors/std-orb-lint-service-registry"
+
+  entity OrbLintCallServiceRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    tops : CsTops = []
+    known : [string] = []
+    haveTops : boolean = false
+    registry : Map string SrService = {}
+    haveRegistry : boolean = false
+  }
+
+  trait OrbLintCallService -> OrbLintCallServiceRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.tops (let ((orbitals (object/get @payload.program "orbitals" [])) (nt : [CsTop] []))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((o (array/nth @orbitals @oi)))
+              (let ((trs (object/get @o "traits" [])))
+                (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
+                  (let ((t (json/parse (json/stringify (array/nth @trs @ti)) CsTrait)))
+                    (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
+                      @nt
+                      (let ((base (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")))
+                        (let ((trans (or (object/get (object/get @t "stateMachine") "transitions" null) [])) (ticks (or (object/get @t "ticks" null) [])))
+                          (array/concat
+                            (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
+                              (let ((effs (or (object/get (array/nth @trans @i) "effects" null) [])))
+                                (array/map (array/range 0 (array/len @effs)) (fn j { p: (str/concat @base ".stateMachine.transitions[" @i "].effects[" @j "]"), e: (array/nth @effs @j) }))))))
+                            (array/flatten (array/map (array/range 0 (array/len @ticks)) (fn i
+                              (let ((effs (or (object/get (array/nth @ticks @i) "effects" null) [])))
+                                (array/map (array/range 0 (array/len @effs)) (fn j { p: (str/concat @base ".ticks[" @i "].effects[" @j "]"), e: (array/nth @effs @j) })))))))))))))))))))))
+        (set @entity.known (let ((nsd : [CsServiceDef] [])) (array/map (or (object/get @payload.program "services" null) @nsd) (fn s (object/get @s "name")))))
+        (set @entity.haveTops true)
+        (emit CS_ASK { })
+      CS_ASK -> ready when @entity.haveRegistry
+        (emit CS_PLAN { })
+      CS_ASK -> ready when (not @entity.haveRegistry)
+        (emit SERVICE_REGISTRY_ASK { requestId: (str/concat "call-service:" @entity.scope) })
+      SERVICE_REGISTRY_HEARD -> ready when (and (str/startsWith @payload.requestId "call-service:") @payload.unread)
+        (set @entity.findings [{ code: "ORB_LINT_SERVICE_REGISTRY_UNREAD", path: "services", message: "the installed @almadar/core services registry could not be read, so the services are unknown", suggestion: "Reinstall @almadar/core so it carries its services registry", severity: "error" }])
+        (set @entity.haveTops false)
+        (emit LINT_FINISH { })
+      SERVICE_REGISTRY_HEARD -> ready when (and (str/startsWith @payload.requestId "call-service:") (not @payload.unread))
+        (set @entity.registry @payload.services)
+        (set @entity.haveRegistry true)
+        (emit CS_PLAN { })
+      CS_PLAN -> ready when (and @entity.haveTops @entity.haveRegistry)
+        (set @entity.haveTops false)
+        (set @entity.findings (let ((none : [OrbFinding] []) (nonc : [[CsVal?]] []) (nop : [SrParam] []) (nosite : [CsSite] []) (noact : Map string SrAction {}) (emptyMap : CsMap {}) (known @entity.known) (registry @entity.registry))
+          (let ((sites (array/flatten (array/map @entity.tops (fn t
+                  (let ((r (json/parse (json/stringify (or (tree/fold (object/get @t "e") (fn (n k)
+            (let ((none : [CsPlaced] []))
+              (if (not (validate/array @n))
+                { e: @none, s: @none }
+                (let ((len (array/len @n)) (hd (if (> (array/len @n) 0) (array/nth @n 0) null)))
+                  (if (and (validate/string @hd) (array/includes ["do", "if", "when", "let"] @hd))
+                    (let ((pos (array/filter (array/range 1 @len) (fn i (and (!= (array/nth @n @i) null) (if (= @hd "do") true (if (= @hd "if") (and (>= @i 2) (<= @i 3)) (>= @i 2))))))))
+                      (let ((kids (array/flatten (array/map @pos (fn i
+                                (let ((l (if (= @hd "do") (str/concat ".do[" (- @i 1) "]") (if (= @hd "if") (if (= @i 2) ".then" ".else") (if (= @hd "when") (str/concat ".then[" (- @i 2) "]") (str/concat ".body[" (- @i 2) "]"))))) (kr (array/nth @k @i)))
+                                  (array/map (object/get @kr "s") (fn lf { r: (str/concat @l (object/get @lf "r")), e: (object/get @lf "e"), t: (object/get @lf "t") })))))))
+                            (own (if (or (= @hd "if") (= @hd "when"))
+                                   [{ r: "", e: (array/nth @n 1), t: "v" }]
+                                   (if (and (= @hd "let") (> @len 1) (validate/array (array/nth @n 1)))
+                                     (array/flatten (array/map (or (json/parse (json/stringify (array/nth @n 1)) CsCalls) @nonc) (fn pair (if (> (array/len @pair) 1) [{ r: "", e: (array/nth @pair 1), t: "v" }] @none))))
+                                     @none))))
+                        (let ((items (array/concat @own @kids))) { e: @items, s: @items })))
+                    (let ((self [{ r: "", e: @n, t: "l" }]))
+                      (if (and (> @len 0) (validate/array @hd))
+                        { e: @self,
+                          s: (array/flatten (array/map (array/range 0 @len) (fn j (if (= (array/nth @n @j) null) @none (array/map (object/get (array/nth @k @j) "e") (fn lf { r: (str/concat "[" @j "]" (object/get @lf "r")), e: (object/get @lf "e"), t: (object/get @lf "t") })))))) }
+                        { e: @self, s: @self }))))))) CsVal) @emptyMap)) CsFold)))
+                    (if (= @r null)
+                      @nosite
+                      (array/flatten (array/map (object/get @r "e") (fn lf
+                        (let ((e (object/get @lf "e")) (pth (str/concat (object/get @t "p") (object/get @lf "r"))))
+                          (let ((isLeaf (and (= (object/get @lf "t") "l") (validate/array @e) (> (array/len @e) 0) (validate/string (array/first @e)) (array/includes ["call-service", "call_service"] (array/first @e)))))
+                            (let ((all (or (json/parse (json/stringify (or (tree/fold @e (fn (nd kids)
+                  (array/concat
+                    (if (and (validate/array @nd) (>= (array/len @nd) 3) (validate/string (array/first @nd)) (array/includes ["call-service", "call_service"] (array/first @nd))) [@nd] @nonc)
+                    (if (validate/array @nd) (array/flatten (array/filter @kids (fn c (!= @c null)))) (if (validate/object @nd) (array/flatten (array/map (object/keys @kids) (fn key (or (object/get @kids @key @nonc) @nonc)))) @nonc)))) CsVal) @nonc)) CsCalls) @nonc)))
+                              (let ((nested (if (and @isLeaf (>= (array/len @e) 3)) (array/slice @all 1 (array/len @all)) @all)))
+                                (array/concat
+                                  (if @isLeaf [{ path: @pth, call: @e, leaf: true }] @nosite)
+                                  (array/map @nested (fn c { path: @pth, call: @c, leaf: false })))))))))))))))))
+            (array/flatten (array/map @sites (fn s
+              (let ((a (object/get @s "call")) (p (object/get @s "path")) (leaf (object/get @s "leaf")))
+                (let ((n (array/len @a)))
+                  (if (and @leaf (< @n 3)) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_SERVICE", path: @p, message: (str/concat "call_service requires service name and action"), suggestion: "Use: [\"call-service\", \"serviceName\", \"action\", { onSuccess: [...] }]", severity: "error" }] (if (< @n 3) @none (let ((svc (array/nth @a 1))) (if (not (validate/string @svc)) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_SERVICE", path: @p, message: (str/concat "Service name must be a string"), suggestion: "", severity: "error" }] (let ((act (array/nth @a 2))) (let ((nameKnown (or (array/includes @known @svc) (object/has @registry @svc)))) (if (not (validate/string @act)) (array/concat (if @nameKnown @none (if (> (array/len @known) 0) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_SERVICE", path: @p, message: (str/concat "Service '" @svc "' is not defined"), suggestion: "Define the service in schema.services or check the name for a typo", severity: "error" }] (if (> (array/len (object/keys @registry)) 0) [{ code: "ORB_EFF_CALL_SERVICE_UNKNOWN_SERVICE", path: @p, message: (str/concat "Service '" @svc "' is not a registered integrator or declared service"), suggestion: "Register the integrator (almadar-sync services) or add it to DECLARED_SERVICES, or check the name for a typo", severity: "error" }] @none))) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_ACTION", path: @p, message: (str/concat "Action must be a string"), suggestion: "", severity: "error" }]) (array/concat (if @nameKnown @none (if (> (array/len @known) 0) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_SERVICE", path: @p, message: (str/concat "Service '" @svc "' is not defined"), suggestion: "Define the service in schema.services or check the name for a typo", severity: "error" }] (if (> (array/len (object/keys @registry)) 0) [{ code: "ORB_EFF_CALL_SERVICE_UNKNOWN_SERVICE", path: @p, message: (str/concat "Service '" @svc "' is not a registered integrator or declared service"), suggestion: "Register the integrator (almadar-sync services) or add it to DECLARED_SERVICES, or check the name for a typo", severity: "error" }] @none))) (let ((sinfo (object/get @registry @svc null))) (let ((actions (if (= @sinfo null) @noact (object/get @sinfo "actions" @noact)))) (let ((ainfo (object/get @actions @act null))) (array/concat (if (and (!= @sinfo null) (> (array/len (object/keys @actions)) 0) (= @ainfo null)) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_ACTION", path: @p, message: (str/concat "Action '" @act "' is not a known action on service '" @svc "'"), suggestion: "Check the service contract for valid action names", severity: "error" }] @none) (if (= @ainfo null) @none (let ((last (array/last @a))) (let ((trailing (and (> @n 4) (validate/object @last) (let ((lm (or (json/parse (json/stringify @last) CsMap) {}))) (or (object/has @lm "emit") (object/has @lm "key")))))) (let ((optm (if @trailing (or (json/parse (json/stringify @last) CsMap) {}) null))) (let ((argsEnd (if @trailing (- @n 1) @n))) (array/concat (let ((pexp (if (> @argsEnd 3) (array/nth @a (- @argsEnd 1)) null))) (if (and (!= @pexp null) (not (validate/object @pexp))) @none (let ((pm : CsMap (or (json/parse (json/stringify (if (= @pexp null) @emptyMap @pexp)) CsMap) @emptyMap)) (declared (object/get @ainfo "params" @nop))) (array/concat (array/map (array/filter (array/sort (object/keys @pm)) (fn key (and (not (array/includes ["emit", "onSuccess", "onError", "timeout"] @key)) (not (array/includes (array/map @declared (fn d (object/get @d "name"))) @key))))) (fn key { code: "ORB_EFF_CALL_SERVICE_UNKNOWN_PARAM", path: @p, message: (str/concat "Param '" @key "' is not declared by action '" @act "' on service '" @svc "'"), suggestion: "Check the service contract for the declared param names", severity: "error" })) (array/flatten (array/map @declared (fn d (let ((dn (object/get @d "name"))) (array/concat (if (and (object/get @d "required") (not (object/has @pm @dn))) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_PARAM", path: @p, message: (str/concat "Required param '" @dn "' is missing on '" @act "' of service '" @svc "'"), suggestion: "Supply the required param in the call's args object", severity: "error" }] @none) (let ((pv (object/get @pm @dn null)) (ex (object/get @d "kind"))) (if (or (= @ex "") (= @pv null)) @none (let ((actual (if (validate/string @pv) (if (or (str/startsWith @pv (quote "@")) (str/startsWith @pv "?") (str/startsWith @pv "$")) "" "string") (if (validate/number @pv) "number" (if (validate/boolean @pv) "boolean" (if (validate/object @pv) "object" (if (validate/array @pv) (if (and (> (array/len @pv) 0) (validate/string (array/first @pv))) "" "array") ""))))))) (if (or (= @actual "") (= @actual @ex)) @none [{ code: "ORB_EFF_CALL_SERVICE_PARAM_TYPE", path: @p, message: (str/concat "Param '" @dn "' on '" @act "' of service '" @svc "' expects " (object/get @d "type") ", got a " @actual " literal"), suggestion: "Match the declared param type from the service contract", severity: "error" }]))))))))))))) (if (and (!= @optm null) (object/has @optm "key") (object/get @ainfo "hasKey" false)) [{ code: "ORB_CALL_SERVICE_RESULT_HAS_KEY", path: @p, message: (str/concat "keyed call-service " @svc "." @act " returns a record that already has a `key` field; the call's `key` is merged beside the result and would collide"), suggestion: "Drop the call's `key`, or use an action whose result has no `key` field", severity: "error" }] @none)))))))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "call-service", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+      CS_ASK { }
+        @description "Internal: ask for the registry once the program is in, or plan when it is already here."
+        @tier "internal"
+      CS_PLAN { }
+        @description "Internal: check the calls once the program and the registry are both in."
+        @tier "internal"
+      SERVICE_REGISTRY_ASK -> external { requestId : string! }
+        @description "Ask the services registry reader for the registry."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CsProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      SERVICE_REGISTRY_HEARD { requestId : string!  unread : boolean!  services : Map string SrService! }
+        @description "The services registry reader's answer."
+      ServiceRegistry.SERVICE_REGISTRY_ANSWER -> SERVICE_REGISTRY_HEARD
+    }
+  }
+
+  trait OrbLintCallServiceCli -> OrbLintCallServiceRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint call-service <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "call-service") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint call-service: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "call-service") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint call-service: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-call-service" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint call-service` with its arguments and working directory."
+        @synonyms "orb lint call-service"
+      OrbLintCallService.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintCallServiceCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+  trait ServiceRegistry = Reg.traits.ServiceRegistry {
+    listens {
+      OrbLintCallService.SERVICE_REGISTRY_ASK -> SERVICE_REGISTRY_ASK
+      LANGUAGE_PACKS_DONE_HEARD { problem : string!  coreRoot : string!  stdRoot : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished, with the installed @almadar/core root when it is compatible."
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+  page boot as OrbLintCallServiceOrbitalStart -> OrbLintCallService, OrbLintCallServiceCli, OrbLintInput, Packs, Versions, ServiceRegistry
+}

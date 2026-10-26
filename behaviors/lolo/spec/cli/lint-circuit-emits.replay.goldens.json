@@ -1,0 +1,3815 @@
+{
+ "atom": "cli/atoms/std-orb-lint-circuit-emits.lolo",
+ "trait": "OrbLintCircuitEmits",
+ "note": "Cases mirror closed_circuit.rs validate_lifecycle_emit_effects, validate_render_action_lifecycle_events and validate_self_emit_loop, each with paired controls. Each case carries the pattern-registry event prop names and the bus-excluded events the lint input offers. Expected findings are the code, path, message and suggestion the Rust validator reports for the same program.",
+ "cases": [
+  {
+   "id": "lifecycle-emit-is-undelivered",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "INIT",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CIRCUIT_LIFECYCLE_EMIT_UNDELIVERED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "'O.T': transition idle--[GO]-->idle emits lifecycle event 'INIT' \u2014 the bus never delivers it",
+           "suggestion": "route a named event whose arm re-enters via `EVENT -> ...`, or inline the target state's own effects directly into this arm; lifecycle events are never delivered through (emit ...)",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lifecycle-emits-nested-in-do-and-if-each-report",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "do",
+                [
+                 "if",
+                 true,
+                 [
+                  "emit",
+                  "INIT",
+                  {}
+                 ],
+                 [
+                  "emit",
+                  "LOAD",
+                  {}
+                 ]
+                ]
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CIRCUIT_LIFECYCLE_EMIT_UNDELIVERED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "'O.T': transition idle--[GO]-->idle emits lifecycle event 'INIT' \u2014 the bus never delivers it",
+           "suggestion": "route a named event whose arm re-enters via `EVENT -> ...`, or inline the target state's own effects directly into this arm; lifecycle events are never delivered through (emit ...)",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_CIRCUIT_LIFECYCLE_EMIT_UNDELIVERED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "'O.T': transition idle--[GO]-->idle emits lifecycle event 'LOAD' \u2014 the bus never delivers it",
+           "suggestion": "route a named event whose arm re-enters via `EVENT -> ...`, or inline the target state's own effects directly into this arm; lifecycle events are never delivered through (emit ...)",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-named-event-emit-is-delivered",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "GO2",
+                {}
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO2"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lifecycle-emit-inside-an-emit-payload-list",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "INIT",
+                {
+                 "a": [
+                  "emit",
+                  "INIT",
+                  {}
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CIRCUIT_LIFECYCLE_EMIT_UNDELIVERED",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "'O.T': transition idle--[GO]-->idle emits lifecycle event 'INIT' \u2014 the bus never delivers it",
+           "suggestion": "route a named event whose arm re-enters via `EVENT -> ...`, or inline the target state's own effects directly into this arm; lifecycle events are never delivered through (emit ...)",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-emit-without-an-event-name",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit"
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rendered-action-names-a-lifecycle-event",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "INIT"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_RENDER_ACTION_LIFECYCLE_EVENT",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.action",
+           "message": "'O.T': prop 'action' on rendered 'button' targets lifecycle event 'INIT' \u2014 the bus never delivers it",
+           "suggestion": "route a named event (e.g. REFRESH) whose arm re-enters via `EVENT -> loading`; lifecycle events are never affordance targets",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nested-children-report-the-nearest-pattern-type",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "button",
+                   "label": "b",
+                   "action": "INIT"
+                  },
+                  {
+                   "type": "card",
+                   "children": [
+                    {
+                     "type": "button",
+                     "label": "b",
+                     "action": "LOAD"
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_RENDER_ACTION_LIFECYCLE_EVENT",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.action",
+           "message": "'O.T': prop 'action' on rendered 'button' targets lifecycle event 'INIT' \u2014 the bus never delivers it",
+           "suggestion": "route a named event (e.g. REFRESH) whose arm re-enters via `EVENT -> loading`; lifecycle events are never affordance targets",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_ACTION_LIFECYCLE_EVENT",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.action",
+           "message": "'O.T': prop 'action' on rendered 'button' targets lifecycle event 'LOAD' \u2014 the bus never delivers it",
+           "suggestion": "route a named event (e.g. REFRESH) whose arm re-enters via `EVENT -> loading`; lifecycle events are never affordance targets",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "item-actions-descriptor-names-a-lifecycle-event",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "data-list",
+                 "itemActions": [
+                  {
+                   "label": "a",
+                   "event": "INIT"
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_RENDER_ACTION_LIFECYCLE_EVENT",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.event",
+           "message": "'O.T': prop 'event' on rendered 'data-list' targets lifecycle event 'INIT' \u2014 the bus never delivers it",
+           "suggestion": "route a named event (e.g. REFRESH) whose arm re-enters via `EVENT -> loading`; lifecycle events are never affordance targets",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-rendered-action-names-a-named-event",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "button",
+                 "label": "b",
+                 "action": "GO"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "untyped-payload-reports-unknown-pattern",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "label": "x",
+                 "action": "INIT"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_RENDER_ACTION_LIFECYCLE_EVENT",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.action",
+           "message": "'O.T': prop 'action' on rendered '<unknown>' targets lifecycle event 'INIT' \u2014 the bus never delivers it",
+           "suggestion": "route a named event (e.g. REFRESH) whose arm re-enters via `EVENT -> loading`; lifecycle events are never affordance targets",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-trait-marker-payload-has-no-props",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                "@trait.X"
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-non-event-prop-may-hold-a-lifecycle-name",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "title": "INIT"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sibling-untyped-children-each-checked",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "action": "INIT"
+                  },
+                  {
+                   "event": "LOAD",
+                   "type": "x"
+                  }
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_RENDER_ACTION_LIFECYCLE_EVENT",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.action",
+           "message": "'O.T': prop 'action' on rendered 'stack' targets lifecycle event 'INIT' \u2014 the bus never delivers it",
+           "suggestion": "route a named event (e.g. REFRESH) whose arm re-enters via `EVENT -> loading`; lifecycle events are never affordance targets",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_RENDER_ACTION_LIFECYCLE_EVENT",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.event",
+           "message": "'O.T': prop 'event' on rendered 'x' targets lifecycle event 'LOAD' \u2014 the bus never delivers it",
+           "suggestion": "route a named event (e.g. REFRESH) whose arm re-enters via `EVENT -> loading`; lifecycle events are never affordance targets",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "self-emit-with-constant-payload-loops",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": [
+               [
+                "emit",
+                "X",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CIRCUIT_SELF_EMIT_LOOP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "'O.T': transition idle--[X]-->idle re-emits its own trigger event 'X' with a constant payload and a same-event arm is reachable at the target state \u2014 the runtime path loops forever re-entering this arm",
+           "suggestion": "this arm re-emits its own trigger event and a same-event arm is reachable at the target state (this very arm, when it is a self-transition) with a constant payload \u2014 the runtime path loops forever re-entering this arm. Transition directly, emit a differently-named event, or make the payload derive from @payload / a mutated @entity so each hop makes progress.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-payload-reads-the-triggering-payload",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": [
+               [
+                "emit",
+                "X",
+                {
+                 "a": "@payload.a"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-payload-reads-an-entity-the-arm-sets",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                1
+               ],
+               [
+                "emit",
+                "X",
+                {
+                 "a": "@entity.n"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "self-emit-reading-an-entity-the-arm-never-sets",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": [
+               [
+                "emit",
+                "X",
+                {
+                 "a": "@entity.n"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CIRCUIT_SELF_EMIT_LOOP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "'O.T': transition idle--[X]-->idle re-emits its own trigger event 'X' with a constant payload and a same-event arm is reachable at the target state \u2014 the runtime path loops forever re-entering this arm",
+           "suggestion": "this arm re-emits its own trigger event and a same-event arm is reachable at the target state (this very arm, when it is a self-transition) with a constant payload \u2014 the runtime path loops forever re-entering this arm. Transition directly, emit a differently-named event, or make the payload derive from @payload / a mutated @entity so each hop makes progress.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-emit-of-a-different-event",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": [
+               [
+                "emit",
+                "Y",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-same-event-arm-at-the-target",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "b",
+              "event": "X",
+              "effects": [
+               [
+                "emit",
+                "X",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "self-emit-reenterable-through-a-second-arm",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "b",
+              "event": "X",
+              "effects": [
+               [
+                "emit",
+                "X",
+                {}
+               ]
+              ]
+             },
+             {
+              "from": "b",
+              "to": "idle",
+              "event": "X"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CIRCUIT_SELF_EMIT_LOOP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "'O.T': transition idle--[X]-->b re-emits its own trigger event 'X' with a constant payload and a same-event arm is reachable at the target state \u2014 the runtime path loops forever re-entering this arm",
+           "suggestion": "this arm re-emits its own trigger event and a same-event arm is reachable at the target state (this very arm, when it is a self-transition) with a constant payload \u2014 the runtime path loops forever re-entering this arm. Transition directly, emit a differently-named event, or make the payload derive from @payload / a mutated @entity so each hop makes progress.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nested-self-emits-each-report",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": [
+               [
+                "do",
+                [
+                 "emit",
+                 "X",
+                 {
+                  "a": 1
+                 }
+                ],
+                [
+                 "if",
+                 true,
+                 [
+                  "emit",
+                  "X",
+                  {}
+                 ],
+                 [
+                  "emit",
+                  "Z",
+                  {}
+                 ]
+                ]
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CIRCUIT_SELF_EMIT_LOOP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "'O.T': transition idle--[X]-->idle re-emits its own trigger event 'X' with a constant payload and a same-event arm is reachable at the target state \u2014 the runtime path loops forever re-entering this arm",
+           "suggestion": "this arm re-emits its own trigger event and a same-event arm is reachable at the target state (this very arm, when it is a self-transition) with a constant payload \u2014 the runtime path loops forever re-entering this arm. Transition directly, emit a differently-named event, or make the payload derive from @payload / a mutated @entity so each hop makes progress.",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_CIRCUIT_SELF_EMIT_LOOP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "'O.T': transition idle--[X]-->idle re-emits its own trigger event 'X' with a constant payload and a same-event arm is reachable at the target state \u2014 the runtime path loops forever re-entering this arm",
+           "suggestion": "this arm re-emits its own trigger event and a same-event arm is reachable at the target state (this very arm, when it is a self-transition) with a constant payload \u2014 the runtime path loops forever re-entering this arm. Transition directly, emit a differently-named event, or make the payload derive from @payload / a mutated @entity so each hop makes progress.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-whole-payload-binding-is-progress",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": [
+               [
+                "emit",
+                "X",
+                {
+                 "a": "@payload"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "config-only-payload-is-constant",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": [
+               [
+                "emit",
+                "X",
+                {
+                 "a": "@config.v"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CIRCUIT_SELF_EMIT_LOOP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "'O.T': transition idle--[X]-->idle re-emits its own trigger event 'X' with a constant payload and a same-event arm is reachable at the target state \u2014 the runtime path loops forever re-entering this arm",
+           "suggestion": "this arm re-emits its own trigger event and a same-event arm is reachable at the target state (this very arm, when it is a self-transition) with a constant payload \u2014 the runtime path loops forever re-entering this arm. Transition directly, emit a differently-named event, or make the payload derive from @payload / a mutated @entity so each hop makes progress.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-arithmetic-on-the-payload-is-progress",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": [
+               [
+                "emit",
+                "X",
+                {
+                 "a": [
+                  "+",
+                  "@payload.n",
+                  1
+                 ]
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sibling-map-effects-before-the-self-emit",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "PROPS_HEARD",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "action",
+       "event",
+       "submitEvent"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": [
+               [
+                "do",
+                {
+                 "a": 1
+                },
+                {
+                 "b": 2
+                },
+                [
+                 "emit",
+                 "X",
+                 {}
+                ]
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitEmits",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-emits",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CIRCUIT_SELF_EMIT_LOOP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0]",
+           "message": "'O.T': transition idle--[X]-->idle re-emits its own trigger event 'X' with a constant payload and a same-event arm is reachable at the target state \u2014 the runtime path loops forever re-entering this arm",
+           "suggestion": "this arm re-emits its own trigger event and a same-event arm is reachable at the target state (this very arm, when it is a self-transition) with a constant payload \u2014 the runtime path loops forever re-entering this arm. Transition directly, emit a differently-named event, or make the payload derive from @payload / a mutated @entity so each hop makes progress.",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

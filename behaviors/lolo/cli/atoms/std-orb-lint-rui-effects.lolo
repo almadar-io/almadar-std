@@ -1,0 +1,221 @@
+app std-orb-lint-rui-effects [
+  version: "1.0.0",
+  inbound: ["cli-lint-rui-effects"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-rui-effects — the `orb lint rui-effects <file>` command, the port of three render_ui/mod.rs checks over every inline trait: ORB_RUI_INVALID_SLOT (a render-ui effect whose slot is not one of the closed slot list; a slot named by a `@config.<knob>` binding is read through the trait's declared default, as the compiler sees it after inlining, and one with no declared default is not judged), ORB_EFF_MISSING_FETCH_FOR_ENTITY (a top-level render-ui whose pattern names a literal entity that no top-level fetch in the same transition, or in any transition leading into its state, fetches; an entity bound through an `@` reference is skipped) and ORB_BINDING_TRAIT_INVALID_POSITION (an `@trait.X` string in a render-ui pattern outside a `children` array and outside a prop the installed pattern registry types as `node`). Only the top-level effects of a transition are read, array and object render-ui forms alike, exactly as the compiler does. ORB_EFF_SLOT_CONFLICT is not ported: the compiler collects the slots of a transition in a set before counting them, so no count is ever above one and the code never fires. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint rui-effects: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-rui-effects"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type EfVal = string | number | boolean | [EfVal?] | Map string EfVal?
+type EfTransition = { from : EfVal, to : string, event : string, effects : [EfVal?] }
+type EfKnob = { default : EfVal? }
+type EfRend = { j : number!, re : string! }
+type EfEff = { j : number!, fe : string!, re : string!, fs : [OrbFinding]! }
+type EfInfo = { froms : [string]!, to : string!, fetched : [string]!, rendered : [EfRend]!, fs : [OrbFinding]! }
+type EfEdge = { f : string!, t : string! }
+type EfMachine = { transitions : [EfTransition] }
+type EfTrait = { name : string, stateMachine : EfMachine, config : Map string EfVal? }
+type EfOrbital = { name : string, traits : [EfTrait] }
+type EfProgram = { orbitals : [EfOrbital] }
+type EfPropShape = { types : [string] }
+type EfPatternShape = { props : Map string EfPropShape? }
+type EfHit = { p : string!, s : string!, open : boolean!, m : string!, g : string! }
+
+orbital OrbLintRuiEffectsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintRuiEffectsRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    nodeProps : Map string [string] = {}
+  }
+
+  trait OrbLintRuiEffects -> OrbLintRuiEffectsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_PATTERNS_HEARD -> ready
+        (set @entity.nodeProps (object/mapValues @payload.patterns (fn e (let ((ps (object/get @e "props" {}))) (array/filter (object/keys @ps) (fn pn (array/includes (object/get (object/get @ps @pn {}) "types" []) "node")))))))
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals : [EfOrbital] (object/get @payload.program "orbitals" [])) (np @entity.nodeProps) (validSlots @config.validSlots))
+            (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+              (let ((orb (array/nth @orbitals @oi)))
+                (let ((trs (object/get @orb "traits" [])))
+                  (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
+                    (let ((td (array/nth @trs @tj)))
+                      (if (not (object/has @td "stateMachine")) []
+                        (let ((tpath (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")]"))
+                              (trans (object/get (object/get @td "stateMachine" {}) "transitions" []))
+                              (cfg (object/get @td "config" {})))
+                          (let ((info (array/map (array/range 0 (array/len @trans)) (fn ti
+                                  (let ((tr (array/nth @trans @ti)))
+                                    (let ((effs (object/get @tr "effects" [])) (raw (object/get @tr "from" "")))
+                                      (let ((effRes (array/map (array/range 0 (array/len @effs)) (fn ej
+                                              (let ((e (array/nth @effs @ej)) (ep (str/concat @tpath ".stateMachine.transitions[" @ti "].effects[" @ej "]")))
+                                                (let ((ea (if (validate/array @e) @e [])) (eo (if (validate/object @e) @e {})))
+                                                  (let ((hd (array/nth @ea 0)) (alen (array/len @ea)) (oa (object/get @eo "render_ui" null)) (ob (object/get @eo "render-ui" null)))
+                                                    (let ((oaO (if (validate/object @oa) @oa {})) (obO (if (validate/object @ob) @ob {})) (rk (if (validate/object @oa) "render_ui" (if (validate/object @ob) "render-ui" ""))))
+                                                      (let ((aRui (and (validate/string @hd) (> @alen 0) (or (= @hd "render-ui") (= @hd "render_ui")))) (ruiObj (if (= @rk "render_ui") @oaO @obO)))
+                                                        (let ((slot0 (if (and @aRui (>= @alen 2)) (array/nth @ea 1) (if (!= @rk "") (object/get @ruiObj "slot" null) null)))
+                                                              (pat (if @aRui (if (>= @alen 3) (array/nth @ea 2) null) (if (!= @rk "") (object/get @ruiObj "pattern" null) null)))
+                                                              (ppath (if @aRui (str/concat @ep "[2]") (str/concat @ep "." @rk ".pattern"))))
+                                                          (let ((sres (if (validate/string @slot0) (if (str/startsWith @slot0 (quote "@config.")) (let ((dv (object/get @cfg (str/concat (str/slice @slot0 8 (str/len @slot0)) ".default") null))) (if (validate/string @dv) @dv @slot0)) @slot0) null))
+                                                                (patO (if (validate/object @pat) @pat {})))
+                                                            (let ((en (object/get @patO "entity" null)))
+                                                              (let ((ent (if (and (or @aRui (!= @rk "")) (validate/string @en) (not (str/startsWith @en (quote "@")))) @en ""))
+                                                                    (slotF (if (and (validate/string @sres) (not (array/includes @validSlots @sres)) (not (str/startsWith @sres (quote "@config."))))
+                                                                      [{ code: "ORB_RUI_INVALID_SLOT", path: @ep, message: (str/concat "Invalid slot: '" @sres "'"), suggestion: "", severity: "error" }]
+                                                                      []))
+                                                                    (posF (if (and (or @aRui (!= @rk "")) (!= @pat null))
+                                                                      (let ((hits (let ((h0 (tree/fold @pat (fn (n k)
+                                                                          (if (validate/string @n)
+                                                                            (if (str/startsWith @n (quote "@trait.")) [{ p: "", s: @n, open: true, m: "", g: "" }] [])
+                                                                            (if (validate/array @n)
+                                                                              (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (array/map (let ((r (array/nth @k @i))) (if (validate/array @r) @r [])) (fn h { p: (str/concat "[" @i "]" (object/get @h "p")), s: (object/get @h "s"), open: (object/get @h "open"), m: (object/get @h "m"), g: (object/get @h "g") })))))
+                                                                              (if (validate/object @n)
+                                                                                (let ((t (object/get @n "type" null)) (ko (if (validate/object @k) @k {})))
+                                                                                  (array/flatten (array/map (array/filter (object/keys @n) (fn kk (!= @kk "type"))) (fn kk
+                                                                                    (array/flatten (array/map (let ((r (object/get @ko @kk []))) (if (validate/array @r) @r [])) (fn h
+                                                                                      (if (object/get @h "open")
+                                                                                        (if (or (= @kk "children") (and (validate/string @t) (array/includes (object/get @np @t []) @kk))) []
+                                                                                          [{ p: (str/concat "." @kk (object/get @h "p")), s: (object/get @h "s"), open: false,
+                                                                                             m: (str/concat (quote "@trait binding '") (object/get @h "s") "' appears in prop '" @kk "' of pattern '" (if (validate/string @t) @t "<unknown>") "'; allowed positions are `children: [...]` and `node`-typed props"),
+                                                                                             g: (str/concat "Move the @trait reference into a `children:` array — e.g. delete the `" @kk ":` prop and add `" (object/get @h "s") "` as an element of the enclosing `children: [ …, " (object/get @h "s") " ]` (custom props like `" @kk "` are not slots) — or use a pattern prop that accepts a node (e.g. `front`, `back`)") }])
+                                                                                        [{ p: (str/concat "." @kk (object/get @h "p")), s: (object/get @h "s"), open: false, m: (object/get @h "m"), g: (object/get @h "g") }]))))))))
+                                                                                [])))) EfVal))) (if (validate/array @h0) @h0 []))))
+                                                                        (array/map @hits (fn h { code: "ORB_BINDING_TRAIT_INVALID_POSITION", path: (str/concat @ppath (object/get @h "p")),
+                                                                            message: (if (object/get @h "open") (str/concat (quote "@trait binding '") (object/get @h "s") "' appears in prop '" "<root>" "' of pattern '" "<unknown>" "'; allowed positions are `children: [...]` and `node`-typed props") (object/get @h "m")),
+                                                                            suggestion: (if (object/get @h "open") (str/concat "Move the @trait reference into a `children:` array — e.g. delete the `" "<root>" ":` prop and add `" (object/get @h "s") "` as an element of the enclosing `children: [ …, " (object/get @h "s") " ]` (custom props like `" "<root>" "` are not slots) — or use a pattern prop that accepts a node (e.g. `front`, `back`)") (object/get @h "g")), severity: "error" })))
+                                                                      [])))
+                                                                { j: @ej, fe: (if (and (validate/string @hd) (>= @alen 2) (= @hd "fetch") (validate/string (array/nth @ea 1))) (array/nth @ea 1) ""),
+                                                                  re: @ent, fs: (array/concat @slotF @posF) })))))))))))))
+                                        { froms: (array/map (if (validate/array @raw) @raw (array/map [0] (fn z @raw))) (fn f (if (validate/string @f) @f ""))), to: (object/get @tr "to" ""),
+                                          fetched: (array/filter (array/map @effRes (fn x (object/get @x "fe"))) (fn f (!= @f ""))),
+                                          rendered: (array/filter (array/map @effRes (fn x { j: (object/get @x "j"), re: (object/get @x "re") })) (fn x (!= (object/get @x "re") ""))),
+                                          fs: (array/flatten (array/map @effRes (fn x (object/get @x "fs")))) })))))))
+                            (let ((anyRend (array/some @info (fn x (> (array/len (object/get @x "rendered")) 0)))))
+                              (let ((fetchF (if (not @anyRend) (array/map @info (fn x (array/take (array/flatten (array/map [0] (fn z (object/get @x "fs")))) 0)))
+                                  (let ((edges (array/flatten (array/map @info (fn x (array/map (object/get @x "froms") (fn f { f: @f, t: (object/get @x "to") }))))))
+                                        (nodes (array/unique (array/flatten (array/map @info (fn x (array/concat (object/get @x "froms") [(object/get @x "to")])))))))
+                                    (let ((avail (array/reduce (array/range 0 (if (< (array/len @nodes) 50) (array/len @nodes) 50))
+                                            (let ((m0 (object/fromEntries (array/map @nodes (fn n [@n, (array/unique (array/flatten (array/map (array/filter @info (fn x (= (object/get @x "to") @n))) (fn x (object/get @x "fetched")))))]))))) (if (validate/object @m0) @m0 {}))
+                                            (fn (cur i) (let ((m1 (object/fromEntries (array/map @nodes (fn n [@n, (array/unique (array/concat (object/get @cur @n []) (array/flatten (array/map (array/filter @edges (fn ed (= (object/get @ed "t") @n))) (fn ed (object/get @cur (object/get @ed "f") []))))))]))))) (if (validate/object @m1) @m1 {}))))))
+                                      (array/map (array/range 0 (array/len @info)) (fn ti
+                                        (let ((x (array/nth @info @ti)))
+                                          (let ((have (object/get @avail (object/get @x "to") [])) (fe (object/get @x "fetched")))
+                                            (array/map (array/filter (object/get @x "rendered") (fn r (and (not (array/includes @fe (object/get @r "re"))) (not (array/includes @have (object/get @r "re"))))))
+                                              (fn r { code: "ORB_EFF_MISSING_FETCH_FOR_ENTITY", path: (str/concat @tpath ".stateMachine.transitions[" @ti "].effects[" (object/get @r "j") "]"),
+                                                      message: (str/concat "render-ui references entity '" (object/get @r "re") "' but no [\"fetch\", \"" (object/get @r "re") "\"] effect exists in this or any predecessor transition"),
+                                                      suggestion: (str/concat "Add [\"fetch\", \"" (object/get @r "re") "\"] before the render-ui effect so the pattern has data to display"), severity: "error" })))))))))))
+                                (array/flatten (array/map (array/range 0 (array/len @info)) (fn ti
+                                  (array/concat (object/get (array/nth @info @ti) "fs") (if @anyRend (array/nth @fetchF @ti) [])))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "rui-effects", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    config {
+      validSlots : [string] = ["main", "sidebar", "dock", "modal", "drawer", "overlay", "center", "toast", "floating", "system", "content", "screen", "hud", "hud-top", "hud-bottom", "hud.health", "hud.score", "hud.inventory", "hud.stamina", "overlay.inventory", "overlay.dialogue", "overlay.menu", "overlay.pause"]
+        @label "Valid slots"
+        @description "The closed list of slots a render-ui effect may paint (the compiler's VALID_SLOTS)."
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EfProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      LINT_PATTERNS_HEARD { patterns : Map string EfPatternShape! }
+        @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry projected for the render-ui checks."
+      OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD
+    }
+  }
+
+  trait OrbLintRuiEffectsCli -> OrbLintRuiEffectsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint rui-effects <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "rui-effects") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint rui-effects: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "rui-effects") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint rui-effects: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-rui-effects" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint rui-effects` with its arguments and working directory."
+        @synonyms "orb lint rui-effects"
+      OrbLintRuiEffects.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintRuiEffectsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintRuiEffectsOrbitalStart -> OrbLintRuiEffects, OrbLintRuiEffectsCli, OrbLintInput, Packs, Versions
+}

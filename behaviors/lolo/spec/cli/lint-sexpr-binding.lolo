@@ -1,0 +1,21 @@
+app lint-sexpr-binding-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint sexpr-binding <file>`; see the atom."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintSexprBindingSpec {
+  expects trait OrbLintSexprBinding {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintSexprBindingCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintSexprBinding, OrbLintSexprBindingCli
+}

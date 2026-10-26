@@ -1,7 +1,7 @@
 app std-behavior-playground [
   version: "1.0.0",
   theme: "linear-clean-light",
-  description: "std-behavior-playground — browse every installed behavior by package and topic, open one and play with it: it runs live in place (the behavior value embedded, as a page would mount it), its state machines open drillable in std-avl-cosmic-zoom (system map, then each trait's machine, then one transition as circuits, with Step running transitions on the kernel), its .lolo source file reads in a code view, and an inspector lists its package, topic, level and knobs. The topic tree, the cards, search and Details are std-behavior-catalog's (scope, starting topic and labels are knobs); the frame is std-workspace-layout with a runtime panel showing the live trait states and event log. Serve it with `orb serve`.",
+  description: "std-behavior-playground — browse every installed behavior by package and topic, open one and play with it: it runs live in place (the behavior value embedded, as a page would mount it), its state machines open drillable in std-avl-cosmic-zoom (system map, then each trait's machine, then one transition as circuits, with Step running transitions on the kernel), its .lolo source file reads in a code view, and an inspector lists its package, topic, level and knobs. The topic tree, the cards, search and Details are std-behavior-catalog's (scope, starting topic and labels are knobs); the frame is std-workspace-layout with a runtime panel showing the live trait states and event log. It runs as a tab of std-launchpad.",
   egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 ;; @capabilities "browse installed behaviors by topic, run a behavior live, explore a behavior's state machines, read a behavior's source, inspect a behavior's knobs"
@@ -36,6 +36,9 @@ orbital BehaviorPlayground {
     sourceText : string = ""
     knobs : [PlaygroundKnob] = []
     check : "pending" | "valid" | "invalid" = pending
+    renderHeads : number @description "How many render-ui effects the opened program holds." = 0
+    renderOverlays : number @description "How many of those draw into the modal, drawer, overlay or toast slot." = 0
+    renders : "inline" | "overlay" | "none" @description "Where the opened program draws: in the page, only in overlay slots, or nowhere." = inline
     findings : [PlaygroundFinding] = []
     error : string = ""
     status : "browsing" | "opening" | "open" | "failed" = browsing
@@ -312,7 +315,10 @@ orbital BehaviorPlayground {
         (set @entity.knobs ?knobs)
         (set @entity.check (if ?valid valid invalid))
         (set @entity.findings ?findings)
+        (set @entity.renderHeads (- (array/len (str/split ?programJson "[\"render-ui\",")) 1))
+        (set @entity.renderOverlays (array/count (array/slice (str/split ?programJson "[\"render-ui\",") 1) (fn p (array/some ["\"modal\"", "\"drawer\"", "\"overlay\"", "\"toast\""] (fn s (str/startsWith @p @s))))))
         (set @entity.status open)
+        (emit LIVE_CLASSIFY {})
         (emit STAGE_SHOWN {})
       BEHAVIOR_LOADED -> opening when (!= ?behavior @entity.behavior)
       BEHAVIOR_FAILED -> failed when (= ?behavior @entity.behavior)
@@ -332,6 +338,12 @@ orbital BehaviorPlayground {
     state open {
       INIT -> browsing
         (emit STAGE_SHOWN {})
+      LIVE_CLASSIFY -> open when (= @entity.renderHeads 0)
+        (set @entity.renders none)
+      LIVE_CLASSIFY -> open when (and (> @entity.renderHeads 0) (= @entity.renderOverlays @entity.renderHeads))
+        (set @entity.renders overlay)
+      LIVE_CLASSIFY -> open when (and (> @entity.renderHeads 0) (< @entity.renderOverlays @entity.renderHeads))
+        (set @entity.renders inline)
       STAGE_SHOWN -> open
         (when (validate/required @entity.value)
         (render-ui main { type: stack, direction: vertical, gap: none, className: "h-full min-h-0", children: [
@@ -346,7 +358,9 @@ orbital BehaviorPlayground {
           { type: box, className: "flex-1 min-h-0 overflow-auto", children: [
             (if (= @entity.tab live)
               (if (= @entity.check valid)
-                { type: box, className: "h-full", children: [(object/set @entity.value "resolved" @entity.programJson)] }
+                (if (= @entity.renders inline)
+                  { type: box, className: "h-full", children: [(object/set @entity.value "resolved" @entity.programJson)] }
+                  { type: container, size: md, padding: lg, children: [{ type: alert, variant: info, title: "Nothing to show on its own", message: (if (= @entity.renders overlay) "This behavior draws only into overlay slots (modal, drawer, overlay or toast), which appear over a page that opens them, so it has no page of its own to show here. Its state machines and source are in the other tabs." "This behavior draws nothing: none of its traits renders a UI. Its state machines and source are in the other tabs.") }] })
                 { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: alert, variant: warning, title: "This behavior does not run on its own", message: "It does not validate alone (it expects a host that provides what it needs); its state machines and source are in the other tabs." }] (array/map @entity.findings (fn f { type: typography, content: (str/concat @f.code ": " @f.message), variant: caption }))) }] })
               (if (= @entity.tab machines)
                 { type: box, className: "h-[calc(100vh-9rem)] min-h-0", children: [@trait.PlaygroundCosmic] }
@@ -405,6 +419,9 @@ orbital BehaviorPlayground {
 
     emits {
       STAGE_SHOWN
+      LIVE_CLASSIFY { }
+        @description "Internal: decide from the opened program's render-ui effects whether it draws in the page, only in overlay slots, or nowhere."
+        @tier "internal"
       LOAD_BEHAVIOR -> external {
         behavior : string!
         value : behavior
@@ -435,6 +452,7 @@ orbital BehaviorPlayground {
       PlaygroundCosmic.CODE_REQUESTED -> CODE_REQUESTED
       PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
       PlaygroundLoader.BEHAVIOR_FAILED -> BEHAVIOR_FAILED
+      LIVE_CLASSIFY { }
       OPEN {
         behavior : string!
         description : string

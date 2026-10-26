@@ -1,0 +1,351 @@
+app std-orb-lint-event-wiring [
+  version: "1.0.0",
+  inbound: ["cli-lint-event-wiring"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-event-wiring - the `orb lint event-wiring <file>` command, the port of validate_event_wiring (circuit/cross_orbital/event_wiring.rs): ORB_X_ORPHAN_LISTENER (a source-scoped listen, not external and not a wildcard or cross-orbital source, whose event no trait emits, produces or handles: the declared emits and top-level emit effects of a trait, std-orb-produced-events' effect-tree productions, and every transition trigger), ORB_X_UNUSED_EMISSION (an emitted event nothing listens for and no trait handles, classified by std-orb-fired-events as a rendered dead control, a programmatic broadcast, an undecidable runtime-bound name or a stale declaration, with the exemptions for external scope, call-site emitsScope, config-knob offers and the unexercised offers of imported traits) and ORB_EMIT_UNROUTED_TO_HANDLER (a sibling trait with an arm for an event another trait fires, with no listens route delivering it). Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint event-wiring: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-event-wiring"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type EwNode = string | number | boolean | [EwNode?] | Map string EwNode?
+type EwSource = { kind : string, trait : string, orbital : string }
+type EwListen = { event : string, triggers : string, scope : string, source : EwSource }
+type EwEmit = { event : string, scope : string, definerKnob : string, scopeOverridden : boolean }
+type EwTransition = { event : string, effects : [EwNode?] }
+type EwMachine = { transitions : [EwTransition] }
+type EwTick = { effects : [EwNode?] }
+type EwSb = { behavior : string }
+type EwTrait = { name : string, sourceBehavior : EwSb?, emits : [EwEmit], listens : [EwListen], stateMachine : EwMachine, ticks : [EwTick] }
+type EwOrbital = { name : string, traits : [EwTrait] }
+type EwProgram = { orbitals : [EwOrbital] }
+type EwEmitRec = { event : string!, scope : string!, knob : boolean!, ovr : boolean! }
+type EwListenRec = { event : string!, trig : string!, scope : string!, kind : string!, st : string!, so : string! }
+type EwRec = { o : string!, n : string!, imp : boolean!, dyn : boolean!, em : [EwEmitRec]!, ls : [EwListenRec]!, te : [string]!, top : [string]!, fe : [string]!, ae : [string]!, ps : [string]! }
+type EwRecMap = Map string [EwRec]
+type EwPair = { ev : string!, t : string!, key : string! }
+type EwPairMap = Map string [EwPair]
+type EwStrMap = Map string [string]
+type EwR = { s : [string]!, o : [string]!, a : [string]!, oa : [string]!, b : boolean! }
+type EwP = { p : [string]! }
+type PatternEventProp = { pattern : string!, prop : string!, field : string! }
+
+orbital OrbLintEventWiringOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Fired from "std/behaviors/std-orb-fired-events"
+  uses Produced from "std/behaviors/std-orb-produced-events"
+
+  entity OrbLintEventWiringRun [runtime] {
+    id : string!
+    scope : string = ""
+    program : EwProgram = {}
+    progScope : string = "<p>"
+    firedScope : string = "<f>"
+    producedScope : string = "<r>"
+    byControl : Map string [string] = {}
+    byEffect : Map string [string] = {}
+    pControl : Map string [string] = {}
+    pEffect : Map string [string] = {}
+    names : [string] = []
+    busExcluded : [string] = []
+    haveNames : boolean = false
+    haveBus : boolean = false
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintEventWiring -> OrbLintEventWiringRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.program @payload.program)
+        (set @entity.progScope @payload.scope)
+        (set @entity.scope @payload.scope)
+        (emit LINT_TRY { })
+      FIRED_HEARD -> ready
+        (set @entity.byControl @payload.byControl)
+        (set @entity.byEffect @payload.byEffect)
+        (set @entity.firedScope @payload.scope)
+        (emit LINT_TRY { })
+      PRODUCED_HEARD -> ready
+        (set @entity.pControl @payload.byControl)
+        (set @entity.pEffect @payload.byEffect)
+        (set @entity.producedScope @payload.scope)
+        (emit LINT_TRY { })
+      PROPS_HEARD -> ready
+        (set @entity.names @payload.names)
+        (set @entity.haveNames true)
+        (emit LINT_TRY { })
+      SEMANTICS_HEARD -> ready
+        (set @entity.busExcluded @payload.busExcluded)
+        (set @entity.haveBus true)
+        (emit LINT_TRY { })
+      LINT_TRY -> ready when (and (= @entity.progScope @entity.firedScope) (= @entity.firedScope @entity.producedScope) @entity.haveNames @entity.haveBus)
+        (set @entity.findings (let ((nos : [string] [])
+                (nof : [OrbFinding] [])
+                (notd : [EwTrait] [])
+                (noem : [EwEmit] [])
+                (nolis : [EwListen] [])
+                (notr : [EwTransition] [])
+                (notk : [EwTick] [])
+                (noef : [EwNode?] [])
+                (nop : [EwPair] [])
+                (norec : [EwRec] [])
+                (nr : EwR { s: [], o: [], a: [], oa: [], b: false })
+                (np : EwP { p: [] })
+                (bc @entity.byControl) (be @entity.byEffect) (pc @entity.pControl) (pe @entity.pEffect)
+                (bus @entity.busExcluded)
+                (names @entity.names)
+                (nameSet (or (object/fromEntries (array/map @entity.names (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
+                (orbitals (object/get @entity.program "orbitals" [])))
+            (let ((recs (array/flatten (array/map @orbitals (fn o
+  (let ((on (object/get @o "name" "")))
+    (array/map (array/filter (object/get @o "traits" @notd) (fn t0 (object/has @t0 "stateMachine"))) (fn t
+      (let ((tEff (array/flatten (array/map (object/get @t "stateMachine.transitions" @notr) (fn x (object/get @x "effects" @noef)))))
+            (kEff (array/flatten (array/map (object/get @t "ticks" @notk) (fn x (object/get @x "effects" @noef))))))
+        (let ((fT (tree/fold @tEff (fn (n k)
+  (if (validate/array @n)
+    (let ((kr (array/map @k (fn r (if (= @r null) @nr @r)))))
+      (let ((isFA (and (>= (array/len @n) 1) (validate/string (array/nth @n 0)) (array/includes ["fetch", "persist"] (array/nth @n 0)))))
+        { s: (array/concat (array/concat (if (and (>= (array/len @n) 2) (validate/string (array/nth @n 0)) (= (array/nth @n 0) "emit")) (let ((x1 (array/nth @n 1))) (if (validate/string @x1) [@x1] @nos)) @nos) (array/flatten (array/map @kr (fn r (object/get @r "o"))))) (array/flatten (array/map @kr (fn r (object/get @r "s"))))),
+          o: @nos,
+          a: (array/concat (if @isFA (array/flatten (array/map @kr (fn r (object/get @r "oa")))) @nos) (array/flatten (array/map @kr (fn r (object/get @r "a"))))),
+          oa: @nos,
+          b: (array/some @kr (fn r (object/get @r "b"))) }))
+    (if (validate/object @n)
+      (let ((e (object/get @n "emit" null)) (kr (array/map (object/values @k) (fn r (if (= @r null) @nr @r)))))
+        { s: @nos,
+          a: @nos,
+          o: (if (validate/string @e) [@e] @nos),
+          oa: (if (validate/object @e) (array/flatten (array/map (object/values @e) (fn v (if (and (validate/string @v) (!= @v "")) [@v] @nos)))) @nos),
+          b: (or (array/some (array/filter (object/keys @n) (fn key (and (not (str/includes @key ".")) (object/has @nameSet (str/replaceAll (str/replaceAll @key "~" "~t") "." "~d"))))) (fn key (let ((v (object/get @n @key null))) (and (validate/string @v) (str/startsWith @v (quote "@"))))))
+                 (array/some @kr (fn r (object/get @r "b")))) })
+      @nr))) "EwNode"))
+              (fK (tree/fold @kEff (fn (n k)
+  (if (validate/array @n)
+    (let ((kr (array/map @k (fn r (if (= @r null) @nr @r)))))
+      (let ((isFA (and (>= (array/len @n) 1) (validate/string (array/nth @n 0)) (array/includes ["fetch", "persist"] (array/nth @n 0)))))
+        { s: (array/concat (array/concat (if (and (>= (array/len @n) 2) (validate/string (array/nth @n 0)) (= (array/nth @n 0) "emit")) (let ((x1 (array/nth @n 1))) (if (validate/string @x1) [@x1] @nos)) @nos) (array/flatten (array/map @kr (fn r (object/get @r "o"))))) (array/flatten (array/map @kr (fn r (object/get @r "s"))))),
+          o: @nos,
+          a: (array/concat (if @isFA (array/flatten (array/map @kr (fn r (object/get @r "oa")))) @nos) (array/flatten (array/map @kr (fn r (object/get @r "a"))))),
+          oa: @nos,
+          b: (array/some @kr (fn r (object/get @r "b"))) }))
+    (if (validate/object @n)
+      (let ((e (object/get @n "emit" null)) (kr (array/map (object/values @k) (fn r (if (= @r null) @nr @r)))))
+        { s: @nos,
+          a: @nos,
+          o: (if (validate/string @e) [@e] @nos),
+          oa: (if (validate/object @e) (array/flatten (array/map (object/values @e) (fn v (if (and (validate/string @v) (!= @v "")) [@v] @nos)))) @nos),
+          b: (or (array/some (array/filter (object/keys @n) (fn key (and (not (str/includes @key ".")) (object/has @nameSet (str/replaceAll (str/replaceAll @key "~" "~t") "." "~d"))))) (fn key (let ((v (object/get @n @key null))) (and (validate/string @v) (str/startsWith @v (quote "@"))))))
+                 (array/some @kr (fn r (object/get @r "b")))) })
+      @nr))) "EwNode")))
+          { o: @on,
+            n: (object/get @t "name" ""),
+            imp: (object/has @t "sourceBehavior"),
+            dyn: (and (> (array/len @names) 0) (or (object/get (if (= @fT null) @nr @fT) "b") (object/get (if (= @fK null) @nr @fK) "b"))),
+            em: (array/map (object/get @t "emits" @noem) (fn x { event: (object/get @x "event" ""), scope: (object/get @x "scope" ""), knob: (!= (object/get @x "definerKnob" null) null), ovr: (= (object/get @x "scopeOverridden" false) true) })),
+            ls: (array/map (object/get @t "listens" @nolis) (fn l (let ((s (object/get @l "source" {}))) { event: (object/get @l "event" ""), trig: (object/get @l "triggers" (object/get @l "event" "")), scope: (object/get @l "scope" ""), kind: (object/get @s "kind" ""), st: (object/get @s "trait" ""), so: (object/get @s "orbital" "") }))),
+            te: (array/map (object/get @t "stateMachine.transitions" @notr) (fn x (object/get @x "event" ""))),
+            top: (array/flatten (array/map @tEff (fn e (if (and (validate/array @e) (>= (array/len @e) 2) (validate/string (array/nth @e 0)) (= (array/nth @e 0) "emit")) (let ((x1 (array/nth @e 1))) (if (validate/string @x1) [@x1] @nos)) (if (validate/object @e) (let ((x2 (object/get @e "emit" null))) (if (validate/string @x2) [@x2] @nos)) @nos))))),
+            fe: (array/concat (object/get (if (= @fT null) @nr @fT) "s") (object/get (if (= @fK null) @nr @fK) "s")),
+            ae: (object/get (if (= @fT null) @nr @fT) "a"),
+            ps: (let ((pe2 (array/filter (array/concat @tEff @kEff) (fn e (and (validate/array @e) (> (array/len @e) 0) (= (array/nth @e 0) "persist")))))) (if (= (array/len @pe2) 0) @nos (object/get (tree/fold @pe2 (fn (n k) (if (validate/string @n) { p: [@n] } (if (validate/array @n) { p: (array/flatten (array/map @k (fn r (object/get (if (= @r null) @np @r) "p")))) } (if (validate/object @n) { p: (array/flatten (array/map (object/values @k) (fn r (object/get (if (= @r null) @np @r) "p")))) } @np)))) "EwNode") "p"))) }))))))))))
+              (let ((internalOf (fn r (array/map (array/filter (object/get @r "em") (fn x (= (object/get @x "scope") "internal"))) (fn x (object/get @x "event")))))
+                    (emPairs (array/flatten (array/map @recs (fn r
+                      (let ((internal (array/map (array/filter (object/get @r "em") (fn x (= (object/get @x "scope") "internal"))) (fn x (object/get @x "event")))) (n (object/get @r "n")))
+                        (array/concat
+                          (array/map (array/filter (object/get @r "em") (fn x (!= (object/get @x "scope") "internal"))) (fn x { ev: (object/get @x "event"), t: @n, key: (str/concat (object/get @x "event") "|" @n) }))
+                          (array/map (array/filter (object/get @r "top") (fn e (not (array/includes @internal @e)))) (fn e { ev: @e, t: @n, key: (str/concat @e "|" @n) }))))))))
+                    (softEvs (array/flatten (array/map @recs (fn r
+                      (let ((internal (array/map (array/filter (object/get @r "em") (fn x (= (object/get @x "scope") "internal"))) (fn x (object/get @x "event")))) (n (object/get @r "n")))
+                        (array/filter (array/concat (object/get @pc @n @nos) (object/get @pe @n @nos)) (fn e (not (array/includes @internal @e)))))))))
+                    (trigEvs (array/flatten (array/map @recs (fn r (object/get @r "te")))))
+                    (lisEvs (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "ls") (fn l (!= (object/get @l "scope") "external"))) (fn l (object/get @l "event")))))))
+                    (psAll (array/flatten (array/map @recs (fn r (object/get @r "ps"))))))
+                (let ((emU : [EwPair] (let ((g : EwPairMap (array/groupBy @emPairs "key"))) (array/map (array/sort (object/keys @g)) (fn kk (array/first (object/get @g @kk))))))
+                      (emSet (or (object/fromEntries (array/map @emPairs (fn x [(object/get @x "ev"), true]))) {}))
+                      (softSet (or (object/fromEntries (array/map @softEvs (fn x [@x, true]))) {}))
+                      (trigSet (or (object/fromEntries (array/map @trigEvs (fn x [@x, true]))) {}))
+                      (lisSet (or (object/fromEntries (array/map @lisEvs (fn x [@x, true]))) {}))
+                      (impSet (or (object/fromEntries (array/map (array/filter @recs (fn r (object/get @r "imp"))) (fn x [(object/get @x "n"), true]))) {}))
+                      (dynSet (or (object/fromEntries (array/map (array/filter @recs (fn r (object/get @r "dyn"))) (fn x [(object/get @x "n"), true]))) {}))
+                      (expSet (or (object/fromEntries (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "em") (fn x (= (object/get @x "scope") "external"))) (fn x [(str/concat (object/get @r "n") "|" (object/get @x "event")), true])))))) {}))
+                      (csSet (or (object/fromEntries (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "em") (fn x (and (= (object/get @x "scope") "external") (object/get @x "ovr")))) (fn x [(str/concat (object/get @r "n") "|" (object/get @x "event")), true])))))) {}))
+                      (offSet (or (object/fromEntries (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "em") (fn x (object/get @x "knob"))) (fn x [(str/concat (object/get @r "n") "|" (object/get @x "event")), true])))))) {})))
+                  (let ((orphanPairs : [EwPair] (let ((g : EwPairMap (array/groupBy (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "ls") (fn l (and (!= (object/get @l "scope") "external") (!= (object/get @l "kind") "any") (!= (object/get @l "kind") "orbital") (not (object/has @emSet (object/get @l "event"))) (not (object/has @softSet (object/get @l "event"))) (not (object/has @trigSet (object/get @l "event")))))) (fn l { ev: (object/get @l "event"), t: (object/get @r "n"), key: (str/concat (object/get @l "event") "|" (object/get @r "n")) }))))) "key"))) (array/map (array/sort (object/keys @g)) (fn kk (array/first (object/get @g @kk))))))
+                        (byOrb : EwRecMap (array/groupBy @recs "o")))
+                    (array/concat
+                      (array/concat
+                        (array/map @orphanPairs (fn p { code: "ORB_X_ORPHAN_LISTENER", path: (str/concat "traits." (object/get @p "t")), message: (str/concat "Trait '" (object/get @p "t") "' listens for event '" (object/get @p "ev") "' but no trait emits it"), suggestion: "Ensure the event is emitted by another trait or remove the listener", severity: "error" }))
+                        (array/flatten (array/map (array/filter @emU (fn p (and (!= (object/get @p "ev") "INIT") (not (object/has @lisSet (object/get @p "ev"))) (not (object/has @trigSet (object/get @p "ev")))))) (fn p
+                          (let ((e (object/get @p "t")) (ev (object/get @p "ev")))
+                            (let ((key (str/concat @e "|" @ev))
+                                  (byCtl (array/includes (object/get @bc @e @nos) @ev))
+                                  (produced (or (array/includes (object/get @bc @e @nos) @ev) (array/includes (object/get @be @e @nos) @ev)))
+                                  (imported (object/has @impSet @e))
+                                  (undec (object/has @dynSet @e)))
+                              (if (or (and (not (and @imported @byCtl)) (object/has @expSet @key)) (object/has @csSet @key) (object/has @offSet @key)) []
+                                (if (and @imported (or (and @produced (not @byCtl)) @undec (and (not @produced) (not (array/includes @psAll @ev))))) []
+                                  [{ code: "ORB_X_UNUSED_EMISSION", path: (str/concat "traits." @e), message: (str/concat "Trait '" @e "' emits event '" @ev "' but no trait listens for it" (if @undec " (the event name is bound at runtime, so reachability cannot be decided statically)" (if @byCtl " — and a RENDERED control here fires it, so the affordance is dead and the value it carries is discarded" (if @produced " — this composition broadcasts it programmatically, and the collector for it was not composed here" " (nothing in this composition fires it, so this is a stale declaration rather than a dead control)")))), suggestion: (if @imported (str/concat "This trait is composed from an imported behavior, so THIS file is the consumer its `-> external` emit was declared for. Wire it at the call site: rename the event onto one you handle (`events { " @ev ": <YOUR_EVENT> }`) and add a matching transition arm, or add `listens { " @e "." @ev " -> <TRIGGER> }`. Re-declaring it `-> external` no longer suppresses this — that only defers an emit whose trait is DECLARED here.") (str/concat "Consume it where it fires: add a transition arm `" @ev " -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config")), severity: "error" }]))))))))
+                      (array/flatten (array/map @orbitals (fn o
+                        (let ((on (object/get @o "name" "")))
+                          (let ((gs : [EwRec] (object/get @byOrb @on @norec)))
+                            (let ((fmap : EwStrMap (or (object/fromEntries (array/map @gs (fn r [(object/get @r "n"), (array/unique (array/concat (array/filter (object/get @r "fe") (fn e (array/includes (object/get @be (object/get @r "n") @nos) @e))) (object/get @r "ae")))]))) {})))
+                              (array/flatten (array/map @gs (fn em
+                                (let ((en (object/get @em "n")))
+                                  (array/flatten (array/map (array/sort (object/get @fmap @en @nos)) (fn ev
+                                    (if (array/includes @bus @ev) []
+                                      (array/flatten (array/map @gs (fn h
+                                        (let ((hn (object/get @h "n")))
+                                          (let ((bothSelf (and (array/includes (object/get @em "te") @ev) (array/includes (object/get @fmap @hn @nos) @ev))))
+                                            (if (or (= @hn @en) (not (array/includes (object/get @h "te") @ev)) @bothSelf) []
+                                              (let ((aud (array/some (object/get @h "ls") (fn l (and (= (object/get @l "trig") @ev) (or (= (object/get @l "kind") "trait") (= (object/get @l "kind") "orbital"))))))
+                                                    (selfFed (array/includes (object/get @bc @hn @nos) @ev)))
+                                                (if (or (array/some (object/get @h "ls") (fn l (and (= (object/get @l "event") @ev) (or (= (object/get @l "kind") "") (= (object/get @l "kind") "any") (and (= (object/get @l "kind") "trait") (= (object/get @l "st") @en)) (and (= (object/get @l "kind") "orbital") (= (object/get @l "so") @on) (= (object/get @l "st") @en))))))
+                                                        (and (or @aud @selfFed)
+                                                             (array/some @gs (fn t2 (and (!= (object/get @t2 "n") @en) (array/includes (object/get @t2 "te") @ev)
+                                                               (array/some (object/get @t2 "ls") (fn l (and (= (object/get @l "event") @ev) (or (= (object/get @l "kind") "") (= (object/get @l "kind") "any") (and (= (object/get @l "kind") "trait") (= (object/get @l "st") @en)) (and (= (object/get @l "kind") "orbital") (= (object/get @l "so") @on) (= (object/get @l "st") @en))))))))))) []
+                                                  [{ code: "ORB_EMIT_UNROUTED_TO_HANDLER", path: (str/concat "orbitals." @on ".traits." @en), message: (str/concat "Trait '" @en "' emits '" @ev "' and trait '" @hn "' has an arm for it, but no declared route delivers it — events reach another trait only through `listens`"), suggestion: (str/concat "Add `listens { " @en "." @ev " -> " @ev " }` on '" @hn "'"), severity: "error" }])))))))))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_TRY -> ready when (not (and (= @entity.progScope @entity.firedScope) (= @entity.firedScope @entity.producedScope) @entity.haveNames @entity.haveBus))
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "event-wiring", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+      LINT_TRY { }
+        @description "Internal: compute once every answer is in for the scope."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EwProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
+        @description "std-orb-fired-events' FIRED_EVENTS: the events each trait's controls and effects fire."
+      PRODUCED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
+        @description "std-orb-produced-events' PRODUCED_EVENTS: the events each trait's effect trees produce."
+      PROPS_HEARD { names : [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      SEMANTICS_HEARD { busExcluded : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the events the bus never delivers."
+      OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
+      OrbProducedEvents.PRODUCED_EVENTS -> PRODUCED_HEARD
+      OrbLintInput.LINT_EVENT_PROPS -> PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> SEMANTICS_HEARD
+
+    }
+  }
+
+  trait OrbLintEventWiringCli -> OrbLintEventWiringRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint event-wiring <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "event-wiring") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint event-wiring: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "event-wiring") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint event-wiring: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-event-wiring" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint event-wiring` with its arguments and working directory."
+        @synonyms "orb lint event-wiring"
+      OrbLintEventWiring.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait OrbFiredEvents = Fired.traits.OrbFiredEvents {
+    listens {
+      FIRED_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      FIRED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : EwProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD
+      OrbLintInput.LINT_INPUT -> FIRED_INPUT_HEARD
+    }
+  }
+  trait OrbProducedEvents = Produced.traits.OrbProducedEvents {
+    listens {
+      PRODUCED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      PRODUCED_PATTERNS_HEARD { byPattern : [PatternEventProp]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: each pattern's event props and event-list fields."
+      PRODUCED_SLOTS_HEARD { emitSlots : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the emit option slots the operator table declares."
+      PRODUCED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : EwProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_EVENT_PROPS -> PRODUCED_PATTERNS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> PRODUCED_SEMANTICS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> PRODUCED_SLOTS_HEARD
+      OrbLintInput.LINT_INPUT -> PRODUCED_INPUT_HEARD
+    }
+  }
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintEventWiringCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintEventWiringOrbitalStart -> OrbLintEventWiring, OrbLintEventWiringCli, OrbLintInput, OrbFiredEvents, OrbProducedEvents, Packs, Versions
+}

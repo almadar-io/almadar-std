@@ -1,0 +1,195 @@
+app std-orb-lint-host-effects [
+  version: "1.0.0",
+  inbound: ["cli-lint-host-effects"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-host-effects — the `orb lint host-effects <file>` command, the port of effect/host_effects.rs (validate_host_effects): every call of an operator the installed operator table marks `closedCall` (random-bytes, access-check and the credential-* effects), found at any depth of a guard or effect of an inline trait. The operators, their arity bounds, the integer range of an argument, whether the first parameter is a request object with its declared and required fields, and the options keys all come from the table through std-orb-lint-host-calls, never from this atom. Reports ORB_HOST_EFFECT_ARITY (the call has fewer or more arguments than the table allows), ORB_RANDOM_BYTES_COUNT (a literal number at the table's intRange argument that is not a whole number inside the range), ORB_CREDENTIAL_REQUEST_INVALID (a literal request that is not an object, carries a field the table does not declare, or lacks a required one; a binding is the runtime's to check) and ORB_HOST_EFFECT_OPTION_UNKNOWN (an options argument that is not an object or carries a key the table does not declare). The key and emit-block findings of these calls belong to std-orb-lint-keyed-call-keys and the emit-config rules. Findings carry the Rust path (the guard or effect), message and suggestion (status 500, exit 1). Clean answers `lint host-effects: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-host-effects"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type HcVal = string | number | boolean | [HcVal?] | Map string HcVal?
+type HcOrbital = { name : string, traits : [HcVal] }
+type HcCall = { head : string!, path : string!, call : [HcVal?]!, tname : string!, tick : string!, bg : boolean!, declared : [string]! }
+type HcType = string | HcTypeNode
+type HcTypeNode = { kind : string!, fields : Map string HcType?, optional : [string]? }
+type HcParam = { name : string!, optional : boolean?, type : HcType }
+type HcIntRange = { arg : number!, min : number!, max : number! }
+type HcClosed = { request : boolean?, intRange : HcIntRange? }
+type HcOauthOp = { name : string!, required : [string]!, optional : [string]!, endpoint : string? }
+type HcOauth = { endpointTarget : string!, endpointKinds : [string]!, ops : [HcOauthOp]! }
+type HcGrantNeed = Map string HcVal
+type HcFact = { minArity : number!, maxArity : number?, runsOn : string?, host : string?, params : [HcParam]!, closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, hasOptions : boolean!, optionKeys : [string]!, emitKeys : [string]!, hasRequest : boolean!, requestFields : [string]!, requestRequired : [string]!, words : Map string [string]!, keys : Map string [string]! }
+type HcValMap = Map string HcVal?
+type LnVal = string | number | boolean | [LnVal?] | Map string LnVal?
+type LnProgram = { orbitals : [HcOrbital] }
+
+
+orbital OrbLintHostEffectsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Calls from "std/behaviors/std-orb-lint-host-calls"
+
+
+  entity OrbLintHostEffectsRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+
+  }
+
+  trait OrbLintHostEffects -> OrbLintHostEffectsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (emit HOST_CALLS_COLLECT { requestId: (str/concat "host-effects:" @payload.scope), orbitals: (object/get @payload.program "orbitals" []), heads: [], operators: [], fields: ["closedCall"] })
+      HOST_CALLS_HEARD -> ready when (and (str/startsWith @payload.requestId "host-effects:") @payload.unread)
+        (set @entity.findings [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table could not be read, so the closed host calls are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }])
+        (emit LINT_FINISH { })
+      HOST_CALLS_HEARD -> ready when (and (str/startsWith @payload.requestId "host-effects:") (not @payload.unread))
+        (set @entity.findings (let ((facts @payload.facts))
+          (array/flatten (array/map @payload.calls (fn c
+            (let ((a (object/get @c "call")) (p (object/get @c "path")))
+              (let ((h (object/get @c "head")) (n (array/len @a)))
+                (let ((f (object/get @facts @h)))
+                  (let ((cc (object/get @f "closedCall")) (lo (+ (object/get @f "minArity") 1)))
+                    (let ((hi (+ (object/get @f "maxArity" (+ (object/get @f "minArity") 1)) 1)))
+                      (if (or (< @n @lo) (> @n @hi))
+                        [{ code: "ORB_HOST_EFFECT_ARITY", path: @p, message: (str/concat "`" @h "` takes " (if (= @lo 1) "only an optional options object" "one argument and an optional options object") ", got " (- @n 1)), suggestion: (if (= @lo 1) (str/concat "Write (" @h " { emit: { success: <EVENT> } })") (str/concat "Write (" @h " <arg> { emit: { success: <EVENT> } })")), severity: "error" }]
+                        (array/concat
+                          (let ((ir (object/get @cc "intRange" null)))
+                            (if (and (!= @ir null) (> @n (+ (object/get @ir "arg") 1)))
+                              (let ((v (array/nth @a (+ (object/get @ir "arg") 1))))
+                                (if (and (validate/number @v) (or (!= @v (math/floor @v)) (< @v (object/get @ir "min")) (> @v (object/get @ir "max"))))
+                                  [{ code: "ORB_RANDOM_BYTES_COUNT", path: @p, message: (str/concat "`" @h "` argument " (+ (object/get @ir "arg") 1) " is an integer from " (object/get @ir "min") " to " (object/get @ir "max") ", got " @v), suggestion: "Use a whole number of bytes such as 32", severity: "error" }]
+                                  []))
+                              []))
+                          (if (and (object/get @cc "request" false) (object/get @f "hasRequest"))
+                            (let ((req (array/nth @a 1)) (declared (object/get @f "requestFields" [])) (required (object/get @f "requestRequired" [])))
+                              (if (validate/object @req)
+                                (array/concat
+                                  (let ((bad (array/find (object/keys @req) (fn k (not (array/includes @declared @k))))))
+                                    (if (= @bad null) [] [{ code: "ORB_CREDENTIAL_REQUEST_INVALID", path: @p, message: (str/concat "`" @h "` takes only " (str/join @declared ", ") ", got `" @bad "`"), suggestion: "", severity: "error" }]))
+                                  (array/map (array/filter @required (fn k (not (object/has @req @k)))) (fn k { code: "ORB_CREDENTIAL_REQUEST_INVALID", path: @p, message: (str/concat "`" @h "` needs `" @k "` in its request"), suggestion: "", severity: "error" })))
+                                (if (validate/string @req)
+                                  (if (str/startsWith @req (quote "@")) [] [{ code: "ORB_CREDENTIAL_REQUEST_INVALID", path: @p, message: (str/concat "`" @h "` takes a request object, not text"), suggestion: "", severity: "error" }])
+                                  [{ code: "ORB_CREDENTIAL_REQUEST_INVALID", path: @p, message: (str/concat "`" @h "` takes a request object"), suggestion: "", severity: "error" }])))
+                            [])
+                          (if (<= @n @lo)
+                            []
+                            (let ((opt (array/nth @a @lo)) (allowed (object/get @f "optionKeys" [])))
+                              (if (validate/object @opt)
+                                (let ((bad (array/find (object/keys @opt) (fn k (not (array/includes @allowed @k))))))
+                                  (if (= @bad null) [] [{ code: "ORB_HOST_EFFECT_OPTION_UNKNOWN", path: @p, message: (str/concat "`" @h "` options accept only " (str/join @allowed " and ") ", got `" @bad "`"), suggestion: "", severity: "error" }]))
+                                [{ code: "ORB_HOST_EFFECT_OPTION_UNKNOWN", path: @p, message: (str/concat "`" @h "` options must be an object"), suggestion: "Write { emit: { success: <EVENT>, failure: <EVENT> } }", severity: "error" }])))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "host-effects", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+      HOST_CALLS_COLLECT -> external { requestId : string!  orbitals : [HcOrbital]!  heads : [string]!  operators : [string]!  fields : [string]! }
+        @description "Ask the shared collector for the calls this rule checks."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LnProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      HOST_CALLS_HEARD { requestId : string!  unread : boolean!  calls : [HcCall]!  facts : Map string HcFact! }
+        @description "The shared collector's answer: the calls of the asked heads and the table entries."
+      HostCalls.HOST_CALLS_COLLECTED -> HOST_CALLS_HEARD
+    }
+  }
+
+  trait OrbLintHostEffectsCli -> OrbLintHostEffectsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint host-effects <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "host-effects") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint host-effects: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "host-effects") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint host-effects: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-host-effects" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint host-effects` with its arguments and working directory."
+        @synonyms "orb lint host-effects"
+      OrbLintHostEffects.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintHostEffectsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+  trait HostCalls = Calls.traits.HostCalls {
+    listens {
+      OrbLintHostEffects.HOST_CALLS_COLLECT -> HOST_CALLS_COLLECT
+      LANGUAGE_PACKS_DONE_HEARD { problem : string!  coreRoot : string!  stdRoot : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished, with the installed @almadar/std root when it is compatible."
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+  page boot as OrbLintHostEffectsOrbitalStart -> OrbLintHostEffects, OrbLintHostEffectsCli, OrbLintInput, Packs, Versions, HostCalls
+}

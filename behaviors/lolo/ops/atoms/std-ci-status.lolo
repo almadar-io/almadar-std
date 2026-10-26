@@ -73,9 +73,10 @@ orbital CiStatusOrbital {
       INIT -> idle when @config.loadOnInit
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "Reading CI status…" })
         (emit CI_STATUS_LOAD { })
-      CI_RUN_OPEN -> idle when (and (!= @config.logsPage "") (= @payload.row.conclusion "failure"))
-        (navigate (str/concat "/" @config.logsPage "/" (array/nth (str/split @payload.id "/") 0) "/" (array/nth (str/split @payload.id "/") 1) "/" @payload.row.runId))
-      CI_RUN_OPEN -> idle when (not (and (!= @config.logsPage "") (= @payload.row.conclusion "failure")))
+      CI_RUN_OPEN -> idle when (= @payload.row.conclusion "failure")
+        (emit CI_RUN_SELECTED { owner: (array/nth (str/split @payload.id "/") 0), repo: (array/nth (str/split @payload.id "/") 1), runId: (str/concat @payload.row.runId) })
+        (when (!= @config.logsPage "") (navigate (str/concat "/" @config.logsPage "/" (array/nth (str/split @payload.id "/") 0) "/" (array/nth (str/split @payload.id "/") 1) "/" @payload.row.runId)))
+      CI_RUN_OPEN -> idle when (!= @payload.row.conclusion "failure")
       CI_STATUS_LOAD -> idle when (and @entity.hasCache (<= (- @now @entity.cachedAt) @config.cacheTtlMs))
         (emit CI_STATUS { runs: @entity.runs, fetchedAt: @entity.fetchedAt, stale: false })
         (render-ui @config.statusSlot { type: stack, direction: vertical, gap: md, children: [
@@ -188,6 +189,14 @@ orbital CiStatusOrbital {
         @description "The board: per repository its latest run's status, conclusion (absent while running), workflow name, url, run id and creation time, or status unknown; fetchedAt is when it was read, and stale says GitHub could not be read this time."
         @synonyms "ci board, build status, workflow runs"
         @tier "primary"
+      CI_RUN_SELECTED -> external {
+        owner : string!
+        repo : string!
+        runId : string!
+      }
+        @description "A failing row was clicked: the run to read the log of, for whatever shows run logs."
+        @synonyms "failed run picked, open run log"
+        @tier "primary"
       CI_GQL {
         query : string!
         variables : string!
@@ -241,7 +250,7 @@ orbital CiStatusOrbital {
         id : string!
         row : CiRunRow!
       }
-        @description "A board row was clicked: a failed run opens its log page when logsPage is set."
+        @description "A board row was clicked: a failed run is announced as CI_RUN_SELECTED, and opens its log page when logsPage is set."
         @synonyms "refresh ci status, reload runs"
       CI_ATTEMPT {
         key : CallKey!

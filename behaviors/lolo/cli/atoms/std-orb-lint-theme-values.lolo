@@ -1,0 +1,172 @@
+app std-orb-lint-theme-values [
+  version: "1.0.0",
+  inbound: ["cli-lint-theme-values"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-theme-values — the `orb lint theme-values <file>` command, the port of the inline-theme findings of theme.rs validate_theme_definition: ORB_GEN_INVALID_VALUE for a token color that is not a CSS color (hex of 3, 4, 6 or 8 digits, rgb, hsl, var(, or letters and hyphens), a radius or spacing that is not a CSS length (0, var(, a number with an optional px, rem, em, %, vh, vw, pt, ch or ex unit) and a malformed font-family stack (typeScale display, body and mono families, typography font-family keys), in the app theme and each orbital theme, in the tokens and in each variant (sorted by name), and ORB_E_MISSING_NAME for an inline theme with no name. It lowers the file with program/read and reports in the order of the Rust check (status 500, exit 1). Clean answers `lint theme-values: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-theme-values"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type ThVal = string | number | boolean | [ThVal?] | Map string ThVal?
+type ThMap = Map string string
+type ThScale = Map string ThVal
+type ThTokens = { colors : ThMap, radii : ThMap, spacing : ThMap, typography : ThMap, typeScale : ThScale }
+type ThVariant = { colors : ThMap, typography : ThMap, typeScale : ThScale }
+type ThDef = { name : string, tokens : ThTokens, variants : Map string ThVariant }
+type ThOrbital = { theme : string | ThDef }
+type ThProgram = { theme : string | ThDef, orbitals : [ThOrbital] }
+orbital OrbLintThemeValuesOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintThemeValuesRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintThemeValues -> OrbLintThemeValuesRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+          (let ((themes (array/concat
+                    (let ((t (object/get @payload.program "theme" null))) (if (validate/object @t) [{ p: "theme", d: @t }] []))
+                    (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+                      (let ((t (object/get (array/nth @orbitals @oi) "theme" null))) (if (validate/object @t) [{ p: (str/concat "orbitals[" @oi "].theme"), d: @t }] []))))))))
+            (let ((sites (array/flatten (array/map @themes (fn th
+                    (let ((p (object/get @th "p")) (d (object/get @th "d")))
+                      (let ((tk (object/get @d "tokens" {})) (vs (object/get @d "variants" {})))
+                        (let ((zero 0))
+                          (array/concat
+                            (if (and (validate/string (object/get @d "name" null)) (!= (object/get @d "name" "") "")) [] [{ path: (str/concat @p ".name"), value: "", kind: "name" }])
+                            (array/flatten (array/map [[(str/concat @p ".tokens.colors.") "color" (object/entries (object/get @tk "colors" {}))]
+                                                       [(str/concat @p ".tokens.radii.") "radius" (object/entries (object/get @tk "radii" {}))]
+                                                       [(str/concat @p ".tokens.spacing.") "spacing" (object/entries (object/get @tk "spacing" {}))]
+                                                       [(str/concat @p ".tokens.typeScale.") "font" (array/filter (array/map ["displayFamily" "bodyFamily" "monoFamily"] (fn k [@k (object/get (object/get @tk "typeScale" {}) @k null)])) (fn kv (validate/string (array/nth @kv 1))))]
+                                                       [(str/concat @p ".tokens.typography.") "font" (array/filter (object/entries (object/get @tk "typography" {})) (fn kv (str/startsWith (array/nth @kv 0) "font-family")))]]
+                              (fn g (array/map (array/filter (array/nth @g 2) (fn kv (validate/string (array/nth @kv 1)))) (fn kv { path: (str/concat (array/nth @g 0) (array/nth @kv 0)), value: (array/nth @kv 1), kind: (array/nth @g 1) })))))
+                            (array/flatten (array/map (array/sort (object/keys @vs)) (fn vn
+                              (let ((vr (object/get @vs @vn)) (vp (str/concat @p ".variants." @vn)))
+                                (array/flatten (array/map [[(str/concat @vp ".typeScale.") "font" (array/filter (array/map ["displayFamily" "bodyFamily" "monoFamily"] (fn k [@k (object/get (object/get @vr "typeScale" {}) @k null)])) (fn kv (validate/string (array/nth @kv 1))))]
+                                                           [(str/concat @vp ".typography.") "font" (array/filter (object/entries (object/get @vr "typography" {})) (fn kv (str/startsWith (array/nth @kv 0) "font-family")))]
+                                                           [(str/concat @vp ".colors.") "color" (object/entries (object/get @vr "colors" {}))]]
+                                  (fn g (array/map (array/filter (array/nth @g 2) (fn kv (validate/string (array/nth @kv 1)))) (fn kv { path: (str/concat (array/nth @g 0) (array/nth @kv 0)), value: (array/nth @kv 1), kind: (array/nth @g 1) }))))))))))))))))))
+              (array/map (array/filter @sites (fn s (let ((v (object/get @s "value")) (k (object/get @s "kind")))
+                  (if (= @k "name") true
+                    (if (= @k "font") (not (let ((st (array/reduce (str/split @v "") { q: "", d: 0, cur: "", items: [] } (fn a c
+                        (if (!= (object/get @a "q") "")
+                          { q: (if (= @c (object/get @a "q")) "" (object/get @a "q")), d: (object/get @a "d"), cur: (str/concat (object/get @a "cur") @c), items: (object/get @a "items") }
+                          (if (and (= @c ",") (= (object/get @a "d") 0))
+                            { q: "", d: 0, cur: "", items: (array/concat (object/get @a "items") [(str/trim (object/get @a "cur"))]) }
+                            { q: (if (or (= @c "\"") (= @c "'")) @c ""), d: (+ (object/get @a "d") (if (= @c "(") 1 (if (= @c ")") -1 0))), cur: (str/concat (object/get @a "cur") @c), items: (object/get @a "items") }))))))
+                  (and (= (object/get @st "q") "") (= (object/get @st "d") 0)
+                    (array/every (array/concat (object/get @st "items") [(str/trim (object/get @st "cur"))])
+                      (fn it (or (validate/pattern @it "^\"[^\"]+\"$") (validate/pattern @it "^'[^']+'$") (validate/pattern @it "^-?[A-Za-z][\\p{L}\\p{N}_-]*(?: [A-Za-z0-9][\\p{L}\\p{N}_-]*)*$") (validate/pattern @it "^var\\(--[\\p{L}\\p{N}_-]+(?:,.*)?\\)$")))))))
+                      (if (= @k "color") (not (let ((tv (str/trim @v))) (if (str/startsWith @tv "#") (validate/pattern @tv "^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$") (or (str/startsWith @tv "rgb") (str/startsWith @tv "hsl") (str/startsWith @tv "var(") (validate/pattern @tv "^[\\p{L}-]*$"))))) (not (let ((tv (str/trim @v))) (or (str/startsWith @tv "var(") (validate/pattern @tv "^(?:[+-]?(?:(?:[0-9]+\\.?[0-9]*|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?|[iI][nN][fF](?:[iI][nN][iI][tT][yY])?|[nN][aA][nN]))(?:px|rem|em|%|vh|vw|pt|ch|ex)?$"))))))))))
+                (fn s (let ((v (object/get @s "value")) (k (object/get @s "kind")))
+                  { code: (if (= @k "name") "ORB_E_MISSING_NAME" "ORB_GEN_INVALID_VALUE"), path: (object/get @s "path"),
+                    message: (if (= @k "name") "Theme name is required"
+                      (if (= @k "font") (str/concat "Malformed CSS font-family stack '" @v "' — separate every family with a comma and fully quote multi-word names")
+                        (if (= @k "color") (str/concat "Color value '" @v "' may not be a valid CSS color")
+                          (if (= @k "radius") (str/concat "Radius value '" @v "' may not be a valid CSS length") (str/concat "Spacing value '" @v "' may not be a valid CSS length"))))),
+                    suggestion: "", severity: "error" })))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "theme-values", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ThProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintThemeValuesCli -> OrbLintThemeValuesRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint theme-values <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "theme-values") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint theme-values: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "theme-values") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint theme-values: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-theme-values" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint theme-values` with its arguments and working directory."
+        @synonyms "orb lint theme-values"
+      OrbLintThemeValues.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintThemeValuesCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintThemeValuesOrbitalStart -> OrbLintThemeValues, OrbLintThemeValuesCli, OrbLintInput, Packs, Versions
+}

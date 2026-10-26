@@ -1,0 +1,21 @@
+app lint-service-def-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint service-def <file>`. It lowers the file with program/read and reports the service definition findings of service.rs: invalid references, empty names, bad or missing urls, secretEnv naming, zero timeouts, missing auth keyName, events, serverPath and capabilities, and duplicate inline service names (status 500, exit 1). Clean answers `lint service-def: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintServiceDefSpec {
+  expects trait OrbLintServiceDef {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintServiceDefCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintServiceDef, OrbLintServiceDefCli
+}

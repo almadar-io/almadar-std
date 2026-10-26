@@ -1,0 +1,21 @@
+app lint-set-column-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-set-column - the `orb lint set-column <file>` command, the port of ORB_SET_COLUMN_WITHOUT_ROW (entities/entity_mutation.rs). For every inline trait linked to a persistent entity (persistence unset or persistent) that never runs `persist create|upsert|update` of that entity (a `[shared]` entity also counts a sibling trait of the orbital that does, and `persist batch` list builders are followed) and binds no row with `(set @entity.id …)` anywhere, a transition is reported for each `(set @entity.<field> …)` it runs when its event carries no row (no `id` or `row` payload field, no payload field typed @entity, the entity or a list of it, no payload field stamped with the entity) unless the field is `@intrinsic`, a restate-persistor sibling persists the very payload the field is set from, or the field only scopes a read's `filter`. Reported at the transition with the Rust message and suggestion (status 500, exit 1). Clean answers `lint set-column: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintSetColumnSpec {
+  expects trait OrbLintSetColumn {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintSetColumnCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintSetColumn, OrbLintSetColumnCli
+}

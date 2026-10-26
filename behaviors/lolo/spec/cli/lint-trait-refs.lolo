@@ -1,0 +1,21 @@
+app lint-trait-refs-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-trait-refs - the `orb lint trait-refs <file>` command, the port of the trait reference, rebind and uniqueness checks of traits/trait_validator.rs. A trait entry of an orbital without a state machine is a reference: with neither `ref` nor `name` it is ORB_T_INVALID_FORMAT, naming a trait no orbital defines inline (and not a `std/` trait) it is ORB_T_UNDEFINED_TRAIT, and a `linkedEntity` no orbital declares (primary, auxiliary or expected entity) is ORB_E_INVALID_RELATION. An inline trait with an empty name is ORB_T_UNDEFINED_TRAIT at `.name` and an undeclared `linkedEntity` ORB_E_INVALID_RELATION. An inline trait imported from an atom (`sourceBehavior`) and rebound to an entity other than the atom's own is ORB_T_REBIND_TARGET_UNRESOLVED when the target names no entity of the program, else ORB_T_ENTITY_NOT_REBINDABLE when the atom's binding is not `@rebindable`, else ORB_T_REBIND_MISSING_FIELDS for the contract `requires` fields the target entity lacks. A trait name defined by more than one inline trait of the program is ORB_T_DUPLICATE_NAME at `orbitals`, once per name. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint trait-refs: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintTraitRefsSpec {
+  expects trait OrbLintTraitRefs {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintTraitRefsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintTraitRefs, OrbLintTraitRefsCli
+}

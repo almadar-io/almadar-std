@@ -1,0 +1,21 @@
+app lint-oauth-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint oauth <file>`: it reports ORB_OAUTH_CLIENT_INVALID, ORB_OAUTH_PROVIDER_UNKNOWN, ORB_OAUTH_OP_UNKNOWN, ORB_OAUTH_ENDPOINT_MISMATCH, ORB_OAUTH_REQUEST_CONFLICT and ORB_OAUTH_OPTION_UNKNOWN for the oauth-client auth of http calls and the oauth-authorize and oauth-connection effects, with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint oauth: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintOauthSpec {
+  expects trait OrbLintOauth {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintOauthCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintOauth, OrbLintOauthCli
+}

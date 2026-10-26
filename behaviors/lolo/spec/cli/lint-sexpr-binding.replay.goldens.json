@@ -1,0 +1,850 @@
+{
+  "atom": "cli/atoms/std-orb-lint-sexpr-binding.lolo",
+  "trait": "OrbLintSexprBinding",
+  "note": "Cases pin the binding checks of sexpr/binding.rs (SEXPR_INVALID_BINDING, SEXPR_UNKNOWN_ENTITY, ORB_BINDING_STATE_NO_PATH with this pass's message); expected findings are what `orb validate --json` reports on the same fixtures (sxb-a.lolo, sxb-b.orb, sxb-c.orb), leaving out the other pass's differently worded ORB_BINDING_STATE_NO_PATH.",
+  "cases": [
+    {
+      "id": "state-now-paths-and-unknown-entities-in-guard-and-effects",
+      "steps": [
+        {
+          "trait": "OrbLintSexprBinding",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "name": "SxbAOrbital",
+                  "entity": {
+                    "name": "SxbRun",
+                    "fields": [
+                      {
+                        "nullable": false,
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "s",
+                        "type": "string",
+                        "default": ""
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "SxbT",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "guard": [
+                              "=",
+                              "@state.x",
+                              "a"
+                            ],
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.s",
+                                "@state.name"
+                              ],
+                              [
+                                "set",
+                                "@entity.s",
+                                "@now.t"
+                              ],
+                              [
+                                "set",
+                                "@entity.s",
+                                [
+                                  "str/concat",
+                                  "@Nowhere.x",
+                                  "@Ghost",
+                                  "a"
+                                ]
+                              ],
+                              [
+                                "set",
+                                "@entity.s",
+                                "@SxbRun.s"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSexprBinding",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sexpr-binding",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_BINDING_STATE_NO_PATH",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].guard[1]",
+                      "message": "@state should not have a path",
+                      "suggestion": "Use @state without path",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_BINDING_STATE_NO_PATH",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[0][2]",
+                      "message": "@state should not have a path",
+                      "suggestion": "Use @state without path",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_BINDING_STATE_NO_PATH",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[1][2]",
+                      "message": "@now should not have a path",
+                      "suggestion": "Use @now without path",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[2][2][1]",
+                      "message": "Entity 'Nowhere' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[2][2][2]",
+                      "message": "Entity 'Ghost' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "lambda-let-scopes-defaults-ticks-holds-ensures-and-expects",
+      "steps": [
+        {
+          "trait": "OrbLintSexprBinding",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "name": "SxbAOrbital",
+                  "entity": {
+                    "name": "SxbRun",
+                    "fields": [
+                      {
+                        "nullable": false,
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "s",
+                        "type": "string",
+                        "default": ""
+                      },
+                      {
+                        "name": "z",
+                        "type": "string",
+                        "default": "@Zed"
+                      },
+                      {
+                        "name": "n",
+                        "type": "string",
+                        "default": "@SxbRun"
+                      },
+                      {
+                        "name": "nest",
+                        "type": "object",
+                        "properties": {
+                          "inner": {
+                            "name": "inner",
+                            "type": "string",
+                            "default": "@Deep.x"
+                          },
+                          "arr": {
+                            "name": "arr",
+                            "type": "array",
+                            "items": {
+                              "name": "it",
+                              "type": "string",
+                              "default": "@Lvl3"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "name": "ok",
+                        "type": "string",
+                        "default": [
+                          "str/concat",
+                          "@entity.id",
+                          "@now"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "SxbT",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "holds": [
+                              "=",
+                              "@HoldE",
+                              "a"
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.s",
+                                [
+                                  "array/map",
+                                  "@entity.list",
+                                  [
+                                    "fn",
+                                    [
+                                      "Row"
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "@Row",
+                                      "@Row2"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "set",
+                                "@entity.s",
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "Foo",
+                                      "a"
+                                    ],
+                                    [
+                                      "Bar",
+                                      "@Foo"
+                                    ]
+                                  ],
+                                  [
+                                    "str/concat",
+                                    "@Foo",
+                                    "@Bar",
+                                    "@Baz"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "set",
+                                "@entity.s",
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "Aa",
+                                      "@Bb"
+                                    ],
+                                    [
+                                      "Bb",
+                                      "a"
+                                    ]
+                                  ],
+                                  [
+                                    "str/concat",
+                                    "@Aa",
+                                    "@Bb"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "set",
+                                "@entity.s",
+                                [
+                                  "array/map",
+                                  "@entity.list",
+                                  [
+                                    "fn",
+                                    "Xx",
+                                    [
+                                      "str/concat",
+                                      "@Xx",
+                                      "@Yy"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "set",
+                                "@entity.s",
+                                [
+                                  "str/concat",
+                                  "@state.a",
+                                  "@Missing.b",
+                                  "@",
+                                  "@.x",
+                                  "@SxbRun.s"
+                                ]
+                              ],
+                              [
+                                "set",
+                                "@entity.s",
+                                [
+                                  "let",
+                                  {
+                                    "Oo": "@Pp",
+                                    "Pp": "@Oo"
+                                  },
+                                  [
+                                    "str/concat",
+                                    "@Oo",
+                                    "@Qq"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "set",
+                                "@entity.s",
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "Zz",
+                                      "a",
+                                      "@Extra"
+                                    ],
+                                    [
+                                      "Ww"
+                                    ]
+                                  ],
+                                  [
+                                    "str/concat",
+                                    "@Zz",
+                                    "@Ww"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "set",
+                                "@entity.s",
+                                [
+                                  [
+                                    "@Head",
+                                    "@Tail"
+                                  ],
+                                  {
+                                    "k": "@Val",
+                                    "m": [
+                                      "@Inner"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              [
+                                "set",
+                                "@entity.s",
+                                [
+                                  "str/concat",
+                                  "@Foo[0].x",
+                                  "@state.",
+                                  "@now[0]"
+                                ]
+                              ]
+                            ],
+                            "ensures": [
+                              [
+                                "=",
+                                "@EnsE",
+                                "a"
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "G2",
+                            "guard": [
+                              "and",
+                              [
+                                "=",
+                                "@GuardE",
+                                "a"
+                              ],
+                              "@Other"
+                            ]
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.s",
+                              [
+                                "str/concat",
+                                "@Tick1",
+                                "@now.x"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Expected"
+                    },
+                    {
+                      "kind": "identity",
+                      "name": "Idn"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSexprBinding",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sexpr-binding",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[0][2][2][2][2]",
+                      "message": "Entity 'Row2' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[1][2][2][3]",
+                      "message": "Entity 'Baz' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[2][2][1][0][1]",
+                      "message": "Entity 'Bb' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[3][2][2][2][2]",
+                      "message": "Entity 'Yy' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_BINDING_STATE_NO_PATH",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[4][2][1]",
+                      "message": "@state should not have a path",
+                      "suggestion": "Use @state without path",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[4][2][2]",
+                      "message": "Entity 'Missing' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_INVALID_BINDING",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[4][2][3]",
+                      "message": "Invalid binding: '@'",
+                      "suggestion": "Bindings should be @root.field format",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_INVALID_BINDING",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[4][2][4]",
+                      "message": "Invalid binding: '@.x'",
+                      "suggestion": "Bindings should be @root.field format",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[5][2][2][2]",
+                      "message": "Entity 'Qq' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[7][2][0][0]",
+                      "message": "Entity 'Head' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[7][2][0][1]",
+                      "message": "Entity 'Tail' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[7][2][1].k",
+                      "message": "Entity 'Val' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[7][2][1].m[0]",
+                      "message": "Entity 'Inner' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[8][2][1]",
+                      "message": "Entity 'Foo[0]' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_BINDING_STATE_NO_PATH",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].effects[8][2][2]",
+                      "message": "@state should not have a path",
+                      "suggestion": "Use @state without path",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[1].ensures[0][1]",
+                      "message": "Entity 'EnsE' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[2].guard[1][1]",
+                      "message": "Entity 'GuardE' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.transitions[2].guard[2]",
+                      "message": "Entity 'Other' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].stateMachine.states[0].holds[1]",
+                      "message": "Entity 'HoldE' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].ticks[0].effects[0][2][1]",
+                      "message": "Entity 'Tick1' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_BINDING_STATE_NO_PATH",
+                      "path": "orbitals[0 (SxbAOrbital)].traits[0 (SxbT)].ticks[0].effects[0][2][2]",
+                      "message": "@now should not have a path",
+                      "suggestion": "Use @now without path",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0].entity.fields[2].default",
+                      "message": "Entity 'Zed' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0].entity.fields[4].properties.inner.default",
+                      "message": "Entity 'Deep' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "SEXPR_UNKNOWN_ENTITY",
+                      "path": "orbitals[0].entity.fields[4].properties.arr.items.default",
+                      "message": "Entity 'Lvl3' in binding may not exist",
+                      "suggestion": "Ensure the entity is defined in the schema",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-known-entities-locals-and-core-roots",
+      "steps": [
+        {
+          "trait": "OrbLintSexprBinding",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "name": "SxbAOrbital",
+                  "entity": {
+                    "name": "SxbRun",
+                    "fields": [
+                      {
+                        "nullable": false,
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "s",
+                        "type": "string",
+                        "default": ""
+                      },
+                      {
+                        "name": "ok",
+                        "type": "string",
+                        "default": [
+                          "str/concat",
+                          "@entity.id",
+                          "@now"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "SxbT",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.s",
+                                [
+                                  "array/map",
+                                  "@entity.list",
+                                  [
+                                    "fn",
+                                    [
+                                      "Row"
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "@Row",
+                                      "@SxbRun.s",
+                                      "@Expected.x",
+                                      "@Idn.y"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "set",
+                                "@entity.s",
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "Foo",
+                                      "a"
+                                    ],
+                                    [
+                                      "Bar",
+                                      "@Foo"
+                                    ]
+                                  ],
+                                  [
+                                    "str/concat",
+                                    "@Foo",
+                                    "@Bar",
+                                    "@state",
+                                    "@now",
+                                    "@payload.x",
+                                    "@config.k"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "ensures": [
+                              [
+                                "=",
+                                "@entity.s",
+                                "a"
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "effects": [
+                            [
+                              "set",
+                              "@entity.s",
+                              [
+                                "str/concat",
+                                "@entity.id",
+                                "@now"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Expected"
+                    },
+                    {
+                      "kind": "identity",
+                      "name": "Idn"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintSexprBinding",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "sexpr-binding",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
