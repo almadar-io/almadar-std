@@ -1,0 +1,148 @@
+app std-orb-firestore-indexes [
+  version: "1.0.0",
+  inbound: ["cli-firestore-indexes"],
+  fs: { cwd: "**": [read, write], "/**": [read, write] },
+  description: "std-orb-firestore-indexes — the `orb firestore-indexes <file> [--scope collection|collection-group] [--out <path>]` command (spec/cli/orb-firestore-indexes.lolo). The program is read (os/read-file, program/read) and every persistent entity's `@index { fields, orderBy? }` declaration becomes one entry of a Firebase firestore.indexes.json: collectionGroup is the entity's collection, queryScope is COLLECTION (the default) or COLLECTION_GROUP with --scope collection-group, and fields are the declared field paths ascending followed by the orderBy field in its direction (`name:desc`, ascending by default). A declaration that resolves to one field is left out, since Firestore keeps every single-field index itself. The file is `{ indexes, fieldOverrides: [] }`, two-space indented and newline-terminated; it is printed (status 200), or written to --out, relative to the directory the command runs in, and the answer is `wrote <path>`. A wrong word count, an unknown flag or an unknown scope answers the usage (status 400, exit 2); an unreadable or unlowerable file answers status 500 on `Error: <reason>` (exit 1). Which store drives an entity is not read: every persistent entity that declares `@index` is rendered."
+]
+uses Spec from "almadar-std/orb-firestore-indexes"
+uses Args from "std/behaviors/std-args"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
+type IndexDecl = { fields : [string]!, orderBy : string? }
+type IndexEntity = { collection : string?, persistence : string?, indexes : [IndexDecl]? }
+type IndexOrbital = { entity : IndexEntity? }
+type IndexProgram = { orbitals : [IndexOrbital]? }
+
+orbital OrbFirestoreIndexesOrbital {
+  entity FirestoreIndexesRun [runtime] {
+    id : string!
+    cwd : string = ""
+    file : string = ""
+    out : string = ""
+    scope : string = "COLLECTION"
+    text : string = ""
+  }
+
+  trait ArgsCli = Args.traits.ArgsParser {
+    listens {
+      OrbFirestoreIndexes.FIRESTORE_INDEXES_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait OrbFirestoreIndexes -> FirestoreIndexesRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      FIRESTORE_INDEXES_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (emit FIRESTORE_INDEXES_ANSWERED { status: 400, body: "usage: orb firestore-indexes <file> [--scope collection|collection-group] [--out <path>]" })
+      FIRESTORE_INDEXES_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
+        (emit FIRESTORE_INDEXES_ARGS_PARSE { stage: "firestore-indexes" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "scope" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }] })
+    }
+
+    state parsing {
+      INIT -> parsing
+      FIRESTORE_INDEXES_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1) (and (!= (object/get @payload.flags "scope") null) (not (array/includes ["collection", "collection-group"] (array/first (object/get @payload.flags "scope"))))))
+        (emit FIRESTORE_INDEXES_ANSWERED { status: 400, body: "usage: orb firestore-indexes <file> [--scope collection|collection-group] [--out <path>]" })
+      FIRESTORE_INDEXES_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (or (= (object/get @payload.flags "scope") null) (array/includes ["collection", "collection-group"] (array/first (object/get @payload.flags "scope")))))
+        (set @entity.file (array/first @payload.positionals))
+        (set @entity.out (if (!= (object/get @payload.flags "out") null) (array/first (object/get @payload.flags "out")) ""))
+        (set @entity.scope (if (= (object/get @payload.flags "scope") null) "COLLECTION" (if (= (array/first (object/get @payload.flags "scope")) "collection-group") "COLLECTION_GROUP" "COLLECTION")))
+        (emit FIRESTORE_INDEXES_READ_FILE {})
+    }
+
+    state reading {
+      INIT -> reading
+      FIRESTORE_INDEXES_READ_FILE -> reading when (not (os/path-is-absolute @entity.file))
+        (os/read-file { anchor: "cwd" path: @entity.file } { key: "program" emit: { success: FIRESTORE_INDEXES_READ, failure: FIRESTORE_INDEXES_FAILED } })
+      FIRESTORE_INDEXES_READ_FILE -> reading when (os/path-is-absolute @entity.file)
+        (os/read-file (str/concat "/" (str/slice @entity.file 1 (str/len @entity.file))) { key: "program" emit: { success: FIRESTORE_INDEXES_READ, failure: FIRESTORE_INDEXES_FAILED } })
+      FIRESTORE_INDEXES_FAILED -> ready
+        (emit FIRESTORE_INDEXES_ANSWERED { status: 500, body: (str/concat "Error: " @payload.error) })
+      FIRESTORE_INDEXES_READ -> reading
+        (program/read (bytes/to-string @payload.data) { key: "lowered" emit: { success: FIRESTORE_INDEXES_PROGRAM, failure: FIRESTORE_INDEXES_FAILED } })
+      FIRESTORE_INDEXES_PROGRAM -> rendering
+        (set @entity.text (str/concat (json/stringify { indexes: (array/flatten (array/map (object/get (json/parse (json/stringify @payload.result) IndexProgram) "orbitals" []) (fn o
+          (let ((ent (object/get @o "entity" {})))
+            (if (or (!= (object/get @ent "persistence" "") "persistent") (= (object/get @ent "collection" "") ""))
+              []
+              (array/filter (array/map (object/get @ent "indexes" []) (fn d
+                { collectionGroup: (object/get @ent "collection"), queryScope: @entity.scope, fields: (array/concat (array/map (object/get @d "fields") (fn f { fieldPath: @f, order: "ASCENDING" })) (if (= (object/get @d "orderBy" "") "") [] [{ fieldPath: (array/first (str/split (object/get @d "orderBy") ":")), order: (if (= (str/default (array/nth (str/split (object/get @d "orderBy") ":") 1) "asc") "desc") "DESCENDING" "ASCENDING") }])) }))
+                (fn x (> (array/len (object/get @x "fields")) 1)))))))), fieldOverrides: [] } { pretty: true }) "\n"))
+        (emit FIRESTORE_INDEXES_RENDERED {})
+    }
+
+    state rendering {
+      INIT -> rendering
+      FIRESTORE_INDEXES_RENDERED -> ready when (= @entity.out "")
+        (emit FIRESTORE_INDEXES_ANSWERED { status: 200, body: (str/slice @entity.text 0 (- (str/len @entity.text) 1)) })
+      FIRESTORE_INDEXES_RENDERED -> writing when (and (!= @entity.out "") (not (os/path-is-absolute @entity.out)))
+        (os/write-file { anchor: "cwd" path: @entity.out } (bytes/from-string @entity.text) { key: "write" emit: { success: FIRESTORE_INDEXES_WROTE, failure: FIRESTORE_INDEXES_FAILED } })
+      FIRESTORE_INDEXES_RENDERED -> writing when (and (!= @entity.out "") (os/path-is-absolute @entity.out))
+        (os/write-file (str/concat "/" (str/slice @entity.out 1 (str/len @entity.out))) (bytes/from-string @entity.text) { key: "write" emit: { success: FIRESTORE_INDEXES_WROTE, failure: FIRESTORE_INDEXES_FAILED } })
+    }
+
+    state writing {
+      INIT -> writing
+      FIRESTORE_INDEXES_FAILED -> ready
+        (emit FIRESTORE_INDEXES_ANSWERED { status: 500, body: (str/concat "Error: " @payload.error) })
+      FIRESTORE_INDEXES_WROTE -> ready
+        (emit FIRESTORE_INDEXES_ANSWERED { status: 200, body: (str/concat "wrote " @entity.out) })
+    }
+
+    emits {
+      FIRESTORE_INDEXES_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      FIRESTORE_INDEXES_ARGS_PARSE {
+        stage : string!
+        argv : [string]!
+        flags : [ArgFlag]!
+      }
+        @description "Internal: parse the call's words."
+        @tier "internal"
+      FIRESTORE_INDEXES_READ_FILE {}
+        @description "Internal: read the program file."
+        @tier "internal"
+      FIRESTORE_INDEXES_READ { data : bytes! }
+        @description "The program file read."
+        @tier "internal"
+      FIRESTORE_INDEXES_FAILED { error : string }
+        @description "The program could not be read, lowered or the file written."
+        @tier "internal"
+      FIRESTORE_INDEXES_PROGRAM { result : SExpr! }
+        @description "The program lowered."
+        @tier "internal"
+      FIRESTORE_INDEXES_RENDERED {}
+        @description "Internal: the file text is built."
+        @tier "internal"
+      FIRESTORE_INDEXES_WROTE { }
+        @description "The file was written."
+        @tier "internal"
+    }
+
+    listens {
+      FIRESTORE_INDEXES_CALLED -> inbound "cli-firestore-indexes" answers FIRESTORE_INDEXES_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb firestore-indexes`."
+        @synonyms "orb firestore-indexes, generate firestore.indexes.json, composite indexes from @index, firestore index file"
+      FIRESTORE_INDEXES_ARGS_DONE {
+        stage : string!
+        flags : Map string [string]!
+        positionals : [string]!
+        errors : [string]!
+        words : [string]!
+      }
+        @description "std-args's ARGS_PARSED."
+      ArgsCli.ARGS_PARSED -> FIRESTORE_INDEXES_ARGS_DONE
+    }
+  }
+
+  page boot as OrbFirestoreIndexesOrbitalStart -> OrbFirestoreIndexes, ArgsCli
+}

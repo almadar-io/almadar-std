@@ -1,0 +1,284 @@
+{
+  "atom": "cli/atoms/std-orb-gate.lolo",
+  "trait": "OrbGate",
+  "cases": [
+    {
+      "id": "control-identical-lists-pass",
+      "entity": {
+        "knownPath": "gates/known.txt",
+        "observedPath": "obs.txt",
+        "knownText": "a\nb\n",
+        "observedText": "b\na\n"
+      },
+      "steps": [
+        {
+          "from": "comparing",
+          "event": "GATE_COMPARE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "0 new, 0 fixed, 2 known"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-new-failure-fails",
+      "entity": {
+        "knownPath": "gates/known.txt",
+        "observedPath": "obs.txt",
+        "knownText": "a\n",
+        "observedText": "a\nc\n"
+      },
+      "steps": [
+        {
+          "from": "comparing",
+          "event": "GATE_COMPARE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "new    c\n1 new, 0 fixed, 1 known"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-fixed-failure-still-listed-fails",
+      "entity": {
+        "knownPath": "gates/known.txt",
+        "observedPath": "obs.txt",
+        "knownText": "a\nb\n",
+        "observedText": "a\n"
+      },
+      "steps": [
+        {
+          "from": "comparing",
+          "event": "GATE_COMPARE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "fixed  b  (remove it from gates/known.txt)\n0 new, 1 fixed, 2 known"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "new-and-fixed-are-each-sorted",
+      "entity": {
+        "knownPath": "gates/known.txt",
+        "observedPath": "obs.txt",
+        "knownText": "z\nb\n",
+        "observedText": "y\nc\n"
+      },
+      "steps": [
+        {
+          "from": "comparing",
+          "event": "GATE_COMPARE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "new    c\nnew    y\nfixed  b  (remove it from gates/known.txt)\nfixed  z  (remove it from gates/known.txt)\n2 new, 2 fixed, 2 known"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "comments-blanks-whitespace-and-repeats-are-ignored",
+      "entity": {
+        "knownPath": "gates/known.txt",
+        "observedPath": "obs.txt",
+        "knownText": "# known reds\n\n  a  \na\n",
+        "observedText": "a\n\n# none new\n a\n"
+      },
+      "steps": [
+        {
+          "from": "comparing",
+          "event": "GATE_COMPARE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "0 new, 0 fixed, 1 known"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-both-empty-pass",
+      "entity": {
+        "knownPath": "gates/known.txt",
+        "observedPath": "obs.txt",
+        "knownText": "",
+        "observedText": ""
+      },
+      "steps": [
+        {
+          "from": "comparing",
+          "event": "GATE_COMPARE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "0 new, 0 fixed, 0 known"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-empty-observed-list-reports-every-known-as-fixed",
+      "entity": {
+        "knownPath": "gates/known.txt",
+        "observedPath": "obs.txt",
+        "knownText": "a\n",
+        "observedText": ""
+      },
+      "steps": [
+        {
+          "from": "comparing",
+          "event": "GATE_COMPARE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "fixed  a  (remove it from gates/known.txt)\n0 new, 1 fixed, 1 known"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "one-argument-is-usage",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "GATE_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"gates/known.txt\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb gate <known-failures.txt> <observed.txt> (paths relative to the working directory)"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "three-arguments-is-usage",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "GATE_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"a\", \"b\", \"c\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb gate <known-failures.txt> <observed.txt> (paths relative to the working directory)"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-absolute-path-is-usage",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "GATE_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"/etc/known.txt\", \"obs.txt\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "GATE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb gate <known-failures.txt> <observed.txt> (paths relative to the working directory)"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

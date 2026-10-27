@@ -1,0 +1,14 @@
+app orb-gate-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb gate <known-failures.txt> <observed.txt>`: the ratchet a release gate runs. Each file lists failure ids, one per line; surrounding whitespace is trimmed, blank lines and lines starting with # are ignored, and a repeated id counts once. An id in observed that is not in known is new; an id in known that is not in observed is fixed but still listed. The answer is each `new    <id>` line, then each `fixed  <id>  (remove it from <known>)` line, both sorted, then `N new, M fixed, K known`. Status 200 (exit 0) when nothing is new and nothing fixed is still listed, else 500 (exit 1). Fewer or more than two arguments, or an absolute path, answers usage status 400 (exit 2). A read that fails or a file that is not text answers 500 with its error. Control: identical lists answer 200 with `0 new, 0 fixed, K known`."
+]
+
+orbital OrbGateSpec {
+  expects trait OrbGate {
+    state ready
+    emits {
+      GATE_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbGate
+}

@@ -4,7 +4,7 @@ app std-orb-lint-sigil-context [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-sigil-context - the `orb lint sigil-context <file>` command, the port of ORB_BINDING_UNKNOWN_ROOT and ORB_BINDING_PAYLOAD_IN_TICK (traits/sigil_context.rs). It lowers the file with program/read and walks the guard and effects of every inline trait transition (guard and effect context) and the effects of every tick (tick context): every `@root` binding string must name a sigil the installed @almadar/core binding rules allow in that context (read from LINT_LANGUAGE_FACTS), unless it is bound by an enclosing `(fn (x) ...)` / `(lambda ...)` parameter, a sequential `let` name, or, inside a collection callback (a collection or std-array operator of two or more arguments in the installed operator table, read from LINT_OPERATOR_SHAPES), `item` / `index`. `@item` / `@index` outside a callback get the out-of-scope diagnostic; `@payload` in a tick is ORB_BINDING_PAYLOAD_IN_TICK; PascalCase roots (entity bindings) are skipped. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint sigil-context: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-sigil-context - the `orb lint sigil-context <file>` command, the port of ORB_BINDING_UNKNOWN_ROOT and ORB_BINDING_PAYLOAD_IN_TICK (traits/sigil_context.rs). It lowers the file with program/read and walks the guard and effects of every inline trait transition (guard and effect context) and the effects of every tick (tick context): every `@root` binding string must name a sigil the installed @almadar/core binding rules allow in that context (read from LINT_LANGUAGE_FACTS), unless it is bound by an enclosing `(fn (x) ...)` parameter, a sequential `let` name, or, inside a collection callback (a collection or std-array operator of two or more arguments in the installed operator table, read from LINT_OPERATOR_SHAPES), `item` / `index`. `@item` / `@index` outside a callback get the out-of-scope diagnostic; `@payload` in a tick is ORB_BINDING_PAYLOAD_IN_TICK; PascalCase roots (entity bindings) are skipped. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint sigil-context: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-sigil-context"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -98,7 +98,7 @@ orbital OrbLintSigilContextOrbital {
     @nohits)
   (if (validate/array @n)
     (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
-      (if (and (= @len 3) (or (= @op "lambda") (= @op "fn")))
+      (if (and (= @len 3) (= @op "fn"))
         (let ((p1 (array/nth @n 1)))
           (let ((params : [string] (if (validate/array @p1) (array/flatten (array/map @p1 (fn x (if (validate/string @x) [@x] @nostr)))) (if (validate/string @p1) [@p1] @nostr))))
             (array/map (array/filter (let ((r : [SgHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes @params (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) })))))

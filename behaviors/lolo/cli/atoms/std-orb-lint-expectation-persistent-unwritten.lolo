@@ -88,7 +88,7 @@ orbital OrbLintExpectationPersistentUnwrittenOrbital {
                                       (if (= (json/stringify (array/nth @l 2)) "0") { ok: true, es: [] } { ok: (object/get (array/nth @kr 1) "lok"), es: (object/get (array/nth @kr 1) "les") })
                                       (if (and (= @head "if") (= @len 4)) { ok: (array/every [(array/nth @kr 2), (array/nth @kr 3)] (fn r (object/get @r "lok"))), es: (array/flatten (array/map [(array/nth @kr 2), (array/nth @kr 3)] (fn r (object/get @r "les")))) } { ok: false, es: [] }))))))))
                         { ok: (object/get @allE "ok"), es: (object/get @allE "es") }))))
-          (let ((body (if (and (array/includes ["fn", "lambda"] @head) (>= @len 3)) (array/last @kr) @f)))
+          (let ((body (if (and (array/includes ["fn"] @head) (>= @len 3)) (array/last @kr) @f)))
            { lok: (object/get @lst "ok"), les: (object/get @lst "es"), eok: (object/get @e "ok"), ees: (object/get @e "es"), bok: (object/get @body "eok"), bes: (object/get @body "ees"),
              aok: (object/get @allL "ok"), aes: (object/get @allL "es"), rok: (object/get @restL "ok"), res: (object/get @restL "es"), arr: true, head: @head, hstr: @hstr }))))))))))) "LNode")))
             (if (and (!= @r null) (object/get @r "lok"))
@@ -97,7 +97,7 @@ orbital OrbLintExpectationPersistentUnwrittenOrbital {
         (if (!= (json/parse (json/stringify (if (> (array/len @ops) 0) (array/nth @ops 0) null)) LStr) null)
           (if (= (or (json/parse (json/stringify (if (> (array/len @ops) 0) (array/nth @ops 0) null)) LStr) "") "list") (array/drop @ops 1)
             (if (and (= (or (json/parse (json/stringify (if (> (array/len @ops) 0) (array/nth @ops 0) null)) LStr) "") "array/map") (= (array/len @ops) 3))
-              (let ((fl (or (json/parse (json/stringify (array/nth @ops 2)) LNodes) []))) (if (and (> (array/len @fl) 2) (array/includes ["fn", "lambda"] (or (json/parse (json/stringify (if (> (array/len @fl) 0) (array/nth @fl 0) null)) LStr) ""))) [(array/last @fl)] []))
+              (let ((fl (or (json/parse (json/stringify (array/nth @ops 2)) LNodes) []))) (if (and (> (array/len @fl) 2) (array/includes ["fn"] (or (json/parse (json/stringify (if (> (array/len @fl) 0) (array/nth @fl 0) null)) LStr) ""))) [(array/last @fl)] []))
               []))
           @ops)) (fn el (or (json/parse (json/stringify @el) LNodes) []))) (fn tp (and (> (array/len @tp) 0) (array/includes ["create", "update", "delete"] (or (json/parse (json/stringify (if (> (array/len @tp) 0) (array/nth @tp 0) null)) LStr) "")))))
         (fn tp (let ((a (or (json/parse (json/stringify (if (> (array/len @tp) 0) (array/nth @tp 0) null)) LStr) "")) (en (or (json/parse (json/stringify (if (> (array/len @tp) 1) (array/nth @tp 1) null)) LStr) "")))

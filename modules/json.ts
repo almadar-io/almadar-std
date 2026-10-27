@@ -10,7 +10,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, SHAPE, STRING, childrenOf, fn, openShape, tv, nullable } from '../signature.js';
+import { BOOLEAN, SEXPR, SHAPE, STRING, childrenOf, fn, list, mapOf, openShape, shape, tv, nullable } from '../signature.js';
 
 export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
   'json/valid': {
@@ -49,6 +49,20 @@ export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: { kind: 'array', of: 'sexpr' },
     params: [{ name: 'v', type: tv('T'), description: 'The value to walk' }],
     example: '["json/nodes", {"a": [1]}] // => [{"a": [1]}, [1], 1]',
+  },
+  'tree/index': {
+    module: 'json',
+    category: 'std-json',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Every call form in a value, grouped by its head, in one walk: a call form is a list whose first item is a string listed in `heads`. The walk is pre-order over lists (items in order) and objects (values in key order), like json/nodes, and continues inside a call form. Each hit carries its node and its path from the value: `[i]` for a list item, `.key` for an object field (e.g. `[2][1].then`). The result has one entry per listed head, an empty list when the head never occurs. For indexing a program once so readers look up the calls they inspect instead of walking it',
+    hasSideEffects: false,
+    returnType: mapOf(STRING, list(shape({ path: STRING, node: SEXPR }))),
+    params: [
+      { name: 'value', type: tv('T'), description: 'The value to index' },
+      { name: 'heads', type: list(STRING), description: 'The heads to collect' },
+    ],
+    example: '["tree/index", [["emit", "A"], ["if", true, ["emit", "B"]]], ["emit"]] // => {"emit": [{"path": "[0]", "node": ["emit", "A"]}, {"path": "[1][2]", "node": ["emit", "B"]}]}',
   },
   'tree/fold': {
     module: 'json',

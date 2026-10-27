@@ -10,13 +10,32 @@ uses Language from "std/behaviors/std-orb-language"
 type DocObject = Map string DocValue?
 type DocValue = string | number | boolean | [DocValue?] | Map string DocValue?
 type LintValue = string | number | boolean | [LintValue?] | Map string LintValue?
-type LazyChild = { orbital : string!, program : NdxProgram! }
-type ResolvedProgram = { program : NdxProgram!, lazy : [LazyChild]! }
-type NdxTransition = { guard : LintValue, effects : [LintValue?] }
-type NdxMachine = { transitions : [NdxTransition] }
-type NdxTrait = { stateMachine : NdxMachine, config : LintValue, ticks : [LintValue?] }
-type NdxOrbital = { traits : [NdxTrait] }
-type NdxProgram = { orbitals : [NdxOrbital] }
+type LintProjection = { type : string!, field : string }
+type LintRelation = { entity : string!, entityId : string, cardinality : string, onDelete : string }
+type LintField = { name : string, type : string!, nullable : boolean, required : boolean, primaryKey : boolean, unique : boolean, default : LintValue?, values : [string], relation : LintRelation, items : LintField, properties : Map string LintField, additionalProperties : LintField, record : string, intrinsic : boolean, derived : LintValue, description : string, synonyms : string, mock : string, mergedFrom : string, projectedFrom : LintProjection }
+type LintEntityIndex = { fields : [string]!, orderBy : string }
+type LintEntity = { name : string!, id : string, collection : string, persistence : string, store : string, fields : [LintField]!, instances : [Map string LintValue?], localeInstances : Map string [Map string LintValue?], shared : boolean, identity : boolean, browser : boolean, read_policy : LintValue, create_policy : LintValue, update_policy : LintValue, delete_policy : LintValue, invariants : [LintValue?], indexes : [LintEntityIndex], timestamps : boolean, softDelete : boolean, description : string }
+type LintPayloadField = { name : string!, type : string!, nullable : boolean, required : boolean, values : [string], description : string, properties : [LintPayloadField], items : LintPayloadField, additionalProperties : LintPayloadField, entity : string, projectedFrom : LintProjection }
+type LintConfigField = { type : string!, default : LintValue?, nullable : boolean, required : boolean, label : string, description : string, synonyms : string, tier : string, values : [string], items : LintField, properties : Map string LintField, record : string, refId : string, projectedFrom : LintProjection, forwardedFrom : string, nestedForwardedFrom : [string], payloadFor : string }
+type LintEmit = { event : string!, eventId : string, description : string, synonyms : string, tier : string, scope : string, payloadSchema : [LintPayloadField], definerKnob : string, scopeOverridden : boolean, payloadEntity : string }
+type LintListenSource = { kind : string!, trait : string, traitId : string, orbital : string, orbitalId : string }
+type LintListen = { event : string!, eventId : string, triggers : string, triggersId : string, scope : string, description : string, synonyms : string, tier : string, payloadMapping : Map string LintValue?, guard : LintValue, source : LintListenSource }
+type LintInbound = { name : string!, answers : string! }
+type LintEvent = { key : string!, id : string, name : string, description : string, synonyms : string, tier : string, payloadSchema : [LintPayloadField], payloadEntity : string, input : boolean, listened : boolean, inbound : LintInbound }
+type LintState = { name : string!, isInitial : boolean, isTerminal : boolean, description : string }
+type LintTransition = { from : string | [string], to : string!, event : string!, eventId : string, guard : LintValue, effects : [LintValue?], ensures : [LintValue?] }
+type LintMachine = { states : [LintState]!, events : [LintEvent], transitions : [LintTransition]! }
+type LintTick = { name : string!, interval : string | number, guard : LintValue, effects : [LintValue?]!, appliesTo : [string], description : string, runsInBackground : boolean, whileVisible : boolean }
+type LintEffectRow = { kind : string, resource : string }
+type LintSourceBehavior = { behavior : string, alias : string, originalName : string }
+type LintTrait = { name : string!, id : string, entityRebindable : boolean, entityContract : LintValue, effectRow : [LintEffectRow], description : string, linkedEntity : string, linkedEntityId : string, entityRefIds : Map string string, traitEmbedIds : Map string string, emits : [LintEmit], listens : [LintListen], stateMachine : LintMachine!, ticks : [LintTick], config : Map string LintConfigField, dataEntities : [LintEntity], dispatch : string, sourceBehavior : LintSourceBehavior }
+type LintTraitRef = { ref : string, refId : string }
+type LintPage = { name : string!, id : string, path : string, protocol : string, address : LintValue, viewType : string, primaryEntity : string, isInitial : boolean, traits : [LintTraitRef], icon : string, label : string, roles : [string], access : LintValue, indexing : LintValue, title : LintValue, description : LintValue, sourcePage : string, translationOf : string }
+type LintUse = { from : string!, as : string!, lazy : boolean }
+type LintOrbital = { name : string!, id : string, uses : [LintUse], expects : [Map string LintValue?], entity : LintEntity!, auxiliaryEntities : [LintEntity], traits : [LintTrait]!, pages : [LintPage], emits : [string], listens : [LintListen], exposes : [string], config : Map string LintConfigField, types : Map string [LintPayloadField] }
+type LintProgram = { name : string, version : string, description : string, schemaVersion : number, orbitals : [LintOrbital]!, themeDefinitions : [LintValue?] }
+type LazyChild = { orbital : string!, program : LintProgram! }
+type ResolvedProgram = { program : LintProgram!, lazy : [LazyChild]! }
 type PackText = { name : string!, text : string! }
 type PackMeta = { code : string! }
 type CoreLanguageBlock = { componentMapping : string, patterns : string, programTypes : string, bindingRules : string, vocabulary : string, uiVocabulary : string, services : string }
@@ -99,7 +118,7 @@ orbital OrbLintInputOrbital {
     tickSigils : [string] = []
     factsDone : boolean = true
     factsWaiting : boolean = false
-    pendingProgram : NdxProgram?
+    pendingProgram : LintProgram?
   }
 
   trait Versions = Semver.traits.Semver {
@@ -402,10 +421,10 @@ orbital OrbLintInputOrbital {
     }
 
     emits {
-      LINT_INPUT -> external { file : string!  raw : string!  latin : boolean!  program : LintValue!  scope : string! }
+      LINT_INPUT -> external { file : string!  raw : string!  latin : boolean!  program : LintProgram!  scope : string! }
         @description "The file read, its language decided and the program lowered, offered to every rule trait."
         @tier "internal"
-      LINT_INPUT_OFFER { file : string!  raw : string!  latin : boolean!  program : NdxProgram!  scope : string! }
+      LINT_INPUT_OFFER { file : string!  raw : string!  latin : boolean!  program : LintProgram!  scope : string! }
         @description "Internal: the lowered program of one pass, on its way to LINT_INPUT; the offer sends LINT_INDEX first so every rule has the structural index before it hears the program."
         @tier "internal"
       LINT_INDEX -> external { scope : string!  heads : Map string [string]!  roots : Map string [string]! }

@@ -1,0 +1,92 @@
+app std-orb-gate [
+  version: "1.0.0",
+  inbound: ["cli-gate"],
+  fs: { cwd: "**": [read] },
+  description: "std-orb-gate — the `orb gate <known-failures.txt> <observed.txt>` command, the ratchet a release gate runs. Each file lists failure ids, one per line; surrounding whitespace is trimmed, blank lines and lines starting with # are ignored, and a repeated id counts once. An id in observed that is not in known is new; an id in known that is not in observed is fixed but still listed, so fixing a failure means deleting its line. The answer is each `new    <id>` line, then each `fixed  <id>  (remove it from <known>)` line, both sorted, then `N new, M fixed, K known`. Status 200 (exit 0) when nothing is new and nothing fixed is still listed, else 500 (exit 1); fewer or more than two arguments, or an absolute path, answers usage status 400 (exit 2); a read that fails or a file that is not text answers 500 with its error. Both paths are read relative to the working directory."
+]
+uses Spec from "almadar-std/orb-gate"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+
+orbital GateOrbital {
+  entity GateRun [runtime] {
+    id : string!
+    knownPath : string = ""
+    observedPath : string = ""
+    knownText : string = ""
+    observedText : string = ""
+  }
+
+  trait OrbGate -> GateRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      GATE_CALLED -> ready when (let ((args (json/parse @payload.rawBody OrbCommandArgs))) (or (= @args null) (!= (array/len (object/get @args "argv")) 2) (array/some (object/get @args "argv") (fn p (os/path-is-absolute @p)))))
+        (emit GATE_ANSWERED { status: 400, body: "usage: orb gate <known-failures.txt> <observed.txt> (paths relative to the working directory)" })
+      GATE_CALLED -> reading when (let ((args (json/parse @payload.rawBody OrbCommandArgs))) (and (!= @args null) (= (array/len (object/get @args "argv")) 2) (not (array/some (object/get @args "argv") (fn p (os/path-is-absolute @p))))))
+        (set @entity.knownPath (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))
+        (set @entity.observedPath (array/nth (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1))
+        (os/read-file { anchor: "cwd" path: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) } { key: "known" emit: { success: GATE_KNOWN_READ, failure: GATE_FAILED } })
+    }
+
+    state reading {
+      INIT -> reading
+      GATE_KNOWN_READ -> ready when (= (bytes/to-string @payload.data) null)
+        (emit GATE_ANSWERED { status: 500, body: (str/concat "gate: not a text file: " @entity.knownPath) })
+      GATE_KNOWN_READ -> reading when (!= (bytes/to-string @payload.data) null)
+        (set @entity.knownText (bytes/to-string @payload.data))
+        (os/read-file { anchor: "cwd" path: @entity.observedPath } { key: "observed" emit: { success: GATE_OBSERVED_READ, failure: GATE_FAILED } })
+      GATE_OBSERVED_READ -> ready when (= (bytes/to-string @payload.data) null)
+        (emit GATE_ANSWERED { status: 500, body: (str/concat "gate: not a text file: " @entity.observedPath) })
+      GATE_OBSERVED_READ -> comparing when (!= (bytes/to-string @payload.data) null)
+        (set @entity.observedText (bytes/to-string @payload.data))
+        (emit GATE_COMPARE {})
+      GATE_FAILED -> ready
+        (emit GATE_ANSWERED { status: 500, body: (str/concat "gate: " @payload.error) })
+    }
+
+    state comparing {
+      INIT -> comparing
+      GATE_COMPARE -> ready
+        (let ((known (array/unique (array/filter (array/map (str/split @entity.knownText "\n") (fn l (str/trim @l))) (fn l (and (!= @l "") (not (str/startsWith @l "#")))))))
+              (observed (array/unique (array/filter (array/map (str/split @entity.observedText "\n") (fn l (str/trim @l))) (fn l (and (!= @l "") (not (str/startsWith @l "#"))))))))
+          (let ((fresh (array/sort (array/filter @observed (fn x (not (array/includes @known @x))))))
+                (fixed (array/sort (array/filter @known (fn x (not (array/includes @observed @x)))))))
+            (emit GATE_ANSWERED {
+              status: (if (and (= (array/len @fresh) 0) (= (array/len @fixed) 0)) 200 500),
+              body: (str/join (array/concat
+                (array/map @fresh (fn x (str/concat "new    " @x)))
+                (array/map @fixed (fn x (str/concat "fixed  " @x "  (remove it from " @entity.knownPath ")")))
+                [(str/concat (array/len @fresh) " new, " (array/len @fixed) " fixed, " (array/len @known) " known")]) "\n") })))
+    }
+
+    emits {
+      GATE_ANSWERED -> internal { status : number!  body : string! }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      GATE_KNOWN_READ { data : bytes! }
+        @description "The known-failures file read."
+        @tier "internal"
+      GATE_OBSERVED_READ { data : bytes! }
+        @description "The observed-failures file read."
+        @tier "internal"
+      GATE_COMPARE {}
+        @description "Both lists read; compare them."
+        @tier "internal"
+      GATE_FAILED { error : string }
+        @description "A read that failed."
+        @tier "internal"
+    }
+
+    listens {
+      GATE_CALLED -> inbound "cli-gate" answers GATE_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb gate` with its arguments and working directory."
+        @synonyms "orb gate, release gate, known failures, ratchet"
+    }
+  }
+
+  page boot as GateOrbitalStart -> OrbGate
+}
