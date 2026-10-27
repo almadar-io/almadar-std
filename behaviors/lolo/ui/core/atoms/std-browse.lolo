@@ -30,6 +30,8 @@ orbital BrowseItemOrbital {
     description : string @description "A textual explanation or summary of the item." @synonyms "summary, details, notes, explanation"
     status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the item." @synonyms "state, condition, flag" = active
     createdAt : string
+    browsePage : number @intrinsic @description "The page the list shows." = 1
+    browseTotalCount : number @intrinsic @description "Rows the list's filter matches, across every page." = 0
   }
 
   uses Typography from "std/behaviors/ui-typography"
@@ -69,6 +71,7 @@ orbital BrowseItemOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.browsePage 1)
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
           filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
@@ -83,17 +86,29 @@ orbital BrowseItemOrbital {
             (render-ui main { type: skeleton, variant: list, rows: 6 })
             (render-ui main { type: skeleton, variant: table, rows: 6 })))
       BrowseItemLoaded -> browsing
-        (if (= @config.browseLook dense)
-          (render-ui main @config.denseBodyContent)
+        (set @entity.browseTotalCount ?totalCount)
+        (render-ui main {
+          children: [(if (= @config.browseLook dense)
+          @config.denseBodyContent
           (if (= @config.browseLook feed)
-            (render-ui main @config.feedBodyContent)
+            @config.feedBodyContent
             (if (= @config.browseLook gallery)
-              (render-ui main @config.galleryBodyContent)
+              @config.galleryBodyContent
               (if (= @config.browseLook master-detail)
-                (render-ui main @config.masterDetailBodyContent)
+                @config.masterDetailBodyContent
                 (if (= @config.browseLook triage)
-                  (render-ui main @config.triageBodyContent)
-                  (render-ui main @config.bodyContent))))))
+                  @config.triageBodyContent
+                  @config.bodyContent))))), {
+            currentPage: @entity.browsePage
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ @entity.browseTotalCount @config.pageSize)))
+            type: pagination
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       BrowseItemLoadFailed -> error
         (render-ui main { message: ?error, title: "Couldn't load this list", type: alert, variant: error })
     }
@@ -104,6 +119,7 @@ orbital BrowseItemOrbital {
       ;; is unaffected — `initial: loading` and `state loading`'s own INIT still
       ;; paint it; `browsing` is only reachable after a successful load.
       INIT -> loading
+        (set @entity.browsePage 1)
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
           filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
@@ -119,6 +135,7 @@ orbital BrowseItemOrbital {
       ;; grid with the new rows (handler below), so React reconciles the
       ;; data-grid in place instead of unmounting it.
       REFETCH_QUERY -> browsing when (or (= @config.searchRelation null) (= ?searchTerm ""))
+        (set @entity.browsePage 1)
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
           filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (= ?searchTerm "") (and (!= @config.searchField null) (str/includes (object/get @entity @config.searchField) ?searchTerm))))
@@ -133,6 +150,7 @@ orbital BrowseItemOrbital {
           filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
         })
       BrowseItemRelatedLoaded -> browsing
+        (set @entity.browsePage 1)
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
           filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
@@ -142,6 +160,7 @@ orbital BrowseItemOrbital {
           offset: 0
         })
       REFETCH_FILTER -> browsing
+        (set @entity.browsePage 1)
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
           filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (= ?value "") (= (object/get @entity ?field) ?value)))
@@ -151,6 +170,7 @@ orbital BrowseItemOrbital {
           offset: 0
         })
       REFETCH_PAGE -> browsing
+        (set @entity.browsePage ?page)
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
           filter: (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id))
@@ -166,19 +186,42 @@ orbital BrowseItemOrbital {
       VIEW -> browsing when (= @config.browseLook "master-detail")
         (render-ui main @config.masterDetailRecordBodyContent)
       CLOSE -> browsing when (= @config.browseLook "master-detail")
-        (render-ui main @config.masterDetailBodyContent)
+        (render-ui main {
+          children: [@config.masterDetailBodyContent, {
+            currentPage: @entity.browsePage
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ @entity.browseTotalCount @config.pageSize)))
+            type: pagination
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       BrowseItemLoaded -> browsing
-        (if (= @config.browseLook dense)
-          (render-ui main @config.denseBodyContent)
+        (set @entity.browseTotalCount ?totalCount)
+        (render-ui main {
+          children: [(if (= @config.browseLook dense)
+          @config.denseBodyContent
           (if (= @config.browseLook feed)
-            (render-ui main @config.feedBodyContent)
+            @config.feedBodyContent
             (if (= @config.browseLook gallery)
-              (render-ui main @config.galleryBodyContent)
+              @config.galleryBodyContent
               (if (= @config.browseLook master-detail)
-                (render-ui main @config.masterDetailBodyContent)
+                @config.masterDetailBodyContent
                 (if (= @config.browseLook triage)
-                  (render-ui main @config.triageBodyContent)
-                  (render-ui main @config.bodyContent))))))
+                  @config.triageBodyContent
+                  @config.bodyContent))))), {
+            currentPage: @entity.browsePage
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ @entity.browseTotalCount @config.pageSize)))
+            type: pagination
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       ;; A refetch keeps the populated body on screen; only the failure
       ;; itself has to reach the user.
       BrowseItemLoadFailed -> browsing
@@ -187,6 +230,7 @@ orbital BrowseItemOrbital {
 
     state error {
       INIT -> loading
+        (set @entity.browsePage 1)
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
           filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
@@ -348,9 +392,9 @@ orbital BrowseItemOrbital {
         @description "A field name, or field:desc for newest or largest first (e.g. createdAt:desc). Applied before paging. Empty keeps the stored order."
         @synonyms "sort, sort by, order by, newest first, latest first, sort order"
         @tier "presentation"
-      displayPageSize : number = 10
+      displayPageSize : number = 0
         @label "How many rows to show at once?"
-        @description "Rows visible per page before the pagination control appears."
+        @description "Rows visible per client-side page inside the loaded server page. 0 (default) shows the whole server page under the list's own pager; a positive value stacks a second pager on it."
         @synonyms "visible rows, items per page, display limit, show per page"
         @tier "presentation"
       include : [string] = []

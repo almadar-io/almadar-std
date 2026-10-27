@@ -611,6 +611,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
 
   set: {
     module: 'core',
+    // emit key order: effect/set.rs:101
+    emitKeys: ['success'],
     category: 'effect',
     minArity: 2,
     maxArity: 2,
@@ -656,6 +658,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   persist: {
     module: 'core',
+    // emit key order: effect/persist.rs:214, :492
+    emitKeys: ['success', 'failure'],
     category: 'effect',
     minArity: 2,
     maxArity: 4,
@@ -821,6 +825,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   fetch: {
     module: 'core',
+    // emit key order: effect/fetch.rs:94
+    emitKeys: ['success', 'failure'],
     category: 'effect',
     minArity: 1,
     maxArity: 2,
@@ -870,6 +876,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'fetch-stream': {
     module: 'core',
+    // emit key order: effect/fetch.rs:451
+    emitKeys: ['onMessage', 'success', 'failure'],
     category: 'effect',
     minArity: 1,
     maxArity: 2,
@@ -923,6 +931,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   ref: {
     module: 'core',
+    // emit key order: effect/ref.rs:25
+    emitKeys: ['onChange', 'failure'],
     category: 'effect',
     minArity: 1,
     maxArity: 2,
@@ -1043,6 +1053,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'call-service': {
     module: 'core',
+    // emit key order: effect/keyed_call.rs:15, call_service.rs:325
+    emitKeys: ['success', 'failure', 'onMessage', 'cancelled'],
     category: 'effect',
     minArity: 2,
     maxArity: 4,
@@ -1079,6 +1091,27 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   http: {
     module: 'core',
+    // emit key order: effect/keyed_call.rs:15
+    emitKeys: ['success', 'failure', 'onMessage', 'cancelled'],
+    // effect/http.rs:22 REQUEST_KEYS, :42 BODY_KEYS, :49 AUTH_SCHEMES, :62-90 auth_keys, :234 onUnauthorized, :239 aws-sigv4 required, :398 queryEncoding; orbital-core wire/http_wire.rs:287 default ports
+    httpWire: {
+      requestKeys: ['query', 'headers', 'json', 'form', 'text', 'bytes', 'multipart', 'auth', 'timeoutMs', 'delayMs', 'responseAs', 'paginate', 'stream', 'retry', 'formEncoding', 'queryEncoding', 'presign', 'webpush'],
+      bodyKeys: ['json', 'form', 'text', 'bytes', 'multipart', 'webpush'],
+      queryEncodings: ['uri', 'rfc3986'],
+      defaultPorts: { http: 80, https: 443 },
+      authSchemes: [
+        { name: 'oauth-client', keys: ['scheme', 'op', 'client', 'clients', 'code', 'state', 'subject', 'provider', 'refreshToken', 'token', 'accessToken'] },
+        { name: 'bearer', keys: ['scheme', 'credential'] },
+        { name: 'api-key', keys: ['scheme', 'credential', 'name', 'in'] },
+        { name: 'basic', keys: ['scheme', 'user', 'credential'] },
+        { name: 'oauth2-client', keys: ['scheme', 'tokenUrl', 'clientId', 'clientSecret', 'scope', 'grantRequest', 'onUnauthorized'], onUnauthorized: ['reply', 'refresh'] },
+        { name: 'token-exchange', keys: ['scheme', 'tokenUrl', 'grant', 'body', 'clientAuth', 'clientId', 'clientSecret', 'accessField', 'expiresField', 'expiresMarginMs', 'storeAs', 'grantRequest', 'rotate', 'onUnauthorized'], onUnauthorized: ['reply', 'refresh'] },
+        { name: 'jwt-bearer', keys: ['scheme', 'key', 'alg', 'claims', 'tokenUrl', 'grant', 'scope', 'expiresMarginMs', 'storeAs', 'grantRequest', 'onUnauthorized'], onUnauthorized: ['reply', 'refresh'] },
+        { name: 'hmac-sha256', keys: ['scheme', 'credential', 'name', 'signs', 'encoding', 'prefix'] },
+        { name: 'aws-sigv4', keys: ['scheme', 'accessKeyId', 'secretAccessKey', 'sessionToken', 'region', 'service'], required: ['accessKeyId', 'secretAccessKey', 'region', 'service'] },
+        { name: 'vapid', keys: ['scheme', 'privateKey', 'publicKey', 'subject'] },
+      ],
+    },
     category: 'effect',
     minArity: 3,
     maxArity: 5,
@@ -1124,6 +1157,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   redis: {
     module: 'core',
+    // emit key order: effect/redis.rs:17
+    emitKeys: ['success', 'failure'],
     category: 'effect',
     defaultPorts: { redis: 6379, rediss: 6379 },
     minArity: 2,
@@ -1154,6 +1189,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   postgres: {
     module: 'core',
+    // emit key order: effect/postgres.rs:19
+    emitKeys: ['success', 'failure'],
     category: 'effect',
     defaultPorts: { postgres: 5432, postgresql: 5432 },
     minArity: 3,
@@ -1437,6 +1474,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'oauth-authorize': {
     module: 'core',
+    // emit key order: effect/oauth.rs:20
+    emitKeys: ['success', 'failure'],
     category: 'effect',
     minArity: 2,
     maxArity: 3,
@@ -1464,6 +1503,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'oauth-connection-status': {
     module: 'core',
+    // emit key order: effect/oauth.rs:20
+    emitKeys: ['success', 'failure'],
     category: 'effect',
     minArity: 1,
     maxArity: 2,
@@ -1486,6 +1527,8 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'oauth-connection-forget': {
     module: 'core',
+    // emit key order: effect/oauth.rs:20
+    emitKeys: ['success', 'failure'],
     category: 'effect',
     minArity: 1,
     maxArity: 2,

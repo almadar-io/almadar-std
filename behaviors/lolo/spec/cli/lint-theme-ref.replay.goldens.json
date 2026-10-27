@@ -1,0 +1,1089 @@
+{
+  "atom": "cli/atoms/std-orb-lint-theme-ref.lolo",
+  "trait": "OrbLintThemeRef",
+  "note": "Cases mirror theme.rs validate_theme_ref: an app, orbital or themes-list reference is valid when it is an Alias.theme, an inline orbital theme name or a built-in key. Expected findings equal `orb validate --json` on the fixtures in the batch scratch dir (th-*.lolo, th-*.orb). The vocabulary step feeds a six-key subset.",
+  "cases": [
+    {
+      "id": "an-unknown-app-theme-is-reported",
+      "steps": [
+        {
+          "event": "UI_VOCAB_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": [],
+            "itemActionBaseProps": [],
+            "lucideIcons": [],
+            "themeKeys": [
+              "almadar-dark",
+              "almadar-light",
+              "clay-dark",
+              "clay-light",
+              "terminal-dark",
+              "game-adventure-dark"
+            ],
+            "deliveryRoots": [],
+            "eventSourceKeys": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ThemeRefFx",
+              "orbitals": [
+                {
+                  "name": "FooOrbital"
+                }
+              ],
+              "theme": "nonexistent-dark"
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintThemeRef",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-ref",
+                  "findings": [
+                    {
+                      "code": "ORB_X_UNKNOWN_THEME",
+                      "path": "theme",
+                      "message": "Unknown theme 'nonexistent-dark'. Must be a built-in theme key (the full data-theme value, e.g. linear-clean-light, terminal-dark, game-adventure-dark) or an orbital-declared inline theme.",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-built-in-app-theme-is-accepted",
+      "steps": [
+        {
+          "event": "UI_VOCAB_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": [],
+            "itemActionBaseProps": [],
+            "lucideIcons": [],
+            "themeKeys": [
+              "almadar-dark",
+              "almadar-light",
+              "clay-dark",
+              "clay-light",
+              "terminal-dark",
+              "game-adventure-dark"
+            ],
+            "deliveryRoots": [],
+            "eventSourceKeys": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ThemeRefFx",
+              "orbitals": [
+                {
+                  "name": "FooOrbital"
+                }
+              ],
+              "theme": "clay-dark"
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintThemeRef",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-ref",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-unknown-orbital-theme-is-reported-at-its-index",
+      "steps": [
+        {
+          "event": "UI_VOCAB_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": [],
+            "itemActionBaseProps": [],
+            "lucideIcons": [],
+            "themeKeys": [
+              "almadar-dark",
+              "almadar-light",
+              "clay-dark",
+              "clay-light",
+              "terminal-dark",
+              "game-adventure-dark"
+            ],
+            "deliveryRoots": [],
+            "eventSourceKeys": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ThemeRefFx",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "theme": "almadar-dark"
+                },
+                {
+                  "name": "B",
+                  "theme": "not-a-theme"
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintThemeRef",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-ref",
+                  "findings": [
+                    {
+                      "code": "ORB_X_UNKNOWN_THEME",
+                      "path": "orbitals[1].theme",
+                      "message": "Unknown theme 'not-a-theme'. Must be a built-in theme key (the full data-theme value, e.g. linear-clean-light, terminal-dark, game-adventure-dark) or an orbital-declared inline theme.",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-built-in-orbital-theme-is-accepted",
+      "steps": [
+        {
+          "event": "UI_VOCAB_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": [],
+            "itemActionBaseProps": [],
+            "lucideIcons": [],
+            "themeKeys": [
+              "almadar-dark",
+              "almadar-light",
+              "clay-dark",
+              "clay-light",
+              "terminal-dark",
+              "game-adventure-dark"
+            ],
+            "deliveryRoots": [],
+            "eventSourceKeys": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ThemeRefFx",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "theme": "game-adventure-dark"
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintThemeRef",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-ref",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-unknown-themes-list-entry-is-reported-at-its-index",
+      "steps": [
+        {
+          "event": "UI_VOCAB_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": [],
+            "itemActionBaseProps": [],
+            "lucideIcons": [],
+            "themeKeys": [
+              "almadar-dark",
+              "almadar-light",
+              "clay-dark",
+              "clay-light",
+              "terminal-dark",
+              "game-adventure-dark"
+            ],
+            "deliveryRoots": [],
+            "eventSourceKeys": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ThemeRefFx",
+              "orbitals": [
+                {
+                  "name": "FooOrbital"
+                }
+              ],
+              "themes": [
+                "clay-dark",
+                "bogus-light",
+                "almadar-light"
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintThemeRef",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-ref",
+                  "findings": [
+                    {
+                      "code": "ORB_X_UNKNOWN_THEME",
+                      "path": "themes[1]",
+                      "message": "Unknown theme 'bogus-light'. Must be a built-in theme key (the full data-theme value, e.g. linear-clean-light, terminal-dark, game-adventure-dark) or an orbital-declared inline theme.",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "app-orbital-and-list-findings-come-in-that-order",
+      "steps": [
+        {
+          "event": "UI_VOCAB_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": [],
+            "itemActionBaseProps": [],
+            "lucideIcons": [],
+            "themeKeys": [
+              "almadar-dark",
+              "almadar-light",
+              "clay-dark",
+              "clay-light",
+              "terminal-dark",
+              "game-adventure-dark"
+            ],
+            "deliveryRoots": [],
+            "eventSourceKeys": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ThemeRefFx",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "theme": "b-dark"
+                }
+              ],
+              "theme": "a-dark",
+              "themes": [
+                "c-dark"
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintThemeRef",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-ref",
+                  "findings": [
+                    {
+                      "code": "ORB_X_UNKNOWN_THEME",
+                      "path": "theme",
+                      "message": "Unknown theme 'a-dark'. Must be a built-in theme key (the full data-theme value, e.g. linear-clean-light, terminal-dark, game-adventure-dark) or an orbital-declared inline theme.",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_X_UNKNOWN_THEME",
+                      "path": "orbitals[0].theme",
+                      "message": "Unknown theme 'b-dark'. Must be a built-in theme key (the full data-theme value, e.g. linear-clean-light, terminal-dark, game-adventure-dark) or an orbital-declared inline theme.",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_X_UNKNOWN_THEME",
+                      "path": "themes[0]",
+                      "message": "Unknown theme 'c-dark'. Must be a built-in theme key (the full data-theme value, e.g. linear-clean-light, terminal-dark, game-adventure-dark) or an orbital-declared inline theme.",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-alias-theme-reference-is-accepted",
+      "steps": [
+        {
+          "event": "UI_VOCAB_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": [],
+            "itemActionBaseProps": [],
+            "lucideIcons": [],
+            "themeKeys": [
+              "almadar-dark",
+              "almadar-light",
+              "clay-dark",
+              "clay-light",
+              "terminal-dark",
+              "game-adventure-dark"
+            ],
+            "deliveryRoots": [],
+            "eventSourceKeys": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ThemeRefFx",
+              "orbitals": [
+                {
+                  "name": "FooOrbital"
+                }
+              ],
+              "theme": "Brand.theme",
+              "themes": [
+                "Other2.theme"
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintThemeRef",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-ref",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-lower-case-alias-theme-is-reported",
+      "steps": [
+        {
+          "event": "UI_VOCAB_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": [],
+            "itemActionBaseProps": [],
+            "lucideIcons": [],
+            "themeKeys": [
+              "almadar-dark",
+              "almadar-light",
+              "clay-dark",
+              "clay-light",
+              "terminal-dark",
+              "game-adventure-dark"
+            ],
+            "deliveryRoots": [],
+            "eventSourceKeys": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ThemeRefFx",
+              "orbitals": [
+                {
+                  "name": "FooOrbital"
+                }
+              ],
+              "theme": "brand.theme"
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintThemeRef",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-ref",
+                  "findings": [
+                    {
+                      "code": "ORB_X_UNKNOWN_THEME",
+                      "path": "theme",
+                      "message": "Unknown theme 'brand.theme'. Must be a built-in theme key (the full data-theme value, e.g. linear-clean-light, terminal-dark, game-adventure-dark) or an orbital-declared inline theme.",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-theme-named-by-an-inline-orbital-theme-is-accepted",
+      "steps": [
+        {
+          "event": "UI_VOCAB_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": [],
+            "itemActionBaseProps": [],
+            "lucideIcons": [],
+            "themeKeys": [
+              "almadar-dark",
+              "almadar-light",
+              "clay-dark",
+              "clay-light",
+              "terminal-dark",
+              "game-adventure-dark"
+            ],
+            "deliveryRoots": [],
+            "eventSourceKeys": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ThemeRefFx",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "theme": {
+                    "name": "deco",
+                    "tokens": {}
+                  }
+                }
+              ],
+              "theme": "deco",
+              "themes": [
+                "deco"
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintThemeRef",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-ref",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-inline-theme-definition-is-not-judged",
+      "steps": [
+        {
+          "event": "UI_VOCAB_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": [],
+            "itemActionBaseProps": [],
+            "lucideIcons": [],
+            "themeKeys": [
+              "almadar-dark",
+              "almadar-light",
+              "clay-dark",
+              "clay-light",
+              "terminal-dark",
+              "game-adventure-dark"
+            ],
+            "deliveryRoots": [],
+            "eventSourceKeys": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ThemeRefFx",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "theme": {
+                    "name": "anything",
+                    "tokens": {}
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintThemeRef",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-ref",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-empty-theme-name-is-reported",
+      "steps": [
+        {
+          "event": "UI_VOCAB_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": [],
+            "itemActionBaseProps": [],
+            "lucideIcons": [],
+            "themeKeys": [
+              "almadar-dark",
+              "almadar-light",
+              "clay-dark",
+              "clay-light",
+              "terminal-dark",
+              "game-adventure-dark"
+            ],
+            "deliveryRoots": [],
+            "eventSourceKeys": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ThemeRefFx",
+              "orbitals": [
+                {
+                  "name": "FooOrbital"
+                }
+              ],
+              "theme": ""
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintThemeRef",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-ref",
+                  "findings": [
+                    {
+                      "code": "ORB_X_UNKNOWN_THEME",
+                      "path": "theme",
+                      "message": "Unknown theme ''. Must be a built-in theme key (the full data-theme value, e.g. linear-clean-light, terminal-dark, game-adventure-dark) or an orbital-declared inline theme.",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-program-with-no-theme-is-clean",
+      "steps": [
+        {
+          "event": "UI_VOCAB_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": [],
+            "itemActionBaseProps": [],
+            "lucideIcons": [],
+            "themeKeys": [
+              "almadar-dark",
+              "almadar-light",
+              "clay-dark",
+              "clay-light",
+              "terminal-dark",
+              "game-adventure-dark"
+            ],
+            "deliveryRoots": [],
+            "eventSourceKeys": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ThemeRefFx",
+              "orbitals": [
+                {
+                  "name": "FooOrbital"
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintThemeRef",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-ref",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ui-vocabulary-unread-is-reported",
+      "steps": [
+        {
+          "event": "UI_VOCAB_UNREAD",
+          "from": "ready",
+          "payload": {
+            "error": "gone"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "ThemeRefFx",
+              "orbitals": [
+                {
+                  "name": "FooOrbital"
+                }
+              ],
+              "theme": "clay-dark"
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintThemeRef",
+          "event": "LINT_FINISH",
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-ref",
+                  "findings": [
+                    {
+                      "code": "ORB_LINT_UI_VOCAB_UNREAD",
+                      "path": "uiVocabulary",
+                      "message": "the installed @almadar/core declares no readable UI vocabulary, so the built-in theme keys are unknown",
+                      "suggestion": "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintThemeRefCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint theme-ref <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "one file argument asks the lint input to read it",
+      "steps": [
+        {
+          "trait": "OrbLintThemeRefCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "{\"argv\":[\"a.lolo\"],\"cwd\":\"/w\"}"
+          },
+          "expect": {
+            "fired": true,
+            "state": "waiting",
+            "emits": [
+              {
+                "event": "LINT_REQUEST",
+                "payload": {
+                  "file": "a.lolo"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

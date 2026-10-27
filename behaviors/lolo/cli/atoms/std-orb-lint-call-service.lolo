@@ -4,7 +4,7 @@ app std-orb-lint-call-service [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-call-service — the `orb lint call-service <file>` command, the port of effect/call_service.rs (validate_call_service, check_array_call, check_service_name, check_action, check_params, walk_nested_call_services): every `call-service` (or `call_service`) form of an inline trait's transition or tick, at the path the compiler reports it. A call-service that is itself an effect is checked where it stands, inside the do, if, when and let effect-sequencing forms too (at `<effect>.do[i]`, `.then`, `.else`, `.body[i]`, a branch written as a list adding `[k]`); a call-service nested in the arguments of an effect, in the condition of an if or when, or in a let value is checked at the path of the effect that holds it. Service names, actions, params and the response shape come from the installed services registry (std-orb-lint-service-registry), and the program's own `services` when it declares any. Reports ORB_EFF_CALL_SERVICE_MISSING_SERVICE (fewer than two arguments, a service name that is not text, a service the program's `services` does not define), ORB_EFF_CALL_SERVICE_UNKNOWN_SERVICE (a service the registry does not know), ORB_EFF_CALL_SERVICE_MISSING_ACTION (an action that is not text, or not an action of the service; a declared-only service has no action list to check), ORB_EFF_CALL_SERVICE_UNKNOWN_PARAM (an args key the action does not declare, the envelope keys emit, onSuccess, onError and timeout excepted), ORB_EFF_CALL_SERVICE_MISSING_PARAM (a required param the args object lacks), ORB_EFF_CALL_SERVICE_PARAM_TYPE (a literal of another kind than the declared type; a binding or call is not checked) and ORB_CALL_SERVICE_RESULT_HAS_KEY (a keyed call to an action whose response already has a `key` field). The object form `{ call_service: { … } }` of an effect (written only in .orb documents), the emit-block findings and the key findings are not reported here. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint call-service: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-call-service — the `orb lint call-service <file>` command, the port of effect/call_service.rs (validate_call_service, check_array_call, check_service_name, check_action, check_params, walk_nested_call_services): every `call-service` (or `call_service`) form of an inline trait's transition or tick, at the path the compiler reports it. A call-service that is itself an effect is checked where it stands, inside the do, if, when and let effect-sequencing forms too (at `<effect>.do[i]`, `.then`, `.else`, `.body[i]`, a branch written as a list adding `[k]`); a call-service nested in the arguments of an effect, in the condition of an if or when, or in a let value is checked at the path of the effect that holds it. Service names, actions, params and the response shape come from the installed services registry (std-orb-lint-service-registry), and the program's own `services` when it declares any. Reports ORB_EFF_CALL_SERVICE_MISSING_SERVICE (fewer than two arguments, a service name that is not text, a service the program's `services` does not define), ORB_EFF_CALL_SERVICE_UNKNOWN_SERVICE (a service the registry does not know), ORB_EFF_CALL_SERVICE_MISSING_ACTION (an action that is not text, or not an action of the service; a declared-only service has no action list to check), ORB_EFF_CALL_SERVICE_UNKNOWN_PARAM (an args key the action does not declare, the envelope keys emit, onSuccess, onError and timeout excepted), ORB_EFF_CALL_SERVICE_MISSING_PARAM (a required param the args object lacks), ORB_EFF_CALL_SERVICE_PARAM_TYPE (a literal of another kind than the declared type; a binding or call is not checked) and ORB_CALL_SERVICE_RESULT_HAS_KEY (a keyed call to an action whose response already has a `key` field). The object form `{ call_service: { … } }` of an effect (written only in .orb documents), the key findings are not reported here. The `emit` block of the trailing options of a call-service that is itself an effect is checked through std-orb-emit-config against the emit keys of the operator table, which std-orb-lint-input sends as LINT_HOST_FACTS (ORB_EFF_EMIT_KEY_INVALID, ORB_EFF_EMIT_INVALID_NAME, ORB_EFF_EMIT_UNDECLARED_EVENT). Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint call-service: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-call-service"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -17,25 +17,33 @@ type CsFold = { e : CsPlacedList!, s : CsPlacedList! }
 type CsTransition = { effects : [CsVal?]? }
 type CsTick = { effects : [CsVal?]? }
 type CsMachine = { transitions : [CsTransition]? }
-type CsTrait = { name : string, stateMachine : CsMachine?, ticks : [CsTick]? }
+type CsEmit = { event : string }
+type CsTrait = { name : string, stateMachine : CsMachine?, ticks : [CsTick]?, emits : [CsEmit]? }
 type CsOrbital = { name : string, traits : [CsVal] }
 type CsServiceDef = { name : string }
 type CsProgram = { orbitals : [CsOrbital], services : [CsServiceDef]? }
-type CsTop = { p : string!, e : CsVal }
+type CsTop = { p : string!, e : CsVal, dc : [string]! }
 type CsTops = [CsTop]
-type CsSite = { path : string!, call : [CsVal?]!, leaf : boolean! }
+type CsSite = { path : string!, call : [CsVal?]!, leaf : boolean!, dc : [string]! }
+type CsHostFact = { emitKeys : [string]? }
 type CsSites = [CsSite]
 type CsCalls = [[CsVal?]]
 type SrVal = string | number | boolean | [SrVal?] | Map string SrVal?
 type SrParam = { name : string!, type : string!, required : boolean!, kind : string! }
 type SrAction = { params : [SrParam]!, hasKey : boolean! }
 type SrService = { actions : Map string SrAction! }
+type EmitVal = string | number | boolean | [EmitVal?] | Map string EmitVal?
+type EmitObj = Map string EmitVal?
+type Seg = { items : [EmitItem]!, pre : [OrbFinding]!, post : [OrbFinding]! }
+type EmitItem = { id : string!, path : string!, emit : EmitObj!, allowedKeys : [string]!, checkDeclared : boolean!, declared : [string]! }
+type EmitResult = { id : string!, findings : [OrbFinding]! }
 
 
 orbital OrbLintCallServiceOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
   uses Reg from "std/behaviors/std-orb-lint-service-registry"
+  uses EmitConfigUse from "std/behaviors/std-orb-emit-config"
 
   entity OrbLintCallServiceRun [runtime] {
     id : string!
@@ -46,6 +54,11 @@ orbital OrbLintCallServiceOrbital {
     haveTops : boolean = false
     registry : Map string SrService = {}
     haveRegistry : boolean = false
+    emitKeys : [string] = []
+    hostUnread : boolean = false
+    segs : [Seg] = []
+    emitRes : [EmitResult] = []
+
   }
 
   trait OrbLintCallService -> OrbLintCallServiceRun [optimistic] {
@@ -63,15 +76,15 @@ orbital OrbLintCallServiceOrbital {
                   (let ((t (json/parse (json/stringify (array/nth @trs @ti)) CsTrait)))
                     (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
                       @nt
-                      (let ((base (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")))
+                      (let ((base (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (dc (array/map (or (object/get @t "emits" null) []) (fn em (object/get @em "event")))))
                         (let ((trans (or (object/get (object/get @t "stateMachine") "transitions" null) [])) (ticks (or (object/get @t "ticks" null) [])))
                           (array/concat
                             (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
                               (let ((effs (or (object/get (array/nth @trans @i) "effects" null) [])))
-                                (array/map (array/range 0 (array/len @effs)) (fn j { p: (str/concat @base ".stateMachine.transitions[" @i "].effects[" @j "]"), e: (array/nth @effs @j) }))))))
+                                (array/map (array/range 0 (array/len @effs)) (fn j { p: (str/concat @base ".stateMachine.transitions[" @i "].effects[" @j "]"), e: (array/nth @effs @j), dc: @dc }))))))
                             (array/flatten (array/map (array/range 0 (array/len @ticks)) (fn i
                               (let ((effs (or (object/get (array/nth @ticks @i) "effects" null) [])))
-                                (array/map (array/range 0 (array/len @effs)) (fn j { p: (str/concat @base ".ticks[" @i "].effects[" @j "]"), e: (array/nth @effs @j) })))))))))))))))))))))
+                                (array/map (array/range 0 (array/len @effs)) (fn j { p: (str/concat @base ".ticks[" @i "].effects[" @j "]"), e: (array/nth @effs @j), dc: @dc })))))))))))))))))))))
         (set @entity.known (let ((nsd : [CsServiceDef] [])) (array/map (or (object/get @payload.program "services" null) @nsd) (fn s (object/get @s "name")))))
         (set @entity.haveTops true)
         (emit CS_ASK { })
@@ -87,9 +100,13 @@ orbital OrbLintCallServiceOrbital {
         (set @entity.registry @payload.services)
         (set @entity.haveRegistry true)
         (emit CS_PLAN { })
-      CS_PLAN -> ready when (and @entity.haveTops @entity.haveRegistry)
+      CS_PLAN -> ready when (and @entity.haveTops @entity.haveRegistry @entity.hostUnread)
         (set @entity.haveTops false)
-        (set @entity.findings (let ((none : [OrbFinding] []) (nonc : [[CsVal?]] []) (nop : [SrParam] []) (nosite : [CsSite] []) (noact : Map string SrAction {}) (emptyMap : CsMap {}) (known @entity.known) (registry @entity.registry))
+        (set @entity.findings [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table could not be read, so the emit keys of call-service are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the emit keys of call-service", severity: "error" }])
+        (emit LINT_FINISH { })
+      CS_PLAN -> ready when (and @entity.haveTops @entity.haveRegistry (not @entity.hostUnread))
+        (set @entity.haveTops false)
+        (set @entity.segs (let ((none : [OrbFinding] []) (noitems : [EmitItem] []) (nonc : [[CsVal?]] []) (nop : [SrParam] []) (nosite : [CsSite] []) (noact : Map string SrAction {}) (emptyMap : CsMap {}) (known @entity.known) (registry @entity.registry))
           (let ((sites (array/flatten (array/map @entity.tops (fn t
                   (let ((r (json/parse (json/stringify (or (tree/fold (object/get @t "e") (fn (n k)
             (let ((none : [CsPlaced] []))
@@ -123,15 +140,31 @@ orbital OrbLintCallServiceOrbital {
                     (if (validate/array @nd) (array/flatten (array/filter @kids (fn c (!= @c null)))) (if (validate/object @nd) (array/flatten (array/map (object/keys @kids) (fn key (or (object/get @kids @key @nonc) @nonc)))) @nonc)))) CsVal) @nonc)) CsCalls) @nonc)))
                               (let ((nested (if (and @isLeaf (>= (array/len @e) 3)) (array/slice @all 1 (array/len @all)) @all)))
                                 (array/concat
-                                  (if @isLeaf [{ path: @pth, call: @e, leaf: true }] @nosite)
-                                  (array/map @nested (fn c { path: @pth, call: @c, leaf: false })))))))))))))))))
-            (array/flatten (array/map @sites (fn s
+                                  (if @isLeaf [{ path: @pth, call: @e, leaf: true, dc: (object/get @t "dc") }] @nosite)
+                                  (array/map @nested (fn c { path: @pth, call: @c, leaf: false, dc: (object/get @t "dc") })))))))))))))))))
+            (array/map (array/range 0 (array/len @sites)) (fn si
+              (let ((s (array/nth @sites @si)))
               (let ((a (object/get @s "call")) (p (object/get @s "path")) (leaf (object/get @s "leaf")))
                 (let ((n (array/len @a)))
-                  (if (and @leaf (< @n 3)) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_SERVICE", path: @p, message: (str/concat "call_service requires service name and action"), suggestion: "Use: [\"call-service\", \"serviceName\", \"action\", { onSuccess: [...] }]", severity: "error" }] (if (< @n 3) @none (let ((svc (array/nth @a 1))) (if (not (validate/string @svc)) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_SERVICE", path: @p, message: (str/concat "Service name must be a string"), suggestion: "", severity: "error" }] (let ((act (array/nth @a 2))) (let ((nameKnown (or (array/includes @known @svc) (object/has @registry @svc)))) (if (not (validate/string @act)) (array/concat (if @nameKnown @none (if (> (array/len @known) 0) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_SERVICE", path: @p, message: (str/concat "Service '" @svc "' is not defined"), suggestion: "Define the service in schema.services or check the name for a typo", severity: "error" }] (if (> (array/len (object/keys @registry)) 0) [{ code: "ORB_EFF_CALL_SERVICE_UNKNOWN_SERVICE", path: @p, message: (str/concat "Service '" @svc "' is not a registered integrator or declared service"), suggestion: "Register the integrator (almadar-sync services) or add it to DECLARED_SERVICES, or check the name for a typo", severity: "error" }] @none))) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_ACTION", path: @p, message: (str/concat "Action must be a string"), suggestion: "", severity: "error" }]) (array/concat (if @nameKnown @none (if (> (array/len @known) 0) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_SERVICE", path: @p, message: (str/concat "Service '" @svc "' is not defined"), suggestion: "Define the service in schema.services or check the name for a typo", severity: "error" }] (if (> (array/len (object/keys @registry)) 0) [{ code: "ORB_EFF_CALL_SERVICE_UNKNOWN_SERVICE", path: @p, message: (str/concat "Service '" @svc "' is not a registered integrator or declared service"), suggestion: "Register the integrator (almadar-sync services) or add it to DECLARED_SERVICES, or check the name for a typo", severity: "error" }] @none))) (let ((sinfo (object/get @registry @svc null))) (let ((actions (if (= @sinfo null) @noact (object/get @sinfo "actions" @noact)))) (let ((ainfo (object/get @actions @act null))) (array/concat (if (and (!= @sinfo null) (> (array/len (object/keys @actions)) 0) (= @ainfo null)) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_ACTION", path: @p, message: (str/concat "Action '" @act "' is not a known action on service '" @svc "'"), suggestion: "Check the service contract for valid action names", severity: "error" }] @none) (if (= @ainfo null) @none (let ((last (array/last @a))) (let ((trailing (and (> @n 4) (validate/object @last) (let ((lm (or (json/parse (json/stringify @last) CsMap) {}))) (or (object/has @lm "emit") (object/has @lm "key")))))) (let ((optm (if @trailing (or (json/parse (json/stringify @last) CsMap) {}) null))) (let ((argsEnd (if @trailing (- @n 1) @n))) (array/concat (let ((pexp (if (> @argsEnd 3) (array/nth @a (- @argsEnd 1)) null))) (if (and (!= @pexp null) (not (validate/object @pexp))) @none (let ((pm : CsMap (or (json/parse (json/stringify (if (= @pexp null) @emptyMap @pexp)) CsMap) @emptyMap)) (declared (object/get @ainfo "params" @nop))) (array/concat (array/map (array/filter (array/sort (object/keys @pm)) (fn key (and (not (array/includes ["emit", "onSuccess", "onError", "timeout"] @key)) (not (array/includes (array/map @declared (fn d (object/get @d "name"))) @key))))) (fn key { code: "ORB_EFF_CALL_SERVICE_UNKNOWN_PARAM", path: @p, message: (str/concat "Param '" @key "' is not declared by action '" @act "' on service '" @svc "'"), suggestion: "Check the service contract for the declared param names", severity: "error" })) (array/flatten (array/map @declared (fn d (let ((dn (object/get @d "name"))) (array/concat (if (and (object/get @d "required") (not (object/has @pm @dn))) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_PARAM", path: @p, message: (str/concat "Required param '" @dn "' is missing on '" @act "' of service '" @svc "'"), suggestion: "Supply the required param in the call's args object", severity: "error" }] @none) (let ((pv (object/get @pm @dn null)) (ex (object/get @d "kind"))) (if (or (= @ex "") (= @pv null)) @none (let ((actual (if (validate/string @pv) (if (or (str/startsWith @pv (quote "@")) (str/startsWith @pv "?") (str/startsWith @pv "$")) "" "string") (if (validate/number @pv) "number" (if (validate/boolean @pv) "boolean" (if (validate/object @pv) "object" (if (validate/array @pv) (if (and (> (array/len @pv) 0) (validate/string (array/first @pv))) "" "array") ""))))))) (if (or (= @actual "") (= @actual @ex)) @none [{ code: "ORB_EFF_CALL_SERVICE_PARAM_TYPE", path: @p, message: (str/concat "Param '" @dn "' on '" @act "' of service '" @svc "' expects " (object/get @d "type") ", got a " @actual " literal"), suggestion: "Match the declared param type from the service contract", severity: "error" }]))))))))))))) (if (and (!= @optm null) (object/has @optm "key") (object/get @ainfo "hasKey" false)) [{ code: "ORB_CALL_SERVICE_RESULT_HAS_KEY", path: @p, message: (str/concat "keyed call-service " @svc "." @act " returns a record that already has a `key` field; the call's `key` is merged beside the result and would collide"), suggestion: "Drop the call's `key`, or use an action whose result has no `key` field", severity: "error" }] @none)))))))))))))))))))))))))))
-        (emit LINT_FINISH { })
+                  { items: (if (and @leaf (> @n 3) (validate/object (array/last @a)) (validate/object (object/get (or (json/parse (json/stringify (array/last @a)) CsMap) {}) "emit" null))) [{ id: (str/concat "e" @si), path: @p, emit: (or (json/parse (json/stringify (object/get (or (json/parse (json/stringify (array/last @a)) CsMap) {}) "emit")) EmitObj) {}), allowedKeys: @entity.emitKeys, checkDeclared: true, declared: (object/get @s "dc") }] @noitems), pre: (if (and @leaf (< @n 3)) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_SERVICE", path: @p, message: (str/concat "call_service requires service name and action"), suggestion: "Use: [\"call-service\", \"serviceName\", \"action\", { onSuccess: [...] }]", severity: "error" }] (if (< @n 3) @none (let ((svc (array/nth @a 1))) (if (not (validate/string @svc)) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_SERVICE", path: @p, message: (str/concat "Service name must be a string"), suggestion: "", severity: "error" }] (let ((act (array/nth @a 2))) (let ((nameKnown (or (array/includes @known @svc) (object/has @registry @svc)))) (if (not (validate/string @act)) (array/concat (if @nameKnown @none (if (> (array/len @known) 0) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_SERVICE", path: @p, message: (str/concat "Service '" @svc "' is not defined"), suggestion: "Define the service in schema.services or check the name for a typo", severity: "error" }] (if (> (array/len (object/keys @registry)) 0) [{ code: "ORB_EFF_CALL_SERVICE_UNKNOWN_SERVICE", path: @p, message: (str/concat "Service '" @svc "' is not a registered integrator or declared service"), suggestion: "Register the integrator (almadar-sync services) or add it to DECLARED_SERVICES, or check the name for a typo", severity: "error" }] @none))) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_ACTION", path: @p, message: (str/concat "Action must be a string"), suggestion: "", severity: "error" }]) (array/concat (if @nameKnown @none (if (> (array/len @known) 0) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_SERVICE", path: @p, message: (str/concat "Service '" @svc "' is not defined"), suggestion: "Define the service in schema.services or check the name for a typo", severity: "error" }] (if (> (array/len (object/keys @registry)) 0) [{ code: "ORB_EFF_CALL_SERVICE_UNKNOWN_SERVICE", path: @p, message: (str/concat "Service '" @svc "' is not a registered integrator or declared service"), suggestion: "Register the integrator (almadar-sync services) or add it to DECLARED_SERVICES, or check the name for a typo", severity: "error" }] @none))) (let ((sinfo (object/get @registry @svc null))) (let ((actions (if (= @sinfo null) @noact (object/get @sinfo "actions" @noact)))) (let ((ainfo (object/get @actions @act null))) (array/concat (if (and (!= @sinfo null) (> (array/len (object/keys @actions)) 0) (= @ainfo null)) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_ACTION", path: @p, message: (str/concat "Action '" @act "' is not a known action on service '" @svc "'"), suggestion: "Check the service contract for valid action names", severity: "error" }] @none) (if (= @ainfo null) @none (let ((last (array/last @a))) (let ((trailing (and (> @n 4) (validate/object @last) (let ((lm (or (json/parse (json/stringify @last) CsMap) {}))) (or (object/has @lm "emit") (object/has @lm "key")))))) (let ((optm (if @trailing (or (json/parse (json/stringify @last) CsMap) {}) null))) (let ((argsEnd (if @trailing (- @n 1) @n))) (array/concat (let ((pexp (if (> @argsEnd 3) (array/nth @a (- @argsEnd 1)) null))) (if (and (!= @pexp null) (not (validate/object @pexp))) @none (let ((pm : CsMap (or (json/parse (json/stringify (if (= @pexp null) @emptyMap @pexp)) CsMap) @emptyMap)) (declared (object/get @ainfo "params" @nop))) (array/concat (array/map (array/filter (array/sort (object/keys @pm)) (fn key (and (not (array/includes ["emit", "onSuccess", "onError", "timeout"] @key)) (not (array/includes (array/map @declared (fn d (object/get @d "name"))) @key))))) (fn key { code: "ORB_EFF_CALL_SERVICE_UNKNOWN_PARAM", path: @p, message: (str/concat "Param '" @key "' is not declared by action '" @act "' on service '" @svc "'"), suggestion: "Check the service contract for the declared param names", severity: "error" })) (array/flatten (array/map @declared (fn d (let ((dn (object/get @d "name"))) (array/concat (if (and (object/get @d "required") (not (object/has @pm @dn))) [{ code: "ORB_EFF_CALL_SERVICE_MISSING_PARAM", path: @p, message: (str/concat "Required param '" @dn "' is missing on '" @act "' of service '" @svc "'"), suggestion: "Supply the required param in the call's args object", severity: "error" }] @none) (let ((pv (object/get @pm @dn null)) (ex (object/get @d "kind"))) (if (or (= @ex "") (= @pv null)) @none (let ((actual (if (validate/string @pv) (if (or (str/startsWith @pv (quote "@")) (str/startsWith @pv "?") (str/startsWith @pv "$")) "" "string") (if (validate/number @pv) "number" (if (validate/boolean @pv) "boolean" (if (validate/object @pv) "object" (if (validate/array @pv) (if (and (> (array/len @pv) 0) (validate/string (array/first @pv))) "" "array") ""))))))) (if (or (= @actual "") (= @actual @ex)) @none [{ code: "ORB_EFF_CALL_SERVICE_PARAM_TYPE", path: @p, message: (str/concat "Param '" @dn "' on '" @act "' of service '" @svc "' expects " (object/get @d "type") ", got a " @actual " literal"), suggestion: "Match the declared param type from the service contract", severity: "error" }]))))))))))))) (if (and (!= @optm null) (object/has @optm "key") (object/get @ainfo "hasKey" false)) [{ code: "ORB_CALL_SERVICE_RESULT_HAS_KEY", path: @p, message: (str/concat "keyed call-service " @svc "." @act " returns a record that already has a `key` field; the call's `key` is merged beside the result and would collide"), suggestion: "Drop the call's `key`, or use an action whose result has no `key` field", severity: "error" }] @none))))))))))))))))))), post: @none }))))))))
+        (emit LINT_PLANNED { })
+      LINT_HOST_FACTS_HEARD -> ready when (object/has @payload.operators "call-service.emitKeys")
+        (set @entity.emitKeys (object/get (object/get @payload.operators "call-service" { emitKeys: [] }) "emitKeys" []))
+      LINT_HOST_FACTS_HEARD -> ready when (not (object/has @payload.operators "call-service.emitKeys"))
+        (set @entity.hostUnread true)
+      LINT_HOST_FACTS_UNREAD_HEARD -> ready
+        (set @entity.hostUnread true)
+
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "call-service", scope: @entity.scope, findings: @entity.findings })
+      LINT_PLANNED -> ready
+        (emit EMIT_CONFIG_CHECK { requestId: (str/concat "emit" @entity.scope), items: (array/flatten (array/map @entity.segs (fn s (object/get @s "items")))) })
+      EMIT_HEARD -> ready
+        (set @entity.emitRes @payload.results)
+        (emit LINT_ASSEMBLE { })
+      LINT_ASSEMBLE -> ready
+        (set @entity.findings (let ((none : [OrbFinding] [])) (array/flatten (array/map @entity.segs (fn s (array/concat (object/get @s "pre") (array/flatten (array/map (object/get @s "items") (fn it (object/get (or (array/find @entity.emitRes (fn r (= (object/get @r "id") (object/get @it "id")))) { id: "", findings: @none }) "findings")))) (object/get @s "post")))))))
+        (emit LINT_FINISH { })
     }
 
     emits {
@@ -150,6 +183,15 @@ orbital OrbLintCallServiceOrbital {
       SERVICE_REGISTRY_ASK -> external { requestId : string! }
         @description "Ask the services registry reader for the registry."
         @tier "internal"
+      LINT_PLANNED { }
+        @description "Internal: the calls are planned, ask the emit-config checker."
+        @tier "internal"
+      LINT_ASSEMBLE { }
+        @description "Internal: merge the emit-config findings into the call findings."
+        @tier "internal"
+      EMIT_CONFIG_CHECK -> external { requestId : string!  items : [EmitItem]! }
+        @description "Ask std-orb-emit-config to check each call's emit object."
+        @tier "internal"
     }
 
     listens {
@@ -159,6 +201,15 @@ orbital OrbLintCallServiceOrbital {
       SERVICE_REGISTRY_HEARD { requestId : string!  unread : boolean!  services : Map string SrService! }
         @description "The services registry reader's answer."
       ServiceRegistry.SERVICE_REGISTRY_ANSWER -> SERVICE_REGISTRY_HEARD
+      LINT_HOST_FACTS_HEARD { operators : Map string CsHostFact! }
+        @description "std-orb-lint-input's LINT_HOST_FACTS: the emit keys the operator table states for call-service."
+      LINT_HOST_FACTS_UNREAD_HEARD { error : string! }
+        @description "std-orb-lint-input's LINT_HOST_FACTS_UNREAD: the host-effect facts could not be read."
+      OrbLintInput.LINT_HOST_FACTS -> LINT_HOST_FACTS_HEARD
+      OrbLintInput.LINT_HOST_FACTS_UNREAD -> LINT_HOST_FACTS_UNREAD_HEARD
+      EMIT_HEARD { requestId : string!  results : [EmitResult]! }
+        @description "std-orb-emit-config's answer: the findings of each call's emit object."
+      OrbEmitConfig.EMIT_CONFIG_CHECKED -> EMIT_HEARD
     }
   }
 
@@ -236,10 +287,20 @@ orbital OrbLintCallServiceOrbital {
   trait ServiceRegistry = Reg.traits.ServiceRegistry {
     listens {
       OrbLintCallService.SERVICE_REGISTRY_ASK -> SERVICE_REGISTRY_ASK
-      LANGUAGE_PACKS_DONE_HEARD { problem : string!  coreRoot : string!  stdRoot : string! }
-        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished, with the installed @almadar/core root when it is compatible."
-      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+      LINT_SERVICES_HEARD { services : Map string SrService! }
+        @description "std-orb-lint-input's LINT_SERVICES: the services registry of the installed @almadar/core, projected."
+      LINT_SERVICES_UNREAD_HEARD { error : string! }
+        @description "std-orb-lint-input's LINT_SERVICES_UNREAD: the services registry could not be read."
+      OrbLintInput.LINT_SERVICES -> LINT_SERVICES_HEARD
+      OrbLintInput.LINT_SERVICES_UNREAD -> LINT_SERVICES_UNREAD_HEARD
     }
   }
-  page boot as OrbLintCallServiceOrbitalStart -> OrbLintCallService, OrbLintCallServiceCli, OrbLintInput, Packs, Versions, ServiceRegistry
+  trait OrbEmitConfig = EmitConfigUse.traits.OrbEmitConfig {
+    listens {
+      EMIT_CONFIG_CHECK { requestId : string!  items : [EmitItem]! }
+        @description "Check each item's emit object against its allowed keys and the events its trait declares."
+      OrbLintCallService.EMIT_CONFIG_CHECK -> EMIT_CONFIG_CHECK
+    }
+  }
+  page boot as OrbLintCallServiceOrbitalStart -> OrbLintCallService, OrbLintCallServiceCli, OrbLintInput, Packs, Versions, ServiceRegistry, OrbEmitConfig
 }

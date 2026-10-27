@@ -32,7 +32,10 @@ orbital OrbLintPatternPropsOrbital {
     findings : [OrbFinding] = []
     fieldRefs : Map string (Map string string) = {}
     reqFields : Map string (Map string [string]) = {}
+    itemPat : [string] = []
     itemSet : Map string boolean = {}
+    itemBase : [string] = []
+    vocabUnread : boolean = false
     opSet : Map string boolean = {}
   }
 
@@ -44,10 +47,21 @@ orbital OrbLintPatternPropsOrbital {
       LINT_PATTERNS_HEARD -> ready
         (set @entity.fieldRefs (object/mapValues @payload.patterns (fn e (object/mapValues (object/get @e "props" {}) (fn pr (str/concat (if (= (object/get @pr "kind" "") "field-ref") "s" "") (if (= (object/get @pr "itemKind" "") "field-ref") "a" ""))))))) 
         (set @entity.reqFields (object/mapValues @payload.patterns (fn e (object/mapValues (object/get @e "props" {}) (fn pr (object/get @pr "requiredFields" []))))))
-        (set @entity.itemSet (object/fromEntries (array/map (array/unique (array/concat ["label", "event", "icon", "variant", "disabled", "hidden", "confirm", "payload", "navigatesTo"] (array/flatten (array/map (object/keys @payload.patterns) (fn pn (object/keys (object/get @payload.patterns (str/concat @pn ".props.itemActions.items.properties") {}))))))) (fn x [@x, true]))))
+        (set @entity.itemPat (array/unique (array/flatten (array/map (object/keys @payload.patterns) (fn pn (object/keys (object/get @payload.patterns (str/concat @pn ".props.itemActions.items.properties") {})))))))
+        (set @entity.itemSet (object/fromEntries (array/map (array/unique (array/concat @entity.itemBase @entity.itemPat)) (fn x [@x, true]))))
       LINT_OPERATOR_NAMES_HEARD -> ready
         (set @entity.opSet (object/fromEntries (array/map @payload.names (fn x [@x, true]))))
-      LINT_INPUT -> ready
+      UI_VOCAB_HEARD -> ready
+        (set @entity.vocabUnread false)
+        (set @entity.itemBase @payload.itemActionBaseProps)
+        (set @entity.itemSet (object/fromEntries (array/map (array/unique (array/concat @entity.itemBase @entity.itemPat)) (fn x [@x, true]))))
+      UI_VOCAB_UNREAD -> ready
+        (set @entity.vocabUnread true)
+      LINT_INPUT -> ready when @entity.vocabUnread
+        (set @entity.scope @payload.scope)
+        (set @entity.findings [{ code: "ORB_LINT_UI_VOCAB_UNREAD", path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the base item-action props are unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
+        (emit LINT_FINISH { })
+      LINT_INPUT -> ready when (not @entity.vocabUnread)
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (noh : [PtHit] []) (noe : [PtEntity] []) (nof : [OrbFinding] [])
  (ops @entity.opSet) (itemSet @entity.itemSet) (fieldRefs @entity.fieldRefs) (reqFields @entity.reqFields)
@@ -202,6 +216,12 @@ orbital OrbLintPatternPropsOrbital {
       LINT_OPERATOR_NAMES_HEARD { names : [string]! }
         @description "std-orb-lint-input's LINT_OPERATOR_NAMES: every installed operator name."
       OrbLintInput.LINT_OPERATOR_NAMES -> LINT_OPERATOR_NAMES_HEARD
+      UI_VOCAB_HEARD { slots : [string]!  itemActionBaseProps : [string]!  lucideIcons : [string]!  themeKeys : [string]!  deliveryRoots : [string]!  eventSourceKeys : [string]! }
+        @description "std-orb-lint-input's LINT_UI_VOCAB: the installed UI vocabulary; its itemActionBaseProps are the base item-action prop names."
+      UI_VOCAB_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_UI_VOCAB_UNREAD: the UI vocabulary could not be read."
+      OrbLintInput.LINT_UI_VOCAB -> UI_VOCAB_HEARD
+      OrbLintInput.LINT_UI_VOCAB_UNREAD -> UI_VOCAB_UNREAD
     }
   }
 

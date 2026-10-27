@@ -1,0 +1,152 @@
+{
+ "atom": "../ui/core/atoms/std-browse.lolo",
+ "trait": "BrowseItemBrowse",
+ "cases": [
+  {
+   "id": "loaded-records-the-filter-total-for-the-pager",
+   "steps": [
+    {
+     "trait": "BrowseItemBrowse",
+     "from": "loading",
+     "entity": {
+      "id": "b",
+      "name": "n",
+      "browsePage": 1,
+      "browseTotalCount": 0
+     },
+     "event": "BrowseItemLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "r0",
+        "name": "Row 0"
+       },
+       {
+        "id": "r1",
+        "name": "Row 1"
+       },
+       {
+        "id": "r2",
+        "name": "Row 2"
+       }
+      ],
+      "totalCount": 60
+     },
+     "expect": {
+      "fired": true,
+      "state": "browsing",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.browseTotalCount",
+        "arg1": "@payload.totalCount"
+       },
+       {
+        "type": "render-ui"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "refetch-page-two-sets-the-page-and-fetches-offset-ten",
+   "steps": [
+    {
+     "trait": "BrowseItemBrowse",
+     "from": "browsing",
+     "entity": {
+      "id": "b",
+      "name": "n",
+      "browsePage": 1,
+      "browseTotalCount": 0
+     },
+     "event": "REFETCH_PAGE",
+     "payload": {
+      "page": 2
+     },
+     "expect": {
+      "fired": true,
+      "state": "browsing",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.browsePage",
+        "arg1": "@payload.page"
+       },
+       {
+        "type": "fetch"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "init-in-browsing-resets-to-page-one",
+   "steps": [
+    {
+     "trait": "BrowseItemBrowse",
+     "from": "browsing",
+     "entity": {
+      "id": "b",
+      "name": "n",
+      "browsePage": 1,
+      "browseTotalCount": 0
+     },
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.browsePage",
+        "arg1": 1
+       },
+       {
+        "type": "fetch"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "filter-refetch-resets-to-page-one",
+   "steps": [
+    {
+     "trait": "BrowseItemBrowse",
+     "from": "browsing",
+     "entity": {
+      "id": "b",
+      "name": "n",
+      "browsePage": 1,
+      "browseTotalCount": 0
+     },
+     "event": "REFETCH_FILTER",
+     "payload": {
+      "entity": "BrowseItem",
+      "field": "status",
+      "value": "active"
+     },
+     "expect": {
+      "fired": true,
+      "state": "browsing",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.browsePage",
+        "arg1": 1
+       },
+       {
+        "type": "fetch"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

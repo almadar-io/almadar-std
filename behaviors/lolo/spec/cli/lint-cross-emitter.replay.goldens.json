@@ -2796,6 +2796,229 @@
       ]
     },
     {
+      "id": "an-event-prop-written-as-an-expression-fires-nothing-so-the-empty-declared-payload-differs",
+      "steps": [
+        {
+          "trait": "OrbLintCrossEmitter",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "button": {
+                "props": {
+                  "action": {
+                    "kind": "event"
+                  },
+                  "actionPayload": {
+                    "payloadFor": "action"
+                  },
+                  "label": {}
+                }
+              },
+              "card": {
+                "props": {
+                  "title": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCrossEmitter",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "DeclaredEmitter",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "APPROVE",
+                          "scope": "external",
+                          "payloadSchema": [
+                            {
+                              "name": "id",
+                              "type": "string",
+                              "required": true
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "name": "RenderButton",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "action": [
+                                    "if",
+                                    true,
+                                    "APPROVE",
+                                    "OTHER"
+                                  ],
+                                  "actionPayload": {
+                                    "id": "@entity.id"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "emits": [
+                        {
+                          "event": "APPROVE",
+                          "scope": "external"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "ListenerOrbital",
+                  "entity": {
+                    "name": "Other",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Listener",
+                      "linkedEntity": "Other",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "listens": [
+                        {
+                          "event": "APPROVE",
+                          "triggers": "INIT",
+                          "source": {
+                            "kind": "any"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCrossEmitter",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-emitter",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_X_CROSS_EMITTER_DECLARED_PAYLOAD_MISMATCH",
+                      "path": "orbitals[0 (TestOrbital)].traits[0 (DeclaredEmitter)] vs orbitals[0 (TestOrbital)].traits[1 (RenderButton)]",
+                      "message": "Event 'APPROVE' is declared by multiple emitters with conflicting payload fields. anchor only: [id:string!]; other only: []",
+                      "suggestion": "Align the payload field lists across every trait that declares this event, or rename the event so each emitter has its own typed channel.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "f2-render-action-payload-mismatch-still-detected",
       "steps": [
         {

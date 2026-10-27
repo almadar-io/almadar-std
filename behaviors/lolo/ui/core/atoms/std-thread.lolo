@@ -54,7 +54,7 @@ orbital ThreadPostOrbital {
     replyParentId : string @intrinsic @description "Post the reply being composed answers." = ""
     replyRootId : string @intrinsic @description "Thread root the reply being composed belongs to." = ""
     lastReplyId : string @intrinsic @description "Reply just created, added to its parent post's replies." = ""
-    page : number @intrinsic @description "The page the list shows." = 1
+    threadPage : number @intrinsic @description "The page the list shows." = 1
   }
 
   trait ThreadPostBrowse -> @rebindable ThreadPost {
@@ -62,7 +62,7 @@ orbital ThreadPostOrbital {
 
     state loading {
       INIT -> loading
-        (set @entity.page 1)
+        (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
@@ -74,7 +74,7 @@ orbital ThreadPostOrbital {
       ThreadPostLoaded -> browsing
         (render-ui main <Stack direction={vertical} gap={md}>
           {@config.bodyContent}
-          <Pagination currentPage={@entity.page} totalPages={(math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))} pageChangeEvent={REFETCH_PAGE} showPageSize={false} />
+          <Pagination currentPage={@entity.threadPage} totalPages={(math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))} pageChangeEvent={REFETCH_PAGE} showPageSize={false} />
         </Stack>)
       ThreadPostLoadFailed -> error
         (render-ui main {
@@ -84,7 +84,7 @@ orbital ThreadPostOrbital {
         })
       SET_THREAD_ROOT -> loading
         (set @entity.replyRootId ?rootId)
-        (set @entity.page 1)
+        (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
@@ -97,7 +97,7 @@ orbital ThreadPostOrbital {
 
     state browsing {
       REFETCH_PAGE -> loading
-        (set @entity.page ?page)
+        (set @entity.threadPage ?page)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
@@ -106,7 +106,7 @@ orbital ThreadPostOrbital {
           offset: (* (- ?page 1) @config.pageSize)
         })
       INIT -> loading
-        (set @entity.page 1)
+        (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
@@ -118,7 +118,7 @@ orbital ThreadPostOrbital {
       ThreadPostLoaded -> browsing
         (render-ui main <Stack direction={vertical} gap={md}>
           {@config.bodyContent}
-          <Pagination currentPage={@entity.page} totalPages={(math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))} pageChangeEvent={REFETCH_PAGE} showPageSize={false} />
+          <Pagination currentPage={@entity.threadPage} totalPages={(math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))} pageChangeEvent={REFETCH_PAGE} showPageSize={false} />
         </Stack>)
       ;; Inline reply: when the event already carries the composed text (e.g.
       ;; reply-tree's inline composer), persist directly and stay in `browsing`
@@ -187,7 +187,7 @@ orbital ThreadPostOrbital {
       ThreadPostCreated -> browsing when (= (str/default ?parentId "") "")
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
-        (set @entity.page 1)
+        (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
@@ -205,7 +205,7 @@ orbital ThreadPostOrbital {
         })
       ReplyParentLoadFailed -> browsing
         (notify error (str/concat "Couldn't attach the reply to its post — " ?error))
-        (set @entity.page 1)
+        (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
@@ -214,7 +214,7 @@ orbital ThreadPostOrbital {
           offset: 0
         })
       ReplyParentUpdated -> browsing
-        (set @entity.page 1)
+        (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
@@ -227,7 +227,7 @@ orbital ThreadPostOrbital {
       ;; correct here.
       SELECT -> loading
         (set @entity.focusedRow ?row)
-        (set @entity.page 1)
+        (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?row.threadRootId "") (= (object/get @entity threadRootId) ?row.threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
@@ -272,7 +272,7 @@ orbital ThreadPostOrbital {
         })
       SET_THREAD_ROOT -> loading
         (set @entity.replyRootId ?rootId)
-        (set @entity.page 1)
+        (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
@@ -285,7 +285,7 @@ orbital ThreadPostOrbital {
 
     state replying {
       INIT -> loading
-        (set @entity.page 1)
+        (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
@@ -323,7 +323,7 @@ orbital ThreadPostOrbital {
       ThreadPostCreated -> browsing when (= (str/default ?parentId "") "")
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
-        (set @entity.page 1)
+        (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
@@ -339,7 +339,7 @@ orbital ThreadPostOrbital {
         })
       SET_THREAD_ROOT -> loading
         (set @entity.replyRootId ?rootId)
-        (set @entity.page 1)
+        (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
@@ -352,7 +352,7 @@ orbital ThreadPostOrbital {
 
     state error {
       INIT -> loading
-        (set @entity.page 1)
+        (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
@@ -363,7 +363,7 @@ orbital ThreadPostOrbital {
         (render-ui main { type: skeleton, variant: list, rows: 6 })
       SET_THREAD_ROOT -> loading
         (set @entity.replyRootId ?rootId)
-        (set @entity.page 1)
+        (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
           filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))

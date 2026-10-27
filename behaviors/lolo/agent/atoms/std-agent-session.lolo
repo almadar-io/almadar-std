@@ -121,14 +121,6 @@ orbital AgentSessionOrbital {
       @tier "policy"
   }
 
-  entity AgentMessageRetentionLog [runtime] {
-    id : string!
-    headId : string = ""
-    headStatus : string = ""
-    status : string = ""
-    createdAt : number = 0
-  }
-
   entity AgentMessage [persistent: agentMessages] {
     id : string!
     ownerId : string! @description "Whose conversation this message belongs to (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
@@ -136,6 +128,13 @@ orbital AgentSessionOrbital {
     content : string! @description "What was said." @synonyms "text, message, body"
     createdAt : number! @description "When it was said (ms)." @synonyms "time, timestamp" = 0
     chatId : string @description "The conversation this message belongs to (an AgentChat id)." @synonyms "conversation, thread, session" = ""
+  }
+  entity AgentMessageRetentionLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+    createdAt : number = 0
   }
 
   entity AgentConversationView [runtime] {
@@ -1444,14 +1443,6 @@ orbital AgentChatsOrbital {
       @tier "policy"
   }
 
-  entity AgentChatRetentionLog [runtime] {
-    id : string!
-    headId : string = ""
-    headStatus : string = ""
-    status : string = ""
-    lastActiveAt : number = 0
-  }
-
   entity AgentChat [persistent: agentChats] {
     id : string!
     ownerId : string! @description "Whose conversation this is (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
@@ -1461,6 +1452,13 @@ orbital AgentChatsOrbital {
     pendingMessage : string @intrinsic = ""
     pendingReply : string @intrinsic = ""
     page : number @intrinsic @description "The page the list shows." = 1
+  }
+  entity AgentChatRetentionLog [runtime] {
+    id : string!
+    headId : string = ""
+    headStatus : string = ""
+    status : string = ""
+    lastActiveAt : number = 0
   }
 
   ;; Which conversation is current: each person's most recently used AgentChat.

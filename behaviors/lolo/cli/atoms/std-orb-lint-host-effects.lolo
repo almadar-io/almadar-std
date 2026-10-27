@@ -4,14 +4,14 @@ app std-orb-lint-host-effects [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-host-effects — the `orb lint host-effects <file>` command, the port of effect/host_effects.rs (validate_host_effects): every call of an operator the installed operator table marks `closedCall` (random-bytes, access-check and the credential-* effects), found at any depth of a guard or effect of an inline trait. The operators, their arity bounds, the integer range of an argument, whether the first parameter is a request object with its declared and required fields, and the options keys all come from the table through std-orb-lint-host-calls, never from this atom. Reports ORB_HOST_EFFECT_ARITY (the call has fewer or more arguments than the table allows), ORB_RANDOM_BYTES_COUNT (a literal number at the table's intRange argument that is not a whole number inside the range), ORB_CREDENTIAL_REQUEST_INVALID (a literal request that is not an object, carries a field the table does not declare, or lacks a required one; a binding is the runtime's to check) and ORB_HOST_EFFECT_OPTION_UNKNOWN (an options argument that is not an object or carries a key the table does not declare). The key and emit-block findings of these calls belong to std-orb-lint-keyed-call-keys and the emit-config rules. Findings carry the Rust path (the guard or effect), message and suggestion (status 500, exit 1). Clean answers `lint host-effects: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-host-effects — the `orb lint host-effects <file>` command, the port of effect/host_effects.rs (validate_host_effects): every call of an operator the installed operator table marks `closedCall` (random-bytes, access-check and the credential-* effects), found at any depth of a guard or effect of an inline trait. The operators, their arity bounds, the integer range of an argument, whether the first parameter is a request object with its declared and required fields, and the options keys all come from the table through std-orb-lint-host-calls, never from this atom. Reports ORB_HOST_EFFECT_ARITY (the call has fewer or more arguments than the table allows), ORB_RANDOM_BYTES_COUNT (a literal number at the table's intRange argument that is not a whole number inside the range), ORB_CREDENTIAL_REQUEST_INVALID (a literal request that is not an object, carries a field the table does not declare, or lacks a required one; a binding is the runtime's to check) and ORB_HOST_EFFECT_OPTION_UNKNOWN (an options argument that is not an object or carries a key the table does not declare). The `emit` block of an options object is checked through std-orb-emit-config against the operator's emit keys (ORB_EFF_EMIT_KEY_INVALID, ORB_EFF_EMIT_INVALID_NAME, ORB_EFF_EMIT_UNDECLARED_EVENT); the key findings belong to std-orb-lint-keyed-call-keys. Findings carry the Rust path (the guard or effect), message and suggestion (status 500, exit 1). Clean answers `lint host-effects: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-host-effects"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type HcVal = string | number | boolean | [HcVal?] | Map string HcVal?
 type HcOrbital = { name : string, traits : [HcVal] }
-type HcCall = { head : string!, path : string!, call : [HcVal?]!, tname : string!, tick : string!, bg : boolean!, declared : [string]! }
+type HcCall = { head : string!, path : string!, call : [HcVal?]!, tname : string!, tick : string!, bg : boolean!, declared : [string]!, config : Map string HcVal?, inGuard : boolean? }
 type HcType = string | HcTypeNode
 type HcTypeNode = { kind : string!, fields : Map string HcType?, optional : [string]? }
 type HcParam = { name : string!, optional : boolean?, type : HcType }
@@ -20,21 +20,33 @@ type HcClosed = { request : boolean?, intRange : HcIntRange? }
 type HcOauthOp = { name : string!, required : [string]!, optional : [string]!, endpoint : string? }
 type HcOauth = { endpointTarget : string!, endpointKinds : [string]!, ops : [HcOauthOp]! }
 type HcGrantNeed = Map string HcVal
-type HcFact = { minArity : number!, maxArity : number?, runsOn : string?, host : string?, params : [HcParam]!, closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, hasOptions : boolean!, optionKeys : [string]!, emitKeys : [string]!, hasRequest : boolean!, requestFields : [string]!, requestRequired : [string]!, words : Map string [string]!, keys : Map string [string]! }
+type HcAuthScheme = { name : string!, keys : [string]!, required : [string]?, onUnauthorized : [string]? }
+type HcHttpWire = { requestKeys : [string]!, bodyKeys : [string]!, queryEncodings : [string]!, authSchemes : [HcAuthScheme]!, defaultPorts : Map string number! }
+type HcShape = { category : string?, minArity : number?, maxArity : number?, runsOn : string?, host : string?, hasSideEffects : boolean!, params : [HcParam]! }
+type HcExtras = { closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, httpWire : HcHttpWire?, family : string?, emitKeys : [string]? }
+type HcFact = { minArity : number!, maxArity : number?, runsOn : string?, host : string?, params : [HcParam]!, closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, httpWire : HcHttpWire?, family : string?, emitOrder : [string]?, hasOptions : boolean!, optionKeys : [string]!, emitKeys : [string]!, hasRequest : boolean!, requestFields : [string]!, requestRequired : [string]!, words : Map string [string]!, keys : Map string [string]! }
 type HcValMap = Map string HcVal?
 type LnVal = string | number | boolean | [LnVal?] | Map string LnVal?
 type LnProgram = { orbitals : [HcOrbital] }
+type EmitVal = string | number | boolean | [EmitVal?] | Map string EmitVal?
+type EmitObj = Map string EmitVal?
+type Seg = { items : [EmitItem]!, pre : [OrbFinding]!, post : [OrbFinding]! }
+type EmitItem = { id : string!, path : string!, emit : EmitObj!, allowedKeys : [string]!, checkDeclared : boolean!, declared : [string]! }
+type EmitResult = { id : string!, findings : [OrbFinding]! }
+type HcValMap = Map string HcVal?
 
 
 orbital OrbLintHostEffectsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses Calls from "std/behaviors/std-orb-lint-host-calls"
-
+  uses EmitConfigUse from "std/behaviors/std-orb-emit-config"
 
   entity OrbLintHostEffectsRun [runtime] {
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
+    segs : [Seg] = []
+    emitRes : [EmitResult] = []
 
   }
 
@@ -50,14 +62,15 @@ orbital OrbLintHostEffectsOrbital {
         (set @entity.findings [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table could not be read, so the closed host calls are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }])
         (emit LINT_FINISH { })
       HOST_CALLS_HEARD -> ready when (and (str/startsWith @payload.requestId "host-effects:") (not @payload.unread))
-        (set @entity.findings (let ((facts @payload.facts))
-          (array/flatten (array/map @payload.calls (fn c
+        (set @entity.segs (let ((facts @payload.facts) (none : [OrbFinding] []) (noitems : [EmitItem] []))
+          (array/map (array/range 0 (array/len @payload.calls)) (fn ci
+            (let ((c (array/nth @payload.calls @ci)))
             (let ((a (object/get @c "call")) (p (object/get @c "path")))
               (let ((h (object/get @c "head")) (n (array/len @a)))
                 (let ((f (object/get @facts @h)))
                   (let ((cc (object/get @f "closedCall")) (lo (+ (object/get @f "minArity") 1)))
                     (let ((hi (+ (object/get @f "maxArity" (+ (object/get @f "minArity") 1)) 1)))
-                      (if (or (< @n @lo) (> @n @hi))
+                      { items: (if (and (<= @n @hi) (>= @n @lo) (> @n @lo) (validate/object (array/nth @a @lo)) (validate/object (object/get (or (json/parse (json/stringify (array/nth @a @lo)) HcValMap) {}) "emit" null))) [{ id: (str/concat "e" @ci), path: @p, emit: (or (json/parse (json/stringify (object/get (or (json/parse (json/stringify (array/nth @a @lo)) HcValMap) {}) "emit")) EmitObj) {}), allowedKeys: (object/get @f "emitKeys" []), checkDeclared: true, declared: (object/get @c "declared") }] @noitems), pre: (if (or (< @n @lo) (> @n @hi))
                         [{ code: "ORB_HOST_EFFECT_ARITY", path: @p, message: (str/concat "`" @h "` takes " (if (= @lo 1) "only an optional options object" "one argument and an optional options object") ", got " (- @n 1)), suggestion: (if (= @lo 1) (str/concat "Write (" @h " { emit: { success: <EVENT> } })") (str/concat "Write (" @h " <arg> { emit: { success: <EVENT> } })")), severity: "error" }]
                         (array/concat
                           (let ((ir (object/get @cc "intRange" null)))
@@ -84,10 +97,18 @@ orbital OrbLintHostEffectsOrbital {
                               (if (validate/object @opt)
                                 (let ((bad (array/find (object/keys @opt) (fn k (not (array/includes @allowed @k))))))
                                   (if (= @bad null) [] [{ code: "ORB_HOST_EFFECT_OPTION_UNKNOWN", path: @p, message: (str/concat "`" @h "` options accept only " (str/join @allowed " and ") ", got `" @bad "`"), suggestion: "", severity: "error" }]))
-                                [{ code: "ORB_HOST_EFFECT_OPTION_UNKNOWN", path: @p, message: (str/concat "`" @h "` options must be an object"), suggestion: "Write { emit: { success: <EVENT>, failure: <EVENT> } }", severity: "error" }])))))))))))))))
-        (emit LINT_FINISH { })
+                                [{ code: "ORB_HOST_EFFECT_OPTION_UNKNOWN", path: @p, message: (str/concat "`" @h "` options must be an object"), suggestion: "Write { emit: { success: <EVENT>, failure: <EVENT> } }", severity: "error" }]))))), post: @none }))))))))))
+        (emit LINT_PLANNED { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "host-effects", scope: @entity.scope, findings: @entity.findings })
+      LINT_PLANNED -> ready
+        (emit EMIT_CONFIG_CHECK { requestId: (str/concat "emit" @entity.scope), items: (array/flatten (array/map @entity.segs (fn s (object/get @s "items")))) })
+      EMIT_HEARD -> ready
+        (set @entity.emitRes @payload.results)
+        (emit LINT_ASSEMBLE { })
+      LINT_ASSEMBLE -> ready
+        (set @entity.findings (let ((none : [OrbFinding] [])) (array/flatten (array/map @entity.segs (fn s (array/concat (object/get @s "pre") (array/flatten (array/map (object/get @s "items") (fn it (object/get (or (array/find @entity.emitRes (fn r (= (object/get @r "id") (object/get @it "id")))) { id: "", findings: @none }) "findings")))) (object/get @s "post")))))))
+        (emit LINT_FINISH { })
     }
 
     emits {
@@ -100,6 +121,15 @@ orbital OrbLintHostEffectsOrbital {
       HOST_CALLS_COLLECT -> external { requestId : string!  orbitals : [HcOrbital]!  heads : [string]!  operators : [string]!  fields : [string]! }
         @description "Ask the shared collector for the calls this rule checks."
         @tier "internal"
+      LINT_PLANNED { }
+        @description "Internal: the calls are planned, ask the emit-config checker."
+        @tier "internal"
+      LINT_ASSEMBLE { }
+        @description "Internal: merge the emit-config findings into the call findings."
+        @tier "internal"
+      EMIT_CONFIG_CHECK -> external { requestId : string!  items : [EmitItem]! }
+        @description "Ask std-orb-emit-config to check each call's emit object."
+        @tier "internal"
     }
 
     listens {
@@ -109,6 +139,9 @@ orbital OrbLintHostEffectsOrbital {
       HOST_CALLS_HEARD { requestId : string!  unread : boolean!  calls : [HcCall]!  facts : Map string HcFact! }
         @description "The shared collector's answer: the calls of the asked heads and the table entries."
       HostCalls.HOST_CALLS_COLLECTED -> HOST_CALLS_HEARD
+      EMIT_HEARD { requestId : string!  results : [EmitResult]! }
+        @description "std-orb-emit-config's answer: the findings of each call's emit object."
+      OrbEmitConfig.EMIT_CONFIG_CHECKED -> EMIT_HEARD
     }
   }
 
@@ -186,10 +219,26 @@ orbital OrbLintHostEffectsOrbital {
   trait HostCalls = Calls.traits.HostCalls {
     listens {
       OrbLintHostEffects.HOST_CALLS_COLLECT -> HOST_CALLS_COLLECT
-      LANGUAGE_PACKS_DONE_HEARD { problem : string!  coreRoot : string!  stdRoot : string! }
-        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished, with the installed @almadar/std root when it is compatible."
-      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+      LINT_OPERATOR_SHAPES_HEARD { operators : Map string HcShape! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES: every operator's arity, host and params."
+      LINT_OPERATOR_SHAPES_UNREAD_HEARD { error : string! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES_UNREAD: the operator shapes could not be read."
+      LINT_HOST_FACTS_HEARD { operators : Map string HcExtras! }
+        @description "std-orb-lint-input's LINT_HOST_FACTS: the closedCall, oauth, grant, defaultPorts, httpWire, family and emitKeys of the operators that state any."
+      LINT_HOST_FACTS_UNREAD_HEARD { error : string! }
+        @description "std-orb-lint-input's LINT_HOST_FACTS_UNREAD: the host-effect facts could not be read."
+      OrbLintInput.LINT_OPERATOR_SHAPES -> LINT_OPERATOR_SHAPES_HEARD
+      OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> LINT_OPERATOR_SHAPES_UNREAD_HEARD
+      OrbLintInput.LINT_HOST_FACTS -> LINT_HOST_FACTS_HEARD
+      OrbLintInput.LINT_HOST_FACTS_UNREAD -> LINT_HOST_FACTS_UNREAD_HEARD
     }
   }
-  page boot as OrbLintHostEffectsOrbitalStart -> OrbLintHostEffects, OrbLintHostEffectsCli, OrbLintInput, Packs, Versions, HostCalls
+  trait OrbEmitConfig = EmitConfigUse.traits.OrbEmitConfig {
+    listens {
+      EMIT_CONFIG_CHECK { requestId : string!  items : [EmitItem]! }
+        @description "Check each item's emit object against its allowed keys and the events its trait declares."
+      OrbLintHostEffects.EMIT_CONFIG_CHECK -> EMIT_CONFIG_CHECK
+    }
+  }
+  page boot as OrbLintHostEffectsOrbitalStart -> OrbLintHostEffects, OrbLintHostEffectsCli, OrbLintInput, Packs, Versions, HostCalls, OrbEmitConfig
 }

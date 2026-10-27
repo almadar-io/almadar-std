@@ -15,7 +15,7 @@ type ReachPage = { path : string, protocol : string, label : string }
 type ReachField = { default : ReachVal? }
 type ReachStrings = [string]
 type ReachEffect = [ReachVal?]
-type ReachEffects = { effects : [ReachEffect] }
+type ReachEffects = { effects : [ReachVal?] }
 type ReachMachine = { transitions : [ReachEffects] }
 type ReachTrait = { stateMachine : ReachMachine, ticks : [ReachEffects], config : Map string ReachField }
 type ReachOrbital = { traits : [ReachTrait], config : Map string ReachField, pages : [ReachPage] }
@@ -42,13 +42,13 @@ orbital OrbLintPageUnreachableOrbital {
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (appCfg (object/get @payload.program "config" {})) (signIn (object/get (object/get @payload.program "site" {}) "signIn" "")))
           (let ((trs (array/flatten (array/map @orbitals (fn orb (object/get @orb "traits" []))))))
             (let ((effects (array/concat
-                              (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (object/get @t "effects" [])))))))
-                              (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get @tr "ticks" []) (fn k (object/get @k "effects" [])))))))))
-                  (transEffects (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (object/get @t "effects" [])))))))))
+                              (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (array/map (object/get @t "effects" []) (fn r { w: @r }))))))))
+                              (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get @tr "ticks" []) (fn k (array/map (object/get @k "effects" []) (fn r { w: @r }))))))))))
+                  (transEffects (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (array/map (object/get @t "effects" []) (fn r { w: @r }))))))))))
               (let ((trCfg (array/map @trs (fn tr (array/filter (array/map (object/values (object/get @tr "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))))
                     (orbCfg (array/map @orbitals (fn orb (array/filter (array/map (object/values (object/get @orb "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))))
                     (appCfgDefaults (array/filter (array/map (object/values @appCfg) (fn f (object/get @f "default" null))) (fn v (!= @v null))))
-                    (payloads (array/filter (array/map (array/filter @effects (fn e (and (validate/array @e) (> (array/len @e) 2) (validate/string (array/first @e)) (= (array/first @e) "render-ui")))) (fn e (array/nth @e 2))) (fn v (!= @v null)))))
+                    (payloads (array/filter (array/map (array/filter (array/map @effects (fn x (let ((w (object/get @x "w" null))) (if (validate/array @w) (or (json/parse (json/stringify @w) ReachEffect) []) [])))) (fn e (and (validate/array @e) (> (array/len @e) 2) (validate/string (array/first @e)) (= (array/first @e) "render-ui")))) (fn e (array/nth @e 2))) (fn v (!= @v null)))))
                 (let ((hrefs (or (tree/fold (or (json/parse (json/stringify { cfg: @trCfg, pay: @payloads }) ReachVal) "") (fn (n kids)
                                   (array/concat
                                     (if (and (validate/object @n) (not (validate/array @n)))

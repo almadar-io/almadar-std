@@ -19,7 +19,7 @@ type NdxOrbital = { traits : [NdxTrait] }
 type NdxProgram = { orbitals : [NdxOrbital] }
 type PackText = { name : string!, text : string! }
 type PackMeta = { code : string! }
-type CoreLanguageBlock = { componentMapping : string, patterns : string, programTypes : string, bindingRules : string, vocabulary : string }
+type CoreLanguageBlock = { componentMapping : string, patterns : string, programTypes : string, bindingRules : string, vocabulary : string, uiVocabulary : string, services : string }
 type CoreManifest = { orbLanguage : CoreLanguageBlock? }
 type ComponentMappingEntry = { component : string! }
 type StdLanguageBlock = { operators : string }
@@ -51,7 +51,27 @@ type ProgTypeFile = Map string ProgTypeNode
 type BindingRule = { allowed : [string]! }
 type BindingRulesFile = { guard : BindingRule!, effect : BindingRule!, tick : BindingRule! }
 type VocabularyFile = { types : [string]! }
+type UiVocabularyFile = { slots : [string]!, itemActionBaseProps : [string]!, lucideIcons : [string]!, themeKeys : [string]!, deliveryRoots : [string]!, eventSourceKeys : [string]! }
 type ComponentMappingFile = { mappings : Map string ComponentMappingEntry! }
+type HostVal = string | number | boolean | [HostVal?] | Map string HostVal?
+type HostIntRange = { arg : number!, min : number!, max : number! }
+type HostClosed = { request : boolean?, intRange : HostIntRange? }
+type HostOauthOp = { name : string!, required : [string]!, optional : [string]!, endpoint : string? }
+type HostOauth = { endpointTarget : string!, endpointKinds : [string]!, ops : [HostOauthOp]! }
+type HostAuthScheme = { name : string!, keys : [string]!, required : [string]?, onUnauthorized : [string]? }
+type HostHttpWire = { requestKeys : [string]!, bodyKeys : [string]!, queryEncodings : [string]!, authSchemes : [HostAuthScheme]!, defaultPorts : Map string number! }
+type HostOpFacts = { closedCall : HostClosed?, oauth : HostOauth?, grant : [Map string HostVal]?, defaultPorts : Map string number?, httpWire : HostHttpWire?, family : string?, emitKeys : [string]? }
+type HostOpFactMap = Map string HostOpFacts
+type HostOpProbe = Map string HostVal?
+type HostDoc = { operators : Map string HostOpProbe! }
+type SrRawParam = { name : string!, type : string?, required : boolean? }
+type SrRawAction = { name : string!, params : [SrRawParam]?, responseShape : Map string HostVal? }
+type SrRawService = { actions : [SrRawAction]? }
+type SrRawRegistry = { services : Map string SrRawService! }
+type SrParam = { name : string!, type : string!, required : boolean!, kind : string! }
+type SrAction = { params : [SrParam]!, hasKey : boolean! }
+type SrService = { actions : Map string SrAction! }
+type SrServices = Map string SrService
 type PackVocab = { meta : PackMeta!, keywords : Map string string, orb : Map string string }
 
 orbital OrbLintInputOrbital {
@@ -71,6 +91,8 @@ orbital OrbLintInputOrbital {
     typesFile : string = ""
     rulesFile : string = ""
     vocabFile : string = ""
+    uiVocabFile : string = ""
+    servicesFile : string = ""
     progTypes : ProgTypeFile = {}
     guardSigils : [string] = []
     effectSigils : [string] = []
@@ -178,6 +200,8 @@ orbital OrbLintInputOrbital {
         (set @entity.typesFile (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage" {}) "programTypes" ""))
         (set @entity.rulesFile (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage" {}) "bindingRules" ""))
         (set @entity.vocabFile (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage" {}) "vocabulary" ""))
+        (set @entity.uiVocabFile (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage" {}) "uiVocabulary" ""))
+        (set @entity.servicesFile (object/get (object/get (json/parse (bytes/to-string @payload.data) CoreManifest) "orbLanguage" {}) "services" ""))
         (emit LINT_FACTS_READ { })
         (let ((text (bytes/to-string @payload.data)))
           (if (= @text null)
@@ -288,6 +312,37 @@ orbital OrbLintInputOrbital {
                 semantics: @semMap,
                 functions: (array/sort (array/filter (object/keys @ops) (fn n (let ((rt (object/get (object/get @ops @n) "returnType" ""))) (and (validate/object @rt) (= (object/get @rt "kind" "") "fn")))))),
                 emitSlots: (array/sort (array/unique (array/flatten (array/map (object/keys @ops) (fn n (array/flatten (array/map (object/get (object/get @ops @n) "params" []) (fn p (let ((ty (object/get @p "type" null))) (if (validate/object @ty) (let ((em (object/get (object/get (json/parse (json/stringify @ty) OpShape) "fields" {}) "emit" null))) (if (validate/object @em) (object/keys (object/get (json/parse (json/stringify @em) OpShape) "fields" {})) [])) [])))))))))) }))))))
+        (let ((text (bytes/to-string @payload.data)))
+          (if (= @text null)
+            (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table is not valid text" })
+            (let ((doc (json/parse @text HostDoc)) (fields ["closedCall", "oauth", "grant", "defaultPorts", "httpWire", "family", "emitKeys"]))
+              (if (= @doc null)
+                (emit LINT_HOST_FACTS_UNREAD { error: "the installed @almadar/std operator table is not an operator table" })
+                (let ((names (array/sort (array/filter (object/keys (object/get @doc "operators")) (fn n (array/some @fields (fn f (!= (object/get @doc (str/concat "operators." @n "." @f) null) null))))))))
+                  (let ((ops (json/parse (json/stringify (or (object/fromEntries (array/map @names (fn n [@n, (or (object/fromEntries (array/filter (array/map @fields (fn f [@f, (object/get @doc (str/concat "operators." @n "." @f) null)])) (fn pr (!= (array/nth @pr 1) null)))) {})]))) {})) HostOpFactMap)))
+                    (if (= @ops null)
+                      (emit LINT_HOST_FACTS_UNREAD { error: "the installed @almadar/std operator table has an operator whose closedCall, oauth, grant, defaultPorts, httpWire, family or emitKeys is not declared in the table's shape" })
+                      (emit LINT_HOST_FACTS { operators: @ops }))))))))
+        (emit LINT_SERVICES_READ { })
+      LINT_SERVICES_READ -> reading when (= @entity.servicesFile "")
+        (emit LINT_SERVICES_UNREAD { error: "the installed @almadar/core declares no orbLanguage.services" })
+        (emit LINT_PROGRAM_START { })
+      LINT_SERVICES_READ -> reading when (!= @entity.servicesFile "")
+        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot @entity.servicesFile))) { key: "lint-input-services" emit: { success: LINT_SERVICES_FILE, failure: LINT_SERVICES_FAILED } })
+      LINT_SERVICES_FILE -> reading when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text SrRawRegistry) null)))
+        (emit LINT_SERVICES_UNREAD { error: "the installed @almadar/core services registry is not a services registry" })
+        (emit LINT_PROGRAM_START { })
+      LINT_SERVICES_FILE -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text SrRawRegistry) null)))
+        (emit LINT_SERVICES { services: (let ((reg (object/get (json/parse (or (bytes/to-string @payload.data) "") SrRawRegistry) "services")))
+          (or (json/parse (json/stringify (object/mapValues @reg (fn s
+            { actions: (or (object/fromEntries (array/map (object/get @s "actions" []) (fn a
+                [(object/get @a "name"), { hasKey: (object/has (object/get @a "responseShape" {}) "key"),
+                  params: (array/map (object/get @a "params" []) (fn p { name: (object/get @p "name"), type: (object/get @p "type" ""), required: (object/get @p "required" false), kind: (let ((tt (str/trim (object/get @p "type" "")))) (if (= @tt "string") "string" (if (= @tt "number") "number" (if (= @tt "boolean") "boolean" (if (or (= @tt "object") (= @tt "map")) "object" (if (or (= @tt "array") (str/endsWith @tt "[]")) "array" (if (str/startsWith @tt "'") "string" ""))))))) })) }]))) {}) }))) SrServices) {})) })
+        (emit LINT_PROGRAM_START { })
+      LINT_SERVICES_FAILED -> reading
+        (emit LINT_SERVICES_UNREAD { error: (or @payload.error "") })
+        (emit LINT_PROGRAM_START { })
+      LINT_PROGRAM_START -> reading
         (program/read "" { resolve: true text: false path: (if (os/path-is-absolute @entity.file) @entity.file (os/path-join @entity.cwd @entity.file)) } { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
       LINT_PROGRAM_READ -> reading when (not @entity.factsDone)
         (set @entity.lazy (object/get @payload.result "lazy" []))
@@ -317,6 +372,20 @@ orbital OrbLintInputOrbital {
         (emit LINT_FACTS_FAILED { error: "the installed @almadar/core vocabulary is not a vocabulary" })
       LINT_FACTS_VOCAB -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text VocabularyFile) null)))
         (emit LINT_LANGUAGE_FACTS { programTypes: @entity.progTypes, guardSigils: @entity.guardSigils, effectSigils: @entity.effectSigils, tickSigils: @entity.tickSigils, fieldTypes: (object/get (json/parse (or (bytes/to-string @payload.data) "") VocabularyFile) "types" []) })
+        (emit LINT_UI_VOCAB_READ { })
+      LINT_UI_VOCAB_READ -> reading when (= @entity.uiVocabFile "")
+        (emit LINT_UI_VOCAB_UNREAD { error: "the installed @almadar/core declares no orbLanguage.uiVocabulary" })
+        (emit LINT_FACTS_DONE { })
+      LINT_UI_VOCAB_READ -> reading when (!= @entity.uiVocabFile "")
+        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot @entity.uiVocabFile))) { key: "lint-input-ui-vocabulary" emit: { success: LINT_UI_VOCAB_FILE, failure: LINT_UI_VOCAB_FAILED } })
+      LINT_UI_VOCAB_FILE -> reading when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text UiVocabularyFile) null)))
+        (emit LINT_UI_VOCAB_UNREAD { error: "the installed @almadar/core UI vocabulary is not a UI vocabulary" })
+        (emit LINT_FACTS_DONE { })
+      LINT_UI_VOCAB_FILE -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text UiVocabularyFile) null)))
+        (emit LINT_UI_VOCAB { slots: (object/get (json/parse (or (bytes/to-string @payload.data) "") UiVocabularyFile) "slots" []), itemActionBaseProps: (object/get (json/parse (or (bytes/to-string @payload.data) "") UiVocabularyFile) "itemActionBaseProps" []), lucideIcons: (object/get (json/parse (or (bytes/to-string @payload.data) "") UiVocabularyFile) "lucideIcons" []), themeKeys: (object/get (json/parse (or (bytes/to-string @payload.data) "") UiVocabularyFile) "themeKeys" []), deliveryRoots: (object/get (json/parse (or (bytes/to-string @payload.data) "") UiVocabularyFile) "deliveryRoots" []), eventSourceKeys: (object/get (json/parse (or (bytes/to-string @payload.data) "") UiVocabularyFile) "eventSourceKeys" []) })
+        (emit LINT_FACTS_DONE { })
+      LINT_UI_VOCAB_FAILED -> reading
+        (emit LINT_UI_VOCAB_UNREAD { error: (or @payload.error "") })
         (emit LINT_FACTS_DONE { })
       LINT_FACTS_FAILED -> reading
         (emit LINT_LANGUAGE_FACTS_UNREAD { error: (or @payload.error "") })
@@ -371,6 +440,45 @@ orbital OrbLintInputOrbital {
         @tier "internal"
       LINT_LANGUAGE_FACTS_UNREAD -> external { error : string! }
         @description "The installed @almadar/core language facts could not be read, so LINT_LANGUAGE_FACTS is not sent; LINT_INPUT and every other event are unaffected. A rule that needs the facts answers its own unread finding."
+        @tier "internal"
+      LINT_UI_VOCAB -> external { slots : [string]!  itemActionBaseProps : [string]!  lucideIcons : [string]!  themeKeys : [string]!  deliveryRoots : [string]!  eventSourceKeys : [string]! }
+        @description "The installed @almadar/core UI vocabulary (orbLanguage.uiVocabulary): the valid slots, the base item-action prop names, the Lucide icon names, the built-in theme keys, the delivery-only binding roots and the @event.source keys; sent before LINT_INPUT."
+        @tier "internal"
+      LINT_UI_VOCAB_UNREAD -> external { error : string! }
+        @description "The installed @almadar/core UI vocabulary could not be read, so LINT_UI_VOCAB is not sent; LINT_INPUT and every other event are unaffected. A rule that needs the vocabulary answers its own unread finding."
+        @tier "internal"
+      LINT_HOST_FACTS -> external { operators : Map string HostOpFacts! }
+        @description "The host-effect facts the installed @almadar/std operator table states beside the shapes, for the operators that state any: closedCall, oauth, grant, defaultPorts, httpWire (request keys, body keys, query encodings, per-scheme auth keys with their required keys and onUnauthorized words, the default port of each http scheme), family (on-device or tab) and emitKeys (the emit keys in the order the operator documents them); sent before LINT_INPUT. The operator's arity, params and types come in LINT_OPERATOR_SHAPES."
+        @tier "internal"
+      LINT_HOST_FACTS_UNREAD -> external { error : string! }
+        @description "The host-effect facts of the operator table do not match their declared shape, so LINT_HOST_FACTS is not sent; LINT_INPUT and every other event are unaffected. A rule that needs them answers its own unread finding."
+        @tier "internal"
+      LINT_SERVICES -> external { services : Map string SrService! }
+        @description "The services registry of the installed @almadar/core (orbLanguage.services), projected for the service lints: per service its actions, and per action the declared params (name, declared type text, whether required, and the kind a literal must have: string, number, boolean, object or array, empty for a type that is not checked) and whether the action's response shape names a `key` field. A service with no action is declared-only; sent before LINT_INPUT."
+        @tier "internal"
+      LINT_SERVICES_UNREAD -> external { error : string! }
+        @description "The installed @almadar/core services registry could not be read, so LINT_SERVICES is not sent; LINT_INPUT and every other event are unaffected. A rule that needs it answers its own unread finding."
+        @tier "internal"
+      LINT_SERVICES_READ { }
+        @description "Internal: read the installed @almadar/core services registry."
+        @tier "internal"
+      LINT_SERVICES_FILE { data : bytes! }
+        @description "The installed @almadar/core services registry read."
+        @tier "internal"
+      LINT_SERVICES_FAILED { error : string }
+        @description "Internal: the services registry file could not be read."
+        @tier "internal"
+      LINT_PROGRAM_START { }
+        @description "Internal: every installed file of the pass is read, resolve the program."
+        @tier "internal"
+      LINT_UI_VOCAB_READ { }
+        @description "Internal: read the installed @almadar/core UI vocabulary."
+        @tier "internal"
+      LINT_UI_VOCAB_FILE { data : bytes! }
+        @description "The installed @almadar/core UI vocabulary read."
+        @tier "internal"
+      LINT_UI_VOCAB_FAILED { error : string }
+        @description "Internal: the UI vocabulary file could not be read."
         @tier "internal"
       LINT_FACTS_READ { }
         @description "Internal: read the installed @almadar/core program types, binding rules and vocabulary."

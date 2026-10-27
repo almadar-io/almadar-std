@@ -10,8 +10,6 @@ orbital BillableHourOrbital {
 
   uses Button from "std/behaviors/ui-button"
 
-  uses TableView from "std/behaviors/ui-table-view"
-
     type BillableHourLoaded = Event { data : [BillableHour], totalCount : number } "Fired when the billable-hour collection finishes loading"
 
     type BillableHourLoadFailed = Event { error : string, code : string } "Fired when the billable-hour collection fails to load"
@@ -29,22 +27,6 @@ orbital BillableHourOrbital {
     isBillable : boolean @description "Indicates whether the hour is eligible for billing." @synonyms "billable flag, billing status, billable indicator" = true
     invoiceStatus : "unbilled" | "invoiced" | "paid" | "written_off" @description "The current billing status of the hour entry." @synonyms "status, billing status, payment status" = unbilled
     page : number @intrinsic @description "The page the list shows." = 1
-  }
-
-  trait DenseHoursTable = TableView.traits.TableViewRender -> BillableHour {
-    config {
-      columns: @config.columns
-      emptyMessage: "No time entries"
-      itemActions: @config.itemActions
-      viewerRole: @config.viewerRole
-      look: @config.tableLook
-      maxInlineActions: 2
-      selfFetch: false
-    }
-
-    listens {
-      BillableHourTimesheet.BillableHourLoaded -> TableViewLoaded
-    }
   }
 
   trait BillableHourTimesheet -> BillableHour {
@@ -86,7 +68,7 @@ orbital BillableHourOrbital {
             gap: none
             type: stack
           }), {
-            children: [@trait.DenseHoursTable]
+            children: [{ type: table-view, entity: ?data, columns: @config.columns, emptyMessage: "No time entries", itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole)))), maxInlineActions: 2, look: @config.tableLook }]
             className: overflow-x-auto
             direction: vertical
             gap: none

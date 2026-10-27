@@ -1,0 +1,21 @@
+app lint-icon-exists-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint icon-exists <file>`. It lowers the file with program/read and reports ORB_UI_ICON_NOT_FOUND for every well-formed icon name of a render-ui pattern that is not in the installed Lucide set, with a Did-you-mean suggestion (status 500, exit 1); clean answers status 200."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintIconExistsSpec {
+  expects trait OrbLintIconExists {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintIconExistsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintIconExists, OrbLintIconExistsCli
+}

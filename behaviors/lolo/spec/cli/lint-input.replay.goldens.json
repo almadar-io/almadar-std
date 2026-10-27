@@ -1,7 +1,7 @@
 {
  "atom": "cli/atoms/std-orb-lint-input.lolo",
  "trait": "OrbLintInput",
- "note": "The input reads, scans the language packs and lowers once per lint run; every rule trait and the umbrella receive the result as LINT_INPUT. The language-decision cases moved here from lint-page-path.",
+ "note": "The input reads, scans the language packs and lowers once per lint run; every rule trait and the umbrella receive the result as LINT_INPUT. The language-decision cases moved here from lint-page-path. The operator table also answers LINT_HOST_FACTS (the closedCall, oauth, grant, defaultPorts, httpWire, family and emitKeys the operators state) and the core services registry answers LINT_SERVICES; both are sent before LINT_INPUT.",
  "cases": [
   {
    "id": "lolo-arabic-first-token-is-not-english",
@@ -2949,7 +2949,7 @@
      "from": "reading",
      "event": "LINT_CORE_MANIFEST",
      "payload": {
-      "data": "eyJvcmJMYW5ndWFnZSI6IHsiY29tcG9uZW50TWFwcGluZyI6ICJtLmpzb24iLCAicGF0dGVybnMiOiAicC5qc29uIiwgInByb2dyYW1UeXBlcyI6ICJ0Lmpzb24iLCAiYmluZGluZ1J1bGVzIjogInIuanNvbiIsICJ2b2NhYnVsYXJ5IjogInYuanNvbiJ9fQ=="
+      "data": "eyJvcmJMYW5ndWFnZSI6IHsiY29tcG9uZW50TWFwcGluZyI6ICJtLmpzb24iLCAicGF0dGVybnMiOiAicC5qc29uIiwgInByb2dyYW1UeXBlcyI6ICJ0Lmpzb24iLCAiYmluZGluZ1J1bGVzIjogInIuanNvbiIsICJ2b2NhYnVsYXJ5IjogInYuanNvbiIsICJ1aVZvY2FidWxhcnkiOiAidS5qc29uIn19"
      },
      "expect": {
       "fired": true,
@@ -3245,7 +3245,8 @@
     "tickSigils": [
      "entity",
      "now"
-    ]
+    ],
+    "uiVocabFile": "u.json"
    },
    "steps": [
     {
@@ -3321,12 +3322,13 @@
         }
        },
        {
-        "event": "LINT_FACTS_DONE",
+        "event": "LINT_UI_VOCAB_READ",
         "payload": {}
        }
       ],
       "neverEmits": [
-       "LINT_LANGUAGE_FACTS_UNREAD"
+       "LINT_LANGUAGE_FACTS_UNREAD",
+       "LINT_UI_VOCAB_UNREAD"
       ]
      }
     }
@@ -3367,6 +3369,215 @@
       "neverEmits": [
        "LINT_INPUT_UNREAD",
        "LINT_LANGUAGE_FACTS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-vocabulary-start-reads-the-ui-vocabulary",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "uiVocabFile": "u.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_UI_VOCAB_READ",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LINT_UI_VOCAB_UNREAD",
+       "LINT_FACTS_DONE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-manifest-without-a-ui-vocabulary-fails-only-the-ui-vocabulary",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_UI_VOCAB_READ",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_UI_VOCAB_UNREAD",
+        "payload": {
+         "error": "the installed @almadar/core declares no orbLanguage.uiVocabulary"
+        }
+       },
+       {
+        "event": "LINT_FACTS_DONE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_UI_VOCAB",
+       "LINT_INPUT_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-ui-vocabulary-that-is-not-a-table-fails-only-the-ui-vocabulary",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "uiVocabFile": "u.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_UI_VOCAB_FILE",
+     "payload": {
+      "data": "eyJzbG90cyI6IFsibWFpbiJdfQ=="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_UI_VOCAB_UNREAD",
+        "payload": {
+         "error": "the installed @almadar/core UI vocabulary is not a UI vocabulary"
+        }
+       },
+       {
+        "event": "LINT_FACTS_DONE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_UI_VOCAB"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-ui-vocabulary-file-is-sent-as-the-ui-vocabulary",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "uiVocabFile": "u.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_UI_VOCAB_FILE",
+     "payload": {
+      "data": "eyJzbG90cyI6IFsibWFpbiIsICJtb2RhbCJdLCAiaXRlbUFjdGlvbkJhc2VQcm9wcyI6IFsibGFiZWwiLCAiZXZlbnQiXSwgImx1Y2lkZUljb25zIjogWyJhLWFycm93LWRvd24iLCAiemFwIl0sICJ0aGVtZUtleXMiOiBbImNsYXktbGlnaHQiLCAiY2xheS1kYXJrIl0sICJkZWxpdmVyeVJvb3RzIjogWyJldmVudCIsICJ0b1N0YXRlIl0sICJldmVudFNvdXJjZUtleXMiOiBbIm9yYml0YWwiLCAidHJhaXQiXX0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_UI_VOCAB",
+        "payload": {
+         "slots": [
+          "main",
+          "modal"
+         ],
+         "itemActionBaseProps": [
+          "label",
+          "event"
+         ],
+         "lucideIcons": [
+          "a-arrow-down",
+          "zap"
+         ],
+         "themeKeys": [
+          "clay-light",
+          "clay-dark"
+         ],
+         "deliveryRoots": [
+          "event",
+          "toState"
+         ],
+         "eventSourceKeys": [
+          "orbital",
+          "trait"
+         ]
+        }
+       },
+       {
+        "event": "LINT_FACTS_DONE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_UI_VOCAB_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-unreadable-ui-vocabulary-answers-its-own-unread-event",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "uiVocabFile": "u.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_UI_VOCAB_FAILED",
+     "payload": {
+      "error": "boom"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_UI_VOCAB_UNREAD",
+        "payload": {
+         "error": "boom"
+        }
+       },
+       {
+        "event": "LINT_FACTS_DONE",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_UI_VOCAB",
+       "LINT_INPUT_UNREAD"
       ]
      }
     }
@@ -4715,6 +4926,1149 @@
          "scope": ""
         }
        }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-table-answers-the-host-effect-facts-of-the-operators-that-state-any",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7ImVtaXQiOiB7ImNhdGVnb3J5IjogImVmZmVjdCIsICJidXNFeGNsdWRlZCI6IFsiSU5JVCJdfSwgInByb2dyYW0vZGlzcGF0Y2giOiB7ImNhdGVnb3J5IjogInN0ZC1wcm9ncmFtIiwgInRhcmdldE9wdGlvbnMiOiBbIm9yYml0YWwiXX0sICJodHRwIjogeyJjYXRlZ29yeSI6ICJlZmZlY3QiLCAibWluQXJpdHkiOiAzLCAibWF4QXJpdHkiOiA1LCAiaGFzU2lkZUVmZmVjdHMiOiB0cnVlLCAib2F1dGgiOiB7ImVuZHBvaW50VGFyZ2V0IjogIm9hdXRoLWVuZHBvaW50IiwgImVuZHBvaW50S2luZHMiOiBbInRva2VuIiwgInJldm9jYXRpb24iLCAidXNlcmluZm8iXSwgIm9wcyI6IFt7Im5hbWUiOiAiZGlzY292ZXJ5IiwgInJlcXVpcmVkIjogW10sICJvcHRpb25hbCI6IFtdfSwgeyJuYW1lIjogImNvZGUiLCAicmVxdWlyZWQiOiBbImNvZGUiLCAic3RhdGUiXSwgIm9wdGlvbmFsIjogWyJzdWJqZWN0Il0sICJlbmRwb2ludCI6ICJ0b2tlbiJ9LCB7Im5hbWUiOiAiY29ubmVjdCIsICJyZXF1aXJlZCI6IFsiY29kZSIsICJzdGF0ZSIsICJwcm92aWRlciJdLCAib3B0aW9uYWwiOiBbXSwgImVuZHBvaW50IjogInRva2VuIn0sIHsibmFtZSI6ICJyZWZyZXNoIiwgInJlcXVpcmVkIjogWyJyZWZyZXNoVG9rZW4iXSwgIm9wdGlvbmFsIjogW10sICJlbmRwb2ludCI6ICJ0b2tlbiJ9LCB7Im5hbWUiOiAicmV2b2tlIiwgInJlcXVpcmVkIjogWyJ0b2tlbiJdLCAib3B0aW9uYWwiOiBbXSwgImVuZHBvaW50IjogInJldm9jYXRpb24ifSwgeyJuYW1lIjogInVzZXJpbmZvIiwgInJlcXVpcmVkIjogWyJhY2Nlc3NUb2tlbiJdLCAib3B0aW9uYWwiOiBbXSwgImVuZHBvaW50IjogInVzZXJpbmZvIn1dfSwgImh0dHBXaXJlIjogeyJyZXF1ZXN0S2V5cyI6IFsicXVlcnkiLCAiaGVhZGVycyIsICJqc29uIiwgImZvcm0iLCAidGV4dCIsICJieXRlcyIsICJtdWx0aXBhcnQiLCAiYXV0aCIsICJ0aW1lb3V0TXMiLCAiZGVsYXlNcyIsICJyZXNwb25zZUFzIiwgInBhZ2luYXRlIiwgInN0cmVhbSIsICJyZXRyeSIsICJmb3JtRW5jb2RpbmciLCAicXVlcnlFbmNvZGluZyIsICJwcmVzaWduIiwgIndlYnB1c2giXSwgImJvZHlLZXlzIjogWyJqc29uIiwgImZvcm0iLCAidGV4dCIsICJieXRlcyIsICJtdWx0aXBhcnQiLCAid2VicHVzaCJdLCAicXVlcnlFbmNvZGluZ3MiOiBbInVyaSIsICJyZmMzOTg2Il0sICJkZWZhdWx0UG9ydHMiOiB7Imh0dHAiOiA4MCwgImh0dHBzIjogNDQzfSwgImF1dGhTY2hlbWVzIjogW3sibmFtZSI6ICJvYXV0aC1jbGllbnQiLCAia2V5cyI6IFsic2NoZW1lIiwgIm9wIiwgImNsaWVudCIsICJjbGllbnRzIiwgImNvZGUiLCAic3RhdGUiLCAic3ViamVjdCIsICJwcm92aWRlciIsICJyZWZyZXNoVG9rZW4iLCAidG9rZW4iLCAiYWNjZXNzVG9rZW4iXX0sIHsibmFtZSI6ICJiZWFyZXIiLCAia2V5cyI6IFsic2NoZW1lIiwgImNyZWRlbnRpYWwiXX0sIHsibmFtZSI6ICJhcGkta2V5IiwgImtleXMiOiBbInNjaGVtZSIsICJjcmVkZW50aWFsIiwgIm5hbWUiLCAiaW4iXX0sIHsibmFtZSI6ICJiYXNpYyIsICJrZXlzIjogWyJzY2hlbWUiLCAidXNlciIsICJjcmVkZW50aWFsIl19LCB7Im5hbWUiOiAib2F1dGgyLWNsaWVudCIsICJrZXlzIjogWyJzY2hlbWUiLCAidG9rZW5VcmwiLCAiY2xpZW50SWQiLCAiY2xpZW50U2VjcmV0IiwgInNjb3BlIiwgImdyYW50UmVxdWVzdCIsICJvblVuYXV0aG9yaXplZCJdLCAib25VbmF1dGhvcml6ZWQiOiBbInJlcGx5IiwgInJlZnJlc2giXX0sIHsibmFtZSI6ICJ0b2tlbi1leGNoYW5nZSIsICJrZXlzIjogWyJzY2hlbWUiLCAidG9rZW5VcmwiLCAiZ3JhbnQiLCAiYm9keSIsICJjbGllbnRBdXRoIiwgImNsaWVudElkIiwgImNsaWVudFNlY3JldCIsICJhY2Nlc3NGaWVsZCIsICJleHBpcmVzRmllbGQiLCAiZXhwaXJlc01hcmdpbk1zIiwgInN0b3JlQXMiLCAiZ3JhbnRSZXF1ZXN0IiwgInJvdGF0ZSIsICJvblVuYXV0aG9yaXplZCJdLCAib25VbmF1dGhvcml6ZWQiOiBbInJlcGx5IiwgInJlZnJlc2giXX0sIHsibmFtZSI6ICJqd3QtYmVhcmVyIiwgImtleXMiOiBbInNjaGVtZSIsICJrZXkiLCAiYWxnIiwgImNsYWltcyIsICJ0b2tlblVybCIsICJncmFudCIsICJzY29wZSIsICJleHBpcmVzTWFyZ2luTXMiLCAic3RvcmVBcyIsICJncmFudFJlcXVlc3QiLCAib25VbmF1dGhvcml6ZWQiXSwgIm9uVW5hdXRob3JpemVkIjogWyJyZXBseSIsICJyZWZyZXNoIl19LCB7Im5hbWUiOiAiaG1hYy1zaGEyNTYiLCAia2V5cyI6IFsic2NoZW1lIiwgImNyZWRlbnRpYWwiLCAibmFtZSIsICJzaWducyIsICJlbmNvZGluZyIsICJwcmVmaXgiXX0sIHsibmFtZSI6ICJhd3Mtc2lndjQiLCAia2V5cyI6IFsic2NoZW1lIiwgImFjY2Vzc0tleUlkIiwgInNlY3JldEFjY2Vzc0tleSIsICJzZXNzaW9uVG9rZW4iLCAicmVnaW9uIiwgInNlcnZpY2UiXSwgInJlcXVpcmVkIjogWyJhY2Nlc3NLZXlJZCIsICJzZWNyZXRBY2Nlc3NLZXkiLCAicmVnaW9uIiwgInNlcnZpY2UiXX0sIHsibmFtZSI6ICJ2YXBpZCIsICJrZXlzIjogWyJzY2hlbWUiLCAicHJpdmF0ZUtleSIsICJwdWJsaWNLZXkiLCAic3ViamVjdCJdfV19LCAiZW1pdEtleXMiOiBbInN1Y2Nlc3MiLCAiZmFpbHVyZSIsICJvbk1lc3NhZ2UiLCAiY2FuY2VsbGVkIl0sICJydW5zT24iOiAic2VydmVyIiwgInBhcmFtcyI6IFtdfSwgImJyb3dzZXIvdGFiLW9wZW4iOiB7ImNhdGVnb3J5IjogInN0ZC1icm93c2VyIiwgIm1pbkFyaXR5IjogMSwgIm1heEFyaXR5IjogMiwgImhhc1NpZGVFZmZlY3RzIjogdHJ1ZSwgImVtaXRLZXlzIjogWyJzdWNjZXNzIiwgImZhaWx1cmUiLCAiY2FuY2VsbGVkIl0sICJmYW1pbHkiOiAidGFiIiwgInJ1bnNPbiI6ICJjbGllbnQiLCAicGFyYW1zIjogW119LCAiYnJvd3Nlci9wcm9tcHQiOiB7ImNhdGVnb3J5IjogInN0ZC1icm93c2VyIiwgIm1pbkFyaXR5IjogMiwgIm1heEFyaXR5IjogMywgImhhc1NpZGVFZmZlY3RzIjogdHJ1ZSwgImVtaXRLZXlzIjogWyJzdWNjZXNzIiwgImZhaWx1cmUiLCAiY2FuY2VsbGVkIl0sICJmYW1pbHkiOiAib24tZGV2aWNlIiwgInJ1bnNPbiI6ICJjbGllbnQiLCAicGFyYW1zIjogW119LCAicG9zdGdyZXMiOiB7ImNhdGVnb3J5IjogImVmZmVjdCIsICJtaW5Bcml0eSI6IDMsICJtYXhBcml0eSI6IDUsICJoYXNTaWRlRWZmZWN0cyI6IHRydWUsICJkZWZhdWx0UG9ydHMiOiB7InBvc3RncmVzIjogNTQzMiwgInBvc3RncmVzcWwiOiA1NDMyfSwgImVtaXRLZXlzIjogWyJzdWNjZXNzIiwgImZhaWx1cmUiXSwgInJ1bnNPbiI6ICJzZXJ2ZXIiLCAicGFyYW1zIjogW119LCAicmFuZG9tLWJ5dGVzIjogeyJjYXRlZ29yeSI6ICJlZmZlY3QiLCAibWluQXJpdHkiOiAxLCAibWF4QXJpdHkiOiAyLCAiaGFzU2lkZUVmZmVjdHMiOiB0cnVlLCAiY2xvc2VkQ2FsbCI6IHsiaW50UmFuZ2UiOiB7ImFyZyI6IDAsICJtaW4iOiAxLCAibWF4IjogMTAyNH19LCAicnVuc09uIjogInNlcnZlciIsICJwYXJhbXMiOiBbXX0sICJjcmVkZW50aWFsLWZvcmdldCI6IHsiY2F0ZWdvcnkiOiAiZWZmZWN0IiwgIm1pbkFyaXR5IjogMSwgIm1heEFyaXR5IjogMiwgImhhc1NpZGVFZmZlY3RzIjogdHJ1ZSwgImNsb3NlZENhbGwiOiB7fSwgInJ1bnNPbiI6ICJzZXJ2ZXIiLCAicGFyYW1zIjogW119LCAia3YvZ2V0IjogeyJjYXRlZ29yeSI6ICJzdGQta3YiLCAibWluQXJpdHkiOiAyLCAibWF4QXJpdHkiOiAzLCAiaGFzU2lkZUVmZmVjdHMiOiB0cnVlLCAiZ3JhbnQiOiBbeyJraW5kIjogImt2IiwgImFjY2VzcyI6ICJyZWFkIiwgInN0b3JlIjogMH1dLCAicnVuc09uIjogImFueSIsICJwYXJhbXMiOiBbXX0sICJpZiI6IHsiY2F0ZWdvcnkiOiAiY29udHJvbCIsICJwYXJhbXMiOiBbXX19fQ=="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_HOST_FACTS",
+        "payload": {
+         "operators": {
+          "browser/prompt": {
+           "family": "on-device",
+           "emitKeys": [
+            "success",
+            "failure",
+            "cancelled"
+           ]
+          },
+          "browser/tab-open": {
+           "family": "tab",
+           "emitKeys": [
+            "success",
+            "failure",
+            "cancelled"
+           ]
+          },
+          "credential-forget": {
+           "closedCall": {}
+          },
+          "http": {
+           "oauth": {
+            "endpointTarget": "oauth-endpoint",
+            "endpointKinds": [
+             "token",
+             "revocation",
+             "userinfo"
+            ],
+            "ops": [
+             {
+              "name": "discovery",
+              "required": [],
+              "optional": []
+             },
+             {
+              "name": "code",
+              "required": [
+               "code",
+               "state"
+              ],
+              "optional": [
+               "subject"
+              ],
+              "endpoint": "token"
+             },
+             {
+              "name": "connect",
+              "required": [
+               "code",
+               "state",
+               "provider"
+              ],
+              "optional": [],
+              "endpoint": "token"
+             },
+             {
+              "name": "refresh",
+              "required": [
+               "refreshToken"
+              ],
+              "optional": [],
+              "endpoint": "token"
+             },
+             {
+              "name": "revoke",
+              "required": [
+               "token"
+              ],
+              "optional": [],
+              "endpoint": "revocation"
+             },
+             {
+              "name": "userinfo",
+              "required": [
+               "accessToken"
+              ],
+              "optional": [],
+              "endpoint": "userinfo"
+             }
+            ]
+           },
+           "httpWire": {
+            "requestKeys": [
+             "query",
+             "headers",
+             "json",
+             "form",
+             "text",
+             "bytes",
+             "multipart",
+             "auth",
+             "timeoutMs",
+             "delayMs",
+             "responseAs",
+             "paginate",
+             "stream",
+             "retry",
+             "formEncoding",
+             "queryEncoding",
+             "presign",
+             "webpush"
+            ],
+            "bodyKeys": [
+             "json",
+             "form",
+             "text",
+             "bytes",
+             "multipart",
+             "webpush"
+            ],
+            "queryEncodings": [
+             "uri",
+             "rfc3986"
+            ],
+            "defaultPorts": {
+             "http": 80,
+             "https": 443
+            },
+            "authSchemes": [
+             {
+              "name": "oauth-client",
+              "keys": [
+               "scheme",
+               "op",
+               "client",
+               "clients",
+               "code",
+               "state",
+               "subject",
+               "provider",
+               "refreshToken",
+               "token",
+               "accessToken"
+              ]
+             },
+             {
+              "name": "bearer",
+              "keys": [
+               "scheme",
+               "credential"
+              ]
+             },
+             {
+              "name": "api-key",
+              "keys": [
+               "scheme",
+               "credential",
+               "name",
+               "in"
+              ]
+             },
+             {
+              "name": "basic",
+              "keys": [
+               "scheme",
+               "user",
+               "credential"
+              ]
+             },
+             {
+              "name": "oauth2-client",
+              "keys": [
+               "scheme",
+               "tokenUrl",
+               "clientId",
+               "clientSecret",
+               "scope",
+               "grantRequest",
+               "onUnauthorized"
+              ],
+              "onUnauthorized": [
+               "reply",
+               "refresh"
+              ]
+             },
+             {
+              "name": "token-exchange",
+              "keys": [
+               "scheme",
+               "tokenUrl",
+               "grant",
+               "body",
+               "clientAuth",
+               "clientId",
+               "clientSecret",
+               "accessField",
+               "expiresField",
+               "expiresMarginMs",
+               "storeAs",
+               "grantRequest",
+               "rotate",
+               "onUnauthorized"
+              ],
+              "onUnauthorized": [
+               "reply",
+               "refresh"
+              ]
+             },
+             {
+              "name": "jwt-bearer",
+              "keys": [
+               "scheme",
+               "key",
+               "alg",
+               "claims",
+               "tokenUrl",
+               "grant",
+               "scope",
+               "expiresMarginMs",
+               "storeAs",
+               "grantRequest",
+               "onUnauthorized"
+              ],
+              "onUnauthorized": [
+               "reply",
+               "refresh"
+              ]
+             },
+             {
+              "name": "hmac-sha256",
+              "keys": [
+               "scheme",
+               "credential",
+               "name",
+               "signs",
+               "encoding",
+               "prefix"
+              ]
+             },
+             {
+              "name": "aws-sigv4",
+              "keys": [
+               "scheme",
+               "accessKeyId",
+               "secretAccessKey",
+               "sessionToken",
+               "region",
+               "service"
+              ],
+              "required": [
+               "accessKeyId",
+               "secretAccessKey",
+               "region",
+               "service"
+              ]
+             },
+             {
+              "name": "vapid",
+              "keys": [
+               "scheme",
+               "privateKey",
+               "publicKey",
+               "subject"
+              ]
+             }
+            ]
+           },
+           "emitKeys": [
+            "success",
+            "failure",
+            "onMessage",
+            "cancelled"
+           ]
+          },
+          "kv/get": {
+           "grant": [
+            {
+             "kind": "kv",
+             "access": "read",
+             "store": 0
+            }
+           ]
+          },
+          "postgres": {
+           "defaultPorts": {
+            "postgres": 5432,
+            "postgresql": 5432
+           },
+           "emitKeys": [
+            "success",
+            "failure"
+           ]
+          },
+          "random-bytes": {
+           "closedCall": {
+            "intRange": {
+             "arg": 0,
+             "min": 1,
+             "max": 1024
+            }
+           }
+          }
+         }
+        }
+       },
+       {
+        "event": "LINT_SERVICES_READ",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_HOST_FACTS_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-table-whose-operators-state-no-host-facts-answers-none",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7ImVtaXQiOiB7ImNhdGVnb3J5IjogImVmZmVjdCIsICJidXNFeGNsdWRlZCI6IFsiSU5JVCJdfSwgInByb2dyYW0vZGlzcGF0Y2giOiB7ImNhdGVnb3J5IjogInN0ZC1wcm9ncmFtIiwgInRhcmdldE9wdGlvbnMiOiBbIm9yYml0YWwiXX0sICJpZiI6IHsiY2F0ZWdvcnkiOiAiY29udHJvbCIsICJwYXJhbXMiOiBbXX19fQ=="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_HOST_FACTS",
+        "payload": {
+         "operators": {}
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINT_HOST_FACTS_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-host-fact-of-another-shape-leaves-the-input-and-the-other-events-alone",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_TABLE_READ",
+     "payload": {
+      "data": "eyJvcGVyYXRvcnMiOiB7ImVtaXQiOiB7ImNhdGVnb3J5IjogImVmZmVjdCIsICJidXNFeGNsdWRlZCI6IFsiSU5JVCJdfSwgInByb2dyYW0vZGlzcGF0Y2giOiB7ImNhdGVnb3J5IjogInN0ZC1wcm9ncmFtIiwgInRhcmdldE9wdGlvbnMiOiBbIm9yYml0YWwiXX0sICJicm93c2VyL3RhYi1vcGVuIjogeyJjYXRlZ29yeSI6ICJzdGQtYnJvd3NlciIsICJtaW5Bcml0eSI6IDEsICJtYXhBcml0eSI6IDIsICJoYXNTaWRlRWZmZWN0cyI6IHRydWUsICJlbWl0S2V5cyI6IFsic3VjY2VzcyIsICJmYWlsdXJlIiwgImNhbmNlbGxlZCJdLCAiZmFtaWx5IjogNSwgInJ1bnNPbiI6ICJjbGllbnQiLCAicGFyYW1zIjogW119fX0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_OPERATORS",
+        "payload": {
+         "names": [
+          "emit"
+         ]
+        }
+       },
+       {
+        "event": "LINT_HOST_FACTS_UNREAD",
+        "payload": {
+         "error": "the installed @almadar/std operator table has an operator whose closedCall, oauth, grant, defaultPorts, httpWire, family or emitKeys is not declared in the table's shape"
+        }
+       },
+       {
+        "event": "LINT_SERVICES_READ",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_HOST_FACTS"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-manifest-records-the-services-path",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_CORE_MANIFEST",
+     "payload": {
+      "data": "eyJvcmJMYW5ndWFnZSI6IHsiY29tcG9uZW50TWFwcGluZyI6ICJjLmpzb24iLCAic2VydmljZXMiOiAicy5qc29uIn19"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LINT_INPUT_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-manifest-without-a-services-registry-fails-only-the-services",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_SERVICES_READ",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_SERVICES_UNREAD",
+        "payload": {
+         "error": "the installed @almadar/core declares no orbLanguage.services"
+        }
+       },
+       {
+        "event": "LINT_PROGRAM_START",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_SERVICES"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-declared-services-registry-is-read",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "servicesFile": "s.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_SERVICES_READ",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "LINT_SERVICES_UNREAD",
+       "LINT_PROGRAM_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-services-registry-answers-its-actions-params-and-key-flags",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "servicesFile": "s.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_SERVICES_FILE",
+     "payload": {
+      "data": "eyJzZXJ2aWNlcyI6IHsiaG9zdGluZyI6IHsiYWN0aW9ucyI6IFt7Im5hbWUiOiAiZGVwbG95IiwgInBhcmFtcyI6IFt7Im5hbWUiOiAiYXBwSWQiLCAidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlfSwgeyJuYW1lIjogImNvdW50IiwgInR5cGUiOiAibnVtYmVyIn0sIHsibmFtZSI6ICJtb2RlIiwgInR5cGUiOiAiJ2EnIHwgJ2InIn0sIHsibmFtZSI6ICJ0YWdzIiwgInR5cGUiOiAic3RyaW5nW10ifSwgeyJuYW1lIjogIm1ldGEiLCAidHlwZSI6ICJvYmplY3QifSwgeyJuYW1lIjogImlkIiwgInR5cGUiOiAiUmVmIn1dLCAicmVzcG9uc2VTaGFwZSI6IHsia2V5IjogInN0cmluZyJ9fSwgeyJuYW1lIjogInN0YXR1cyIsICJyZXNwb25zZVNoYXBlIjoge319XX0sICJkZWNsYXJlZCI6IHt9fX0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_SERVICES",
+        "payload": {
+         "services": {
+          "hosting": {
+           "actions": {
+            "deploy": {
+             "hasKey": true,
+             "params": [
+              {
+               "name": "appId",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "count",
+               "type": "number",
+               "required": false,
+               "kind": "number"
+              },
+              {
+               "name": "mode",
+               "type": "'a' | 'b'",
+               "required": false,
+               "kind": "string"
+              },
+              {
+               "name": "tags",
+               "type": "string[]",
+               "required": false,
+               "kind": "array"
+              },
+              {
+               "name": "meta",
+               "type": "object",
+               "required": false,
+               "kind": "object"
+              },
+              {
+               "name": "id",
+               "type": "Ref",
+               "required": false,
+               "kind": ""
+              }
+             ]
+            },
+            "status": {
+             "hasKey": false,
+             "params": []
+            }
+           }
+          },
+          "declared": {
+           "actions": {}
+          }
+         }
+        }
+       },
+       {
+        "event": "LINT_PROGRAM_START",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_SERVICES_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-file-that-is-not-a-services-registry-fails-only-the-services",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_SERVICES_FILE",
+     "payload": {
+      "data": "eyJub3BlIjogMX0="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_SERVICES_UNREAD",
+        "payload": {
+         "error": "the installed @almadar/core services registry is not a services registry"
+        }
+       },
+       {
+        "event": "LINT_PROGRAM_START",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_SERVICES"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-unreadable-services-registry-answers-its-own-unread-event",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_SERVICES_FAILED",
+     "payload": {
+      "error": "no file"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_SERVICES_UNREAD",
+        "payload": {
+         "error": "no file"
+        }
+       },
+       {
+        "event": "LINT_PROGRAM_START",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_SERVICES"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-services-read-resolves-the-program",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_PROGRAM_START",
+     "payload": {},
+     "expect": {
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-installed-services-registry-is-projected-per-service-action-and-param",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "servicesFile": "s.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_SERVICES_FILE",
+     "payload": {
+      "data": "eyJ2ZXJzaW9uIjogIjEuMC4wIiwgImV4cG9ydGVkQXQiOiAiMjAyNi0xMC0xOFQxMDowOTozMS43MDBaIiwgInNlcnZpY2VzIjogeyJob3N0aW5nIjogeyJuYW1lIjogImhvc3RpbmciLCAiZGVzY3JpcHRpb24iOiAiSG9zdGluZyBcdTIwMTQgcHVibGlzaCBhbiBhcHAgYXMgPGhhbmRsZT4vPG5hbWU+IGJlaGluZCB0aGUgcHJlLWRlcGxveSBnYXRlLCBzZXJ2ZSwgcm9sbCBiYWNrLCB0b3BvbG9neSwgbG9ncywgb3duLWNsb3VkIGV4cG9ydCIsICJjYXRlZ29yeSI6ICJpbmZyYXN0cnVjdHVyZSIsICJwYWNrYWdlIjogIkBhbG1hZGFyLWlvL2hvc3RpbmciLCAiYmFja2VuZCI6ICJwcm9kdWN0aW9uIiwgInJ1bnRpbWVzIjogWyJub2RlIl0sICJhY3Rpb25zIjogW3sibmFtZSI6ICJkZXBsb3kiLCAiZGVzY3JpcHRpb24iOiAiUHVibGlzaCBhbiBhcHA6IHJ1biB0aGUgcHJlLWRlcGxveSBnYXRlLCBtYWtlIGl0IGl0cyBoYW5kbGUncyBuZXh0IHBhY2thZ2UgdmVyc2lvbiBhbmQgc2VydmUgaXQgYXQgYDxoYW5kbGU+LzxuYW1lPmAuIFN0cmVhbXMgb25lIHByb2dyZXNzIG1lc3NhZ2UgcGVyIHN0ZXAuIiwgInBhcmFtcyI6IFt7Im5hbWUiOiAiYXBwSWQiLCAidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiVGhlIGFwcCAod29ya3NwYWNlKSB0byBwdWJsaXNoLiJ9LCB7Im5hbWUiOiAibmFtZSIsICJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJUaGUgcHVibGlzaGVkIG5hbWUsIGxvd2VyY2FzZSBrZWJhYi1jYXNlLiJ9LCB7Im5hbWUiOiAiZGVzY3JpcHRpb24iLCAidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiV2hhdCB0aGUgYXBwIGlzLiJ9LCB7Im5hbWUiOiAidGFncyIsICJ0eXBlIjogInN0cmluZ1tdIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIkNhdGFsb2cgdGFncy4ifSwgeyJuYW1lIjogInRlYW1JZCIsICJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IGZhbHNlLCAiZGVzY3JpcHRpb24iOiAiUHVibGlzaCBhcyB0aGlzIHRlYW0gKG93bmVyIG9yIGFkbWluIG9ubHkpOyBhcyB0aGUgY2FsbGVyIHdoZW4gb21pdHRlZC4ifSwgeyJuYW1lIjogInByaXZhdGUiLCAidHlwZSI6ICJib29sZWFuIiwgInJlcXVpcmVkIjogZmFsc2UsICJkZXNjcmlwdGlvbiI6ICJBIHBhaWQgdGVhbSdzIGFwcCBzZXJ2ZWQgdG8gaXRzIG1lbWJlcnMgb25seS4ifV0sICJyZXNwb25zZVNoYXBlIjogeyJvayI6ICJib29sZWFuIiwgImZhaWxlZFN0ZXAiOiAic3RyaW5nIiwgImZpbmRpbmdzIjogInN0cmluZ1tdIiwgInZlcnNpb24iOiAibnVtYmVyIiwgInVzZXMiOiAic3RyaW5nIiwgInBhY2thZ2VWZXJzaW9uIjogInN0cmluZyIsICJsaXZlVXJsIjogInN0cmluZyJ9fSwgeyJuYW1lIjogInN0YXR1cyIsICJkZXNjcmlwdGlvbiI6ICJXaGF0IGFuIGFwcCBpcyBwdWJsaXNoZWQgYXMsIHRoZSB2ZXJzaW9uIHNlcnZlZCwgaXRzIGhpc3RvcnkgYW5kIGl0cyBtYXNrZWQgY3JlZGVudGlhbHMuIiwgInBhcmFtcyI6IFt7Im5hbWUiOiAiYXBwSWQiLCAidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiVGhlIGFwcC4ifV0sICJyZXNwb25zZVNoYXBlIjogeyJwdWJsaXNoZWQiOiAiYm9vbGVhbiIsICJoYW5kbGUiOiAic3RyaW5nIiwgIm5hbWUiOiAic3RyaW5nIiwgInRlYW1Pbmx5IjogImJvb2xlYW4iLCAibGl2ZVVybCI6ICJzdHJpbmciLCAiaGFzQWN0aXZlIjogImJvb2xlYW4iLCAiYWN0aXZlIjogeyJ0eXBlIjogIkhvc3RpbmdEZXBsb3ltZW50Um93IiwgInByb3BlcnRpZXMiOiB7ImlkIjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJSb3cgaWQ6IHRoZSB2ZXJzaW9uIGFzIHRleHQuIn0sICJ2ZXJzaW9uIjogeyJ0eXBlIjogIm51bWJlciIsICJyZXF1aXJlZCI6IHRydWV9LCAiY29tbWl0IjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJUaGUgd29ya3NwYWNlIGNvbW1pdCBkZXBsb3llZC4ifSwgInRhcmdldCI6IHsidHlwZSI6ICInc2hhcmVkLWhvc3QnIHwgJ293bi1jbG91ZCciLCAicmVxdWlyZWQiOiB0cnVlfSwgInBhY2thZ2VWZXJzaW9uIjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJUaGUgaGFuZGxlIHBhY2thZ2UgdmVyc2lvbiBhIHNoYXJlZC1ob3N0IGRlcGxveW1lbnQgc2VydmVzOyBlbXB0eSBmb3Igb3duLWNsb3VkLiJ9LCAicHVibGlzaGVkQnkiOiB7InR5cGUiOiAic3RyaW5nIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIldobyBwdWJsaXNoZWQgaXQ7IGVtcHR5IHdoZW4gdW5yZWNvcmRlZC4ifSwgInJlY29yZGVkQXQiOiB7InR5cGUiOiAibnVtYmVyIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIldoZW4gaXQgd2FzIHJlY29yZGVkLCBlcG9jaCBtczsgMCB3aGVuIHVucmVjb3JkZWQuIn19fSwgImhpc3RvcnkiOiB7InR5cGUiOiAiSG9zdGluZ0RlcGxveW1lbnRSb3dbXSIsICJpdGVtcyI6IHsidHlwZSI6ICJIb3N0aW5nRGVwbG95bWVudFJvdyIsICJwcm9wZXJ0aWVzIjogeyJpZCI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiUm93IGlkOiB0aGUgdmVyc2lvbiBhcyB0ZXh0LiJ9LCAidmVyc2lvbiI6IHsidHlwZSI6ICJudW1iZXIiLCAicmVxdWlyZWQiOiB0cnVlfSwgImNvbW1pdCI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiVGhlIHdvcmtzcGFjZSBjb21taXQgZGVwbG95ZWQuIn0sICJ0YXJnZXQiOiB7InR5cGUiOiAiJ3NoYXJlZC1ob3N0JyB8ICdvd24tY2xvdWQnIiwgInJlcXVpcmVkIjogdHJ1ZX0sICJwYWNrYWdlVmVyc2lvbiI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiVGhlIGhhbmRsZSBwYWNrYWdlIHZlcnNpb24gYSBzaGFyZWQtaG9zdCBkZXBsb3ltZW50IHNlcnZlczsgZW1wdHkgZm9yIG93bi1jbG91ZC4ifSwgInB1Ymxpc2hlZEJ5IjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJXaG8gcHVibGlzaGVkIGl0OyBlbXB0eSB3aGVuIHVucmVjb3JkZWQuIn0sICJyZWNvcmRlZEF0IjogeyJ0eXBlIjogIm51bWJlciIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJXaGVuIGl0IHdhcyByZWNvcmRlZCwgZXBvY2ggbXM7IDAgd2hlbiB1bnJlY29yZGVkLiJ9fX19LCAiY3JlZGVudGlhbHMiOiB7InR5cGUiOiAiYXJyYXkiLCAiaXRlbXMiOiB7InR5cGUiOiAib2JqZWN0IiwgInByb3BlcnRpZXMiOiB7ImlkIjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJSb3cgaWQ6IGA8c2VydmljZT4vPGVudlZhcj5gLiJ9LCAic2VydmljZSI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlfSwgImVudlZhciI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlfSwgImxhc3Q0IjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWV9LCAidXBkYXRlZEF0IjogeyJ0eXBlIjogIm51bWJlciIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJFcG9jaCBtcy4ifX19fSwgImNyZWRlbnRpYWxzRW5hYmxlZCI6ICJib29sZWFuIn19LCB7Im5hbWUiOiAic2V0Q3JlZGVudGlhbCIsICJkZXNjcmlwdGlvbiI6ICJTdG9yZSBvbmUgb2YgYSBwdWJsaXNoZWQgYXBwJ3Mgb3duIGNyZWRlbnRpYWxzLiIsICJwYXJhbXMiOiBbeyJuYW1lIjogImFwcElkIiwgInR5cGUiOiAic3RyaW5nIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIiJ9LCB7Im5hbWUiOiAic2VydmljZSIsICJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJJbnRlZ3JhdGlvbiB0aGUgY3JlZGVudGlhbCBiZWxvbmdzIHRvLiJ9LCB7Im5hbWUiOiAiZW52VmFyIiwgInR5cGUiOiAic3RyaW5nIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIkRlY2xhcmVkIGVudiB2YXIuIn0sIHsibmFtZSI6ICJ2YWx1ZSIsICJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJTZWNyZXQgdmFsdWU7IG5ldmVyIGxvZ2dlZC4ifV0sICJyZXNwb25zZVNoYXBlIjogeyJzYXZlZCI6ICJib29sZWFuIiwgImxhc3Q0IjogInN0cmluZyJ9fSwgeyJuYW1lIjogInJvbGxiYWNrIiwgImRlc2NyaXB0aW9uIjogIlNlcnZlIGFuIGVhcmxpZXIgZGVwbG95bWVudCB2ZXJzaW9uIGFnYWluLiIsICJwYXJhbXMiOiBbeyJuYW1lIjogImFwcElkIiwgInR5cGUiOiAic3RyaW5nIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIiJ9LCB7Im5hbWUiOiAidmVyc2lvbiIsICJ0eXBlIjogIm51bWJlciIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJUaGUgZGVwbG95bWVudCB2ZXJzaW9uIHRvIHNlcnZlLiJ9XSwgInJlc3BvbnNlU2hhcGUiOiB7Imhhc0FjdGl2ZSI6ICJib29sZWFuIiwgImFjdGl2ZSI6IHsidHlwZSI6ICJIb3N0aW5nRGVwbG95bWVudFJvdyIsICJwcm9wZXJ0aWVzIjogeyJpZCI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiUm93IGlkOiB0aGUgdmVyc2lvbiBhcyB0ZXh0LiJ9LCAidmVyc2lvbiI6IHsidHlwZSI6ICJudW1iZXIiLCAicmVxdWlyZWQiOiB0cnVlfSwgImNvbW1pdCI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiVGhlIHdvcmtzcGFjZSBjb21taXQgZGVwbG95ZWQuIn0sICJ0YXJnZXQiOiB7InR5cGUiOiAiJ3NoYXJlZC1ob3N0JyB8ICdvd24tY2xvdWQnIiwgInJlcXVpcmVkIjogdHJ1ZX0sICJwYWNrYWdlVmVyc2lvbiI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiVGhlIGhhbmRsZSBwYWNrYWdlIHZlcnNpb24gYSBzaGFyZWQtaG9zdCBkZXBsb3ltZW50IHNlcnZlczsgZW1wdHkgZm9yIG93bi1jbG91ZC4ifSwgInB1Ymxpc2hlZEJ5IjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJXaG8gcHVibGlzaGVkIGl0OyBlbXB0eSB3aGVuIHVucmVjb3JkZWQuIn0sICJyZWNvcmRlZEF0IjogeyJ0eXBlIjogIm51bWJlciIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJXaGVuIGl0IHdhcyByZWNvcmRlZCwgZXBvY2ggbXM7IDAgd2hlbiB1bnJlY29yZGVkLiJ9fX19fSwgeyJuYW1lIjogInRvcG9sb2d5IiwgImRlc2NyaXB0aW9uIjogIlRoZSBwdWJsaXNoZWQgYXBwJ3MgY2xpZW50cywgaG9zdCwgc2VydmljZXMgYW5kIHN0b3Jlcywgd2l0aCB0aGUgY2FsbHMgb2JzZXJ2ZWQgYmV0d2VlbiB0aGVtLiIsICJwYXJhbXMiOiBbeyJuYW1lIjogImFwcElkIiwgInR5cGUiOiAic3RyaW5nIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIiJ9LCB7Im5hbWUiOiAic2luY2VNcyIsICJ0eXBlIjogIm51bWJlciIsICJyZXF1aXJlZCI6IGZhbHNlLCAiZGVzY3JpcHRpb24iOiAiV2luZG93IHN0YXJ0LCBlcG9jaCBtczsgdGhlIGxhc3QgMjQgaG91cnMgd2hlbiBvbWl0dGVkLiJ9XSwgInJlc3BvbnNlU2hhcGUiOiB7InNpbmNlTXMiOiAibnVtYmVyIiwgInVuaXRzIjogeyJ0eXBlIjogImFycmF5IiwgIml0ZW1zIjogeyJ0eXBlIjogIm9iamVjdCIsICJwcm9wZXJ0aWVzIjogeyJpZCI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlfSwgImNvbHVtbiI6IHsidHlwZSI6ICInY2xpZW50JyB8ICdob3N0JyB8ICdzZXJ2aWNlJyB8ICdzdG9yZScgfCAnZXh0ZXJuYWwnIiwgInJlcXVpcmVkIjogdHJ1ZX0sICJsYWJlbCI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlfSwgInN0YXR1cyI6IHsidHlwZSI6ICInb2snIHwgJ2RlZ3JhZGVkJyB8ICdkb3duJyB8ICdpZGxlJyIsICJyZXF1aXJlZCI6IHRydWV9LCAibWV0cmljIjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJFbXB0eSB3aGVuIHRoZSB1bml0IHJlcG9ydHMgbm9uZS4ifX19fSwgImVkZ2VzIjogeyJ0eXBlIjogImFycmF5IiwgIml0ZW1zIjogeyJ0eXBlIjogIm9iamVjdCIsICJwcm9wZXJ0aWVzIjogeyJpZCI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlfSwgInNvdXJjZSI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlfSwgInRhcmdldCI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlfSwgImxhYmVsIjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWV9LCAic3RhdHVzIjogeyJ0eXBlIjogIidvaycgfCAnZGVncmFkZWQnIHwgJ2Rvd24nIHwgJ2lkbGUnIiwgInJlcXVpcmVkIjogdHJ1ZX0sICJjYWxscyI6IHsidHlwZSI6ICJudW1iZXIiLCAicmVxdWlyZWQiOiB0cnVlfSwgImVycm9ycyI6IHsidHlwZSI6ICJudW1iZXIiLCAicmVxdWlyZWQiOiB0cnVlfSwgInA1ME1zIjogeyJ0eXBlIjogIm51bWJlciIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJNZWRpYW4gbGF0ZW5jeSBpbiBtczsgMCB3aGVuIHVubWVhc3VyZWQuIn19fX0sICJkYXNoYm9hcmRVcmwiOiAic3RyaW5nIn19LCB7Im5hbWUiOiAibG9ncyIsICJkZXNjcmlwdGlvbiI6ICJPbmUgdG9wb2xvZ3kgdW5pdCdzIGxvZyB0YWlsLiIsICJwYXJhbXMiOiBbeyJuYW1lIjogImFwcElkIiwgInR5cGUiOiAic3RyaW5nIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIiJ9LCB7Im5hbWUiOiAidW5pdCIsICJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJUb3BvbG9neSB1bml0IGlkLiJ9LCB7Im5hbWUiOiAic2luY2VNcyIsICJ0eXBlIjogIm51bWJlciIsICJyZXF1aXJlZCI6IGZhbHNlLCAiZGVzY3JpcHRpb24iOiAiV2luZG93IHN0YXJ0LCBlcG9jaCBtczsgdGhlIGxhc3QgMjQgaG91cnMgd2hlbiBvbWl0dGVkLiJ9XSwgInJlc3BvbnNlU2hhcGUiOiB7ImxpbmVzIjogeyJ0eXBlIjogImFycmF5IiwgIml0ZW1zIjogeyJ0eXBlIjogIm9iamVjdCIsICJwcm9wZXJ0aWVzIjogeyJpZCI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiUm93IGlkOiB0aGUgbGluZSdzIHBvc2l0aW9uIGluIHRoZSB0YWlsLiJ9LCAidGltZSI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlfSwgInNldmVyaXR5IjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWV9LCAibWVzc2FnZSI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlfSwgIm9wIjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJFbXB0eSB3aGVuIHRoZSBsaW5lIGlzIG5vdCBhIGNhbGwuIn0sICJvayI6IHsidHlwZSI6ICJib29sZWFuIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIldoZXRoZXIgdGhlIGNhbGwgc3VjY2VlZGVkOyB0cnVlIGZvciBhIGxpbmUgdGhhdCBpcyBub3QgYSBjYWxsLiJ9LCAiZHVyYXRpb25NcyI6IHsidHlwZSI6ICJudW1iZXIiLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiMCB3aGVuIHVubWVhc3VyZWQuIn0sICJlcnJvciI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiRW1wdHkgd2hlbiBub25lLiJ9fX19fX0sIHsibmFtZSI6ICJleHBvcnQiLCAiZGVzY3JpcHRpb24iOiAiQnVpbGQgdGhlIGFwcCBmb3IgaXRzIG93bmVyJ3Mgb3duIGNsb3VkIChjb21waWxlZCBjb2RlICsgVGVycmFmb3JtKSBiZWhpbmQgdGhlIHNhbWUgZ2F0ZTsgdGhlIGFyY2hpdmUgaXMgc3RvcmVkIGFuZCBvZmZlcmVkIGJ5IFVSTC4iLCAicGFyYW1zIjogW3sibmFtZSI6ICJhcHBJZCIsICJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICIifV0sICJyZXNwb25zZVNoYXBlIjogeyJvayI6ICJib29sZWFuIiwgImZhaWxlZFN0ZXAiOiAic3RyaW5nIiwgImZpbmRpbmdzIjogInN0cmluZ1tdIiwgInVybCI6ICJzdHJpbmciLCAiZmlsZW5hbWUiOiAic3RyaW5nIn19XSwgImNyZWRlbnRpYWxzIjogW119LCAicmVnaXN0cnkiOiB7Im5hbWUiOiAicmVnaXN0cnkiLCAiZGVzY3JpcHRpb24iOiAiUmVnaXN0cnkgXHUyMDE0IGNsYWltIGhhbmRsZXMsIGxpc3QgdGhlIGhhbmRsZSBwYWNrYWdlLCBwdWJsaXNoIGEgYmVoYXZpb3IgdG8gdGhlIGxpYnJhcnksIG1hbmFnZSBhIHRlYW0ncyBiZWhhdmlvcnMiLCAiY2F0ZWdvcnkiOiAiZGV2dG9vbHMiLCAicGFja2FnZSI6ICJAYWxtYWRhci1pby9ob3N0aW5nIiwgImJhY2tlbmQiOiAicHJvZHVjdGlvbiIsICJydW50aW1lcyI6IFsibm9kZSJdLCAiYWN0aW9ucyI6IFt7Im5hbWUiOiAiaGFuZGxlcyIsICJkZXNjcmlwdGlvbiI6ICJUaGUgY2FsbGVyJ3MgaGFuZGxlIGFuZCBlYWNoIG9mIHRoZWlyIHRlYW1zJyBoYW5kbGVzLiIsICJwYXJhbXMiOiBbXSwgInJlc3BvbnNlU2hhcGUiOiB7ImhhbmRsZSI6ICJzdHJpbmciLCAidGVhbXMiOiB7InR5cGUiOiAiYXJyYXkiLCAiaXRlbXMiOiB7InR5cGUiOiAib2JqZWN0IiwgInByb3BlcnRpZXMiOiB7ImlkIjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJSb3cgaWQ6IHRoZSB0ZWFtIGlkLiJ9LCAibmFtZSI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlfSwgImhhbmRsZSI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiRW1wdHkgd2hlbiB0aGUgdGVhbSBoYXMgbm90IGNsYWltZWQgb25lLiJ9fX19fX0sIHsibmFtZSI6ICJjbGFpbUhhbmRsZSIsICJkZXNjcmlwdGlvbiI6ICJDbGFpbSBhIGhhbmRsZSBmb3IgdGhlIGNhbGxlciBvciBvbmUgb2YgdGhlaXIgdGVhbXMgKG93bmVyIG9yIGFkbWluKS4iLCAicGFyYW1zIjogW3sibmFtZSI6ICJoYW5kbGUiLCAidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiVGhlIGhhbmRsZSB0byBjbGFpbS4ifSwgeyJuYW1lIjogInRlYW1JZCIsICJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IGZhbHNlLCAiZGVzY3JpcHRpb24iOiAiQ2xhaW0gZm9yIHRoaXMgdGVhbTsgZm9yIHRoZSBjYWxsZXIgd2hlbiBvbWl0dGVkLiJ9XSwgInJlc3BvbnNlU2hhcGUiOiB7ImNsYWltZWQiOiAiYm9vbGVhbiIsICJyZWZ1c2FsIjogIicnIHwgJ2ludmFsaWQnIHwgJ3Jlc2VydmVkJyB8ICd0YWtlbicgfCAna2VwdCcgfCAnZm9yYmlkZGVuJyIsICJtZXNzYWdlIjogInN0cmluZyJ9fSwgeyJuYW1lIjogInBhY2thZ2VzIiwgImRlc2NyaXB0aW9uIjogIlRoZSBsYXRlc3QgdmVyc2lvbiBvZiB0aGUgY2FsbGVyJ3MgaGFuZGxlIHBhY2thZ2UgYW5kIHRoZSBiZWhhdmlvcnMgaW4gaXQuIiwgInBhcmFtcyI6IFtdLCAicmVzcG9uc2VTaGFwZSI6IHsiaGFuZGxlIjogInN0cmluZyIsICJ2ZXJzaW9uIjogInN0cmluZyIsICJiZWhhdmlvcnMiOiB7InR5cGUiOiAiYXJyYXkiLCAiaXRlbXMiOiB7InR5cGUiOiAib2JqZWN0IiwgInByb3BlcnRpZXMiOiB7ImlkIjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICJSb3cgaWQ6IHRoZSBiZWhhdmlvciBuYW1lLiJ9LCAibmFtZSI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlfSwgImRlc2NyaXB0aW9uIjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWV9LCAidXNlcyI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiVGhlIGltcG9ydCBzdHJpbmcsIGA8aGFuZGxlPi88bmFtZT5gLiJ9fX19fX0sIHsibmFtZSI6ICJwdWJsaXNoQmVoYXZpb3IiLCAiZGVzY3JpcHRpb24iOiAiT2ZmZXIgYSBiZWhhdmlvciB0byB0aGUgY29tbXVuaXR5IGxpYnJhcnkgKHJldmlld2VkIGFzIGEgcHVsbCByZXF1ZXN0KS4iLCAicGFyYW1zIjogW3sibmFtZSI6ICJuYW1lIiwgInR5cGUiOiAic3RyaW5nIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIkJlaGF2aW9yIG5hbWUsIGxvd2VyY2FzZSBrZWJhYi1jYXNlLiJ9LCB7Im5hbWUiOiAiZGVzY3JpcHRpb24iLCAidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiIn0sIHsibmFtZSI6ICJ2aXNpYmlsaXR5IiwgInR5cGUiOiAiJ3B1YmxpYycgfCAncHJpdmF0ZSciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiIn0sIHsibmFtZSI6ICJwcm9ncmFtIiwgInR5cGUiOiAic3RyaW5nIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIlRoZSBiZWhhdmlvcidzIHByb2dyYW0gYXMgYC5vcmJgIEpTT04gdGV4dC4ifV0sICJyZXNwb25zZVNoYXBlIjogeyJuYW1lIjogInN0cmluZyIsICJwclVybCI6ICJzdHJpbmcifX0sIHsibmFtZSI6ICJ0ZWFtQmVoYXZpb3JzIiwgImRlc2NyaXB0aW9uIjogIkEgdGVhbSdzIGJlaGF2aW9ycyAodGVhbSBvd25lciBvciBhZG1pbikuIiwgInBhcmFtcyI6IFt7Im5hbWUiOiAidGVhbUlkIiwgInR5cGUiOiAic3RyaW5nIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIiJ9XSwgInJlc3BvbnNlU2hhcGUiOiB7ImJlaGF2aW9ycyI6IHsidHlwZSI6ICJhcnJheSIsICJpdGVtcyI6IHsidHlwZSI6ICJvYmplY3QiLCAicHJvcGVydGllcyI6IHsiaWQiOiB7InR5cGUiOiAic3RyaW5nIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIlJvdyBpZDogdGhlIGJlaGF2aW9yIG5hbWUuIn0sICJuYW1lIjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWV9LCAiaGFuZGxlIjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWV9LCAidmVyc2lvbiI6IHsidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlfSwgImRlc2NyaXB0aW9uIjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWV9LCAidGFncyI6IHsidHlwZSI6ICJzdHJpbmdbXSIsICJyZXF1aXJlZCI6IHRydWV9LCAiZW5hYmxlZCI6IHsidHlwZSI6ICJib29sZWFuIiwgInJlcXVpcmVkIjogdHJ1ZX0sICJjcmVhdGVkQXQiOiB7InR5cGUiOiAibnVtYmVyIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIkVwb2NoIG1zLiJ9LCAiY3JlYXRlZEJ5IjogeyJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWV9LCAib3JiaXRhbENvdW50IjogeyJ0eXBlIjogIm51bWJlciIsICJyZXF1aXJlZCI6IHRydWV9fX19fX0sIHsibmFtZSI6ICJzZXRUZWFtQmVoYXZpb3JFbmFibGVkIiwgImRlc2NyaXB0aW9uIjogIkVuYWJsZSBvciBkaXNhYmxlIG9uZSBvZiBhIHRlYW0ncyBiZWhhdmlvcnMgZm9yIGl0cyBtZW1iZXJzICh0ZWFtIG93bmVyIG9yIGFkbWluKS4iLCAicGFyYW1zIjogW3sibmFtZSI6ICJ0ZWFtSWQiLCAidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiIn0sIHsibmFtZSI6ICJuYW1lIiwgInR5cGUiOiAic3RyaW5nIiwgInJlcXVpcmVkIjogdHJ1ZSwgImRlc2NyaXB0aW9uIjogIiJ9LCB7Im5hbWUiOiAiZW5hYmxlZCIsICJ0eXBlIjogImJvb2xlYW4iLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiIn1dLCAicmVzcG9uc2VTaGFwZSI6IHsiZm91bmQiOiAiYm9vbGVhbiIsICJlbmFibGVkIjogImJvb2xlYW4ifX0sIHsibmFtZSI6ICJyZW1vdmVUZWFtQmVoYXZpb3IiLCAiZGVzY3JpcHRpb24iOiAiUmVtb3ZlIG9uZSBvZiBhIHRlYW0ncyBiZWhhdmlvcnMgKHRlYW0gb3duZXIgb3IgYWRtaW4pLiIsICJwYXJhbXMiOiBbeyJuYW1lIjogInRlYW1JZCIsICJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IHRydWUsICJkZXNjcmlwdGlvbiI6ICIifSwgeyJuYW1lIjogIm5hbWUiLCAidHlwZSI6ICJzdHJpbmciLCAicmVxdWlyZWQiOiB0cnVlLCAiZGVzY3JpcHRpb24iOiAiIn1dLCAicmVzcG9uc2VTaGFwZSI6IHsicmVtb3ZlZCI6ICJib29sZWFuIn19XSwgImNyZWRlbnRpYWxzIjogW119fSwgImNhdGVnb3JpZXMiOiBbImRldnRvb2xzIiwgImluZnJhc3RydWN0dXJlIl19"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_SERVICES",
+        "payload": {
+         "services": {
+          "hosting": {
+           "actions": {
+            "deploy": {
+             "hasKey": false,
+             "params": [
+              {
+               "name": "appId",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "name",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "description",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "tags",
+               "type": "string[]",
+               "required": true,
+               "kind": "array"
+              },
+              {
+               "name": "teamId",
+               "type": "string",
+               "required": false,
+               "kind": "string"
+              },
+              {
+               "name": "private",
+               "type": "boolean",
+               "required": false,
+               "kind": "boolean"
+              }
+             ]
+            },
+            "status": {
+             "hasKey": false,
+             "params": [
+              {
+               "name": "appId",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              }
+             ]
+            },
+            "setCredential": {
+             "hasKey": false,
+             "params": [
+              {
+               "name": "appId",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "service",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "envVar",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "value",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              }
+             ]
+            },
+            "rollback": {
+             "hasKey": false,
+             "params": [
+              {
+               "name": "appId",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "version",
+               "type": "number",
+               "required": true,
+               "kind": "number"
+              }
+             ]
+            },
+            "topology": {
+             "hasKey": false,
+             "params": [
+              {
+               "name": "appId",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "sinceMs",
+               "type": "number",
+               "required": false,
+               "kind": "number"
+              }
+             ]
+            },
+            "logs": {
+             "hasKey": false,
+             "params": [
+              {
+               "name": "appId",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "unit",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "sinceMs",
+               "type": "number",
+               "required": false,
+               "kind": "number"
+              }
+             ]
+            },
+            "export": {
+             "hasKey": false,
+             "params": [
+              {
+               "name": "appId",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              }
+             ]
+            }
+           }
+          },
+          "registry": {
+           "actions": {
+            "handles": {
+             "hasKey": false,
+             "params": []
+            },
+            "claimHandle": {
+             "hasKey": false,
+             "params": [
+              {
+               "name": "handle",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "teamId",
+               "type": "string",
+               "required": false,
+               "kind": "string"
+              }
+             ]
+            },
+            "packages": {
+             "hasKey": false,
+             "params": []
+            },
+            "publishBehavior": {
+             "hasKey": false,
+             "params": [
+              {
+               "name": "name",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "description",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "visibility",
+               "type": "'public' | 'private'",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "program",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              }
+             ]
+            },
+            "teamBehaviors": {
+             "hasKey": false,
+             "params": [
+              {
+               "name": "teamId",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              }
+             ]
+            },
+            "setTeamBehaviorEnabled": {
+             "hasKey": false,
+             "params": [
+              {
+               "name": "teamId",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "name",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "enabled",
+               "type": "boolean",
+               "required": true,
+               "kind": "boolean"
+              }
+             ]
+            },
+            "removeTeamBehavior": {
+             "hasKey": false,
+             "params": [
+              {
+               "name": "teamId",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "name",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              }
+             ]
+            }
+           }
+          }
+         }
+        }
+       },
+       {
+        "event": "LINT_PROGRAM_START",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_SERVICES_UNREAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "declared-only-services-bare-actions-response-keys-and-every-param-kind",
+   "entity": {
+    "file": "a.lolo",
+    "cwd": "/w",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "coreRoot": "/core",
+    "stdRoot": "/std",
+    "servicesFile": "s.json"
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "reading",
+     "event": "LINT_SERVICES_FILE",
+     "payload": {
+      "data": "eyJ2ZXJzaW9uIjogIjEuMC4wIiwgInNlcnZpY2VzIjogeyJrZXlzdmMiOiB7Im5hbWUiOiAia2V5c3ZjIiwgInJ1bnRpbWVzIjogWyJub2RlIl0sICJhY3Rpb25zIjogW3sibmFtZSI6ICJmZXRjaCIsICJwYXJhbXMiOiBbeyJuYW1lIjogImlkIiwgInR5cGUiOiAic3RyaW5nIiwgInJlcXVpcmVkIjogdHJ1ZX0sIHsibmFtZSI6ICJvcHRzIiwgInR5cGUiOiAiT3B0aW9ucyIsICJyZXF1aXJlZCI6IGZhbHNlfV0sICJyZXNwb25zZVNoYXBlIjogeyJrZXkiOiAic3RyaW5nIiwgIm9rIjogImJvb2xlYW4ifX0sIHsibmFtZSI6ICJwbGFpbiIsICJwYXJhbXMiOiBbXSwgInJlc3BvbnNlU2hhcGUiOiB7Im9rIjogImJvb2xlYW4ifX0sIHsibmFtZSI6ICJiYXJlIiwgInBhcmFtcyI6IFt7Im5hbWUiOiAieCIsICJ0eXBlIjogInN0cmluZyIsICJyZXF1aXJlZCI6IGZhbHNlfV19XX0sICJkZWNsYXJlZCI6IHsibmFtZSI6ICJkZWNsYXJlZCIsICJhY3Rpb25zIjogW119LCAia2luZHMiOiB7Im5hbWUiOiAia2luZHMiLCAiYWN0aW9ucyI6IFt7Im5hbWUiOiAiZ28iLCAicGFyYW1zIjogW3sibmFtZSI6ICJuIiwgInR5cGUiOiAibnVtYmVyIiwgInJlcXVpcmVkIjogZmFsc2V9LCB7Im5hbWUiOiAibyIsICJ0eXBlIjogIm9iamVjdCIsICJyZXF1aXJlZCI6IGZhbHNlfSwgeyJuYW1lIjogIm0iLCAidHlwZSI6ICJtYXAiLCAicmVxdWlyZWQiOiBmYWxzZX0sIHsibmFtZSI6ICJhIiwgInR5cGUiOiAiYXJyYXkiLCAicmVxdWlyZWQiOiBmYWxzZX0sIHsibmFtZSI6ICJsIiwgInR5cGUiOiAic3RyaW5nW10iLCAicmVxdWlyZWQiOiBmYWxzZX0sIHsibmFtZSI6ICJ1IiwgInR5cGUiOiAiJ3gnIHwgJ3knIiwgInJlcXVpcmVkIjogZmFsc2V9LCB7Im5hbWUiOiAibmFtZWQiLCAidHlwZSI6ICJUaGluZyIsICJyZXF1aXJlZCI6IGZhbHNlfSwgeyJuYW1lIjogImIiLCAidHlwZSI6ICJib29sZWFuIiwgInJlcXVpcmVkIjogZmFsc2V9LCB7Im5hbWUiOiAicyIsICJ0eXBlIjogIiBzdHJpbmcgIiwgInJlcXVpcmVkIjogZmFsc2V9XX1dfX19"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_SERVICES",
+        "payload": {
+         "services": {
+          "keysvc": {
+           "actions": {
+            "fetch": {
+             "hasKey": true,
+             "params": [
+              {
+               "name": "id",
+               "type": "string",
+               "required": true,
+               "kind": "string"
+              },
+              {
+               "name": "opts",
+               "type": "Options",
+               "required": false,
+               "kind": ""
+              }
+             ]
+            },
+            "plain": {
+             "hasKey": false,
+             "params": []
+            },
+            "bare": {
+             "hasKey": false,
+             "params": [
+              {
+               "name": "x",
+               "type": "string",
+               "required": false,
+               "kind": "string"
+              }
+             ]
+            }
+           }
+          },
+          "declared": {
+           "actions": {}
+          },
+          "kinds": {
+           "actions": {
+            "go": {
+             "hasKey": false,
+             "params": [
+              {
+               "name": "n",
+               "type": "number",
+               "required": false,
+               "kind": "number"
+              },
+              {
+               "name": "o",
+               "type": "object",
+               "required": false,
+               "kind": "object"
+              },
+              {
+               "name": "m",
+               "type": "map",
+               "required": false,
+               "kind": "object"
+              },
+              {
+               "name": "a",
+               "type": "array",
+               "required": false,
+               "kind": "array"
+              },
+              {
+               "name": "l",
+               "type": "string[]",
+               "required": false,
+               "kind": "array"
+              },
+              {
+               "name": "u",
+               "type": "'x' | 'y'",
+               "required": false,
+               "kind": "string"
+              },
+              {
+               "name": "named",
+               "type": "Thing",
+               "required": false,
+               "kind": ""
+              },
+              {
+               "name": "b",
+               "type": "boolean",
+               "required": false,
+               "kind": "boolean"
+              },
+              {
+               "name": "s",
+               "type": " string ",
+               "required": false,
+               "kind": "string"
+              }
+             ]
+            }
+           }
+          }
+         }
+        }
+       },
+       {
+        "event": "LINT_PROGRAM_START",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "LINT_SERVICES_UNREAD"
       ]
      }
     }

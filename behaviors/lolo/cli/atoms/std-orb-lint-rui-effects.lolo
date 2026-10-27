@@ -32,6 +32,8 @@ orbital OrbLintRuiEffectsOrbital {
     scope : string = ""
     findings : [OrbFinding] = []
     nodeProps : Map string [string] = {}
+    validSlots : [string] = []
+    vocabUnread : boolean = false
   }
 
   trait OrbLintRuiEffects -> OrbLintRuiEffectsRun [optimistic] {
@@ -41,9 +43,18 @@ orbital OrbLintRuiEffectsOrbital {
       INIT -> ready
       LINT_PATTERNS_HEARD -> ready
         (set @entity.nodeProps (object/mapValues @payload.patterns (fn e (let ((ps (object/get @e "props" {}))) (array/filter (object/keys @ps) (fn pn (array/includes (object/get (object/get @ps @pn {}) "types" []) "node")))))))
-      LINT_INPUT -> ready
+      UI_VOCAB_HEARD -> ready
+        (set @entity.vocabUnread false)
+        (set @entity.validSlots @payload.slots)
+      UI_VOCAB_UNREAD -> ready
+        (set @entity.vocabUnread true)
+      LINT_INPUT -> ready when @entity.vocabUnread
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals : [EfOrbital] (object/get @payload.program "orbitals" [])) (np @entity.nodeProps) (validSlots @config.validSlots))
+        (set @entity.findings [{ code: "ORB_LINT_UI_VOCAB_UNREAD", path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the valid slots are unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
+        (emit LINT_FINISH { })
+      LINT_INPUT -> ready when (not @entity.vocabUnread)
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals : [EfOrbital] (object/get @payload.program "orbitals" [])) (np @entity.nodeProps) (validSlots @entity.validSlots))
             (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
               (let ((orb (array/nth @orbitals @oi)))
                 (let ((trs (object/get @orb "traits" [])))
@@ -129,12 +140,6 @@ orbital OrbLintRuiEffectsOrbital {
         @tier "internal"
     }
 
-    config {
-      validSlots : [string] = ["main", "sidebar", "dock", "modal", "drawer", "overlay", "center", "toast", "floating", "system", "content", "screen", "hud", "hud-top", "hud-bottom", "hud.health", "hud.score", "hud.inventory", "hud.stamina", "overlay.inventory", "overlay.dialogue", "overlay.menu", "overlay.pause"]
-        @label "Valid slots"
-        @description "The closed list of slots a render-ui effect may paint (the compiler's VALID_SLOTS)."
-    }
-
     listens {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EfProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
@@ -142,6 +147,12 @@ orbital OrbLintRuiEffectsOrbital {
       LINT_PATTERNS_HEARD { patterns : Map string EfPatternShape! }
         @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry projected for the render-ui checks."
       OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD
+      UI_VOCAB_HEARD { slots : [string]!  itemActionBaseProps : [string]!  lucideIcons : [string]!  themeKeys : [string]!  deliveryRoots : [string]!  eventSourceKeys : [string]! }
+        @description "std-orb-lint-input's LINT_UI_VOCAB: the installed UI vocabulary; its slots are the valid render-ui slots."
+      UI_VOCAB_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_UI_VOCAB_UNREAD: the UI vocabulary could not be read."
+      OrbLintInput.LINT_UI_VOCAB -> UI_VOCAB_HEARD
+      OrbLintInput.LINT_UI_VOCAB_UNREAD -> UI_VOCAB_UNREAD
     }
   }
 

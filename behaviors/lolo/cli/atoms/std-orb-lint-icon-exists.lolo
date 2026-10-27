@@ -1,0 +1,191 @@
+app std-orb-lint-icon-exists [
+  version: "1.0.0",
+  inbound: ["cli-lint-icon-exists"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-icon-exists — the `orb lint icon-exists <file>` command, the port of the ORB_UI_ICON_NOT_FOUND check of icon.rs (validate_icon_value). It walks the same icon positions as icon-format (the `icon` prop, `actions[i].icon` and `itemActions[i].icon` of every object inside the pattern of a `render-ui` effect, recursing as the compiler does) and reports a well-formed icon name (kebab-case or PascalCase, not a binding, not blank) whose kebab-case form (PascalCase lowers each capital to -x, kebab-case lowercases) is not in the installed Lucide set, which comes from std-orb-lint-input's LINT_UI_VOCAB (orbLanguage.uiVocabulary.lucideIcons). The suggestion lists up to three installed icons whose distinct-character overlap with the name (shared distinct characters over the larger distinct-character count) is above 0.3, best first, ties in vocabulary order. An unreadable vocabulary answers ORB_LINT_UI_VOCAB_UNREAD. Clean answers `lint icon-exists: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-icon-exists"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type IcVal = string | number | boolean | [IcVal?] | Map string IcVal?
+type IcHit = { p : string!, code : string!, msg : string!, sug : string! }
+type IcRes = { f : [IcHit]! }
+type IcCand = { p : string, v : IcVal? }
+type IcTransition = { effects : [IcVal?] }
+type IcMachine = { transitions : [IcTransition] }
+type IcTrait = { name : string, stateMachine : IcMachine }
+type IcOrbital = { name : string, traits : [IcTrait] }
+type IcProgram = { orbitals : [IcOrbital] }
+
+orbital OrbLintIconExistsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintIconExistsRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    icons : [string] = []
+    iconSet : Map string boolean = {}
+    vocabUnread : boolean = false
+  }
+
+  trait OrbLintIconExists -> OrbLintIconExistsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      UI_VOCAB_HEARD -> ready
+        (set @entity.vocabUnread false)
+        (set @entity.icons @payload.lucideIcons)
+        (set @entity.iconSet (object/fromEntries (array/map @payload.lucideIcons (fn x [@x, true]))))
+      UI_VOCAB_UNREAD -> ready
+        (set @entity.vocabUnread true)
+      LINT_INPUT -> ready when @entity.vocabUnread
+        (set @entity.scope @payload.scope)
+        (set @entity.findings [{ code: "ORB_LINT_UI_VOCAB_UNREAD", path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the Lucide icon set is unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
+        (emit LINT_FINISH { })
+      LINT_INPUT -> ready when (not @entity.vocabUnread)
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (icons : [string] @entity.icons) (iconSet @entity.iconSet))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((orb (array/nth @orbitals @oi)))
+              (let ((trs (object/get @orb "traits" [])))
+                (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
+                  (let ((td (array/nth @trs @tj)))
+                    (let ((trans (object/get (object/get @td "stateMachine" {}) "transitions" [])))
+                      (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ti
+                        (let ((effs (object/get (array/nth @trans @ti) "effects" [])))
+                          (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
+                            (let ((e (array/nth @effs @ej)))
+                              (if (and (validate/array @e) (> (array/len @e) 2) (let ((hd (array/nth @e 0))) (and (validate/string @hd) (= @hd "render-ui"))) (validate/object (array/nth @e 2)))
+                                (let ((fr (tree/fold (array/nth @e 2) (fn (n k)
+                                      (let ((nr : IcRes { f: [] }))
+                                        (if (validate/array @n)
+                                          { f: (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (if (validate/object (array/nth @n @i)) (array/map (object/get (let ((r0 (array/nth @k @i))) (if (= @r0 null) @nr @r0)) "f") (fn h { p: (str/concat "[" @i "]" (object/get @h "p")), code: (object/get @h "code"), msg: (object/get @h "msg"), sug: (object/get @h "sug") })) []))))  }
+                                          (if (validate/object @n)
+                                            (let ((noc : [IcCand] [])) (let ((cs (array/concat
+                                                        (if (object/has @n "icon") [{ p: ".icon", v: (object/get @n "icon") }] @noc)
+                                                        (let ((lst (object/get @n "actions" null))) (if (validate/array @lst) (array/flatten (array/map (array/range 0 (array/len @lst)) (fn i (let ((a (array/nth @lst @i))) (if (and (validate/object @a) (object/has @a "icon")) [{ p: (str/concat ".actions[" @i "].icon"), v: (object/get @a "icon") }] []))))) @noc))
+                                                        (let ((lst (object/get @n "itemActions" null))) (if (validate/array @lst) (array/flatten (array/map (array/range 0 (array/len @lst)) (fn i (let ((a (array/nth @lst @i))) (if (and (validate/object @a) (object/has @a "icon")) [{ p: (str/concat ".itemActions[" @i "].icon"), v: (object/get @a "icon") }] []))))) @noc)))))
+                                              { f: (array/concat
+                                                  (array/flatten (array/map @cs (fn c
+                                                    (let ((v (object/get @c "v")))
+                                                      (if (or (not (validate/string @v)) (str/startsWith @v (quote "@")) (= (str/trim @v) "") (not (or (validate/pattern @v "^[a-z][a-z0-9]*(-[a-z0-9]+)*$") (validate/pattern @v "^[A-Z][a-zA-Z0-9]*$")))) []
+                                                        (let ((chars : [string] (str/split @v "")) (pascal (validate/pattern @v "^[A-Z][a-zA-Z0-9]*$")))
+                                                          (let ((norm (if @pascal (str/join (array/map (array/range 0 (array/len @chars)) (fn ci (let ((ch (array/nth @chars @ci))) (if (and (!= @ch (str/lower @ch)) (= @ch (str/upper @ch))) (if (= @ci 0) (str/lower @ch) (str/concat "-" (str/lower @ch))) @ch)))) "") (str/lower @v))))
+                                                            (if (object/has @iconSet @norm) []
+                                                              (let ((na (array/unique (str/split @norm ""))))
+                                                                (let ((top (array/take (array/sort (array/filter (array/map (array/range 0 (array/len @icons)) (fn ii (let ((nm (array/nth @icons @ii))) (let ((nb (array/unique (str/split @nm "")))) { i: @ii, n: @nm, s: (/ (array/len (array/filter @na (fn ch (array/includes @nb @ch)))) (if (> (array/len @na) (array/len @nb)) (array/len @na) (array/len @nb))) })))) (fn r (> (object/get @r "s" 0) 0.3))) "s" "desc") 3)))
+                                                                  [{ p: (object/get @c "p"), code: "ORB_UI_ICON_NOT_FOUND", msg: (str/concat "Icon '" @v "' may not exist in Lucide. Check https://lucide.dev/icons for available icons"), sug: (if (= (array/len @top) 0) "" (str/concat "Did you mean: " (str/join (array/map @top (fn r (object/get @r "n"))) ", ") "?")) }]))))))))))
+                                                  (array/flatten (array/map (object/keys @n) (fn key
+                                                    (let ((child (object/get @n @key null)) (r (let ((r0 (object/get @k @key null))) (if (= @r0 null) @nr @r0))))
+                                                      (if (or (validate/object @child) (validate/array @child))
+                                                        (array/map (object/get @r "f") (fn h { p: (str/concat "." @key (object/get @h "p")), code: (object/get @h "code"), msg: (object/get @h "msg"), sug: (object/get @h "sug") }))
+                                                        []))))) ) }))
+                                            @nr)))) IcVal)))
+                                  (if (= @fr null) []
+                                    (array/map (object/get @fr "f") (fn h { code: (object/get @h "code"), path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")].stateMachine.transitions[" @ti "].effects[" @ej "].pattern" (object/get @h "p")), message: (object/get @h "msg"), suggestion: (object/get @h "sug"), severity: "error" }))))
+                                [])))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "icon-exists", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IcProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      UI_VOCAB_HEARD { slots : [string]!  itemActionBaseProps : [string]!  lucideIcons : [string]!  themeKeys : [string]!  deliveryRoots : [string]!  eventSourceKeys : [string]! }
+        @description "std-orb-lint-input's LINT_UI_VOCAB: the installed UI vocabulary; its lucideIcons are the known icons."
+      UI_VOCAB_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_UI_VOCAB_UNREAD: the UI vocabulary could not be read."
+      OrbLintInput.LINT_UI_VOCAB -> UI_VOCAB_HEARD
+      OrbLintInput.LINT_UI_VOCAB_UNREAD -> UI_VOCAB_UNREAD
+    }
+  }
+
+  trait OrbLintIconExistsCli -> OrbLintIconExistsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint icon-exists <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "icon-exists") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint icon-exists: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "icon-exists") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint icon-exists: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-icon-exists" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint icon-exists` with its arguments and working directory."
+        @synonyms "orb lint icon-exists"
+      OrbLintIconExists.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintIconExistsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintIconExistsOrbitalStart -> OrbLintIconExists, OrbLintIconExistsCli, OrbLintInput, Packs, Versions
+}

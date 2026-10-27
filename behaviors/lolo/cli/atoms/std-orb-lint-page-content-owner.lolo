@@ -1,0 +1,248 @@
+app std-orb-lint-page-content-owner [
+  version: "1.0.0",
+  inbound: ["cli-lint-page-content-owner"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-page-content-owner - the `orb lint page-content-owner <file>` command, the port of ORB_PAGE_AMBIGUOUS_CONTENT_OWNER and ORB_PAGE_SECOND_CONTENT_BODY (circuit/closed_circuit.rs validate_page_content_ownership, phases/program/page_content_owner.rs). Per orbital with pages it builds the trait embed graphs from `@trait.<Name>` tokens (the full graph: config defaults, guards, effects, ticks; the content channel: config defaults only, minus a trait the declaring trait paints only into non-main slots), resolves each page's content owner (a content-grade main writer designated through the channel, else the sole page-declared writer, reduced by designation and containment), and reports a page whose writers none composes the others (ORB_PAGE_AMBIGUOUS_CONTENT_OWNER, rivals not embedded by a client-bound trait) and a page-declared content writer that is neither the owner, nor embedded by a client-bound trait, nor kin to the owner (ORB_PAGE_SECOND_CONTENT_BODY). A content-grade body is a string payload, an object with children, or a pattern with an entity-kind prop (LINT_PATTERNS). The main slots are the rule's knob. ORB_PAGE_CONTROL_OUTSIDE_SHELL is not part of this rule: it needs the pattern registry's category, which the lint input does not carry. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint page-content-owner: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-page-content-owner"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type LNode = string | number | boolean | [LNode?] | Map string LNode?
+type LNodes = [LNode?]
+type LStr = string
+type PoNode = string | number | boolean | [PoNode?] | Map string PoNode?
+type PoTransition = { event : string, guard : PoNode?, effects : [PoNode?] }
+type PoMachine = { transitions : [PoTransition] }
+type PoField = { default : PoNode? }
+type PoTick = { guard : PoNode?, effects : [PoNode?] }
+type PoRef = { ref : string, name : string }
+type PoPage = { path : string, protocol : string, traits : [PoRef] }
+type PoTrait = { name : string, stateMachine : PoMachine, config : Map string PoField?, ticks : [PoTick] }
+type PoOrbital = { name : string, traits : [PoTrait], pages : [PoPage] }
+type PoProgram = { orbitals : [PoOrbital] }
+type PoPatProp = { kind : string? }
+type PoPattern = { props : Map string PoPatProp? }
+type PoR = { w : boolean!, p : [string]! }
+type PoRec = { n : string!, cf : [string]!, ct : [string]!, ov : [string]!, w : boolean! }
+type PoAdj = Map string [string]
+
+orbital OrbLintPageContentOwnerOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+
+  entity OrbLintPageContentOwnerRun [runtime] {
+    id : string!
+    scope : string = ""
+    program : PoProgram = {}
+    roots : Map string [string] = {}
+    patterns : Map string PoPattern = {}
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintPageContentOwner -> OrbLintPageContentOwnerRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      INDEX_HEARD -> ready
+        (set @entity.roots @payload.roots)
+      PATTERNS_HEARD -> ready
+        (set @entity.patterns @payload.patterns)
+      LINT_INPUT -> ready
+        (set @entity.program @payload.program)
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((nos : [string] [])
+                (nof : [OrbFinding] [])
+                (notd : [PoTrait] [])
+                (nopg : [PoPage] [])
+                (nor : [PoRef] [])
+                (notr : [PoTransition] [])
+                (notk : [PoTick] [])
+                (lnone : LNodes [])
+                (nr : PoR { w: false, p: @nos })
+                (mainSet (or (object/fromEntries (array/map @config.mainSlots (fn x [@x, true]))) {}))
+                (contentSet (or (object/fromEntries (array/map (array/filter (object/keys @entity.patterns) (fn pn (array/some (object/values (object/get (object/get @entity.patterns @pn {}) "props" {})) (fn pr (= (object/get (or @pr {}) "kind" "") "entity"))))) (fn pn [(str/replaceAll (str/replaceAll @pn "~" "~t") "." "~d"), true]))) {})))
+  (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn (o oi)
+    (let ((trs0 : [PoTrait] (object/get @o "traits" @notd)) (pgs (object/get @o "pages" @nopg)))
+      (if (= (array/len @pgs) 0) @nof
+        (let ((inlK (array/filter (array/range 0 (array/len @trs0)) (fn i (object/has (array/nth @trs0 @i) "stateMachine")))))
+          (let ((recs : [PoRec] (array/map @inlK (fn ti
+                  (let ((t (array/nth @trs0 @ti)))
+                    (let ((gt (array/includes (object/get @entity.roots (str/concat @oi "-" @ti) @nos) (quote "@trait"))) (cfg (object/get @t "config" {})) (tn (object/get @t "name" "")))
+                      (let ((effs (array/concat (array/flatten (array/map (object/get @t "stateMachine.transitions" @notr) (fn x (object/get @x "effects" [])))) (array/flatten (array/map (object/get @t "ticks" @notk) (fn x (object/get @x "effects" [])))))))
+                        (let ((pairs (if @gt (object/get (let ((q (tree/fold @effs (fn (n k)
+  (if (validate/array @n)
+    (let ((kr (array/map @k (fn q (if (= @q null) @nr @q)))) (h0 (if (> (array/len @n) 0) (array/nth @n 0) null)) (h1 (if (> (array/len @n) 1) (array/nth @n 1) null)))
+      { w: false, p: (array/concat
+        (if (and (>= (array/len @n) 3) (validate/string @h0) (= @h0 "render-ui") (validate/string @h1))
+          (let ((pl (array/nth @n 2)))
+            (array/map (array/filter (array/concat (let ((nn1 (json/parse (json/stringify (json/nodes @pl)) LNodes))) (array/map (if (= @nn1 null) @lnone @nn1) (fn nd1 (let ((st1 (or (json/parse (json/stringify @nd1) LStr) ""))) (if (str/startsWith @st1 (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @st1 7 (str/len @st1)) ".")) "[")) ""))))) (if (validate/string @pl) (if (str/startsWith @pl (quote "@config.")) (let ((dv (object/get (object/get @cfg (str/slice @pl 8) {}) "default" null))) (if (= @dv null) @nos (let ((nn2 (json/parse (json/stringify (json/nodes @dv)) LNodes))) (array/map (if (= @nn2 null) @lnone @nn2) (fn nd2 (let ((st2 (or (json/parse (json/stringify @nd2) LStr) ""))) (if (str/startsWith @st2 (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @st2 7 (str/len @st2)) ".")) "[")) ""))))))) @nos) @nos)) (fn c (!= @c ""))) (fn c (str/concat @c "|" @h1))))
+          @nos)
+        (array/flatten (array/map @kr (fn q (object/get @q "p"))))) })
+    @nr)) "PoNode"))) (if (= @q null) @nr @q)) "p") @nos)))
+                          { n: @tn,
+                            cf: (if @gt (let ((nnc (json/parse (json/stringify (json/nodes (array/map (object/values @cfg) (fn f (object/get (or @f {}) "default" null))))) LNodes))) (array/map (if (= @nnc null) @lnone @nnc) (fn ndc (let ((stc (or (json/parse (json/stringify @ndc) LStr) ""))) (if (str/startsWith @stc (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @stc 7 (str/len @stc)) ".")) "[")) ""))))) @nos),
+                            ct: (if @gt (array/concat (let ((nns (json/parse (json/stringify (json/nodes (array/map (object/get @t "stateMachine.transitions" @notr) (fn x [(object/get @x "guard" null), (object/get @x "effects" [])])))) LNodes))) (array/map (if (= @nns null) @lnone @nns) (fn nds (let ((sts (or (json/parse (json/stringify @nds) LStr) ""))) (if (str/startsWith @sts (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @sts 7 (str/len @sts)) ".")) "[")) ""))))) (let ((nnk (json/parse (json/stringify (json/nodes (array/map (object/get @t "ticks" @notk) (fn x [(object/get @x "guard" null), (object/get @x "effects" [])])))) LNodes))) (array/map (if (= @nnk null) @lnone @nnk) (fn ndk (let ((stk (or (json/parse (json/stringify @ndk) LStr) ""))) (if (str/startsWith @stk (quote "@trait.")) (array/first (str/split (array/first (str/split (str/slice @stk 7 (str/len @stk)) ".")) "[")) "")))))) @nos),
+                            ov: (array/filter (array/unique (array/map @pairs (fn pr (array/first (str/split @pr "|"))))) (fn nm (not (array/some @pairs (fn pr (and (= (array/first (str/split @pr "|")) @nm) (object/has @mainSet (array/last (str/split @pr "|"))))))))),
+                            w: (object/get (let ((q (tree/fold @effs (fn (n k)
+  (if (validate/array @n)
+    (let ((kr (array/map @k (fn q (if (= @q null) @nr @q)))) (h0 (if (> (array/len @n) 0) (array/nth @n 0) null)) (h1 (if (> (array/len @n) 1) (array/nth @n 1) null)))
+      (if (and (>= (array/len @n) 3) (validate/string @h0) (= @h0 "if") (let ((c1 (array/nth @n 1))) (if (validate/boolean @c1) (= @c1 false) false)))
+        { w: (if (>= (array/len @n) 4) (object/get (array/nth @kr 3) "w") false), p: @nos }
+        (if (and (>= (array/len @n) 3) (validate/string @h0) (= @h0 "render-ui") (validate/string @h1) (object/has @mainSet @h1))
+          { w: (let ((pl (array/nth @n 2)))
+            (if (validate/string @pl) true
+              (if (validate/object @pl)
+                (let ((ch (object/get @pl "children" null)) (ty (object/get @pl "type" null)))
+                  (or (and (validate/array @ch) (> (array/len @ch) 0)) (validate/object @ch) (and (validate/string @ty) (object/has @contentSet @ty))))
+                false))), p: @nos }
+          { w: (array/some @kr (fn q (object/get @q "w"))), p: @nos })))
+    @nr)) "PoNode"))) (if (= @q null) @nr @q)) "w") }))))))))
+            (let ((n1 (+ (array/len @recs) 1))
+                  (inl (or (object/fromEntries (array/map @recs (fn r [(object/get @r "n"), true]))) {}))
+                  (wr (or (object/fromEntries (array/map (array/filter @recs (fn r (object/get @r "w"))) (fn r [(object/get @r "n"), true]))) {}))
+                  (embFwd : PoAdj (or (object/fromEntries (array/map @recs (fn r [(object/get @r "n"), (array/unique (array/filter (array/concat (object/get @r "cf") (object/get @r "ct")) (fn c (and (!= @c "") (!= @c (object/get @r "n"))))))]))) {}))
+                  (chanFwd : PoAdj (or (object/fromEntries (array/map @recs (fn r [(object/get @r "n"), (array/unique (array/filter (object/get @r "cf") (fn c (and (!= @c "") (!= @c (object/get @r "n")) (not (array/includes (object/get @r "ov") @c))))))]))) {})))
+              (let ((seeds (array/flatten (array/map (array/filter @pgs (fn p (= (object/get @p "protocol" "") ""))) (fn p (array/map (object/get @p "traits" @nor) (fn r (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" ""))))))))
+                    (nn1 (array/len @recs)))
+                (let ((bound (array/reduce (array/range 0 @n1) (array/unique @seeds) (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map @acc (fn x (object/get @embFwd @x @nos))))))))))
+                  (let ((claimed (array/unique (array/flatten (array/map @bound (fn b (object/get @embFwd @b @nos)))))))
+                    (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
+                      (let ((p (array/nth @pgs @pj)))
+                        (if (not (validate/object @p)) @nof
+                          (let ((declared (array/map (object/get @p "traits" @nor) (fn r (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" "")))))
+                                (path (object/get @p "path" "")))
+                            (let ((chanCand (array/filter (let ((seed (array/unique (array/flatten (array/map @declared (fn s (object/get @chanFwd @s @nos))))))) (array/reduce (array/range 0 @n1) @seed (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map @acc (fn x (object/get @chanFwd @x @nos))))))))) (fn c (and (object/has @inl @c) (object/has @wr @c))))))
+                              (let ((terminal (let ((cs @chanCand)) (let ((rcs (or (object/fromEntries (array/map @cs (fn a [@a, (let ((seed (array/unique (array/flatten (array/map [@a] (fn s (object/get @chanFwd @s @nos))))))) (array/reduce (array/range 0 @n1) @seed (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map @acc (fn x (object/get @chanFwd @x @nos)))))))))]))) {})) (res (or (object/fromEntries (array/map @cs (fn a [@a, (let ((seed (array/unique (array/flatten (array/map [@a] (fn s (object/get @embFwd @s @nos))))))) (array/reduce (array/range 0 @n1) @seed (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map @acc (fn x (object/get @embFwd @x @nos)))))))))]))) {}))) (let ((dropped (array/flatten (array/map @cs (fn a (array/flatten (array/map (array/filter @cs (fn b (!= @a @b))) (fn b (if (array/includes (object/get @rcs @a @nos) @b) [@a] (if (array/includes (object/get @res @a @nos) @b) [@b] @nos)))))))))) (array/filter @cs (fn c (not (array/includes @dropped @c)))))))))
+                                (let ((owner (if (= (array/len @terminal) 1) { kind: "channel", names: @terminal }
+                                               (if (> (array/len @terminal) 1) { kind: "ambiguous", names: (array/sort @terminal) }
+                                                 (let ((distinct (let ((cs (array/filter @declared (fn c (and (object/has @inl @c) (object/has @wr @c)))))) (let ((rcs (or (object/fromEntries (array/map @cs (fn a [@a, (let ((seed (array/unique (array/flatten (array/map [@a] (fn s (object/get @chanFwd @s @nos))))))) (array/reduce (array/range 0 @n1) @seed (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map @acc (fn x (object/get @chanFwd @x @nos)))))))))]))) {})) (res (or (object/fromEntries (array/map @cs (fn a [@a, (let ((seed (array/unique (array/flatten (array/map [@a] (fn s (object/get @embFwd @s @nos))))))) (array/reduce (array/range 0 @n1) @seed (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map @acc (fn x (object/get @embFwd @x @nos)))))))))]))) {}))) (let ((dropped (array/flatten (array/map @cs (fn a (array/flatten (array/map (array/filter @cs (fn b (!= @a @b))) (fn b (if (array/includes (object/get @rcs @a @nos) @b) [@a] (if (array/includes (object/get @res @a @nos) @b) [@b] @nos)))))))))) (array/filter @cs (fn c (not (array/includes @dropped @c)))))))))
+                                                   (if (= (array/len @distinct) 0) { kind: "none", names: @nos }
+                                                     (if (= (array/len @distinct) 1) { kind: "sole", names: @distinct }
+                                                       { kind: "ambiguous", names: (array/sort @distinct) })))))))
+                                  (let ((ok (object/get @owner "kind")) (on (object/get @owner "names")))
+                                    (array/concat
+                                      (if (= @ok "ambiguous")
+                                        (let ((rivals (array/filter @on (fn x (not (array/includes @claimed @x))))))
+                                          (if (> (array/len @rivals) 1)
+                                            [{ code: "ORB_PAGE_AMBIGUOUS_CONTENT_OWNER", path: (str/concat "orbitals[" @oi "].pages[" @pj "]"), message: (str/concat "page \"" @path "\": " (str/join @rivals ", ") " each render a content body into slot 'main' and none composes the others — the page has no single content owner, so a shell that designates one turns the rest into second bodies"), suggestion: (str/concat "make one trait the page's composer — it embeds the others (<trait.X/> or @trait.X in its render) — and mount only it on the page; candidates: " (str/join @rivals ", ")), severity: "error" }]
+                                            @nof))
+                                        @nof)
+                                      (if (or (= @ok "channel") (= @ok "ambiguous"))
+                                        (array/flatten (array/map @declared (fn nm
+                                          (if (or (= @nm "") (array/includes @on @nm) (array/includes @claimed @nm) (not (object/has @inl @nm)) (not (object/has @wr @nm))) @nof
+                                            (if (array/some @on (fn ow (= (array/len (let ((cs [@ow, @nm])) (let ((rcs (or (object/fromEntries (array/map @cs (fn a [@a, (let ((seed (array/unique (array/flatten (array/map [@a] (fn s (object/get @chanFwd @s @nos))))))) (array/reduce (array/range 0 @n1) @seed (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map @acc (fn x (object/get @chanFwd @x @nos)))))))))]))) {})) (res (or (object/fromEntries (array/map @cs (fn a [@a, (let ((seed (array/unique (array/flatten (array/map [@a] (fn s (object/get @embFwd @s @nos))))))) (array/reduce (array/range 0 @n1) @seed (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map @acc (fn x (object/get @embFwd @x @nos)))))))))]))) {}))) (let ((dropped (array/flatten (array/map @cs (fn a (array/flatten (array/map (array/filter @cs (fn b (!= @a @b))) (fn b (if (array/includes (object/get @rcs @a @nos) @b) [@a] (if (array/includes (object/get @res @a @nos) @b) [@b] @nos)))))))))) (array/filter @cs (fn c (not (array/includes @dropped @c)))))))) 1))) @nof
+                                              [{ code: "ORB_PAGE_SECOND_CONTENT_BODY", path: (str/concat "orbitals[" @oi "].pages[" @pj "]"), message: (str/concat "page \"" @path "\": " @nm " renders a content body into slot 'main' while " (str/join @on " / ") " already owns this page's content — a second, stacked UI if this is not a deliberate dedicated-feature page"), suggestion: (str/concat "embed <trait." @nm "> in the composer's render or a config slot (contentTrait/idleContent), or remove " @nm " from the page decl if it only hosts dialogs/logic"), severity: "error" }])))))
+                                        @nof)))))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "page-content-owner", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PoProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the binding roots each inline trait uses; a trait is searched for @trait references only when its roots hold @trait."
+      PATTERNS_HEARD { patterns : Map string PoPattern! }
+        @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry's props, each with its kind."
+      OrbLintInput.LINT_INDEX -> INDEX_HEARD
+      OrbLintInput.LINT_PATTERNS -> PATTERNS_HEARD
+    }
+
+    config {
+      mainSlots : [string] = ["main", "content", "screen"]
+        @label "Main slots"
+        @description "The inline content slots a state paints."
+    }
+
+  }
+
+  trait OrbLintPageContentOwnerCli -> OrbLintPageContentOwnerRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint page-content-owner <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "page-content-owner") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint page-content-owner: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "page-content-owner") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint page-content-owner: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-page-content-owner" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint page-content-owner` with its arguments and working directory."
+        @synonyms "orb lint page-content-owner"
+      OrbLintPageContentOwner.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintPageContentOwnerCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintPageContentOwnerOrbitalStart -> OrbLintPageContentOwner, OrbLintPageContentOwnerCli, OrbLintInput, Packs, Versions
+}

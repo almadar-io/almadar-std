@@ -77,6 +77,8 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'program/eval': {
     module: 'program', category: 'std-program',
+    // emit key order: effect/program_eval.rs:23
+    emitKeys: ['success', 'failure'],
     minArity: 1, maxArity: 3,
     description: 'Validate a program (`.orb` IR) at the 0-error / 0-warning bar and write it into the workspace (default `orbitals/<name>.orb`, or the project named by `into`). Success carries `{ behavior, traits, value }` — where the program was written, its traits as values, and the program itself as a behavior value; failure carries the validator errors as data. A `prior` program keeps ids stable across a re-evaluation. With `generate` (alone) and a null program, what `orb compile` does and prints: the program at the absolute `path` is validated, then the `shell` shell writes the project into the absolute `output`; success carries `{ lines, files, warnings, nextSteps }`, `lines` being the report `orb compile` prints.',
     hasSideEffects: true,

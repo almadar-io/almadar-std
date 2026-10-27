@@ -204,6 +204,8 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/page-facts': {
     module: 'browser',
+    // emit key order: effect/http.rs:898
+    emitKeys: ['success', 'failure'],
     category: 'std-browser',
     minArity: 1,
     maxArity: 2,
@@ -230,6 +232,8 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/beacon': {
     module: 'browser',
+    // emit key order: effect/http.rs:781
+    emitKeys: ['success', 'failure', 'cancelled'],
     category: 'std-browser',
     minArity: 2,
     maxArity: 3,
@@ -257,6 +261,10 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/prompt': {
     module: 'browser',
+    // emit key order: effect/http.rs:951
+    emitKeys: ['success', 'failure', 'cancelled'],
+    // effect/keyed_call.rs:22 ON_DEVICE_OPERATORS; http.rs:1080 ORB_ON_DEVICE_EFFECT_ON_SERVER
+    family: 'on-device',
     category: 'std-browser',
     minArity: 2,
     maxArity: 3,
@@ -280,6 +288,10 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/embed': {
     module: 'browser',
+    // emit key order: effect/http.rs:951
+    emitKeys: ['success', 'failure', 'cancelled'],
+    // effect/keyed_call.rs:22 ON_DEVICE_OPERATORS; http.rs:1080 ORB_ON_DEVICE_EFFECT_ON_SERVER
+    family: 'on-device',
     category: 'std-browser',
     minArity: 1,
     maxArity: 2,
@@ -302,6 +314,10 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/tab-list': {
     module: 'browser',
+    // emit key order: effect/http.rs:1037
+    emitKeys: ['success', 'failure', 'cancelled'],
+    // orbital-core wire/tab.rs:29 TabOp::ALL; http.rs:1089 ORB_TAB_EFFECT_ON_SERVER
+    family: 'tab',
     category: 'std-browser',
     minArity: 1,
     maxArity: 2,
@@ -324,6 +340,10 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/tab-open': {
     module: 'browser',
+    // emit key order: effect/http.rs:1037
+    emitKeys: ['success', 'failure', 'cancelled'],
+    // orbital-core wire/tab.rs:29 TabOp::ALL; http.rs:1089 ORB_TAB_EFFECT_ON_SERVER
+    family: 'tab',
     category: 'std-browser',
     minArity: 1,
     maxArity: 2,
@@ -346,6 +366,10 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/tab-close': {
     module: 'browser',
+    // emit key order: effect/http.rs:1037
+    emitKeys: ['success', 'failure', 'cancelled'],
+    // orbital-core wire/tab.rs:29 TabOp::ALL; http.rs:1089 ORB_TAB_EFFECT_ON_SERVER
+    family: 'tab',
     category: 'std-browser',
     minArity: 1,
     maxArity: 2,
@@ -368,6 +392,10 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/tab-navigate': {
     module: 'browser',
+    // emit key order: effect/http.rs:1037
+    emitKeys: ['success', 'failure', 'cancelled'],
+    // orbital-core wire/tab.rs:29 TabOp::ALL; http.rs:1089 ORB_TAB_EFFECT_ON_SERVER
+    family: 'tab',
     category: 'std-browser',
     minArity: 1,
     maxArity: 2,
@@ -390,6 +418,10 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/tab-query': {
     module: 'browser',
+    // emit key order: effect/http.rs:1037
+    emitKeys: ['success', 'failure', 'cancelled'],
+    // orbital-core wire/tab.rs:29 TabOp::ALL; http.rs:1089 ORB_TAB_EFFECT_ON_SERVER
+    family: 'tab',
     category: 'std-browser',
     minArity: 1,
     maxArity: 2,
@@ -412,6 +444,10 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/tab-watch': {
     module: 'browser',
+    // emit key order: effect/http.rs:1037
+    emitKeys: ['success', 'failure', 'cancelled'],
+    // orbital-core wire/tab.rs:29 TabOp::ALL; http.rs:1089 ORB_TAB_EFFECT_ON_SERVER
+    family: 'tab',
     category: 'std-browser',
     minArity: 1,
     maxArity: 2,
@@ -434,6 +470,10 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/tab-unwatch': {
     module: 'browser',
+    // emit key order: effect/http.rs:1037
+    emitKeys: ['success', 'failure', 'cancelled'],
+    // orbital-core wire/tab.rs:29 TabOp::ALL; http.rs:1089 ORB_TAB_EFFECT_ON_SERVER
+    family: 'tab',
     category: 'std-browser',
     minArity: 1,
     maxArity: 2,
@@ -456,6 +496,10 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/tab-apply': {
     module: 'browser',
+    // emit key order: effect/http.rs:1037
+    emitKeys: ['success', 'failure', 'cancelled'],
+    // orbital-core wire/tab.rs:29 TabOp::ALL; http.rs:1089 ORB_TAB_EFFECT_ON_SERVER
+    family: 'tab',
     category: 'std-browser',
     minArity: 1,
     maxArity: 2,
@@ -478,6 +522,10 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/tab-apply-many': {
     module: 'browser',
+    // emit key order: effect/http.rs:1037
+    emitKeys: ['success', 'failure', 'cancelled'],
+    // orbital-core wire/tab.rs:29 TabOp::ALL; http.rs:1089 ORB_TAB_EFFECT_ON_SERVER
+    family: 'tab',
     category: 'std-browser',
     minArity: 1,
     maxArity: 2,
@@ -500,6 +548,10 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/tab-act': {
     module: 'browser',
+    // emit key order: effect/http.rs:1037
+    emitKeys: ['success', 'failure', 'cancelled'],
+    // orbital-core wire/tab.rs:29 TabOp::ALL; http.rs:1089 ORB_TAB_EFFECT_ON_SERVER
+    family: 'tab',
     category: 'std-browser',
     minArity: 1,
     maxArity: 2,
@@ -522,6 +574,10 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'browser/tab-capture': {
     module: 'browser',
+    // emit key order: effect/http.rs:1037
+    emitKeys: ['success', 'failure', 'cancelled'],
+    // orbital-core wire/tab.rs:29 TabOp::ALL; http.rs:1089 ORB_TAB_EFFECT_ON_SERVER
+    family: 'tab',
     category: 'std-browser',
     minArity: 1,
     maxArity: 2,

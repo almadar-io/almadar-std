@@ -118,28 +118,29 @@ orbital OrbLintCircuitItemActionsOrbital {
                                        dk: (str/replaceAll (str/replaceAll (str/concat (object/get @s "oi") "-" (object/get @s "ti") ":" @base ":" (if @multi (str/concat @li "]") "") ":" (object/get @s "slot") ":" @ev) "~" "~t") "." "~d") }]
                                     @noact)))))))))))))))))))))
     (let ((byTk : CiActMap (array/groupBy @acts "tk")) (byDk : CiActMap (array/groupBy @acts "dk")))
-      (array/concat
-        (array/flatten (array/map (array/unique (array/map @acts (fn a (object/get @a "tk")))) (fn k
-          (let ((grp (object/get @byTk @k @noact)))
-            (let ((o (array/nth @orbitals (object/get (array/first @grp) "oi"))))
-              (let ((t (array/nth (object/get @o "traits" @notd) (object/get (array/first @grp) "ti"))))
-                (let ((tl : [CiTr] (array/map (object/get @t "stateMachine.transitions" @notr) (fn x (let ((fr (object/get @x "from" ""))) { f: (if (validate/string @fr) (array/append @nos @fr) @fr), e: (object/get @x "event" "") }))))
-                      (orbH (array/flatten (array/map (object/get @o "traits" @notd) (fn t2 (array/concat (array/map (object/get @t2 "stateMachine.transitions" @notr) (fn x (object/get @x "event" ""))) (array/map (object/get @t2 "listens" @nolis) (fn l (object/get @l "event" ""))))))))
-                      (em (array/map (object/get @t "emits" @noem) (fn e (object/get @e "event" "")))))
-                  (let ((handled (array/map @tl (fn x (object/get @x "e")))))
-                    (array/flatten (array/map @grp (fn a
-                      (let ((ev (object/get @a "event")))
-                        (array/concat
+      (array/flatten (array/map (array/unique (array/map @acts (fn a (object/get @a "tk")))) (fn k
+        (let ((grp (object/get @byTk @k @noact)))
+          (let ((o (array/nth @orbitals (object/get (array/first @grp) "oi"))))
+            (let ((t (array/nth (object/get @o "traits" @notd) (object/get (array/first @grp) "ti"))))
+              (let ((tl : [CiTr] (array/map (object/get @t "stateMachine.transitions" @notr) (fn x (let ((fr (object/get @x "from" ""))) { f: (if (validate/string @fr) (array/append @nos @fr) @fr), e: (object/get @x "event" "") }))))
+                    (orbH (array/flatten (array/map (object/get @o "traits" @notd) (fn t2 (array/concat (array/map (object/get @t2 "stateMachine.transitions" @notr) (fn x (object/get @x "event" ""))) (array/map (object/get @t2 "listens" @nolis) (fn l (object/get @l "event" ""))))))))
+                    (em (array/map (object/get @t "emits" @noem) (fn e (object/get @e "event" "")))))
+                (let ((handled (array/map @tl (fn x (object/get @x "e")))))
+                  (array/concat
+                    (array/concat
+                      (array/flatten (array/map @grp (fn a
+                        (let ((ev (object/get @a "event")))
                           (if (or (array/includes @handled @ev) (array/includes @orbH @ev) (array/includes @em @ev)) @nof
-                            [{ code: "CIRCUIT_ORPHAN_EVENT", path: (object/get @a "path"), message: (str/concat "Action '" (object/get @a "action") "' emits event '" @ev "' which has no transition handler"), suggestion: (str/concat "Add a transition with event '" @ev "' or remove this action"), severity: "error" }])
+                            [{ code: "CIRCUIT_ORPHAN_EVENT", path: (object/get @a "path"), message: (str/concat "Action '" (object/get @a "action") "' emits event '" @ev "' which has no transition handler"), suggestion: (str/concat "Add a transition with event '" @ev "' or remove this action"), severity: "error" }])))))
+                      (array/flatten (array/map @grp (fn a
+                        (let ((ev (object/get @a "event")))
                           (if (or (not (array/includes @handled @ev)) (array/some @tl (fn x (and (= (object/get @x "e") @ev) (or (array/includes (object/get @x "f") (object/get @a "to")) (array/includes (object/get @x "f") "*"))))))
                             @nof
                             (let ((valid (array/sort (array/unique (array/flatten (array/map (array/filter @tl (fn x (= (object/get @x "e") @ev))) (fn x (object/get @x "f"))))))))
-                              [{ code: "CIRCUIT_DEAD_HANDLER", path: (object/get @a "path"), message: (str/concat "Action '" (object/get @a "action") "' fires event '" @ev "' in state '" (object/get @a "to") "' but no transition handles '" @ev "' from '" (object/get @a "to") "'"), suggestion: (str/concat "Add a transition `from: '" (object/get @a "to") "', event: '" @ev "'` or move this render-ui to a state that handles '" @ev "' (valid states: " (if (= (array/len @valid) 0) "none" (str/join @valid ", ")) ")"), severity: "error" }])))))))))))))))
-        (array/flatten (array/map (array/sort (object/keys @byDk)) (fn dk
-          (let ((g (object/get @byDk @dk @noact)))
-            (array/map (array/drop @g 1) (fn a
-              { code: "CIRCUIT_DUPLICATE_EVENT", path: (object/get @a "path"), message: (str/concat "Event '" (object/get @a "event") "' is emitted multiple times in the same render-ui effect (actions '" (object/get (array/first @g) "action") "' and '" (object/get @a "action") "')"), suggestion: "Remove duplicate action or use unique event names", severity: "error" })))))))))))
+                              [{ code: "CIRCUIT_DEAD_HANDLER", path: (object/get @a "path"), message: (str/concat "Action '" (object/get @a "action") "' fires event '" @ev "' in state '" (object/get @a "to") "' but no transition handles '" @ev "' from '" (object/get @a "to") "'"), suggestion: (str/concat "Add a transition `from: '" (object/get @a "to") "', event: '" @ev "'` or move this render-ui to a state that handles '" @ev "' (valid states: " (if (= (array/len @valid) 0) "none" (str/join @valid ", ")) ")"), severity: "error" }])))))))
+                    (array/flatten (array/map (array/unique (array/map @grp (fn a (object/get @a "dk")))) (fn dk
+                      (array/map (array/drop (object/get @byDk @dk @noact) 1) (fn a
+                        { code: "CIRCUIT_DUPLICATE_EVENT", path: (object/get @a "path"), message: (str/concat "Event '" (object/get @a "event") "' is emitted multiple times in the same render-ui effect (actions '" (object/get (array/first (object/get @byDk @dk @noact)) "action") "' and '" (object/get @a "action") "')"), suggestion: "Remove duplicate action or use unique event names", severity: "error" }))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "circuit-item-actions", scope: @entity.scope, findings: @entity.findings })

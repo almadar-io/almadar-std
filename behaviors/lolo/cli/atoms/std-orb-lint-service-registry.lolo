@@ -1,16 +1,8 @@
 app std-orb-lint-service-registry [
   version: "1.0.0",
-  fs: { "/**": [read] },
-  description: "std-orb-lint-service-registry — the one place the service lints read the services registry of the installed @almadar/core. SERVICE_REGISTRY_ASK { requestId } is answered by SERVICE_REGISTRY_ANSWER { requestId, unread, services }: per service its actions, and per action the declared params (name, declared type text, whether required, and the kind a literal must have: string, number, boolean, object or array, empty for a type that is not checked: a named type or a union of words that are not literals) and whether the action's response shape names a `key` field. A service with no action is declared-only: its name is known and its actions are not checked. The registry is read once, from the path orbLanguage.services of the core package the language scan reports (LANGUAGE_PACKS_DONE), and a request that arrives before the read finishes waits; when the registry cannot be read the answer is unread."
+  description: "std-orb-lint-service-registry — the service lints' view of the services registry of the installed @almadar/core. It reads no file: std-orb-lint-input reads orbLanguage.services once and sends LINT_SERVICES { services } (or LINT_SERVICES_UNREAD { error }) before LINT_INPUT, which this trait keeps. SERVICE_REGISTRY_ASK { requestId } is answered by SERVICE_REGISTRY_ANSWER { requestId, unread, services }: per service its actions, and per action the declared params (name, declared type text, whether required, and the kind a literal must have: string, number, boolean, object or array, empty for a type that is not checked: a named type or a union of words that are not literals) and whether the action's response shape names a `key` field. A service with no action is declared-only: its name is known and its actions are not checked. A request that arrives before the input is heard waits; when the registry is unread the answer is unread."
 ]
 uses Spec from "almadar-std/lint-service-registry"
-type SrVal = string | number | boolean | [SrVal?] | Map string SrVal?
-type SrCoreManifest = { orbLanguage : SrCoreLanguage? }
-type SrCoreLanguage = { services : string }
-type SrRawParam = { name : string!, type : string?, required : boolean? }
-type SrRawAction = { name : string!, params : [SrRawParam]?, responseShape : Map string SrVal? }
-type SrRawService = { actions : [SrRawAction]? }
-type SrRawRegistry = { services : Map string SrRawService! }
 type SrParam = { name : string!, type : string!, required : boolean!, kind : string! }
 type SrAction = { params : [SrParam]!, hasKey : boolean! }
 type SrService = { actions : Map string SrAction! }
@@ -20,7 +12,6 @@ type SrAsk = { requestId : string! }
 orbital OrbLintServiceRegistryOrbital {
   entity OrbLintServiceRegistryRun [runtime] {
     id : string!
-    coreRoot : string = ""
     services : SrServices = {}
     loaded : boolean = false
     failed : boolean = false
@@ -32,29 +23,11 @@ orbital OrbLintServiceRegistryOrbital {
 
     state ready {
       INIT -> ready
-      LANGUAGE_PACKS_DONE_HEARD -> ready when (or (!= @payload.problem "") (= @payload.coreRoot ""))
-        (set @entity.failed true)
-        (emit SR_DRAIN { })
-      LANGUAGE_PACKS_DONE_HEARD -> ready when (and (= @payload.problem "") (!= @payload.coreRoot ""))
-        (set @entity.coreRoot @payload.coreRoot)
-        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @payload.coreRoot "package.json"))) { key: "service-registry-core" emit: { success: SR_MANIFEST, failure: SR_UNREAD } })
-      SR_MANIFEST -> ready when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (object/get (object/get (json/parse @text SrCoreManifest) "orbLanguage" {}) "services" "") "")))
-        (set @entity.failed true)
-        (emit SR_DRAIN { })
-      SR_MANIFEST -> ready when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (object/get (object/get (json/parse @text SrCoreManifest) "orbLanguage" {}) "services" "") "")))
-        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot (object/get (object/get (json/parse (bytes/to-string @payload.data) SrCoreManifest) "orbLanguage" {}) "services" "")))) { key: "service-registry-file" emit: { success: SR_REGISTRY, failure: SR_UNREAD } })
-      SR_REGISTRY -> ready when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text SrRawRegistry) null)))
-        (set @entity.failed true)
-        (emit SR_DRAIN { })
-      SR_REGISTRY -> ready when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text SrRawRegistry) null)))
-        (set @entity.services (let ((reg (object/get (json/parse (bytes/to-string @payload.data) SrRawRegistry) "services")))
-          (or (json/parse (json/stringify (object/mapValues @reg (fn s
-            { actions: (or (object/fromEntries (array/map (object/get @s "actions" []) (fn a
-                [(object/get @a "name"), { hasKey: (object/has (object/get @a "responseShape" {}) "key"),
-                  params: (array/map (object/get @a "params" []) (fn p { name: (object/get @p "name"), type: (object/get @p "type" ""), required: (object/get @p "required" false), kind: (let ((tt (str/trim (object/get @p "type" "")))) (if (= @tt "string") "string" (if (= @tt "number") "number" (if (= @tt "boolean") "boolean" (if (or (= @tt "object") (= @tt "map")) "object" (if (or (= @tt "array") (str/endsWith @tt "[]")) "array" (if (str/startsWith @tt "'") "string" ""))))))) })) }]))) {}) }))) SrServices) {})))
+      LINT_SERVICES_HEARD -> ready
+        (set @entity.services @payload.services)
         (set @entity.loaded true)
         (emit SR_DRAIN { })
-      SR_UNREAD -> ready
+      LINT_SERVICES_UNREAD_HEARD -> ready
         (set @entity.failed true)
         (emit SR_DRAIN { })
       SERVICE_REGISTRY_ASK -> ready when (or @entity.loaded @entity.failed)
@@ -83,23 +56,16 @@ orbital OrbLintServiceRegistryOrbital {
       SR_RUN { requestId : string! }
         @description "Internal: answer one request."
         @tier "internal"
-      SR_MANIFEST { data : bytes! }
-        @description "The installed @almadar/core package.json read."
-        @tier "internal"
-      SR_REGISTRY { data : bytes! }
-        @description "The installed services registry read."
-        @tier "internal"
-      SR_UNREAD { error : string }
-        @description "A file of the installed @almadar/core could not be read."
-        @tier "internal"
     }
 
     listens {
       SERVICE_REGISTRY_ASK { requestId : string! }
         @description "Ask for the services registry."
         @tier "internal"
-      LANGUAGE_PACKS_DONE_HEARD { problem : string!  coreRoot : string!  stdRoot : string! }
-        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished, with the installed @almadar/core root when it is compatible."
+      LINT_SERVICES_HEARD { services : Map string SrService! }
+        @description "std-orb-lint-input's LINT_SERVICES: the services registry of the installed @almadar/core, projected."
+      LINT_SERVICES_UNREAD_HEARD { error : string! }
+        @description "std-orb-lint-input's LINT_SERVICES_UNREAD: the services registry could not be read."
     }
   }
 

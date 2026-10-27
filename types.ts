@@ -160,6 +160,31 @@ export interface OAuthMeta {
   ops: OAuthOpMeta[];
 }
 
+/** One `http` auth scheme: the keys its `auth` object may carry (in the checker's order), the keys that must be present and non-empty, and the words `onUnauthorized` takes. */
+export interface HttpAuthSchemeMeta {
+  name: string;
+  keys: string[];
+  required?: string[];
+  onUnauthorized?: string[];
+}
+
+/** The wire contract of the `http` request: the closed key sets the validator holds the call to. */
+export interface HttpWireMeta {
+  /** Every key a request object may carry. */
+  requestKeys: string[];
+  /** The request keys that are bodies: at most one per request, none on GET. */
+  bodyKeys: string[];
+  /** The words `queryEncoding` takes. */
+  queryEncodings: string[];
+  /** The default port of each scheme the operator requests under. */
+  defaultPorts: Record<string, number>;
+  /** The auth schemes, in the order the validator lists them. */
+  authSchemes: HttpAuthSchemeMeta[];
+}
+
+/** A family of effects only one kind of host holds: `on-device` = the browser's on-device model, `tab` = the browser's tabs. */
+export type EffectFamily = 'on-device' | 'tab';
+
 /** A host outside the runtime that executes an effect. */
 export type EffectHost = 'program' | 'os' | 'kv';
 
@@ -205,6 +230,12 @@ export interface OperatorMeta {
   closedCall?: ClosedCallMeta;
   /** The `oauth-client` auth ops and endpoint words (on `http`). */
   oauth?: OAuthMeta;
+  /** The request and auth key sets of `http`. */
+  httpWire?: HttpWireMeta;
+  /** The `emit: { … }` keys the operator accepts, in the order the validator reports them. */
+  emitKeys?: string[];
+  /** Set on the effects only one kind of host holds; one of those in a `[background]` tick runs on the server. */
+  family?: EffectFamily;
   /** Execution site of an effect operator; set on every `hasSideEffects` operator, absent on pure ones. */
   runsOn?: RunsOn;
   /** The host that executes this effect: `program` = the shared program host (`@almadar/runtime` `host/program` `runProgramEffect`), on both execution paths. `os` = the `os/` family, executed by the OS host under a declared grant. Absent for effects the runtime executes itself. */

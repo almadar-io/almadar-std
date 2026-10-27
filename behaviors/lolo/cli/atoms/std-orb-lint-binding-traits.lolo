@@ -129,8 +129,8 @@ orbital OrbLintBindingTraitsOrbital {
                       [(object/get @t "name" ""),
                        (array/unique (array/flatten (array/map
                          (array/concat
-                           (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn tr (object/get @tr "effects" []))))
-                           (array/flatten (array/map (object/get @t "ticks" []) (fn tk (object/get @tk "effects" [])))))
+                           (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn tr (array/map (object/get @tr "effects" []) (fn r { w: @r })))))
+                           (array/flatten (array/map (object/get @t "ticks" []) (fn tk (array/map (object/get @tk "effects" []) (fn r { w: @r }))))))
                          (fn e (tree/fold @e (fn (n k) (if (validate/string @n) (if (and (str/startsWith @n @tP2) (!= (array/first (str/split (array/first (str/split (str/slice @n 7) ".")) "[")) "")) [(array/first (str/split (str/slice @n 7) "."))] @nostr) (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nostr @r)))) (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @nostr @r)))) @nostr)))) BtShape)))))]))))
    {})))
               (if (= (array/len (array/flatten (object/values @adj))) 0)

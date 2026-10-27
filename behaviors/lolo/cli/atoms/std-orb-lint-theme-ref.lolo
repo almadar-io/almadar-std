@@ -1,0 +1,155 @@
+app std-orb-lint-theme-ref [
+  version: "1.0.0",
+  inbound: ["cli-lint-theme-ref"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-theme-ref — the `orb lint theme-ref <file>` command, the port of the ORB_X_UNKNOWN_THEME check of theme.rs (validate_theme_ref). It lowers the file with program/read and checks every theme given by reference: the app `theme`, each orbital `theme` and each entry of the app `themes` list. A reference is accepted when it has the form `Alias.theme`, names an inline theme declared by an orbital, or is one of the built-in theme keys that std-orb-lint-input sends in LINT_UI_VOCAB (orbLanguage.uiVocabulary.themeKeys); an inline theme definition is not judged here. Findings carry the compiler's message at `theme`, `orbitals[<i>].theme` or `themes[<i>]` (status 500, exit 1). An unreadable vocabulary answers ORB_LINT_UI_VOCAB_UNREAD. Clean answers `lint theme-ref: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-theme-ref"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type ThrDef = { name : string }
+type ThrOrbital = { theme : string | ThrDef }
+type ThrProgram = { theme : string | ThrDef, themes : [string], orbitals : [ThrOrbital] }
+type ThrRef = { p : string!, k : string! }
+
+orbital OrbLintThemeRefOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintThemeRefRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+    themeKeys : [string] = []
+    keySet : Map string boolean = {}
+    vocabUnread : boolean = false
+  }
+
+  trait OrbLintThemeRef -> OrbLintThemeRefRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      UI_VOCAB_HEARD -> ready
+        (set @entity.vocabUnread false)
+        (set @entity.themeKeys @payload.themeKeys)
+        (set @entity.keySet (object/fromEntries (array/map @payload.themeKeys (fn x [@x, true]))))
+      UI_VOCAB_UNREAD -> ready
+        (set @entity.vocabUnread true)
+      LINT_INPUT -> ready when @entity.vocabUnread
+        (set @entity.scope @payload.scope)
+        (set @entity.findings [{ code: "ORB_LINT_UI_VOCAB_UNREAD", path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the built-in theme keys are unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
+        (emit LINT_FINISH { })
+      LINT_INPUT -> ready when (not @entity.vocabUnread)
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals : [ThrOrbital] (object/get @payload.program "orbitals" [])) (keySet @entity.keySet) (noref : [ThrRef] []) (nostr : [string] []))
+          (let ((inl : [string] (array/flatten (array/map @orbitals (fn o (let ((t (object/get @o "theme" null))) (if (and (validate/object @t) (validate/string (object/get @t "name" null))) [(str/concat (object/get @t "name" ""))] @nostr))))))
+                (refs : [ThrRef] (array/concat
+                  (let ((t (object/get @payload.program "theme" null))) (if (validate/string @t) [{ p: "theme", k: @t }] @noref))
+                  (array/concat
+                    (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((t (object/get (array/nth @orbitals @oi) "theme" null))) (if (validate/string @t) [{ p: (str/concat "orbitals[" @oi "].theme"), k: @t }] @noref)))))
+                    (let ((ts (object/get @payload.program "themes" null))) (if (validate/array @ts) (array/flatten (array/map (array/range 0 (array/len @ts)) (fn ti (let ((k (array/nth @ts @ti))) (if (validate/string @k) [{ p: (str/concat "themes[" @ti "]"), k: @k }] @noref))))) @noref))))))
+            (array/map (array/filter @refs (fn r (and (not (validate/pattern (object/get @r "k" "") "^[A-Z][a-zA-Z0-9]*\\.theme$")) (not (array/includes @inl (object/get @r "k" ""))) (not (object/has @keySet (object/get @r "k" ""))))))
+              (fn r { code: "ORB_X_UNKNOWN_THEME", path: (object/get @r "p" ""), message: (str/concat "Unknown theme '" (object/get @r "k" "") "'. Must be a built-in theme key (the full data-theme value, e.g. linear-clean-light, terminal-dark, game-adventure-dark) or an orbital-declared inline theme."), suggestion: "", severity: "error" })))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "theme-ref", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ThrProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      UI_VOCAB_HEARD { slots : [string]!  itemActionBaseProps : [string]!  lucideIcons : [string]!  themeKeys : [string]!  deliveryRoots : [string]!  eventSourceKeys : [string]! }
+        @description "std-orb-lint-input's LINT_UI_VOCAB: the installed UI vocabulary; its themeKeys are the built-in theme keys."
+      UI_VOCAB_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_UI_VOCAB_UNREAD: the UI vocabulary could not be read."
+      OrbLintInput.LINT_UI_VOCAB -> UI_VOCAB_HEARD
+      OrbLintInput.LINT_UI_VOCAB_UNREAD -> UI_VOCAB_UNREAD
+    }
+  }
+
+  trait OrbLintThemeRefCli -> OrbLintThemeRefRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint theme-ref <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "theme-ref") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint theme-ref: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "theme-ref") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint theme-ref: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-theme-ref" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint theme-ref` with its arguments and working directory."
+        @synonyms "orb lint theme-ref"
+      OrbLintThemeRef.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintThemeRefCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintThemeRefOrbitalStart -> OrbLintThemeRef, OrbLintThemeRefCli, OrbLintInput, Packs, Versions
+}

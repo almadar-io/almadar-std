@@ -10,7 +10,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STD_OPERATORS, STD_OPERATORS_BY_MODULE } from '../registry.js';
-import type { ClosedCallMeta, EffectHost, FailableMeta, OAuthMeta, OsGrantNeed, ResultSign, OperatorEffectMeta, OperatorTypeRef, RunsOn, StdOperatorMeta, StdModule } from '../types.js';
+import type { ClosedCallMeta, EffectHost, FailableMeta, OAuthMeta, HttpWireMeta, EffectFamily, OsGrantNeed, ResultSign, OperatorEffectMeta, OperatorTypeRef, RunsOn, StdOperatorMeta, StdModule } from '../types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STD_ROOT = resolve(__dirname, '..');
@@ -105,6 +105,9 @@ interface CanonicalOperatorEntry {
     defaultPorts?: Record<string, number>;
     grant?: OsGrantNeed[];
     oauth?: OAuthMeta;
+    httpWire?: HttpWireMeta;
+    emitKeys?: string[];
+    family?: EffectFamily;
     runsOn?: RunsOn;
     host?: EffectHost;
     /** 0-indexed argument naming a data effect's target entity; the effect runs where that entity lives. */
@@ -175,6 +178,9 @@ function toCanonicalEntry(
     if (meta.defaultPorts) entry.defaultPorts = meta.defaultPorts;
     if (meta.grant) entry.grant = meta.grant;
     if (meta.oauth) entry.oauth = meta.oauth;
+    if (meta.httpWire) entry.httpWire = meta.httpWire;
+    if (meta.emitKeys) entry.emitKeys = meta.emitKeys;
+    if (meta.family) entry.family = meta.family;
     if (meta.runsOn) entry.runsOn = meta.runsOn;
     if (meta.host) entry.host = meta.host;
     if (meta.entityArgPosition != null) entry.entityArgPosition = meta.entityArgPosition;

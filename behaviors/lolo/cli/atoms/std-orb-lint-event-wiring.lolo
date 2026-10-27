@@ -103,9 +103,9 @@ orbital OrbLintEventWiringOrbital {
             (let ((recs (array/flatten (array/map @orbitals (fn o
   (let ((on (object/get @o "name" "")))
     (array/map (array/filter (object/get @o "traits" @notd) (fn t0 (object/has @t0 "stateMachine"))) (fn t
-      (let ((tEff (array/flatten (array/map (object/get @t "stateMachine.transitions" @notr) (fn x (object/get @x "effects" @noef)))))
-            (kEff (array/flatten (array/map (object/get @t "ticks" @notk) (fn x (object/get @x "effects" @noef))))))
-        (let ((fT (tree/fold @tEff (fn (n k)
+      (let ((tEffA (array/flatten (array/map (object/get @t "stateMachine.transitions" @notr) (fn x (array/filter (object/get @x "effects" @noef) (fn e (validate/array @e))))))) (tEffM (array/flatten (array/map (object/get @t "stateMachine.transitions" @notr) (fn x (array/filter (object/get @x "effects" @noef) (fn e (not (validate/array @e)))))))) (kEffA (array/flatten (array/map (object/get @t "ticks" @notk) (fn x (array/filter (object/get @x "effects" @noef) (fn e (validate/array @e))))))) (kEffM (array/flatten (array/map (object/get @t "ticks" @notk) (fn x (array/filter (object/get @x "effects" @noef) (fn e (not (validate/array @e)))))))))
+       (let ((tEff (array/concat @tEffA @tEffM)) (kEff (array/concat @kEffA @kEffM)))
+        (let ((fT (let ((fa (tree/fold @tEffA (fn (n k)
   (if (validate/array @n)
     (let ((kr (array/map @k (fn r (if (= @r null) @nr @r)))))
       (let ((isFA (and (>= (array/len @n) 1) (validate/string (array/nth @n 0)) (array/includes ["fetch", "persist"] (array/nth @n 0)))))
@@ -122,8 +122,7 @@ orbital OrbLintEventWiringOrbital {
           oa: (if (validate/object @e) (array/flatten (array/map (object/values @e) (fn v (if (and (validate/string @v) (!= @v "")) [@v] @nos)))) @nos),
           b: (or (array/some (array/filter (object/keys @n) (fn key (and (not (str/includes @key ".")) (object/has @nameSet (str/replaceAll (str/replaceAll @key "~" "~t") "." "~d"))))) (fn key (let ((v (object/get @n @key null))) (and (validate/string @v) (str/startsWith @v (quote "@"))))))
                  (array/some @kr (fn r (object/get @r "b")))) })
-      @nr))) "EwNode"))
-              (fK (tree/fold @kEff (fn (n k)
+      @nr))) "EwNode")) (fm (tree/fold @tEffM (fn (n k)
   (if (validate/array @n)
     (let ((kr (array/map @k (fn r (if (= @r null) @nr @r)))))
       (let ((isFA (and (>= (array/len @n) 1) (validate/string (array/nth @n 0)) (array/includes ["fetch", "persist"] (array/nth @n 0)))))
@@ -141,6 +140,45 @@ orbital OrbLintEventWiringOrbital {
           b: (or (array/some (array/filter (object/keys @n) (fn key (and (not (str/includes @key ".")) (object/has @nameSet (str/replaceAll (str/replaceAll @key "~" "~t") "." "~d"))))) (fn key (let ((v (object/get @n @key null))) (and (validate/string @v) (str/startsWith @v (quote "@"))))))
                  (array/some @kr (fn r (object/get @r "b")))) })
       @nr))) "EwNode")))
+          (let ((ra (if (= @fa null) @nr @fa)) (rm (if (= @fm null) @nr @fm)))
+            { s: (array/concat (object/get @ra "s") (object/get @rm "s")), o: @nos, a: (array/concat (object/get @ra "a") (object/get @rm "a")), oa: @nos, b: (or (object/get @ra "b") (object/get @rm "b")) })))
+              (fK (let ((fa (tree/fold @kEffA (fn (n k)
+  (if (validate/array @n)
+    (let ((kr (array/map @k (fn r (if (= @r null) @nr @r)))))
+      (let ((isFA (and (>= (array/len @n) 1) (validate/string (array/nth @n 0)) (array/includes ["fetch", "persist"] (array/nth @n 0)))))
+        { s: (array/concat (array/concat (if (and (>= (array/len @n) 2) (validate/string (array/nth @n 0)) (= (array/nth @n 0) "emit")) (let ((x1 (array/nth @n 1))) (if (validate/string @x1) [@x1] @nos)) @nos) (array/flatten (array/map @kr (fn r (object/get @r "o"))))) (array/flatten (array/map @kr (fn r (object/get @r "s"))))),
+          o: @nos,
+          a: (array/concat (if @isFA (array/flatten (array/map @kr (fn r (object/get @r "oa")))) @nos) (array/flatten (array/map @kr (fn r (object/get @r "a"))))),
+          oa: @nos,
+          b: (array/some @kr (fn r (object/get @r "b"))) }))
+    (if (validate/object @n)
+      (let ((e (object/get @n "emit" null)) (kr (array/map (object/values @k) (fn r (if (= @r null) @nr @r)))))
+        { s: @nos,
+          a: @nos,
+          o: (if (validate/string @e) [@e] @nos),
+          oa: (if (validate/object @e) (array/flatten (array/map (object/values @e) (fn v (if (and (validate/string @v) (!= @v "")) [@v] @nos)))) @nos),
+          b: (or (array/some (array/filter (object/keys @n) (fn key (and (not (str/includes @key ".")) (object/has @nameSet (str/replaceAll (str/replaceAll @key "~" "~t") "." "~d"))))) (fn key (let ((v (object/get @n @key null))) (and (validate/string @v) (str/startsWith @v (quote "@"))))))
+                 (array/some @kr (fn r (object/get @r "b")))) })
+      @nr))) "EwNode")) (fm (tree/fold @kEffM (fn (n k)
+  (if (validate/array @n)
+    (let ((kr (array/map @k (fn r (if (= @r null) @nr @r)))))
+      (let ((isFA (and (>= (array/len @n) 1) (validate/string (array/nth @n 0)) (array/includes ["fetch", "persist"] (array/nth @n 0)))))
+        { s: (array/concat (array/concat (if (and (>= (array/len @n) 2) (validate/string (array/nth @n 0)) (= (array/nth @n 0) "emit")) (let ((x1 (array/nth @n 1))) (if (validate/string @x1) [@x1] @nos)) @nos) (array/flatten (array/map @kr (fn r (object/get @r "o"))))) (array/flatten (array/map @kr (fn r (object/get @r "s"))))),
+          o: @nos,
+          a: (array/concat (if @isFA (array/flatten (array/map @kr (fn r (object/get @r "oa")))) @nos) (array/flatten (array/map @kr (fn r (object/get @r "a"))))),
+          oa: @nos,
+          b: (array/some @kr (fn r (object/get @r "b"))) }))
+    (if (validate/object @n)
+      (let ((e (object/get @n "emit" null)) (kr (array/map (object/values @k) (fn r (if (= @r null) @nr @r)))))
+        { s: @nos,
+          a: @nos,
+          o: (if (validate/string @e) [@e] @nos),
+          oa: (if (validate/object @e) (array/flatten (array/map (object/values @e) (fn v (if (and (validate/string @v) (!= @v "")) [@v] @nos)))) @nos),
+          b: (or (array/some (array/filter (object/keys @n) (fn key (and (not (str/includes @key ".")) (object/has @nameSet (str/replaceAll (str/replaceAll @key "~" "~t") "." "~d"))))) (fn key (let ((v (object/get @n @key null))) (and (validate/string @v) (str/startsWith @v (quote "@"))))))
+                 (array/some @kr (fn r (object/get @r "b")))) })
+      @nr))) "EwNode")))
+          (let ((ra (if (= @fa null) @nr @fa)) (rm (if (= @fm null) @nr @fm)))
+            { s: (array/concat (object/get @ra "s") (object/get @rm "s")), o: @nos, a: (array/concat (object/get @ra "a") (object/get @rm "a")), oa: @nos, b: (or (object/get @ra "b") (object/get @rm "b")) }))))
           { o: @on,
             n: (object/get @t "name" ""),
             imp: (object/has @t "sourceBehavior"),
@@ -151,7 +189,7 @@ orbital OrbLintEventWiringOrbital {
             top: (array/flatten (array/map @tEff (fn e (if (and (validate/array @e) (>= (array/len @e) 2) (validate/string (array/nth @e 0)) (= (array/nth @e 0) "emit")) (let ((x1 (array/nth @e 1))) (if (validate/string @x1) [@x1] @nos)) (if (validate/object @e) (let ((x2 (object/get @e "emit" null))) (if (validate/string @x2) [@x2] @nos)) @nos))))),
             fe: (array/concat (object/get (if (= @fT null) @nr @fT) "s") (object/get (if (= @fK null) @nr @fK) "s")),
             ae: (object/get (if (= @fT null) @nr @fT) "a"),
-            ps: (let ((pe2 (array/filter (array/concat @tEff @kEff) (fn e (and (validate/array @e) (> (array/len @e) 0) (= (array/nth @e 0) "persist")))))) (if (= (array/len @pe2) 0) @nos (object/get (tree/fold @pe2 (fn (n k) (if (validate/string @n) { p: [@n] } (if (validate/array @n) { p: (array/flatten (array/map @k (fn r (object/get (if (= @r null) @np @r) "p")))) } (if (validate/object @n) { p: (array/flatten (array/map (object/values @k) (fn r (object/get (if (= @r null) @np @r) "p")))) } @np)))) "EwNode") "p"))) }))))))))))
+            ps: (let ((pe2 (array/filter (array/concat @tEff @kEff) (fn e (and (validate/array @e) (> (array/len @e) 0) (= (array/nth @e 0) "persist")))))) (if (= (array/len @pe2) 0) @nos (object/get (tree/fold @pe2 (fn (n k) (if (validate/string @n) { p: [@n] } (if (validate/array @n) { p: (array/flatten (array/map @k (fn r (object/get (if (= @r null) @np @r) "p")))) } (if (validate/object @n) { p: (array/flatten (array/map (object/values @k) (fn r (object/get (if (= @r null) @np @r) "p")))) } @np)))) "EwNode") "p"))) })))))))))))
               (let ((internalOf (fn r (array/map (array/filter (object/get @r "em") (fn x (= (object/get @x "scope") "internal"))) (fn x (object/get @x "event")))))
                     (emPairs (array/flatten (array/map @recs (fn r
                       (let ((internal (array/map (array/filter (object/get @r "em") (fn x (= (object/get @x "scope") "internal"))) (fn x (object/get @x "event")))) (n (object/get @r "n")))

@@ -32,6 +32,9 @@ orbital OrbLintBindingRootsOrbital {
     findings : [OrbFinding] = []
     collOps : [string] = []
     shapesUnread : boolean = false
+    deliveryRoots : [string] = []
+    sourceKeys : [string] = []
+    vocabUnread : boolean = false
   }
 
   trait OrbLintBindingRoots -> OrbLintBindingRootsRun [optimistic] {
@@ -44,9 +47,19 @@ orbital OrbLintBindingRootsOrbital {
         (set @entity.collOps (array/filter (object/keys @payload.operators) (fn k (and (or (= (object/get (object/get @payload.operators @k) "category" "") "collection") (= (object/get (object/get @payload.operators @k) "category" "") "std-array")) (>= (object/get (object/get @payload.operators @k) "minArity" 0) 2)))))
       SHAPES_UNREAD -> ready
         (set @entity.shapesUnread true)
-      LINT_INPUT -> ready
+      UI_VOCAB_HEARD -> ready
+        (set @entity.vocabUnread false)
+        (set @entity.deliveryRoots @payload.deliveryRoots)
+        (set @entity.sourceKeys @payload.eventSourceKeys)
+      UI_VOCAB_UNREAD -> ready
+        (set @entity.vocabUnread true)
+      LINT_INPUT -> ready when @entity.vocabUnread
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((nohits : [BrHit] []) (noroots : [BrRoot] []) (nostr : [string] []) (nof : [OrbFinding] []) (collOps : [string] @entity.collOps) (orbitals : [BrOrbital] (object/get @payload.program "orbitals" [])))
+        (set @entity.findings [{ code: "ORB_LINT_UI_VOCAB_UNREAD", path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the delivery roots and @event.source keys are unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
+        (emit LINT_FINISH { })
+      LINT_INPUT -> ready when (not @entity.vocabUnread)
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((nohits : [BrHit] []) (noroots : [BrRoot] []) (nostr : [string] []) (nof : [OrbFinding] []) (dRoots : [string] @entity.deliveryRoots) (sKeys : [string] @entity.sourceKeys) (collOps : [string] @entity.collOps) (orbitals : [BrOrbital] (object/get @payload.program "orbitals" [])))
   (if @entity.shapesUnread
     [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the collection callback operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
     (let ((known : [string] (array/flatten (array/map @orbitals (fn o (array/concat
@@ -163,12 +176,12 @@ orbital OrbLintBindingRootsOrbital {
                     [{ code: "ORB_BINDING_INVALID_FORMAT", path: @p, message: (str/concat "Invalid binding format: '" @s "'"), suggestion: "Use @root.field.nested format", severity: "error" }]
                     (if (= @r "fromEntity")
                       (if (!= @c "ensures") [{ code: "ORB_BINDING_FROM_ENTITY_OUTSIDE_ENSURES", path: @p, message: (str/concat (quote "@") "fromEntity is the row before a transition and exists only inside its `@ensures`"), suggestion: "Read the current row with @entity; state a before/after relation in an `@ensures` under the transition", severity: "error" }] @nof)
-                      (if (array/includes ["event", "prevEvents", "prevStates", "fromState", "toState"] @r)
+                      (if (array/includes @dRoots @r)
                         (if (= @c "tick")
                           [{ code: "ORB_BINDING_DISPATCH_ROOT_IN_TICK", path: @p, message: (str/concat (quote "@") @r " is not available in a tick: a tick firing has no delivery"), suggestion: "Read the trait's own state and entity in a tick", severity: "error" }]
                           (if (!= @r "event")
                             (if (> (array/len @rest) 0) [{ code: "ORB_BINDING_ROOT_NO_PATH", path: @p, message: (str/concat (quote "@") @r " takes no path"), suggestion: (str/concat "Use " (quote "@") @r " and read it with an operator"), severity: "error" }] @nof)
-                            (if (or (= (array/len @rest) 0) (= @rest ["event"]) (= (array/first @rest) "payload") (= @rest ["source"]) (and (= (array/first @rest) "source") (= (array/len @rest) 2) (array/includes ["orbital", "orbitalId", "trait", "traitId", "eventId", "transition", "tick", "fromBridge", "dispatched", "originClientId"] (array/nth @rest 1))))
+                            (if (or (= (array/len @rest) 0) (= @rest ["event"]) (= (array/first @rest) "payload") (= @rest ["source"]) (and (= (array/first @rest) "source") (= (array/len @rest) 2) (array/includes @sKeys (array/nth @rest 1))))
                               @nof
                               [{ code: "ORB_BINDING_EVENT_INVALID_PATH", path: @p, message: (str/concat (quote "@") "event." (str/join @rest ".") " does not follow the delivery record"), suggestion: (str/concat (quote "@") "event has `event`, `payload.<field>` and `source.<field>`"), severity: "error" }])))
                         (if (and (= @r "state") (> (array/len @parts) 1))
@@ -203,6 +216,12 @@ orbital OrbLintBindingRootsOrbital {
         @description "std-orb-lint-input's LINT_OPERATOR_SHAPES_UNREAD: the operator table does not match the shape type."
       OrbLintInput.LINT_OPERATOR_SHAPES -> SHAPES_HEARD
       OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> SHAPES_UNREAD
+      UI_VOCAB_HEARD { slots : [string]!  itemActionBaseProps : [string]!  lucideIcons : [string]!  themeKeys : [string]!  deliveryRoots : [string]!  eventSourceKeys : [string]! }
+        @description "std-orb-lint-input's LINT_UI_VOCAB: the installed UI vocabulary; its deliveryRoots and eventSourceKeys are the delivery record."
+      UI_VOCAB_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_UI_VOCAB_UNREAD: the UI vocabulary could not be read."
+      OrbLintInput.LINT_UI_VOCAB -> UI_VOCAB_HEARD
+      OrbLintInput.LINT_UI_VOCAB_UNREAD -> UI_VOCAB_UNREAD
     }
   }
 

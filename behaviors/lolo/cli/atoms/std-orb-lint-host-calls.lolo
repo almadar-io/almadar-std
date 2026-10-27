@@ -1,21 +1,16 @@
 app std-orb-lint-host-calls [
   version: "1.0.0",
-  fs: { "/**": [read] },
-  description: "std-orb-lint-host-calls — the one place the effect lints collect the calls they check next to what the installed operator table says about them. HOST_CALLS_COLLECT { requestId, orbitals, heads, operators, fields } takes the lowered program's orbitals, the operator heads to look for, the operators whose table entries the asker needs and table fields (closedCall, oauth, grant, defaultPorts): every operator whose entry has one of the fields is added to both lists. It answers HOST_CALLS_COLLECTED { requestId, unread, calls, facts }. Each call is every array form headed by one of the heads, found at any depth in a guard or effect of an inline trait's transition or tick (parent before children, the order of the Rust each_call_of walk), with its head, the path of the guard or effect it sits in, the trait name, whether it sits in a background tick and that tick's name, and the events the trait declares in its emits. The facts are the table entry of each requested operator as the table writes it (arity, runsOn, host, params, closedCall, oauth, grant, defaultPorts) with what the rules read from the params: whether the last parameter is an options object, its keys and its emit keys, whether the first parameter is a request object, its fields and its required fields, and, for every parameter, `keys` (the sorted field names of each object type, by the path from the parameter, segments joined with `/`: `request/auth/client`, `options/emit`) and `words` (the literal words of each union of literals, in the table's order, by the same path; an array's element is `[]`). The table is read once, from the installed @almadar/std the language scan reports (LANGUAGE_PACKS_DONE), and a request that arrives before the read finishes waits; when the table cannot be read the answer is unread with no facts."
+  description: "std-orb-lint-host-calls — the one place the effect lints collect the calls they check next to what the installed operator table says about them. It reads no file: the facts come from std-orb-lint-input, LINT_OPERATOR_SHAPES (each operator's arity, host and params) and LINT_HOST_FACTS (the closedCall, oauth, grant, defaultPorts, httpWire, family and emitKeys the table states), both sent before LINT_INPUT. HOST_CALLS_COLLECT { requestId, orbitals, heads, operators, fields } takes the lowered program's orbitals, the operator heads to look for, the operators whose table entries the asker needs and table fields (closedCall, oauth, grant, defaultPorts, httpWire, family, emitKeys): every operator whose entry has one of the fields is added to both lists. It answers HOST_CALLS_COLLECTED { requestId, unread, calls, facts }. Each call is every array form headed by one of the heads, found at any depth in a guard or effect of an inline trait's transition or tick (parent before children, the order of the Rust each_call_of walk), with its head, the path of the guard or effect it sits in, the trait name, whether it sits in a background tick and that tick's name, and the events the trait declares in its emits. Each call also carries its trait's config and whether it sits in a guard. The facts are the table entry of each requested operator as the table writes it (arity, runsOn, host, params, closedCall, oauth, grant, defaultPorts, httpWire, family, and emitOrder: the table's emitKeys in documented order) with what the rules read from the params: whether the last parameter is an options object, its keys and its emit keys (sorted), whether the first parameter is a request object, its fields and its required fields, and, for every parameter, `keys` (the sorted field names of each object type, by the path from the parameter, segments joined with `/`: `request/auth/client`, `options/emit`) and `words` (the literal words of each union of literals, in the table's order, by the same path; an array's element is `[]`). A request that arrives before both inputs are heard waits; when either is unread the answer is unread with no facts."
 ]
 uses Spec from "almadar-std/lint-host-calls"
 type HcVal = string | number | boolean | [HcVal?] | Map string HcVal?
-type HcStdManifest = { orbLanguage : HcStdLanguage? }
-type HcStdLanguage = { operators : string }
-type HcOp = Map string HcVal?
-type HcTable = { operators : Map string HcOp! }
 type HcTransition = { guard : HcVal?, effects : [HcVal?]? }
 type HcTick = { name : string?, runsInBackground : boolean?, guard : HcVal?, effects : [HcVal?]? }
 type HcMachine = { transitions : [HcTransition]? }
 type HcEmit = { event : string }
-type HcTrait = { name : string, stateMachine : HcMachine?, ticks : [HcTick]?, emits : [HcEmit]? }
+type HcTrait = { name : string, stateMachine : HcMachine?, ticks : [HcTick]?, emits : [HcEmit]?, config : Map string HcVal? }
 type HcOrbital = { name : string, traits : [HcVal] }
-type HcCall = { head : string!, path : string!, call : [HcVal?]!, tname : string!, tick : string!, bg : boolean!, declared : [string]! }
+type HcCall = { head : string!, path : string!, call : [HcVal?]!, tname : string!, tick : string!, bg : boolean!, declared : [string]!, config : Map string HcVal?, inGuard : boolean? }
 type HcType = string | HcTypeNode
 type HcTypeNode = { kind : string!, fields : Map string HcType?, optional : [string]? }
 type HcParam = { name : string!, optional : boolean?, type : HcType }
@@ -24,8 +19,12 @@ type HcClosed = { request : boolean?, intRange : HcIntRange? }
 type HcOauthOp = { name : string!, required : [string]!, optional : [string]!, endpoint : string? }
 type HcOauth = { endpointTarget : string!, endpointKinds : [string]!, ops : [HcOauthOp]! }
 type HcGrantNeed = Map string HcVal
-type HcOpEntry = { minArity : number!, maxArity : number?, runsOn : string?, host : string?, params : [HcParam]?, closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number? }
-type HcFact = { minArity : number!, maxArity : number?, runsOn : string?, host : string?, params : [HcParam]!, closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, hasOptions : boolean!, optionKeys : [string]!, emitKeys : [string]!, hasRequest : boolean!, requestFields : [string]!, requestRequired : [string]!, words : Map string [string]!, keys : Map string [string]! }
+type HcAuthScheme = { name : string!, keys : [string]!, required : [string]?, onUnauthorized : [string]? }
+type HcHttpWire = { requestKeys : [string]!, bodyKeys : [string]!, queryEncodings : [string]!, authSchemes : [HcAuthScheme]!, defaultPorts : Map string number! }
+type HcOpEntry = { minArity : number!, maxArity : number?, runsOn : string?, host : string?, params : [HcParam]?, closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, httpWire : HcHttpWire?, family : string?, emitKeys : [string]? }
+type HcShape = { category : string?, minArity : number?, maxArity : number?, runsOn : string?, host : string?, hasSideEffects : boolean!, params : [HcParam]! }
+type HcExtras = { closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, httpWire : HcHttpWire?, family : string?, emitKeys : [string]? }
+type HcFact = { minArity : number!, maxArity : number?, runsOn : string?, host : string?, params : [HcParam]!, closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, httpWire : HcHttpWire?, family : string?, emitOrder : [string]?, hasOptions : boolean!, optionKeys : [string]!, emitKeys : [string]!, hasRequest : boolean!, requestFields : [string]!, requestRequired : [string]!, words : Map string [string]!, keys : Map string [string]! }
 type HcFacts = Map string HcFact
 type HcIdx = { p : string!, t : string!, v : [string]! }
 type HcIdxList = [HcIdx]
@@ -43,11 +42,10 @@ type HcRequest = { requestId : string!, orbitals : [HcOrbital]!, heads : [string
 orbital OrbLintHostCallsOrbital {
   entity OrbLintHostCallsRun [runtime] {
     id : string!
-    stdRoot : string = ""
-    table : HcTable?
-    facts : HcFacts = {}
-    fieldOps : Map string [string] = {}
-    loaded : boolean = false
+    shapes : Map string HcShape = {}
+    extras : Map string HcExtras = {}
+    shapesHeard : boolean = false
+    extrasHeard : boolean = false
     failed : boolean = false
     pending : [HcRequest] = []
   }
@@ -57,31 +55,34 @@ orbital OrbLintHostCallsOrbital {
 
     state ready {
       INIT -> ready
-      LANGUAGE_PACKS_DONE_HEARD -> ready when (!= @payload.problem "")
+      LINT_OPERATOR_SHAPES_HEARD -> ready
+        (set @entity.shapes @payload.operators)
+        (set @entity.shapesHeard true)
+        (emit HC_DRAIN { })
+      LINT_HOST_FACTS_HEARD -> ready
+        (set @entity.extras @payload.operators)
+        (set @entity.extrasHeard true)
+        (emit HC_DRAIN { })
+      LINT_OPERATOR_SHAPES_UNREAD_HEARD -> ready
         (set @entity.failed true)
         (emit HC_DRAIN { })
-      LANGUAGE_PACKS_DONE_HEARD -> ready when (and (= @payload.problem "") (= @payload.stdRoot ""))
+      LINT_HOST_FACTS_UNREAD_HEARD -> ready
         (set @entity.failed true)
         (emit HC_DRAIN { })
-      LANGUAGE_PACKS_DONE_HEARD -> ready when (and (= @payload.problem "") (!= @payload.stdRoot ""))
-        (set @entity.stdRoot @payload.stdRoot)
-        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @payload.stdRoot "package.json"))) { key: "host-calls-std" emit: { success: HC_MANIFEST, failure: HC_UNREAD } })
-      HC_MANIFEST -> ready when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (object/get (object/get (json/parse @text HcStdManifest) "orbLanguage" {}) "operators" "") "")))
-        (set @entity.failed true)
+      HOST_CALLS_COLLECT -> ready when (or @entity.failed (and @entity.shapesHeard @entity.extrasHeard))
+        (emit HC_RUN { requestId: @payload.requestId, orbitals: @payload.orbitals, heads: @payload.heads, operators: @payload.operators, fields: @payload.fields })
+      HOST_CALLS_COLLECT -> ready when (not (or @entity.failed (and @entity.shapesHeard @entity.extrasHeard)))
+        (set @entity.pending (array/append @entity.pending @payload))
+      HC_DRAIN -> ready when (and (or @entity.failed (and @entity.shapesHeard @entity.extrasHeard)) (> (array/len @entity.pending) 0))
+        (emit HC_RUN { requestId: (object/get (array/first @entity.pending) "requestId"), orbitals: (object/get (array/first @entity.pending) "orbitals"), heads: (object/get (array/first @entity.pending) "heads"), operators: (object/get (array/first @entity.pending) "operators"), fields: (object/get (array/first @entity.pending) "fields") })
+        (set @entity.pending (array/slice @entity.pending 1 (array/len @entity.pending)))
+      HC_DRAIN -> ready when (not (and (or @entity.failed (and @entity.shapesHeard @entity.extrasHeard)) (> (array/len @entity.pending) 0)))
+      HC_RUN -> ready when @entity.failed
+        (emit HOST_CALLS_COLLECTED { requestId: @payload.requestId, unread: true, calls: [], facts: {} })
         (emit HC_DRAIN { })
-      HC_MANIFEST -> ready when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (object/get (object/get (json/parse @text HcStdManifest) "orbLanguage" {}) "operators" "") "")))
-        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.stdRoot (object/get (object/get (json/parse (bytes/to-string @payload.data) HcStdManifest) "orbLanguage" {}) "operators" "")))) { key: "host-calls-table" emit: { success: HC_TABLE, failure: HC_UNREAD } })
-      HC_TABLE -> ready when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text HcTable) null)))
-        (set @entity.failed true)
-        (emit HC_DRAIN { })
-      HC_TABLE -> ready when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text HcTable) null)))
-        (set @entity.table (json/parse (bytes/to-string @payload.data) HcTable))
-        (set @entity.fieldOps (let ((ops (object/get (json/parse (bytes/to-string @payload.data) HcTable) "operators")) (names (object/keys (object/get (json/parse (bytes/to-string @payload.data) HcTable) "operators"))))
-          (object/fromEntries (array/map ["closedCall", "oauth", "grant", "defaultPorts"] (fn f [@f, (array/filter @names (fn n (object/has (object/get @ops @n {}) @f)))])))))
-        (emit HC_FACTS { })
-      HC_FACTS -> ready
-        (set @entity.facts (or (json/parse (json/stringify (or (object/fromEntries (array/flatten (array/map (object/keys (object/get @entity.table "operators")) (fn n
-          (let ((e (json/parse (json/stringify (object/get @entity.table (str/concat "operators." @n) {})) HcOpEntry)))
+      HC_RUN -> ready when (not @entity.failed)
+        (emit HOST_CALLS_COLLECTED { requestId: @payload.requestId, unread: false, facts: (or (json/parse (json/stringify (or (object/fromEntries (array/flatten (array/map (array/filter (array/unique (array/concat @payload.operators (array/flatten (array/map @payload.fields (fn f (array/filter (object/keys @entity.extras) (fn n (object/has (object/get @entity.extras @n {}) @f)))))))) (fn n (object/has @entity.shapes @n))) (fn n
+          (let ((e (json/parse (json/stringify (object/merge (object/get @entity.shapes @n {}) (object/get @entity.extras @n {}))) HcOpEntry)))
             (if (= @e null)
               []
               (let ((ps (object/get @e "params" [])) (first (array/first (object/get @e "params" []))))
@@ -113,27 +114,9 @@ orbital OrbLintHostCallsOrbital {
                         (if (validate/array @n)
                           (array/flatten (or (json/parse (json/stringify @k) HcIdxLists) []))
                           @none))))) HcVal) [])) HcIdxList) []) (fn en { p: (str/concat @nm (if (= (object/get @en "p") "") "" (if (str/startsWith (object/get @en "p") "[") "" "/")) (object/get @en "p")), t: (object/get @en "t"), v: (object/get @en "v") }))))))) HcIdxList) [])))
-                        [[@n, (object/merge (object/pick @e ["minArity", "maxArity", "runsOn", "host", "closedCall", "oauth", "grant", "defaultPorts"]) { params: (array/map @ps (fn pr (object/pick @pr ["name", "optional", "type"]))), hasOptions: (and (!= @lt null) (= (object/get @lt "kind") "object")), optionKeys: (if (and (!= @lt null) (= (object/get @lt "kind") "object")) (array/sort (object/keys (object/get @lt "fields" {}))) []), emitKeys: (if (= @et null) [] (array/sort (object/keys (object/get @et "fields" {})))), hasRequest: (and (!= @ft null) (= (object/get @ft "kind") "object")), requestFields: @rf, requestRequired: (array/filter @rf (fn k (not (array/includes (object/get @ft "optional" []) @k)))),
+                        [[@n, (object/merge (object/pick @e ["minArity", "maxArity", "runsOn", "host", "closedCall", "oauth", "grant", "defaultPorts", "family", "httpWire"]) { params: (array/map @ps (fn pr (if (= (object/get @pr "optional" false) true) (object/pick @pr ["name", "optional", "type"]) (object/pick @pr ["name", "type"])))), hasOptions: (and (!= @lt null) (= (object/get @lt "kind") "object")), optionKeys: (if (and (!= @lt null) (= (object/get @lt "kind") "object")) (array/sort (object/keys (object/get @lt "fields" {}))) []), emitKeys: (if (= @et null) [] (array/sort (object/keys (object/get @et "fields" {})))), hasRequest: (and (!= @ft null) (= (object/get @ft "kind") "object")), requestFields: @rf, requestRequired: (array/filter @rf (fn k (not (array/includes (object/get @ft "optional" []) @k)))),
                           words: (or (object/fromEntries (array/map (array/filter @ix (fn x (= (object/get @x "t") "w"))) (fn x [(object/get @x "p"), (object/get @x "v")]))) {}),
-                          keys: (or (object/fromEntries (array/map (array/filter @ix (fn x (= (object/get @x "t") "k"))) (fn x [(object/get @x "p"), (object/get @x "v")]))) {}) })]]))))))))))) {}) ) HcFacts) {}))
-        (set @entity.loaded true)
-        (emit HC_DRAIN { })
-      HC_UNREAD -> ready
-        (set @entity.failed true)
-        (emit HC_DRAIN { })
-      HOST_CALLS_COLLECT -> ready when (or @entity.loaded @entity.failed)
-        (emit HC_RUN { requestId: @payload.requestId, orbitals: @payload.orbitals, heads: @payload.heads, operators: @payload.operators, fields: @payload.fields })
-      HOST_CALLS_COLLECT -> ready when (not (or @entity.loaded @entity.failed))
-        (set @entity.pending (array/append @entity.pending @payload))
-      HC_DRAIN -> ready when (and (or @entity.loaded @entity.failed) (> (array/len @entity.pending) 0))
-        (emit HC_RUN { requestId: (object/get (array/first @entity.pending) "requestId"), orbitals: (object/get (array/first @entity.pending) "orbitals"), heads: (object/get (array/first @entity.pending) "heads"), operators: (object/get (array/first @entity.pending) "operators"), fields: (object/get (array/first @entity.pending) "fields") })
-        (set @entity.pending (array/slice @entity.pending 1 (array/len @entity.pending)))
-      HC_DRAIN -> ready when (not (and (or @entity.loaded @entity.failed) (> (array/len @entity.pending) 0)))
-      HC_RUN -> ready when @entity.failed
-        (emit HOST_CALLS_COLLECTED { requestId: @payload.requestId, unread: true, calls: [], facts: {} })
-        (emit HC_DRAIN { })
-      HC_RUN -> ready when (not @entity.failed)
-        (emit HOST_CALLS_COLLECTED { requestId: @payload.requestId, unread: false, facts: (or (json/parse (json/stringify (or (object/fromEntries (array/filter (array/map (array/unique (array/concat @payload.operators (array/flatten (array/map @payload.fields (fn f (object/get @entity.fieldOps @f [])))))) (fn n [@n, (object/get @entity.facts @n null)])) (fn pr (!= (array/nth @pr 1) null)))) {})) HcFacts) {}), calls: (or (json/parse (json/stringify (let ((orbitals @payload.orbitals) (heads (array/unique (array/concat @payload.heads (array/flatten (array/map @payload.fields (fn f (object/get @entity.fieldOps @f []))))))))
+                          keys: (or (object/fromEntries (array/map (array/filter @ix (fn x (= (object/get @x "t") "k"))) (fn x [(object/get @x "p"), (object/get @x "v")]))) {}) } (if (object/has @e "emitKeys") { emitOrder: (object/get @e "emitKeys") } {}))]]))))))))))) {}) ) HcFacts) {}), calls: (or (json/parse (json/stringify (let ((orbitals @payload.orbitals) (heads (array/unique (array/concat @payload.heads (array/flatten (array/map @payload.fields (fn f (array/filter (object/keys @entity.extras) (fn n (object/has (object/get @entity.extras @n {}) @f))))))))))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((o (array/nth @orbitals @oi)))
               (let ((trs (object/get @o "traits" [])))
@@ -141,27 +124,27 @@ orbital OrbLintHostCallsOrbital {
                   (let ((t (json/parse (json/stringify (array/nth @trs @ti)) HcTrait)))
                     (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
                       []
-                      (let ((base (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tname (object/get @t "name" "")) (decl (array/map (or (object/get @t "emits" null) []) (fn e (object/get @e "event")))))
+                      (let ((base (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tname (object/get @t "name" "")) (tcfg (or (object/get @t "config" null) {})) (decl (array/map (or (object/get @t "emits" null) []) (fn e (object/get @e "event")))))
                         (let ((trans (or (object/get (object/get @t "stateMachine") "transitions" null) [])) (ticks (or (object/get @t "ticks" null) [])))
                           (let ((places (array/concat
                                   (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
                                     (let ((tr (array/nth @trans @i)))
                                       (array/concat
-                                        (if (!= (object/get @tr "guard" null) null) [{ path: (str/concat @base ".stateMachine.transitions[" @i "].guard"), node: (object/get @tr "guard"), tick: "", bg: false }] [])
+                                        (if (!= (object/get @tr "guard" null) null) [{ path: (str/concat @base ".stateMachine.transitions[" @i "].guard"), node: (object/get @tr "guard"), tick: "", bg: false, guard: true }] [])
                                         (let ((effs (or (object/get @tr "effects" null) [])))
-                                          (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat @base ".stateMachine.transitions[" @i "].effects[" @j "]"), node: (array/nth @effs @j), tick: "", bg: false }))))))))
+                                          (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat @base ".stateMachine.transitions[" @i "].effects[" @j "]"), node: (array/nth @effs @j), tick: "", bg: false, guard: false }))))))))
                                   (array/flatten (array/map (array/range 0 (array/len @ticks)) (fn i
                                     (let ((tk (array/nth @ticks @i)))
                                       (array/concat
-                                        (if (!= (object/get @tk "guard" null) null) [{ path: (str/concat @base ".ticks[" @i "].guard"), node: (object/get @tk "guard"), tick: (object/get @tk "name" ""), bg: (object/get @tk "runsInBackground" false) }] [])
+                                        (if (!= (object/get @tk "guard" null) null) [{ path: (str/concat @base ".ticks[" @i "].guard"), node: (object/get @tk "guard"), tick: (object/get @tk "name" ""), bg: (object/get @tk "runsInBackground" false), guard: true }] [])
                                         (let ((effs (or (object/get @tk "effects" null) [])))
-                                          (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat @base ".ticks[" @i "].effects[" @j "]"), node: (array/nth @effs @j), tick: (object/get @tk "name" ""), bg: (object/get @tk "runsInBackground" false) })))))))))))
+                                          (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat @base ".ticks[" @i "].effects[" @j "]"), node: (array/nth @effs @j), tick: (object/get @tk "name" ""), bg: (object/get @tk "runsInBackground" false), guard: false })))))))))))
                             (array/flatten (array/map @places (fn pl
                               (array/map (or (json/parse (json/stringify (or (tree/fold (object/get @pl "node") (fn (nd kids)
                                   (array/concat
                                     (if (and (validate/array @nd) (> (array/len @nd) 0) (validate/string (array/first @nd)) (array/includes @heads (array/first @nd))) [@nd] [])
                                     (if (validate/array @nd) (array/flatten (array/filter @kids (fn c (!= @c null)))) (if (validate/object @nd) (array/flatten (array/map (object/keys @kids) (fn key (or (object/get @kids @key []) [])))) [])))) HcVal) [])) HcCalls) [])
-                                (fn call { head: (let ((hd (array/first @call))) (if (validate/string @hd) @hd "")), path: (object/get @pl "path"), call: @call, tname: @tname, tick: (object/get @pl "tick"), bg: (object/get @pl "bg"), declared: @decl }))))))))))))))))))) ) HcCallList) []) })
+                                (fn call { head: (let ((hd (array/first @call))) (if (validate/string @hd) @hd "")), path: (object/get @pl "path"), call: @call, tname: @tname, tick: (object/get @pl "tick"), bg: (object/get @pl "bg"), declared: @decl, declared: @decl, config: @tcfg, inGuard: (object/get @pl "guard") }))))))))))))))))))) ) HcCallList) []) })
         (emit HC_DRAIN { })
     }
 
@@ -170,22 +153,10 @@ orbital OrbLintHostCallsOrbital {
         @description "The calls of the requested heads in program order, and the table entry of each requested operator."
         @tier "internal"
       HC_DRAIN { }
-        @description "Internal: answer the requests that waited for the table."
-        @tier "internal"
-      HC_FACTS { }
-        @description "Internal: derive the facts of every operator of the table."
+        @description "Internal: answer the requests that waited for the input."
         @tier "internal"
       HC_RUN { requestId : string!  orbitals : [HcOrbital]!  heads : [string]!  operators : [string]!  fields : [string]! }
         @description "Internal: answer one request."
-        @tier "internal"
-      HC_MANIFEST { data : bytes! }
-        @description "The installed @almadar/std package.json read."
-        @tier "internal"
-      HC_TABLE { data : bytes! }
-        @description "The installed @almadar/std operator table read."
-        @tier "internal"
-      HC_UNREAD { error : string }
-        @description "A file of the installed @almadar/std could not be read."
         @tier "internal"
     }
 
@@ -193,8 +164,14 @@ orbital OrbLintHostCallsOrbital {
       HOST_CALLS_COLLECT { requestId : string!  orbitals : [HcOrbital]!  heads : [string]!  operators : [string]!  fields : [string]! }
         @description "Collect the calls of these heads (and of every operator whose table entry has one of these fields) and the table entries of these operators."
         @tier "internal"
-      LANGUAGE_PACKS_DONE_HEARD { problem : string!  coreRoot : string!  stdRoot : string! }
-        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished, with the installed @almadar/std root when it is compatible."
+      LINT_OPERATOR_SHAPES_HEARD { operators : Map string HcShape! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES: every operator's arity, host and params."
+      LINT_OPERATOR_SHAPES_UNREAD_HEARD { error : string! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SHAPES_UNREAD: the operator shapes could not be read."
+      LINT_HOST_FACTS_HEARD { operators : Map string HcExtras! }
+        @description "std-orb-lint-input's LINT_HOST_FACTS: the closedCall, oauth, grant, defaultPorts, httpWire, family and emitKeys of the operators that state any."
+      LINT_HOST_FACTS_UNREAD_HEARD { error : string! }
+        @description "std-orb-lint-input's LINT_HOST_FACTS_UNREAD: the host-effect facts could not be read."
     }
   }
 

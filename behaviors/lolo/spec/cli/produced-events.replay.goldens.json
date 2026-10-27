@@ -1,0 +1,495 @@
+{
+ "atom": "cli/atoms/std-orb-produced-events.lolo",
+ "trait": "OrbProducedEvents",
+ "note": "The walk reads an operator call's emit map through the declared emit slots. An object-form effect ({ \"render-ui\": ... }, { \"set\": ... }) is not an effect call: the compiler's collect_effect_produced_events matches array effects, so object effects beside array effects must not break the walk and contribute only what a nested emit map holds.",
+ "cases": [
+  {
+   "id": "array-form emit maps are produced",
+   "steps": [
+    {
+     "event": "PRODUCED_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {},
+      "functions": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "PRODUCED_PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "byPattern": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "PRODUCED_SLOTS_HEARD",
+     "from": "ready",
+     "payload": {
+      "emitSlots": [
+       "success"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "PRODUCED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "GO",
+              "effects": [
+               [
+                "http",
+                "GET",
+                "https://x.test",
+                {
+                 "emit": {
+                  "success": "A"
+                 }
+                }
+               ],
+               [
+                "http",
+                "GET",
+                "https://x.test",
+                {
+                 "emit": {
+                  "success": "B"
+                 }
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "config": {}
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PRODUCED_EVENTS",
+        "payload": {
+         "scope": "",
+         "byControl": {
+          "T": []
+         },
+         "byEffect": {
+          "T": [
+           "A",
+           "B"
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "object-form effects beside array effects do not break the walk",
+   "steps": [
+    {
+     "event": "PRODUCED_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {},
+      "functions": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "PRODUCED_PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "byPattern": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "PRODUCED_SLOTS_HEARD",
+     "from": "ready",
+     "payload": {
+      "emitSlots": [
+       "success"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "PRODUCED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "GO",
+              "effects": [
+               [
+                "http",
+                "GET",
+                "https://x.test",
+                {
+                 "emit": {
+                  "success": "A"
+                 }
+                }
+               ],
+               {
+                "render-ui": {
+                 "slot": "main",
+                 "pattern": {
+                  "type": "typography",
+                  "content": "x"
+                 }
+                }
+               },
+               {
+                "render_ui": {
+                 "slot": "main",
+                 "pattern": {
+                  "type": "typography",
+                  "content": "x"
+                 }
+                }
+               },
+               {
+                "set": "@config.k",
+                "value": "x"
+               },
+               {
+                "fetch": "Missing"
+               },
+               {
+                "call_service": {
+                 "service": "s",
+                 "op": "a"
+                }
+               },
+               [
+                "http",
+                "GET",
+                "https://x.test",
+                {
+                 "emit": {
+                  "success": "B"
+                 }
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "config": {}
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PRODUCED_EVENTS",
+        "payload": {
+         "scope": "",
+         "byControl": {
+          "T": []
+         },
+         "byEffect": {
+          "T": [
+           "A",
+           "B"
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "object-form effects alone answer an empty trait",
+   "steps": [
+    {
+     "event": "PRODUCED_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {},
+      "functions": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "PRODUCED_PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "byPattern": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "PRODUCED_SLOTS_HEARD",
+     "from": "ready",
+     "payload": {
+      "emitSlots": [
+       "success"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "PRODUCED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "GO",
+              "effects": [
+               {
+                "render-ui": {
+                 "slot": "main",
+                 "pattern": {
+                  "type": "typography",
+                  "content": "x"
+                 }
+                }
+               },
+               {
+                "render_ui": {
+                 "slot": "main",
+                 "pattern": {
+                  "type": "typography",
+                  "content": "x"
+                 }
+                }
+               },
+               {
+                "set": "@config.k",
+                "value": "x"
+               },
+               {
+                "fetch": "Missing"
+               },
+               {
+                "call_service": {
+                 "service": "s",
+                 "op": "a"
+                }
+               }
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "config": {}
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PRODUCED_EVENTS",
+        "payload": {
+         "scope": "",
+         "byControl": {
+          "T": []
+         },
+         "byEffect": {
+          "T": []
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an emit map nested in an object-form effect is produced",
+   "steps": [
+    {
+     "event": "PRODUCED_SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "semantics": {},
+      "functions": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "PRODUCED_PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "byPattern": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "PRODUCED_SLOTS_HEARD",
+     "from": "ready",
+     "payload": {
+      "emitSlots": [
+       "success"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "event": "PRODUCED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "GO",
+              "effects": [
+               {
+                "do": [
+                 [
+                  "http",
+                  "GET",
+                  "https://x.test",
+                  {
+                   "emit": {
+                    "success": "C"
+                   }
+                  }
+                 ]
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "config": {}
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PRODUCED_EVENTS",
+        "payload": {
+         "scope": "",
+         "byControl": {
+          "T": []
+         },
+         "byEffect": {
+          "T": [
+           "C"
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
