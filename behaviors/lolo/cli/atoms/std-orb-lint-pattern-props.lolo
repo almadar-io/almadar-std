@@ -82,16 +82,11 @@ orbital OrbLintPatternPropsOrbital {
                         (let ((effs (object/get (array/nth @trans @ti) "effects" [])))
                           (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
                             (let ((e (array/nth @effs @ej)))
-                              (let ((ea (if (validate/array @e) @e [])) (eo (if (validate/object @e) @e {})))
-                              (let ((ehd (if (> (array/len @ea) 0) (let ((h0 (array/nth @ea 0))) (if (validate/string @h0) @h0 "")) ""))
-                                    (r1 (object/get @eo "render_ui" null)) (r2 (object/get @eo "render-ui" null)))
-                              (let ((r1o (if (validate/object @r1) @r1 {})) (r2o (if (validate/object @r2) @r2 {})))
-                              (let ((isArr (and (> (array/len @ea) 2) (array/includes ["render-ui", "render_ui"] @ehd)))
-                                    (rk (if (validate/object @r1) "render_ui" (if (validate/object @r2) "render-ui" ""))))
-                              (let ((ro (if (= @rk "render_ui") @r1o @r2o)))
-                              (let ((isObj (and (validate/object @e) (!= @rk "") (object/has @ro "pattern"))))
-                                (if (not (or @isArr @isObj)) @nof
-                                  (let ((pat (if @isArr (array/nth @ea 2) (object/get @ro "pattern" null))) (sfx (if @isArr "[2]" (str/concat "." @rk ".pattern"))))
+                              (let ((ea (if (validate/array @e) @e [])))
+                              (let ((ehd (if (> (array/len @ea) 0) (let ((h0 (array/nth @ea 0))) (if (validate/string @h0) @h0 "")) "")))
+                              (let ((isArr (and (> (array/len @ea) 2) (= @ehd "render-ui"))))
+                                (if (not @isArr) @nof
+                                  (let ((pat (array/nth @ea 2)) (sfx "[2]"))
                                     (let ((fr (tree/fold @pat (fn (n k)
   (let ((nr : PtRes { v: [], e: [], lb: [], mv: [], mp: false, op: false, cd: false, ar: false }))
     (if (validate/array @n)
@@ -191,7 +186,7 @@ orbital OrbLintPatternPropsOrbital {
                 (let ((tv (array/concat @ownV @kidV)))
                   { v: @tv, e: [{ v: @tv, m: [], mp: false }], lb: [], mv: [], mp: false, op: false, cd: false, ar: false })))))))
         @nr)))) PtVal)))
-                                      (if (= @fr null) @nof (array/map (object/get @fr "v") (fn h { code: (object/get @h "c"), path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")].stateMachine.transitions[" @ti "].effects[" @ej "]" @sfx (object/get @h "p")), message: (object/get @h "m"), suggestion: (object/get @h "s"), severity: "error" })))))))))))))))))))))))))))))))))
+                                      (if (= @fr null) @nof (array/map (object/get @fr "v") (fn h { code: (object/get @h "c"), path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")].stateMachine.transitions[" @ti "].effects[" @ej "]" @sfx (object/get @h "p")), message: (object/get @h "m"), suggestion: (object/get @h "s"), severity: "error" }))))))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "pattern-props", scope: @entity.scope, findings: @entity.findings })

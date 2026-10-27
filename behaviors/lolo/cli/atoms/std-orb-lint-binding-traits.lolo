@@ -72,14 +72,14 @@ orbital OrbLintBindingTraitsOrbital {
                                 (let ((effs : [BtShape] (object/get @tr "effects" [])) (g (object/get @tr "guard" null)))
                                   (array/concat
                                     (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard"), allow: false, tn: @tn, oi: @oi, only: false }] @noroots)
-                                    (array/map (array/range 0 (array/len @effs)) (fn ei { x: (array/nth @effs @ei), w: (str/concat @xp ".effects[" @ei "]"), allow: (let ((e (array/nth @effs @ei))) (and (validate/object @e) (or (object/has @e "render_ui") (object/has @e "render-ui")))), tn: @tn, oi: @oi, only: false }))))))))
+                                    (array/map (array/filter (array/range 0 (array/len @effs)) (fn ei (not (validate/object (array/nth @effs @ei))))) (fn ei { x: (array/nth @effs @ei), w: (str/concat @xp ".effects[" @ei "]"), allow: false, tn: @tn, oi: @oi, only: false }))))))))
                         (array/flatten
                           (array/map (array/range 0 (array/len @tks))
                             (fn ki
                               (let ((tk (array/nth @tks @ki)) (teffs : [BtShape] (object/get (array/nth @tks @ki) "effects" [])) (tg (object/get (array/nth @tks @ki) "guard" null)))
                                 (array/concat
                                   (if (!= @tg null) [{ x: @tg, w: (str/concat @tp ".ticks[" @ki "].guard"), allow: false, tn: @tn, oi: @oi, only: false }] @noroots)
-                                  (array/map (array/range 0 (array/len @teffs)) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]"), allow: false, tn: @tn, oi: @oi, only: false })))))))))))))))))))))
+                                  (array/map (array/filter (array/range 0 (array/len @teffs)) (fn ei (not (validate/object (array/nth @teffs @ei))))) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]"), allow: false, tn: @tn, oi: @oi, only: false })))))))))))))))))))))
     (array/concat
       (array/flatten
         (array/map @roots
@@ -91,7 +91,7 @@ orbital OrbLintBindingTraitsOrbital {
       (array/flatten
         (array/map (array/range 0 (array/len @n))
           (fn i
-            (array/map (let ((r : [BtHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")), rd: (or (object/get @h "rd" false) (= @op "render-ui") (= @op "render_ui")) })))))))
+            (array/map (let ((r : [BtHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")), rd: (or (object/get @h "rd" false) (= @op "render-ui")) })))))))
     (if (validate/object @n)
       (array/flatten
         (array/map (object/keys @k)
@@ -129,8 +129,8 @@ orbital OrbLintBindingTraitsOrbital {
                       [(object/get @t "name" ""),
                        (array/unique (array/flatten (array/map
                          (array/concat
-                           (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn tr (array/map (object/get @tr "effects" []) (fn r { w: @r })))))
-                           (array/flatten (array/map (object/get @t "ticks" []) (fn tk (array/map (object/get @tk "effects" []) (fn r { w: @r }))))))
+                           (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn tr (array/map (array/filter (object/get @tr "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r })))))
+                           (array/flatten (array/map (object/get @t "ticks" []) (fn tk (array/map (array/filter (object/get @tk "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))
                          (fn e (tree/fold @e (fn (n k) (if (validate/string @n) (if (and (str/startsWith @n @tP2) (!= (array/first (str/split (array/first (str/split (str/slice @n 7) ".")) "[")) "")) [(array/first (str/split (str/slice @n 7) "."))] @nostr) (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nostr @r)))) (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @nostr @r)))) @nostr)))) BtShape)))))]))))
    {})))
               (if (= (array/len (array/flatten (object/values @adj))) 0)

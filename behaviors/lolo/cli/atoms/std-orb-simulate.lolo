@@ -66,7 +66,7 @@ orbital OrbSimulateOrbital {
                                       (array/flatten (array/map (array/filter @tx (fn t (let ((frm (object/get @t "from" ""))) (if (validate/string @frm) (= @frm @st) (array/includes @frm @st))))) (fn t
                                         (let ((effs (array/filter (object/get @t "effects" []) (fn e (and (validate/array @e) (validate/string (array/nth @e 0)))))))
                                           (let ((fetches (array/filter @effs (fn e (= (array/nth @e 0) "fetch"))))
-                                                (rends (array/filter @effs (fn e (or (= (array/nth @e 0) "render-ui") (= (array/nth @e 0) "render_ui"))))))
+                                                (rends (array/filter @effs (fn e (= (array/nth @e 0) "render-ui")))))
                                             (array/concat
                                               [(str/concat "    " (object/get @t "event" "") " transition" (if (!= (object/get @t "guard" null) null) " (guarded)" "") ":")]
                                               (array/map (array/filter @fetches (fn e (validate/string (array/nth @e 1)))) (fn e (str/concat "      📦 fetch " (json/stringify (array/nth @e 1)))))

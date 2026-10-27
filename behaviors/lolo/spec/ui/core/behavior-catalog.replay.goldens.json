@@ -922,6 +922,9 @@
   },
   {
    "id": "init-with-load-on-init-off-lists-nothing",
+   "config": {
+    "loadOnInit": false
+   },
    "steps": [
     {
      "trait": "BehaviorCatalog",
@@ -936,8 +939,7 @@
       "state": "loading"
      }
     }
-   ],
-   "skip": "needs case config: G-ORB-460 (loadOnInit false; the step cannot pin the absent read)"
+   ]
   },
   {
    "id": "catalog-load-lists-the-scope",
@@ -973,6 +975,294 @@
       "paths": []
      },
      "event": "INIT",
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "per-topic-a-changed-scope-lists-the-topics",
+   "config": {
+    "perTopic": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p2"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "per-topic-an-unchanged-scope-reads-nothing",
+   "config": {
+    "perTopic": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ]
+     },
+     "expect": {
+      "fired": false,
+      "state": "ready"
+     }
+    }
+   ]
+  },
+  {
+   "id": "per-topic-a-scope-after-a-failure-lists-the-topics",
+   "config": {
+    "perTopic": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "failed",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ]
+     },
+     "event": "SCOPE",
+     "payload": {
+      "paths": [
+       "p1"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "per-topic-the-held-topic-in-the-listing-reads-its-entries",
+   "config": {
+    "perTopic": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "loading",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "topicPackage": "@almadar/std",
+      "topic": "dev"
+     },
+     "event": "TOPICS_LISTED",
+     "payload": {
+      "result": [
+       {
+        "package": "@almadar/std",
+        "prefix": "std",
+        "topic": "dev",
+        "count": 2
+       },
+       {
+        "package": "@almadar/std",
+        "prefix": "std",
+        "topic": "cli",
+        "count": 5
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "emits": [
+       {
+        "event": "CATALOG_TOPICS"
+       }
+      ],
+      "effects": [
+       {
+        "type": "behavior/catalog"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "per-topic-a-held-topic-the-listing-dropped-shows-the-topics",
+   "config": {
+    "perTopic": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "loading",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "topicPackage": "@almadar/std",
+      "topic": "gone"
+     },
+     "event": "TOPICS_LISTED",
+     "payload": {
+      "result": [
+       {
+        "package": "@almadar/std",
+        "prefix": "std",
+        "topic": "dev",
+        "count": 2
+       },
+       {
+        "package": "@almadar/std",
+        "prefix": "std",
+        "topic": "cli",
+        "count": 5
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "CATALOG_TOPICS"
+       },
+       {
+        "event": "CATALOG_SHOWN"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "per-topic-no-held-topic-shows-the-topics",
+   "config": {
+    "perTopic": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "loading",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "topic": ""
+     },
+     "event": "TOPICS_LISTED",
+     "payload": {
+      "result": [
+       {
+        "package": "@almadar/std",
+        "prefix": "std",
+        "topic": "dev",
+        "count": 2
+       },
+       {
+        "package": "@almadar/std",
+        "prefix": "std",
+        "topic": "cli",
+        "count": 5
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "CATALOG_TOPICS"
+       },
+       {
+        "event": "CATALOG_SHOWN"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "per-topic-a-topic-reads-its-entries",
+   "config": {
+    "perTopic": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "ready",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "topics": [
+       {
+        "package": "@almadar/std",
+        "prefix": "std",
+        "topic": "dev",
+        "count": 2
+       },
+       {
+        "package": "@almadar/std",
+        "prefix": "std",
+        "topic": "cli",
+        "count": 5
+       }
+      ]
+     },
+     "event": "TOPIC",
+     "payload": {
+      "package": "@almadar/std",
+      "topic": "cli"
+     },
      "expect": {
       "fired": true,
       "state": "loading",

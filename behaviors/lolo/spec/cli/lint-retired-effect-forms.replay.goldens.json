@@ -1,0 +1,1110 @@
+{
+  "atom": "cli/atoms/std-orb-lint-retired-effect-forms.lolo",
+  "trait": "OrbLintRetiredEffectForms",
+  "cases": [
+    {
+      "id": "set-object-effect-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              {
+                                "set": [
+                                  "@entity.n",
+                                  1
+                                ]
+                              }
+                            ]
+                          }
+                        ],
+                        "events": []
+                      },
+                      "ticks": []
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "retired-effect-forms",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_RETIRED_FORM",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Effect is written as an object keyed by 'set'; effects are arrays",
+                      "suggestion": "Write it as the array effect [\"set\", ...]; the object form is retired",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "fetch-object-effect-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.a",
+                                1
+                              ],
+                              {
+                                "fetch": [
+                                  "Task"
+                                ]
+                              }
+                            ]
+                          }
+                        ],
+                        "events": []
+                      },
+                      "ticks": []
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "retired-effect-forms",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_RETIRED_FORM",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1]",
+                      "message": "Effect is written as an object keyed by 'fetch'; effects are arrays",
+                      "suggestion": "Write it as the array effect [\"fetch\", ...]; the object form is retired",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "call-service-object-effect-reported-with-hyphen-suggestion",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              {
+                                "call_service": [
+                                  "mail",
+                                  "send"
+                                ]
+                              }
+                            ]
+                          }
+                        ],
+                        "events": []
+                      },
+                      "ticks": []
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "retired-effect-forms",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_RETIRED_FORM",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Effect is written as an object keyed by 'call_service'; effects are arrays",
+                      "suggestion": "Write it as the array effect [\"call-service\", ...]; the object form is retired",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "object-render-ui-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              {
+                                "render-ui": [
+                                  "main",
+                                  {
+                                    "type": "button",
+                                    "label": "Go"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ],
+                        "events": []
+                      },
+                      "ticks": []
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "retired-effect-forms",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_RETIRED_FORM",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "Effect is written as an object keyed by 'render-ui'; effects are arrays",
+                      "suggestion": "Write it as the array effect [\"render-ui\", ...]; the object form is retired",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "object-effect-inside-if-reported-at-its-branch",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "if",
+                                true,
+                                {
+                                  "set": [
+                                    "@entity.n",
+                                    1
+                                  ]
+                                },
+                                [
+                                  "set",
+                                  "@entity.n",
+                                  2
+                                ]
+                              ]
+                            ]
+                          }
+                        ],
+                        "events": []
+                      },
+                      "ticks": []
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "retired-effect-forms",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_RETIRED_FORM",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].then",
+                      "message": "Effect is written as an object keyed by 'set'; effects are arrays",
+                      "suggestion": "Write it as the array effect [\"set\", ...]; the object form is retired",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "object-effects-inside-do-and-else-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "do",
+                                [
+                                  "set",
+                                  "@entity.a",
+                                  1
+                                ],
+                                {
+                                  "set": [
+                                    "@entity.b",
+                                    2
+                                  ]
+                                }
+                              ],
+                              [
+                                "if",
+                                true,
+                                [
+                                  "set",
+                                  "@entity.n",
+                                  1
+                                ],
+                                {
+                                  "fetch": [
+                                    "Task"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ],
+                        "events": []
+                      },
+                      "ticks": []
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "retired-effect-forms",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_RETIRED_FORM",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].do[1]",
+                      "message": "Effect is written as an object keyed by 'set'; effects are arrays",
+                      "suggestion": "Write it as the array effect [\"set\", ...]; the object form is retired",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFF_RETIRED_FORM",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1].else",
+                      "message": "Effect is written as an object keyed by 'fetch'; effects are arrays",
+                      "suggestion": "Write it as the array effect [\"fetch\", ...]; the object form is retired",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "object-effect-inside-let-body-and-when-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "let",
+                                [
+                                  [
+                                    "x",
+                                    1
+                                  ]
+                                ],
+                                {
+                                  "set": [
+                                    "@entity.n",
+                                    1
+                                  ]
+                                }
+                              ],
+                              [
+                                "when",
+                                true,
+                                [
+                                  "set",
+                                  "@entity.n",
+                                  1
+                                ],
+                                {
+                                  "set": [
+                                    "@entity.m",
+                                    2
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ],
+                        "events": []
+                      },
+                      "ticks": []
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "retired-effect-forms",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_RETIRED_FORM",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0].body[0]",
+                      "message": "Effect is written as an object keyed by 'set'; effects are arrays",
+                      "suggestion": "Write it as the array effect [\"set\", ...]; the object form is retired",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFF_RETIRED_FORM",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[1].then[1]",
+                      "message": "Effect is written as an object keyed by 'set'; effects are arrays",
+                      "suggestion": "Write it as the array effect [\"set\", ...]; the object form is retired",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tick-object-effect-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [],
+                        "events": []
+                      },
+                      "ticks": [
+                        {
+                          "interval": 1000,
+                          "effects": [
+                            {
+                              "set": [
+                                "@entity.n",
+                                1
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "retired-effect-forms",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_RETIRED_FORM",
+                      "path": "orbitals[0 (A)].traits[0 (T)].ticks[0].effects[0]",
+                      "message": "Effect is written as an object keyed by 'set'; effects are arrays",
+                      "suggestion": "Write it as the array effect [\"set\", ...]; the object form is retired",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-array-effects",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.n",
+                                1
+                              ],
+                              [
+                                "fetch",
+                                "Task"
+                              ],
+                              [
+                                "call-service",
+                                "mail",
+                                "send"
+                              ]
+                            ]
+                          }
+                        ],
+                        "events": []
+                      },
+                      "ticks": []
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "retired-effect-forms",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-render-ui-with-object-pattern-tree",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "type": "button",
+                                      "label": "Go"
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ],
+                        "events": []
+                      },
+                      "ticks": []
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "retired-effect-forms",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-render-ui-pattern-tree-inside-if",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "if",
+                                true,
+                                [
+                                  "render-ui",
+                                  "main",
+                                  {
+                                    "type": "button",
+                                    "label": "Go"
+                                  }
+                                ],
+                                [
+                                  "render-ui",
+                                  "main",
+                                  {
+                                    "type": "text",
+                                    "content": "x"
+                                  }
+                                ]
+                              ]
+                            ]
+                          }
+                        ],
+                        "events": []
+                      },
+                      "ticks": []
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "retired-effect-forms",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-state-machine",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "retired-effect-forms",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an args body that does not parse is the usage error",
+      "steps": [
+        {
+          "trait": "OrbLintRetiredEffectFormsCli",
+          "from": "ready",
+          "event": "LINT_CALLED",
+          "payload": {
+            "rawBody": "not json"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb lint retired-effect-forms <file>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

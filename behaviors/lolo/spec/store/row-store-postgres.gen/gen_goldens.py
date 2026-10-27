@@ -198,12 +198,12 @@ case("bad-startup-database-missing-fails-with-the-server-message",
      to_startup() + [recv(E("3D000", 'database "app" does not exist', "FATAL"), expect={"state": "ready", "emits": [emit("STORE_FAILED", key="k", message='database "app" does not exist')]})])
 case("skip-password-required-but-none-in-the-url", [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}}],
      note="expect STORE_FAILED `the server asks for a password and DATABASE_URL has none` after R3/R5/R10 with a url without a password",
-     skip="needs config.url without a password: case config is unsupported until G-ORB-460")
+     skip="needs the server's answer frames (R3/R5/R10) scripted, with config.url without a password")
 case("skip-sslmode-require-and-server-answers-n", [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}}],
      note="expect STORE_FAILED `the server does not support TLS and sslmode requires it` after answer N",
-     skip="needs config sslmode=require: case config is unsupported until G-ORB-460")
+     skip="needs the server's N answer scripted, with config sslmode=require")
 case("skip-sslmode-disable-sends-startup-without-ssl-request", [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}}],
-     note="expect PG_CONNECTED -> startup frame directly, no SSLRequest", skip="needs config sslmode=disable: case config is unsupported until G-ORB-460")
+     note="expect PG_CONNECTED -> startup frame directly, no SSLRequest", skip="needs the startup frame checked, with config sslmode=disable")
 
 # ================= read / list =================
 r1 = ticket("t1", "Fix login", "open", 3, '["a","b"]')
@@ -554,7 +554,7 @@ case("good-rows-are-unchanged-by-an-ensure-the-read-after-it-answers-the-same-ro
 doc = {"atom": "spec/store/row-store-postgres-fixture.lolo", "trait": "RowStoreDriver",
        "spec": "spec/store/row-store-postgres.lolo",
        "source": "orbital-rust/crates/orbital-core/crates/runtime/src/stores/pg_rows.rs over drivers/postgres.rs (behavior and tests)",
-       "note": "Replay goldens feed the os reply events the kernel would route (PG_CONNECTED, PG_RECEIVED with the server bytes as base64, PG_NONCE_DRAWN) and assert state, emits and the effects' types. Effect arguments are compared evaluated; the exact bytes the driver writes are asserted through the spec's PG_WIRE_SENT diagnostic emit (stage, sql, params, frame = base64 of the whole send). Server answers are hand-built Postgres v3 messages (cross-checked against fixtures/postgres/*.json); the SCRAM server-first is the recorded scram-wrong-password-fails one. Cases marked skip need case-level config (unsupported until G-ORB-460). The Rust twin (`pg_rows.rs`) is archived under `archive/orbital-rust/`; each id's `source` names the Rust unit/live test it once mirrored.",
+       "note": "Replay goldens feed the os reply events the kernel would route (PG_CONNECTED, PG_RECEIVED with the server bytes as base64, PG_NONCE_DRAWN) and assert state, emits and the effects' types. Effect arguments are compared evaluated; the exact bytes the driver writes are asserted through the spec's PG_WIRE_SENT diagnostic emit (stage, sql, params, frame = base64 of the whole send). Server answers are hand-built Postgres v3 messages (cross-checked against fixtures/postgres/*.json); the SCRAM server-first is the recorded scram-wrong-password-fails one. Cases marked skip need the server's answer frames scripted. The Rust twin (`pg_rows.rs`) is archived under `archive/orbital-rust/`; each id's `source` names the Rust unit/live test it once mirrored.",
        "cases": cases}
 json.dump(doc, open(OUT, "w"), indent=1)
 open(OUT, "a").write("\n")

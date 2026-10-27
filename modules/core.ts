@@ -483,23 +483,6 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["typed", "@entity.via", "{\\"kind\\":\\"array\\",\\"inner\\":{\\"kind\\":\\"sexpr\\"}}"]',
   },
 
-  proven: {
-    module: 'core',
-    category: 'logic',
-    minArity: 2,
-    maxArity: 2,
-    description:
-      'Resolved IR only, never written in .lolo: the value of the operator call, whose arguments at the listed positions the static checker proved, so the kernel does not check them again. Honored only in a program the kernel registered; a program arriving as data has it removed before it is resolved.',
-    hasSideEffects: false,
-    returnType: tv('T'),
-    returnSemantics: 'identity-of-arg<1>',
-    params: [
-      { name: 'positions', type: list('number'), description: 'The proven argument positions of the call, from 0' },
-      { name: 'call', type: tv('T'), description: 'The operator call' },
-    ],
-    example: '["proven", [0, 1], ["+", "@entity.count", 1]]',
-  },
-
   // --- control ----------------------------------------------------------------
 
   let: {

@@ -133,10 +133,10 @@ orbital OrbLintCallServiceOrbital {
                       @nosite
                       (array/flatten (array/map (object/get @r "e") (fn lf
                         (let ((e (object/get @lf "e")) (pth (str/concat (object/get @t "p") (object/get @lf "r"))))
-                          (let ((isLeaf (and (= (object/get @lf "t") "l") (validate/array @e) (> (array/len @e) 0) (validate/string (array/first @e)) (array/includes ["call-service", "call_service"] (array/first @e)))))
+                          (let ((isLeaf (and (= (object/get @lf "t") "l") (validate/array @e) (> (array/len @e) 0) (validate/string (array/first @e)) (= (array/first @e) "call-service"))))
                             (let ((all (or (json/parse (json/stringify (or (tree/fold @e (fn (nd kids)
                   (array/concat
-                    (if (and (validate/array @nd) (>= (array/len @nd) 3) (validate/string (array/first @nd)) (array/includes ["call-service", "call_service"] (array/first @nd))) [@nd] @nonc)
+                    (if (and (validate/array @nd) (>= (array/len @nd) 3) (validate/string (array/first @nd)) (= (array/first @nd) "call-service")) [@nd] @nonc)
                     (if (validate/array @nd) (array/flatten (array/filter @kids (fn c (!= @c null)))) (if (validate/object @nd) (array/flatten (array/map (object/keys @kids) (fn key (or (object/get @kids @key @nonc) @nonc)))) @nonc)))) CsVal) @nonc)) CsCalls) @nonc)))
                               (let ((nested (if (and @isLeaf (>= (array/len @e) 3)) (array/slice @all 1 (array/len @all)) @all)))
                                 (array/concat

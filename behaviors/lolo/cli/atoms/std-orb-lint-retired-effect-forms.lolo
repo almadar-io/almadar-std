@@ -1,0 +1,162 @@
+app std-orb-lint-retired-effect-forms [
+  version: "1.0.0",
+  inbound: ["cli-lint-retired-effect-forms"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-retired-effect-forms — the `orb lint retired-effect-forms <file>` command: ORB_EFF_RETIRED_FORM. An effect is an array `[\"set\", ...]`; the object form keyed by an operator (`{ \"set\": ... }`, `{ \"fetch\": ... }`, `{ \"call_service\": ... }`, an object render-ui) is retired. It lowers the file with program/read and reports every object that stands as an effect of an inline trait's transition or tick effects, or of a do, if, when or let body inside them, once at its path, naming the array form to write instead (status 500, exit 1). A render-ui pattern tree is an object by design and is not an effect slot. Clean answers `lint retired-effect-forms: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-retired-effect-forms"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type RfVal = string | number | boolean | [RfVal?] | Map string RfVal?
+type RfTransition = { effects : [RfVal?] }
+type RfTick = { effects : [RfVal?] }
+type RfMachine = { transitions : [RfTransition] }
+type RfTrait = { name : string, stateMachine : RfMachine, ticks : [RfTick] }
+type RfOrbital = { name : string, traits : [RfTrait] }
+type RfProgram = { orbitals : [RfOrbital] }
+
+orbital OrbLintRetiredEffectFormsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintRetiredEffectFormsRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintRetiredEffectForms -> OrbLintRetiredEffectFormsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (array/map (let ((orbitals (object/get @payload.program "orbitals" [])))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((o (array/nth @orbitals @oi)))
+              (array/flatten (array/map (array/range 0 (array/len (object/get @o "traits" []))) (fn ti
+                (let ((td (array/nth (object/get @o "traits" []) @ti)))
+                  (if (not (object/has @td "stateMachine")) []
+                    (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")) (trs (object/get (object/get @td "stateMachine" {}) "transitions" [])) (tks (object/get @td "ticks" [])))
+                      (array/flatten (array/map (array/concat
+                        (array/map (array/range 0 (array/len @trs)) (fn tj { w: (str/concat @tp ".stateMachine.transitions[" @tj "].effects"), efs: (object/get (array/nth @trs @tj) "effects" []) }))
+                        (array/map (array/range 0 (array/len @tks)) (fn kj { w: (str/concat @tp ".ticks[" @kj "].effects"), efs: (object/get (array/nth @tks @kj) "effects" []) }))) (fn lst
+                        (let ((efs (object/get @lst "efs")) (w (object/get @lst "w")))
+                          (array/flatten (array/map (array/range 0 (array/len @efs)) (fn ej
+                            (let ((x (array/nth @efs @ej)) (xp (str/concat @w "[" @ej "]")))
+                              (if (validate/object @x) [{ r: "", k: (array/first (object/keys @x)), p: @xp }]
+                                (if (not (and (validate/array @x) (> (array/len @x) 0) (or (validate/array (array/nth @x 0)) (and (validate/string (array/nth @x 0)) (array/includes ["do", "if", "when", "let"] (array/nth @x 0)))))) []
+                                  (let ((r (tree/fold @x (fn (n k)
+                                    (if (validate/object @n) { s: [{ r: "", o: true, k: (array/first (object/keys @n)) }] }
+                                      (if (not (validate/array @n)) { s: [] }
+                                        (let ((len (array/len @n)) (hd (if (> (array/len @n) 0) (array/nth @n 0) null)))
+                                          (if (and (validate/string @hd) (array/includes ["do", "if", "when", "let"] @hd))
+                                            { s: (array/flatten (array/map (array/filter (array/range 1 @len) (fn i (and (not (= (array/nth @n @i) null)) (if (= @hd "do") true (if (= @hd "if") (and (>= @i 2) (<= @i 3)) (>= @i 2)))))) (fn i
+                                              (let ((lbl (if (= @hd "do") (str/concat ".do[" (- @i 1) "]") (if (= @hd "if") (if (= @i 2) ".then" ".else") (if (= @hd "when") (str/concat ".then[" (- @i 2) "]") (str/concat ".body[" (- @i 2) "]")))))
+                                                    (kr (array/nth @k @i)))
+                                                (array/map (object/get @kr "s") (fn lf { r: (str/concat @lbl (object/get @lf "r")), o: (object/get @lf "o"), k: (object/get @lf "k") })))))) }
+                                            (if (and (> @len 0) (validate/array @hd))
+                                              { s: (array/flatten (array/map (array/range 0 @len) (fn j
+                                                (let ((kr (array/nth @k @j)))
+                                                  (if (= (array/nth @n @j) null) []
+                                                    (array/map (object/get @kr "s") (fn lf { r: (str/concat "[" @j "]" (object/get @lf "r")), o: (object/get @lf "o"), k: (object/get @lf "k") }))))))) }
+                                              { s: [{ r: "", o: false, k: "" }] })))))) "RfVal")))
+                                    (if (= @r null) []
+                                      (array/map (array/filter (object/get @r "s") (fn lf (object/get @lf "o"))) (fn lf { r: (object/get @lf "r"), k: (object/get @lf "k"), p: (str/concat @xp (object/get @lf "r")) }))))))))))))))))))))))))) (fn h { code: "ORB_EFF_RETIRED_FORM", path: (object/get @h "p"), message: (str/concat "Effect is written as an object keyed by '" (object/get @h "k") "'; effects are arrays"), suggestion: (str/concat "Write it as the array effect [\"" (str/replaceAll (object/get @h "k") "_" "-") "\", ...]; the object form is retired"), severity: "error" })))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "retired-effect-forms", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : RfProgram  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintRetiredEffectFormsCli -> OrbLintRetiredEffectFormsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint retired-effect-forms <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "retired-effect-forms") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint retired-effect-forms: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "retired-effect-forms") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint retired-effect-forms: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-retired-effect-forms" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint retired-effect-forms` with its arguments and working directory."
+        @synonyms "orb lint retired-effect-forms"
+      OrbLintRetiredEffectForms.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintRetiredEffectFormsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintRetiredEffectFormsOrbitalStart -> OrbLintRetiredEffectForms, OrbLintRetiredEffectFormsCli, OrbLintInput, Packs, Versions
+}

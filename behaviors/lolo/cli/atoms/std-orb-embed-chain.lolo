@@ -36,8 +36,8 @@ orbital OrbEmbedChainOrbital {
                     (let ((t (array/nth @inl @kx))) (let ((tn (object/get @t "name" "")))
                       (let ((gt (array/includes (object/get @entity.roots (str/concat @oi "-" (array/nth @inlK @kx)) []) (quote "@trait")))) (let ((roots (if @gt (array/concat (array/concat
                                       (array/map (object/values (object/get @t "config" {})) (fn f { x: (object/get (or @f {}) "default" null) }))
-                                      (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn x [{ x: (object/get @x "guard" null) }, { x: (object/get @x "effects" []) }]))))
-                                      (array/flatten (array/map (object/get @t "ticks" []) (fn x [{ x: (object/get @x "guard" null) }, { x: (object/get @x "effects" []) }])))) [])))
+                                      (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn x [{ x: (object/get @x "guard" null) }, { x: (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) }]))))
+                                      (array/flatten (array/map (object/get @t "ticks" []) (fn x [{ x: (object/get @x "guard" null) }, { x: (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) }])))) [])))
                         (if @gt
                           (let ((fr (tree/fold @roots (fn (n k)
   (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nr @r))))

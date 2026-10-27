@@ -3,7 +3,7 @@
  "trait": "RowStoreDriver",
  "spec": "spec/store/row-store-postgres.lolo",
  "source": "orbital-rust/crates/orbital-core/crates/runtime/src/stores/pg_rows.rs over drivers/postgres.rs (behavior and tests)",
- "note": "Replay goldens feed the os reply events the kernel would route (PG_CONNECTED, PG_RECEIVED with the server bytes as base64, PG_NONCE_DRAWN) and assert state, emits and the effects' types. Effect arguments are compared evaluated; the exact bytes the driver writes are asserted through the spec's PG_WIRE_SENT diagnostic emit (stage, sql, params, frame = base64 of the whole send). Server answers are hand-built Postgres v3 messages (cross-checked against fixtures/postgres/*.json); the SCRAM server-first is the recorded scram-wrong-password-fails one. Cases marked skip need case-level config (unsupported until G-ORB-460). The Rust twin (`pg_rows.rs`) is archived under `archive/orbital-rust/`; each id's `source` names the Rust unit/live test it once mirrored.",
+ "note": "Replay goldens feed the os reply events the kernel would route (PG_CONNECTED, PG_RECEIVED with the server bytes as base64, PG_NONCE_DRAWN) and assert state, emits and the effects' types. Effect arguments are compared evaluated; the exact bytes the driver writes are asserted through the spec's PG_WIRE_SENT diagnostic emit (stage, sql, params, frame = base64 of the whole send). Server answers are hand-built Postgres v3 messages (cross-checked against fixtures/postgres/*.json); the SCRAM server-first is the recorded scram-wrong-password-fails one. Cases marked skip need the server's answer frames scripted. The Rust twin (`pg_rows.rs`) is archived under `archive/orbital-rust/`; each id's `source` names the Rust unit/live test it once mirrored.",
  "cases": [
   {
    "id": "good-cold-ask-connects-to-the-configured-origin",
@@ -1358,7 +1358,7 @@
     }
    ],
    "note": "expect STORE_FAILED `the server asks for a password and DATABASE_URL has none` after R3/R5/R10 with a url without a password",
-   "skip": "needs config.url without a password: case config is unsupported until G-ORB-460"
+   "skip": "needs the server's answer frames (R3/R5/R10) scripted, with config.url without a password"
   },
   {
    "id": "skip-sslmode-require-and-server-answers-n",
@@ -1377,7 +1377,7 @@
     }
    ],
    "note": "expect STORE_FAILED `the server does not support TLS and sslmode requires it` after answer N",
-   "skip": "needs config sslmode=require: case config is unsupported until G-ORB-460"
+   "skip": "needs the server's N answer scripted, with config sslmode=require"
   },
   {
    "id": "skip-sslmode-disable-sends-startup-without-ssl-request",
@@ -1396,7 +1396,7 @@
     }
    ],
    "note": "expect PG_CONNECTED -> startup frame directly, no SSLRequest",
-   "skip": "needs config sslmode=disable: case config is unsupported until G-ORB-460"
+   "skip": "needs the startup frame checked, with config sslmode=disable"
   },
   {
    "id": "good-read-answers-the-row-with-stamps-as-millisecond-iso-and-jsonb-parsed",

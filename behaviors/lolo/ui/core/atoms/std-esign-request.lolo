@@ -22,50 +22,12 @@ orbital ESignRequestOrbital {
   }
 
   uses Typography from "std/behaviors/ui-typography"
-  uses DataGrid from "std/behaviors/ui-data-grid"
   uses Alert from "std/behaviors/ui-alert"
 
   trait TitleHeading = Typography.traits.TypographyRender -> ESignRequest {
     config {
       content: @config.title
       variant: h3
-    }
-  }
-
-  trait RequestDataGrid = DataGrid.traits.DataGridRender -> ESignRequest {
-    config {
-      fields: [{
-        label: Document
-        name: documentName
-        variant: h4
-      }, {
-        label: Recipient
-        name: recipientName
-        variant: body
-      }, {
-        label: Email
-        name: recipientEmail
-        variant: caption
-      }, {
-        label: Status
-        name: status
-        variant: badge
-      }, {
-        label: Sent
-        name: sentAt
-        variant: caption
-      }]
-      itemActions: [{
-        event: SEND_REQUEST
-        label: Send
-        variant: primary
-      }, {
-        event: REVOKE_REQUEST
-        label: Revoke
-        variant: danger
-      }]
-      viewerRole: @config.viewerRole
-      look: @config.tableLook
     }
   }
 
@@ -96,7 +58,42 @@ orbital ESignRequestOrbital {
         })
       ESignRequestLoaded -> browsing
         (render-ui main {
-          children: [@trait.TitleHeading, @trait.RequestDataGrid, {
+          children: [@trait.TitleHeading, {
+            type: data-grid
+            entity: ?data
+            fields: [{
+              label: Document
+              name: documentName
+              variant: h4
+            }, {
+              label: Recipient
+              name: recipientName
+              variant: body
+            }, {
+              label: Email
+              name: recipientEmail
+              variant: caption
+            }, {
+              label: Status
+              name: status
+              variant: badge
+            }, {
+              label: Sent
+              name: sentAt
+              variant: caption
+            }]
+            itemActions: (array/filter [{
+              event: SEND_REQUEST
+              label: Send
+              variant: primary
+            }, {
+              event: REVOKE_REQUEST
+              label: Revoke
+              variant: danger
+            }] (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+            look: @config.tableLook
+            pageSize: 0
+          }, {
             currentPage: @entity.page
             pageChangeEvent: REFETCH_PAGE
             showPageSize: false

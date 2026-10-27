@@ -44,8 +44,8 @@ orbital OrbProducedEventsOrbital {
           (let ((recs (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn o
                   (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t
                     (let ((effs (array/concat
-                                   (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn x (array/map (object/get @x "effects" []) (fn r { w: @r })))))
-                                   (array/flatten (array/map (object/get @t "ticks" []) (fn x (array/map (object/get @x "effects" []) (fn r { w: @r }))))))))
+                                   (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn x (array/map (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r })))))
+                                   (array/flatten (array/map (object/get @t "ticks" []) (fn x (array/map (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))))
                       (let ((fr (tree/fold @effs (fn (n k)
   (if (validate/array @n)
     (array/flatten (array/map @k (fn r (if (= @r null) @nr @r))))

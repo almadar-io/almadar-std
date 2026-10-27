@@ -49,8 +49,8 @@ orbital OrbFiredEventsOrbital {
                       (let ((kn (object/fromEntries (array/map (array/filter (object/keys @cfg) (fn key (let ((d (object/get (or (object/get @cfg @key null) {}) "default" null))) (or (validate/string @d) (validate/number @d) (validate/boolean @d))))) (fn key [@key, (object/get (object/get @cfg @key) "default")]))))
                             (roots (array/concat
                                      (array/concat
-                                       (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn x (array/map (object/get @x "effects" []) (fn r { w: @r })))))
-                                       (array/flatten (array/map (object/get @t "ticks" []) (fn x (array/map (object/get @x "effects" []) (fn r { w: @r }))))))
+                                       (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn x (array/map (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r })))))
+                                       (array/flatten (array/map (object/get @t "ticks" []) (fn x (array/map (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))
                                      (array/map (array/filter (array/map (object/keys @cfg) (fn key (object/get (or (object/get @cfg @key null) {}) "default" null))) (fn d (!= @d null))) (fn r { w: @r })))))
                         (let ((fr (tree/fold @roots (fn (n k)
   (if (validate/array @n)

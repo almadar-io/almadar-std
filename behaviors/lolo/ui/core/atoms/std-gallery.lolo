@@ -9,7 +9,6 @@ orbital GalleryItemOrbital {
   uses Typography from "std/behaviors/ui-typography"
   uses Icon from "std/behaviors/ui-icon"
   uses Divider from "std/behaviors/ui-divider"
-  uses MediaGallery from "std/behaviors/ui-media-gallery"
   uses Alert from "std/behaviors/ui-alert"
 
     type GalleryItemLoaded = Event { data : [GalleryItem], totalCount : number! } "Fired when GalleryItem finishes loading; payload.data holds the gallery"
@@ -27,6 +26,11 @@ orbital GalleryItemOrbital {
     status : "active" | "inactive" | "pending" @description "Indicates the current state of the item." @synonyms "state, condition, flag" = active
     createdAt : string
     imageUrl : image @description "The URL pointing to the image resource." @synonyms "image, src, path" = "https://picsum.photos/seed/gallery/800/600"
+    galleryPage : number @intrinsic @description "The page the gallery shows." = 1
+    galleryTotalCount : number @intrinsic @description "Images the active search and filter match, across every page." = 0
+    gallerySearchTerm : string @intrinsic @description "The search query the paged gallery applies." = ""
+    galleryFilterField : string @intrinsic @description "The field the paged gallery's active filter matches." = ""
+    galleryFilterValue : string @intrinsic @description "The value the paged gallery's active filter matches; empty means no filter." = ""
   }
 
   trait LoadingSpinner = Spinner.traits.SpinnerRender -> GalleryItem {
@@ -49,11 +53,6 @@ orbital GalleryItemOrbital {
 
   trait TitleDivider = Divider.traits.DividerRender -> GalleryItem {
     config {}
-  }
-
-  trait MediaGalleryGrid = MediaGallery.traits.MediaGalleryRender -> GalleryItem {
-    config {
-    }
   }
 
   trait ErrorAlert = Alert.traits.AlertRender -> GalleryItem {
@@ -103,6 +102,10 @@ orbital GalleryItemOrbital {
       GalleryItemLoaded -> loading when (> ?totalCount (array/len ?data))
         (emit GalleryItemLoadFailed { error: (str/concat "GalleryItem has " ?totalCount " images, over the maxRows cap of " @config.maxRows), code: "GALLERY_OVER_CAP" })
       GalleryItemLoaded -> browsing
+        (set @entity.galleryPage 1)
+        (set @entity.gallerySearchTerm "")
+        (set @entity.galleryFilterField "")
+        (set @entity.galleryFilterValue "")
         (render-ui main {
           children: [{
             align: center
@@ -144,7 +147,7 @@ orbital GalleryItemOrbital {
             children: []
             gap: none
             type: stack
-          }), @trait.MediaGalleryGrid]
+          }), { captionField: @config.nameField, entity: ?data, pageSize: 0, srcField: @config.imageField, type: media-gallery }]
           direction: vertical
           gap: md
           type: stack
@@ -169,13 +172,17 @@ orbital GalleryItemOrbital {
       ;; background; when GalleryItemLoaded arrives below, React reconciles
       ;; the grid in place instead of unmounting it.
       REFETCH_QUERY -> browsing when (or (= @config.searchRelation null) (= ?searchTerm ""))
+        (set @entity.gallerySearchTerm ?searchTerm)
+        (set @entity.galleryPage 1)
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
-          filter: (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm))
+          filter: (and (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm)) (or (= @entity.galleryFilterValue "") (= (object/get @entity @entity.galleryFilterField) @entity.galleryFilterValue)))
           limit: @config.pageSize
           offset: 0
         })
       REFETCH_QUERY -> browsing when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
+        (set @entity.gallerySearchTerm ?searchTerm)
+        (set @entity.galleryPage 1)
         (fetch @config.relatedEntity {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemRelatedLoaded }
           filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
@@ -186,26 +193,48 @@ orbital GalleryItemOrbital {
       GalleryItemRelatedLoaded -> browsing
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
-          filter: (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))
+          filter: (and (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)) (or (= @entity.galleryFilterValue "") (= (object/get @entity @entity.galleryFilterField) @entity.galleryFilterValue)))
+          limit: @config.pageSize
+          offset: (* (- @entity.galleryPage 1) @config.pageSize)
+        })
+      REFETCH_FILTER -> browsing when (or (= @config.searchRelation null) (= @entity.gallerySearchTerm ""))
+        (set @entity.galleryFilterField ?field)
+        (set @entity.galleryFilterValue ?value)
+        (set @entity.galleryPage 1)
+        (fetch GalleryItem {
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
+          filter: (and (or (= @entity.gallerySearchTerm "") (str/includes (object/get @entity @config.searchField) @entity.gallerySearchTerm)) (or (= ?value "") (= (object/get @entity ?field) ?value)))
           limit: @config.pageSize
           offset: 0
         })
-      REFETCH_FILTER -> browsing
-        (fetch GalleryItem {
-          emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
-          filter: (or (= ?value "") (= (object/get @entity ?field) ?value))
-          limit: @config.pageSize
-          offset: 0
+      REFETCH_FILTER -> browsing when (and (!= @config.searchRelation null) (!= @entity.gallerySearchTerm ""))
+        (set @entity.galleryFilterField ?field)
+        (set @entity.galleryFilterValue ?value)
+        (set @entity.galleryPage 1)
+        (fetch @config.relatedEntity {
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemRelatedLoaded }
+          filter: (str/includes (object/get @entity @config.relatedSearchField) @entity.gallerySearchTerm)
+          limit: @config.relatedMaxRows
         })
-      REFETCH_PAGE -> browsing
+      REFETCH_PAGE -> browsing when (or (= @config.searchRelation null) (= @entity.gallerySearchTerm ""))
+        (set @entity.galleryPage ?page)
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
+          filter: (and (or (= @entity.gallerySearchTerm "") (str/includes (object/get @entity @config.searchField) @entity.gallerySearchTerm)) (or (= @entity.galleryFilterValue "") (= (object/get @entity @entity.galleryFilterField) @entity.galleryFilterValue)))
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)
+        })
+      REFETCH_PAGE -> browsing when (and (!= @config.searchRelation null) (!= @entity.gallerySearchTerm ""))
+        (set @entity.galleryPage ?page)
+        (fetch @config.relatedEntity {
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemRelatedLoaded }
+          filter: (str/includes (object/get @entity @config.relatedSearchField) @entity.gallerySearchTerm)
+          limit: @config.relatedMaxRows
         })
       GalleryItemLoadFailed -> browsing
         (notify error (str/concat "Couldn't refresh the gallery — " ?error))
       GalleryItemPageLoaded -> browsing
+        (set @entity.galleryTotalCount ?totalCount)
         (render-ui main {
           children: [{
             align: center
@@ -247,7 +276,13 @@ orbital GalleryItemOrbital {
             children: []
             gap: none
             type: stack
-          }), @trait.MediaGalleryGrid]
+          }), { captionField: @config.nameField, entity: ?data, pageSize: 0, srcField: @config.imageField, type: media-gallery }, {
+            currentPage: @entity.galleryPage
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
+          }]
           direction: vertical
           gap: md
           type: stack
@@ -473,11 +508,11 @@ orbital GalleryItemOrbital {
         @tier "policy"
       pageSize : number = 20
         @label "How many images to fetch per page?"
-        @description "Records fetched from the server when REFETCH_PAGE fires (a composed std-pagination driving this trait). The initial load and revisit fetches stay unpaged (whole collection), unchanged from before this knob existed."
+        @description "Images per page for search, filter and page-change reads, which render their own page bar. The first load reads the whole gallery up to maxRows."
         @synonyms "fetch limit, records per page, batch size, page limit"
         @tier "presentation"
     }
   }
 
-  page "/galleryitems/gallery" as GalleryItemGalleryPage -> GalleryItemGallery, LoadingSpinner, LoadingCaption, GalleryIcon, TitleDivider, MediaGalleryGrid, ErrorAlert, ReloadSpinner, ReloadCaption, RetrySpinner
+  page "/galleryitems/gallery" as GalleryItemGalleryPage -> GalleryItemGallery, LoadingSpinner, LoadingCaption, GalleryIcon, TitleDivider, ErrorAlert, ReloadSpinner, ReloadCaption, RetrySpinner
 }

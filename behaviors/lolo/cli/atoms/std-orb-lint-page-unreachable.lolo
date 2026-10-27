@@ -42,9 +42,9 @@ orbital OrbLintPageUnreachableOrbital {
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (appCfg (object/get @payload.program "config" {})) (signIn (object/get (object/get @payload.program "site" {}) "signIn" "")))
           (let ((trs (array/flatten (array/map @orbitals (fn orb (object/get @orb "traits" []))))))
             (let ((effects (array/concat
-                              (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (array/map (object/get @t "effects" []) (fn r { w: @r }))))))))
-                              (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get @tr "ticks" []) (fn k (array/map (object/get @k "effects" []) (fn r { w: @r }))))))))))
-                  (transEffects (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (array/map (object/get @t "effects" []) (fn r { w: @r }))))))))))
+                              (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (array/map (array/filter (object/get @t "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))))
+                              (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get @tr "ticks" []) (fn k (array/map (array/filter (object/get @k "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))))))
+                  (transEffects (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (array/map (array/filter (object/get @t "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))))))
               (let ((trCfg (array/map @trs (fn tr (array/filter (array/map (object/values (object/get @tr "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))))
                     (orbCfg (array/map @orbitals (fn orb (array/filter (array/map (object/values (object/get @orb "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))))
                     (appCfgDefaults (array/filter (array/map (object/values @appCfg) (fn f (object/get @f "default" null))) (fn v (!= @v null))))

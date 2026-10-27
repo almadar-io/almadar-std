@@ -1,6 +1,6 @@
 app std-behavior-catalog [
   version: "1.4.0",
-  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the list carries no vectors; a search lists the current topic's registry folder, or the whole scope, with its vectors, embeds the query with std-llm (LLM_EMBED) and ranks by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. After listing it emits CATALOG_TOPICS { topics } (each package and topic once, with its count), and SCOPE { paths } replaces the scope knob's registry folders at run time (the catalog lists them again; a SCOPE naming exactly the folders it already lists, in the same order, and carrying no fingerprints or the same ones, is ignored and reads nothing; fingerprints are one opaque string per folder that changes when the folder's files do), and TOPIC { package, topic } narrows the rows and search results to that topic (an empty topic lists everything). Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block.",
+  description: "std-behavior-catalog — browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (the list carries no vectors; a search lists the current topic's registry folder, or the whole scope, with its vectors, embeds the query with std-llm (LLM_EMBED) and ranks by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. After listing it emits CATALOG_TOPICS { topics } (each package and topic once, with its count), and SCOPE { paths } replaces the scope knob's registry folders at run time (the catalog lists them again; a SCOPE naming exactly the folders it already lists, in the same order, and carrying no fingerprints or the same ones, is ignored and reads nothing; fingerprints are one opaque string per folder that changes when the folder's files do), With perTopic, listing (the start, CATALOG_LOAD or a SCOPE) reads only each topic's count, then the held topic's entries when the listing still has it, and a TOPIC reads that topic's entries. TOPIC { package, topic } narrows the rows and search results to that topic (an empty topic lists everything). Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block.",
   egress: ["https://api.openai.com", "https://openrouter.ai"]
 ]
 ;; @capabilities "browse installed behaviors, search behaviors by meaning, describe a behavior's knobs and events, pick a behavior to bind"
@@ -143,12 +143,18 @@ orbital BehaviorCatalogOrbital {
     initial: loading
 
     state loading {
-      SCOPE -> loading when (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints)))
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) (not @config.perTopic))
         (set @entity.paths ?paths)
         (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) @config.perTopic)
+        (set @entity.paths ?paths)
+        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: ?paths } { vectors: false topics: true emit: { success: TOPICS_LISTED, failure: LIST_FAILED } })
       INIT -> loading when (and @config.loadOnInit @config.perTopic)
         (set @entity.topicPackage @config.startPackage)
         (set @entity.topic @config.startTopic)
@@ -196,11 +202,11 @@ orbital BehaviorCatalogOrbital {
       TOPIC -> loading
         (set @entity.topicPackage ?package)
         (set @entity.topic ?topic)
-      TOPICS_LISTED -> loading when (!= @entity.topic "")
+      TOPICS_LISTED -> loading when (array/some ?result (fn t (and (= @t.package @entity.topicPackage) (= @t.topic @entity.topic))))
         (set @entity.topics ?result)
         (emit CATALOG_TOPICS { topics: ?result })
         (behavior/catalog { paths: [(str/concat (object/get (array/find ?result (fn t (and (= @t.package @entity.topicPackage) (= @t.topic @entity.topic)))) prefix "") "/" @entity.topic)] } { vectors: false traits: false emit: { success: TOPIC_LISTED, failure: LIST_FAILED } })
-      TOPICS_LISTED -> ready when (= @entity.topic "")
+      TOPICS_LISTED -> ready when (not (array/some ?result (fn t (and (= @t.package @entity.topicPackage) (= @t.topic @entity.topic)))))
         (set @entity.topics ?result)
         (set @entity.entries [])
         (set @entity.rows [])
@@ -230,12 +236,18 @@ orbital BehaviorCatalogOrbital {
     }
 
     state ready {
-      SCOPE -> loading when (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints)))
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) (not @config.perTopic))
         (set @entity.paths ?paths)
         (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) @config.perTopic)
+        (set @entity.paths ?paths)
+        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: ?paths } { vectors: false topics: true emit: { success: TOPICS_LISTED, failure: LIST_FAILED } })
       INIT -> ready
         (emit CATALOG_TOPICS { topics: @entity.topics })
         (emit CATALOG_SHOWN {})
@@ -386,12 +398,18 @@ orbital BehaviorCatalogOrbital {
     }
 
     state searching {
-      SCOPE -> loading when (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints)))
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) (not @config.perTopic))
         (set @entity.paths ?paths)
         (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) @config.perTopic)
+        (set @entity.paths ?paths)
+        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: ?paths } { vectors: false topics: true emit: { success: TOPICS_LISTED, failure: LIST_FAILED } })
       SEARCH_LISTED -> searching
         (set @entity.searchHits ?result)
         (emit LLM_EMBED { texts: (array/prepend [] @entity.query) })
@@ -424,12 +442,18 @@ orbital BehaviorCatalogOrbital {
     }
 
     state describing {
-      SCOPE -> loading when (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints)))
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) (not @config.perTopic))
         (set @entity.paths ?paths)
         (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
+      SCOPE -> loading when (and (or (!= ?paths @entity.paths) (and (!= ?fingerprints null) (!= ?fingerprints @entity.fingerprints))) @config.perTopic)
+        (set @entity.paths ?paths)
+        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: ?paths } { vectors: false topics: true emit: { success: TOPICS_LISTED, failure: LIST_FAILED } })
       INIT -> loading
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
@@ -450,12 +474,18 @@ orbital BehaviorCatalogOrbital {
     }
 
     state failed {
-      SCOPE -> loading
+      SCOPE -> loading when (not @config.perTopic)
         (set @entity.paths ?paths)
         (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
+      SCOPE -> loading when @config.perTopic
+        (set @entity.paths ?paths)
+        (set @entity.fingerprints (if (!= ?fingerprints null) ?fingerprints []))
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: ?paths } { vectors: false topics: true emit: { success: TOPICS_LISTED, failure: LIST_FAILED } })
       INIT -> failed when (= @config.look chips)
         (render-ui main null)
       INIT -> failed when (!= @config.look chips)

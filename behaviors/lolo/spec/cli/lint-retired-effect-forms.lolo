@@ -1,0 +1,21 @@
+app lint-retired-effect-forms-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint retired-effect-forms <file>`; see the atom."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintRetiredEffectFormsSpec {
+  expects trait OrbLintRetiredEffectForms {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintRetiredEffectFormsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintRetiredEffectForms, OrbLintRetiredEffectFormsCli
+}

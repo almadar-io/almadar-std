@@ -39,6 +39,9 @@ orbital EventLogOrbital {
     errorMessage : string @description "A human-readable message indicating an error condition." @synonyms "error, error message, problem, issue" = ""
     eventLogPage : number @intrinsic @description "The page the log shows." = 1
     eventLogTotalCount : number @intrinsic @description "Entries the log's filter matches, across every page." = 0
+    eventLogSearchTerm : string @intrinsic @description "The search query the log applies to every page." = ""
+    eventLogFilterField : string @intrinsic @description "The field the log's extra filter matches." = ""
+    eventLogFilterValue : string @intrinsic @description "The value the log's extra filter matches; empty means no extra filter." = ""
   }
 
   trait EventLogTimeline -> @rebindable EventLogView {
@@ -47,8 +50,12 @@ orbital EventLogOrbital {
     state loading {
       INIT -> loading
         (set @entity.eventLogPage 1)
+        (set @entity.eventLogSearchTerm "")
+        (set @entity.eventLogFilterField "")
+        (set @entity.eventLogFilterValue "")
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+          filter: (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind))
           limit: @config.pageSize
           offset: 0
           orderBy: (str/concat @config.dateField ":desc")
@@ -139,6 +146,11 @@ orbital EventLogOrbital {
             tabs: (array/map @entity.filterChips (fn chip { id: (object/get @chip id ""), icon: (object/get @chip icon list), label: (if (= @index 0) @config.allLabel (if (= (array/len @config.kindLabels) 0) (object/get @chip label "") (array/nth @config.kindLabels (- @index 1)))) }))
             type: tabs
           }, {
+            color: muted
+            content: (str/concat ?totalCount " entries")
+            type: typography
+            variant: caption
+          }, {
             entity: @entity.entries
             fields: (title description date status)
             titleField: @config.titleField
@@ -167,8 +179,12 @@ orbital EventLogOrbital {
         })
       EventLogSaved -> loading
         (set @entity.eventLogPage 1)
+        (set @entity.eventLogSearchTerm "")
+        (set @entity.eventLogFilterField "")
+        (set @entity.eventLogFilterValue "")
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+          filter: (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind))
           limit: @config.pageSize
           offset: 0
           orderBy: (str/concat @config.dateField ":desc")
@@ -193,86 +209,33 @@ orbital EventLogOrbital {
       ;; timeline on screen instead of flashing the loading skeleton over it.
       INIT -> loading
         (set @entity.eventLogPage 1)
+        (set @entity.eventLogSearchTerm "")
+        (set @entity.eventLogFilterField "")
+        (set @entity.eventLogFilterValue "")
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+          filter: (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind))
           limit: @config.pageSize
           offset: 0
           orderBy: (str/concat @config.dateField ":desc")
         })
-      APPLY_FILTER -> viewing
+      APPLY_FILTER -> viewing when (or (= @config.searchRelation null) (= @entity.eventLogSearchTerm ""))
         (set @entity.filterKind ?tabId)
-        (set @entity.entries (array/filter @entity.allEntries (fn e (or (= ?tabId "") (= (object/get @e kind) ?tabId)))))
-        (render-ui main {
-          children: [{
-            align: center
-            children: [{ name: history, size: lg, type: icon }, {
-              content: @config.title
-              type: typography
-              variant: h3
-            }, {
-              action: OPEN_BACKFILL
-              icon: plus
-              label: "Log event"
-              type: button
-              variant: primary
-            }]
-            direction: horizontal
-            gap: sm
-            type: stack
-          }, (if @config.bodySearch {
-            children: [{
-              className: "w-full max-w-md"
-              clearable: true
-              event: REFETCH_QUERY
-              placeholder: @config.searchPlaceholder
-              type: search-input
-            }]
-            direction: horizontal
-            gap: sm
-            type: stack
-          } {
-            children: []
-            gap: none
-            type: stack
-          }), (if (> (array/len @config.filters) 0) {
-            children: [{
-              entity: EventLogView
-              event: REFETCH_FILTER
-              filters: @config.filters
-              look: @config.filterBarLook
-              type: filter-group
-            }]
-            direction: horizontal
-            gap: sm
-            type: stack
-          } {
-            children: []
-            gap: none
-            type: stack
-          }), {
-            activeTab: @entity.filterKind
-            tabChangeEvent: APPLY_FILTER
-            tabs: (array/map @entity.filterChips (fn chip { id: (object/get @chip id ""), icon: (object/get @chip icon list), label: (if (= @index 0) @config.allLabel (if (= (array/len @config.kindLabels) 0) (object/get @chip label "") (array/nth @config.kindLabels (- @index 1)))) }))
-            type: tabs
-          }, {
-            entity: @entity.entries
-            fields: (title description date status)
-            titleField: @config.titleField
-            descriptionField: @config.descriptionField
-            dateField: @config.dateField
-            statusField: @config.statusField
-            look: @config.timelineLook
-            type: timeline
-          }, {
-            currentPage: @entity.eventLogPage
-            pageChangeEvent: REFETCH_PAGE
-            showPageSize: false
-            totalPages: (math/max 1 (math/ceil (/ @entity.eventLogTotalCount @config.pageSize)))
-            type: pagination
-          }]
-          direction: vertical
-          gap: md
-          type: stack
+        (set @entity.eventLogPage 1)
+        (fetch EventLogView {
+          emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+          filter: (and (or (= ?tabId "") (= (object/get @entity @config.kindField) ?tabId)) (or (= @entity.eventLogSearchTerm "") (str/includes (object/get @entity @config.searchField) @entity.eventLogSearchTerm)) (or (= @entity.eventLogFilterValue "") (= (object/get @entity @entity.eventLogFilterField) @entity.eventLogFilterValue)))
+          limit: @config.pageSize
+          offset: 0
+          orderBy: (str/concat @config.dateField ":desc")
+        })
+      APPLY_FILTER -> viewing when (and (!= @config.searchRelation null) (!= @entity.eventLogSearchTerm ""))
+        (set @entity.filterKind ?tabId)
+        (set @entity.eventLogPage 1)
+        (fetch @config.relatedEntity {
+          emit: { failure: EventLogLoadFailed, success: EventLogRelatedLoaded }
+          filter: (str/includes (object/get @entity @config.relatedSearchField) @entity.eventLogSearchTerm)
+          limit: @config.relatedMaxRows
         })
       ;; REFETCH_* stays in `viewing` and DOES NOT replace the timeline with a
       ;; skeleton — same reasoning as std-browse's REFETCH_* arms: a skeleton
@@ -282,15 +245,18 @@ orbital EventLogOrbital {
       ;; tab (@entity.filterKind) so search/generic-filter compound with it
       ;; instead of resetting it.
       REFETCH_QUERY -> viewing when (or (= @config.searchRelation null) (= ?searchTerm ""))
+        (set @entity.eventLogSearchTerm ?searchTerm)
         (set @entity.eventLogPage 1)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
-          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm)))
+          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm)) (or (= @entity.eventLogFilterValue "") (= (object/get @entity @entity.eventLogFilterField) @entity.eventLogFilterValue)))
           limit: @config.pageSize
           offset: 0
           orderBy: (str/concat @config.dateField ":desc")
         })
       REFETCH_QUERY -> viewing when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
+        (set @entity.eventLogSearchTerm ?searchTerm)
+        (set @entity.eventLogPage 1)
         (fetch @config.relatedEntity {
           emit: { failure: EventLogLoadFailed, success: EventLogRelatedLoaded }
           filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
@@ -299,32 +265,48 @@ orbital EventLogOrbital {
       EventLogRelatedLoaded -> viewing when (> ?totalCount (array/len ?data))
         (emit EventLogLoadFailed { error: (str/concat @config.relatedEntity " has " ?totalCount " rows matching the search, over the relatedMaxRows cap of " @config.relatedMaxRows), code: "EVENT_LOG_RELATED_OVER_CAP" })
       EventLogRelatedLoaded -> viewing
+        (fetch EventLogView {
+          emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)) (or (= @entity.eventLogFilterValue "") (= (object/get @entity @entity.eventLogFilterField) @entity.eventLogFilterValue)))
+          limit: @config.pageSize
+          offset: (* (- @entity.eventLogPage 1) @config.pageSize)
+          orderBy: (str/concat @config.dateField ":desc")
+        })
+      REFETCH_FILTER -> viewing when (or (= @config.searchRelation null) (= @entity.eventLogSearchTerm ""))
+        (set @entity.eventLogFilterField ?field)
+        (set @entity.eventLogFilterValue ?value)
         (set @entity.eventLogPage 1)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
-          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
+          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= @entity.eventLogSearchTerm "") (str/includes (object/get @entity @config.searchField) @entity.eventLogSearchTerm)) (or (= ?value "") (= (object/get @entity ?field) ?value)))
           limit: @config.pageSize
           offset: 0
           orderBy: (str/concat @config.dateField ":desc")
         })
-      REFETCH_FILTER -> viewing
+      REFETCH_FILTER -> viewing when (and (!= @config.searchRelation null) (!= @entity.eventLogSearchTerm ""))
+        (set @entity.eventLogFilterField ?field)
+        (set @entity.eventLogFilterValue ?value)
         (set @entity.eventLogPage 1)
-        (fetch EventLogView {
-          emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
-          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= ?value "") (= (object/get @entity ?field) ?value)))
-          limit: @config.pageSize
-          offset: 0
-          orderBy: (str/concat @config.dateField ":desc")
+        (fetch @config.relatedEntity {
+          emit: { failure: EventLogLoadFailed, success: EventLogRelatedLoaded }
+          filter: (str/includes (object/get @entity @config.relatedSearchField) @entity.eventLogSearchTerm)
+          limit: @config.relatedMaxRows
         })
-      ;; No filter carried over on REFETCH_PAGE, mirroring std-browse exactly —
-      ;; the reference page arm does not preserve query/filter either.
-      REFETCH_PAGE -> viewing
+      REFETCH_PAGE -> viewing when (or (= @config.searchRelation null) (= @entity.eventLogSearchTerm ""))
         (set @entity.eventLogPage ?page)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+          filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= @entity.eventLogSearchTerm "") (str/includes (object/get @entity @config.searchField) @entity.eventLogSearchTerm)) (or (= @entity.eventLogFilterValue "") (= (object/get @entity @entity.eventLogFilterField) @entity.eventLogFilterValue)))
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)
           orderBy: (str/concat @config.dateField ":desc")
+        })
+      REFETCH_PAGE -> viewing when (and (!= @config.searchRelation null) (!= @entity.eventLogSearchTerm ""))
+        (set @entity.eventLogPage ?page)
+        (fetch @config.relatedEntity {
+          emit: { failure: EventLogLoadFailed, success: EventLogRelatedLoaded }
+          filter: (str/includes (object/get @entity @config.relatedSearchField) @entity.eventLogSearchTerm)
+          limit: @config.relatedMaxRows
         })
       EventLogLoadFailed -> viewing
         (notify error (str/concat "Couldn't refresh the event log — " ?error))
@@ -408,6 +390,11 @@ orbital EventLogOrbital {
             tabs: (array/map @entity.filterChips (fn chip { id: (object/get @chip id ""), icon: (object/get @chip icon list), label: (if (= @index 0) @config.allLabel (if (= (array/len @config.kindLabels) 0) (object/get @chip label "") (array/nth @config.kindLabels (- @index 1)))) }))
             type: tabs
           }, {
+            color: muted
+            content: (str/concat ?totalCount " entries")
+            type: typography
+            variant: caption
+          }, {
             entity: @entity.entries
             fields: (title description date status)
             titleField: @config.titleField
@@ -470,8 +457,12 @@ orbital EventLogOrbital {
     state backfilling {
       INIT -> loading
         (set @entity.eventLogPage 1)
+        (set @entity.eventLogSearchTerm "")
+        (set @entity.eventLogFilterField "")
+        (set @entity.eventLogFilterValue "")
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+          filter: (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind))
           limit: @config.pageSize
           offset: 0
           orderBy: (str/concat @config.dateField ":desc")
@@ -539,6 +530,11 @@ orbital EventLogOrbital {
             tabChangeEvent: APPLY_FILTER
             tabs: (array/map @entity.filterChips (fn chip { id: (object/get @chip id ""), icon: (object/get @chip icon list), label: (if (= @index 0) @config.allLabel (if (= (array/len @config.kindLabels) 0) (object/get @chip label "") (array/nth @config.kindLabels (- @index 1)))) }))
             type: tabs
+          }, {
+            color: muted
+            content: (str/concat @entity.eventLogTotalCount " entries")
+            type: typography
+            variant: caption
           }, {
             entity: @entity.entries
             fields: (title description date status)
