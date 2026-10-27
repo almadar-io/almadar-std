@@ -12,6 +12,8 @@ type OrbFinding = { code : string!, path : string!, message : string!, suggestio
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type FbVal = string | number | boolean | [FbVal?] | Map string FbVal?
+type FbCall = { path : string!, node : FbVal! }
+type FbIndex = Map string [FbCall]
 type FbField = { name : string, type : string }
 type FbEmit = { event : string, payloadSchema : [FbField] }
 type FbEvent = { key : string, payloadSchema : [FbField] }
@@ -50,19 +52,19 @@ orbital OrbLintAsyncResultDeafTargetOrbital {
             (let ((o (array/nth @orbitals @oi)))
               (let ((trs (object/get @o "traits" [])))
                 (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
-                  (let ((t (json/parse (json/stringify (array/nth @trs @ti)) AdTrait)))
+                  (let ((t (as (array/nth @trs @ti) AdTrait)))
                     (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
                       []
                       (let ((trans (object/get (object/get @t "stateMachine") "transitions" [])))
                         (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
                           (let ((tr (array/nth @trans @i)))
-                            (let ((froms (or (json/parse (json/stringify (let ((f (object/get @tr "from" ""))) (if (validate/array @f) @f [@f]))) AdNames) [])) (to (object/get @tr "to" "")))
+                            (let ((froms (or (as (let ((f (object/get @tr "from" ""))) (if (validate/array @f) @f [@f])) AdNames) [])) (to (object/get @tr "to" "")))
                               (if (array/includes @froms @to)
                                 []
-                                (let ((results (array/unique (or (json/parse (json/stringify (or (tree/fold (object/get @tr "effects" []) (fn (n k)
-                                          (if (validate/array @n)
-                                            (array/concat
-                                              (if (and (> (array/len @n) 0) (validate/string (array/nth @n 0)) (array/includes ["fetch" "persist"] (array/nth @n 0)))
+                                (let ((results (array/unique (or (as (let ((ix (or (as (tree/index (object/get @tr "effects" []) ["fetch" "persist"]) FbIndex) {})))
+                                          (array/flatten (array/map (array/filter (array/concat (object/get @ix "fetch" []) (object/get @ix "persist" [])) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c
+                                            (let ((n (object/get @c "node" null)))
+                                              (if (validate/array @n)
                                                 (array/flatten (array/map (array/slice @n 1 (array/len @n)) (fn a
                                                   (if (validate/object @a)
                                                     (let ((em (object/get @a "emit" null)))
@@ -70,10 +72,8 @@ orbital OrbLintAsyncResultDeafTargetOrbital {
                                                         (array/filter (object/values @em) (fn v (if (validate/string @v) (!= @v "") false)))
                                                         (array/take [""] 0)))
                                                     (array/take [""] 0)))))
-                                                [])
-                                              (array/flatten (array/filter @k (fn c (!= @c null)))))
-                                            [])) FbVal) [])) AdNames) []))))
-                                  (let ((handled (array/map (array/filter @trans (fn a (or (array/includes (or (json/parse (json/stringify (let ((f (object/get @a "from" ""))) (if (validate/array @f) @f [@f]))) AdNames) []) @to) (array/includes (or (json/parse (json/stringify (let ((f (object/get @a "from" ""))) (if (validate/array @f) @f [@f]))) AdNames) []) "*")))) (fn a (object/get @a "event" "")))))
+                                                [])))))) AdNames) []))))
+                                  (let ((handled (array/map (array/filter @trans (fn a (or (array/includes (or (as (let ((f (object/get @a "from" ""))) (if (validate/array @f) @f [@f])) AdNames) []) @to) (array/includes (or (as (let ((f (object/get @a "from" ""))) (if (validate/array @f) @f [@f])) AdNames) []) "*")))) (fn a (object/get @a "event" "")))))
                                     (let ((deaf (array/sort (array/filter @results (fn r (not (array/includes @handled @r)))))))
                                       (if (= (array/len @deaf) 0)
                                         []

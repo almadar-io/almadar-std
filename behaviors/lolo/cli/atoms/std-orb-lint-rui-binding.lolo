@@ -10,6 +10,8 @@ uses Spec from "almadar-std/lint-rui-binding"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type EfVal = string | number | boolean | [EfVal?] | Map string EfVal?
+type EfCall = { path : string!, node : [EfVal?]! }
+type EfIndex = Map string [EfCall]
 type EfEvt = { event : string }
 type EfListen = { event : string, triggers : string }
 type EfKey = { key : string }
@@ -75,12 +77,7 @@ orbital OrbLintRuiBindingOrbital {
                             (let ((e (array/nth @effs @ej)) (ep (str/concat @tpath ".stateMachine.transitions[" @ti "].effects[" @ej "]")))
   (array/concat
     (if (= (array/len @dc) 0) @noF
-      (array/map (array/flatten (array/map (let ((h1 (tree/fold @e (fn (n k)
-  (if (validate/array @n)
-    (let ((hd (array/nth @n 0)))
-      (array/concat (if (and (validate/string @hd) (= @hd "render-ui") (>= (array/len @n) 3) (validate/object (array/nth @n 2))) [(array/nth @n 2)] @noPat)
-        (array/flatten (array/map @k (fn r (if (= @r null) @noPat @r))))))
-    (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @noPat @r)))) @noPat))) EfVal))) (if (validate/array @h1) @h1 @noPat)) (fn p (if (validate/object @p) (let ((h0 (tree/fold @p (fn (n k)
+      (array/map (array/flatten (array/map (let ((h1 (array/map (array/filter (object/get (or (as (tree/index @e ["render-ui"]) EfIndex) {}) "render-ui" []) (fn c (let ((nn (object/get @c "node" []))) (and (>= (array/len @nn) 3) (validate/object (array/nth @nn 2)))))) (fn c (array/nth (object/get @c "node" []) 2))))) (if (validate/array @h1) @h1 @noPat)) (fn p (if (validate/object @p) (let ((h0 (tree/fold @p (fn (n k)
   (if (validate/object @n)
     (let ((tyv (let ((t0 (object/get @n "type" null))) (if (validate/string @t0) @t0 ""))))
     (let ((evl (if (!= @tyv "") (object/get @evp @tyv @noS) @noS)))

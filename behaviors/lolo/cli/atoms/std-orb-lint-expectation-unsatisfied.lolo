@@ -78,7 +78,7 @@ orbital OrbLintExpectationUnsatisfiedOrbital {
     (if (= @kind "transition") (let ((tr (object/get @tidx (object/get @x "traitName" "") null)))
   (if (or (= @tr null) (array/some (object/get @tr "trans" [])
         (fn t (and (= (object/get @t "event" "") (object/get @x "event" "")) (= (object/get @t "to" "") (object/get @x "to" ""))
-                   (or (= (or (json/parse (json/stringify (object/get @t "from" null)) LStr) "") (object/get @x "from" "")) (array/includes (or (json/parse (json/stringify (object/get @t "from" null)) LNodes) []) (object/get @x "from" ""))))))) []
+                   (or (= (or (as (object/get @t "from" null) LStr) "") (object/get @x "from" "")) (array/includes (or (as (object/get @t "from" null) LNodes) []) (object/get @x "from" ""))))))) []
     [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects " (str/concat "trait `" (object/get @x "traitName" "") "` to move `" (object/get @x "from" "") "` to `" (object/get @x "to" "") "` on `" (object/get @x "event" "") "`") ", but nothing in this program provides it — " (str/concat "`" (object/get @x "traitName" "") "` has no such transition") "."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }]))
       (if (= @kind "event") (let ((tr (object/get @tidx (object/get @x "traitName" "") null)))
   (if (or (= @tr null) (array/includes (object/get @tr "emits" []) (object/get @x "event" ""))) []

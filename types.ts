@@ -109,6 +109,8 @@ export interface FailableMeta {
   unlessNonZero?: number[];
   unlessNonNegative?: number[];
   unlessPositive?: number[];
+  /** Argument positions whose type name is a nominal type: the conversion is checked at validate, so the call cannot fail (`as` to CallKey). */
+  unlessNominal?: number[];
 }
 
 /** What the sign of a numeric result is: always at least zero, or derived from the arguments' signs. */

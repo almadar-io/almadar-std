@@ -13,6 +13,8 @@ type LNode = string | number | boolean | [LNode?] | Map string LNode?
 type LNodes = [LNode?]
 type PgVal = string | number | boolean | [PgVal?] | Map string PgVal?
 type PgCalls = [[PgVal?]]
+type PgCall = { path : string!, node : PgVal! }
+type PgIndex = Map string [PgCall]
 type PgField = { type : string?, default : PgVal? }
 type PgEmit = { event : string }
 type PgTransition = { guard : PgVal?, effects : [PgVal?]? }
@@ -76,12 +78,12 @@ orbital OrbLintRedisOrbital {
       LINT_INPUT -> ready when (not @entity.shapesUnread)
         (set @entity.scope @payload.scope)
         (set @entity.egress (or (object/get @payload.program "egress" null) []))
-        (set @entity.sites (or (json/parse (json/stringify (let ((orbitals (object/get @payload.program "orbitals" [])))
+        (set @entity.sites (or (as (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((o (array/nth @orbitals @oi)))
               (let ((trs (object/get @o "traits" [])))
                 (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
-                  (let ((t (json/parse (json/stringify (array/nth @trs @ti)) PgTrait)))
+                  (let ((t (as (array/nth @trs @ti) PgTrait)))
                     (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
                       []
                       (let ((base (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (cfg (or (object/get @t "config" null) {})) (decl (array/map (or (object/get @t "emits" null) []) (fn e (object/get @e "event")))))
@@ -100,11 +102,8 @@ orbital OrbLintRedisOrbital {
                                         (let ((effs (or (object/get @tk "effects" null) [])))
                                           (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat @base ".ticks[" @i "].effects[" @j "]"), node: (array/nth @effs @j) })))))))))))
                             (array/flatten (array/map @places (fn pl
-                              (array/map (or (json/parse (json/stringify (or (tree/fold (object/get @pl "node") (fn (nd kids)
-                                  (array/concat
-                                    (if (and (validate/array @nd) (> (array/len @nd) 0) (validate/string (array/first @nd)) (= (array/first @nd) "redis")) [@nd] [])
-                                    (if (validate/array @nd) (array/flatten (array/filter @kids (fn c (!= @c null)))) (if (validate/object @nd) (array/flatten (array/map (object/keys @kids) (fn key (or (object/get @kids @key []) [])))) [])))) PgVal) [])) PgCalls) [])
-                                (fn call { path: (object/get @pl "path"), call: @call, config: @cfg, declared: @decl })))))))))))))))))))) PgSites) []))
+                              (array/map (or (as (array/map (object/get (or (as (tree/index (object/get @pl "node") ["redis"]) PgIndex) {}) "redis" []) (fn c (object/get @c "node" null))) PgCalls) [])
+                                (fn call { path: (object/get @pl "path"), call: @call, config: @cfg, declared: @decl }))))))))))))))))))) PgSites) []))
         (emit LINT_PLAN { })
       LINT_PLAN -> ready
         (set @entity.segs (array/flatten (array/map (array/range 0 (array/len @entity.sites)) (fn si

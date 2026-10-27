@@ -81,47 +81,47 @@ orbital OrbLintHostCallsOrbital {
         (emit HOST_CALLS_COLLECTED { requestId: @payload.requestId, unread: true, calls: [], facts: {} })
         (emit HC_DRAIN { })
       HC_RUN -> ready when (not @entity.failed)
-        (emit HOST_CALLS_COLLECTED { requestId: @payload.requestId, unread: false, facts: (or (json/parse (json/stringify (or (object/fromEntries (array/flatten (array/map (array/filter (array/unique (array/concat @payload.operators (array/flatten (array/map @payload.fields (fn f (array/filter (object/keys @entity.extras) (fn n (object/has (object/get @entity.extras @n {}) @f)))))))) (fn n (object/has @entity.shapes @n))) (fn n
-          (let ((e (json/parse (json/stringify (object/merge (object/get @entity.shapes @n {}) (object/get @entity.extras @n {}))) HcOpEntry)))
+        (emit HOST_CALLS_COLLECTED { requestId: @payload.requestId, unread: false, facts: (or (as (or (object/fromEntries (array/flatten (array/map (array/filter (array/unique (array/concat @payload.operators (array/flatten (array/map @payload.fields (fn f (array/filter (object/keys @entity.extras) (fn n (object/has (object/get @entity.extras @n {}) @f)))))))) (fn n (object/has @entity.shapes @n))) (fn n
+          (let ((e (as (object/merge (object/get @entity.shapes @n {}) (object/get @entity.extras @n {})) HcOpEntry)))
             (if (= @e null)
               []
               (let ((ps (object/get @e "params" [])) (first (array/first (object/get @e "params" []))))
                 (let ((lp (array/last @ps)))
-                  (let ((lt (if (and (!= @lp null) (= (object/get @lp "name") "options") (validate/object (object/get @lp "type"))) (json/parse (json/stringify (object/get @lp "type")) HcTypeNode) null))
-                        (ft (if (and (!= @first null) (validate/object (object/get @first "type"))) (json/parse (json/stringify (object/get @first "type")) HcTypeNode) null)))
+                  (let ((lt (if (and (!= @lp null) (= (object/get @lp "name") "options") (validate/object (object/get @lp "type"))) (as (object/get @lp "type") HcTypeNode) null))
+                        (ft (if (and (!= @first null) (validate/object (object/get @first "type"))) (as (object/get @first "type") HcTypeNode) null)))
                     (let ((ef (if (= @lt null) null (object/get (object/get @lt "fields" {}) "emit" null))))
-                      (let ((et (if (validate/object @ef) (json/parse (json/stringify @ef) HcTypeNode) null))
+                      (let ((et (if (validate/object @ef) (as @ef HcTypeNode) null))
                             (rf (if (and (!= @ft null) (= (object/get @ft "kind") "object")) (array/sort (object/keys (object/get @ft "fields" {}))) []))
-                            (ix (or (json/parse (json/stringify (array/flatten (array/map @ps (fn pr
+                            (ix (or (as (array/flatten (array/map @ps (fn pr
                                   (let ((nm (object/get @pr "name")))
-                                    (array/map (or (json/parse (json/stringify (or (tree/fold (object/get @pr "type") (fn (n k)
+                                    (array/map (or (as (or (tree/fold (object/get @pr "type") (fn (n k)
                   (let ((none : [HcIdx] []) (nov : [string] []) (noa : [HcArm] []))
                     (if (and (validate/object @n) (validate/string (object/get @n "kind" null)))
                       (let ((kind (object/get @n "kind" "")))
                         (if (= @kind "union")
                           (array/concat
-                            (let ((ws (or (json/parse (json/stringify (let ((arms (or (json/parse (json/stringify (object/get @n "of" null)) HcArms) @noa)))
-                                    (array/filter (array/map (or (json/parse (json/stringify (array/filter @arms (fn t (validate/object @t)))) HcArmNodes) (array/take @noa 0)) (fn t (if (and (= (object/get @t "kind" "") "literal") (validate/string (object/get @t "value" null))) (object/get @t "value") null))) (fn x (!= @x null))))) HcStrs) @nov)))
+                            (let ((ws (or (as (let ((arms (or (as (object/get @n "of" null) HcArms) @noa)))
+                                    (array/filter (array/map (or (as (array/filter @arms (fn t (validate/object @t))) HcArmNodes) (array/take @noa 0)) (fn t (if (and (= (object/get @t "kind" "") "literal") (validate/string (object/get @t "value" null))) (object/get @t "value") null))) (fn x (!= @x null)))) HcStrs) @nov)))
                               (if (> (array/len @ws) 0) [{ p: "", t: "w", v: @ws }] @none))
-                            (or (json/parse (json/stringify (object/get @k "of" null)) HcIdxList) @none))
+                            (or (as (object/get @k "of" null) HcIdxList) @none))
                           (if (= @kind "object")
-                            (array/concat [{ p: "", t: "k", v: (array/sort (object/keys (or (json/parse (json/stringify (object/get @n "fields" null)) HcValMap) {}))) }] (or (json/parse (json/stringify (object/get @k "fields" null)) HcIdxList) @none))
+                            (array/concat [{ p: "", t: "k", v: (array/sort (object/keys (or (as (object/get @n "fields" null) HcValMap) {}))) }] (or (as (object/get @k "fields" null) HcIdxList) @none))
                             (if (= @kind "array")
-                              (array/map (or (json/parse (json/stringify (object/get @k "of" null)) HcIdxList) @none) (fn en { p: (str/concat "[]" (if (= (object/get @en "p") "") "" (if (str/startsWith (object/get @en "p") "[") "" "/")) (object/get @en "p")), t: (object/get @en "t"), v: (object/get @en "v") }))
+                              (array/map (or (as (object/get @k "of" null) HcIdxList) @none) (fn en { p: (str/concat "[]" (if (= (object/get @en "p") "") "" (if (str/startsWith (object/get @en "p") "[") "" "/")) (object/get @en "p")), t: (object/get @en "t"), v: (object/get @en "v") }))
                               @none))))
                       (if (validate/object @n)
-                        (array/flatten (array/map (object/keys @n) (fn key (array/map (or (json/parse (json/stringify (object/get @k @key null)) HcIdxList) @none) (fn en { p: (str/concat @key (if (= (object/get @en "p") "") "" (if (str/startsWith (object/get @en "p") "[") "" "/")) (object/get @en "p")), t: (object/get @en "t"), v: (object/get @en "v") })))))
+                        (array/flatten (array/map (object/keys @n) (fn key (array/map (or (as (object/get @k @key null) HcIdxList) @none) (fn en { p: (str/concat @key (if (= (object/get @en "p") "") "" (if (str/startsWith (object/get @en "p") "[") "" "/")) (object/get @en "p")), t: (object/get @en "t"), v: (object/get @en "v") })))))
                         (if (validate/array @n)
-                          (array/flatten (or (json/parse (json/stringify @k) HcIdxLists) []))
-                          @none))))) HcVal) [])) HcIdxList) []) (fn en { p: (str/concat @nm (if (= (object/get @en "p") "") "" (if (str/startsWith (object/get @en "p") "[") "" "/")) (object/get @en "p")), t: (object/get @en "t"), v: (object/get @en "v") }))))))) HcIdxList) [])))
+                          (array/flatten (or (as @k HcIdxLists) []))
+                          @none))))) HcVal) []) HcIdxList) []) (fn en { p: (str/concat @nm (if (= (object/get @en "p") "") "" (if (str/startsWith (object/get @en "p") "[") "" "/")) (object/get @en "p")), t: (object/get @en "t"), v: (object/get @en "v") })))))) HcIdxList) [])))
                         [[@n, (object/merge (object/pick @e ["minArity", "maxArity", "runsOn", "host", "closedCall", "oauth", "grant", "defaultPorts", "family", "httpWire"]) { params: (array/map @ps (fn pr (if (= (object/get @pr "optional" false) true) (object/pick @pr ["name", "optional", "type"]) (object/pick @pr ["name", "type"])))), hasOptions: (and (!= @lt null) (= (object/get @lt "kind") "object")), optionKeys: (if (and (!= @lt null) (= (object/get @lt "kind") "object")) (array/sort (object/keys (object/get @lt "fields" {}))) []), emitKeys: (if (= @et null) [] (array/sort (object/keys (object/get @et "fields" {})))), hasRequest: (and (!= @ft null) (= (object/get @ft "kind") "object")), requestFields: @rf, requestRequired: (array/filter @rf (fn k (not (array/includes (object/get @ft "optional" []) @k)))),
                           words: (or (object/fromEntries (array/map (array/filter @ix (fn x (= (object/get @x "t") "w"))) (fn x [(object/get @x "p"), (object/get @x "v")]))) {}),
-                          keys: (or (object/fromEntries (array/map (array/filter @ix (fn x (= (object/get @x "t") "k"))) (fn x [(object/get @x "p"), (object/get @x "v")]))) {}) } (if (object/has @e "emitKeys") { emitOrder: (object/get @e "emitKeys") } {}))]]))))))))))) {}) ) HcFacts) {}), calls: (or (json/parse (json/stringify (let ((orbitals @payload.orbitals) (heads (array/unique (array/concat @payload.heads (array/flatten (array/map @payload.fields (fn f (array/filter (object/keys @entity.extras) (fn n (object/has (object/get @entity.extras @n {}) @f))))))))))
+                          keys: (or (object/fromEntries (array/map (array/filter @ix (fn x (= (object/get @x "t") "k"))) (fn x [(object/get @x "p"), (object/get @x "v")]))) {}) } (if (object/has @e "emitKeys") { emitOrder: (object/get @e "emitKeys") } {}))]]))))))))))) {})  HcFacts) {}), calls: (or (as (let ((orbitals @payload.orbitals) (heads (array/unique (array/concat @payload.heads (array/flatten (array/map @payload.fields (fn f (array/filter (object/keys @entity.extras) (fn n (object/has (object/get @entity.extras @n {}) @f))))))))))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((o (array/nth @orbitals @oi)))
               (let ((trs (object/get @o "traits" [])))
                 (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
-                  (let ((t (json/parse (json/stringify (array/nth @trs @ti)) HcTrait)))
+                  (let ((t (as (array/nth @trs @ti) HcTrait)))
                     (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
                       []
                       (let ((base (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tname (object/get @t "name" "")) (tcfg (or (object/get @t "config" null) {})) (decl (array/map (or (object/get @t "emits" null) []) (fn e (object/get @e "event")))))
@@ -140,11 +140,11 @@ orbital OrbLintHostCallsOrbital {
                                         (let ((effs (or (object/get @tk "effects" null) [])))
                                           (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat @base ".ticks[" @i "].effects[" @j "]"), node: (array/nth @effs @j), tick: (object/get @tk "name" ""), bg: (object/get @tk "runsInBackground" false), guard: false })))))))))))
                             (array/flatten (array/map @places (fn pl
-                              (array/map (or (json/parse (json/stringify (or (tree/fold (object/get @pl "node") (fn (nd kids)
+                              (array/map (or (as (or (tree/fold (object/get @pl "node") (fn (nd kids)
                                   (array/concat
                                     (if (and (validate/array @nd) (> (array/len @nd) 0) (validate/string (array/first @nd)) (array/includes @heads (array/first @nd))) [@nd] [])
-                                    (if (validate/array @nd) (array/flatten (array/filter @kids (fn c (!= @c null)))) (if (validate/object @nd) (array/flatten (array/map (object/keys @kids) (fn key (or (object/get @kids @key []) [])))) [])))) HcVal) [])) HcCalls) [])
-                                (fn call { head: (let ((hd (array/first @call))) (if (validate/string @hd) @hd "")), path: (object/get @pl "path"), call: @call, tname: @tname, tick: (object/get @pl "tick"), bg: (object/get @pl "bg"), declared: @decl, declared: @decl, config: @tcfg, inGuard: (object/get @pl "guard") }))))))))))))))))))) ) HcCallList) []) })
+                                    (if (validate/array @nd) (array/flatten (array/filter @kids (fn c (!= @c null)))) (if (validate/object @nd) (array/flatten (array/map (object/keys @kids) (fn key (or (object/get @kids @key []) [])))) [])))) HcVal) []) HcCalls) [])
+                                (fn call { head: (let ((hd (array/first @call))) (if (validate/string @hd) @hd "")), path: (object/get @pl "path"), call: @call, tname: @tname, tick: (object/get @pl "tick"), bg: (object/get @pl "bg"), declared: @decl, declared: @decl, config: @tcfg, inGuard: (object/get @pl "guard") })))))))))))))))))))  HcCallList) []) })
         (emit HC_DRAIN { })
     }
 

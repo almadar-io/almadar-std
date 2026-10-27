@@ -59,21 +59,21 @@ orbital OrbLintEmbedBridgeOrbital {
                             { path: (str/concat "orbitals[" @oi "].traits[" @ti "].stateMachine.transitions[" @xi "]"),
                               event: (object/get @x "event" ""),
                               bridges: (array/flatten (array/map (object/get @x "effects" []) (fn e
-                                (array/flatten (array/map (let ((nd (json/parse (json/stringify (json/nodes @e)) BrNodes))) (if (= @nd null) [] @nd)) (fn n
+                                (array/flatten (array/map (let ((nd (as (json/nodes @e) BrNodes))) (if (= @nd null) [] @nd)) (fn n
                                   (if (validate/array @n)
                                     (if (= (array/len @n) 3)
                                     (if (= (json/stringify (array/nth @n 0)) (json/stringify "behavior/apply"))
                                     (let ((o3 (array/nth @n 2)))
                                       (if (validate/object @o3)
                                         (if (object/has @o3 "bridge")
-                                          (let ((ov (json/parse (json/stringify @o3) BrOverrides))) (if (= @ov null) [] [(object/get @ov "bridge")]))
+                                          (let ((ov (as @o3 BrOverrides))) (if (= @ov null) [] [(object/get @ov "bridge")]))
                                           [])
                                         []))
                                     [])
                                     [])
                                     []))))))),
                               bound: (array/flatten (array/map (object/get @x "effects" []) (fn e
-                                (array/flatten (array/map (let ((nd (json/parse (json/stringify (json/nodes @e)) BrNodes))) (if (= @nd null) [] @nd)) (fn n
+                                (array/flatten (array/map (let ((nd (as (json/nodes @e) BrNodes))) (if (= @nd null) [] @nd)) (fn n
                                   (if (validate/object @n)
                                     (let ((ty (object/get @n "type" null)))
                                       (if (validate/string @ty)

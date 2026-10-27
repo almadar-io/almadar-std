@@ -40,7 +40,7 @@ orbital OrbLintIdLedgerOrbital {
                 (array/filter
                   (array/flatten (array/map (array/range 0 (array/len @authored)) (fn oi
                     (let ((a (array/nth @authored @oi)) (s (array/nth @stamped @oi)))
-                      (let ((at (str/concat "orbitals[" @oi "]")) (ae (if (validate/object (object/get @a "entity" null)) (json/parse (json/stringify (object/get @a "entity" null)) IdEntity) null)) (se (if (validate/object (object/get @s "entity" null)) (json/parse (json/stringify (object/get @s "entity" null)) IdEntity) null)))
+                      (let ((at (str/concat "orbitals[" @oi "]")) (ae (if (validate/object (object/get @a "entity" null)) (as (object/get @a "entity" null) IdEntity) null)) (se (if (validate/object (object/get @s "entity" null)) (as (object/get @s "entity" null) IdEntity) null)))
                         (array/concat
                           [{ path: (str/concat @at ".id"), before: (object/get @a "id" ""), after: (object/get @s "id" "") }]
                           (array/concat
@@ -49,7 +49,7 @@ orbital OrbLintIdLedgerOrbital {
                               [])
                             (array/concat
                               (array/flatten (array/map (array/range 0 (array/len (object/get @a "auxiliaryEntities" []))) (fn ai
-                                (let ((xe (if (validate/object (array/nth (object/get @a "auxiliaryEntities" []) @ai)) (json/parse (json/stringify (array/nth (object/get @a "auxiliaryEntities" []) @ai)) IdEntity) null)) (ye (if (validate/object (array/nth (object/get @s "auxiliaryEntities" []) @ai)) (json/parse (json/stringify (array/nth (object/get @s "auxiliaryEntities" []) @ai)) IdEntity) null)))
+                                (let ((xe (if (validate/object (array/nth (object/get @a "auxiliaryEntities" []) @ai)) (as (array/nth (object/get @a "auxiliaryEntities" []) @ai) IdEntity) null)) (ye (if (validate/object (array/nth (object/get @s "auxiliaryEntities" []) @ai)) (as (array/nth (object/get @s "auxiliaryEntities" []) @ai) IdEntity) null)))
                                   (if (and (!= @xe null) (= (object/get @xe "extends" "") ""))
                                     [{ path: (str/concat @at ".auxiliaryEntities[" @ai "].id"), before: (object/get @xe "id" ""), after: (object/get @ye "id" "") }]
                                     [])))))

@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-27T19:10:04.379Z",
+  "generated": "2026-10-27T19:38:53.527Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -2662,10 +2662,24 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": {
-        "kind": "shape"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "shape"
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
       },
-      "description": "Explicit cast: the value, converted to the named type. Legal only where the type relation allows the conversion with a cast (a string to CallKey); plain assignment never makes it. A CallKey is a string at rest, so the value is unchanged; an empty string is invalid.",
+      "description": "Explicit cast: the value, converted to the named type. To a nominal type it is legal only where the type relation allows the conversion with a cast (a string to CallKey); plain assignment never makes it. A CallKey is a string at rest, so the value is unchanged; an empty string is invalid. To a declared type it is a checked narrowing: the value when it is of that type, null when it is not (a union, a list of SExpr or an operator result read as the record it holds).",
       "module": "core",
+      "failable": {
+        "unlessNominal": [
+          1
+        ]
+      },
       "params": [
         {
           "name": "value",
@@ -25794,7 +25808,7 @@
           }
         }
       },
-      "description": "Every call form in a value, grouped by its head, in one walk: a call form is a list whose first item is a string listed in `heads`. The walk is pre-order over lists (items in order) and objects (values in key order), like json/nodes, and continues inside a call form. Each hit carries its node and its path from the value: `[i]` for a list item, `.key` for an object field (e.g. `[2][1].then`). The result has one entry per listed head, an empty list when the head never occurs. For indexing a program once so readers look up the calls they inspect instead of walking it",
+      "description": "Every call form in a value, grouped by its head, in one walk: a call form is a list whose first item is a string listed in `heads`. The walk is pre-order over lists (items in order) and objects (values in key order), like json/nodes, and continues inside a call form. Each hit carries its node and its path from the value: `[i]` for a list item, `.key` for an object field and `key` for a field of the value itself (e.g. `orbitals[0].traits[1]`, `[2][1].then`). The result has one entry per listed head, an empty list when the head never occurs. For indexing a program once so readers look up the calls they inspect instead of walking it",
       "module": "json",
       "params": [
         {

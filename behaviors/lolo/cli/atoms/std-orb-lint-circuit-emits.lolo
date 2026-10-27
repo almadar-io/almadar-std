@@ -10,6 +10,8 @@ uses Spec from "almadar-std/lint-circuit-emits"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type CeNode = string | number | boolean | [CeNode?] | Map string CeNode?
+type CeCall = { path : string!, node : CeNode! }
+type CeIndex = Map string [CeCall]
 type CeFrom = string | [string]
 type CeTransition = { from : CeFrom, to : string, event : string, effects : [CeNode?] }
 type CeMachine = { transitions : [CeTransition] }
@@ -61,12 +63,8 @@ orbital OrbLintCircuitEmitsOrbital {
                               (array/concat
                                 (array/concat
                                   (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
-                                    (let ((r (tree/fold (array/nth @effs @ej) (fn (n k)
-                                          (if (validate/array @n)
-                                            (let ((kr (array/map @k (fn q (if (= @q null) @nr @q)))))
-                                              { s: (array/concat (if (and (>= (array/len @n) 2) (let ((h0 (array/nth @n 0))) (if (validate/string @h0) (= @h0 "emit") false))) (let ((ev (array/nth @n 1))) (if (validate/string @ev) (if (object/has @busSet (str/replaceAll (str/replaceAll @ev "~" "~t") "." "~d")) (array/append @nos @ev) @nos) @nos)) @nos) (array/flatten (array/map @kr (fn q (object/get @q "s"))))), c: 0, m: false, p: false, en: false, h: @nohit })
-                                            @nr)) "CeNode")))
-                                      (array/map (object/get (if (= @r null) @nr @r) "s") (fn ev
+                                    (let ((evs (array/flatten (array/map (array/filter (object/get (or (as (tree/index (let ((e (array/nth @effs @ej))) (if (validate/array @e) @e [])) ["emit"]) CeIndex) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (if (and (validate/array @n) (>= (array/len @n) 2)) (let ((ev (array/nth @n 1))) (if (validate/string @ev) (if (object/has @busSet (str/replaceAll (str/replaceAll @ev "~" "~t") "." "~d")) [@ev] @nos) @nos)) @nos)))))))
+ (array/map @evs (fn ev
                                         { code: "ORB_CIRCUIT_LIFECYCLE_EMIT_UNDELIVERED", path: (str/concat @ep @ej "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " emits lifecycle event '" @ev "' — the bus never delivers it"), suggestion: "route a named event whose arm re-enters via `EVENT -> ...`, or inline the target state's own effects directly into this arm; lifecycle events are never delivered through (emit ...)", severity: "error" }))))))
                                   (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
                                     (let ((e (array/nth @effs @ej)))
@@ -91,17 +89,9 @@ orbital OrbLintCircuitEmitsOrbital {
                                             @nof))
                                         @nof))))))
                                 (if (not (array/some @tl (fn t2 (and (= (object/get @t2 "e") (object/get @x "e")) (array/includes (object/get @t2 "f") (object/get @x "to")))))) @nof
-                                  (let ((mut (object/get (let ((q (tree/fold @effs (fn (n k)
-                                              (if (validate/array @n)
-                                                { s: @nos, c: 0, m: (or (and (>= (array/len @n) 2) (let ((h0 (array/nth @n 0))) (if (validate/string @h0) (= @h0 "set") false)) (let ((tg (array/nth @n 1))) (if (validate/string @tg) (or (= @tg (quote "@entity")) (str/startsWith @tg (quote "@entity."))) false))) (array/some @k (fn q2 (object/get (if (= @q2 null) @nr @q2) "m")))), p: false, en: false, h: @nohit }
-                                                @nr)) "CeNode"))) (if (= @q null) @nr @q)) "m")))
+                                  (let ((mut (array/some (array/filter (object/get (or (as (tree/index (if (validate/array @effs) @effs []) ["set"]) CeIndex) {}) "set" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (and (validate/array @n) (>= (array/len @n) 2) (let ((tg (array/nth @n 1))) (if (validate/string @tg) (or (= @tg (quote "@entity")) (str/startsWith @tg (quote "@entity."))) false))))))))
                                     (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
-                                      (let ((cnt (object/get (let ((q (tree/fold (array/nth @effs @ej) (fn (n k)
-                                              (if (validate/array @n)
-                                                (let ((kr (array/map @k (fn q2 (if (= @q2 null) @nr @q2)))))
-                                                  { s: @nos, m: false, p: false, en: false, h: @nohit,
-                                                    c: (+ (array/reduce @kr 0 (fn (acc q2) (+ @acc (object/get @q2 "c"))))
-                                                          (if (and (>= (array/len @n) 2) (let ((h0 (array/nth @n 0))) (if (validate/string @h0) (= @h0 "emit") false)) (let ((h1 (array/nth @n 1))) (if (validate/string @h1) (= @h1 (object/get @x "e")) false)))
+(let ((cnt (array/reduce (array/filter (object/get (or (as (tree/index (let ((e (array/nth @effs @ej))) (if (validate/array @e) @e [])) ["emit"]) CeIndex) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) 0 (fn (acc c) (+ @acc (let ((n (object/get @c "node"))) (if (and (validate/array @n) (>= (array/len @n) 2) (let ((h1 (array/nth @n 1))) (if (validate/string @h1) (= @h1 (object/get @x "e")) false)))
                                                             (if (< (array/len @n) 3) 1
                                                               (let ((pl (array/nth @n 2)))
                                                                 (let ((pf (object/get (let ((q3 (tree/fold @pl (fn (n2 k2)
@@ -121,8 +111,7 @@ orbital OrbLintCircuitEmitsOrbital {
                                                                                       { s: @nos, c: 0, m: false, h: @nohit, p: false, en: (array/some (object/values @k2) (fn q4 (object/get (if (= @q4 null) @nr @q4) "en"))) }
                                                                                       @nr)))) "CeNode"))) (if (= @q3 null) @nr @q3)) "en")))
                                                                   (if (or @pf (and @mut @ef)) 0 1))))
-                                                            0)) }) 
-                                                @nr)) "CeNode"))) (if (= @q null) @nr @q)) "c")))
+ 0)))))))
                                         (array/map (array/range 0 @cnt) (fn z
                                           { code: "ORB_CIRCUIT_SELF_EMIT_LOOP", path: (str/concat @ep @ej "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " re-emits its own trigger event '" (object/get @x "e") "' with a constant payload and a same-event arm is reachable at the target state — the runtime path loops forever re-entering this arm"), suggestion: "this arm re-emits its own trigger event and a same-event arm is reachable at the target state (this very arm, when it is a self-transition) with a constant payload — the runtime path loops forever re-entering this arm. Transition directly, emit a differently-named event, or make the payload derive from @payload / a mutated @entity so each hop makes progress.", severity: "error" }))))))))))))))))))))))))))
         (emit LINT_FINISH { })

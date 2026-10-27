@@ -55,7 +55,7 @@ orbital OrbLintCircularDependenciesOrbital {
           (array/some (object/get (object/get @payload.operators @k) "params" []) (fn pr
             (let ((ty (object/get @pr "type" null)))
               (if (validate/object @ty)
-                (let ((nd (json/parse (json/stringify @ty) CycTypeNode)))
+                (let ((nd (as @ty CycTypeNode)))
                   (if (= @nd null) false (object/has (object/get @nd "fields" {}) "emit")))
                 false))))))))
       SHAPES_UNREAD -> ready
@@ -104,18 +104,18 @@ orbital OrbLintCircularDependenciesOrbital {
                                                   (if (or (= (json/stringify @hd) (json/stringify "fetch")) (= (json/stringify @hd) (json/stringify "persist")))
                                                     (array/flatten (array/map @tn (fn mi
                                                       (if (not (validate/object @mi)) @nos
-                                                        (let ((mo3 (json/parse (json/stringify @mi) CycMap)))
+                                                        (let ((mo3 (as @mi CycMap)))
                                                           (if (= @mo3 null) @nos
                                                             (let ((mem (object/get @mo3 "emit" null)))
                                                               (if (not (validate/object @mem)) @nos
-                                                                (let ((me (json/parse (json/stringify @mem) CycMap)))
+                                                                (let ((me (as @mem CycMap)))
                                                                   (if (= @me null) @nos
                                                                     (array/flatten (array/map (object/values @me) (fn mv
                                                                       (if (and (validate/string @mv) (!= (str/concat @mv "") "")) [(str/concat @mv "")] @nos))))))))))))))
                                                     @nos)))
                                               (array/flatten (array/map (or @fk @nokids) (fn fr (object/get (if (= @fr null) @nr @fr) "ev" @nos))))) })
                                         (if (validate/object @tn)
-                                          { ev: (let ((mo (json/parse (json/stringify @tn) CycMap)))
+                                          { ev: (let ((mo (as @tn CycMap)))
                                               (if (= @mo null) @nos
                                                 (let ((ev2 (object/get @mo "emit" null)))
                                                   (if (validate/string @ev2) [(str/concat @ev2 "")] @nos)))) }
@@ -138,7 +138,7 @@ orbital OrbLintCircularDependenciesOrbital {
                                   (let ((propEvs (array/unique (array/map (array/filter (array/filter @trs (fn pf (array/includes @trigs (object/get @pf "event" "")))) (fn pt2
                                           (array/some (object/get @pt2 "effects" @nonodes) (fn pe
                                             (if (validate/array @pe)
-                                              (let ((pa (json/parse (json/stringify @pe) CycNodes)))
+                                              (let ((pa (as @pe CycNodes)))
                                                 (if (= @pa null) false
                                                   (if (= (array/len @pa) 0) false
                                                     (and (>= (array/len @pa) 2)
@@ -147,10 +147,10 @@ orbital OrbLintCircularDependenciesOrbital {
                                                             (and (validate/string @p0) (array/includes @propops (str/concat @p0 ""))
                                                               (array/some (array/drop @pa 1) (fn po
                                                                 (and (validate/object @po)
-                                                                  (let ((pmo (json/parse (json/stringify @po) CycMap)))
+                                                                  (let ((pmo (as @po CycMap)))
                                                                     (and (!= @pmo null) (object/has @pmo "emit")))))))))))))
                                               (if (validate/object @pe)
-                                                (let ((pm2 (json/parse (json/stringify @pe) CycMap)))
+                                                (let ((pm2 (as @pe CycMap)))
                                                   (if (= @pm2 null) false
                                                     (let ((pe2 (object/get @pm2 "emit" null))) (validate/string @pe2))))
                                                 false)))))) (fn pt (object/get @pt "event" ""))))))

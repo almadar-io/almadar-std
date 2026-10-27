@@ -14,6 +14,8 @@ type ReachVal = string | number | boolean | [ReachVal?] | Map string ReachVal?
 type ReachPage = { path : string, protocol : string, label : string }
 type ReachField = { default : ReachVal? }
 type ReachStrings = [string]
+type ReachCall = { path : string!, node : ReachVal! }
+type ReachIndex = Map string [ReachCall]
 type ReachEffect = [ReachVal?]
 type ReachEffects = { effects : [ReachVal?] }
 type ReachMachine = { transitions : [ReachEffects] }
@@ -48,7 +50,7 @@ orbital OrbLintPageUnreachableOrbital {
               (let ((trCfg (array/map @trs (fn tr (array/filter (array/map (object/values (object/get @tr "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))))
                     (orbCfg (array/map @orbitals (fn orb (array/filter (array/map (object/values (object/get @orb "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))))
                     (appCfgDefaults (array/filter (array/map (object/values @appCfg) (fn f (object/get @f "default" null))) (fn v (!= @v null))))
-                    (payloads (array/filter (array/map (array/filter (array/map @effects (fn x (let ((w (object/get @x "w" null))) (if (validate/array @w) (or (json/parse (json/stringify @w) ReachEffect) []) [])))) (fn e (and (validate/array @e) (> (array/len @e) 2) (validate/string (array/first @e)) (= (array/first @e) "render-ui")))) (fn e (array/nth @e 2))) (fn v (!= @v null)))))
+                    (payloads (array/filter (array/map (array/filter (array/map @effects (fn x (let ((w (object/get @x "w" null))) (if (validate/array @w) (or (as @w ReachEffect) []) [])))) (fn e (and (validate/array @e) (> (array/len @e) 2) (validate/string (array/first @e)) (= (array/first @e) "render-ui")))) (fn e (array/nth @e 2))) (fn v (!= @v null)))))
                 (let ((hrefs (or (tree/fold (or (json/parse (json/stringify { cfg: @trCfg, pay: @payloads }) ReachVal) "") (fn (n kids)
                                   (array/concat
                                     (if (and (validate/object @n) (not (validate/array @n)))
@@ -56,7 +58,7 @@ orbital OrbLintPageUnreachableOrbital {
                                         (let ((hv (object/get @n @k null)))
                                           (if (and (validate/string @hv) (!= @hv "") (not (str/startsWith @hv (quote "@"))))
                                             [@hv]
-                                            (let ((parts (if (validate/array @hv) (json/parse (json/stringify @hv) ReachStrings) null)))
+                                            (let ((parts (if (validate/array @hv) (as @hv ReachStrings) null)))
                                               (if (and (!= @parts null) (> (array/len @parts) 1) (= (array/first @parts) "str/concat")
                                                        (array/every (array/drop @parts 1) (fn p (not (str/startsWith @p (quote "@"))))))
                                                 (if (= (str/join (array/drop @parts 1) "") "") [] [(str/join (array/drop @parts 1) "")])
@@ -66,17 +68,16 @@ orbital OrbLintPageUnreachableOrbital {
                       (navs (array/concat
                               (if (= @signIn "") [] [@signIn])
                               (array/flatten (array/map @effects (fn v
-                                (tree/fold @v (fn (n kids)
-                                  (array/concat
-                                    (if (and (validate/array @n) (> (array/len @n) 1) (validate/string (array/first @n)) (= (array/first @n) "navigate"))
+                                (array/flatten (array/map (object/get (or (as (tree/index @v ["navigate"]) ReachIndex) {}) "navigate" []) (fn c
+                                  (let ((n (or (as (object/get @c "node") ReachEffect) [])))
+                                    (if (> (array/len @n) 1)
                                       (let ((tg (array/nth @n 1)))
                                         (if (validate/string @tg)
                                           [@tg]
                                           (if (and (validate/array @tg) (> (array/len @tg) 1) (= (array/first @tg) "str/concat") (validate/string (array/nth @tg 1)))
                                             [(array/nth @tg 1)]
                                             [])))
-                                      [])
-                                    (if (validate/array @n) (array/flatten (array/filter @kids (fn r (!= @r null)))) (if (validate/object @n) (array/flatten (array/filter (object/values @kids) (fn r (!= @r null)))) [])))) ReachVal))))))
+                                      []))))))))))
                       (sigil (= (tree/fold (or (json/parse (json/stringify { app: @appCfgDefaults, orb: @orbCfg, tr: @trCfg, eff: @transEffects }) ReachVal) "") (fn (n kids)
                                       (if (validate/string @n)
                                         (= @n (quote "@pages"))

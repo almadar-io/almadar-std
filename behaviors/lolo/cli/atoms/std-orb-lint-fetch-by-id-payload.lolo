@@ -18,11 +18,12 @@ type FbEvent = { key : string, payloadSchema : [FbField] }
 type FbTransition = { effects : [FbVal] }
 type FbMachine = { events : [FbEvent], transitions : [FbTransition] }
 type FbTrait = { name : string, emits : [FbEmit], stateMachine : FbMachine }
-type FbFounds = [FbFound]
 type FbHit = { i : number, e : string, id : boolean }
 type FbOrbital = { name : string, traits : [FbVal] }
 type FbProgram = { orbitals : [FbOrbital] }
 type FbFound = { e : string, id : boolean }
+type FbCall = { path : string!, node : FbVal! }
+type FbIndex = Map string [FbCall]
 
 orbital OrbLintFetchByIdPayloadOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -40,31 +41,29 @@ orbital OrbLintFetchByIdPayloadOrbital {
       INIT -> ready
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (fetches (object/get (or (as (tree/index @payload.program ["fetch"]) FbIndex) {}) "fetch" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((o (array/nth @orbitals @oi)))
               (let ((trs (object/get @o "traits" [])))
                 (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
-                  (let ((t (json/parse (json/stringify (array/nth @trs @ti)) FbTrait)))
+                  (let ((t (as (array/nth @trs @ti) FbTrait)))
                     (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
                       []
                       (let ((sm (object/get @t "stateMachine")))
                         (let ((trans (object/get @sm "transitions" [])))
                           (let ((found  (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
-                                  (array/map (or (json/parse (json/stringify (or (tree/fold (object/get (array/nth @trans @i) "effects" []) (fn (n k)
-                                      (if (validate/array @n)
-                                        (array/concat
-                                          (if (and (> (array/len @n) 0) (validate/string (array/nth @n 0)) (= (array/nth @n 0) "fetch"))
-                                            (array/flatten (array/map (array/slice @n 2 (array/len @n)) (fn a
-                                              (if (validate/object @a)
-                                                (let ((em (object/get @a "emit" null)))
-                                                  (if (and (validate/object @em) (validate/string (object/get @em "success" null)) (!= (object/get @em "success" "") ""))
-                                                    [{ e: (object/get @em "success"), id: (object/has @a "id") }]
-                                                    []))
-                                                []))))
-                                            [])
-                                          (array/flatten (array/filter @k (fn c (!= @c null)))))
-                                        [])) FbVal) [])) FbFounds) []) (fn p { i: @i, e: (object/get @p "e"), id: (object/get @p "id") })))))))
+                                  (let ((pre (str/concat "orbitals[" @oi "].traits[" @ti "].stateMachine.transitions[" @i "].effects[")))
+                                    (array/flatten (array/map (array/filter @fetches (fn c (and (str/startsWith (object/get @c "path" "") @pre) (not (str/includes (str/slice (object/get @c "path" "") (str/len @pre)) "."))))) (fn c
+                                      (let ((n (object/get @c "node" null)))
+                                        (if (validate/array @n)
+                                          (array/flatten (array/map (array/slice @n 2 (array/len @n)) (fn a
+                                            (if (validate/object @a)
+                                              (let ((em (object/get @a "emit" null)))
+                                                (if (and (validate/object @em) (validate/string (object/get @em "success" null)) (!= (object/get @em "success" "") ""))
+                                                  (let ((hit (as { i: @i, e: (object/get @em "success"), id: (object/has @a "id") } FbHit))) (if (= @hit null) [] [@hit]))
+                                                  []))
+                                              []))))
+                                          [])))))))))))
                             (let ((ids  (array/filter @found (fn p (object/get @p "id")))))
                               (let ((lists  (array/map (array/filter @found (fn p (not (object/get @p "id")))) (fn p (object/get @p "e")))))
                                 (let ((evs  (array/unique (array/map @ids (fn p (object/get @p "e"))))))

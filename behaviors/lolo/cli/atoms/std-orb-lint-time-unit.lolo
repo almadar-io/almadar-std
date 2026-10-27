@@ -52,11 +52,11 @@ orbital OrbLintTimeUnitOrbital {
               (let ((p (array/nth @ps @j)))
                 (if (!= (object/get @p "name" "") "unit")
                   []
-                  (let ((nd (json/parse (json/stringify (object/get @p "type" null)) TimeUnionNode)))
+                  (let ((nd (as (object/get @p "type" null) TimeUnionNode)))
                     (if (and (!= @nd null) (= (object/get @nd "kind") "union"))
                       [{ op: @k, idx: (+ @j 1), values: (array/map (object/get @nd "of") (fn x (object/get @x "value" ""))) }]
                       [])))))))))))))
-          (or (json/parse (json/stringify (or (object/fromEntries (array/map @ents (fn e [(object/get @e "op"), { idx: (object/get @e "idx"), values: (object/get @e "values") }]))) {})) TimeUnitMap) {})))
+          (or (as (or (object/fromEntries (array/map @ents (fn e [(object/get @e "op"), { idx: (object/get @e "idx"), values: (object/get @e "values") }]))) {}) TimeUnitMap) {})))
       SHAPES_UNREAD -> ready
         (set @entity.shapesUnread true)
       LINT_INPUT -> ready

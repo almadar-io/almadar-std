@@ -10,6 +10,9 @@ uses Spec from "almadar-std/lint-http-site"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type HsVal = string | number | boolean | [HsVal?] | Map string HsVal?
+type HsNode = [HsVal?]
+type HsCall = { path : string!, node : HsVal! }
+type HsIndex = Map string [HsCall]
 type HsTransition = { event : string, effects : [HsVal]? }
 type HsTick = { name : string, runsInBackground : boolean?, effects : [HsVal]? }
 type HsMachine = { transitions : [HsTransition]? }
@@ -51,7 +54,7 @@ orbital OrbLintHttpSiteOrbital {
             (array/flatten (array/map (array/range 0 (array/len @ps)) (fn i
               (let ((ty (object/get (array/nth @ps @i) "type" null)))
                 (if (validate/object @ty)
-                  (let ((nd (json/parse (json/stringify @ty) HsTypeNode)))
+                  (let ((nd (as @ty HsTypeNode)))
                     (if (and (!= @nd null) (= (object/get @nd "kind" "") "entity")) [[@k, @i]] []))
                   [])))))))))))
       SHAPES_UNREAD -> ready
@@ -66,7 +69,7 @@ orbital OrbLintHttpSiteOrbital {
  (let ((oi (array/nth @op 0)) (o (array/nth @op 1)))
   (let ((trs (object/get @o "traits" [])))
    (array/flatten (array/map (array/zip (array/range 0 (array/len @trs)) @trs) (fn tp
-    (let ((ti (array/nth @tp 0)) (t (json/parse (json/stringify (array/nth @tp 1)) HsTrait)))
+    (let ((ti (array/nth @tp 0)) (t (as (array/nth @tp 1) HsTrait)))
      (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
       []
       (let ((st (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tname (object/get @t "name")) (dispatch (object/get @t "dispatch" "")))
@@ -76,14 +79,10 @@ orbital OrbLintHttpSiteOrbital {
                       (array/map (array/zip (array/range 0 (array/len @ticks)) @ticks) (fn q { kind: "k", i: (array/nth @q 0), label: (object/get (array/nth @q 1) "name"), bg: (object/get (array/nth @q 1) "runsInBackground" false), effs: (or (object/get (array/nth @q 1) "effects" []) []) })))))
          (let ((gis (array/map @grps (fn g
                  (let ((effs (object/get @g "effs")))
-                  (let ((cls (array/map @effs (fn eff (if (tree/fold @eff (fn (hn hk) (if (validate/string @hn) (= @hn "http") (if (validate/array @hk) (array/includes @hk true) (array/some (object/keys @hk) (fn hq (object/get @hk @hq)))))) HsVal) (or (tree/fold @eff (fn (n k)
-  (let ((nos : [string] []))
-    (array/concat
-      (if (and (validate/array @n) (> (array/len @n) 0) (validate/string (array/first @n)) (= (array/first @n) "http"))
-        (let ((r (if (> (array/len @n) 4) (array/nth @n 4) null)))
-          [(if (validate/object @r) (if (object/has @r "auth") "keyed" "keyless") (if (= @r null) "keyless" "opaque"))])
-        @nos)
-      (if (validate/array @n) (array/flatten (array/filter @k (fn c (!= @c null)))) (if (validate/object @n) (array/flatten (array/map (object/keys @k) (fn key (or (object/get @k @key) @nos)))) @nos))))) HsVal) @nos) @nos)))))
+                  (let ((cls (array/map @effs (fn eff (if (tree/fold @eff (fn (hn hk) (if (validate/string @hn) (= @hn "http") (if (validate/array @hk) (array/includes @hk true) (array/some (object/keys @hk) (fn hq (object/get @hk @hq)))))) HsVal) (array/map (object/get (or (as (tree/index @eff ["http"]) HsIndex) {}) "http" []) (fn c
+  (let ((n (or (as (object/get @c "node") HsNode) [])))
+    (let ((r (if (> (array/len @n) 4) (array/nth @n 4) null)))
+      (if (validate/object @r) (if (object/has @r "auth") "keyed" "keyless") (if (= @r null) "keyless" "opaque")))))) @nos)))))
                    { kind: (object/get @g "kind"), i: (object/get @g "i"), label: (object/get @g "label"), bg: (object/get @g "bg"),
                      keyed: (array/map @cls (fn c (array/len (array/filter @c (fn x (= @x "keyed")))))),
                      mixed: (if (array/some @cls (fn c (array/includes @c "keyless"))) (array/some @effs (fn eff (object/get (tree/fold @eff (fn (n k)

@@ -14,6 +14,8 @@ type IxOpts = { filter : IxVal, orderBy : string, id : IxVal, nearest : IxVal }
 type IxNodes = [IxVal?]
 type IxFound = { e : string, o : IxOpts }
 type IxFounds = [IxFound]
+type IxCall = { path : string!, node : [IxVal?]! }
+type IxIdx = Map string [IxCall]
 type IxLeaf = { k : string, f : string }
 type IxLeaves = [IxLeaf]
 type IxField = { name : string, type : string }
@@ -82,14 +84,7 @@ orbital OrbLintQueryIndexOrbital {
         (let ((t (array/nth @trs @ti)))
          (let ((trans (object/get (object/get @t "stateMachine" {}) "transitions" [])))
           (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ni
-           (let ((fetches (or (json/parse (json/stringify (or (tree/fold (object/get (array/nth @trans @ni) "effects" []) (fn (n k)
-                  (if (validate/array @n)
-                   (array/concat
-                    (if (and (> (array/len @n) 1) (validate/string (array/nth @n 0)) (= (array/nth @n 0) "fetch") (validate/string (array/nth @n 1)))
-                     [{ e: (array/nth @n 1), o: (if (and (> (array/len @n) 2) (validate/object (array/nth @n 2))) (array/nth @n 2) {}) }]
-                     [])
-                    (array/flatten (array/filter @k (fn c (!= @c null)))))
-                   [])) IxVal) [])) IxFounds) [])))
+           (let ((fetches (or (as (array/flatten (array/map (array/filter (object/get (or (as (tree/index (object/get (array/nth @trans @ni) "effects" []) ["fetch"]) IxIdx) {}) "fetch" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node" null))) (if (and (> (array/len @n) 1) (validate/string (array/nth @n 1))) [{ e: (array/nth @n 1), o: (if (and (> (array/len @n) 2) (validate/object (array/nth @n 2))) (array/nth @n 2) {}) }] []))))) IxFounds) [])))
             (array/flatten (array/map @fetches (fn fx
              (let ((ename (object/get @fx "e" ""))
                    (opts (object/get @fx "o" {})))
@@ -103,7 +98,7 @@ orbital OrbLintQueryIndexOrbital {
                    (let ((mode (object/get (object/get (object/get (object/get @drv "config" {}) "queryCapabilities" {}) "default" {}) "indexes" "")))
                     (if (not (array/includes ["deploy", "none"] @mode))
                      []
-                     (let ((leaves (let ((fs (object/get @opts "filter" null))) (if (= @fs null) [] (or (json/parse (json/stringify (or (tree/fold @fs (fn (n k)
+                     (let ((leaves (let ((fs (object/get @opts "filter" null))) (if (= @fs null) [] (or (as (or (tree/fold @fs (fn (n k)
                             (if (validate/array @n)
                              (let ((h (if (and (> (array/len @n) 0) (validate/string (array/nth @n 0))) (array/nth @n 0) "")))
                               (if (= @h "and")
@@ -111,14 +106,14 @@ orbital OrbLintQueryIndexOrbital {
                                (if (array/includes ["or", "not"] @h)
                                 [{ k: "complex", f: "" }]
                                 (if (array/includes ["=", ">", ">=", "<", "<="] @h)
-                                 (let ((a (or (json/parse (json/stringify (array/nth @n 1)) IxNodes) []))
-                                       (b (or (json/parse (json/stringify (array/nth @n 2)) IxNodes) [])))
+                                 (let ((a (or (as (array/nth @n 1) IxNodes) []))
+                                       (b (or (as (array/nth @n 2) IxNodes) [])))
                                   (let ((fa (if (and (= (array/len @a) 3) (= (array/nth @a 0) "object/get") (= (array/nth @a 1) (quote "@entity")) (validate/string (array/nth @a 2))) (array/nth @a 2) ""))
                                         (fb (if (and (= (array/len @b) 3) (= (array/nth @b 0) "object/get") (= (array/nth @b 1) (quote "@entity")) (validate/string (array/nth @b 2))) (array/nth @b 2) "")))
                                    (let ((fld (if (!= @fa "") @fa @fb)))
                                     (if (= @fld "") [] [{ k: (if (= @h "=") "eq" "range"), f: @fld }]))))
                                  []))))
-                             [])) IxVal) [])) IxLeaves) [])))))
+                             [])) IxVal) []) IxLeaves) [])))))
                       (let ((E (array/unique (array/map (array/filter @leaves (fn l (= (object/get @l "k" "") "eq"))) (fn l (object/get @l "f" "")))))
                             (R (array/unique (array/map (array/filter @leaves (fn l (= (object/get @l "k" "") "range"))) (fn l (object/get @l "f" ""))))))
                        (let ((ov (object/get @opts "orderBy" "")))

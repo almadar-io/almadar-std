@@ -10,6 +10,8 @@ uses Spec from "almadar-std/lint-listen-wildcard-unkeyed"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type CkVal = string | number | boolean | [CkVal?] | Map string CkVal?
+type CkCall = { path : string!, node : CkVal! }
+type CkIndex = Map string [CkCall]
 type CkField = { name : string, type : string }
 type CkEmit = { event : string, payloadSchema : [CkField] }
 type CkSource = { kind : string }
@@ -37,18 +39,15 @@ orbital OrbLintListenWildcardUnkeyedOrbital {
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (let ((keyed (array/flatten (array/map @orbitals (fn orb
                   (array/flatten (array/map (object/get @orb "traits" []) (fn tr
-                    (let ((td (json/parse (json/stringify @tr) CkTraitView)))
+                    (let ((td (as @tr CkTraitView)))
                       (array/flatten (array/map (object/get @td "emits" []) (fn em
                         (if (array/some (object/get @em "payloadSchema" []) (fn f (and (= (object/get @f "name" "") "key") (= (object/get @f "type" "") "CallKey"))))
                           [(object/get @em "event" "")]
                           [])))))))))))))
             (array/flatten (array/map @orbitals (fn orb
               (array/flatten (array/map (object/get @orb "traits" []) (fn tr
-                (let ((td (json/parse (json/stringify @tr) CkTraitView)))
-                  (if (!= (tree/fold @tr (fn (n k)
-                          (if (validate/array @n)
-                            (or (if (= (array/len @n) 3) (if (and (validate/string (array/nth @n 0)) (validate/string (array/nth @n 2))) (and (= (array/nth @n 0) "as") (= (array/nth @n 2) "CallKey")) false) false) (array/some @k (fn r (= @r true))))
-                            (if (validate/object @n) (array/some (object/values @k) (fn r (= @r true))) false))) CkVal) true)
+                (let ((td (as @tr CkTraitView)))
+                  (if (not (array/some (object/get (or (as (tree/index @tr ["as"]) CkIndex) {}) "as" []) (fn c (let ((n (object/get @c "node"))) (and (validate/array @n) (= (array/len @n) 3) (validate/string (array/nth @n 0)) (validate/string (array/nth @n 2)) (= (array/nth @n 0) "as") (= (array/nth @n 2) "CallKey"))))))
                     []
                     (array/flatten (array/map (object/get @td "listens" []) (fn l
                       (let ((ev (object/get @l "event" "")) (triggered (object/get @l "triggers" (object/get @l "event" ""))))

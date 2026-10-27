@@ -456,9 +456,10 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 2,
     maxArity: 2,
     description:
-      'Explicit cast: the value, converted to the named type. Legal only where the type relation allows the conversion with a cast (a string to CallKey); plain assignment never makes it. A CallKey is a string at rest, so the value is unchanged; an empty string is invalid.',
+      'Explicit cast: the value, converted to the named type. To a nominal type it is legal only where the type relation allows the conversion with a cast (a string to CallKey); plain assignment never makes it. A CallKey is a string at rest, so the value is unchanged; an empty string is invalid. To a declared type it is a checked narrowing: the value when it is of that type, null when it is not (a union, a list of SExpr or an operator result read as the record it holds).',
     hasSideEffects: false,
-    returnType: SHAPE,
+    failable: { unlessNominal: [1] },
+    returnType: nullable(SHAPE),
     params: [
       { name: 'value', type: tv('T'), description: 'The value to convert' },
       { name: 'type', type: SHAPE, description: 'The name of the type to convert to' },

@@ -11,6 +11,8 @@ type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type StoreShape = string | number | boolean | [StoreShape] | Map string StoreShape
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type StCall = { path : string!, node : StoreShape! }
+type StIndex = Map string [StCall]
 type StoreBindArm = { event : string, effects : [StoreShape] }
 type StoreBindMachine = { transitions : [StoreBindArm] }
 type StoreBindTrait = { name : string, stateMachine : StoreBindMachine }
@@ -76,12 +78,7 @@ orbital OrbLintStoreBindingOrbital {
                       (array/flatten (array/map (object/get @orb "traits" []) (fn td
                         (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "transitions" []) (fn tr
                           (array/flatten (array/map (object/get @tr "effects" []) (fn ef
-                            (let ((fres (tree/fold @ef (fn (n k)
-                                (if (validate/array @n)
-                                  (array/concat
-                                    (let ((h0 (array/nth @n 0)) (a0 (array/nth @n 1))) (if (validate/string @h0) (if (= @h0 "emit") (if (validate/string @a0) (if (array/includes ["ROW_READ", "ROW_LIST", "ROWS_QUERY", "ROWS_WRITE"] @a0) [@a0] []) []) []) []))
-                                    (array/flatten (array/filter @k (fn r (validate/array @r)))))
-                                  [])) StoreShape))) (if (= @fres null) (let ((up (str/concat "orbitals[" @oi "].traits." (object/get @td "name" "")))) [{ code: "LINT_NODE_UNCHECKED", path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a StoreShape; this rule could not check it"), suggestion: "", severity: "error" }]) (array/map
+                            (let ((fres (if (= (as @ef StoreShape) null) null (array/flatten (array/map (array/filter (object/get (or (as (tree/index (if (validate/array @ef) @ef []) ["emit"]) StIndex) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (if (validate/array @n) (let ((a0 (array/nth @n 1))) (if (and (validate/string @a0) (array/includes ["ROW_READ", "ROW_LIST", "ROWS_QUERY", "ROWS_WRITE"] @a0)) [@a0] [])) [])))))))) (if (= @fres null) (let ((up (str/concat "orbitals[" @oi "].traits." (object/get @td "name" "")))) [{ code: "LINT_NODE_UNCHECKED", path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a StoreShape; this rule could not check it"), suggestion: "", severity: "error" }]) (array/map
                               @fres
                               (fn verb { code: "ORB_STORE_VERB_OUTSIDE_SEAM", path: (str/concat "orbitals[" @oi "].traits." (object/get @td "name" "")), message: (str/concat "trait " (object/get @td "name" "") " emits the row verb " @verb "; a store driver is asked only by the store seam, one frame per ask (EXEC-STORE-4)"), suggestion: "Read and write the rows through persist/fetch on an entity bound to the driver", severity: "error" }))))))))))))))))))))
             (let ((bnd (array/flatten (array/map @orbitals (fn o
@@ -98,12 +95,7 @@ orbital OrbLintStoreBindingOrbital {
                       (let ((td (array/nth (object/get @orb "traits" []) @ti)))
                         (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "transitions" []) (fn tr
                           (array/flatten (array/map (object/get @tr "effects" []) (fn ef
-                            (let ((fres (tree/fold @ef (fn (n k)
-                                (if (validate/array @n)
-                                  (array/concat
-                                    (let ((h0 (array/nth @n 0)) (v0 (array/nth @n 1)) (e0 (array/nth @n 2))) (if (validate/string @h0) (if (= @h0 "persist") (if (validate/string @v0) (if (or (= @v0 "delete") (= @v0 "update")) (if (validate/string @e0) [@e0] []) []) []) []) []))
-                                    (array/flatten (array/filter @k (fn r (validate/array @r)))))
-                                  [])) StoreShape))) (if (= @fres null) (let ((up (str/concat "orbitals[" @oi " (" (object/get @orb "name") ")].traits[" @ti " (" (object/get @td "name") ")]"))) [{ code: "LINT_NODE_UNCHECKED", path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a StoreShape; this rule could not check it"), suggestion: "", severity: "error" }]) (array/flatten (array/map
+                            (let ((fres (if (= (as @ef StoreShape) null) null (array/flatten (array/map (array/filter (object/get (or (as (tree/index (if (validate/array @ef) @ef []) ["persist"]) StIndex) {}) "persist" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (if (validate/array @n) (let ((v0 (array/nth @n 1)) (e0 (array/nth @n 2))) (if (and (validate/string @v0) (or (= @v0 "delete") (= @v0 "update")) (validate/string @e0)) [@e0] [])) [])))))))) (if (= @fres null) (let ((up (str/concat "orbitals[" @oi " (" (object/get @orb "name") ")].traits[" @ti " (" (object/get @td "name") ")]"))) [{ code: "LINT_NODE_UNCHECKED", path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a StoreShape; this rule could not check it"), suggestion: "", severity: "error" }]) (array/flatten (array/map
                               @fres
                               (fn en
                                 (let ((hits (array/filter @bnd (fn x (= (object/get @x "name") @en)))))
