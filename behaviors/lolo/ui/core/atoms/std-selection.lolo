@@ -6,11 +6,11 @@ type FilterSpec = { field : string!, label : string, options : [string] }
 type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
 type SelectableItemRelatedRow = { id : string! }
 orbital SelectableItemOrbital {
-    type SelectableItemLoaded = Event { data : [SelectableItem] } "Fired when SelectableItem finishes loading; payload.data holds the list"
+    type SelectableItemLoaded = Event { data : [SelectableItem], totalCount : number } "Fired when one page of SelectableItem finishes loading; payload.data holds the page"
 
     type SelectableItemLoadFailed = Event { error : string, code : string } "Fired when SelectableItem fails to load"
 
-    type SelectableItemRelatedLoaded = Event { data : [SelectableItemRelatedRow]! } "Related rows whose text matches the query loaded"
+    type SelectableItemRelatedLoaded = Event { data : [SelectableItemRelatedRow]!, totalCount : number! } "Related rows whose text matches the query loaded"
 
   entity SelectableItem [runtime] {
     id : string!
@@ -18,6 +18,7 @@ orbital SelectableItemOrbital {
     description : string @description "A textual explanation of the item." @synonyms "details, explanation, notes"
     status : "active" | "inactive" | "pending" @description "Indicates the current operational state of the item." @synonyms "state, condition, flag" = active
     createdAt : string
+    selectionPage : number @intrinsic @description "The page the pick-list shows." = 1
   }
 
   trait SelectableItemSelection -> @rebindable SelectableItem [optimistic] {
@@ -25,8 +26,11 @@ orbital SelectableItemOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -88,7 +92,7 @@ orbital SelectableItemOrbital {
             itemClickEvent: @config.itemClickEvent
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
-            pageSize: @config.displayPageSize
+            pageSize: 0
             renderItem: (fn item {
               align: center
               children: [{ label: @item.name, type: checkbox }]
@@ -97,6 +101,12 @@ orbital SelectableItemOrbital {
               type: stack
             })
             type: data-grid
+          }, {
+            currentPage: @entity.selectionPage
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: lg
@@ -135,8 +145,11 @@ orbital SelectableItemOrbital {
 
     state idle {
       INIT -> loading
+        (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -150,24 +163,36 @@ orbital SelectableItemOrbital {
       ;; fires in the background; the SelectableItemLoaded arm below
       ;; re-renders in place once it lands.
       REFETCH_QUERY -> idle when (or (= @config.searchRelation null) (= ?searchTerm ""))
+        (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
           filter: (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm))
+          limit: @config.pageSize
+          offset: 0
         })
       REFETCH_QUERY -> idle when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemRelatedLoaded }
           filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
+          limit: @config.relatedMaxRows
         })
+      SelectableItemRelatedLoaded -> idle when (> ?totalCount (array/len ?data))
+        (emit SelectableItemLoadFailed { error: (str/concat @config.relatedEntity " has " ?totalCount " rows matching the search, over the relatedMaxRows cap of " @config.relatedMaxRows), code: "SELECTION_RELATED_OVER_CAP" })
       SelectableItemRelatedLoaded -> idle
+        (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
           filter: (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))
+          limit: @config.pageSize
+          offset: 0
         })
       REFETCH_FILTER -> idle
+        (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
           filter: (or (= ?value "") (= (object/get @entity ?field) ?value))
+          limit: @config.pageSize
+          offset: 0
         })
       ;; No filter carried over on REFETCH_PAGE, mirroring std-browse exactly.
       ;; Paging is safe here: this atom's selection is a single transient id
@@ -178,6 +203,7 @@ orbital SelectableItemOrbital {
       ;; picks into an @entity field would need to carry that array across
       ;; REFETCH_PAGE explicitly; this single-pick atom does not need to.
       REFETCH_PAGE -> idle
+        (set @entity.selectionPage ?page)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
           limit: @config.pageSize
@@ -239,7 +265,7 @@ orbital SelectableItemOrbital {
             itemClickEvent: @config.itemClickEvent
             itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
-            pageSize: @config.displayPageSize
+            pageSize: 0
             renderItem: (fn item {
               align: center
               children: [{ label: @item.name, type: checkbox }]
@@ -248,6 +274,12 @@ orbital SelectableItemOrbital {
               type: stack
             })
             type: data-grid
+          }, {
+            currentPage: @entity.selectionPage
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: lg
@@ -309,8 +341,11 @@ orbital SelectableItemOrbital {
 
     state selecting {
       INIT -> loading
+        (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -367,8 +402,11 @@ orbital SelectableItemOrbital {
           type: stack
         })
       CLEAR -> loading
+        (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -380,8 +418,11 @@ orbital SelectableItemOrbital {
 
     state selected {
       INIT -> loading
+        (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -390,8 +431,11 @@ orbital SelectableItemOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
         })
       CLEAR -> loading
+        (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -403,8 +447,11 @@ orbital SelectableItemOrbital {
 
     state error {
       INIT -> loading
+        (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -415,8 +462,11 @@ orbital SelectableItemOrbital {
       ;; the error screen's Retry button: INIT is lifecycle-only and the bus never
       ;; delivers it, so the affordance must target a first-class user event
       RETRY -> loading
+        (set @entity.selectionPage 1)
         (fetch SelectableItem {
           emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -495,6 +545,11 @@ orbital SelectableItemOrbital {
         @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, label) or the search box can never match a row."
         @synonyms "search column, search on field, match field, search key"
         @tier "policy"
+      relatedMaxRows : number = 500
+        @label "Related rows matched per search"
+        @description "Most related-entity rows one relation search may match. The search turns the matches into the ids that narrow the main read, so a partial set would hide results; a search matching more is refused through the failure event instead of showing part of it."
+        @synonyms "relation search cap, related match limit, search match cap"
+        @tier "policy"
       relatedEntity : entity = SelectableItem
         @label "Related entity"
         @description "The entity a relation search matches through: the target of searchRelation."
@@ -528,14 +583,9 @@ orbital SelectableItemOrbital {
         @synonyms "filter bar style, facet style, chips, pills"
         @tier "presentation"
       pageSize : number = 20
-        @label "How many candidates per page when paging?"
-        @description "Records fetched from the server per REFETCH_PAGE request. The initial load and search/filter refetches remain unpaginated (load every candidate) unless a consumer wires REFETCH_PAGE, so the default pick-list surface is unchanged. Safe to page: this atom's selection is a single transient id (never an accumulated array), so no already-picked item can be stranded on another page."
+        @label "How many candidates per page?"
+        @description "Candidates shown per page; every load, search and filter reads the first page and the pick-list renders its own page bar. Safe to page: this atom's selection is a single transient id (never an accumulated array), so no already-picked item can be stranded on another page."
         @synonyms "fetch limit, records per page, page limit"
-        @tier "presentation"
-      displayPageSize : number = 20
-        @label "How many candidates to show at once?"
-        @description "Rows visible per page before the data-grid's own pagination control appears — 20 matches the pick-list density sweet spot (Miller's law, 10-25 rows)."
-        @synonyms "visible rows, items per page, display limit, show per page"
         @tier "presentation"
       itemClickEvent : event = SELECT
         @label "Row click"

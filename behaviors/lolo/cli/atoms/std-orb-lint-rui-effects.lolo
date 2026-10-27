@@ -10,18 +10,18 @@ uses Spec from "almadar-std/lint-rui-effects"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type EfVal = string | number | boolean | [EfVal?] | Map string EfVal?
-type EfTransition = { from : EfVal, to : string, event : string, effects : [EfVal?] }
-type EfKnob = { default : EfVal? }
+type EfTransitionRE = { from : EfVal, to : string, event : string, effects : [EfVal?] }
+type EfKnobRE = { default : EfVal? }
 type EfRend = { j : number!, re : string! }
 type EfEff = { j : number!, fe : string!, re : string!, fs : [OrbFinding]! }
 type EfInfo = { froms : [string]!, to : string!, fetched : [string]!, rendered : [EfRend]!, fs : [OrbFinding]! }
 type EfEdge = { f : string!, t : string! }
-type EfMachine = { transitions : [EfTransition] }
-type EfTrait = { name : string, stateMachine : EfMachine, config : Map string EfVal? }
-type EfOrbital = { name : string, traits : [EfTrait] }
-type EfProgram = { orbitals : [EfOrbital] }
-type EfPropShape = { types : [string] }
-type EfPatternShape = { props : Map string EfPropShape? }
+type EfMachineRE = { transitions : [EfTransitionRE] }
+type EfTraitRE = { name : string, stateMachine : EfMachineRE, config : Map string EfVal? }
+type EfOrbitalRE = { name : string, traits : [EfTraitRE] }
+type EfProgramRE = { orbitals : [EfOrbitalRE] }
+type EfPropShapeRE = { types : [string] }
+type EfPatternShapeRE = { props : Map string EfPropShapeRE? }
 type EfHit = { p : string!, s : string!, open : boolean!, m : string!, g : string! }
 
 orbital OrbLintRuiEffectsOrbital {
@@ -54,7 +54,7 @@ orbital OrbLintRuiEffectsOrbital {
         (emit LINT_FINISH { })
       LINT_INPUT -> ready when (not @entity.vocabUnread)
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals : [EfOrbital] (object/get @payload.program "orbitals" [])) (np @entity.nodeProps) (validSlots @entity.validSlots))
+        (set @entity.findings (let ((orbitals : [EfOrbitalRE] (object/get @payload.program "orbitals" [])) (np @entity.nodeProps) (validSlots @entity.validSlots))
             (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
               (let ((orb (array/nth @orbitals @oi)))
                 (let ((trs (object/get @orb "traits" [])))
@@ -141,10 +141,10 @@ orbital OrbLintRuiEffectsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EfProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EfProgramRE  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
-      LINT_PATTERNS_HEARD { patterns : Map string EfPatternShape! }
+      LINT_PATTERNS_HEARD { patterns : Map string EfPatternShapeRE! }
         @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry projected for the render-ui checks."
       OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD
       UI_VOCAB_HEARD { slots : [string]!  itemActionBaseProps : [string]!  lucideIcons : [string]!  themeKeys : [string]!  deliveryRoots : [string]!  eventSourceKeys : [string]! }

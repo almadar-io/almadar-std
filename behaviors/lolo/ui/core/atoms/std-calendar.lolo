@@ -7,11 +7,11 @@ type FilterSpec = { field : string!, label : string, options : [string] }
 type CalendarFieldSpec = { name : string!, label : string, variant : h3 | h4 | body | caption | badge | small | progress, icon : string, format : date | currency | number | boolean | percent }
 type CalendarEventRelatedRow = { id : string! }
 orbital CalendarEventOrbital {
-    type CalendarEventLoaded = Event { data : [CalendarEvent]! } "Fired when CalendarEvent finishes loading; payload.data holds the events"
+    type CalendarEventLoaded = Event { data : [CalendarEvent]!, totalCount : number! } "Fired when CalendarEvent finishes loading; payload.data holds the events"
 
     type CalendarEventLoadFailed = Event { error : string, code : string } "Fired when CalendarEvent fails to load"
 
-    type CalendarEventRelatedLoaded = Event { data : [CalendarEventRelatedRow]! } "Related rows whose text matches the query loaded"
+    type CalendarEventRelatedLoaded = Event { data : [CalendarEventRelatedRow]!, totalCount : number! } "Related rows whose text matches the query loaded"
 
   entity CalendarEvent [runtime] {
     id : string!
@@ -35,14 +35,20 @@ orbital CalendarEventOrbital {
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
+          limit: @config.maxRows
         })
         (render-ui main { type: skeleton, variant: card })
+      CalendarEventRelatedLoaded -> loading when (> ?totalCount (array/len ?data))
+        (emit CalendarEventLoadFailed { error: (str/concat @config.relatedEntity " has " ?totalCount " rows matching the search, over the relatedMaxRows cap of " @config.relatedMaxRows), code: "CALENDAR_RELATED_OVER_CAP" })
       CalendarEventRelatedLoaded -> loading
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
+          limit: @config.maxRows
           filter: (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))
         })
+      CalendarEventLoaded -> loading when (> ?totalCount (array/len ?data))
+        (emit CalendarEventLoadFailed { error: (str/concat "CalendarEvent has " ?totalCount " events, over the maxRows cap of " @config.maxRows), code: "CALENDAR_OVER_CAP" })
       CalendarEventLoaded -> month-view
         (if (= @config.calendarLook agenda-list)
           (render-ui main @config.agendaListBodyContent)
@@ -85,6 +91,7 @@ orbital CalendarEventOrbital {
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
+          limit: @config.maxRows
         })
         (render-ui main { type: skeleton, variant: card })
       SELECT_DAY -> loading
@@ -94,6 +101,7 @@ orbital CalendarEventOrbital {
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
+          limit: @config.maxRows
           filter: (time/isAfter (time/parse (object/get @entity @config.startField)) (if (= ?value week) (time/subtract (time/now) 1 week) (if (= ?value "3months") (time/subtract (time/now) 3 month) (if (= ?value year) (time/subtract (time/now) 1 year) (time/subtract (time/now) 1 month)))))
         })
       CALENDAR_PREV_WEEK -> loading
@@ -101,12 +109,14 @@ orbital CalendarEventOrbital {
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
+          limit: @config.maxRows
         })
       CALENDAR_NEXT_WEEK -> loading
         (set @entity.weekAnchor (time/add @entity.weekAnchor 1 week))
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
+          limit: @config.maxRows
         })
       ;; Same no-render-ui shape as SELECT_DAY/CALENDAR_*_WEEK above: transition
       ;; to `loading` without repainting, so the current grid/agenda/timeline
@@ -116,17 +126,20 @@ orbital CalendarEventOrbital {
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
+          limit: @config.maxRows
           filter: (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm))
         })
       REFETCH_QUERY -> loading when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventRelatedLoaded }
           filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
+          limit: @config.relatedMaxRows
         })
       REFETCH_FILTER -> loading
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
+          limit: @config.maxRows
           filter: (or (= ?value "") (= (object/get @entity ?field) ?value))
         })
     }
@@ -136,6 +149,7 @@ orbital CalendarEventOrbital {
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
+          limit: @config.maxRows
         })
         (render-ui main { type: skeleton, variant: card })
       ;; the error screen's Retry button: INIT is lifecycle-only and the bus never
@@ -144,6 +158,7 @@ orbital CalendarEventOrbital {
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
+          limit: @config.maxRows
         })
         (render-ui main { type: skeleton, variant: card })
     }
@@ -300,6 +315,16 @@ orbital CalendarEventOrbital {
         @label "Which column does the search box match against?"
         @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, description) or the search box can never match a row."
         @synonyms "search column, search on field, match field, search key"
+        @tier "policy"
+      maxRows : number = 1000
+        @label "Calendar event cap"
+        @description "Most events one calendar load may return. The month grid, agenda and week timeline place every event, so a partial read would hide events; a calendar holding more is refused through CalendarEventLoadFailed instead of showing part of it."
+        @synonyms "calendar limit, event cap, max events"
+        @tier "policy"
+      relatedMaxRows : number = 500
+        @label "Related rows matched per search"
+        @description "Most related-entity rows one relation search may match. The search turns the matches into the ids that narrow the main read, so a partial set would hide results; a search matching more is refused through the failure event instead of showing part of it."
+        @synonyms "relation search cap, related match limit, search match cap"
         @tier "policy"
       relatedEntity : entity = CalendarEvent
         @label "Related entity"

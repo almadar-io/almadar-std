@@ -2,7 +2,7 @@ app std-orb-behaviors [
   version: "1.0.0",
   inbound: ["cli-behaviors-catalog", "cli-behaviors-describe", "cli-behaviors-source", "cli-behaviors-which", "cli-behaviors-texts", "cli-behaviors-expects"],
   fs: { "/dev/fd/0": [read], cwd: "**": [read] },
-  description: "std-orb-behaviors — the `orb behaviors catalog|describe|source|which|texts|expects` commands over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]` lists the installed behaviors under the scopes (`behavior/catalog`; `--no-vectors` is its `vectors: false` option, reading no vector store) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>|<behavior>|<behavior>.orbitals.<Orbital>|- [--json] [--knob-vectors]` prints the description as JSON (`behavior/describe`; `-` reads a trait or orbital value as JSON from stdin; `--knob-vectors` attaches each knob's embedding vector, `behavior/describe`'s `knobVectors` option); `source <behavior> [--json]` prints the behavior's program as JSON (`behavior/source`); `which <spec>` prints `<path> (<owner>)`, the file the specifier resolves to and the package that owns it (`behavior/resolve` with `path: true`); `texts <scope…> [--kind organism|capability|knob] [--json]` prints the embedding texts under the scopes as one compact JSON array of { key, text, hash } (`behavior/texts`; `--json` is accepted, the only format). `expects <file.orb|spec> [--json]` prints each orbital's derived expectations as one compact JSON line, `{ <orbital>: { expectations, diagnostics } }` (`behavior/resolve` with `expects: true`; a spec naming an existing file under the working directory is read as that file, an absolute path when relative to the hook's cwd, `--json` is accepted, the only format). Each answers status 200 (exit 0). Each subcommand is its own cli hook, so the other `orb behaviors` subcommands (vectors) stay with the Rust command. A missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
+  description: "std-orb-behaviors — the `orb behaviors catalog|describe|source|which|texts|expects` commands over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]` lists the installed behaviors under the scopes (`behavior/catalog`; `--no-vectors` is its `vectors: false` option, reading no vector store) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>|<behavior>|<behavior>.orbitals.<Orbital>|- [--json] [--knob-vectors]` prints the description as JSON (`behavior/describe`; `-` reads a trait or orbital value as JSON from stdin; `--knob-vectors` attaches each knob's embedding vector, `behavior/describe`'s `knobVectors` option); `source <behavior> [--json]` prints the behavior's program as JSON (`behavior/source`); `which <spec>` prints `<path> (<owner>)`, the file the specifier resolves to and the package that owns it (`behavior/resolve` with `path: true`); `texts <scope…> [--kind organism|capability|knob] [--json]` prints the embedding texts under the scopes as one compact JSON array of { key, text, hash } (`behavior/texts`; `--json` is accepted, the only format). `expects <file.orb|spec> [--json]` prints each orbital's derived expectations as one compact JSON line, `{ <orbital>: { expectations, diagnostics } }` (`behavior/resolve` with `expects: true`; a spec naming an existing file under the working directory is read as that file, an absolute path when relative to the hook's cwd, `--json` is accepted, the only format). Each answers status 200 (exit 0). Each subcommand is its own cli hook, so the other `orb behaviors` subcommands (vectors) stay with the Rust command. A missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
 ]
 uses Spec from "almadar-std/orb-behaviors"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -15,11 +15,12 @@ type OrbBehaviorsCatalogHit = {
   exposure : string
   description : string!
   capabilities : [string]
-  traits : [trait]!
+  traits : [trait]
   value : behavior!
   vectors : Map string [number]
   model : string
 }
+type OrbBehaviorsCatalogTopic = { package : string!, prefix : string!, topic : string!, count : number! }
 type OrbBehaviorsWhich = { path : string!, owner : string! }
 type OrbBehaviorsText = { key : string!, text : string!, hash : string! }
 type ExpectValue = string | number | boolean | [ExpectValue?] | Map string ExpectValue?
@@ -59,6 +60,8 @@ orbital OrbBehaviorsOrbital {
     paths : [string] = []
     spec : string = ""
     noVectors : boolean = false
+    noTraits : boolean = false
+    topics : boolean = false
     knobVectors : boolean = false
     kind : string = ""
     cwd : string = ""
@@ -76,10 +79,10 @@ orbital OrbBehaviorsOrbital {
     state ready {
       INIT -> ready
       CATALOG_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (emit BEHAVIORS_ANSWERED { status: 400, body: "", stderr: "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]" })
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "", stderr: "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]" })
       CATALOG_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.sub "catalog")
-        (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "no-vectors" aliases: [] takesValue: false repeatable: false }, { name: "exposure" aliases: [] takesValue: true repeatable: true }] })
+        (emit BEHAVIORS_ARGS_PARSE { stage: "behaviors" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "no-vectors" aliases: [] takesValue: false repeatable: false }, { name: "no-traits" aliases: [] takesValue: false repeatable: false }, { name: "topics" aliases: [] takesValue: false repeatable: false }, { name: "exposure" aliases: [] takesValue: true repeatable: true }] })
       DESCRIBE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit BEHAVIORS_ANSWERED { status: 400, body: "", stderr: "usage: orb behaviors describe <behavior>.traits.<Trait>" })
       DESCRIBE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
@@ -111,7 +114,7 @@ orbital OrbBehaviorsOrbital {
     state parsing {
       INIT -> parsing
       BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "catalog") (or (> (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0)))
-        (emit BEHAVIORS_ANSWERED { status: 400, body: "", stderr: "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors]" })
+        (emit BEHAVIORS_ANSWERED { status: 400, body: "", stderr: "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]" })
       BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "describe") (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1)))
         (emit BEHAVIORS_ANSWERED { status: 400, body: "", stderr: "usage: orb behaviors describe <behavior>.traits.<Trait>" })
       BEHAVIORS_ARGS_DONE -> ready when (and (= @entity.sub "source") (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1)))
@@ -135,6 +138,8 @@ orbital OrbBehaviorsOrbital {
       BEHAVIORS_ARGS_DONE -> working when (and (= @entity.sub "catalog") (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0))
         (set @entity.json (!= (object/get @payload.flags "json") null))
         (set @entity.noVectors (!= (object/get @payload.flags "no-vectors") null))
+        (set @entity.noTraits (!= (object/get @payload.flags "no-traits") null))
+        (set @entity.topics (!= (object/get @payload.flags "topics") null))
         (set @entity.exposure (or (object/get @payload.flags "exposure") []))
         (set @entity.paths @payload.positionals)
         (emit BEHAVIORS_CATALOG { })
@@ -152,10 +157,17 @@ orbital OrbBehaviorsOrbital {
 
     state working {
       INIT -> working
-      BEHAVIORS_CATALOG -> working
+      BEHAVIORS_CATALOG -> working when (not @entity.topics)
         (behavior/catalog { paths: @entity.paths, exposure: @entity.exposure } {
           vectors: (not @entity.noVectors)
+          traits: (not @entity.noTraits)
           emit: { success: CATALOG_LISTED, failure: BEHAVIORS_FAILED }
+        })
+      BEHAVIORS_CATALOG -> working when @entity.topics
+        (behavior/catalog { paths: @entity.paths, exposure: @entity.exposure } {
+          vectors: false
+          topics: true
+          emit: { success: CATALOG_TOPICS_LISTED, failure: BEHAVIORS_FAILED }
         })
       BEHAVIORS_DESCRIBE -> working when (str/includes @entity.spec ".traits.")
         (behavior/describe { behavior: (array/first (str/split @entity.spec ".traits.")), trait: (array/nth (str/split @entity.spec ".traits.") 1) } {
@@ -212,6 +224,10 @@ orbital OrbBehaviorsOrbital {
         (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
       CATALOG_LISTED -> ready when @entity.json
         (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
+      CATALOG_TOPICS_LISTED -> ready when @entity.json
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
+      CATALOG_TOPICS_LISTED -> ready when (not @entity.json)
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (str/join (array/map @payload.result (fn t (str/concat (str/padEnd @t.package 24 " ") " " (str/padEnd @t.topic 24 " ") " " (json/stringify @t.count)))) "\n") })
       CATALOG_LISTED -> ready when (not @entity.json)
         (emit BEHAVIORS_ANSWERED { status: 200, body: (str/join (array/map @payload.result (fn e (str/concat (str/padEnd (object/get @e behavior "") 48 " ") " " (str/padEnd (object/get @e level "") 9 " ") " " (str/padEnd (object/get @e exposure "-") 10 " ") " " (object/get @e description "")))) "\n") })
       TRAIT_DESCRIBED -> ready
@@ -382,6 +398,10 @@ orbital OrbBehaviorsOrbital {
         result : [OrbBehaviorsCatalogHit]!
       }
         @description "behavior/catalog's success."
+      CATALOG_TOPICS_LISTED {
+        result : [OrbBehaviorsCatalogTopic]!
+      }
+        @description "behavior/catalog's success with `topics: true`."
       TRAIT_DESCRIBED {
         result : TraitDescription!
       }

@@ -41,7 +41,7 @@ orbital QueueOrbital {
 
     type EnqCreated = Event { id : string! } "Internal: the job row exists."
 
-    type EnqAheadLoaded = Event { data : [@entity @config.jobEntity]! } "Internal: pending jobs ahead of the new job."
+    type EnqAheadLoaded = Event { data : [@entity @config.jobEntity]!, totalCount : number! } "Internal: pending jobs ahead of the new job."
 
     type EnqFailed = Event { error : string, code : string } "Internal: an enqueue step failed."
 
@@ -77,7 +77,9 @@ orbital QueueOrbital {
 
     type StatJobLoaded = Event { data : [@entity @config.jobEntity]! } "Internal: the job asked about."
 
-    type SizeLoaded = Event { data : [@entity @config.jobEntity]! } "Internal: the live jobs of the queue."
+    type SizePendingLoaded = Event { data : [@entity @config.jobEntity]!, totalCount : number! } "Internal: the pending jobs of the queue, counted."
+
+    type SizeLoaded = Event { data : [@entity @config.jobEntity]!, totalCount : number! } "Internal: the processing jobs of the queue, counted."
 
     type InspectFailed = Event { error : string, code : string } "Internal: an inspect step failed."
 
@@ -114,6 +116,7 @@ orbital QueueOrbital {
     wantAttempt : number = 0
     wantOutcome : "completed" | "failed" = completed
     wantText : string = ""
+    wantPending : number = 0
     skipIds : [string] = []
   }
 
@@ -134,9 +137,10 @@ orbital QueueOrbital {
         (fetch @config.jobEntity {
           emit: { failure: EnqFailed, success: EnqAheadLoaded }
           filter: (and (= (object/get @entity queue) @entity.wantQueue) (= (object/get @entity status) "pending") (or (> (object/get @entity priority) @entity.wantPriority) (and (= (object/get @entity priority) @entity.wantPriority) (< (object/get @entity enqueuedAt) @entity.wantEnqueuedAt))))
+          limit: 1
         })
       EnqAheadLoaded -> idle
-        (emit JOB_ENQUEUED { jobId: @entity.wantId, position: (array/len ?data) })
+        (emit JOB_ENQUEUED { jobId: @entity.wantId, position: ?totalCount })
       EnqFailed -> idle
         (emit QUEUE_FAILED { op: "enqueue", error: ?error, code: ?code })
       CANCEL -> idle
@@ -144,6 +148,7 @@ orbital QueueOrbital {
         (fetch @config.jobEntity {
           emit: { failure: CancelFailed, success: CancelJobLoaded }
           filter: (= (object/get @entity id) @entity.wantId)
+          limit: 1
         })
       CancelJobLoaded -> idle when (= (array/len ?data) 0)
         (emit JOB_CANCELLED { jobId: @entity.wantId, cancelled: false })
@@ -190,6 +195,7 @@ orbital QueueOrbital {
       }
       EnqAheadLoaded {
         data : [@entity @config.jobEntity]!
+        totalCount : number!
       }
       EnqFailed {
         error : string
@@ -230,6 +236,7 @@ orbital QueueOrbital {
       }
       EnqAheadLoaded {
         data : [@entity @config.jobEntity]!
+        totalCount : number!
       }
       EnqFailed {
         error : string
@@ -455,6 +462,7 @@ orbital QueueOrbital {
         (fetch @config.jobEntity {
           emit: { failure: FinFailed, success: FinJobLoaded }
           filter: (= (object/get @entity id) @entity.wantId)
+          limit: 1
         })
       FAIL -> idle
         (set @entity.wantId ?jobId)
@@ -464,6 +472,7 @@ orbital QueueOrbital {
         (fetch @config.jobEntity {
           emit: { failure: FinFailed, success: FinJobLoaded }
           filter: (= (object/get @entity id) @entity.wantId)
+          limit: 1
         })
       FinJobLoaded -> idle when (and (or (= (array/len ?data) 0) (!= (object/get (array/first ?data) status) "processing")) (= @entity.wantOutcome "completed"))
         (emit JOB_COMPLETED { jobId: @entity.wantId, completed: false })
@@ -588,12 +597,21 @@ orbital QueueOrbital {
         (fetch @config.jobEntity {
           emit: { failure: InspectFailed, success: StatJobLoaded }
           filter: (= (object/get @entity id) @entity.wantId)
+          limit: 1
         })
       QUEUE_SIZE -> idle
         (set @entity.wantQueue ?queue)
         (fetch @config.jobEntity {
+          emit: { failure: InspectFailed, success: SizePendingLoaded }
+          filter: (and (= (object/get @entity queue) @entity.wantQueue) (= (object/get @entity status) "pending"))
+          limit: 1
+        })
+      SizePendingLoaded -> idle
+        (set @entity.wantPending ?totalCount)
+        (fetch @config.jobEntity {
           emit: { failure: InspectFailed, success: SizeLoaded }
-          filter: (and (= (object/get @entity queue) @entity.wantQueue) (or (= (object/get @entity status) "pending") (= (object/get @entity status) "processing")))
+          filter: (and (= (object/get @entity queue) @entity.wantQueue) (= (object/get @entity status) "processing"))
+          limit: 1
         })
       StatJobLoaded -> idle when (= (array/len ?data) 0)
         (emit JOB_NOT_FOUND { jobId: @entity.wantId })
@@ -608,9 +626,9 @@ orbital QueueOrbital {
       SizeLoaded -> idle
         (emit QUEUE_SIZED {
           queue: @entity.wantQueue
-          size: (array/len ?data)
-          pending: (array/count ?data (fn row (= (object/get @row status) "pending")))
-          processing: (array/count ?data (fn row (= (object/get @row status) "processing")))
+          size: (+ @entity.wantPending ?totalCount)
+          pending: @entity.wantPending
+          processing: ?totalCount
         })
       InspectFailed -> idle
         (emit QUEUE_FAILED { op: "inspect", error: ?error, code: ?code })
@@ -649,8 +667,13 @@ orbital QueueOrbital {
       StatJobLoaded {
         data : [@entity @config.jobEntity]!
       }
+      SizePendingLoaded {
+        data : [@entity @config.jobEntity]!
+        totalCount : number!
+      }
       SizeLoaded {
         data : [@entity @config.jobEntity]!
+        totalCount : number!
       }
       InspectFailed {
         error : string
@@ -672,8 +695,13 @@ orbital QueueOrbital {
       StatJobLoaded {
         data : [@entity @config.jobEntity]!
       }
+      SizePendingLoaded {
+        data : [@entity @config.jobEntity]!
+        totalCount : number!
+      }
       SizeLoaded {
         data : [@entity @config.jobEntity]!
+        totalCount : number!
       }
       InspectFailed {
         error : string

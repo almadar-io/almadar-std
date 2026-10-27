@@ -52,6 +52,45 @@ type PgShape = { minArity : number?, maxArity : number?, params : [PgShapeParam]
 type PgEmitConfigItem = { id : string!, path : string!, emit : PgEmitObj!, allowedKeys : [string]!, checkDeclared : boolean!, declared : [string]! }
 type EmitConfigResult = { id : string!, findings : [OrbFinding]! }
 type SqlGuardVerdict = { ok : boolean!, reason : string! }
+type LnProgram = { orbitals : [HcOrbital], egress : [string]? }
+type HcCall = { head : string!, path : string!, call : [HcVal?]!, tname : string!, tick : string!, bg : boolean!, declared : [string]!, config : Map string HcVal?, inGuard : boolean? }
+type HcFact = { minArity : number!, maxArity : number?, runsOn : string?, host : string?, params : [HcParam]!, closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, httpWire : HcHttpWire?, family : string?, emitOrder : [string]?, hasOptions : boolean!, optionKeys : [string]!, emitKeys : [string]!, hasRequest : boolean!, requestFields : [string]!, requestRequired : [string]!, words : Map string [string]!, keys : Map string [string]! }
+type EmitResult = { id : string!, findings : [OrbFinding]! }
+type HcParam = { name : string!, optional : boolean?, type : HcType }
+type HcClosed = { request : boolean?, intRange : HcIntRange? }
+type HcOauth = { endpointTarget : string!, endpointKinds : [string]!, ops : [HcOauthOp]! }
+type HcGrantNeed = Map string HcVal
+type HcHttpWire = { requestKeys : [string]!, bodyKeys : [string]!, queryEncodings : [string]!, authSchemes : [HcAuthScheme]!, defaultPorts : Map string number! }
+type HcAuthScheme = { name : string!, keys : [string]!, required : [string]?, onUnauthorized : [string]? }
+type HcVal = string | number | boolean | [HcVal?] | Map string HcVal?
+type HcOauthOp = { name : string!, required : [string]!, optional : [string]!, endpoint : string? }
+type HcIntRange = { arg : number!, min : number!, max : number! }
+type HcType = string | HcTypeNode
+type HcTypeNode = { kind : string!, fields : Map string HcType?, optional : [string]? }
+type HcOrbital = { name : string, traits : [HcVal] }
+type CsProgramCS = { orbitals : [CsOrbitalCS], services : [CsServiceDef]? }
+type SrService = { actions : Map string SrAction! }
+type CsHostFact = { emitKeys : [string]? }
+type SrAction = { params : [SrParam]!, hasKey : boolean! }
+type SrParam = { name : string!, type : string!, required : boolean!, kind : string! }
+type CsOrbitalCS = { name : string, traits : [CsVal] }
+type CsServiceDef = { name : string }
+type CsVal = string | number | boolean | [CsVal?] | Map string CsVal?
+type EwProgram = { orbitals : [EwOrbital] }
+type EwOrbital = { name : string, traits : [EwTrait] }
+type EwTrait = { name : string, sourceBehavior : EwSb?, emits : [EwEmit], listens : [EwListen], stateMachine : EwMachine, ticks : [EwTick] }
+type EwSb = { behavior : string }
+type EwEmit = { event : string, scope : string, definerKnob : string, scopeOverridden : boolean }
+type EwListen = { event : string, triggers : string, scope : string, source : EwSource }
+type EwMachine = { transitions : [EwTransition] }
+type EwTick = { effects : [EwNode?] }
+type EwNode = string | number | boolean | [EwNode?] | Map string EwNode?
+type EwTransition = { event : string, effects : [EwNode?] }
+type EwSource = { kind : string, trait : string, orbital : string }
+type LnProgramHE = { orbitals : [HcOrbital] }
+type HcShape = { category : string?, minArity : number?, maxArity : number?, runsOn : string?, host : string?, hasSideEffects : boolean!, params : [HcParam]! }
+type HcExtras = { closedCall : HcClosed?, oauth : HcOauth?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, httpWire : HcHttpWire?, family : string?, emitKeys : [string]? }
+type CiNode = string | number | boolean | [CiNode?] | Map string CiNode?
 
 orbital OrbLintEngineOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -154,6 +193,50 @@ orbital OrbLintEngineOrbital {
   uses TimeUnit from "std/behaviors/std-orb-lint-time-unit"
   uses UserFieldExists from "std/behaviors/std-orb-lint-user-field-exists"
   uses ConfigRoleLists from "std/behaviors/std-orb-lint-config-role-lists"
+  uses BindingFields from "std/behaviors/std-orb-lint-binding-fields"
+  uses BindingRoots from "std/behaviors/std-orb-lint-binding-roots"
+  uses BindingSetters from "std/behaviors/std-orb-lint-binding-setters"
+  uses BindingTraits from "std/behaviors/std-orb-lint-binding-traits"
+  uses BrowserEffects from "std/behaviors/std-orb-lint-browser-effects"
+  uses CallService from "std/behaviors/std-orb-lint-call-service"
+  uses CircuitClientBound from "std/behaviors/std-orb-lint-circuit-client-bound"
+  uses CircuitEmits from "std/behaviors/std-orb-lint-circuit-emits"
+  uses CircuitGraph from "std/behaviors/std-orb-lint-circuit-graph"
+  uses CircuitItemActions from "std/behaviors/std-orb-lint-circuit-item-actions"
+  uses ComposedWiring from "std/behaviors/std-orb-lint-composed-wiring"
+  uses ConfigDanglingRef from "std/behaviors/std-orb-lint-config-dangling-ref"
+  uses ConfigKnob from "std/behaviors/std-orb-lint-config-knob"
+  uses DispatchContract from "std/behaviors/std-orb-lint-dispatch-contract"
+  uses EffectForms from "std/behaviors/std-orb-lint-effect-forms"
+  uses EmbedConfigForward from "std/behaviors/std-orb-lint-embed-config-forward"
+  uses EmitDeclaration from "std/behaviors/std-orb-lint-emit-declaration"
+  uses EntityMutation from "std/behaviors/std-orb-lint-entity-mutation"
+  uses EventWiring from "std/behaviors/std-orb-lint-event-wiring"
+  uses FetchDeliver from "std/behaviors/std-orb-lint-fetch-deliver"
+  uses GroupbyEnumColumnGap from "std/behaviors/std-orb-lint-groupby-enum-column-gap"
+  uses HostEffects from "std/behaviors/std-orb-lint-host-effects"
+  uses HttpRequest from "std/behaviors/std-orb-lint-http-request"
+  uses IconExists from "std/behaviors/std-orb-lint-icon-exists"
+  uses MergedFields from "std/behaviors/std-orb-lint-merged-fields"
+  uses Oauth from "std/behaviors/std-orb-lint-oauth"
+  uses OrbitalRefConfig from "std/behaviors/std-orb-lint-orbital-ref-config"
+  uses PageContentOwner from "std/behaviors/std-orb-lint-page-content-owner"
+  uses PatternProps from "std/behaviors/std-orb-lint-pattern-props"
+  uses Placement from "std/behaviors/std-orb-lint-placement"
+  uses RuiBinding from "std/behaviors/std-orb-lint-rui-binding"
+  uses RuiEffects from "std/behaviors/std-orb-lint-rui-effects"
+  uses ServiceDef from "std/behaviors/std-orb-lint-service-def"
+  uses SetColumn from "std/behaviors/std-orb-lint-set-column"
+  uses SexprBinding from "std/behaviors/std-orb-lint-sexpr-binding"
+  uses SlotTick from "std/behaviors/std-orb-lint-slot-tick"
+  uses ThemeRef from "std/behaviors/std-orb-lint-theme-ref"
+  uses ThemeValues from "std/behaviors/std-orb-lint-theme-values"
+  uses TraitEmbeds from "std/behaviors/std-orb-lint-trait-embeds"
+  uses TraitMounts from "std/behaviors/std-orb-lint-trait-mounts"
+  uses TraitRefs from "std/behaviors/std-orb-lint-trait-refs"
+  uses Hc from "std/behaviors/std-orb-lint-host-calls"
+  uses Sr from "std/behaviors/std-orb-lint-service-registry"
+  uses Vl from "std/behaviors/std-orb-value-leaves"
   uses Chain from "std/behaviors/std-orb-embed-chain"
   uses Leaves from "std/behaviors/std-orb-effect-leaves"
   uses Pp from "std/behaviors/std-orb-produced-program"
@@ -220,10 +303,10 @@ orbital OrbLintEngineOrbital {
     }
 
     config {
-      ruleCount : number = 96
+      ruleCount : number = 137
         @label "Rule count"
         @description "How many composed rule traits answer LINT_FOUND before the run settles."
-      programOnlyCount : number = 3
+      programOnlyCount : number = 4
         @label "Program-pass-only rules"
         @description "How many of those rules read the call sites input and answer once, for the program pass only: a lazy child's pass waits for the others."
     }
@@ -336,6 +419,47 @@ orbital OrbLintEngineOrbital {
       OrbLintTimeUnit.LINT_FOUND -> LINT_FOUND
       OrbLintUserFieldExists.LINT_FOUND -> LINT_FOUND
       OrbLintConfigRoleLists.LINT_FOUND -> LINT_FOUND
+      OrbLintBindingFields.LINT_FOUND -> LINT_FOUND
+      OrbLintBindingRoots.LINT_FOUND -> LINT_FOUND
+      OrbLintBindingSetters.LINT_FOUND -> LINT_FOUND
+      OrbLintBindingTraits.LINT_FOUND -> LINT_FOUND
+      OrbLintBrowserEffects.LINT_FOUND -> LINT_FOUND
+      OrbLintCallService.LINT_FOUND -> LINT_FOUND
+      OrbLintCircuitClientBound.LINT_FOUND -> LINT_FOUND
+      OrbLintCircuitEmits.LINT_FOUND -> LINT_FOUND
+      OrbLintCircuitGraph.LINT_FOUND -> LINT_FOUND
+      OrbLintCircuitItemActions.LINT_FOUND -> LINT_FOUND
+      OrbLintComposedWiring.LINT_FOUND -> LINT_FOUND
+      OrbLintConfigDanglingRef.LINT_FOUND -> LINT_FOUND
+      OrbLintConfigKnob.LINT_FOUND -> LINT_FOUND
+      OrbLintDispatchContract.LINT_FOUND -> LINT_FOUND
+      OrbLintEffectForms.LINT_FOUND -> LINT_FOUND
+      OrbLintEmbedConfigForward.LINT_FOUND -> LINT_FOUND
+      OrbLintEmitDeclaration.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityMutation.LINT_FOUND -> LINT_FOUND
+      OrbLintEventWiring.LINT_FOUND -> LINT_FOUND
+      OrbLintFetchDeliver.LINT_FOUND -> LINT_FOUND
+      OrbLintGroupbyEnumColumnGap.LINT_FOUND -> LINT_FOUND
+      OrbLintHostEffects.LINT_FOUND -> LINT_FOUND
+      OrbLintHttpRequest.LINT_FOUND -> LINT_FOUND
+      OrbLintIconExists.LINT_FOUND -> LINT_FOUND
+      OrbLintMergedFields.LINT_FOUND -> LINT_FOUND
+      OrbLintOauth.LINT_FOUND -> LINT_FOUND
+      OrbLintOrbitalRefConfig.LINT_FOUND -> LINT_FOUND
+      OrbLintPageContentOwner.LINT_FOUND -> LINT_FOUND
+      OrbLintPatternProps.LINT_FOUND -> LINT_FOUND
+      OrbLintPlacement.LINT_FOUND -> LINT_FOUND
+      OrbLintRuiBinding.LINT_FOUND -> LINT_FOUND
+      OrbLintRuiEffects.LINT_FOUND -> LINT_FOUND
+      OrbLintServiceDef.LINT_FOUND -> LINT_FOUND
+      OrbLintSetColumn.LINT_FOUND -> LINT_FOUND
+      OrbLintSexprBinding.LINT_FOUND -> LINT_FOUND
+      OrbLintSlotTick.LINT_FOUND -> LINT_FOUND
+      OrbLintThemeRef.LINT_FOUND -> LINT_FOUND
+      OrbLintThemeValues.LINT_FOUND -> LINT_FOUND
+      OrbLintTraitEmbeds.LINT_FOUND -> LINT_FOUND
+      OrbLintTraitMounts.LINT_FOUND -> LINT_FOUND
+      OrbLintTraitRefs.LINT_FOUND -> LINT_FOUND
     }
   }
 
@@ -598,6 +722,8 @@ orbital OrbLintEngineOrbital {
       OrbLintEmit.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
       OrbLintNavigate.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
       OrbLintProgramEval.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
+      OrbLintEmitDeclaration.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
+      OrbLintEffectForms.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
     }
   }
   trait OrbProducedProgram = Pp.traits.OrbProducedProgram {
@@ -634,6 +760,209 @@ orbital OrbLintEngineOrbital {
       OrbLintRedis.EMIT_CONFIG_CHECK -> EMIT_CONFIG_CHECK
     }
   }
+  trait OrbLintBindingFields = BindingFields.traits.OrbLintBindingFields {
+  }
+  trait OrbLintBindingRoots = BindingRoots.traits.OrbLintBindingRoots {
+  }
+  trait OrbLintBindingSetters = BindingSetters.traits.OrbLintBindingSetters {
+  }
+  trait OrbLintBindingTraits = BindingTraits.traits.OrbLintBindingTraits {
+  }
+  trait OrbLintBrowserEffects = BrowserEffects.traits.OrbLintBrowserEffects {
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LnProgram  scope : string! }
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      HOST_CALLS_HEARD { requestId : string!  unread : boolean!  calls : [HcCall]!  facts : Map string HcFact! }
+      HostCalls.HOST_CALLS_COLLECTED -> HOST_CALLS_HEARD
+      EMIT_HEARD { requestId : string!  results : [EmitResult]! }
+      OrbEmitConfigBrowserEffects.EMIT_CONFIG_CHECKED -> EMIT_HEARD
+    }
+  }
+  trait OrbLintCallService = CallService.traits.OrbLintCallService {
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CsProgramCS  scope : string! }
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      SERVICE_REGISTRY_HEARD { requestId : string!  unread : boolean!  services : Map string SrService! }
+      ServiceRegistry.SERVICE_REGISTRY_ANSWER -> SERVICE_REGISTRY_HEARD
+      LINT_HOST_FACTS_HEARD { operators : Map string CsHostFact! }
+      LINT_HOST_FACTS_UNREAD_HEARD { error : string! }
+      OrbLintInput.LINT_HOST_FACTS -> LINT_HOST_FACTS_HEARD
+      OrbLintInput.LINT_HOST_FACTS_UNREAD -> LINT_HOST_FACTS_UNREAD_HEARD
+      EMIT_HEARD { requestId : string!  results : [EmitResult]! }
+      OrbEmitConfigCallService.EMIT_CONFIG_CHECKED -> EMIT_HEARD
+    }
+  }
+  trait OrbLintCircuitClientBound = CircuitClientBound.traits.OrbLintCircuitClientBound {
+  }
+  trait OrbLintCircuitEmits = CircuitEmits.traits.OrbLintCircuitEmits {
+  }
+  trait OrbLintCircuitGraph = CircuitGraph.traits.OrbLintCircuitGraph {
+  }
+  trait OrbLintCircuitItemActions = CircuitItemActions.traits.OrbLintCircuitItemActions {
+  }
+  trait OrbLintComposedWiring = ComposedWiring.traits.OrbLintComposedWiring {
+  }
+  trait OrbLintConfigDanglingRef = ConfigDanglingRef.traits.OrbLintConfigDanglingRef {
+  }
+  trait OrbLintConfigKnob = ConfigKnob.traits.OrbLintConfigKnob {
+  }
+  trait OrbLintDispatchContract = DispatchContract.traits.OrbLintDispatchContract {
+  }
+  trait OrbLintEffectForms = EffectForms.traits.OrbLintEffectForms {
+  }
+  trait OrbLintEmbedConfigForward = EmbedConfigForward.traits.OrbLintEmbedConfigForward {
+  }
+  trait OrbLintEmitDeclaration = EmitDeclaration.traits.OrbLintEmitDeclaration {
+  }
+  trait OrbLintEntityMutation = EntityMutation.traits.OrbLintEntityMutation {
+  }
+  trait OrbLintEventWiring = EventWiring.traits.OrbLintEventWiring {
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EwProgram  scope : string! }
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
+      PRODUCED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
+      PROPS_HEARD { names : [string]! }
+      SEMANTICS_HEARD { busExcluded : [string]! }
+      OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
+      OrbProducedProgram.PRODUCED_EVENTS -> PRODUCED_HEARD
+      OrbLintInput.LINT_EVENT_PROPS -> PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> SEMANTICS_HEARD
+
+    }
+  }
+  trait OrbLintFetchDeliver = FetchDeliver.traits.OrbLintFetchDeliver {
+  }
+  trait OrbLintGroupbyEnumColumnGap = GroupbyEnumColumnGap.traits.OrbLintGroupbyEnumColumnGap {
+  }
+  trait OrbLintHostEffects = HostEffects.traits.OrbLintHostEffects {
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LnProgramHE  scope : string! }
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      HOST_CALLS_HEARD { requestId : string!  unread : boolean!  calls : [HcCall]!  facts : Map string HcFact! }
+      HostCalls.HOST_CALLS_COLLECTED -> HOST_CALLS_HEARD
+      EMIT_HEARD { requestId : string!  results : [EmitResult]! }
+      OrbEmitConfigHostEffects.EMIT_CONFIG_CHECKED -> EMIT_HEARD
+    }
+  }
+  trait OrbLintHttpRequest = HttpRequest.traits.OrbLintHttpRequest {
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LnProgram  scope : string! }
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      HOST_CALLS_HEARD { requestId : string!  unread : boolean!  calls : [HcCall]!  facts : Map string HcFact! }
+      HostCalls.HOST_CALLS_COLLECTED -> HOST_CALLS_HEARD
+      EMIT_HEARD { requestId : string!  results : [EmitResult]! }
+      OrbEmitConfigHttpRequest.EMIT_CONFIG_CHECKED -> EMIT_HEARD
+    }
+  }
+  trait OrbLintIconExists = IconExists.traits.OrbLintIconExists {
+  }
+  trait OrbLintMergedFields = MergedFields.traits.OrbLintMergedFields {
+  }
+  trait OrbLintOauth = Oauth.traits.OrbLintOauth {
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : LnProgram  scope : string! }
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      HOST_CALLS_HEARD { requestId : string!  unread : boolean!  calls : [HcCall]!  facts : Map string HcFact! }
+      HostCalls.HOST_CALLS_COLLECTED -> HOST_CALLS_HEARD
+      EMIT_HEARD { requestId : string!  results : [EmitResult]! }
+      OrbEmitConfigOauth.EMIT_CONFIG_CHECKED -> EMIT_HEARD
+    }
+  }
+  trait OrbLintOrbitalRefConfig = OrbitalRefConfig.traits.OrbLintOrbitalRefConfig {
+  }
+  trait OrbLintPageContentOwner = PageContentOwner.traits.OrbLintPageContentOwner {
+  }
+  trait OrbLintPatternProps = PatternProps.traits.OrbLintPatternProps {
+  }
+  trait OrbLintPlacement = Placement.traits.OrbLintPlacement {
+  }
+  trait OrbLintRuiBinding = RuiBinding.traits.OrbLintRuiBinding {
+  }
+  trait OrbLintRuiEffects = RuiEffects.traits.OrbLintRuiEffects {
+  }
+  trait OrbLintServiceDef = ServiceDef.traits.OrbLintServiceDef {
+  }
+  trait OrbLintSetColumn = SetColumn.traits.OrbLintSetColumn {
+  }
+  trait OrbLintSexprBinding = SexprBinding.traits.OrbLintSexprBinding {
+  }
+  trait OrbLintSlotTick = SlotTick.traits.OrbLintSlotTick {
+  }
+  trait OrbLintThemeRef = ThemeRef.traits.OrbLintThemeRef {
+  }
+  trait OrbLintThemeValues = ThemeValues.traits.OrbLintThemeValues {
+  }
+  trait OrbLintTraitEmbeds = TraitEmbeds.traits.OrbLintTraitEmbeds {
+  }
+  trait OrbLintTraitMounts = TraitMounts.traits.OrbLintTraitMounts {
+  }
+  trait OrbLintTraitRefs = TraitRefs.traits.OrbLintTraitRefs {
+  }
+  trait OrbEmitConfigBrowserEffects = Ec.traits.OrbEmitConfig {
+    listens {
+      EMIT_CONFIG_CHECK { requestId : string!  items : [PgEmitConfigItem]! }
+      OrbLintBrowserEffects.EMIT_CONFIG_CHECK -> EMIT_CONFIG_CHECK
+    }
+  }
+  trait OrbEmitConfigCallService = Ec.traits.OrbEmitConfig {
+    listens {
+      EMIT_CONFIG_CHECK { requestId : string!  items : [PgEmitConfigItem]! }
+      OrbLintCallService.EMIT_CONFIG_CHECK -> EMIT_CONFIG_CHECK
+    }
+  }
+  trait OrbEmitConfigHostEffects = Ec.traits.OrbEmitConfig {
+    listens {
+      EMIT_CONFIG_CHECK { requestId : string!  items : [PgEmitConfigItem]! }
+      OrbLintHostEffects.EMIT_CONFIG_CHECK -> EMIT_CONFIG_CHECK
+    }
+  }
+  trait OrbEmitConfigHttpRequest = Ec.traits.OrbEmitConfig {
+    listens {
+      EMIT_CONFIG_CHECK { requestId : string!  items : [PgEmitConfigItem]! }
+      OrbLintHttpRequest.EMIT_CONFIG_CHECK -> EMIT_CONFIG_CHECK
+    }
+  }
+  trait OrbEmitConfigOauth = Ec.traits.OrbEmitConfig {
+    listens {
+      EMIT_CONFIG_CHECK { requestId : string!  items : [PgEmitConfigItem]! }
+      OrbLintOauth.EMIT_CONFIG_CHECK -> EMIT_CONFIG_CHECK
+    }
+  }
+  trait HostCalls = Hc.traits.HostCalls {
+    listens {
+      HOST_CALLS_COLLECT { requestId : string!  orbitals : [HcOrbital]!  heads : [string]!  operators : [string]!  fields : [string]! }
+      OrbLintBrowserEffects.HOST_CALLS_COLLECT -> HOST_CALLS_COLLECT
+      OrbLintHostEffects.HOST_CALLS_COLLECT -> HOST_CALLS_COLLECT
+      OrbLintHttpRequest.HOST_CALLS_COLLECT -> HOST_CALLS_COLLECT
+      OrbLintOauth.HOST_CALLS_COLLECT -> HOST_CALLS_COLLECT
+      LINT_OPERATOR_SHAPES_HEARD { operators : Map string HcShape! }
+      LINT_OPERATOR_SHAPES_UNREAD_HEARD { error : string! }
+      LINT_HOST_FACTS_HEARD { operators : Map string HcExtras! }
+      LINT_HOST_FACTS_UNREAD_HEARD { error : string! }
+      OrbLintInput.LINT_OPERATOR_SHAPES -> LINT_OPERATOR_SHAPES_HEARD
+      OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> LINT_OPERATOR_SHAPES_UNREAD_HEARD
+      OrbLintInput.LINT_HOST_FACTS -> LINT_HOST_FACTS_HEARD
+      OrbLintInput.LINT_HOST_FACTS_UNREAD -> LINT_HOST_FACTS_UNREAD_HEARD
+    }
+  }
+  trait ServiceRegistry = Sr.traits.ServiceRegistry {
+    listens {
+      OrbLintCallService.SERVICE_REGISTRY_ASK -> SERVICE_REGISTRY_ASK
+      LINT_SERVICES_HEARD { services : Map string SrService! }
+      LINT_SERVICES_UNREAD_HEARD { error : string! }
+      OrbLintInput.LINT_SERVICES -> LINT_SERVICES_HEARD
+      OrbLintInput.LINT_SERVICES_UNREAD -> LINT_SERVICES_UNREAD_HEARD
+    }
+  }
+  trait OrbValueLeaves = Vl.traits.OrbValueLeaves {
+    listens {
+      VALUE_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]! }
+      VALUE_LEAVES_ASK { requestId : string!  values : [CiNode?]! }
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> VALUE_SEMANTICS_HEARD
+      OrbLintCircuitItemActions.VALUE_LEAVES_ASK -> VALUE_LEAVES_ASK
+    }
+  }
   trait CallSiteInput = CsInput.traits.CallSiteInput {
     listens {
       OrbLintEngine.LINT_CALL_SITES_REQUEST -> LINT_CALL_SITES_REQUEST
@@ -656,5 +985,5 @@ orbital OrbLintEngineOrbital {
     }
   }
 
-  page boot as OrbLintEngineOrbitalStart -> OrbLintEngine, OrbLintInput, Packs, Versions, CallSiteInput, OrbProducedEvents, OrbLintTraitRefConfig, OrbLintOrbitalRefExtend, OrbLintIdLedger, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintTickRequiresRuntime, OrbLintLoopInvariantParse, OrbLintReservedComponentName, OrbLintAssetInlineUrl, Versions, Packs, OrbLintClientTickLocality, OrbLintEntityNameShadowsTraitUnion, OrbLintListenWildcardUnkeyed, OrbLintFetchByIdPayload, OrbLintAsyncResultDeafTarget, OrbLintOrbitalConfigDeadKnob, OrbLintListenRedundantEmbedRoute, OrbLintEmbedBridge, OrbFiredEvents, OrbEmbedChain, OrbProducedProgram, OrbEmitConfig, SqlSelectGuard, OrbEmitConfigRedis, OrbLintKeyedCall, OrbLintPageUnreachable, OrbLintNavigate, OrbLintEmit, OrbLintProgramEval, OrbLintInboundAnswerForeign, OrbLintExternalEmitPayload, OrbLintListenRouteStarvesRequiredField, OrbLintCircularDependencies, OrbLintListenSourceUnresolved, OrbLintListenSourceNeverProduces, OrbLintTypeParamSweep, OrbLintEntityAccess, OrbLintUserIdentity, OrbLintFilterFieldNeverWritten, OrbLintExpectationFieldUndeclared, OrbLintExpectationUnsatisfied, OrbLintExpectationProviderMismatch, OrbLintExpectedFieldNotProvided, OrbLintExpectationConfigKnob, OrbLintExpectationEventUnfired, OrbLintExpectationPersistentUnwritten, OrbLintIconFormat, OrbLintThemeUndeclared, OrbLintItemActionEvent, OrbLintFieldPath, OrbLintRenderUiPattern, OrbLintHttpSite, OrbLintKeyedCallKeys, OrbLintPostgres, OrbLintRedis, OrbLintCrossEmitter, OrbLintCrossRegistry, OrbLintSigilContext, OrbLintTimeUnit, OrbLintUserFieldExists, OrbLintConfigRoleLists, OrbEffectLeaves, OrbLintQueryIndex, OrbLintDerivedFieldWrite
+  page boot as OrbLintEngineOrbitalStart -> OrbLintEngine, OrbLintInput, Packs, Versions, CallSiteInput, OrbProducedEvents, OrbLintTraitRefConfig, OrbLintOrbitalRefExtend, OrbLintIdLedger, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintTickRequiresRuntime, OrbLintLoopInvariantParse, OrbLintReservedComponentName, OrbLintAssetInlineUrl, Versions, Packs, OrbLintClientTickLocality, OrbLintEntityNameShadowsTraitUnion, OrbLintListenWildcardUnkeyed, OrbLintFetchByIdPayload, OrbLintAsyncResultDeafTarget, OrbLintOrbitalConfigDeadKnob, OrbLintListenRedundantEmbedRoute, OrbLintEmbedBridge, OrbFiredEvents, OrbEmbedChain, OrbProducedProgram, OrbEmitConfig, SqlSelectGuard, OrbEmitConfigRedis, OrbLintKeyedCall, OrbLintPageUnreachable, OrbLintNavigate, OrbLintEmit, OrbLintProgramEval, OrbLintInboundAnswerForeign, OrbLintExternalEmitPayload, OrbLintListenRouteStarvesRequiredField, OrbLintCircularDependencies, OrbLintListenSourceUnresolved, OrbLintListenSourceNeverProduces, OrbLintTypeParamSweep, OrbLintEntityAccess, OrbLintUserIdentity, OrbLintFilterFieldNeverWritten, OrbLintExpectationFieldUndeclared, OrbLintExpectationUnsatisfied, OrbLintExpectationProviderMismatch, OrbLintExpectedFieldNotProvided, OrbLintExpectationConfigKnob, OrbLintExpectationEventUnfired, OrbLintExpectationPersistentUnwritten, OrbLintIconFormat, OrbLintThemeUndeclared, OrbLintItemActionEvent, OrbLintFieldPath, OrbLintRenderUiPattern, OrbLintHttpSite, OrbLintKeyedCallKeys, OrbLintPostgres, OrbLintRedis, OrbLintCrossEmitter, OrbLintCrossRegistry, OrbLintSigilContext, OrbLintTimeUnit, OrbLintUserFieldExists, OrbLintConfigRoleLists, OrbEffectLeaves, OrbLintQueryIndex, OrbLintDerivedFieldWrite, OrbLintBindingFields, OrbLintBindingRoots, OrbLintBindingSetters, OrbLintBindingTraits, OrbLintBrowserEffects, OrbLintCallService, OrbLintCircuitClientBound, OrbLintCircuitEmits, OrbLintCircuitGraph, OrbLintCircuitItemActions, OrbLintComposedWiring, OrbLintConfigDanglingRef, OrbLintConfigKnob, OrbLintDispatchContract, OrbLintEffectForms, OrbLintEmbedConfigForward, OrbLintEmitDeclaration, OrbLintEntityMutation, OrbLintEventWiring, OrbLintFetchDeliver, OrbLintGroupbyEnumColumnGap, OrbLintHostEffects, OrbLintHttpRequest, OrbLintIconExists, OrbLintMergedFields, OrbLintOauth, OrbLintOrbitalRefConfig, OrbLintPageContentOwner, OrbLintPatternProps, OrbLintPlacement, OrbLintRuiBinding, OrbLintRuiEffects, OrbLintServiceDef, OrbLintSetColumn, OrbLintSexprBinding, OrbLintSlotTick, OrbLintThemeRef, OrbLintThemeValues, OrbLintTraitEmbeds, OrbLintTraitMounts, OrbLintTraitRefs, OrbEmitConfigBrowserEffects, OrbEmitConfigCallService, OrbEmitConfigHostEffects, OrbEmitConfigHttpRequest, OrbEmitConfigOauth, HostCalls, ServiceRegistry, OrbValueLeaves
 }

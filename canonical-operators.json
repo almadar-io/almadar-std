@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-26T19:29:07.678Z",
+  "generated": "2026-10-27T02:40:02.737Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -2829,10 +2829,19 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": {
-        "kind": "array",
-        "of": "CatalogEntry"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "array",
+            "of": "CatalogEntry"
+          },
+          {
+            "kind": "array",
+            "of": "CatalogTopic"
+          }
+        ]
       },
-      "description": "List the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), optionally narrowed by exposure. Each entry carries its traits as values and its shipped embedding vectors; with `options.vectors: false` it carries none (`vectors: {}`, `model: \"\"`) and neither the vector store nor the embedding provider is read.",
+      "description": "List the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), optionally narrowed by exposure. Each entry carries its traits as values and its shipped embedding vectors; with `options.vectors: false` it carries none (`vectors: {}`, `model: \"\"`) and neither the vector store nor the embedding provider is read; with `options.traits: false` it carries no `traits`. With `options.topics: true` it answers each package and topic of the listing once, `{ package, prefix, topic, count }`, instead of the entries.",
       "module": "behavior",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -2862,6 +2871,8 @@
             "fields": {
               "key": "string",
               "vectors": "boolean",
+              "traits": "boolean",
+              "topics": "boolean",
               "emit": {
                 "kind": "object",
                 "fields": {
@@ -2880,7 +2891,7 @@
             },
             "open": true
           },
-          "description": "Emit configuration ({ emit: { success, failure } }); `vectors: false` omits the vectors",
+          "description": "Emit configuration ({ emit: { success, failure } }); `vectors: false` omits the vectors, `traits: false` the traits; `topics: true` answers `{ package, prefix, topic, count }` per topic",
           "optional": true
         }
       ],
@@ -22535,6 +22546,40 @@
       ],
       "examples": [
         "(program/validate @entity.program {\"emit\":{\"success\":\"CHECKED\",\"failure\":\"CHECK_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "proven": {
+      "category": "logic",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "var",
+        "name": "T"
+      },
+      "description": "Resolved IR only, never written in .lolo: the value of the operator call, whose arguments at the listed positions the static checker proved, so the kernel does not check them again. Honored only in a program the kernel registered; a program arriving as data has it removed before it is resolved.",
+      "module": "core",
+      "returnSemantics": "identity-of-arg<1>",
+      "params": [
+        {
+          "name": "positions",
+          "type": {
+            "kind": "array",
+            "of": "number"
+          },
+          "description": "The proven argument positions of the call, from 0"
+        },
+        {
+          "name": "call",
+          "type": {
+            "kind": "var",
+            "name": "T"
+          },
+          "description": "The operator call"
+        }
+      ],
+      "examples": [
+        "(proven [0,1] [\"+\",\"@entity.count\",1])"
       ],
       "docsSource": "generated"
     },

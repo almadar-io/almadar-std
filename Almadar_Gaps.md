@@ -8,7 +8,8 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 - **Close by deleting.** Remove the entry in the same commit as the fix. There is no "closed" section; git history is the record.
 - **Cross-repo gaps don't go here.** If fixing it needs another repo, describe it in your report or PR body; the monorepo coordinator files it.
 
-Next code: `G-STD-165`
+
+Next code: `G-STD-166`
 
 - **G-STD-164** — `orb goldens <dir>` lists only the folder's own files (`std-orb-goldens.lolo` `os/list-dir`, no recursion), so `orb goldens spec` answers "0 passed, 0 failed, 0 skipped in 0 file(s)" and exits as if nothing were wrong. Owner: almadar-std cli (std-orb-goldens) [mechanical] — found 2026-10-26 (P-014 baseline); fix: recurse (or refuse a folder holding no goldens). Rung: the command itself; zero files read must be a failure, not a pass.
 

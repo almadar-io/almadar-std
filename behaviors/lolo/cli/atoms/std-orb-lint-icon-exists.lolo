@@ -10,8 +10,8 @@ uses Spec from "almadar-std/lint-icon-exists"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type IcVal = string | number | boolean | [IcVal?] | Map string IcVal?
-type IcHit = { p : string!, code : string!, msg : string!, sug : string! }
-type IcRes = { f : [IcHit]! }
+type IcHitIE = { p : string!, code : string!, msg : string!, sug : string! }
+type IcResIE = { f : [IcHitIE]! }
 type IcCand = { p : string, v : IcVal? }
 type IcTransition = { effects : [IcVal?] }
 type IcMachine = { transitions : [IcTransition] }
@@ -61,7 +61,7 @@ orbital OrbLintIconExistsOrbital {
                             (let ((e (array/nth @effs @ej)))
                               (if (and (validate/array @e) (> (array/len @e) 2) (let ((hd (array/nth @e 0))) (and (validate/string @hd) (= @hd "render-ui"))) (validate/object (array/nth @e 2)))
                                 (let ((fr (tree/fold (array/nth @e 2) (fn (n k)
-                                      (let ((nr : IcRes { f: [] }))
+                                      (let ((nr : IcResIE { f: [] }))
                                         (if (validate/array @n)
                                           { f: (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (if (validate/object (array/nth @n @i)) (array/map (object/get (let ((r0 (array/nth @k @i))) (if (= @r0 null) @nr @r0)) "f") (fn h { p: (str/concat "[" @i "]" (object/get @h "p")), code: (object/get @h "code"), msg: (object/get @h "msg"), sug: (object/get @h "sug") })) []))))  }
                                           (if (validate/object @n)

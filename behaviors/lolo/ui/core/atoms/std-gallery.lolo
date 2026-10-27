@@ -12,11 +12,13 @@ orbital GalleryItemOrbital {
   uses MediaGallery from "std/behaviors/ui-media-gallery"
   uses Alert from "std/behaviors/ui-alert"
 
-    type GalleryItemLoaded = Event { data : [GalleryItem] } "Fired when GalleryItem finishes loading; payload.data holds the gallery"
+    type GalleryItemLoaded = Event { data : [GalleryItem], totalCount : number! } "Fired when GalleryItem finishes loading; payload.data holds the gallery"
+
+    type GalleryItemPageLoaded = Event { data : [GalleryItem], totalCount : number } "Fired when one page of GalleryItem finishes loading after a search, filter or REFETCH_PAGE"
 
     type GalleryItemLoadFailed = Event { error : string, code : string } "Fired when GalleryItem fails to load"
 
-    type GalleryItemRelatedLoaded = Event { data : [GalleryItemRelatedRow]! } "Related rows whose text matches the query loaded"
+    type GalleryItemRelatedLoaded = Event { data : [GalleryItemRelatedRow]!, totalCount : number! } "Related rows whose text matches the query loaded"
 
   entity GalleryItem [runtime, shared] {
     id : string!
@@ -88,6 +90,7 @@ orbital GalleryItemOrbital {
       INIT -> loading
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+          limit: @config.maxRows
         })
         (render-ui main {
           align: center
@@ -97,6 +100,8 @@ orbital GalleryItemOrbital {
           gap: md
           type: stack
         })
+      GalleryItemLoaded -> loading when (> ?totalCount (array/len ?data))
+        (emit GalleryItemLoadFailed { error: (str/concat "GalleryItem has " ?totalCount " images, over the maxRows cap of " @config.maxRows), code: "GALLERY_OVER_CAP" })
       GalleryItemLoaded -> browsing
         (render-ui main {
           children: [{
@@ -156,6 +161,7 @@ orbital GalleryItemOrbital {
       INIT -> loading
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+          limit: @config.maxRows
         })
       ;; REFETCH_* stays in `browsing` and DOES NOT replace the gallery grid
       ;; with a spinner — search-as-you-type would otherwise unmount the
@@ -164,7 +170,7 @@ orbital GalleryItemOrbital {
       ;; the grid in place instead of unmounting it.
       REFETCH_QUERY -> browsing when (or (= @config.searchRelation null) (= ?searchTerm ""))
         (fetch GalleryItem {
-          emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
           filter: (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm))
           limit: @config.pageSize
           offset: 0
@@ -173,30 +179,33 @@ orbital GalleryItemOrbital {
         (fetch @config.relatedEntity {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemRelatedLoaded }
           filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
+          limit: @config.relatedMaxRows
         })
+      GalleryItemRelatedLoaded -> browsing when (> ?totalCount (array/len ?data))
+        (emit GalleryItemLoadFailed { error: (str/concat @config.relatedEntity " has " ?totalCount " rows matching the search, over the relatedMaxRows cap of " @config.relatedMaxRows), code: "GALLERY_RELATED_OVER_CAP" })
       GalleryItemRelatedLoaded -> browsing
         (fetch GalleryItem {
-          emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
           filter: (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))
           limit: @config.pageSize
           offset: 0
         })
       REFETCH_FILTER -> browsing
         (fetch GalleryItem {
-          emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
           filter: (or (= ?value "") (= (object/get @entity ?field) ?value))
           limit: @config.pageSize
           offset: 0
         })
       REFETCH_PAGE -> browsing
         (fetch GalleryItem {
-          emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemPageLoaded }
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)
         })
       GalleryItemLoadFailed -> browsing
         (notify error (str/concat "Couldn't refresh the gallery — " ?error))
-      GalleryItemLoaded -> browsing
+      GalleryItemPageLoaded -> browsing
         (render-ui main {
           children: [{
             align: center
@@ -267,6 +276,7 @@ orbital GalleryItemOrbital {
         (render-ui modal null)
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+          limit: @config.maxRows
         })
         (render-ui main {
           align: center
@@ -280,6 +290,7 @@ orbital GalleryItemOrbital {
         (render-ui modal null)
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+          limit: @config.maxRows
         })
         (render-ui main {
           align: center
@@ -295,6 +306,7 @@ orbital GalleryItemOrbital {
       INIT -> loading
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+          limit: @config.maxRows
         })
         (render-ui main {
           align: center
@@ -320,9 +332,17 @@ orbital GalleryItemOrbital {
         @tier "domain"
       GalleryItemLoaded {
         data : [GalleryItem]
+        totalCount : number!
       }
         @description "Indicates a GalleryItem has finished loading."
         @synonyms "loaded, ready, available"
+        @tier "internal"
+      GalleryItemPageLoaded {
+        data : [GalleryItem]
+        totalCount : number
+      }
+        @description "Indicates one page of GalleryItem finished loading after a search, filter or page change."
+        @synonyms "page loaded, results loaded, filtered"
         @tier "internal"
       GalleryItemLoadFailed {
         error : string
@@ -368,9 +388,17 @@ orbital GalleryItemOrbital {
         @tier "domain"
       GalleryItemLoaded {
         data : [GalleryItem]
+        totalCount : number!
       }
         @description "Indicates a GalleryItem has finished loading."
         @synonyms "loaded, ready, available"
+        @tier "internal"
+      GalleryItemPageLoaded {
+        data : [GalleryItem]
+        totalCount : number
+      }
+        @description "Indicates one page of GalleryItem finished loading after a search, filter or page change."
+        @synonyms "page loaded, results loaded, filtered"
         @tier "internal"
       GalleryItemLoadFailed {
         error : string
@@ -400,6 +428,11 @@ orbital GalleryItemOrbital {
         @label "Which column does the search box match against?"
         @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, caption) or the search box can never match a row."
         @synonyms "search column, search on field, match field, search key"
+        @tier "policy"
+      relatedMaxRows : number = 500
+        @label "Related rows matched per search"
+        @description "Most related-entity rows one relation search may match. The search turns the matches into the ids that narrow the main read, so a partial set would hide results; a search matching more is refused through the failure event instead of showing part of it."
+        @synonyms "relation search cap, related match limit, search match cap"
         @tier "policy"
       relatedEntity : entity = GalleryItem
         @label "Related entity"
@@ -433,6 +466,11 @@ orbital GalleryItemOrbital {
         @description "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty."
         @synonyms "filter bar style, facet style, chips, pills"
         @tier "presentation"
+      maxRows : number = 500
+        @label "Gallery image cap"
+        @description "Most images one whole-gallery load may return. The grid shows every image, so a partial read would hide images; a gallery holding more is refused through GalleryItemLoadFailed instead of showing part of it. Search, filter and REFETCH_PAGE reads use pageSize."
+        @synonyms "gallery limit, image cap, max images"
+        @tier "policy"
       pageSize : number = 20
         @label "How many images to fetch per page?"
         @description "Records fetched from the server when REFETCH_PAGE fires (a composed std-pagination driving this trait). The initial load and revisit fetches stay unpaged (whole collection), unchanged from before this knob existed."

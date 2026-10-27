@@ -14,14 +14,14 @@ type CsMap = Map string CsVal?
 type CsPlaced = { r : string!, e : CsVal, t : string! }
 type CsPlacedList = [CsPlaced]
 type CsFold = { e : CsPlacedList!, s : CsPlacedList! }
-type CsTransition = { effects : [CsVal?]? }
-type CsTick = { effects : [CsVal?]? }
-type CsMachine = { transitions : [CsTransition]? }
+type CsTransitionCS = { effects : [CsVal?]? }
+type CsTickCS = { effects : [CsVal?]? }
+type CsMachineCS = { transitions : [CsTransitionCS]? }
 type CsEmit = { event : string }
-type CsTrait = { name : string, stateMachine : CsMachine?, ticks : [CsTick]?, emits : [CsEmit]? }
-type CsOrbital = { name : string, traits : [CsVal] }
+type CsTrait = { name : string, stateMachine : CsMachineCS?, ticks : [CsTickCS]?, emits : [CsEmit]? }
+type CsOrbitalCS = { name : string, traits : [CsVal] }
 type CsServiceDef = { name : string }
-type CsProgram = { orbitals : [CsOrbital], services : [CsServiceDef]? }
+type CsProgramCS = { orbitals : [CsOrbitalCS], services : [CsServiceDef]? }
 type CsTop = { p : string!, e : CsVal, dc : [string]! }
 type CsTops = [CsTop]
 type CsSite = { path : string!, call : [CsVal?]!, leaf : boolean!, dc : [string]! }
@@ -195,7 +195,7 @@ orbital OrbLintCallServiceOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CsProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CsProgramCS  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       SERVICE_REGISTRY_HEARD { requestId : string!  unread : boolean!  services : Map string SrService! }

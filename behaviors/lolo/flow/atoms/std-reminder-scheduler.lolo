@@ -51,6 +51,7 @@ orbital ReminderSchedulerOrbital {
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
           filter: (and (= (object/get @entity remindedAt) 0) (or (and (= @config.direction "future") (> (time/parse (object/get @entity @config.dateField)) @now) (< (- (time/parse (object/get @entity @config.dateField)) @now) (* @config.offsetHours 3600000))) (and (= @config.direction "past") (> (- @now (time/parse (object/get @entity @config.dateField))) (* @config.offsetHours 3600000)))))
+          limit: 1
         })
       ScanRecordsLoaded -> scanning when (> (array/len ?data) 0)
         (set @entity.headId (object/get (array/first ?data) id))
@@ -103,6 +104,7 @@ orbital ReminderSchedulerOrbital {
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
           filter: (and (= (object/get @entity remindedAt) 0) (or (and (= @config.direction "future") (> (time/parse (object/get @entity @config.dateField)) @now) (< (- (time/parse (object/get @entity @config.dateField)) @now) (* @config.offsetHours 3600000))) (and (= @config.direction "past") (> (- @now (time/parse (object/get @entity @config.dateField))) (* @config.offsetHours 3600000)))))
+          limit: 1
         })
       
     }

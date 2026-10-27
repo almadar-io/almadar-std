@@ -18,7 +18,7 @@ orbital BoardOrbital {
 
     type BoardItemsLoadFailed = Event { error : string, code : string } "Fired when the upstream fetch fails"
 
-    type BoardItemsRelatedLoaded = Event { data : [BoardItemsRelatedRow]! } "Related rows whose text matches the query loaded"
+    type BoardItemsRelatedLoaded = Event { data : [BoardItemsRelatedRow]!, totalCount : number! } "Related rows whose text matches the query loaded"
 
     type BoardItemsSaved = Event @entity "Fired when a board item has been persisted"
 
@@ -256,7 +256,10 @@ orbital BoardOrbital {
         (fetch @config.relatedEntity {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsRelatedLoaded }
           filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
+          limit: @config.relatedMaxRows
         })
+      BoardItemsRelatedLoaded -> viewing_board when (> ?totalCount (array/len ?data))
+        (emit BoardItemsLoadFailed { error: (str/concat @config.relatedEntity " has " ?totalCount " rows matching the search, over the relatedMaxRows cap of " @config.relatedMaxRows), code: "BOARD_RELATED_OVER_CAP" })
       BoardItemsRelatedLoaded -> viewing_board
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
@@ -600,6 +603,11 @@ orbital BoardOrbital {
         @label "Which column does the search box match against?"
         @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `title` column must set this to a real field (e.g. name, summary) or the search box can never match a card."
         @synonyms "search column, search on field, match field, search key"
+        @tier "policy"
+      relatedMaxRows : number = 500
+        @label "Related rows matched per search"
+        @description "Most related-entity rows one relation search may match. The search turns the matches into the ids that narrow the main read, so a partial set would hide results; a search matching more is refused through the failure event instead of showing part of it."
+        @synonyms "relation search cap, related match limit, search match cap"
         @tier "policy"
       relatedEntity : entity = BoardView
         @label "Related entity"

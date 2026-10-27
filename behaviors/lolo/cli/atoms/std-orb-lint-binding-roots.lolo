@@ -10,18 +10,19 @@ uses Spec from "almadar-std/lint-binding-roots"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type BrShape = string | number | boolean | [BrShape?] | Map string BrShape?
-type BrTransition = { guard : BrShape?, effects : [BrShape], ensures : [BrShape] }
+type BrTransitionBR = { guard : BrShape?, effects : [BrShape], ensures : [BrShape] }
 type BrState = { holds : BrShape? }
 type BrTick = { effects : [BrShape] }
-type BrMachine = { states : [BrState], transitions : [BrTransition] }
-type BrTrait = { name : string, stateMachine : BrMachine, ticks : [BrTick] }
+type BrMachineBR = { states : [BrState], transitions : [BrTransitionBR] }
+type BrTraitBR = { name : string, stateMachine : BrMachineBR, ticks : [BrTick] }
 type BrEntity = { name : string, invariants : [BrShape] }
 type BrExpect = { kind : string, name : string }
-type BrOrbital = { name : string, expects : [BrExpect], entity : BrEntity, auxiliaryEntities : [BrEntity], traits : [BrTrait] }
-type BrProgram = { orbitals : [BrOrbital] }
+type BrOrbitalBR = { name : string, expects : [BrExpect], entity : BrEntity, auxiliaryEntities : [BrEntity], traits : [BrTraitBR] }
+type BrProgramBR = { orbitals : [BrOrbitalBR] }
 type BrOpShape = { category : string, minArity : number }
 type BrHit = { rel : string, r : string, s : string }
 type BrRoot = { x : BrShape?, w : string!, c : string! }
+type BrRH = { x : BrRoot, hs : [BrHit] }
 
 orbital OrbLintBindingRootsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -59,70 +60,67 @@ orbital OrbLintBindingRootsOrbital {
         (emit LINT_FINISH { })
       LINT_INPUT -> ready when (not @entity.vocabUnread)
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((nohits : [BrHit] []) (noroots : [BrRoot] []) (nostr : [string] []) (nof : [OrbFinding] []) (dRoots : [string] @entity.deliveryRoots) (sKeys : [string] @entity.sourceKeys) (collOps : [string] @entity.collOps) (orbitals : [BrOrbital] (object/get @payload.program "orbitals" [])))
+        (set @entity.findings (let ((nohits : [BrHit] []) (noroots : [BrRoot] []) (nostr : [string] []) (nof : [OrbFinding] []) (dRoots : [string] @entity.deliveryRoots) (sKeys : [string] @entity.sourceKeys) (collOps : [string] @entity.collOps) (collIdx (or (object/fromEntries (array/map @entity.collOps (fn c [@c, true]))) {  })) (orbitals : [BrOrbitalBR] (object/get @payload.program "orbitals" [])))
   (if @entity.shapesUnread
     [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the collection callback operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
     (let ((known : [string] (array/flatten (array/map @orbitals (fn o (array/concat
     (let ((e (object/get @o "entity" null))) (if (validate/object @e) [(object/get @e "name" "")] @nostr))
     (array/concat
       (array/flatten (array/map (object/get @o "auxiliaryEntities" []) (fn a (if (validate/object @a) [(object/get @a "name" "")] @nostr))))
-      (array/flatten (array/map (object/get @o "expects" []) (fn ex (if (and (or (= (object/get @ex "kind" "") "entity") (= (object/get @ex "kind" "") "identity")) (object/has @ex "name")) [(object/get @ex "name" "")] @nostr)))))))))) (roots : [BrRoot] (array/concat (array/flatten
-  (array/map (array/range 0 (array/len @orbitals))
-    (fn oi
-      (let ((o (array/nth @orbitals @oi)))
-        (let ((trts : [BrTrait] (object/get @o "traits" [])))
+      (array/flatten (array/map (object/get @o "expects" []) (fn ex (if (and (or (= (object/get @ex "kind" "") "entity") (= (object/get @ex "kind" "") "identity")) (object/has @ex "name")) [(object/get @ex "name" "")] @nostr)))))))))) (roots : [BrRoot] (array/concat
+  (array/flatten
+    (array/map @orbitals
+      (fn o
+        (let ((oi @index) (trts : [BrTraitBR] (object/get @o "traits" [])))
           (array/flatten
-            (array/map (array/range 0 (array/len @trts))
-              (fn ti
-                (let ((t (array/nth @trts @ti)))
+            (array/map @trts
+              (fn t
+                (let ((ti @index))
                   (if (not (object/has @t "stateMachine"))
                     @noroots
-                    (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (trs : [BrTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (sts : [BrState] (object/get (object/get @t "stateMachine" { states: [] }) "states" [])) (tks : [BrTick] (object/get @t "ticks" [])))
+                    (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (trs : [BrTransitionBR] (object/get @t "stateMachine.transitions" [])) (sts : [BrState] (object/get @t "stateMachine.states" [])) (tks : [BrTick] (object/get @t "ticks" [])))
                       (array/concat
                         (array/flatten
-                          (array/map (array/range 0 (array/len @trs))
-                            (fn xi
-                              (let ((tr (array/nth @trs @xi)) (xp (str/concat @tp ".stateMachine.transitions[" @xi "]")))
-                                (let ((effs : [BrShape] (object/get @tr "effects" [])) (ens : [BrShape] (object/get @tr "ensures" [])) (g (object/get @tr "guard" null)))
+                          (array/map @trs
+                            (fn tr
+                              (let ((xp (str/concat @tp ".stateMachine.transitions[" @index "]")) (effs : [BrShape] (object/get @tr "effects" [])) (ens : [BrShape] (object/get @tr "ensures" [])) (g (object/get @tr "guard" null)))
+                                (array/concat
+                                  (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard"), c: "guard" }] @noroots)
                                   (array/concat
-                                    (if (!= @g null) [{ x: @g, w: (str/concat @xp ".guard"), c: "guard" }] @noroots)
-                                    (array/concat
-                                      (array/map (array/range 0 (array/len @effs)) (fn ei { x: (array/nth @effs @ei), w: (str/concat @xp ".effects[" @ei "]"), c: "effect" }))
-                                      (array/map (array/range 0 (array/len @ens)) (fn ki { x: (array/nth @ens @ki), w: (str/concat @xp ".ensures[" @ki "]"), c: "ensures" })))))))))
+                                    (array/map @effs (fn e { x: @e, w: (str/concat @xp ".effects[" @index "]"), c: "effect" }))
+                                    (array/map @ens (fn e { x: @e, w: (str/concat @xp ".ensures[" @index "]"), c: "ensures" }))))))))
                         (array/concat
                           (array/flatten
-                            (array/map (array/range 0 (array/len @sts))
-                              (fn si
-                                (let ((h (object/get (array/nth @sts @si) "holds" null)))
-                                  (if (!= @h null) [{ x: @h, w: (str/concat @tp ".stateMachine.states[" @si "].holds"), c: "guard" }] @noroots)))))
+                            (array/map @sts
+                              (fn st
+                                (let ((h (object/get @st "holds" null)))
+                                  (if (!= @h null) [{ x: @h, w: (str/concat @tp ".stateMachine.states[" @index "].holds"), c: "guard" }] @noroots)))))
                           (array/flatten
-                            (array/map (array/range 0 (array/len @tks))
-                              (fn ki
-                                (let ((teffs : [BrShape] (object/get (array/nth @tks @ki) "effects" [])))
-                                  (array/map (array/range 0 (array/len @teffs)) (fn ei { x: (array/nth @teffs @ei), w: (str/concat @tp ".ticks[" @ki "].effects[" @ei "]"), c: "tick" }))))))))))))))))))) (array/concat
-  (array/flatten
-    (array/map (array/range 0 (array/len @orbitals))
-      (fn oi
-        (let ((ent (object/get (array/nth @orbitals @oi) "entity" null)))
-          (if (validate/object @ent)
-            (let ((invs : [BrShape] (object/get @ent "invariants" [])))
-              (array/map (array/range 0 (array/len @invs)) (fn ni { x: (array/nth @invs @ni), w: (str/concat "orbitals[" @oi "].entity.invariants[" @ni "]"), c: "guard" })))
-            @noroots)))))
-  (array/flatten
-    (array/map (array/range 0 (array/len @orbitals))
-      (fn oi
-        (let ((auxs : [BrEntity] (object/get (array/nth @orbitals @oi) "auxiliaryEntities" [])))
-          (array/flatten
-            (array/map (array/range 0 (array/len @auxs))
-              (fn ai
-                (let ((invs : [BrShape] (object/get (array/nth @auxs @ai) "invariants" [])))
-                  (if (validate/object (array/nth @auxs @ai))
-                    (array/map (array/range 0 (array/len @invs)) (fn ni { x: (array/nth @invs @ni), w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @ni "]"), c: "guard" }))
-                    @noroots)))))))))))))
-      (array/flatten
-        (array/map @roots
-          (fn x
-            (let ((hs (or (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
+                            (array/map @tks
+                              (fn tk
+                                (let ((ki @index) (teffs : [BrShape] (object/get @tk "effects" [])))
+                                  (array/map @teffs (fn e { x: @e, w: (str/concat @tp ".ticks[" @ki "].effects[" @index "]"), c: "tick" }))))))))))))))))))
+  (array/concat
+    (array/flatten
+      (array/map @orbitals
+        (fn o
+          (let ((oi @index) (ent (object/get @o "entity" null)))
+            (if (validate/object @ent)
+              (let ((invs : [BrShape] (object/get @ent "invariants" [])))
+                (array/map @invs (fn iv { x: @iv, w: (str/concat "orbitals[" @oi "].entity.invariants[" @index "]"), c: "guard" })))
+              @noroots)))))
+    (array/flatten
+      (array/map @orbitals
+        (fn o
+          (let ((oi @index) (auxs : [BrEntity] (object/get @o "auxiliaryEntities" [])))
+            (array/flatten
+              (array/map @auxs
+                (fn a
+                  (let ((ai @index) (invs : [BrShape] (object/get @a "invariants" [])))
+                    (if (validate/object @a)
+                      (array/map @invs (fn iv { x: @iv, w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @index "]"), c: "guard" }))
+                      @noroots)))))))))))) (knownIdx (or (object/fromEntries (array/map @known (fn z [@z, true]))) {  }))
+      (rh : [BrRH] (array/map @roots (fn x { x: @x, hs: (or (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
   (if (str/startsWith @n (quote "@"))
     [{ rel: "", r: (array/first (str/split (array/first (str/split (str/slice @n 1) ".")) "[")), s: @n }]
     @nohits)
@@ -149,7 +147,7 @@ orbital OrbLintBindingRootsOrbital {
                     (array/map (array/filter @k1 (fn h (not (array/includes @names (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")) })))
                     (array/map (array/filter (let ((r : [BrHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes @names (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) })))))
                 (array/map (let ((r : [BrHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) }))))))
-          (if (and (>= @len 3) (array/includes @collOps @op))
+          (if (and (>= @len 3) (object/has @collIdx @op))
             (array/concat
               (array/map (let ((r : [BrHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")) })))
               (array/flatten
@@ -157,22 +155,30 @@ orbital OrbLintBindingRootsOrbital {
                   (fn i
                     (array/map (array/filter (let ((r : [BrHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes ["item", "index"] (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) })))))))
             (array/flatten
-              (array/map (array/range 0 @len)
-                (fn i
-                  (array/map (let ((r : [BrHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) }))))))))))
+              (array/map @k
+                (fn kr
+                  (let ((i @index) (r : [BrHit]? @kr))
+                    (array/map (if (validate/array @r) @r @nohits) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) })))))))))))
     (if (validate/object @n)
       (array/flatten
         (array/map (object/keys @k)
           (fn key
             (array/map (let ((r : [BrHit]? (object/get @k @key))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
-      @nohits)))) BrShape) @nohits)))
+      @nohits)))) BrShape) @nohits) })))
+      (allS : [string] (array/map (array/flatten (array/map @rh (fn p (object/get @p "hs" [])))) (fn h (object/get @h "s" ""))))
+      (joined (str/join @allS "\n"))
+      (fmtAll (and (> (array/len @allS) 0) (= (array/len (str/split @joined "\n")) (array/len @allS)) (validate/pattern @joined "^@[\\p{L}_][\\p{L}0-9_]*(?:\\.[\\p{L}0-9_]+|\\[\\d+\\])*(?:\\n@[\\p{L}_][\\p{L}0-9_]*(?:\\.[\\p{L}0-9_]+|\\[\\d+\\])*)*$"))))
+      (array/flatten
+        (array/map @rh
+          (fn p
+            (let ((x (object/get @p "x" null)) (hs : [BrHit] (object/get @p "hs" [])))
               (array/flatten
                 (array/map @hs
                   (fn h
                     (let ((s (object/get @h "s")) (r (object/get @h "r")) (c (object/get @x "c")) (p (str/concat (object/get @x "w") (object/get @h "rel"))))
               (let ((parts (str/split (str/slice @s 1) ".")))
                 (let ((rest (array/slice @parts 1 (array/len @parts))))
-                  (if (not (validate/pattern @s "^@[\\p{L}_][\\p{L}0-9_]*(\\.[\\p{L}0-9_]+|\\[\\d+\\])*$"))
+                  (if (and (not @fmtAll) (not (validate/pattern @s "^@[\\p{L}_][\\p{L}0-9_]*(\\.[\\p{L}0-9_]+|\\[\\d+\\])*$")))
                     [{ code: "ORB_BINDING_INVALID_FORMAT", path: @p, message: (str/concat "Invalid binding format: '" @s "'"), suggestion: "Use @root.field.nested format", severity: "error" }]
                     (if (= @r "fromEntity")
                       (if (!= @c "ensures") [{ code: "ORB_BINDING_FROM_ENTITY_OUTSIDE_ENSURES", path: @p, message: (str/concat (quote "@") "fromEntity is the row before a transition and exists only inside its `@ensures`"), suggestion: "Read the current row with @entity; state a before/after relation in an `@ensures` under the transition", severity: "error" }] @nof)
@@ -188,7 +194,7 @@ orbital OrbLintBindingRootsOrbital {
                           [{ code: "ORB_BINDING_STATE_NO_PATH", path: @p, message: (str/concat (quote "@") "state should not have a path - it returns the state name directly"), suggestion: "Use @state without a path", severity: "error" }]
                           (if (and (= @r "now") (> (array/len @parts) 1))
                             [{ code: "ORB_BINDING_NOW_NO_PATH", path: @p, message: (str/concat (quote "@") "now should not have a path - it returns the current timestamp directly"), suggestion: "Use @now without a path", severity: "error" }]
-                            (if (and (validate/pattern @r "^[A-Z][a-zA-Z0-9]*$") (> (array/len @known) 0) (not (array/includes @known @r)))
+                            (if (and (validate/pattern @r "^[A-Z][a-zA-Z0-9]*$") (> (array/len @known) 0) (not (object/has @knownIdx @r)))
                               [{ code: "ORB_BINDING_UNKNOWN_ENTITY", path: @p, message: (str/concat "Entity '" @r "' in binding may not exist"), suggestion: "Ensure the entity is defined in the schema", severity: "error" }]
                               @nof))))))))))))))))))))
         (emit LINT_FINISH { })
@@ -207,7 +213,7 @@ orbital OrbLintBindingRootsOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BrProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : BrProgramBR  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       SHAPES_HEARD { operators : Map string BrOpShape! }

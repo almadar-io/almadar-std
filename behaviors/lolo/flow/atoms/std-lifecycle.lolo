@@ -5,7 +5,7 @@ app std-lifecycle [
 uses Spec from "almadar-std/lifecycle"
 
 orbital LifecycleOrbital {
-    type ScanRecordsLoaded = Event { data : [@entity @config.targetEntity]! } "Internal: target records matching the lifecycle filter."
+    type ScanRecordsLoaded = Event { data : [@entity @config.targetEntity]!, totalCount : number! } "Internal: target records matching the lifecycle filter."
 
     type ScanFailed = Event { error : string, code : string } "Internal: scan fetch / persist failed."
 
@@ -32,7 +32,7 @@ orbital LifecycleOrbital {
     state idle {
       INIT -> idle
       ScanRecordsLoaded -> idle when (and @config.enabled @config.dryRun (= @config.action "status") (> (array/len ?data) 0))
-        (notify info (str/concat "Dry run — " (array/len ?data) " record(s) would transition, nothing was written."))
+        (notify info (str/concat "Dry run — " ?totalCount " record(s) would transition, nothing was written."))
       ScanRecordsLoaded -> scanning when (and @config.enabled (not @config.dryRun) (= @config.action "status") (> (array/len ?data) 0))
         @ensures (= @entity.headStatus @config.toStatus)
         (set @entity.headId (object/get (array/first ?data) id))
@@ -42,7 +42,7 @@ orbital LifecycleOrbital {
           emit: { failure: ScanFailed, success: LifecycleStepped }
         })
       ScanRecordsLoaded -> idle when (and @config.enabled @config.dryRun (= @config.action "delete") (> @config.ageDays 0) (> (array/len ?data) 0))
-        (notify info (str/concat "Dry run — " (array/len ?data) " record(s) would be deleted, nothing was deleted."))
+        (notify info (str/concat "Dry run — " ?totalCount " record(s) would be deleted, nothing was deleted."))
       ScanRecordsLoaded -> scanning when (and @config.enabled (not @config.dryRun) (= @config.action "delete") (> @config.ageDays 0) (> (array/len ?data) 0))
         (set @entity.headId (object/get (array/first ?data) id))
         (emit LifecycleDeleted { entityId: @entity.headId })
@@ -61,10 +61,12 @@ orbital LifecycleOrbital {
           (fetch @config.targetEntity {
             emit: { failure: ScanFailed, success: ScanRecordsLoaded }
             filter: (and (or (= @config.fromStatus "") (= (object/get @entity @config.statusField) @config.fromStatus)) (> (object/get @entity @config.dateField) 0) (< (object/get @entity @config.dateField) (- @now (* @config.ageDays 86400000))))
+            limit: 1
           })
           (fetch @config.targetEntity {
             emit: { failure: ScanFailed, success: ScanRecordsLoaded }
             filter: (and (= (object/get @entity status) @config.fromStatus) (< (object/get @entity @config.dateField) (- @now (* @config.ageDays 86400000))))
+            limit: 1
           }))
       ScanRecordsLoaded -> scanning when (and (= @config.action "status") (> (array/len ?data) 0))
         @ensures (= @entity.headStatus @config.toStatus)
@@ -95,6 +97,7 @@ orbital LifecycleOrbital {
       }
       ScanRecordsLoaded {
         data : [@entity @config.targetEntity]!
+        totalCount : number!
       }
       ScanFailed {
         error : string
@@ -108,6 +111,7 @@ orbital LifecycleOrbital {
     listens {
       ScanRecordsLoaded {
         data : [@entity @config.targetEntity]!
+        totalCount : number!
       }
       ScanFailed {
         error : string
@@ -124,10 +128,12 @@ orbital LifecycleOrbital {
           (fetch @config.targetEntity {
             emit: { failure: ScanFailed, success: ScanRecordsLoaded }
             filter: (and (or (= @config.fromStatus "") (= (object/get @entity @config.statusField) @config.fromStatus)) (> (object/get @entity @config.dateField) 0) (< (object/get @entity @config.dateField) (- @now (* @config.ageDays 86400000))))
+            limit: 1
           })
           (fetch @config.targetEntity {
             emit: { failure: ScanFailed, success: ScanRecordsLoaded }
             filter: (and (= (object/get @entity status) @config.fromStatus) (< (object/get @entity @config.dateField) (- @now (* @config.ageDays 86400000))))
+            limit: 1
           }))
     }
 

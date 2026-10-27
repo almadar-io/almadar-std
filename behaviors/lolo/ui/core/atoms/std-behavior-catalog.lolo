@@ -12,7 +12,7 @@ type BehaviorCatalogHit = {
   topic : string!
   level : string!
   capabilities : [string]
-  traits : [trait]!
+  traits : [trait]
   value : behavior!
   vectors : Map string [number]
 }
@@ -26,6 +26,7 @@ type BehaviorCatalogRow = {
 }
 type BehaviorCatalogTopic = {
   package : string!
+  prefix : string
   topic : string!
   count : number!
 }
@@ -134,6 +135,10 @@ orbital BehaviorCatalogOrbital {
         @label "List on start"
         @description "List the folders as the page mounts; off waits for CATALOG_LOAD, so a host that mounts the catalog before it is shown reads nothing until then."
         @tier "policy"
+      perTopic : boolean = false
+        @label "Load each topic when opened"
+        @description "List only the topics with their counts at first, and a topic's behaviors, without their traits, when it is opened; off lists every behavior up front."
+        @tier "policy"
     }
     initial: loading
 
@@ -144,7 +149,17 @@ orbital BehaviorCatalogOrbital {
         (set @entity.status loading)
         (render-ui main <loading-state message="Loading the catalog" />)
         (behavior/catalog { paths: ?paths } { vectors: false emit: { success: LISTED, failure: LIST_FAILED } })
-      INIT -> loading when @config.loadOnInit
+      INIT -> loading when (and @config.loadOnInit @config.perTopic)
+        (set @entity.topicPackage @config.startPackage)
+        (set @entity.topic @config.startTopic)
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) } {
+          vectors: false
+          topics: true
+          emit: { success: TOPICS_LISTED, failure: LIST_FAILED }
+        })
+      INIT -> loading when (and @config.loadOnInit (not @config.perTopic))
         (set @entity.topicPackage @config.startPackage)
         (set @entity.topic @config.startTopic)
         (set @entity.status loading)
@@ -157,7 +172,17 @@ orbital BehaviorCatalogOrbital {
         (set @entity.topicPackage @config.startPackage)
         (set @entity.topic @config.startTopic)
         (render-ui main <loading-state message="Loading the catalog" />)
-      CATALOG_LOAD -> loading
+      CATALOG_LOAD -> loading when @config.perTopic
+        (set @entity.topicPackage @config.startPackage)
+        (set @entity.topic @config.startTopic)
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the catalog" />)
+        (behavior/catalog { paths: (if (> (array/len @entity.paths) 0) @entity.paths @config.scope) } {
+          vectors: false
+          topics: true
+          emit: { success: TOPICS_LISTED, failure: LIST_FAILED }
+        })
+      CATALOG_LOAD -> loading when (not @config.perTopic)
         (set @entity.topicPackage @config.startPackage)
         (set @entity.topic @config.startTopic)
         (set @entity.status loading)
@@ -171,6 +196,22 @@ orbital BehaviorCatalogOrbital {
       TOPIC -> loading
         (set @entity.topicPackage ?package)
         (set @entity.topic ?topic)
+      TOPICS_LISTED -> loading when (!= @entity.topic "")
+        (set @entity.topics ?result)
+        (emit CATALOG_TOPICS { topics: ?result })
+        (behavior/catalog { paths: [(str/concat (object/get (array/find ?result (fn t (and (= @t.package @entity.topicPackage) (= @t.topic @entity.topic)))) prefix "") "/" @entity.topic)] } { vectors: false traits: false emit: { success: TOPIC_LISTED, failure: LIST_FAILED } })
+      TOPICS_LISTED -> ready when (= @entity.topic "")
+        (set @entity.topics ?result)
+        (set @entity.entries [])
+        (set @entity.rows [])
+        (set @entity.status ready)
+        (emit CATALOG_TOPICS { topics: ?result })
+        (emit CATALOG_SHOWN {})
+      TOPIC_LISTED -> ready
+        (set @entity.entries ?result)
+        (set @entity.rows (array/map ?result (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
+        (set @entity.status ready)
+        (emit CATALOG_SHOWN {})
       LISTED -> ready
         (set @entity.entries ?result)
         (set @entity.rows (array/map (array/filter ?result (fn e (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic))))) (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
@@ -304,7 +345,14 @@ orbital BehaviorCatalogOrbital {
         (set @entity.query "")
         (set @entity.rows (array/map (array/filter @entity.entries (fn e (or (= @entity.topic "") (and (= @e.package @entity.topicPackage) (= @e.topic @entity.topic))))) (fn e { behavior: @e.behavior, package: @e.package, description: @e.description, topic: @e.topic, level: @e.level, score: 0 })))
         (emit CATALOG_SHOWN {})
-      TOPIC -> ready
+      TOPIC -> loading when @config.perTopic
+        (set @entity.topicPackage ?package)
+        (set @entity.topic ?topic)
+        (set @entity.query "")
+        (set @entity.status loading)
+        (render-ui main <loading-state message="Loading the topic" />)
+        (behavior/catalog { paths: [(str/concat (object/get (array/find @entity.topics (fn t (and (= @t.package ?package) (= @t.topic ?topic)))) prefix "") "/" ?topic)] } { vectors: false traits: false emit: { success: TOPIC_LISTED, failure: LIST_FAILED } })
+      TOPIC -> ready when (not @config.perTopic)
         (set @entity.topicPackage ?package)
         (set @entity.topic ?topic)
         (set @entity.query "")
@@ -442,6 +490,12 @@ orbital BehaviorCatalogOrbital {
         @synonyms "catalog topics, behavior categories, topic counts"
         @tier "primary"
       LISTED {
+        result : [BehaviorCatalogHit]!
+      }
+      TOPICS_LISTED {
+        result : [BehaviorCatalogTopic]!
+      }
+      TOPIC_LISTED {
         result : [BehaviorCatalogHit]!
       }
       LIST_FAILED {

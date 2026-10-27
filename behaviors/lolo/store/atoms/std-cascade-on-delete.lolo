@@ -1,6 +1,6 @@
 app std-cascade-on-delete [
   version: "1.1.0",
-  description: "std-cascade-on-delete — relational `owns` cascade. Listens for a parent-deleted sentinel (`ParentDeleted` — rename via traitOverrides.events to the consumer's actual parent-deleted event), then deletes every dependent row whose `foreignKeyField` points at the deleted parent — via a self-driving loop (delete the head of the matching set, re-fetch until none remain). Emits `CascadeRowDeleted` per row and `CascadeCompleted` when done."
+  description: "std-cascade-on-delete — relational `owns` cascade. Listens for a parent-deleted sentinel (`ParentDeleted` — rename via traitOverrides.events to the consumer's actual parent-deleted event), then deletes every dependent row whose `foreignKeyField` points at the deleted parent — via a self-driving loop (delete the head of the matching set, re-fetch until none remain; each fetch is filtered by the foreign key store-side and reads one row). Emits `CascadeRowDeleted` per row and `CascadeCompleted` when done."
 ]
 orbital CascadeOnDeleteOrbital {
     type ParentDeleted = Event { data : @entity @config.parentEntity } "Rename via traitOverrides.events to the upstream parent-deleted event (e.g. ContactDeleted). `data.id` carries the parent's primary key."
@@ -33,17 +33,19 @@ orbital CascadeOnDeleteOrbital {
         (set @entity.parentEntity @config.parentEntity)
         (fetch @config.dependentEntity {
           emit: { failure: CascadeFailed, success: DepsLoaded }
+          filter: (= (object/get @entity @config.foreignKeyField) @entity.parentId)
+          limit: 1
         })
     }
 
     state scanning {
-      DepsLoaded -> scanning when (> (array/len (array/filter ?data (fn row (= (object/get @row @config.foreignKeyField) @entity.parentId)))) 0)
-        (set @entity.headId (object/get (array/first (array/filter ?data (fn row (= (object/get @row @config.foreignKeyField) @entity.parentId)))) id))
+      DepsLoaded -> scanning when (> (array/len ?data) 0)
+        (set @entity.headId (object/get (array/first ?data) id))
         (emit CascadeRowDeleted { id: @entity.headId })
         (persist delete @config.dependentEntity @entity.headId {
           emit: { failure: CascadeFailed, success: CascadeStepped }
         })
-      DepsLoaded -> idle when (= (array/len (array/filter ?data (fn row (= (object/get @row @config.foreignKeyField) @entity.parentId)))) 0)
+      DepsLoaded -> idle when (= (array/len ?data) 0)
         (emit CascadeCompleted { parentId: @entity.parentId })
         (persist create CascadeLog {
           parentId: @entity.parentId
@@ -54,6 +56,8 @@ orbital CascadeOnDeleteOrbital {
         (set @entity.rowCount (+ @entity.rowCount 1))
         (fetch @config.dependentEntity {
           emit: { failure: CascadeFailed, success: DepsLoaded }
+          filter: (= (object/get @entity @config.foreignKeyField) @entity.parentId)
+          limit: 1
         })
       CascadeFailed -> idle
         (notify error (str/concat "Couldn't cascade the delete — " ?error))

@@ -13,12 +13,12 @@ type EfVal = string | number | boolean | [EfVal?] | Map string EfVal?
 type EfEvt = { event : string }
 type EfListen = { event : string, triggers : string }
 type EfKey = { key : string }
-type EfTransition = { event : string, effects : [EfVal?] }
-type EfMachine = { events : [EfKey], transitions : [EfTransition] }
-type EfTrait = { name : string, linkedEntity : string, emits : [EfEvt], listens : [EfListen], stateMachine : EfMachine }
+type EfTransitionRB = { event : string, effects : [EfVal?] }
+type EfMachineRB = { events : [EfKey], transitions : [EfTransitionRB] }
+type EfTraitRB = { name : string, linkedEntity : string, emits : [EfEvt], listens : [EfListen], stateMachine : EfMachineRB }
 type EfEntity = { name : string, fields : [EfVal?] }
-type EfOrbital = { name : string, entity : EfEntity, auxiliaryEntities : [EfEntity], traits : [EfTrait] }
-type EfProgram = { orbitals : [EfOrbital] }
+type EfOrbitalRB = { name : string, entity : EfEntity, auxiliaryEntities : [EfEntity], traits : [EfTraitRB] }
+type EfProgramRB = { orbitals : [EfOrbitalRB] }
 type EfStale = { pat : string!, prop : string!, ev : string! }
 type EfSetHit = { f : string!, v : EfVal?, nm : string! }
 type EfPropShape = { kind : string? }
@@ -45,7 +45,7 @@ orbital OrbLintRuiBindingOrbital {
         (set @entity.evProps (object/mapValues @payload.patterns (fn e (let ((ps (object/get @e "props" {}))) (array/filter (object/keys @ps) (fn pn (array/includes @config.eventKinds (object/get (object/get @ps @pn {}) "kind" ""))))))))
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals : [EfOrbital] (object/get @payload.program "orbitals" [])) (evp @entity.evProps) (pnm @entity.propNames) (noe : [EfEntity] []) (noS : [string] []) (noSt : [EfStale] []) (noPat : [EfVal?] []) (noSh : [EfSetHit] []) (noL : [EfVal?] []) (noF : [OrbFinding] [])
+        (set @entity.findings (let ((orbitals : [EfOrbitalRB] (object/get @payload.program "orbitals" [])) (evp @entity.evProps) (pnm @entity.propNames) (noe : [EfEntity] []) (noS : [string] []) (noSt : [EfStale] []) (noPat : [EfVal?] []) (noSh : [EfSetHit] []) (noL : [EfVal?] []) (noF : [OrbFinding] [])
  (allEnts (array/flatten (array/map @orbitals (fn o (array/concat
       (let ((en (object/get @o "entity" null))) (if (and (validate/object @en) (validate/string (object/get @en "name" null))) [@en] @noe))
       (array/filter (object/get @o "auxiliaryEntities" @noe) (fn x (and (validate/object @x) (validate/string (object/get @x "name" null))))))))))
@@ -176,7 +176,7 @@ orbital OrbLintRuiBindingOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EfProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : EfProgramRB  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       LINT_PATTERNS_HEARD { patterns : Map string EfPatternShape! }

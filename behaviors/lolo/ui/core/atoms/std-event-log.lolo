@@ -12,11 +12,11 @@ orbital EventLogOrbital {
 
     type FilterChip = { id : string!, label : string!, icon : string }
 
-    type EventLogLoaded = Event { data : [ObjectSpec]! } "Fired when event entries finish loading"
+    type EventLogLoaded = Event { data : [ObjectSpec]!, totalCount : number } "Fired when one page of event entries finishes loading"
 
     type EventLogLoadFailed = Event { error : string, code : string } "Fired when fetch fails"
 
-    type EventLogRelatedLoaded = Event { data : [EventLogRelatedRow]! } "Related rows whose text matches the query loaded"
+    type EventLogRelatedLoaded = Event { data : [EventLogRelatedRow]!, totalCount : number! } "Related rows whose text matches the query loaded"
 
     type EventLogSaved = Event @entity "Fired when an entry has been persisted"
 
@@ -37,6 +37,8 @@ orbital EventLogOrbital {
     backfillDate : date @description "The date and time when the event was manually added." @synonyms "timestamp, entered date, manual date"
     backfillKind : string @description "Specifies the category or type of the manually added event." @synonyms "event type, category, kind" = ""
     errorMessage : string @description "A human-readable message indicating an error condition." @synonyms "error, error message, problem, issue" = ""
+    eventLogPage : number @intrinsic @description "The page the log shows." = 1
+    eventLogTotalCount : number @intrinsic @description "Entries the log's filter matches, across every page." = 0
   }
 
   trait EventLogTimeline -> @rebindable EventLogView {
@@ -44,8 +46,12 @@ orbital EventLogOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.eventLogPage 1)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: (str/concat @config.dateField ":desc")
         })
         (render-ui main {
           type: stack
@@ -54,6 +60,7 @@ orbital EventLogOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: list, rows: 6 }]
         })
       EventLogLoaded -> viewing
+        (set @entity.eventLogTotalCount ?totalCount)
         (set @entity.filterChips (array/prepend (array/map @config.kindOptions (fn k {
           icon: (object/get @k icon circle)
           id: (object/get @k key)
@@ -140,6 +147,12 @@ orbital EventLogOrbital {
             statusField: @config.statusField
             look: @config.timelineLook
             type: timeline
+          }, {
+            currentPage: @entity.eventLogPage
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -153,8 +166,12 @@ orbital EventLogOrbital {
           type: error-state
         })
       EventLogSaved -> loading
+        (set @entity.eventLogPage 1)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: (str/concat @config.dateField ":desc")
         })
         (render-ui main {
           type: stack
@@ -175,8 +192,12 @@ orbital EventLogOrbital {
       ;; revisit re-entry: re-fetch in place, no render — keeps the rendered
       ;; timeline on screen instead of flashing the loading skeleton over it.
       INIT -> loading
+        (set @entity.eventLogPage 1)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: (str/concat @config.dateField ":desc")
         })
       APPLY_FILTER -> viewing
         (set @entity.filterKind ?tabId)
@@ -242,6 +263,12 @@ orbital EventLogOrbital {
             statusField: @config.statusField
             look: @config.timelineLook
             type: timeline
+          }, {
+            currentPage: @entity.eventLogPage
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ @entity.eventLogTotalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -255,36 +282,54 @@ orbital EventLogOrbital {
       ;; tab (@entity.filterKind) so search/generic-filter compound with it
       ;; instead of resetting it.
       REFETCH_QUERY -> viewing when (or (= @config.searchRelation null) (= ?searchTerm ""))
+        (set @entity.eventLogPage 1)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
           filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= ?searchTerm "") (str/includes (object/get @entity @config.searchField) ?searchTerm)))
+          limit: @config.pageSize
+          offset: 0
+          orderBy: (str/concat @config.dateField ":desc")
         })
       REFETCH_QUERY -> viewing when (and (!= @config.searchRelation null) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {
           emit: { failure: EventLogLoadFailed, success: EventLogRelatedLoaded }
           filter: (str/includes (object/get @entity @config.relatedSearchField) ?searchTerm)
+          limit: @config.relatedMaxRows
         })
+      EventLogRelatedLoaded -> viewing when (> ?totalCount (array/len ?data))
+        (emit EventLogLoadFailed { error: (str/concat @config.relatedEntity " has " ?totalCount " rows matching the search, over the relatedMaxRows cap of " @config.relatedMaxRows), code: "EVENT_LOG_RELATED_OVER_CAP" })
       EventLogRelatedLoaded -> viewing
+        (set @entity.eventLogPage 1)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
           filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
+          limit: @config.pageSize
+          offset: 0
+          orderBy: (str/concat @config.dateField ":desc")
         })
       REFETCH_FILTER -> viewing
+        (set @entity.eventLogPage 1)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
           filter: (and (or (= @entity.filterKind "") (= (object/get @entity @config.kindField) @entity.filterKind)) (or (= ?value "") (= (object/get @entity ?field) ?value)))
+          limit: @config.pageSize
+          offset: 0
+          orderBy: (str/concat @config.dateField ":desc")
         })
       ;; No filter carried over on REFETCH_PAGE, mirroring std-browse exactly —
       ;; the reference page arm does not preserve query/filter either.
       REFETCH_PAGE -> viewing
+        (set @entity.eventLogPage ?page)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)
+          orderBy: (str/concat @config.dateField ":desc")
         })
       EventLogLoadFailed -> viewing
         (notify error (str/concat "Couldn't refresh the event log — " ?error))
       EventLogLoaded -> viewing
+        (set @entity.eventLogTotalCount ?totalCount)
         (set @entity.filterChips (array/prepend (array/map @config.kindOptions (fn k {
           icon: (object/get @k icon circle)
           id: (object/get @k key)
@@ -371,6 +416,12 @@ orbital EventLogOrbital {
             statusField: @config.statusField
             look: @config.timelineLook
             type: timeline
+          }, {
+            currentPage: @entity.eventLogPage
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -418,8 +469,12 @@ orbital EventLogOrbital {
 
     state backfilling {
       INIT -> loading
+        (set @entity.eventLogPage 1)
         (fetch EventLogView {
           emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+          limit: @config.pageSize
+          offset: 0
+          orderBy: (str/concat @config.dateField ":desc")
         })
         (render-ui main {
           type: stack
@@ -493,6 +548,12 @@ orbital EventLogOrbital {
             statusField: @config.statusField
             look: @config.timelineLook
             type: timeline
+          }, {
+            currentPage: @entity.eventLogPage
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
+            totalPages: (math/max 1 (math/ceil (/ @entity.eventLogTotalCount @config.pageSize)))
+            type: pagination
           }]
           direction: vertical
           gap: md
@@ -537,6 +598,7 @@ orbital EventLogOrbital {
         @tier "presentation"
       EventLogLoaded {
         data : [ObjectSpec]!
+        totalCount : number
       }
         @description "Signals the event log has finished loading."
         @synonyms "loaded, ready, initialized"
@@ -584,6 +646,7 @@ orbital EventLogOrbital {
         @tier "presentation"
       EventLogLoaded {
         data : [ObjectSpec]!
+        totalCount : number
       }
         @description "Signals the event log has finished loading."
         @synonyms "loaded, ready, initialized"
@@ -638,6 +701,11 @@ orbital EventLogOrbital {
         @label "Which column does the search box match against?"
         @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `title` column must set this to a real field or the search box can never match an entry."
         @synonyms "search column, search on field, match field, search key"
+        @tier "policy"
+      relatedMaxRows : number = 500
+        @label "Related rows matched per search"
+        @description "Most related-entity rows one relation search may match. The search turns the matches into the ids that narrow the main read, so a partial set would hide results; a search matching more is refused through the failure event instead of showing part of it."
+        @synonyms "relation search cap, related match limit, search match cap"
         @tier "policy"
       relatedEntity : entity = EventLogView
         @label "Related entity"
@@ -737,8 +805,8 @@ orbital EventLogOrbital {
         @synonyms "filter bar style, facet style, chips, pills"
         @tier "presentation"
       pageSize : number = 20
-        @label "How many entries per page when paging?"
-        @description "Records fetched from the server per REFETCH_PAGE request. The initial load and every search/kind/filter refetch stay unpaginated (load everything that matches) so the default unlimited activity feed is unchanged; only an explicit REFETCH_PAGE from a composed std-pagination control applies this limit."
+        @label "How many entries per page?"
+        @description "Entries shown per page, newest first. Every load, search and filter refetch reads the first page; the log renders its own page bar."
         @synonyms "fetch limit, records per page, page limit"
         @tier "presentation"
     }

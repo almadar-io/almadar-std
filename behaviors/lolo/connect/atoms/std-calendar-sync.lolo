@@ -65,6 +65,7 @@ orbital CalendarSyncOrbital {
         (fetch @config.targetEntity {
           emit: { failure: CAL_SYNC_FAILED, success: PUSH_ROWS_LOADED }
           filter: (= (object/get @entity externalEventId) "")
+          limit: 1
         })
       CAL_REMOTE_CHANGED -> idle when @config.enabled
         (emit CALENDAR_LIST_EVENTS {
@@ -117,6 +118,7 @@ orbital CalendarSyncOrbital {
         (fetch @config.targetEntity {
           emit: { failure: CAL_SYNC_FAILED, success: PUSH_ROWS_LOADED }
           filter: (= (object/get @entity externalEventId) "")
+          limit: 1
         })
       PUSH_ROWS_LOADED -> pushing when (> (array/len ?data) 0)
         (set @entity.headId (object/get (array/first ?data) id))
@@ -219,7 +221,7 @@ orbital CalendarSyncOrbital {
       PUSH_ROWS_LOADED {
         data : [TargetRow]!
       }
-        @description "Target rows with a blank externalEventId marker — the remaining local→remote export queue."
+        @description "The next target row with a blank externalEventId marker, read one at a time; the push loop stamps it and reads the next, so the export queue drains without ever loading it whole."
         @tier "secondary"
       PUSH_STEPPED {
         id : string!
@@ -293,6 +295,7 @@ orbital CalendarSyncOrbital {
         (fetch @config.targetEntity {
           emit: { failure: CAL_SYNC_FAILED, success: PUSH_ROWS_LOADED }
           filter: (= (object/get @entity externalEventId) "")
+          limit: 1
         })
 
     }

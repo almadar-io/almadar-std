@@ -6,14 +6,15 @@ type AppSearchFieldSpec = { name : string!, label : string, variant : h3 | h4 | 
 type AppSearchRelatedRow = { id : string! }
 type AppSearchActionSpec = { label : string!, event : event!, variant : primary | secondary | ghost | danger, icon : string, href : string, payload : string, disabled : boolean, confirm : string, hidden : boolean, roles : [string] }
 orbital AppSearchOrbital {
-  type AppSearchLoaded = Event { data : [AppSearchTarget]! } "Filtered search results loaded"
+  type AppSearchLoaded = Event { data : [AppSearchTarget]!, totalCount : number } "One page of filtered search results loaded"
   type AppSearchFailed = Event { error : string } "Search fetch failed"
-  type AppSearchRelatedLoaded = Event { data : [AppSearchRelatedRow]! } "Related rows whose text matches the query loaded"
+  type AppSearchRelatedLoaded = Event { data : [AppSearchRelatedRow]!, totalCount : number! } "Related rows whose text matches the query loaded"
 
   entity AppSearchTarget [runtime] {
     id : string!
     name : string @description "The primary human-readable label matched by search." @synonyms "title, label, productName"
     searchTerm : string @intrinsic @description "The current search query the user submitted." @synonyms "query, term, q" = ""
+    appSearchPage : number @intrinsic @description "The results page the search shows." = 1
   }
 
   trait AppSearchIdleHint -> AppSearchTarget [client] {
@@ -42,7 +43,6 @@ orbital AppSearchOrbital {
 
     state idle {
       INIT -> idle
-        (fetch AppSearchTarget {})
         (render-ui main {
           type: stack
           direction: vertical
@@ -51,9 +51,12 @@ orbital AppSearchOrbital {
         })
       APP_SEARCH -> searching when (= @config.searchRelation null)
         (set @entity.searchTerm ?value)
+        (set @entity.appSearchPage 1)
         (fetch AppSearchTarget {
           filter: (or (= ?value "") (and (!= @config.searchField null) (str/includes (object/get @entity @config.searchField) ?value)))
           emit: { success: AppSearchLoaded, failure: AppSearchFailed }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -70,9 +73,11 @@ orbital AppSearchOrbital {
         })
       APP_SEARCH -> searching when (!= @config.searchRelation null)
         (set @entity.searchTerm ?value)
+        (set @entity.appSearchPage 1)
         (fetch @config.relatedEntity {
           filter: (or (= ?value "") (str/includes (object/get @entity @config.relatedSearchField) ?value))
           emit: { success: AppSearchRelatedLoaded, failure: AppSearchFailed }
+          limit: @config.relatedMaxRows
         })
         (render-ui main {
           type: stack
@@ -92,7 +97,6 @@ orbital AppSearchOrbital {
     state searching {
       INIT -> idle
         (set @entity.searchTerm "")
-        (fetch AppSearchTarget {})
         (render-ui main {
           type: stack
           direction: vertical
@@ -101,9 +105,12 @@ orbital AppSearchOrbital {
         })
       APP_SEARCH -> searching when (= @config.searchRelation null)
         (set @entity.searchTerm ?value)
+        (set @entity.appSearchPage 1)
         (fetch AppSearchTarget {
           filter: (or (= ?value "") (and (!= @config.searchField null) (str/includes (object/get @entity @config.searchField) ?value)))
           emit: { success: AppSearchLoaded, failure: AppSearchFailed }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -120,9 +127,11 @@ orbital AppSearchOrbital {
         })
       APP_SEARCH -> searching when (!= @config.searchRelation null)
         (set @entity.searchTerm ?value)
+        (set @entity.appSearchPage 1)
         (fetch @config.relatedEntity {
           filter: (or (= ?value "") (str/includes (object/get @entity @config.relatedSearchField) ?value))
           emit: { success: AppSearchRelatedLoaded, failure: AppSearchFailed }
+          limit: @config.relatedMaxRows
         })
         (render-ui main {
           type: stack
@@ -137,10 +146,14 @@ orbital AppSearchOrbital {
             content: "Searching…"
           }]
         })
+      AppSearchRelatedLoaded -> searching when (> ?totalCount (array/len ?data))
+        (emit AppSearchFailed { error: (str/concat @config.relatedEntity " has " ?totalCount " rows matching the search, over the relatedMaxRows cap of " @config.relatedMaxRows) })
       AppSearchRelatedLoaded -> searching
         (fetch AppSearchTarget {
           filter: (or (= @entity.searchTerm "") (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
           emit: { success: AppSearchLoaded, failure: AppSearchFailed }
+          limit: @config.pageSize
+          offset: (* (- @entity.appSearchPage 1) @config.pageSize)
         })
       AppSearchLoaded -> results
         (render-ui main {
@@ -175,6 +188,13 @@ orbital AppSearchOrbital {
             entity: @payload.data
             fields: @config.resultFields
             itemActions: (array/filter @config.resultActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+            pageSize: 0
+          }, {
+            type: pagination
+            currentPage: @entity.appSearchPage
+            totalPages: (math/max 1 (math/ceil (/ ?totalCount @config.pageSize)))
+            pageChangeEvent: REFETCH_PAGE
+            showPageSize: false
           }]
         })
       AppSearchFailed -> idle
@@ -193,7 +213,6 @@ orbital AppSearchOrbital {
     state results {
       INIT -> idle
         (set @entity.searchTerm "")
-        (fetch AppSearchTarget {})
         (render-ui main {
           type: stack
           direction: vertical
@@ -202,9 +221,12 @@ orbital AppSearchOrbital {
         })
       APP_SEARCH -> searching when (= @config.searchRelation null)
         (set @entity.searchTerm ?value)
+        (set @entity.appSearchPage 1)
         (fetch AppSearchTarget {
           filter: (or (= ?value "") (and (!= @config.searchField null) (str/includes (object/get @entity @config.searchField) ?value)))
           emit: { success: AppSearchLoaded, failure: AppSearchFailed }
+          limit: @config.pageSize
+          offset: 0
         })
         (render-ui main {
           type: stack
@@ -221,9 +243,11 @@ orbital AppSearchOrbital {
         })
       APP_SEARCH -> searching when (!= @config.searchRelation null)
         (set @entity.searchTerm ?value)
+        (set @entity.appSearchPage 1)
         (fetch @config.relatedEntity {
           filter: (or (= ?value "") (str/includes (object/get @entity @config.relatedSearchField) ?value))
           emit: { success: AppSearchRelatedLoaded, failure: AppSearchFailed }
+          limit: @config.relatedMaxRows
         })
         (render-ui main {
           type: stack
@@ -237,6 +261,21 @@ orbital AppSearchOrbital {
             color: muted
             content: "Searching…"
           }]
+        })
+      REFETCH_PAGE -> searching when (= @config.searchRelation null)
+        (set @entity.appSearchPage ?page)
+        (fetch AppSearchTarget {
+          filter: (or (= @entity.searchTerm "") (and (!= @config.searchField null) (str/includes (object/get @entity @config.searchField) @entity.searchTerm)))
+          emit: { success: AppSearchLoaded, failure: AppSearchFailed }
+          limit: @config.pageSize
+          offset: (* (- ?page 1) @config.pageSize)
+        })
+      REFETCH_PAGE -> searching when (!= @config.searchRelation null)
+        (set @entity.appSearchPage ?page)
+        (fetch @config.relatedEntity {
+          filter: (or (= @entity.searchTerm "") (str/includes (object/get @entity @config.relatedSearchField) @entity.searchTerm))
+          emit: { success: AppSearchRelatedLoaded, failure: AppSearchFailed }
+          limit: @config.relatedMaxRows
         })
       CLEAR_SEARCH -> idle
         (set @entity.searchTerm "")
@@ -264,6 +303,12 @@ orbital AppSearchOrbital {
       AppSearchFailed {
         error : string
       }
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Loads another page of the search results."
+        @synonyms "paginate, next page, change page"
+        @tier "domain"
     }
 
     config {
@@ -275,6 +320,16 @@ orbital AppSearchOrbital {
         @label "Search field"
         @description "Entity field matched against the query (case-insensitive substring). `null` for an entity with no text column: only searchRelation can then match."
         @tier "presentation"
+      pageSize : number = 20
+        @label "Results per page"
+        @description "Search results shown per page; every search reads the first page and the results render their own page bar."
+        @synonyms "page size, results per page, page limit"
+        @tier "presentation"
+      relatedMaxRows : number = 500
+        @label "Related rows matched per search"
+        @description "Most related-entity rows one relation search may match. The search turns the matches into the ids that narrow the main read, so a partial set would hide results; a search matching more is refused through the failure event instead of showing part of it."
+        @synonyms "relation search cap, related match limit, search match cap"
+        @tier "policy"
       relatedEntity : entity = AppSearchTarget
         @label "Related entity"
         @description "The entity a relation search matches through: the target of searchRelation."

@@ -44,17 +44,17 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/catalog': {
     module: 'behavior', category: 'std-behavior',
     minArity: 1, maxArity: 2,
-    description: 'List the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), optionally narrowed by exposure. Each entry carries its traits as values and its shipped embedding vectors; with `options.vectors: false` it carries none (`vectors: {}`, `model: ""`) and neither the vector store nor the embedding provider is read.',
+    description: 'List the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), optionally narrowed by exposure. Each entry carries its traits as values and its shipped embedding vectors; with `options.vectors: false` it carries none (`vectors: {}`, `model: ""`) and neither the vector store nor the embedding provider is read; with `options.traits: false` it carries no `traits`. With `options.topics: true` it answers each package and topic of the listing once, `{ package, prefix, topic, count }`, instead of the entries.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
-    returnType: list('CatalogEntry'),
+    returnType: union(list('CatalogEntry'), list('CatalogTopic')),
     params: [
       { name: 'scope', type: { kind: 'object', fields: { paths: { kind: 'array', of: 'string' }, exposure: { kind: 'array', of: 'string' } } }, description: 'Registry folders and an optional exposure filter' },
       {
         name: 'options',
-        type: openShape({ key: STRING, vectors: BOOLEAN, emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) }),
-        description: 'Emit configuration ({ emit: { success, failure } }); `vectors: false` omits the vectors',
+        type: openShape({ key: STRING, vectors: BOOLEAN, traits: BOOLEAN, topics: BOOLEAN, emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) }),
+        description: 'Emit configuration ({ emit: { success, failure } }); `vectors: false` omits the vectors, `traits: false` the traits; `topics: true` answers `{ package, prefix, topic, count }` per topic',
         optional: true,
       },
     ],
