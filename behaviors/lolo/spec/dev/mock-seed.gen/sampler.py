@@ -6,7 +6,7 @@ def uu(s): return f'(/ {s} {M32})'
 def rint(s,a,b): return f'(+ (math/floor (* {uu(s)} {b-a+1})) {a})'
 def numok(x): return f'(and (!= (str/trim {x}) "") (= (str/replace-pattern (str/trim {x}) "{RX}" "") ""))'
 def numv(x): return f'(str/to-number (str/trim {x}))'
-def modlen(n,xs): return f'(or (math/mod {n} (array/len {xs})) 0)'
+def modlen(n,xs): return f'(default (math/mod {n} (array/len {xs})) 0)'
 def iso_of(ms): return f'(let ((isd (time/format {ms} "YYYY-MM-DD")) (ist (time/format {ms} "HH:mm:ss"))) (if (or (= @isd null) (= @ist null)) null (str/concat @isd "T" @ist "." (str/padStart (str/concat "" (math/mod (math/floor {ms}) 1000)) 3 "0") "Z")))'
 def cells_bad(cells): return f'(array/some {cells} (fn bc (= (object/get @bc "kind") "clock")))'
 CLOCK_FAILED='mock-seed: clock is not a date'
@@ -17,9 +17,9 @@ def isoparts(ms):
     d=f'(time/format {ms} "YYYY-MM-DD")'
     dt=iso_of(ms)
     return d,dt
-def draws(n,s0): return f'(array/reduce (array/range {n}) [{s0}] (fn da dj (array/append @da {nxt("(array/last @da)")})))'
+def draws(n,s0): return f'(array/reduce (array/range {n}) [{s0}] (fn da dj (array/append @da {nxt("(default (array/last @da) 0)")})))'
 def cell(path,kind,text='""',num='0',extra=''): return f'{{ path: {path}, kind: {kind}, text: {text}, num: {num}{extra} }}'
-def dcell(kind,x): return f'(let ((dv {x})) {{ path: @pa, kind: (if (= @dv null) "clock" {kind}), text: (or @dv ""), num: 0 }})'
+def dcell(kind,x): return f'(let ((dv {x})) {{ path: @pa, kind: (if (= @dv null) "clock" {kind}), text: (default @dv ""), num: 0 }})'
 def res(cellx,push='[]',s='@s0'):
     cells = '[]' if cellx is None else f'[{cellx}]'
     return f'{{ cells: {cells}, push: {push}, s: {s} }}'
@@ -34,8 +34,13 @@ def field_projection(spec):
                 f'(if (validate/object @pr) '
                 f'(let ((pf : string? (object/get @pr "field" null))) '
                 f'(if (and (validate/string @pf) (!= @pf "")) {{ type: (object/get @pr "type"), field: @pf }} {otherwise})) {otherwise}))')
-    item = f'(if (object/has {spec} "items") ' + candidate(f'(object/get {spec} "items")', 'null') + ' null)'
-    return candidate(spec, f'(if (= (object/get {spec} "type" "") "array") {item} null)')
+    item = f'(let ((itm (object/get {spec} "items"))) (if (= @itm null) null ' + candidate('@itm', 'null') + '))'
+    return f'(let ((fpj : SeedProjection? {candidate(spec, f"(if (= (object/get {spec} \"type\" \"\") \"array\") {item} null)")})) @fpj)'
+
+_wrap_n=[0]
+def stepped(x):
+    _wrap_n[0]+=1
+    return f'(let ((br{_wrap_n[0]} : SampleStep {x})) @br{_wrap_n[0]})'
 
 def sampler_step(P):
     RT,SD,NOW,EN,W=P['RT'],P['SD'],P['NOW'],P['EN'],P['WORDS']
@@ -47,10 +52,10 @@ def sampler_step(P):
     mockv='(object/get @sp "mock" "")'
     cands=f'(array/filter (array/map (str/split {mockv} ",") (fn p (str/trim @p))) (fn p (!= @p "")))'
     ncs='(array/len @cs)'
-    pick=f'(array/nth @cs {modlen("(- @o 1)","@cs")})'
+    pick=f'(default (array/nth @cs {modlen("(- @o 1)","@cs")}) "")'
     def resolve(lit):
         base=f'(if {SD} {NOW} 1781481600000)'
-        ms=f'(+ {base} (* (if (= @sg2 "-") -1 1) (or (str/to-number @dg) 0) (if (= @un "m") 60000 (if (= @un "h") 3600000 (if (= @un "d") 86400000 604800000)))))'
+        ms=f'(+ {base} (* (if (= @sg2 "-") -1 1) (default (str/to-number @dg) 0) (if (= @un "m") 60000 (if (= @un "h") 3600000 (if (= @un "d") 86400000 604800000)))))'
         d,dt=isoparts(ms)
         return (f'(let ((tt (str/trim {lit}))) (let ((sg2 (str/slice @tt 0 1)) (un (str/slice @tt (- (str/len @tt) 1) (str/len @tt))) (dg (str/slice @tt 1 (- (str/len @tt) 1)))) '
                 f'(if (and (or (= @sg2 "-") (= @sg2 "+")) (array/includes ["m", "h", "d", "w"] @un) (!= @dg "") (= (str/replace-pattern @dg "[0-9]" "") "")) (if (= @ty "date") {d} {dt}) {lit})))')
@@ -59,41 +64,41 @@ def sampler_step(P):
     lit_date=f'(if (> {ncs} 0) {pick} {mockv})'
     mock_date=dcell(qs('string'),resolve(lit_date))
     lit_t=f'(if (> {ncs} 1) {pick} (str/concat (str/trim {mockv}) "-" @o))'
-    mock_typed=(f'(let ((lt {lit_t})) (let ((nv (if (and (array/includes ["number", "money"] @ty) {numok("@lt")}) {numv("@lt")} null))) (if (and (!= @nv null) (= (- (or @nv 0) (or @nv 0)) 0)) {C(qs("number"),"@lt","(or @nv 0)")} '
+    mock_typed=(f'(let ((lt {lit_t})) (let ((nv (if (and (array/includes ["number", "money"] @ty) {numok("@lt")}) {numv("@lt")} null))) (if (and (!= @nv null) (= (- (default @nv 0) (default @nv 0)) 0)) {C(qs("number"),"@lt","(default @nv 0)")} '
                 f'(if (and (= @ty "boolean") (array/includes ["true", "false"] @lt)) {C(qs("boolean"),"@lt")} {C(qs("string"),"@lt")}))))')
     mock_chain=(f'(if (and (> (array/len @vals) 0) (> {ncs} 0)) {res(mock_member)} (if (= @ty "behavior") {res(mock_beh)} '
                 f'(if (array/includes ["date", "datetime", "timestamp"] @ty) {res(mock_date)} {res(mock_typed)})))')
     mock_gate=f'(let ((cs {cands})) {mock_chain})'
     projected=f'(!= {field_projection("@sp")} null)'
-    vocab=C(qs('string'),f'(array/nth @vals {modlen("(- @o 1)","@vals")})')
+    vocab=C(qs('string'),f'(default (array/nth @vals {modlen("(- @o 1)","@vals")}) "")')
     kid_frames=lambda n,spec,namex,idx,pathx: f'(array/map (array/range {n}) (fn ki {{ spec: {spec}, name: {namex}, index: {idx}, depth: (+ @dp 1), path: {pathx} }}))'
     arr_body=lambda n,s1: res(C(qs('array'),'""',n,f', kids: (array/map (array/range {n}) (fn ki (str/concat @pa "[" @ki "]")))'),
-        kid_frames(n,'(object/get @sp "items")','(str/concat (if (= @nm "") "item" @nm) "[" @ki "]")','(+ (* @ix 10) @ki)','(str/concat @pa "[" @ki "]")'),s1)
-    arr=(f'(if (or (not (object/has @sp "items")) (>= @dp 3)) {res(C(qs("array")))} (if {SD} (let ((s1 {nxt("@s0")})) (let ((n {rint("@s1",3,5)})) {arr_body("@n","@s1")})) {arr_body("3","@s0")}))')
+        kid_frames(n,'@itm','(str/concat (if (= @nm "") "item" @nm) "[" @ki "]")','(+ (* @ix 10) @ki)','(str/concat @pa "[" @ki "]")'),s1)
+    arr=(f'(let ((itm (object/get @sp "items"))) (if (or (= @itm null) (>= @dp 3)) {res(C(qs("array")))} (if {SD} (let ((s1 {nxt("@s0")})) (let ((n {rint("@s1",3,5)})) {arr_body("@n","@s1")})) {arr_body("3","@s0")})))')
     props='(object/get @sp "properties" {})'
     keys=f'(array/sort (object/keys {props}))'
     obj_cell=C(qs('object'),'""','0',f', keys: {keys}, kids: (array/map {keys} (fn n (str/concat @pa "." @n)))')
-    obj_push=f'(array/map {keys} (fn n {{ spec: (object/get {props} @n), name: @n, index: @ix, depth: (+ @dp 1), path: (str/concat @pa "." @n) }}))'
+    obj_push=f'(array/flatten (array/map {keys} (fn n (let ((sub (object/get {props} @n))) (if (= @sub null) [] [{{ spec: @sub, name: @n, index: @ix, depth: (+ @dp 1), path: (str/concat @pa "." @n) }}])))))'
     obj=f'(if (or (not (object/has @sp "properties")) (>= @dp 3)) {res(C(qs("null")))} {res(obj_cell,obj_push)})'
     slots='(object/get @sp "slots" [])'
     tup=res(C(qs('tuple'),'""',f'(array/len {slots})',f', kids: (array/map (array/range (array/len {slots})) (fn ki (str/concat @pa "[" @ki "]")))'),
-            f'(array/map (array/range (array/len {slots})) (fn ki {{ spec: (array/nth {slots} @ki), name: (object/get (array/nth {slots} @ki) "name" ""), index: @ix, depth: (+ @dp 1), path: (str/concat @pa "[" @ki "]") }}))')
+            f'(array/flatten (array/map (array/range (array/len {slots})) (fn ki (let ((sl (array/nth {slots} @ki))) (if (= @sl null) [] [{{ spec: @sl, name: (object/get @sl "name" ""), index: @ix, depth: (+ @dp 1), path: (str/concat @pa "[" @ki "]") }}])))))')
     uni_cell_none=res(C(qs('omit')))
-    uni_push=f'[{{ spec: (object/get {props} (array/nth (object/get @sp "values" []) 0)), name: @nm, index: @ix, depth: (+ @dp 1), path: @pa }}]'
-    uni=(f'(if (or (>= @dp 3) (= (array/len (object/get @sp "values" [])) 0) (not (object/has {props} (array/nth (object/get @sp "values" []) 0)))) {uni_cell_none} '
-         f'{res(None,uni_push)})')
+    uni_push=f'[{{ spec: @usub, name: @nm, index: @ix, depth: (+ @dp 1), path: @pa }}]'
+    uni=(f'(let ((v0 (array/nth (object/get @sp "values" []) 0))) (if (or (>= @dp 3) (= @v0 null)) {uni_cell_none} '
+         f'(let ((usub (object/get {props} @v0))) (if (= @usub null) {uni_cell_none} {res(None,uni_push)}))))')
     sgx=slug('@nm')
     imgname=f'(array/includes {IMG} (str/lower @nm))'
     def imgurl(x): return f'(str/concat "https://picsum.photos/seed/" (str/encode-uri-component (str/concat {EN} "-" @nm "-" {x})) "/400/400")'
-    last='(array/last @dr)'
-    wd=lambda f: f'(array/nth {W} (math/floor (* {uu(f)} (array/len {W}))))'
+    last='(default (array/last @dr) 0)'
+    wd=lambda f: f'(default (array/nth {W} (math/floor (* {uu(f)} (array/len {W})))) "")'
     ws=f'(array/map (array/drop @dr 1) (fn wf {wd("@wf")}))'
     def withdraw(n,body): return f'(let ((dr {draws(n,"@s0")})) {body})'
-    email_s=withdraw(2,res(C(qs('email'),f'(let ((wl {ws})) (str/concat (str/lower (array/nth @wl 0)) (str/slice "x@y" 1 2) (str/lower (array/nth @wl 1)) ".com"))'),'[]',last))
+    email_s=withdraw(2,res(C(qs('email'),f'(let ((wl {ws})) (str/concat (str/lower (default (array/nth @wl 0) "")) (str/slice "x@y" 1 2) (str/lower (default (array/nth @wl 1) "")) ".com"))'),'[]',last))
     email=f'(if {SD} {email_s} {res(C(qs("email"),f"(str/concat {sgx} @ix (str/slice {qs(chr(120)+chr(64)+chr(121))} 1 2) {qs(chr(101)+chr(120)+chr(97)+chr(109)+chr(112)+chr(108)+chr(101)+chr(46)+chr(99)+chr(111)+chr(109))})"))})'
-    url_s=withdraw(2,res(C(qs('url'),f'(let ((wl {ws})) (str/concat "https://example.com/" (str/lower (array/nth @wl 0)) "-" (str/lower (array/nth @wl 1))))'),'[]',last))
+    url_s=withdraw(2,res(C(qs('url'),f'(let ((wl {ws})) (str/concat "https://example.com/" (str/lower (default (array/nth @wl 0) "")) "-" (str/lower (default (array/nth @wl 1) ""))))'),'[]',last))
     url=f'(if {SD} {url_s} {res(C(qs("url"),f"(str/concat {qs(chr(104)+chr(116)+chr(116)+chr(112)+chr(115)+chr(58)+chr(47)+chr(47)+chr(101)+chr(120)+chr(97)+chr(109)+chr(112)+chr(108)+chr(101)+chr(46)+chr(99)+chr(111)+chr(109)+chr(47))} {sgx} {qs(chr(47))} @ix)"))})'
-    fl=lambda i,m: f'(math/floor (* {uu(f"(array/nth @dr {i})")} {m}))'
+    fl=lambda i,m: f'(math/floor (* {uu(f"(default (array/nth @dr {i}) 0)")} {m}))'
     phone_s=withdraw(3,res(C(qs('phone'),f'(str/concat "+1 (" (+ {fl(1,800)} 200) ") " (+ {fl(2,800)} 200) "-" {pad(fl(3,10000),4)})'),'[]',last))
     phone_i=f'(str/concat "+1-555-" {pad("(+ 1000 (math/mod @ix 9000))",4)})'
     phone=f'(if {SD} {phone_s} {res(C(qs("phone"),phone_i))})'
@@ -124,34 +129,53 @@ def sampler_step(P):
     file_=res(C(qs('file'),f'(str/concat {sgx} "-" @ix ".pdf")','(* @ix 1024)',f', url: (str/concat "https://example.com/files/" {sgx} "/" @ix ".pdf"), mime: "application/pdf"'))
     rel=res(C('(if (= (object/get (object/get @sp "relation" {}) "cardinality" "") "one") "relation-one" "relation-many")'))
     nullr=res(C(qs('null'))); omitr=res(C(qs('omit')))
+    arr=stepped(arr)
+    obj=stepped(obj)
+    tup=stepped(tup)
+    uni=stepped(uni)
+    email=stepped(email)
+    url=stepped(url)
+    phone=stepped(phone)
+    uuid=stepped(uuid)
+    string=stepped(string)
+    img=stepped(img)
+    date=stepped(date)
+    bytes_=stepped(bytes_)
+    file_=stepped(file_)
+    rel=stepped(rel)
+    bool_=stepped(bool_)
     typed_dispatch=(f'(if (= @ty "array") {arr} (if (= @ty "object") {obj} (if (= @ty "tuple") {tup} (if (= @ty "union") {uni} '
         f'(if (= @ty "email") {email} (if (= @ty "url") {url} (if (= @ty "phone") {phone} (if (= @ty "uuid") {uuid} '
-        f'(if (= @ty "number") {numeric(1,250)} (if (= @ty "money") {numeric(10,900)} (if (= @ty "boolean") {bool_} '
+        f'(if (= @ty "number") {stepped(numeric(1,250))} (if (= @ty "money") {stepped(numeric(10,900))} (if (= @ty "boolean") {bool_} '
         f'(if (= @ty "string") {string} (if (= @ty "image") {img} (if (array/includes ["date", "datetime", "timestamp"] @ty) {date} '
         f'(if (= @ty "bytes") {bytes_} (if (= @ty "file") {file_} (if (= @ty "relation") {rel} '
         f'(if (array/includes ["enum", "trait", "orbital", "behavior"] @ty) {nullr} {omitr}))))))))))))))))))')
     intr='(= (object/get @sp "intrinsic" false) true)'
     defcell=res(C(qs('default'),'""','0',f', val: {dflt}'))
+    mock_gate=stepped(mock_gate)
     chain=(f'(if {intr} (if @hasdef {defcell} {omitr}) '
            f'(if {honored} {defcell} '
            f'(if @hasmock {mock_gate} '
            f'(if {projected} {res(C(chr(40)+"if (= @ty "+qs("array")+") "+qs("relation-many")+" "+qs("string")+")"))} '
            f'(if (> (array/len @vals) 0) {res(vocab)} {typed_dispatch})))))')
-    body=(f'(let ((fr (array/first (object/get @acc "stack")))) (let ((rest (array/drop (object/get @acc "stack") 1)) (s0 (object/get @acc "s")) (sp (object/get @fr "spec")) (nm (object/get @fr "name" "")) (ix (object/get @fr "index")) (dp (object/get @fr "depth")) (pa (object/get @fr "path"))) '
+    body=(f'(let ((fr (array/first (object/get @acc "stack")))) (if (= @fr null) @acc (let ((rest (array/drop (object/get @acc "stack") 1)) (s0 (object/get @acc "s")) (sp (object/get @fr "spec")) (nm (object/get @fr "name")) (ix (object/get @fr "index")) (dp (object/get @fr "depth")) (pa (object/get @fr "path"))) '
           f'(let ((ty (object/get @sp "type")) (o (if {RT} 1 @ix))) (let ((vals (if (= @ty "union") [] (object/get @sp "values" []))) (hasdef (object/has @sp "default")) (hasmock (object/has @sp "mock"))) '
-          f'(let ((rr {chain})) {{ stack: (array/concat (object/get @rr "push") @rest), cells: (array/concat (object/get @acc "cells") (object/get @rr "cells")), s: (object/get @rr "s") }})))))')
-    return f'(fn acc kk (if (= (array/len (object/get @acc "stack")) 0) @acc {body}))'
+          f'(let ((rr : SampleStep {chain})) {{ stack: (array/concat (object/get @rr "push") @rest), cells: (array/concat (object/get @acc "cells") (object/get @rr "cells")), s: (object/get @rr "s") }}))))))')
+    return f'(fn acc kk {body})'
 
 def build_expr(cells_expr, root_path_expr='""', row_root=False):
     """Build each value into the reverse walk's map accumulator."""
     def put(value):
         return f'(object/set @vm (object/get @cl "path") {value})'
     def put_entries(entries): return f'(let ((fe {entries})) (if (= @fe null) @vm {put("@fe")}))'
-    row_value='(object/fromEntries (array/map (array/filter (array/range (array/len @ks)) (fn i (!= (object/get (array/find @allc (fn c (= (object/get @c "path") (array/nth @ks @i)))) "kind") "omit"))) (fn i [(or (array/nth (object/get @cl "keys" []) @i) ""), (object/get @vm (array/nth @ks @i))])))'
+    kid=lambda x: f'(default (array/nth @ks {x}) "")'
+    key=lambda x: f'(default (array/nth (object/get @cl "keys" []) {x}) "")'
+    kind_at=lambda x: f'(let ((fc (array/find @allc (fn c (= (object/get @c "path") {kid(x)}))))) (if (= @fc null) "" (object/get @fc "kind")))'
+    row_value=f'(object/fromEntries (array/map (array/filter (array/range (array/len @ks)) (fn i (!= {kind_at("@i")} "omit"))) (fn i [{key("@i")}, (object/get @vm {kid("@i")})])))'
     cases = [
         ('(or (= @kd "array") (= @kd "tuple"))', '(array/map @ks (fn p (object/get @vm @p)))'),
         ('(= @kd "row")', row_value),
-        ('(= @kd "object")', '(object/fromEntries (array/map (array/range (array/len @ks)) (fn i [(or (array/nth (object/get @cl "keys" []) @i) ""), (object/get @vm (array/nth @ks @i))])))'),
+        ('(= @kd "object")', f'(object/fromEntries (array/map (array/range (array/len @ks)) (fn i [{key("@i")}, (object/get @vm {kid("@i")})])))'),
         ('(= @kd "default")', '(object/get @cl "val" null)'),
         ('(= @kd "behavior")', '{ behavior: (object/get @cl "text" "") }'),
         ('(= @kd "file")', '{ name: (object/get @cl "text" ""), url: (object/get @cl "url" ""), mimeType: (object/get @cl "mime" ""), sizeBytes: (object/get @cl "num" 0) }'),
@@ -167,13 +191,13 @@ def build_expr(cells_expr, root_path_expr='""', row_root=False):
     step = f'(let ((kd (object/get @cl "kind")) (ks (object/get @cl "kids" []))) {step})'
     if row_root:
         step=f'(if (= (object/get @cl "path") {root_path_expr}) @vm {step})'
-        result=f'(let ((cl (array/find @allc (fn c (= (object/get @c "path") {root_path_expr}))))) (let ((ks (object/get @cl "kids" []))) {row_value}))'
+        result=f'(let ((cl (array/find @allc (fn c (= (object/get @c "path") {root_path_expr}))))) (if (= @cl null) @initialValues (let ((ks (object/get @cl "kids" []))) {row_value})))'
     else:
         result=f'(object/get @vm {root_path_expr} null)'
-    return (f'(let ((allc {cells_expr}) (initialValues : SampleValueMap {{}})) (let ((vm (array/reduce (array/range (array/len @allc)) @initialValues (fn vm j (let ((cl (array/nth @allc (- (array/len @allc) (+ @j 1))))) {step}))))) {result}))')
+    return (f'(let ((allc {cells_expr}) (initialValues : SampleValueMap {{}})) (let ((vm (array/reduce (array/range (array/len @allc)) @initialValues (fn vm j (let ((cl (array/nth @allc (- (array/len @allc) (+ @j 1))))) (if (= @cl null) @vm {step})))))) {result}))')
 
 def run(P, stack_expr, cells_init, s_expr, root='""', K=400, row_root=False):
     """returns an expression: {cells, s, value}"""
     step=sampler_step(P)
-    return (f'(let ((fin (array/reduce (array/range {K}) {{ stack: {stack_expr}, cells: {cells_init}, s: {s_expr} }} {step}))) '
-            f'{{ cells: (object/get @fin "cells"), s: (object/get @fin "s"), value: {build_expr("(object/get @fin "+chr(34)+"cells"+chr(34)+")", root, row_root=row_root)} }})')
+    return (f'(let ((init : SampleAcc {{ stack: {stack_expr}, cells: {cells_init}, s: {s_expr} }})) (let ((fin (array/reduce (array/range {K}) @init {step}))) '
+            f'{{ cells: (object/get @fin "cells"), s: (object/get @fin "s"), value: {build_expr("(object/get @fin "+chr(34)+"cells"+chr(34)+")", root, row_root=row_root)} }}))')
