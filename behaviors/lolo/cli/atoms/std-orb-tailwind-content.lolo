@@ -49,7 +49,7 @@ orbital OrbTailwindContentOrbital {
       TAILWIND_ARGS_DONE -> ready when (> (array/len @payload.errors) 0)
         (emit TAILWIND_ANSWERED { status: 400, body: "usage: orb tailwind-content [--out <file>] [--check] [<registry folder>…]" })
       TAILWIND_ARGS_DONE -> working when (= (array/len @payload.errors) 0)
-        (set @entity.out (or (array/first (or (object/get @payload.flags "out") [])) @config.defaultOut))
+        (set @entity.out (default (array/first (default (object/get @payload.flags "out") [])) @config.defaultOut))
         (set @entity.check (!= (object/get @payload.flags "check") null))
         (behavior/catalog { paths: (if (> (array/len @payload.positionals) 0) @payload.positionals @config.defaultScope), exposure: [] } {
           vectors: false
@@ -75,14 +75,14 @@ orbital OrbTailwindContentOrbital {
         (emit TAILWIND_ANSWERED { status: 500, body: (str/concat "Error: could not read behavior " (+ @entity.cursor 1) " of " (array/len @entity.hits) ": " @payload.error) })
       TAILWIND_SOURCED -> working
         (set @entity.acc (array/concat @entity.acc
-          (let ((nodes (or (json/parse (json/stringify (json/nodes [@payload.result])) TailwindNodes) [])))
+          (let ((nodes (default (json/parse (json/stringify (json/nodes [@payload.result])) TailwindNodes) [])))
             (array/filter
               (array/flatten (array/map @nodes (fn n
                 (if (validate/object @n)
                   (let ((cn : TailwindDoc? (object/get @n "className" null)))
                     (if (not (or (validate/string @cn) (validate/array @cn)))
                       []
-                      (let ((ns (or (json/parse (json/stringify (json/nodes @cn)) TailwindNodes) [])))
+                      (let ((ns (default (json/parse (json/stringify (json/nodes @cn)) TailwindNodes) [])))
                         (let ((heads (array/flatten (array/map @ns (fn m (if (validate/array @m) (if (> (array/len @m) 0) (let ((h : TailwindDoc? (array/first @m))) (if (validate/string @h) [@h] [])) []) []))))))
                           (array/flatten (array/map @ns (fn m (if (validate/string @m) (if (array/includes @heads @m) [] (str/split (str/trim (str/replace-pattern @m "\\s+" " ")) " ")) []))))))))
                   []))))
@@ -104,8 +104,8 @@ orbital OrbTailwindContentOrbital {
       TAILWIND_READ_FAILED -> ready
         (emit TAILWIND_ANSWERED { status: 500, body: (str/concat "Error: could not read " @entity.out ": " @payload.error) })
       TAILWIND_READ -> ready
-        (set @entity.missing (let ((have (str/split (or (bytes/to-string @payload.data) "") "\n"))) (array/filter @entity.tokens (fn t (not (array/includes @have @t))))))
-        (set @entity.extra (let ((have (str/split (or (bytes/to-string @payload.data) "") "\n"))) (array/filter @have (fn t (and (!= @t "") (not (array/includes @entity.tokens @t)))))))
+        (set @entity.missing (let ((have (str/split (default (bytes/to-string @payload.data) "") "\n"))) (array/filter @entity.tokens (fn t (not (array/includes @have @t))))))
+        (set @entity.extra (let ((have (str/split (default (bytes/to-string @payload.data) "") "\n"))) (array/filter @have (fn t (and (!= @t "") (not (array/includes @entity.tokens @t)))))))
         (emit TAILWIND_ANSWERED { status: (if (and (= (array/len @entity.missing) 0) (= (array/len @entity.extra) 0)) 200 500), body: (if (and (= (array/len @entity.missing) 0) (= (array/len @entity.extra) 0)) (str/concat "tailwind-content: " @entity.out " is up to date (" (array/len @entity.tokens) " tokens)") (str/concat "tailwind-content: " @entity.out " is stale; run `orb tailwind-content`\nmissing (" (array/len @entity.missing) "):\n" (str/join @entity.missing "\n") "\nextra (" (array/len @entity.extra) "):\n" (str/join @entity.extra "\n"))) })
     }
 

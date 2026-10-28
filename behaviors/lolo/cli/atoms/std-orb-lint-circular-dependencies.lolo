@@ -90,7 +90,7 @@ orbital OrbLintCircularDependenciesOrbital {
                                 (if (not (str/includes @txt "\"emit\"")) @nos
                                 (if (and (str/startsWith @txt "[\"emit\"") (= (array/len (str/split @txt "\"emit\"")) 2))
                                   (let ((fpa (json/parse @txt CycNodes))) (if (= @fpa null) @nos (if (< (array/len @fpa) 2) @nos (let ((m1 (array/nth @fpa 1))) (if (validate/string @m1) [(str/concat @m1 "")] @nos)))))
-                                  (object/get (or (tree/fold @re (fn (tn fk)
+                                  (object/get (default (tree/fold @re (fn (tn fk)
                                     (let ((nr : CycOut { ev: [] }))
                                       (if (validate/array @tn)
                                         (let ((len (array/len @tn))
@@ -113,7 +113,7 @@ orbital OrbLintCircularDependenciesOrbital {
                                                                     (array/flatten (array/map (object/values @me) (fn mv
                                                                       (if (and (validate/string @mv) (!= (str/concat @mv "") "")) [(str/concat @mv "")] @nos))))))))))))))
                                                     @nos)))
-                                              (array/flatten (array/map (or @fk @nokids) (fn fr (object/get (if (= @fr null) @nr @fr) "ev" @nos))))) })
+                                              (array/flatten (array/map (default @fk @nokids) (fn fr (object/get (if (= @fr null) @nr @fr) "ev" @nos))))) })
                                         (if (validate/object @tn)
                                           { ev: (let ((mo (as @tn CycMap)))
                                               (if (= @mo null) @nos

@@ -220,7 +220,7 @@ orbital Http1Orbital {
                         (if (> (array/len @codings) 1) 400 0)))
                     (if (not (and (array/every @lengths (fn v (validate/pattern @v @config.lengthPattern))) (array/every @lengths (fn v (= @v (array/first @lengths)))))) 400
                       (if (> (array/len @lengths) 0) (let ((declared (str/to-number (str/replace (array/first @lengths) "+" "")))) (if (== @declared null) 400 (if (> @declared @config.maxBody) 413 0))) 0))))))
-              need: (if (and (> (array/len @lengths) 0) (validate/pattern (array/first @lengths) @config.lengthPattern)) (or (str/to-number (str/replace (array/first @lengths) "+" "")) 0) 0)
+              need: (if (and (> (array/len @lengths) 0) (validate/pattern (array/first @lengths) @config.lengthPattern)) (default (str/to-number (str/replace (array/first @lengths) "+" "")) 0) 0)
             }))
           @c))))
         (emit HEAD_PARSED { sock: @payload.sock })
@@ -272,7 +272,7 @@ orbital Http1Orbital {
         (emit DELIVER { sock: @payload.sock })
       BODY_DECODED -> serving when (not (array/includes ["more", "done"] (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "dstate")))
         (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.sock) (object/merge @c { phase: "pending", keepAlive: false }) @c))))
-        (emit SEND_RESPONSE { requestId: @payload.sock, status: (or (str/to-number (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "dstate")) 400), headers: [], body: (bytes/from-string "") })
+        (emit SEND_RESPONSE { requestId: @payload.sock, status: (default (str/to-number (object/get (array/find @entity.conns (fn c (= @c.sock @payload.sock))) "dstate")) 400), headers: [], body: (bytes/from-string "") })
 
       WANT_MORE -> serving when (!= (array/find @entity.conns (fn c (= @c.sock @payload.sock))) null)
         (os/recv @payload.sock @config.recvBytes { key: (str/concat "conn-" @payload.sock) emit: { success: CHUNK_READ failure: CONN_FAILED } })
@@ -305,7 +305,7 @@ orbital Http1Orbital {
       SEND_RESPONSE -> serving when (and (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "pending") (>= @payload.status 200) (<= @payload.status 599) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name)))))) (or (not (array/includes [204, 304] @payload.status)) (= (bytes/length @payload.body) 0)))
         (os/send @payload.requestId
           (bytes/concat [
-            (bytes/from-string (str/concat "HTTP/1.1 " @payload.status " " (or (object/get (array/find @config.reasons (fn r (= @r.status @payload.status))) "text") "") "\r\n"
+            (bytes/from-string (str/concat "HTTP/1.1 " @payload.status " " (default (object/get (array/find @config.reasons (fn r (= @r.status @payload.status))) "text") "") "\r\n"
               (str/join (array/map @payload.headers (fn h (str/concat (str/lower @h.name) ": " @h.value "\r\n"))) "")
               (if (array/includes [204, 304] @payload.status) "" (str/concat "content-length: " (bytes/length @payload.body) "\r\n"))
               (if (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "keepAlive") "connection: keep-alive\r\n\r\n" "connection: close\r\n\r\n"))),
@@ -330,11 +330,11 @@ orbital Http1Orbital {
       RESPOND_HEAD -> serving when (and (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "pending") (not (and (>= @payload.status 200) (<= @payload.status 599) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name)))))))))
         (emit RESPOND_REFUSED { requestId: @payload.requestId, kind: "invalid", error: "the status must be 200 to 599 and every header a token name with a clean value that is not framing" })
       RESPOND_HEAD -> serving when (and (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "pending") (and (>= @payload.status 200) (<= @payload.status 599) (array/every @payload.headers (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.framingHeaders (str/lower @h.name))))))))
-        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.requestId) (object/merge @c { phase: "streaming", keepAlive: false, idle: 0, chunked: (and (not @c.http10) (not (str/startsWith (str/lower (or (object/get (array/find @payload.headers (fn h (= (str/lower @h.name) "content-type"))) "value") "")) "text/event-stream"))) }) @c))))
+        (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.requestId) (object/merge @c { phase: "streaming", keepAlive: false, idle: 0, chunked: (and (not @c.http10) (not (str/startsWith (str/lower (default (object/get (array/find @payload.headers (fn h (= (str/lower @h.name) "content-type"))) "value") "")) "text/event-stream"))) }) @c))))
         (os/send @payload.requestId
-          (bytes/from-string (str/concat (if (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "http10") "HTTP/1.0 " "HTTP/1.1 ") @payload.status " " (or (object/get (array/find @config.reasons (fn r (= @r.status @payload.status))) "text") "") "\r\n"
+          (bytes/from-string (str/concat (if (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "http10") "HTTP/1.0 " "HTTP/1.1 ") @payload.status " " (default (object/get (array/find @config.reasons (fn r (= @r.status @payload.status))) "text") "") "\r\n"
             (str/join (array/map @payload.headers (fn h (str/concat (str/lower @h.name) ": " @h.value "\r\n"))) "")
-            (if (or (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "http10") (str/startsWith (str/lower (or (object/get (array/find @payload.headers (fn h (= (str/lower @h.name) "content-type"))) "value") "")) "text/event-stream")) "" "transfer-encoding: chunked\r\n")
+            (if (or (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "http10") (str/startsWith (str/lower (default (object/get (array/find @payload.headers (fn h (= (str/lower @h.name) "content-type"))) "value") "")) "text/event-stream")) "" "transfer-encoding: chunked\r\n")
             "connection: close\r\n\r\n"))
           { key: (str/concat "send-" @payload.requestId "-" (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "sends")) emit: { success: HEAD_SENT failure: SEND_FAILED } })
         (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.requestId) (object/merge @c { sends: (+ @c.sends 1) }) @c))))
@@ -347,7 +347,7 @@ orbital Http1Orbital {
       RESPOND_CHUNK -> serving when (and (= (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "phase") "streaming") (> (bytes/length @payload.body) 0))
         (os/send @payload.requestId
           (if (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "chunked")
-            (bytes/concat [(bytes/from-string (str/concat (let ((n (bytes/length @payload.body))) (str/join (array/map (array/filter (array/map (array/range 8) (fn i (- 7 @i))) (fn p (or (= @p 0) (>= @n (array/nth @config.hexPowers @p))))) (fn p (let ((d (math/mod (math/floor (or (/ @n (array/nth @config.hexPowers @p)) 0)) 16))) (str/slice @config.hexDigits @d (+ @d 1))))) "")) "\r\n")), @payload.body, (bytes/from-string "\r\n")])
+            (bytes/concat [(bytes/from-string (str/concat (let ((n (bytes/length @payload.body))) (str/join (array/map (array/filter (array/map (array/range 8) (fn i (- 7 @i))) (fn p (or (= @p 0) (>= @n (array/nth @config.hexPowers @p))))) (fn p (let ((d (math/mod (math/floor (default (/ @n (array/nth @config.hexPowers @p)) 0)) 16))) (str/slice @config.hexDigits @d (+ @d 1))))) "")) "\r\n")), @payload.body, (bytes/from-string "\r\n")])
             @payload.body)
           { key: (str/concat "send-" @payload.requestId "-" (object/get (array/find @entity.conns (fn c (= @c.sock @payload.requestId))) "sends")) emit: { success: SEND_DONE failure: SEND_FAILED } })
         (set @entity.conns (array/map @entity.conns (fn c (if (= @c.sock @payload.requestId) (object/merge @c { sends: (+ @c.sends 1) }) @c))))

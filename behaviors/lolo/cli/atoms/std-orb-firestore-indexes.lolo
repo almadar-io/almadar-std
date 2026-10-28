@@ -68,7 +68,7 @@ orbital OrbFirestoreIndexesOrbital {
             (if (or (!= (object/get @ent "persistence" "") "persistent") (= (object/get @ent "collection" "") ""))
               []
               (array/filter (array/map (object/get @ent "indexes" []) (fn d
-                { collectionGroup: (object/get @ent "collection"), queryScope: @entity.scope, fields: (array/concat (array/map (object/get @d "fields") (fn f { fieldPath: @f, order: "ASCENDING" })) (if (= (object/get @d "orderBy" "") "") [] [{ fieldPath: (array/first (str/split (object/get @d "orderBy") ":")), order: (if (= (str/default (array/nth (str/split (object/get @d "orderBy") ":") 1) "asc") "desc") "DESCENDING" "ASCENDING") }])) }))
+                { collectionGroup: (object/get @ent "collection"), queryScope: @entity.scope, fields: (array/concat (array/map (object/get @d "fields") (fn f { fieldPath: @f, order: "ASCENDING" })) (if (= (object/get @d "orderBy" "") "") [] [{ fieldPath: (array/first (str/split (object/get @d "orderBy") ":")), order: (if (= (default (array/nth (str/split (object/get @d "orderBy") ":") 1) "asc") "desc") "DESCENDING" "ASCENDING") }])) }))
                 (fn x (> (array/len (object/get @x "fields")) 1)))))))), fieldOverrides: [] } { pretty: true }) "\n"))
         (emit FIRESTORE_INDEXES_RENDERED {})
     }

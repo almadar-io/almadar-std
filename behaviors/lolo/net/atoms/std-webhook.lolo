@@ -45,7 +45,7 @@ orbital WebhookOrbital {
         (set @entity.url @payload.url)
         (set @entity.event @payload.event)
         (set @entity.payload (json/stringify @payload.payload))
-        (set @entity.secret (or @payload.secret ""))
+        (set @entity.secret (default @payload.secret ""))
         (set @entity.attempts 0)
         (emit WEBHOOK_RETRY_START { key: (as (str/concat "webhook:" (+ @entity.seq 1)) CallKey) })
       WEBHOOK_SEND -> idle when (not (and (or (str/startsWith @payload.url "https://") (str/startsWith @payload.url "http://")) (!= @payload.event "")))

@@ -276,7 +276,7 @@ orbital ApprovalGateOrbital {
       ;; Deny is a two-step: capture the written reason first, commit second.
       DENY -> denying when (or (= (array/len @config.approverRoles) 0) (array/includes @config.approverRoles @user.role))
         (set @entity.id ?id)
-        (set @entity.subjectLabel (str/default (object/get ?row subjectLabel) ""))
+        (set @entity.subjectLabel (default (object/get ?row subjectLabel) ""))
         (render-ui @config.reviewSlot {
           children: [{
             align: center
@@ -342,11 +342,11 @@ orbital ApprovalGateOrbital {
         (set @entity.status denied)
         (set @entity.reviewer @user.id)
         (set @entity.decidedAt (time/now))
-        (set @entity.notes (str/default (object/get ?data notes) ""))
+        (set @entity.notes (default (object/get ?data notes) ""))
         (persist update ApprovalRequest @entity {
           emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
         })
-        (emit ApprovalDenied { requestId: (object/get ?data id), reason: (str/default (object/get ?data notes) "") })
+        (emit ApprovalDenied { requestId: (object/get ?data id), reason: (default (object/get ?data notes) "") })
       CANCEL_DENY -> loading
         (set @entity.page 1)
         (fetch ApprovalRequest {

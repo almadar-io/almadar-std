@@ -193,7 +193,7 @@ orbital ImageOrbital {
           (!= (object/get (json/parse @payload.body ImageReply) data null) null)
           (= (array/count (object/get (json/parse @payload.body ImageReply) data []) (fn (d) (and (not (validate/required @d.b64_json)) (not (validate/required @d.url))))) 0))
         (emit IMAGE_GENERATED {
-          images: (array/map (object/get (json/parse @payload.body ImageReply) data []) (fn (d) { data: (if (validate/required @d.b64_json) @d.b64_json null), url: (if (validate/required @d.b64_json) null @d.url), mimeType: (str/default (object/get @d media_type "") "image/png") })),
+          images: (array/map (object/get (json/parse @payload.body ImageReply) data []) (fn (d) { data: (if (validate/required @d.b64_json) @d.b64_json null), url: (if (validate/required @d.b64_json) null @d.url), mimeType: (default (object/get @d media_type "") "image/png") })),
           model: (object/get (object/get (json/parse @payload.key ImageJob) request) model ""),
           cost: (object/get (object/get (json/parse @payload.body ImageReply) usage {}) cost 0),
           totalTokens: (object/get (object/get (json/parse @payload.body ImageReply) usage {}) total_tokens 0),

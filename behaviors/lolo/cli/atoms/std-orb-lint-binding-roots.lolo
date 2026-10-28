@@ -60,7 +60,7 @@ orbital OrbLintBindingRootsOrbital {
         (emit LINT_FINISH { })
       LINT_INPUT -> ready when (not @entity.vocabUnread)
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((nohits : [BrHit] []) (noroots : [BrRoot] []) (nostr : [string] []) (nof : [OrbFinding] []) (dRoots : [string] @entity.deliveryRoots) (sKeys : [string] @entity.sourceKeys) (collOps : [string] @entity.collOps) (collIdx (or (object/fromEntries (array/map @entity.collOps (fn c [@c, true]))) {  })) (orbitals : [BrOrbitalBR] (object/get @payload.program "orbitals" [])))
+        (set @entity.findings (let ((nohits : [BrHit] []) (noroots : [BrRoot] []) (nostr : [string] []) (nof : [OrbFinding] []) (dRoots : [string] @entity.deliveryRoots) (sKeys : [string] @entity.sourceKeys) (collOps : [string] @entity.collOps) (collIdx (default (object/fromEntries (array/map @entity.collOps (fn c [@c, true]))) {  })) (orbitals : [BrOrbitalBR] (object/get @payload.program "orbitals" [])))
   (if @entity.shapesUnread
     [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the collection callback operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
     (let ((known : [string] (array/flatten (array/map @orbitals (fn o (array/concat
@@ -119,8 +119,8 @@ orbital OrbLintBindingRootsOrbital {
                   (let ((ai @index) (invs : [BrShape] (object/get @a "invariants" [])))
                     (if (validate/object @a)
                       (array/map @invs (fn iv { x: @iv, w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @index "]"), c: "guard" }))
-                      @noroots)))))))))))) (knownIdx (or (object/fromEntries (array/map @known (fn z [@z, true]))) {  }))
-      (rh : [BrRH] (array/map @roots (fn x { x: @x, hs: (or (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
+                      @noroots)))))))))))) (knownIdx (default (object/fromEntries (array/map @known (fn z [@z, true]))) {  }))
+      (rh : [BrRH] (array/map @roots (fn x { x: @x, hs: (default (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
   (if (str/startsWith @n (quote "@"))
     [{ rel: "", r: (array/first (str/split (array/first (str/split (str/slice @n 1) ".")) "[")), s: @n }]
     @nohits)

@@ -31,10 +31,10 @@ orbital RevisionOrbital {
 
     state loading {
       INIT -> loading
-        (set @entity.scopeKey (str/default ?id ""))
+        (set @entity.scopeKey (default ?id ""))
         (set @entity.page 1)
         (fetch Revision {
-          filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
+          filter: (or (not (validate/required @config.scopeField)) (= (default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
           limit: @config.pageSize
           offset: 0
@@ -131,10 +131,10 @@ orbital RevisionOrbital {
           orderBy: "versionNumber:desc"
         })
       INIT -> loading
-        (set @entity.scopeKey (str/default ?id ""))
+        (set @entity.scopeKey (default ?id ""))
         (set @entity.page 1)
         (fetch Revision {
-          filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
+          filter: (or (not (validate/required @config.scopeField)) (= (default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
           limit: @config.pageSize
           offset: 0
@@ -239,7 +239,7 @@ orbital RevisionOrbital {
               type: stat-display
               ;; The captured title, never the raw foreign id — also keeps this
               ;; binding scalar when a consumer retypes documentId as a relation.
-              value: (str/default @entity.summary "")
+              value: (default @entity.summary "")
             }, {
               icon: layers
               label: Type
@@ -316,10 +316,10 @@ orbital RevisionOrbital {
 
     state viewing_single {
       INIT -> loading
-        (set @entity.scopeKey (str/default ?id ""))
+        (set @entity.scopeKey (default ?id ""))
         (set @entity.page 1)
         (fetch Revision {
-          filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
+          filter: (or (not (validate/required @config.scopeField)) (= (default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
           limit: @config.pageSize
           offset: 0
@@ -367,7 +367,7 @@ orbital RevisionOrbital {
           }, { type: divider }, {
             afterId: (object/get (array/first @entity.revisions) "id" "")
             beforeId: @entity.id
-            revisions: (array/map @entity.revisions (fn r { id: @r.id, label: (str/concat "v" (str/default @r.versionNumber "")), author: @r.authorName, timestamp: @r.createdAt, content: @r.content }))
+            revisions: (array/map @entity.revisions (fn r { id: @r.id, label: (str/concat "v" (default @r.versionNumber "")), author: @r.authorName, timestamp: @r.createdAt, content: @r.content }))
             type: version-diff
             view: side-by-side
           }, {
@@ -431,10 +431,10 @@ orbital RevisionOrbital {
 
     state comparing {
       INIT -> loading
-        (set @entity.scopeKey (str/default ?id ""))
+        (set @entity.scopeKey (default ?id ""))
         (set @entity.page 1)
         (fetch Revision {
-          filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
+          filter: (or (not (validate/required @config.scopeField)) (= (default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
           limit: @config.pageSize
           offset: 0
@@ -505,10 +505,10 @@ orbital RevisionOrbital {
 
     state error {
       INIT -> loading
-        (set @entity.scopeKey (str/default ?id ""))
+        (set @entity.scopeKey (default ?id ""))
         (set @entity.page 1)
         (fetch Revision {
-          filter: (or (not (validate/required @config.scopeField)) (= (str/default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
+          filter: (or (not (validate/required @config.scopeField)) (= (default ?id "") "") (= (object/get @entity @config.scopeField) ?id))
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
           limit: @config.pageSize
           offset: 0

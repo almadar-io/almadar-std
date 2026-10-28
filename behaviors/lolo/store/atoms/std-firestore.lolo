@@ -236,7 +236,7 @@ orbital FirestoreOrbital {
       ROWS_QUERY -> busy when (not (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0))
         (set @entity.key @payload.key)
         (set @entity.entityType @payload.entityType)
-        (set @entity.project (or @payload.project "rows"))
+        (set @entity.project (default @payload.project "rows"))
         (set @entity.op "query")
         (set @entity.query @payload.query)
         (set @entity.rowsPath (let ((ck (let ((cc (array/find @config.collections (fn c (= @c.entityType @entity.entityType))))) (if (= @cc null) @entity.entityType (object/get @cc "collection" @entity.entityType))))) (if (= @config.root "") @ck (str/concat @config.root "/entities/" @ck "/rows"))))

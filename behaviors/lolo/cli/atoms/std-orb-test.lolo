@@ -92,15 +92,15 @@ orbital OrbTestOrbital {
         (emit TEST_ANSWERED { status: @payload.status, body: @payload.body })
       TEST_CALLED -> parsing
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit TEST_ARGS_PARSE { stage: "test" argv: (or (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") []) flags: [{ name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "orbital" aliases: [] takesValue: true repeatable: false }, { name: "report" aliases: [] takesValue: true repeatable: false }, { name: "execute" aliases: [] takesValue: false repeatable: false }] })
+        (emit TEST_ARGS_PARSE { stage: "test" argv: (default (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") []) flags: [{ name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "orbital" aliases: [] takesValue: true repeatable: false }, { name: "report" aliases: [] takesValue: true repeatable: false }, { name: "execute" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
       INIT -> parsing
-      TEST_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1) (and (!= (object/get @payload.flags "report") null) (not (array/includes ["text", "json"] (str/default (array/first (object/get @payload.flags "report")) "")))))
+      TEST_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1) (and (!= (object/get @payload.flags "report") null) (not (array/includes ["text", "json"] (default (array/first (object/get @payload.flags "report")) "")))))
         (emit TEST_ANSWERED { status: 400, body: "usage: orb test <program.lolo> [--trait <name>] [--orbital <name>] [--report text|json] [--execute]" })
-      TEST_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (or (= (object/get @payload.flags "report") null) (array/includes ["text", "json"] (str/default (array/first (object/get @payload.flags "report")) ""))))
-        (emit TEST_START { cwd: @entity.cwd, file: (array/first @payload.positionals), traitFilter: (if (!= (object/get @payload.flags "trait") null) (str/default (array/first (object/get @payload.flags "trait")) "") (if (!= (object/get @payload.flags "orbital") null) (str/default (array/first (object/get @payload.flags "orbital")) "") "")), report: (if (!= (object/get @payload.flags "report") null) (array/first (object/get @payload.flags "report")) "text") })
+      TEST_ARGS_DONE -> ready when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (or (= (object/get @payload.flags "report") null) (array/includes ["text", "json"] (default (array/first (object/get @payload.flags "report")) ""))))
+        (emit TEST_START { cwd: @entity.cwd, file: (array/first @payload.positionals), traitFilter: (if (!= (object/get @payload.flags "trait") null) (default (array/first (object/get @payload.flags "trait")) "") (if (!= (object/get @payload.flags "orbital") null) (default (array/first (object/get @payload.flags "orbital")) "") "")), report: (if (!= (object/get @payload.flags "report") null) (array/first (object/get @payload.flags "report")) "text") })
     }
 
     emits {

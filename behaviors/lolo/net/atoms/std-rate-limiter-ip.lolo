@@ -18,15 +18,15 @@ orbital RateClientOrbital {
     state counting {
       INIT -> counting
         (set @entity.buckets [])
-      REQUEST -> counting when (not (and @config.enabled (!= (or @payload.ip "") "")))
+      REQUEST -> counting when (not (and @config.enabled (!= (default @payload.ip "") "")))
         (emit ADMITTED { requestId: @payload.requestId, remaining: @config.requestsPerMinute, resetIn: @config.windowSeconds, limit: @config.requestsPerMinute, window: @config.windowSeconds, counted: false })
-      REQUEST -> counting when (and @config.enabled (!= (or @payload.ip "") "") (or (= (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) null) (>= (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart")) (* @config.windowSeconds 1000))))
+      REQUEST -> counting when (and @config.enabled (!= (default @payload.ip "") "") (or (= (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) null) (>= (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart")) (* @config.windowSeconds 1000))))
         (set @entity.buckets (array/append (array/filter @entity.buckets (fn b (!= @b.ip @payload.ip))) { ip: @payload.ip, count: 1, windowStart: (time/now) }))
         (emit ADMITTED { requestId: @payload.requestId, remaining: (- @config.requestsPerMinute 1), resetIn: @config.windowSeconds, limit: @config.requestsPerMinute, window: @config.windowSeconds })
-      REQUEST -> counting when (and @config.enabled (!= (or @payload.ip "") "") (not (or (= (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) null) (>= (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart")) (* @config.windowSeconds 1000)))) (< (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "count") @config.requestsPerMinute))
+      REQUEST -> counting when (and @config.enabled (!= (default @payload.ip "") "") (not (or (= (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) null) (>= (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart")) (* @config.windowSeconds 1000)))) (< (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "count") @config.requestsPerMinute))
         (set @entity.buckets (array/map @entity.buckets (fn b (if (= @b.ip @payload.ip) { ip: @b.ip, count: (+ @b.count 1), windowStart: @b.windowStart } @b))))
         (emit ADMITTED { requestId: @payload.requestId, remaining: (- @config.requestsPerMinute (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "count")), resetIn: (math/floor (/ (- (* @config.windowSeconds 1000) (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart"))) 1000)), limit: @config.requestsPerMinute, window: @config.windowSeconds })
-      REQUEST -> counting when (and @config.enabled (!= (or @payload.ip "") "") (not (or (= (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) null) (>= (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart")) (* @config.windowSeconds 1000)))) (>= (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "count") @config.requestsPerMinute))
+      REQUEST -> counting when (and @config.enabled (!= (default @payload.ip "") "") (not (or (= (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) null) (>= (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart")) (* @config.windowSeconds 1000)))) (>= (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "count") @config.requestsPerMinute))
         (emit THROTTLED { requestId: @payload.requestId, resetIn: (math/floor (/ (- (* @config.windowSeconds 1000) (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart"))) 1000)), limit: @config.requestsPerMinute, window: @config.windowSeconds })
     }
 

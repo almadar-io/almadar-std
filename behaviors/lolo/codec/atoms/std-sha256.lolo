@@ -18,11 +18,11 @@ orbital Sha256Orbital {
     state idle {
       INIT -> idle
       SHA256_DIGEST -> idle when (not (array/includes ["hex", "base64"] ?encoding))
-        (emit SHA256_REFUSED { requestId: (str/default ?requestId ""), reason: "encoding" })
+        (emit SHA256_REFUSED { requestId: (default ?requestId ""), reason: "encoding" })
       SHA256_DIGEST -> idle when (array/includes ["hex", "base64"] ?encoding)
-        (set @entity.requestId (str/default ?requestId ""))
+        (set @entity.requestId (default ?requestId ""))
         (set @entity.digest (hash/sha256 ?data ?encoding "bytes"))
-        (emit SHA256_DIGESTED { requestId: (str/default ?requestId ""), digest: @entity.digest })
+        (emit SHA256_DIGESTED { requestId: (default ?requestId ""), digest: @entity.digest })
     }
 
     emits {

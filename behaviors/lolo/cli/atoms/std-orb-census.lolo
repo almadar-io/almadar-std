@@ -45,7 +45,7 @@ orbital OrbCensusOrbital {
       CENSUS_CALLED -> ready when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit CENSUS_ARGS_PARSE { stage: "census" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: true }, { name: "root" aliases: [] takesValue: true repeatable: true }, { name: "path" aliases: [] takesValue: true repeatable: true }, { name: "max-bytes" aliases: [] takesValue: true repeatable: true }] })
       CENSUS_ARGS_DONE -> ready
-        (set @entity.acc { names: @payload.positionals, dirs: (or (object/get @payload.flags "path") []), json: (!= (object/get @payload.flags "json") null), root: (if (> (array/len (or (object/get @payload.flags "root") [])) 0) (array/last (object/get @payload.flags "root")) "."), maxBytes: (if (> (array/len (or (object/get @payload.flags "max-bytes") [])) 0) (str/to-number (array/last (object/get @payload.flags "max-bytes"))) 67108864), errors: @payload.errors })
+        (set @entity.acc { names: @payload.positionals, dirs: (default (object/get @payload.flags "path") []), json: (!= (object/get @payload.flags "json") null), root: (if (> (array/len (default (object/get @payload.flags "root") [])) 0) (array/last (object/get @payload.flags "root")) "."), maxBytes: (if (> (array/len (default (object/get @payload.flags "max-bytes") [])) 0) (str/to-number (array/last (object/get @payload.flags "max-bytes"))) 67108864), errors: @payload.errors })
         (emit CENSUS_PARSED { })
       CENSUS_PARSED -> ready when (or (> (array/len @entity.acc.errors) 0) (and (= (array/len @entity.acc.names) 0) (= (array/len @entity.acc.dirs) 0)))
         (emit CENSUS_ANSWERED { status: 400, body: "usage: orb census [--root <dir>] [--json] [--path <dir>]... [--max-bytes <n>] <package-name>..." })
@@ -137,7 +137,7 @@ orbital OrbCensusOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit CENSUS_STAT { })
       CENSUS_FILE_READ -> statting when (!= (bytes/to-string @payload.data) null)
-        (let ((text (str/default (bytes/to-string @payload.data) ""))
+        (let ((text (default (bytes/to-string @payload.data) ""))
               (file (array/nth @entity.files @entity.cursor)))
           (do
             (set @entity.ownDirs (array/concat @entity.ownDirs

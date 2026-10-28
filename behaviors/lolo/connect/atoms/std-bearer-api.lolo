@@ -29,21 +29,21 @@ orbital BearerApiOrbital {
       BEARER_API_REQUEST -> idle when (and (= @payload.method "POST") (str/startsWith @payload.endpoint "/"))
         (http POST @config.origin @payload.endpoint {
           headers: { Accept: "application/json", Content-Type: "application/json" },
-          text: (or @payload.body ""),
+          text: (default @payload.body ""),
           auth: { scheme: bearer, credential: @config.token },
           timeoutMs: @config.timeoutMs
         } { emit: { success: BEARER_API_REPLIED, failure: BEARER_API_UNREACHABLE } })
       BEARER_API_REQUEST -> idle when (and (= @payload.method "PUT") (str/startsWith @payload.endpoint "/"))
         (http PUT @config.origin @payload.endpoint {
           headers: { Accept: "application/json", Content-Type: "application/json" },
-          text: (or @payload.body ""),
+          text: (default @payload.body ""),
           auth: { scheme: bearer, credential: @config.token },
           timeoutMs: @config.timeoutMs
         } { emit: { success: BEARER_API_REPLIED, failure: BEARER_API_UNREACHABLE } })
       BEARER_API_REQUEST -> idle when (and (= @payload.method "PATCH") (str/startsWith @payload.endpoint "/"))
         (http PATCH @config.origin @payload.endpoint {
           headers: { Accept: "application/json", Content-Type: "application/json" },
-          text: (or @payload.body ""),
+          text: (default @payload.body ""),
           auth: { scheme: bearer, credential: @config.token },
           timeoutMs: @config.timeoutMs
         } { emit: { success: BEARER_API_REPLIED, failure: BEARER_API_UNREACHABLE } })

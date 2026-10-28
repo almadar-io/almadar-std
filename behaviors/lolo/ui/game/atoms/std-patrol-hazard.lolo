@@ -58,7 +58,7 @@ orbital PatrolHazardOrbital {
                 (cdir (if @overshoot -1 (if @undershoot 1 (object/get @p dir)))))
           (let ((nt (+ (object/get @p t) 0.033)))
           (let ((amp (if (== (object/get @p waveAmp) null) 0 (object/get @p waveAmp))) (period (if (== (object/get @p wavePeriod) null) 3 (object/get @p wavePeriod))))
-          (let ((cy (+ (object/get @p y) (* @amp (math/sin (or (/ (* 6.283185307179586 @nt) @period) 0))))))
+          (let ((cy (+ (object/get @p y) (* @amp (math/sin (default (/ (* 6.283185307179586 @nt) @period) 0))))))
           (let ((near (and (<= (math/abs (- @entity.px @cx)) @config.hitRadius) (<= (math/abs (- @entity.py @cy)) @config.hitRadius))))
             (object/merge @p { x: @cx, dir: @cdir, t: @nt, cy: @cy, hit: (and @near (== (object/get @p touching) false)), touching: @near })))))))))))
         (let ((hits (array/filter @entity.patrols (fn p (== (object/get @p hit) true)))))

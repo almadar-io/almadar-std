@@ -22,9 +22,9 @@ orbital RedisOrbital {
       REDIS_GET_REPLIED -> idle
         (emit REDIS_GOT { value: @payload.reply })
 
-      REDIS_SET -> idle when (and (!= @payload.key "") (> (or @payload.ttl 0) 0))
+      REDIS_SET -> idle when (and (!= @payload.key "") (> (default @payload.ttl 0) 0))
         (if @config.authenticated (redis @config.origin ["SET", @payload.key, @payload.value, "EX", (str/concat @payload.ttl)] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: "set", emit: { success: REDIS_SET_REPLIED, failure: REDIS_CALL_FAILED } }) (redis @config.origin ["SET", @payload.key, @payload.value, "EX", (str/concat @payload.ttl)] { db: (if (> @config.db 0) @config.db null) } { key: "set", emit: { success: REDIS_SET_REPLIED, failure: REDIS_CALL_FAILED } }))
-      REDIS_SET -> idle when (and (!= @payload.key "") (<= (or @payload.ttl 0) 0))
+      REDIS_SET -> idle when (and (!= @payload.key "") (<= (default @payload.ttl 0) 0))
         (if @config.authenticated (redis @config.origin ["SET", @payload.key, @payload.value] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: "set", emit: { success: REDIS_SET_REPLIED, failure: REDIS_CALL_FAILED } }) (redis @config.origin ["SET", @payload.key, @payload.value] { db: (if (> @config.db 0) @config.db null) } { key: "set", emit: { success: REDIS_SET_REPLIED, failure: REDIS_CALL_FAILED } }))
       REDIS_SET -> idle when (= @payload.key "")
         (emit REDIS_FAILED { action: "set", kind: "refused", code: null, message: "key is required" })
@@ -39,7 +39,7 @@ orbital RedisOrbital {
         (emit REDIS_DELETED { deleted: (> @payload.reply 0) })
 
       REDIS_INCREMENT -> idle when (!= @payload.key "")
-        (if @config.authenticated (redis @config.origin ["INCRBY", @payload.key, (str/concat (or @payload.by 1))] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: "increment", emit: { success: REDIS_INCREMENT_REPLIED, failure: REDIS_CALL_FAILED } }) (redis @config.origin ["INCRBY", @payload.key, (str/concat (or @payload.by 1))] { db: (if (> @config.db 0) @config.db null) } { key: "increment", emit: { success: REDIS_INCREMENT_REPLIED, failure: REDIS_CALL_FAILED } }))
+        (if @config.authenticated (redis @config.origin ["INCRBY", @payload.key, (str/concat (default @payload.by 1))] { auth: @config.password, user: (if (!= @config.user "") @config.user null), db: (if (> @config.db 0) @config.db null) } { key: "increment", emit: { success: REDIS_INCREMENT_REPLIED, failure: REDIS_CALL_FAILED } }) (redis @config.origin ["INCRBY", @payload.key, (str/concat (default @payload.by 1))] { db: (if (> @config.db 0) @config.db null) } { key: "increment", emit: { success: REDIS_INCREMENT_REPLIED, failure: REDIS_CALL_FAILED } }))
       REDIS_INCREMENT -> idle when (= @payload.key "")
         (emit REDIS_FAILED { action: "increment", kind: "refused", code: null, message: "key is required" })
       REDIS_INCREMENT_REPLIED -> idle
@@ -60,7 +60,7 @@ orbital RedisOrbital {
         (emit REDIS_PUBLISHED { receivers: @payload.reply })
 
       REDIS_LOCK -> idle when (!= @payload.key "")
-        (random-bytes 16 { key: (json/stringify { key: @payload.key, ttl: (or @payload.ttl 30000) }), emit: { success: REDIS_LOCK_ID_DRAWN, failure: REDIS_LOCK_ID_FAILED } })
+        (random-bytes 16 { key: (json/stringify { key: @payload.key, ttl: (default @payload.ttl 30000) }), emit: { success: REDIS_LOCK_ID_DRAWN, failure: REDIS_LOCK_ID_FAILED } })
       REDIS_LOCK -> idle when (= @payload.key "")
         (emit REDIS_FAILED { action: "lock", kind: "refused", code: null, message: "key is required" })
       REDIS_LOCK_ID_DRAWN -> idle

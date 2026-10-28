@@ -65,7 +65,7 @@ orbital ThreadPostOrbital {
         (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
+          filter: (and (or (= (default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (default @entity.replyRootId @config.threadRootId))) (= (default (object/get @entity parentId) "") ""))
           include: (replies)
           limit: @config.pageSize
           offset: 0
@@ -87,7 +87,7 @@ orbital ThreadPostOrbital {
         (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
+          filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (default (object/get @entity parentId) "") ""))
           include: (replies)
           limit: @config.pageSize
           offset: 0
@@ -100,7 +100,7 @@ orbital ThreadPostOrbital {
         (set @entity.threadPage ?page)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
+          filter: (and (or (= (default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (default @entity.replyRootId @config.threadRootId))) (= (default (object/get @entity parentId) "") ""))
           include: (replies)
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)
@@ -109,7 +109,7 @@ orbital ThreadPostOrbital {
         (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
+          filter: (and (or (= (default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (default @entity.replyRootId @config.threadRootId))) (= (default (object/get @entity parentId) "") ""))
           include: (replies)
           limit: @config.pageSize
           offset: 0
@@ -123,20 +123,20 @@ orbital ThreadPostOrbital {
       ;; Inline reply: when the event already carries the composed text (e.g.
       ;; reply-tree's inline composer), persist directly and stay in `browsing`
       ;; so the box stays inline instead of swapping to a full composer view.
-      REPLY -> browsing when (not (= (str/default ?content "") ""))
+      REPLY -> browsing when (not (= (default ?content "") ""))
         (persist create ThreadPost {
           authorId: @user.id
           authorName: @user.name
           createdAt: @now
           content: ?content
-          parentId: (str/default ?parentNodeId ?parentId)
-          threadRootId: (str/default @entity.replyRootId (str/default @config.threadRootId root))
+          parentId: (default ?parentNodeId ?parentId)
+          threadRootId: (default @entity.replyRootId (default @config.threadRootId root))
         } {
           emit: { failure: ThreadPostCreateFailed, success: ThreadPostCreated }
         })
       ;; Reply with no text yet (e.g. an email "Reply" button) opens the composer.
-      REPLY -> replying when (= (str/default ?content "") "")
-        (set @entity.replyParentId (str/default ?parentNodeId ?parentId))
+      REPLY -> replying when (= (default ?content "") "")
+        (set @entity.replyParentId (default ?parentNodeId ?parentId))
         (render-ui main {
           children: [{
             content: "Write a reply"
@@ -176,7 +176,7 @@ orbital ThreadPostOrbital {
       ;; row's own scope, per the create effect's fallback chain) — NOT
       ;; ?row.threadRootId; ThreadPostCreated's payload is the created row
       ;; itself (see the type alias above), no `row` wrapper exists.
-      ThreadPostCreated -> browsing when (not (= (str/default ?parentId "") ""))
+      ThreadPostCreated -> browsing when (not (= (default ?parentId "") ""))
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
         (set @entity.lastReplyId ?id)
@@ -184,13 +184,13 @@ orbital ThreadPostOrbital {
           id: ?parentId
           emit: { failure: ReplyParentLoadFailed, success: ReplyParentLoaded }
         })
-      ThreadPostCreated -> browsing when (= (str/default ?parentId "") "")
+      ThreadPostCreated -> browsing when (= (default ?parentId "") "")
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
         (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
+          filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (default (object/get @entity parentId) "") ""))
           include: (replies)
           limit: @config.pageSize
           offset: 0
@@ -208,7 +208,7 @@ orbital ThreadPostOrbital {
         (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
+          filter: (and (or (= (default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (default @entity.replyRootId @config.threadRootId))) (= (default (object/get @entity parentId) "") ""))
           include: (replies)
           limit: @config.pageSize
           offset: 0
@@ -217,7 +217,7 @@ orbital ThreadPostOrbital {
         (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
+          filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (default (object/get @entity parentId) "") ""))
           include: (replies)
           limit: @config.pageSize
           offset: 0
@@ -230,7 +230,7 @@ orbital ThreadPostOrbital {
         (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or (= ?row.threadRootId "") (= (object/get @entity threadRootId) ?row.threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
+          filter: (and (or (= ?row.threadRootId "") (= (object/get @entity threadRootId) ?row.threadRootId)) (= (default (object/get @entity parentId) "") ""))
           include: (replies)
           limit: @config.pageSize
           offset: 0
@@ -240,14 +240,14 @@ orbital ThreadPostOrbital {
       ;; browsing — without these arms every such click is swallowed.
       EDIT_REPLY -> browsing
         (set @entity.replyDraft ?value)
-      SUBMIT_REPLY -> browsing when (not (= (str/default @entity.replyDraft "") ""))
+      SUBMIT_REPLY -> browsing when (not (= (default @entity.replyDraft "") ""))
         (persist create ThreadPost {
           authorId: @user.id
           authorName: @user.name
           createdAt: @now
           content: @entity.replyDraft
-          parentId: (str/default @entity.replyParentId "")
-          threadRootId: (str/default @entity.replyRootId (str/default @config.threadRootId root))
+          parentId: (default @entity.replyParentId "")
+          threadRootId: (default @entity.replyRootId (default @config.threadRootId root))
         } {
           emit: { failure: ThreadPostCreateFailed, success: ThreadPostCreated }
         })
@@ -275,7 +275,7 @@ orbital ThreadPostOrbital {
         (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
+          filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (default (object/get @entity parentId) "") ""))
           include: (replies)
           limit: @config.pageSize
           offset: 0
@@ -288,7 +288,7 @@ orbital ThreadPostOrbital {
         (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
+          filter: (and (or (= (default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (default @entity.replyRootId @config.threadRootId))) (= (default (object/get @entity parentId) "") ""))
           include: (replies)
           limit: @config.pageSize
           offset: 0
@@ -296,14 +296,14 @@ orbital ThreadPostOrbital {
         (render-ui main { type: skeleton, variant: list, rows: 6 })
       EDIT_REPLY -> replying
         (set @entity.replyDraft ?value)
-      SUBMIT_REPLY -> browsing when (not (= (str/default @entity.replyDraft "") ""))
+      SUBMIT_REPLY -> browsing when (not (= (default @entity.replyDraft "") ""))
         (persist create ThreadPost {
           authorId: @user.id
           authorName: @user.name
           createdAt: @now
           content: @entity.replyDraft
-          parentId: (str/default @entity.replyParentId "")
-          threadRootId: (str/default @entity.replyRootId (str/default @config.threadRootId root))
+          parentId: (default @entity.replyParentId "")
+          threadRootId: (default @entity.replyRootId (default @config.threadRootId root))
         } {
           emit: { failure: ThreadPostCreateFailed, success: ThreadPostCreated }
         })
@@ -312,7 +312,7 @@ orbital ThreadPostOrbital {
         (set @entity.replyParentId "")
       ;; Scoped to the row just created (?threadRootId, flat) — see the twin
       ;; arm in `browsing` for why.
-      ThreadPostCreated -> browsing when (not (= (str/default ?parentId "") ""))
+      ThreadPostCreated -> browsing when (not (= (default ?parentId "") ""))
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
         (set @entity.lastReplyId ?id)
@@ -320,13 +320,13 @@ orbital ThreadPostOrbital {
           id: ?parentId
           emit: { failure: ReplyParentLoadFailed, success: ReplyParentLoaded }
         })
-      ThreadPostCreated -> browsing when (= (str/default ?parentId "") "")
+      ThreadPostCreated -> browsing when (= (default ?parentId "") "")
         (set @entity.replyDraft "")
         (set @entity.replyParentId "")
         (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (str/default (object/get @entity parentId) "") ""))
+          filter: (and (or (= ?threadRootId "") (= (object/get @entity threadRootId) ?threadRootId)) (= (default (object/get @entity parentId) "") ""))
           include: (replies)
           limit: @config.pageSize
           offset: 0
@@ -342,7 +342,7 @@ orbital ThreadPostOrbital {
         (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
+          filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (default (object/get @entity parentId) "") ""))
           include: (replies)
           limit: @config.pageSize
           offset: 0
@@ -355,7 +355,7 @@ orbital ThreadPostOrbital {
         (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or (= (str/default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (str/default @entity.replyRootId @config.threadRootId))) (= (str/default (object/get @entity parentId) "") ""))
+          filter: (and (or (= (default @entity.replyRootId @config.threadRootId) "") (= (object/get @entity threadRootId) (default @entity.replyRootId @config.threadRootId))) (= (default (object/get @entity parentId) "") ""))
           include: (replies)
           limit: @config.pageSize
           offset: 0
@@ -366,7 +366,7 @@ orbital ThreadPostOrbital {
         (set @entity.threadPage 1)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (str/default (object/get @entity parentId) "") ""))
+          filter: (and (or (= ?rootId "") (= (object/get @entity threadRootId) ?rootId)) (= (default (object/get @entity parentId) "") ""))
           include: (replies)
           limit: @config.pageSize
           offset: 0

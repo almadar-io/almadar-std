@@ -33,14 +33,14 @@ orbital IconifyOrbital {
 
       ICONIFY_SEARCH -> idle when (!= @payload.query "")
         (http GET @config.origin "/search" {
-          query: { query: @payload.query, limit: (or @payload.limit 1) },
+          query: { query: @payload.query, limit: (default @payload.limit 1) },
           headers: { Accept: "*/*", User-Agent: @config.userAgent },
           timeoutMs: @config.timeoutMs
         } { emit: { success: ICONIFY_SEARCH_REPLIED, failure: ICONIFY_SEARCH_FAILED } })
       ICONIFY_SEARCH -> idle when (= @payload.query "")
         (emit ICONIFY_SEARCH_RESULT { icons: [] })
       ICONIFY_SEARCH_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (emit ICONIFY_SEARCH_RESULT { icons: (or (object/get (json/parse @payload.body IconifySearchReply) icons []) []) })
+        (emit ICONIFY_SEARCH_RESULT { icons: (default (object/get (json/parse @payload.body IconifySearchReply) icons []) []) })
       ICONIFY_SEARCH_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit ICONIFY_SEARCH_RESULT { icons: [] })
       ICONIFY_SEARCH_FAILED -> idle

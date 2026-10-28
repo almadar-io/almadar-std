@@ -169,7 +169,7 @@ orbital CloudRunBoardOrbital {
             (when (!= @rows null)
               (do
                 (set @entity.costAvailable true)
-                (set @entity.costRows (array/reduce @rows @entity.costRows (fn (acc row) (let ((g (str/to-number @row.gross)) (n (str/to-number @row.net))) (if (or (= (or @row.svc "") "") (= @g null) (= @n null)) @acc (array/concat @acc [{ svc: @row.svc, gross: @g, net: @n }]))))))))
+                (set @entity.costRows (array/reduce @rows @entity.costRows (fn (acc row) (let ((g (str/to-number @row.gross)) (n (str/to-number @row.net))) (if (or (= (default @row.svc "") "") (= @g null) (= @n null)) @acc (array/concat @acc [{ svc: @row.svc, gross: @g, net: @n }]))))))))
             (emit CR_GCLOUD { stage: "services", argv: ["run", "services", "list", (str/concat "--project=" @config.project), "--format=json"] })))
       CR_RAN -> reading when (and (= @payload.stage "cost") (not (and (= @payload.exitCode 0) (json/valid (if (= (str/trim @payload.stdout) "") "[]" @payload.stdout)))))
         (emit CR_GCLOUD { stage: "services", argv: ["run", "services", "list", (str/concat "--project=" @config.project), "--format=json"] })
@@ -183,7 +183,7 @@ orbital CloudRunBoardOrbital {
         (emit CR_DESCRIBE_NEXT { })
       CR_DESCRIBE_NEXT -> reading when (< @entity.cursor (array/len @entity.services))
         (let ((svc (array/nth @entity.services @entity.cursor)))
-          (emit CR_GCLOUD { stage: "describe", argv: ["run", "services", "describe", (object/get @svc "metadata.name" ""), (str/concat "--region=" (or (array/nth (object/values (object/pick (object/get @svc "metadata.labels" @entity.noMap) [(str/concat "cloud.googleapis.com/location")])) 0) "")), (str/concat "--project=" @config.project), "--format=json"] }))
+          (emit CR_GCLOUD { stage: "describe", argv: ["run", "services", "describe", (object/get @svc "metadata.name" ""), (str/concat "--region=" (default (array/nth (object/values (object/pick (object/get @svc "metadata.labels" @entity.noMap) [(str/concat "cloud.googleapis.com/location")])) 0) "")), (str/concat "--project=" @config.project), "--format=json"] }))
       CR_DESCRIBE_NEXT -> reading when (>= @entity.cursor (array/len @entity.services))
         (emit CR_GCLOUD { stage: "enabled", argv: ["services", "list", "--enabled", (str/concat "--project=" @config.project), "--format=json"] })
       CR_RAN -> reading when (and (= @payload.stage "describe") (= @payload.exitCode 0) (json/valid @payload.stdout))
@@ -229,11 +229,11 @@ orbital CloudRunBoardOrbital {
           (do
             (when (!= @rows null)
               (when (> (array/len @rows) 0)
-                (let ((built (array/reduce @rows { ok: true, es: @none } (fn (acc row) (let ((c (str/to-number @row.total_cost))) (if (or (not @acc.ok) (= @c null)) { ok: false, es: @acc.es } { ok: true, es: (array/concat @acc.es [{ service: @row.service_name, cost: (math/round @c 2), currency: (or @row.currency "USD") }]) }))))))
+                (let ((built (array/reduce @rows { ok: true, es: @none } (fn (acc row) (let ((c (str/to-number @row.total_cost))) (if (or (not @acc.ok) (= @c null)) { ok: false, es: @acc.es } { ok: true, es: (array/concat @acc.es [{ service: @row.service_name, cost: (math/round @c 2), currency: (default @row.currency "USD") }]) }))))))
                   (when @built.ok
                     (do
                       (set @entity.entries @built.es)
-                      (set @entity.currency (or (object/get (array/nth @rows (- (array/len @rows) 1)) "currency" null) "USD")))))))
+                      (set @entity.currency (default (object/get (array/nth @rows (- (array/len @rows) 1)) "currency" null) "USD")))))))
             (emit CR_ANSWER { })))
       CR_RAN -> reading when (and (= @payload.stage "rollup") (not (and (= @payload.exitCode 0) (!= (str/trim @payload.stdout) "") (json/valid @payload.stdout))))
         (emit CR_ANSWER { })
@@ -243,21 +243,21 @@ orbital CloudRunBoardOrbital {
         (set @entity.cloudRun { services: (array/map (array/range (array/len @entity.services)) (fn i (let ((svc (array/nth @entity.services @i)) (r (array/nth @entity.resources @i)))
             (let ((name (object/get @svc "metadata.name" "")) (ready (array/find (object/get @svc "status.conditions" []) (fn c (= @c.type "Ready")))) (cost (array/find @entity.costRows (fn c (= @c.svc (object/get @svc "metadata.name" ""))))))
               { name: @name,
-                region: (or (array/nth (object/values (object/pick (object/get @svc "metadata.labels" @entity.noMap) [(str/concat "cloud.googleapis.com/location")])) 0) ""),
+                region: (default (array/nth (object/values (object/pick (object/get @svc "metadata.labels" @entity.noMap) [(str/concat "cloud.googleapis.com/location")])) 0) ""),
                 url: (object/get @svc "status.url" ""),
                 lastDeployed: (or (array/nth (object/values (object/pick (object/get @svc "metadata.annotations" @entity.noMap) [(str/concat "serving.knative.dev/lastModified")])) 0) (object/get @svc "metadata.creationTimestamp" "")),
                 latestRevision: (or (object/get @svc "status.latestReadyRevisionName" null) (object/get @svc "status.latestCreatedRevisionName" "")),
                 status: (if (== @ready null) "Unknown" (if (= @ready.status "True") "Active" "Inactive")),
-                creator: (or (array/nth (object/values (object/pick (object/get @svc "metadata.annotations" @entity.noMap) [(str/concat "serving.knative.dev/creator")])) 0) ""),
+                creator: (default (array/nth (object/values (object/pick (object/get @svc "metadata.annotations" @entity.noMap) [(str/concat "serving.knative.dev/creator")])) 0) ""),
                 hasResourceData: @r.known, cpu: @r.cpu, memoryGb: @r.memoryGb, minInstances: @r.minInstances, maxInstances: @r.maxInstances, concurrency: @r.concurrency, gpu: @r.gpu, gpuCount: @r.gpuCount,
                 hourlyIfUp: (if @r.known (math/round (* (+ (+ (* @r.cpu @config.cpuRatePerSecond) (* @r.memoryGb @config.memoryRatePerSecond)) (if (and (!= @r.gpu null) (> @r.gpuCount 0) (!= (object/get @config.gpuRatesPerSecond @r.gpu null) null)) (* @r.gpuCount (if @r.zonal (object/get (object/get @config.gpuRatesPerSecond @r.gpu) zonal 0) (object/get (object/get @config.gpuRatesPerSecond @r.gpu) noZonal 0))) 0)) 3600) 4) 0),
                 activeInstanceHours: (math/round (/ (array/reduce (array/filter @entity.instanceSeconds (fn x (= @x.svc @name))) 0 (fn acc x (+ @acc @x.value))) 3600) 2),
-                avgInstances: (math/round (or (/ (math/round (/ (array/reduce (array/filter @entity.instanceSeconds (fn x (= @x.svc @name))) 0 (fn acc x (+ @acc @x.value))) 3600) 2) (/ (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) 3600)) 0) 3),
+                avgInstances: (math/round (default (/ (math/round (/ (array/reduce (array/filter @entity.instanceSeconds (fn x (= @x.svc @name))) 0 (fn acc x (+ @acc @x.value))) 3600) 2) (/ (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) 3600)) 0) 3),
                 requestCount: (math/round (array/reduce (array/filter @entity.requests (fn x (= @x.svc @name))) 0 (fn acc x (+ @acc @x.value))) 0),
                 hasUsageData: @entity.usageAvailable,
                 grossCostMtd: (math/round (if (== @cost null) 0 @cost.gross) 4),
                 netCostMtd: (math/round (if (== @cost null) 0 @cost.net) 4),
-                projectedMonthlyUsd: (math/round (* (if (== @cost null) 0 @cost.net) (or (/ @config.hoursPerMonth (/ (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) 3600)) 0)) 2),
+                projectedMonthlyUsd: (math/round (* (if (== @cost null) 0 @cost.net) (default (/ @config.hoursPerMonth (/ (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) 3600)) 0)) 2),
                 hasCostData: @entity.costAvailable })))), actualBilledUsd: (object/get (array/find @entity.entries (fn e (= @e.service "Cloud Run"))) "cost" null), periodHoursElapsed: (math/round (/ (math/max 60 (math/round (/ (- @entity.startedAt (time/startOf @entity.startedAt "month")) 1000) 0)) 3600) 1) })
         (set @entity.fetchedAt (str/concat (time/format @entity.startedAt "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (math/mod @entity.startedAt 1000)) 3 "0") "Z"))
         (set @entity.cachedAt @now)

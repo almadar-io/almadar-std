@@ -67,20 +67,20 @@ orbital OrbLintKeyedCallKeysOrbital {
                               []
                               [{ site: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]"), trait: @t }]))))))))))))
               (let ((places (array/flatten (array/map @sites (fn s
-                      (let ((sm (object/get (object/get @s "trait") "stateMachine")) (ticks (or (object/get (object/get @s "trait") "ticks" []) [])))
-                        (let ((trans (or (object/get @sm "transitions" []) [])))
+                      (let ((sm (object/get (object/get @s "trait") "stateMachine")) (ticks (default (object/get (object/get @s "trait") "ticks" []) [])))
+                        (let ((trans (default (object/get @sm "transitions" []) [])))
                           (array/concat
                             (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
                               (let ((tr (array/nth @trans @i)))
-                                (let ((effs (or (object/get @tr "effects" []) [])))
+                                (let ((effs (default (object/get @tr "effects" []) [])))
                                   (array/concat
                                     (if (!= (object/get @tr "guard" null) null) [{ path: (str/concat (object/get @s "site") ".stateMachine.transitions[" @i "].guard"), node: (object/get @tr "guard"), place: "g" }] [])
                                     (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat (object/get @s "site") ".stateMachine.transitions[" @i "].effects[" @j "]"), node: (array/nth @effs @j), place: "e" }))))))))
                             (array/flatten (array/map (array/range 0 (array/len @ticks)) (fn i
-                              (let ((effs (or (object/get (array/nth @ticks @i) "effects" []) [])))
+                              (let ((effs (default (object/get (array/nth @ticks @i) "effects" []) [])))
                                 (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat (object/get @s "site") ".ticks[" @i "].effects[" @j "]"), node: (array/nth @effs @j), place: "e" }))))))))))))))
                 (let ((recs (array/flatten (array/map @places (fn pl
-                        (as (or (tree/fold (object/get @pl "node") (fn (n k)
+                        (as (default (tree/fold (object/get @pl "node") (fn (n k)
                             (array/concat
                               (if (and (validate/array @n) (> (array/len @n) 0))
                                 (let ((h (array/first @n)))
@@ -105,7 +105,7 @@ orbital OrbLintKeyedCallKeysOrbital {
                                         [{ rtype: "cast", head: "as", hasKey: false, key: "", cancelled: false, text: @t1, path: (object/get @pl "path"), place: (object/get @pl "place") }]
                                         []))))
                                 [])
-                              (if (validate/array @n) (array/flatten (array/filter @k (fn c (!= @c null)))) (if (validate/object @n) (array/flatten (array/map (object/keys @k) (fn key (or (object/get @k @key []) [])))) []))))
+                              (if (validate/array @n) (array/flatten (array/filter @k (fn c (!= @c null)))) (if (validate/object @n) (array/flatten (array/map (object/keys @k) (fn key (default (object/get @k @key []) [])))) []))))
                           KkVal) []) KkRecs))))))
                   (let ((texts (array/map (array/filter @recs (fn r (and (= (object/get @r "rtype") "call") (object/get @r "hasKey")))) (fn r
                           (let ((k (object/get @r "key" null)))

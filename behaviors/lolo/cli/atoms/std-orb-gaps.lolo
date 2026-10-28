@@ -118,22 +118,22 @@ orbital OrbGapsOrbital {
         (emit GAPS_ANSWERED { status: 500, body: "Error: orb gaps: the command arguments could not be read" })
       GAPS_CALLED -> ready when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (set @entity.cmd (str/default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))
+        (set @entity.cmd (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) ""))
         (emit GAPS_ARGS_PARSE { stage: "gaps" argv: (array/drop (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) flags: [{ name: "from" aliases: [] takesValue: true repeatable: false }, { name: "out" aliases: [] takesValue: true repeatable: false }, { name: "write" aliases: [] takesValue: false repeatable: false }, { name: "check" aliases: [] takesValue: false repeatable: false }] })
       GAPS_ARGS_DONE -> ready
         (set @entity.mode (if (!= (object/get @payload.flags "write") null) "write" (if (!= (object/get @payload.flags "check") null) "check" (if (!= (object/get @payload.flags "out") null) "out" "preview"))))
-        (set @entity.outDir (if (!= (object/get @payload.flags "out") null) (str/default (array/first (object/get @payload.flags "out")) "") ""))
-        (set @entity.from (if (!= (object/get @payload.flags "from") null) (str/default (array/first (object/get @payload.flags "from")) "") ""))
+        (set @entity.outDir (if (!= (object/get @payload.flags "out") null) (default (array/first (object/get @payload.flags "out")) "") ""))
+        (set @entity.from (if (!= (object/get @payload.flags "from") null) (default (array/first (object/get @payload.flags "from")) "") ""))
         (set @entity.fail (if (not (array/includes (str/split "check|sync|status|rollup" "|") @entity.cmd)) "usage"
           (if (and (= @entity.cmd "check") (> (array/len @payload.words) 0)) "usage"
-            (str/default (array/find (array/concat
+            (default (array/find (array/concat
               (array/map @payload.errors (fn e (if (str/startsWith @e "unknown flag: ") (str/concat "unrecognized option: " (str/replace @e "unknown flag: " ""))
                 (if (str/startsWith @e "repeated flag: ") (str/concat "duplicate option: " (str/replace @e "repeated flag: " ""))
                   (if (str/startsWith @e "missing value for --") (str/concat "--" (str/replace @e "missing value for --" "") " needs a value")
                     (str/concat "unrecognized option: " (str/replace @e "flag takes no value: " "")))))))
               (array/map @payload.positionals (fn t (str/concat "unrecognized option: " @t)))
               (array/map (array/filter ["--from", "--out", "--write", "--check"] (fn f (and (!= (object/get @payload.flags (str/replace @f "--" "")) null) (not (array/includes (if (= @entity.cmd "sync") ["--from", "--out", "--write", "--check"] (if (= @entity.cmd "rollup") ["--out", "--write", "--check"] (array/take ["--out"] 0))) @f))))) (fn f (str/concat "unrecognized option: " @f)))
-              (array/map (array/filter ["--from", "--out"] (fn f (and (> (array/len (or (object/get @payload.flags (str/replace @f "--" "")) [])) 0) (str/startsWith (array/first (object/get @payload.flags (str/replace @f "--" ""))) "--")))) (fn f (str/concat @f " needs a value")))
+              (array/map (array/filter ["--from", "--out"] (fn f (and (> (array/len (default (object/get @payload.flags (str/replace @f "--" "")) [])) 0) (str/startsWith (array/first (object/get @payload.flags (str/replace @f "--" ""))) "--")))) (fn f (str/concat @f " needs a value")))
               [(if (> (+ (if (!= (object/get @payload.flags "write") null) 1 0) (if (!= (object/get @payload.flags "check") null) 1 0) (if (!= (object/get @payload.flags "out") null) 1 0)) 1) "choose only one of --write, --check, --out" "")
                (if (and (!= (object/get @payload.flags "from") null) (not (or (= @entity.from "master") (= @entity.from "repos")))) "--from must be master or repos" "")
                (if (and (!= (object/get @payload.flags "out") null) (or (str/startsWith @entity.outDir "/") (str/includes @entity.outDir ".."))) "--out must name a directory under the outRoot knob, not a path" "")]) (fn m (!= @m ""))) ""))))
@@ -239,7 +239,7 @@ orbital OrbGapsOrbital {
         (emit GAPS_GM_FAIL { error: "the .gitmodules is not text" })
       GAPS_GM_TEXT -> probing when (!= (bytes/to-string @payload.data) null)
         (set @entity.work (array/concat @entity.work (array/map
-          (array/filter (str/split (str/default (bytes/to-string @payload.data) "") "\n") (fn l (validate/pattern @l "^\\s*path\\s*=")))
+          (array/filter (str/split (default (bytes/to-string @payload.data) "") "\n") (fn l (validate/pattern @l "^\\s*path\\s*=")))
           (fn l { path: (os/path-normalize (os/path-join (object/get (array/nth @entity.work @entity.cursor) "path") (str/trim (str/replace-pattern @l "^\\s*path\\s*=" "")))), nested: (!= (object/get (array/nth @entity.work @entity.cursor) "path") ".") }))))
         (emit GAPS_PROBE_LEDGER { })
       GAPS_GM_FAIL -> probing
@@ -251,7 +251,7 @@ orbital OrbGapsOrbital {
       GAPS_PL_READ -> probing when (= (bytes/to-string @payload.data) null)
         (emit GAPS_PL_FAIL { error: "the ledger is not text" })
       GAPS_PL_READ -> probing when (!= (bytes/to-string @payload.data) null)
-        (set @entity.reads (array/append @entity.reads { path: (os/path-normalize (os/path-join (object/get (array/nth @entity.work @entity.cursor) "path") "Almadar_Gaps.md")), ok: true, text: (str/default (bytes/to-string @payload.data) "") }))
+        (set @entity.reads (array/append @entity.reads { path: (os/path-normalize (os/path-join (object/get (array/nth @entity.work @entity.cursor) "path") "Almadar_Gaps.md")), ok: true, text: (default (bytes/to-string @payload.data) "") }))
         (emit GAPS_PROBE_NEXT { })
       GAPS_PL_FAIL -> probing
         (emit GAPS_PROBE_NEXT { })
@@ -281,7 +281,7 @@ orbital OrbGapsOrbital {
       GAPS_FILE_READ -> reading when (= (bytes/to-string @payload.data) null)
         (emit GAPS_FILE_UNREAD { error: "the file is not text" })
       GAPS_FILE_READ -> reading when (!= (bytes/to-string @payload.data) null)
-        (set @entity.reads (array/append @entity.reads { path: (array/nth @entity.queue @entity.cursor), ok: true, text: (str/default (bytes/to-string @payload.data) "") }))
+        (set @entity.reads (array/append @entity.reads { path: (array/nth @entity.queue @entity.cursor), ok: true, text: (default (bytes/to-string @payload.data) "") }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit GAPS_READ_NEXT { })
       GAPS_FILE_UNREAD -> reading
@@ -325,7 +325,7 @@ orbital OrbGapsOrbital {
             (array/append @acc
               (if (!= @prev "")
                 (if (validate/pattern (str/trim (object/get @m "text")) (str/concat "^" (str/slice @prev 0 1) "{" (str/len @prev) ",}$")) "" @prev)
-                (str/slice @lead 0 (- (str/len @lead) (str/len (or (str/replace-pattern @lead (str/concat "^" (str/slice @lead 0 1) "+") "") @lead)))))))))) 
+                (str/slice @lead 0 (- (str/len @lead) (str/len (default (str/replace-pattern @lead (str/concat "^" (str/slice @lead 0 1) "+") "") @lead)))))))))) 
         (set @entity.curSpans (array/map (array/filter (array/range 0 (array/len @entity.curCand)) (fn k (and (!= (array/nth @entity.curFences @k) "") (or (= @k 0) (= (array/nth @entity.curFences (- @k 1)) ""))))) (fn k
           { lo: (object/get (array/nth @entity.curCand @k) "at"),
             hi: (let ((j (array/find (array/range (+ @k 1) (array/len @entity.curCand)) (fn j (= (array/nth @entity.curFences @j) ""))))) (if (= @j null) @entity.curN (object/get (array/nth @entity.curCand @j) "at"))) })))
@@ -340,7 +340,7 @@ orbital OrbGapsOrbital {
           gapLines: (array/filter (array/map (array/range 0 (math/min (array/len @entity.curLines) (array/len @entity.curFlags))) (fn i (if (and (array/nth @entity.curFlags @i) (str/startsWith (array/nth @entity.curLines @i) "- **G-") (or (< @entity.curBegin 0) (< @index @entity.curBegin))) { code: (array/nth (str/split (array/nth @entity.curLines @i) "**") 1), line: (array/nth @entity.curLines @i), path: @entity.curKey } { code: "", line: "", path: "" }))) (fn r (!= (object/get @r "code") ""))),
           entries: (array/map @entity.curStarts (fn m
             (let ((s (object/get @m "at"))
-                  (e (math/default (array/nth @entity.curBounds (+ (array/indexOf @entity.curBounds (object/get @m "at")) 1)) @entity.curN))
+                  (e (default (array/nth @entity.curBounds (+ (array/indexOf @entity.curBounds (object/get @m "at")) 1)) @entity.curN))
                   (hs (array/filter @entity.curSecs (fn j (< (object/get @j "at") (object/get @m "at"))))))
               (let ((body (str/trimEnd (str/join (array/slice @entity.curLines @s @e) "\n")))
                     (hl (if (= (array/len @hs) 0) "" (object/get (array/last @hs) "text"))))
@@ -445,17 +445,17 @@ orbital OrbGapsOrbital {
             (fn p { code: (object/get @p "0"), repo: (let ((r (object/get @p "1.repo"))) (object/get @config.ownerMoves @r @r)), heading: (object/get @p "1.heading"), body: (object/get @p "1.body"), at: 0, endAt: 0 }))
           (array/take @entity.mEntries 0)))
         (set @entity.errs [
-          (str/default (array/find (array/map (array/range 0 (array/len @entity.hdrIdx)) (fn h
+          (default (array/find (array/map (array/range 0 (array/len @entity.hdrIdx)) (fn h
             (if (or (not (array/includes @entity.repos (array/nth @entity.hdrRepos @h))) (!= (array/nth @entity.hdrSrcs @h) (str/concat (array/nth @entity.hdrRepos @h) "/Almadar_Gaps.md"))) (str/concat "unknown or unavailable repo owner: " (array/nth @entity.hdrRepos @h))
               (if (< (array/indexOf @entity.hdrRepos (array/nth @entity.hdrRepos @h)) @h) (str/concat "duplicate repo section: " (array/nth @entity.hdrRepos @h)) "")))) (fn m (!= @m ""))) ""),
           (if (array/some @entity.mEntries (fn e (= (object/get @e "repo") ""))) "gap outside an explicit repo section in master roll-up" ""),
-          (str/default (array/find (array/map (array/filter @entity.repos (fn r (and (array/includes @entity.hdrRepos @r) (not (array/includes @entity.ledgerRepos @r))))) (fn r (str/concat "missing ledger: " @r "/Almadar_Gaps.md"))) (fn m (!= @m ""))) ""),
+          (default (array/find (array/map (array/filter @entity.repos (fn r (and (array/includes @entity.hdrRepos @r) (not (array/includes @entity.ledgerRepos @r))))) (fn r (str/concat "missing ledger: " @r "/Almadar_Gaps.md"))) (fn m (!= @m ""))) ""),
           (let ((d (array/find @entity.mCodes (fn c (< (array/indexOf @entity.mCodes @c) @index))))) (if (= @d null) "" (str/concat "duplicate gap code: " @d))),
           (let ((d (array/find @entity.lCodes (fn c (< (array/indexOf @entity.lCodes @c) @index))))) (if (= @d null) "" (str/concat "duplicate gap code: " @d))),
           (let ((d (array/find @entity.rCodes (fn c (< (array/indexOf @entity.rCodes @c) @index))))) (if (= @d null) "" (str/concat "duplicate gap code: " @d))),
           (let ((d (array/find @entity.mOwn (fn o (and (array/includes @entity.lCodes (array/first (str/split @o "|"))) (not (array/includes @entity.lOwn @o))))))) (if (= @d null) "" (str/concat "conflicting owners for " (array/first (str/split @d "|"))))),
           (let ((d (array/find (array/unique (array/concat @entity.mCodes @entity.lCodes)) (fn c (array/includes @entity.rCodes @c))))) (if (= @d null) "" (str/concat "duplicate gap code in root and repo: " @d))) ])
-        (set @entity.fail (str/default (array/find @entity.errs (fn m (!= @m ""))) ""))
+        (set @entity.fail (default (array/find @entity.errs (fn m (!= @m ""))) ""))
         (emit GAPS_S4B { })
       GAPS_S4B -> analyzing when (!= @entity.fail "")
         (emit GAPS_FAIL { })
@@ -506,7 +506,7 @@ orbital OrbGapsOrbital {
         (set @entity.fkeys (array/map @entity.ledgerRepos (fn r (str/concat @r "/Almadar_Gaps.md"))))
         (emit GAPS_RENDER { })
       GAPS_MERGE -> merging
-        (set @entity.fail (str/default (array/find (array/concat
+        (set @entity.fail (default (array/find (array/concat
           (array/map (array/filter @entity.rows (fn r (and (!= (object/get @r "side") "skip") (!= (object/get @r "p") "") (not (array/includes @entity.ledgerRepos (object/get @r "pRepo")))))) (fn r (str/concat "baseline owner ledger unavailable: " (object/get @r "pRepo") " (" (object/get @r "code") ")")))
           [(if (array/some @entity.rows (fn r (= (object/get @r "side") "x"))) (str/concat "sync conflicts: " (str/join (array/map (array/filter @entity.rows (fn r (= (object/get @r "side") "x"))) (fn r (object/get @r "code"))) ", ") ". Reconcile these entries or explicitly select --from master|repos; no files written.") "")]) (fn m (!= @m ""))) ""))
         (emit GAPS_MERGE_B { })
@@ -617,7 +617,7 @@ orbital OrbGapsOrbital {
           (let ((lines (str/split @entity.uText "\n"))
                 (needle (str/concat "Next code: `G-" @entity.uPrefix "-")))
             (let ((digits (array/first (str/split (array/nth (str/split (array/nth @lines @entity.uCi) @needle) 1) "`"))))
-              (let ((num (array/max (array/append (array/map (array/filter (array/concat (array/map @entity.merged (fn e (object/get @e "code"))) (array/map @entity.uEntries (fn e (object/get @e "code")))) (fn c (and (str/startsWith @c (str/concat "G-" @entity.uPrefix "-")) (validate/pattern @c (str/concat "^G-" @entity.uPrefix "-\\d+$"))))) (fn c (+ 1 (or (str/to-number (str/replace @c (str/concat "G-" @entity.uPrefix "-") "")) 0)))) (or (str/to-number @digits) 0)))))
+              (let ((num (array/max (array/append (array/map (array/filter (array/concat (array/map @entity.merged (fn e (object/get @e "code"))) (array/map @entity.uEntries (fn e (object/get @e "code")))) (fn c (and (str/startsWith @c (str/concat "G-" @entity.uPrefix "-")) (validate/pattern @c (str/concat "^G-" @entity.uPrefix "-\\d+$"))))) (fn c (+ 1 (default (str/to-number (str/replace @c (str/concat "G-" @entity.uPrefix "-") "")) 0)))) (default (str/to-number @digits) 0)))))
                 (str/join (array/flatten (array/map @lines (fn line
                   (if (= @index @entity.uCi)
                     [(str/replace @line (str/concat @needle @digits "`") (str/concat @needle (str/padStart (str/concat @num) 3 "0") "`"))]

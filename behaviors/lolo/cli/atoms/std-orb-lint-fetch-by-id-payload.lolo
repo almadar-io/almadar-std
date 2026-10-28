@@ -41,7 +41,7 @@ orbital OrbLintFetchByIdPayloadOrbital {
       INIT -> ready
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (fetches (object/get (or (as (tree/index @payload.program ["fetch"]) FbIndex) {}) "fetch" [])))
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (fetches (object/get (default (as (tree/index @payload.program ["fetch"]) FbIndex) {}) "fetch" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((o (array/nth @orbitals @oi)))
               (let ((trs (object/get @o "traits" [])))

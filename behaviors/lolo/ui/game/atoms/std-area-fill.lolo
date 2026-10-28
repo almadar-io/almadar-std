@@ -52,7 +52,7 @@ orbital AreaFillOrbital {
           (let ((leftSamp (array/last (array/filter (object/get @f samples) (fn s (<= (object/get @s x) @payload.x))))))
           (let ((rightSamp (array/first (array/filter (object/get @f samples) (fn s (> (object/get @s x) @payload.x))))))
           (let ((h (if (or (== @leftSamp null) (== @rightSamp null)) 0
-                     (- (+ (object/get @leftSamp y) (* (or (/ (- (object/get @rightSamp y) (object/get @leftSamp y)) (- (object/get @rightSamp x) (object/get @leftSamp x))) 0) (- @payload.x (object/get @leftSamp x)))) (object/get @f baseline)))))
+                     (- (+ (object/get @leftSamp y) (* (default (/ (- (object/get @rightSamp y) (object/get @leftSamp y)) (- (object/get @rightSamp x) (object/get @leftSamp x))) 0) (- @payload.x (object/get @leftSamp x)))) (object/get @f baseline)))))
           (let ((step (math/min @adx 0.5)))
           (let ((rate (if @inside
                         (if (== (object/get @f rateMode) "ride") (if @payload.skating @step 0)
@@ -60,7 +60,7 @@ orbital AreaFillOrbital {
                             (* @step @h)))
                         0)))
           (let ((newFilled (+ (object/get @f filled) @rate)))
-            (object/merge @f { filled: @newFilled, frontier: (+ (object/get @f x0) (* (- (object/get @f x1) (object/get @f x0)) (math/min 1 (or (/ @newFilled (object/get @f target)) 1)))) }))))))))))))
+            (object/merge @f { filled: @newFilled, frontier: (+ (object/get @f x0) (* (- (object/get @f x1) (object/get @f x0)) (math/min 1 (default (/ @newFilled (object/get @f target)) 1)))) }))))))))))))
         (set @entity.lastX @payload.x)
         (let ((newly (array/filter @entity.fills (fn f (and (>= (object/get @f filled) (object/get @f target)) (== (object/get @f reported) false))))))
         (if (> (array/len @newly) 0)

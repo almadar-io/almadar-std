@@ -50,9 +50,9 @@ orbital ConceptIconOrbital {
         (emit CONCEPT_ICON_FAILED { code: "CONFLICT", message: "A concept icon lookup is already running" })
       CONCEPT_ICON_CACHE_FAILED -> idle
         (emit CONCEPT_ICON_FAILED { code: "SERVICE_ERROR", message: ?error })
-      CONCEPT_ICON_CACHE_LOADED -> idle when (and (> (array/len ?data) 0) (!= (or (object/get (array/first ?data) icon "") "") ""))
+      CONCEPT_ICON_CACHE_LOADED -> idle when (and (> (array/len ?data) 0) (!= (default (object/get (array/first ?data) icon "") "") ""))
         (emit CONCEPT_ICON_RESULT { icon: (object/get (array/first ?data) icon ""), tone: (object/get (array/first ?data) tone "none") })
-      CONCEPT_ICON_CACHE_LOADED -> idle when (and (> (array/len ?data) 0) (= (or (object/get (array/first ?data) icon "") "") ""))
+      CONCEPT_ICON_CACHE_LOADED -> idle when (and (> (array/len ?data) 0) (= (default (object/get (array/first ?data) icon "") "") ""))
         (emit CONCEPT_ICON_RESULT { icon: "", tone: "none" })
       CONCEPT_ICON_CACHE_LOADED -> probing when (and (= (array/len ?data) 0) (!= @entity.slug ""))
         (set @entity.iconId (str/concat "devicon:" @entity.slug))

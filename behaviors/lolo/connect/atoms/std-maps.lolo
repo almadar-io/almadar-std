@@ -53,7 +53,7 @@ orbital MapsOrbital {
           (let ((phi2 (math/deg-rad @payload.toLat)))
             (let ((sinLat (math/sin (/ (- @phi2 @phi1) 2))) (sinLng (math/sin (/ (math/deg-rad (- @payload.toLng @payload.fromLng)) 2))))
               (let ((a (math/clamp (+ (* @sinLat @sinLat) (* (* (math/cos @phi1) (math/cos @phi2)) (* @sinLng @sinLng))) 0 1)))
-                (emit DISTANCE_COMPUTED { distanceKm: (math/round (* 12742.0176 (math/atan2 (or (math/sqrt @a) 0) (or (math/sqrt (- 1 @a)) 0))) 3) })))))
+                (emit DISTANCE_COMPUTED { distanceKm: (math/round (* 12742.0176 (math/atan2 (default (math/sqrt @a) 0) (default (math/sqrt (- 1 @a)) 0))) 3) })))))
 
       MAPS_REQUEST_FAILED -> idle
         (emit MAPS_FAILURE { error: @payload.error, code: @payload.kind })

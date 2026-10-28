@@ -44,12 +44,12 @@ orbital DockerOrbital {
         (set @entity.stage "")
       BUILD -> working
         (set @entity.op "build")
-        (set @entity.target (or @payload.tag ""))
+        (set @entity.target (default @payload.tag ""))
         (os/clock-monotonic { key: "start" emit: { success: DOCKER_CLOCK failure: DOCKER_HOST_FAILED } })
-        (emit DOCKER_EXEC { env: @config.env stage: "build" argv: (array/concat (array/concat (array/concat ["build" "-q" "-t" @payload.tag] (if (!= (or @payload.dockerfile "") "") ["-f" @payload.dockerfile] [])) (array/flatten (array/map (object/entries (or @payload.buildArgs {})) (fn e ["--build-arg" (str/concat (array/nth @e 0) "=" (array/nth @e 1))])))) [(or @payload.context ".")]) })
+        (emit DOCKER_EXEC { env: @config.env stage: "build" argv: (array/concat (array/concat (array/concat ["build" "-q" "-t" @payload.tag] (if (!= (default @payload.dockerfile "") "") ["-f" @payload.dockerfile] [])) (array/flatten (array/map (object/entries (default @payload.buildArgs {})) (fn e ["--build-arg" (str/concat (array/nth @e 0) "=" (array/nth @e 1))])))) [(default @payload.context ".")]) })
       RUN -> working
         (set @entity.op "run")
-        (emit DOCKER_EXEC { env: @config.env stage: "run" argv: (array/concat (array/concat (array/concat (array/concat (array/concat ["run" "-d"] (if (!= (or @payload.name "") "") ["--name" @payload.name] [])) (array/flatten (array/map (or @payload.ports []) (fn p ["-p" (str/concat @p.host ":" @p.container "/" (or @p.protocol "tcp"))])))) (array/flatten (array/map (object/entries (or @payload.env {})) (fn e ["-e" (str/concat (array/nth @e 0) "=" (array/nth @e 1))])))) (array/flatten (array/map (or @payload.volumes []) (fn v ["-v" (str/concat @v.host ":" @v.container)])))) (array/concat [@payload.image] (array/filter (str/split (or @payload.command "") " ") (fn t (!= @t ""))))) })
+        (emit DOCKER_EXEC { env: @config.env stage: "run" argv: (array/concat (array/concat (array/concat (array/concat (array/concat ["run" "-d"] (if (!= (default @payload.name "") "") ["--name" @payload.name] [])) (array/flatten (array/map (default @payload.ports []) (fn p ["-p" (str/concat @p.host ":" @p.container "/" (default @p.protocol "tcp"))])))) (array/flatten (array/map (object/entries (default @payload.env {})) (fn e ["-e" (str/concat (array/nth @e 0) "=" (array/nth @e 1))])))) (array/flatten (array/map (default @payload.volumes []) (fn v ["-v" (str/concat @v.host ":" @v.container)])))) (array/concat [@payload.image] (array/filter (str/split (default @payload.command "") " ") (fn t (!= @t ""))))) })
       STOP -> working
         (set @entity.op "stop")
         (set @entity.target @payload.containerId)
@@ -61,14 +61,14 @@ orbital DockerOrbital {
       LOGS -> working
         (set @entity.op "logs")
         (set @entity.target @payload.containerId)
-        (emit DOCKER_EXEC { env: @config.env stage: "logs" argv: (array/concat (array/concat (array/concat ["logs" "--tail" (str/concat (or @payload.tail 100))] (if (!= (or @payload.since "") "") ["--since" @payload.since] [])) ["--timestamps"]) [@payload.containerId]) })
+        (emit DOCKER_EXEC { env: @config.env stage: "logs" argv: (array/concat (array/concat (array/concat ["logs" "--tail" (str/concat (default @payload.tail 100))] (if (!= (default @payload.since "") "") ["--since" @payload.since] [])) ["--timestamps"]) [@payload.containerId]) })
       STATUS -> working
         (set @entity.op "status")
         (set @entity.target @payload.containerId)
         (emit DOCKER_EXEC { env: @config.env stage: "status" argv: ["inspect" "--format" "{{json .}}" @payload.containerId] })
       LIST -> working
         (set @entity.op "list")
-        (emit DOCKER_EXEC { env: @config.env stage: "list" argv: (array/concat (array/concat ["ps" "-q" "--no-trunc"] (if (or @payload.all false) ["-a"] [])) (if (!= (or @payload.filterByLabel "") "") ["--filter" (str/concat "label=" @payload.filterByLabel)] [])) })
+        (emit DOCKER_EXEC { env: @config.env stage: "list" argv: (array/concat (array/concat ["ps" "-q" "--no-trunc"] (if (or @payload.all false) ["-a"] [])) (if (!= (default @payload.filterByLabel "") "") ["--filter" (str/concat "label=" @payload.filterByLabel)] [])) })
     }
 
     state working {
@@ -110,7 +110,7 @@ orbital DockerOrbital {
         (emit DOCKER_EXEC { env: @config.env stage: "build-inspect" argv: ["image" "inspect" "--format" "{{json .}}" @entity.target] })
       DOCKER_RAN -> idle when (and (== @payload.exitCode 0) (== @entity.stage "build-inspect"))
         (let ((d (json/parse (str/trim @payload.stdout) DockerImageInspect)))
-          (emit BUILD_DONE { imageId: @d.Id tag: @entity.target size: (or @d.Size 0) buildTime: @entity.buildMs }))
+          (emit BUILD_DONE { imageId: @d.Id tag: @entity.target size: (default @d.Size 0) buildTime: @entity.buildMs }))
       DOCKER_RAN -> working when (and (== @payload.exitCode 0) (== @entity.stage "run"))
         (set @entity.target (str/trim @payload.stdout))
         (emit DOCKER_EXEC { env: @config.env stage: "run-inspect" argv: ["inspect" "--format" "{{json .}}" (str/trim @payload.stdout)] })

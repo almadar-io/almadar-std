@@ -162,7 +162,7 @@ orbital SemanticIndexOrbital {
       SemanticEmbedded -> loadingPending
         (set @entity.semReply "ok")
         (set @entity.semKey ?key)
-        (set @entity.semModel (str/default ?model ""))
+        (set @entity.semModel (default ?model ""))
         (set @entity.semEmbeddings ?embeddings)
         (fetch SemanticPending { filter: (= (object/get @entity id) ?key), limit: 1, emit: { success: SemanticPendingLoaded, failure: SemanticStoreFailed } })
       SemanticEmbedFailed -> loadingPending
@@ -231,7 +231,7 @@ orbital SemanticIndexOrbital {
                           (fn i
                             (let ((keys (array/nth @config.partKeys @i)) (label (array/nth @config.partLabels @i)) (kind (array/nth @config.partKinds @i)))
                               (if (= @kind "text")
-                                (let ((v (str/default (array/first (array/filter (array/map @keys (fn k (str/trim (object/get @it.texts @k "")))) (fn s (> (str/len @s) 0)))) "")))
+                                (let ((v (default (array/first (array/filter (array/map @keys (fn k (str/trim (object/get @it.texts @k "")))) (fn s (> (str/len @s) 0)))) "")))
                                   (if (> (str/len @v) 0) (str/concat @label @v) ""))
                                 (if (= @kind "number")
                                   (let ((hits (array/filter @keys (fn k (object/has @it.numbers @k)))))
@@ -250,7 +250,7 @@ orbital SemanticIndexOrbital {
 
       SemanticResume -> working when (and (= @entity.semPhase "embed") (= @entity.semOp "index") (= (array/len ?embeddings) (array/len @entity.semTexts)))
         (set @entity.semPhase "write")
-        (set @entity.semModel (str/default ?model ""))
+        (set @entity.semModel (default ?model ""))
         (set @entity.semVectors ?embeddings)
         (persist batch (array/map (array/range 0 (array/len @entity.semItems)) (fn i ["update" "SemanticRow" (object/get (array/nth @entity.semItems @i) id "") { embedding: (array/nth ?embeddings @i), embeddedText: (object/get (array/nth @entity.semTexts @i) text ""), embeddingModel: @entity.semModel }])) { emit: { success: SemanticWritten, failure: SemanticStoreFailed } })
 
@@ -271,7 +271,7 @@ orbital SemanticIndexOrbital {
               (fn i (array/flatten (array/map (array/range (+ @i 1) (array/len ?embeddings))
                 (fn j (let ((c (array/cosine (array/nth ?embeddings @i) (array/nth ?embeddings @j))))
                   (if (== @c null) []
-                    (if (>= @c @config.pairFloor) [{ a: (object/get (array/nth @entity.semTexts @i) id ""), b: (object/get (array/nth @entity.semTexts @j) id ""), score: (or @c 0) }] [])))))))))
+                    (if (>= @c @config.pairFloor) [{ a: (object/get (array/nth @entity.semTexts @i) id ""), b: (object/get (array/nth @entity.semTexts @j) id ""), score: (default @c 0) }] [])))))))))
         })
 
       SemanticResume -> working when (and (= @entity.semPhase "embed") (= @entity.semOp "canonical") (= (array/len ?embeddings) (array/len @entity.semTexts)))
@@ -302,7 +302,7 @@ orbital SemanticIndexOrbital {
           hits: (array/flatten
             (array/map ?data (fn r (let ((c (array/cosine @r.embedding @entity.semQueryVector)))
               (if (== @c null) []
-                (if (>= @c @entity.semFloor) [{ id: @r.id, graphId: (object/get @r graphId ""), nodeId: (object/get @r nodeId ""), nodeType: (object/get @r nodeType ""), name: (object/get @r name ""), score: (or @c 0) }] []))))))
+                (if (>= @c @entity.semFloor) [{ id: @r.id, graphId: (object/get @r graphId ""), nodeId: (object/get @r nodeId ""), nodeType: (object/get @r nodeType ""), name: (object/get @r name ""), score: (default @c 0) }] []))))))
         })
 
       SemanticFetched -> working when (and (= @entity.semPhase "canonical") (= @entity.semOp "canonical"))
@@ -314,7 +314,7 @@ orbital SemanticIndexOrbital {
                 (let ((score (array/cosine (object/get @best embedding []) (array/nth @entity.semVectors @entity.semCursor))))
                   (if (== @score null)
                     { id: @rid, adopted: false, matchId: "", matchName: "", score: 0 }
-                    { id: @rid, adopted: (>= @score @config.canonicalThreshold), matchId: (object/get @best id ""), matchName: (object/get @best name ""), score: (or @score 0) }))))]))
+                    { id: @rid, adopted: (>= @score @config.canonicalThreshold), matchId: (object/get @best id ""), matchName: (object/get @best name ""), score: (default @score 0) }))))]))
         (set @entity.semCursor (+ @entity.semCursor 1))
         (emit SEMANTIC_NEXT { index: @entity.semCursor })
 

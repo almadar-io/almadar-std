@@ -47,7 +47,7 @@ orbital OrbSimulateOrbital {
             (let ((trList (object/get @orb "traits" [])))
               (array/flatten (array/map (object/get @orb "pages" []) (fn pg
                 (if (!= (object/get @pg "path" null) null)
-                  (let ((names (array/map (object/get @pg "traits" []) (fn r (or (object/get @r "ref" null) (object/get @r "name" null))))))
+                  (let ((names (array/map (object/get @pg "traits" []) (fn r (default (object/get @r "ref" null) (object/get @r "name" null))))))
                     (array/concat
                       (array/concat [""] [(str/concat "Page: " (object/get @pg "name" "?") " (" (object/get @pg "path") ")")])
                       (array/flatten (array/map (array/filter @trList (fn td (and (validate/object (object/get @td "stateMachine" null)) (array/includes @names (object/get @td "name" ""))))) (fn td

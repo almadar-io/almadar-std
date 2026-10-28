@@ -40,7 +40,7 @@ orbital OrbProducedEventsOrbital {
       PRODUCED_SLOTS_HEARD -> ready
         (set @entity.slots @payload.emitSlots)
       PRODUCED_INPUT_HEARD -> ready
-        (let ((slots @entity.slots) (sem @entity.semantics) (nr : [FiredItem] []) (nl : FiredLf { lf: [], ll: [] }) (fnSet (or (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (rowsBy (or (array/groupBy @entity.rows (fn row (str/replaceAll (str/replaceAll (object/get @row "pattern") "~" "~t") "." "~d"))) {})))
+        (let ((slots @entity.slots) (sem @entity.semantics) (nr : [FiredItem] []) (nl : FiredLf { lf: [], ll: [] }) (fnSet (default (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (rowsBy (default (array/groupBy @entity.rows (fn row (str/replaceAll (str/replaceAll (object/get @row "pattern") "~" "~t") "." "~d"))) {})))
           (let ((recs (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn o
                   (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t
                     (let ((effs (array/concat
@@ -83,20 +83,20 @@ orbital OrbProducedEventsOrbital {
               { lf: (if (= @sel null) [(json/stringify @n)] (if (and (= (array/len @sel) 0) (!= @sm "branch-union")) [(json/stringify @n)] @sel)), ll: (if (> @len 0) (object/get (array/last @kk) "lf") []) })))))
     { lf: [(json/stringify @n)], ll: [] })) "FiredNode"))) (object/get @sr "lf" [])) (if (= @v null) [] [(json/stringify @v)])))))
         (if (= @field "")
-          (array/map (array/flatten (array/map @leaves (fn lf (if (str/startsWith @lf "\"") (or (json/parse (str/concat "[" @lf "]") FiredNames) []) [])))) (fn x ["c", @x]))
-          (array/map (array/flatten (array/map @leaves (fn lf (if (str/startsWith @lf "[") (array/flatten (array/map (or (json/parse @lf FiredNodes) []) (fn it (let ((m (if (validate/object @it) (json/parse (json/stringify @it) FiredMap) null))) (if (= @m null) [] (if (str/startsWith (json/stringify (object/get @m @field null)) "\"") (or (json/parse (str/concat "[" (json/stringify (object/get @m @field null)) "]") FiredNames) []) [])))))) (if (str/startsWith @lf "{") (let ((m (if (validate/object (or (json/parse @lf FiredMap) null)) (json/parse (json/stringify (or (json/parse @lf FiredMap) null)) FiredMap) null))) (if (= @m null) [] (if (str/startsWith (json/stringify (object/get @m @field null)) "\"") (or (json/parse (str/concat "[" (json/stringify (object/get @m @field null)) "]") FiredNames) []) []))) []))))) (fn x ["c", @x]))))
+          (array/map (array/flatten (array/map @leaves (fn lf (if (str/startsWith @lf "\"") (default (json/parse (str/concat "[" @lf "]") FiredNames) []) [])))) (fn x ["c", @x]))
+          (array/map (array/flatten (array/map @leaves (fn lf (if (str/startsWith @lf "[") (array/flatten (array/map (default (json/parse @lf FiredNodes) []) (fn it (let ((m (if (validate/object @it) (json/parse (json/stringify @it) FiredMap) null))) (if (= @m null) [] (if (str/startsWith (json/stringify (object/get @m @field null)) "\"") (default (json/parse (str/concat "[" (json/stringify (object/get @m @field null)) "]") FiredNames) []) [])))))) (if (str/startsWith @lf "{") (let ((m (if (validate/object (default (json/parse @lf FiredMap) null)) (json/parse (json/stringify (default (json/parse @lf FiredMap) null)) FiredMap) null))) (if (= @m null) [] (if (str/startsWith (json/stringify (object/get @m @field null)) "\"") (default (json/parse (str/concat "[" (json/stringify (object/get @m @field null)) "]") FiredNames) []) []))) []))))) (fn x ["c", @x]))))
       []))))))))
                 (let ((all (array/concat (array/concat @kids @emitEv) @ctlItems)))
                   (if (= (array/len @all) 0) @nr @all)))))))
       @nr))) "FiredNode")))
-                        (let ((items (array/filter (or @fr []) (fn x (validate/array @x)))))
+                        (let ((items (array/filter (default @fr []) (fn x (validate/array @x)))))
                           { trait: (object/get @t "name" ""), ev: (array/map (array/filter @items (fn x (= (array/nth @x 0) "e"))) (fn x (array/nth @x 1))), ctl: (array/map (array/filter @items (fn x (= (array/nth @x 0) "c"))) (fn x (array/nth @x 1))) }))))))))))
             (let ((tnames (array/unique (array/map @recs (fn r (object/get @r "trait" "")))))
                   (g (array/groupBy @recs (fn r (str/replaceAll (str/replaceAll (object/get @r "trait" "") "~" "~t") "." "~d")))))
               (emit PRODUCED_EVENTS {
                 scope: @payload.scope,
-                byControl: (or (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/filter (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ctl" [])))) (fn x (and (!= @x "") (not (str/startsWith @x (quote "@"))))))))]))) {}),
-                byEffect: (or (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/filter (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ev" [])))) (fn x (and (!= @x "") (not (str/startsWith @x (quote "@"))))))))]))) {}) }))))
+                byControl: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/filter (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ctl" [])))) (fn x (and (!= @x "") (not (str/startsWith @x (quote "@"))))))))]))) {}),
+                byEffect: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/filter (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ev" [])))) (fn x (and (!= @x "") (not (str/startsWith @x (quote "@"))))))))]))) {}) }))))
     }
 
     emits {

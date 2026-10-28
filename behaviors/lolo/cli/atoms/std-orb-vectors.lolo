@@ -308,11 +308,11 @@ orbital OrbVectorsOrbital {
 
     state parsing {
       INIT -> parsing
-      VECTORS_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (!= (array/len (or (object/get @payload.flags "package") [])) 1))
+      VECTORS_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (!= (array/len (default (object/get @payload.flags "package") [])) 1))
         (emit VECTORS_CMD_ANSWERED { status: 400, body: "usage: orb behaviors vectors snapshot --package <dir> [--out <path>]" })
-      VECTORS_ARGS_DONE -> packaging when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (= (array/len (or (object/get @payload.flags "package") [])) 1))
+      VECTORS_ARGS_DONE -> packaging when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (= (array/len (default (object/get @payload.flags "package") [])) 1))
         (set @entity.pkgDir (array/first (object/get @payload.flags "package")))
-        (set @entity.outArg (array/first (or (object/get @payload.flags "out") [""])))
+        (set @entity.outArg (array/first (default (object/get @payload.flags "out") [""])))
         (emit VECTORS_PACKAGE_NEEDED { dir: @entity.pkgDir })
     }
 
@@ -321,7 +321,7 @@ orbital OrbVectorsOrbital {
       VECTORS_PACKAGE_FOUND -> organism
         (set @entity.root @payload.root)
         (set @entity.prefix @payload.prefix)
-        (set @entity.lockedPath (str/default @payload.vectors ""))
+        (set @entity.lockedPath (default @payload.vectors ""))
         (emit VECTORS_TEXTS_NEEDED { prefix: @payload.prefix, kind: "organism" })
       VECTORS_PACKAGE_FAILED -> ready
         (emit VECTORS_CMD_ANSWERED { status: 500, body: @payload.error })
@@ -350,7 +350,7 @@ orbital OrbVectorsOrbital {
       ENVF -> ready
         (emit VECTORS_CMD_ANSWERED { status: 500, body: (str/concat "cannot read the environment: " @payload.error) })
       ENV1 -> env2
-        (set @entity.envDir (str/default @payload.value ""))
+        (set @entity.envDir (default @payload.value ""))
         (os/getenv "HOME" { emit: { success: ENV2, failure: ENVF } })
     }
 
@@ -359,7 +359,7 @@ orbital OrbVectorsOrbital {
       ENVF -> ready
         (emit VECTORS_CMD_ANSWERED { status: 500, body: (str/concat "cannot read the environment: " @payload.error) })
       ENV2 -> env3
-        (set @entity.envHome (str/default @payload.value ""))
+        (set @entity.envHome (default @payload.value ""))
         (os/getenv "EMBEDDING_PROVIDER" { emit: { success: ENV3, failure: ENVF } })
     }
 
@@ -368,7 +368,7 @@ orbital OrbVectorsOrbital {
       ENVF -> ready
         (emit VECTORS_CMD_ANSWERED { status: 500, body: (str/concat "cannot read the environment: " @payload.error) })
       ENV3 -> env4
-        (set @entity.envProv (str/default @payload.value ""))
+        (set @entity.envProv (default @payload.value ""))
         (os/getenv "EMBEDDING_API_KEY" { emit: { success: ENV4, failure: ENVF } })
     }
 
@@ -377,7 +377,7 @@ orbital OrbVectorsOrbital {
       ENVF -> ready
         (emit VECTORS_CMD_ANSWERED { status: 500, body: (str/concat "cannot read the environment: " @payload.error) })
       ENV4 -> env5
-        (set @entity.envKey (str/default @payload.value ""))
+        (set @entity.envKey (default @payload.value ""))
         (os/getenv "OPENAI_API_KEY" { emit: { success: ENV5, failure: ENVF } })
     }
 
@@ -386,7 +386,7 @@ orbital OrbVectorsOrbital {
       ENVF -> ready
         (emit VECTORS_CMD_ANSWERED { status: 500, body: (str/concat "cannot read the environment: " @payload.error) })
       ENV5 -> env6
-        (set @entity.envOpenai (str/default @payload.value ""))
+        (set @entity.envOpenai (default @payload.value ""))
         (os/getenv "OPEN_ROUTER_API_KEY" { emit: { success: ENV6, failure: ENVF } })
     }
 
@@ -395,7 +395,7 @@ orbital OrbVectorsOrbital {
       ENVF -> ready
         (emit VECTORS_CMD_ANSWERED { status: 500, body: (str/concat "cannot read the environment: " @payload.error) })
       ENV6 -> env7
-        (set @entity.envRouter (str/default @payload.value ""))
+        (set @entity.envRouter (default @payload.value ""))
         (os/getenv "EMBEDDING_MODEL" { emit: { success: ENV7, failure: ENVF } })
     }
 
@@ -404,7 +404,7 @@ orbital OrbVectorsOrbital {
       ENVF -> ready
         (emit VECTORS_CMD_ANSWERED { status: 500, body: (str/concat "cannot read the environment: " @payload.error) })
       ENV7 -> env8
-        (set @entity.envModel (str/default @payload.value ""))
+        (set @entity.envModel (default @payload.value ""))
         (os/getenv "LMSTUDIO_EMBEDDING_MODEL" { emit: { success: ENV8, failure: ENVF } })
     }
 
@@ -413,7 +413,7 @@ orbital OrbVectorsOrbital {
       ENVF -> ready
         (emit VECTORS_CMD_ANSWERED { status: 500, body: (str/concat "cannot read the environment: " @payload.error) })
       ENV8 -> running
-        (set @entity.envLmModel (str/default @payload.value ""))
+        (set @entity.envLmModel (default @payload.value ""))
         (set @entity.userDir (if (!= @entity.envDir "") @entity.envDir (str/concat @entity.envHome "/.almadar/vectors")))
         (set @entity.providerKind (if (== (if (!= @entity.envProv "") @entity.envProv "openrouter") "openai") (if (!= @entity.envKey "") "openai-shared" (if (!= @entity.envOpenai "") "openai-own" "")) (if (== (if (!= @entity.envProv "") @entity.envProv "openrouter") "openrouter") (if (!= @entity.envKey "") "openrouter-shared" (if (!= @entity.envRouter "") "openrouter-own" "")) "lmstudio")))
         (set @entity.providerModel (if (== @entity.providerKind "") "" (if (== (if (!= @entity.envProv "") @entity.envProv "openrouter") "lmstudio") "baai/bge-base-en-v1.5" (if (!= @entity.envModel "") @entity.envModel "baai/bge-base-en-v1.5"))))

@@ -144,9 +144,9 @@ orbital NpmRegistryOrbital {
       NPM_WAIT_ATTEMPT -> waiting
         (emit NPM_LOOKUP_ASK { requestId: "wait", name: @entity.name, tag: "latest" })
 
-      NPM_PACKUMENT_READ -> waiting when (and (array/includes @payload.versions @entity.version) (!= (str/default (array/nth (object/values (object/pick @payload.tarballs [@entity.version])) 0) "") ""))
-        (emit NPM_WAIT_TARBALL { url: (str/default (array/nth (object/values (object/pick @payload.tarballs [@entity.version])) 0) "") })
-      NPM_PACKUMENT_READ -> waiting when (not (and (array/includes @payload.versions @entity.version) (!= (str/default (array/nth (object/values (object/pick @payload.tarballs [@entity.version])) 0) "") "")))
+      NPM_PACKUMENT_READ -> waiting when (and (array/includes @payload.versions @entity.version) (!= (default (array/nth (object/values (object/pick @payload.tarballs [@entity.version])) 0) "") ""))
+        (emit NPM_WAIT_TARBALL { url: (default (array/nth (object/values (object/pick @payload.tarballs [@entity.version])) 0) "") })
+      NPM_PACKUMENT_READ -> waiting when (not (and (array/includes @payload.versions @entity.version) (!= (default (array/nth (object/values (object/pick @payload.tarballs [@entity.version])) 0) "") "")))
         (emit NPM_WAIT_RETRY_FAILED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey), error: (str/concat "not yet visible: " @entity.name (quote "@") @entity.version " (200)") })
       NPM_PACKUMENT_REFUSED -> idle when (= @payload.code "auth")
         (emit NPM_WAIT_RETRY_CANCEL { })

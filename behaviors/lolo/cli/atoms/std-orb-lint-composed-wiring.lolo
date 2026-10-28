@@ -80,12 +80,12 @@ orbital OrbLintComposedWiringOrbital {
                       (array/flatten (object/values @entity.byEffect))
                       (array/flatten (array/map @orbitals (fn o (array/flatten (array/map (object/get @o "traits" @notd) (fn t
                         (array/flatten (array/map (object/values (object/get @t "config" {})) (fn f
-                          (if (= (object/get (or @f {}) "type" "") "event")
-                            (let ((d (object/get (or @f {}) "default" null)))
+                          (if (= (object/get (default @f {}) "type" "") "event")
+                            (let ((d (object/get (default @f {}) "default" null)))
                               (if (= @d null) @nos
                                 (let ((q (tree/fold @d (fn (n k) (if (validate/string @n) { s: (array/append @nos @n), b: false } (if (validate/array @n) { s: (array/flatten (array/map @k (fn q (object/get (if (= @q null) @ns @q) "s")))), b: false } @ns))) "CwNode"))) (if (= @q null) @nos (object/get @q "s")))))
                             @nos)))))))))))))
-                (prodSet (or (object/fromEntries (array/map @prodList (fn e [@e, true]))) {})))
+                (prodSet (default (object/fromEntries (array/map @prodList (fn e [@e, true]))) {})))
             (array/flatten (array/map @orbitals (fn (o oi)
               (array/flatten (array/map (object/get @o "traits" @notd) (fn (t ti)
                 (if (or (not (object/has @t "stateMachine")) (not (object/has @t "sourceBehavior"))) @nof
@@ -95,7 +95,7 @@ orbital OrbLintComposedWiringOrbital {
                         (trs : [CwTransition] (object/get @t "stateMachine.transitions" @notr))
                         (cfg (object/get @t "config" {})))
                     (if (= (array/len @sts) 0) @nof
-                      (let ((kn (or (object/fromEntries (array/map (array/filter (object/keys @cfg) (fn key (and (not (str/includes @key ".")) (let ((d (object/get (or (object/get @cfg @key null) {}) "default" null))) (or (validate/string @d) (validate/number @d) (validate/boolean @d)))))) (fn key [@key, (json/stringify (object/get (object/get @cfg @key) "default"))]))) {}))
+                      (let ((kn (default (object/fromEntries (array/map (array/filter (object/keys @cfg) (fn key (and (not (str/includes @key ".")) (let ((d (object/get (default (object/get @cfg @key null) {}) "default" null))) (or (validate/string @d) (validate/number @d) (validate/boolean @d)))))) (fn key [@key, (json/stringify (object/get (object/get @cfg @key) "default"))]))) {}))
                             (initRow (array/find @sts (fn s (= (object/get @s "isInitial" false) true)))))
                         (let ((initial (if (= @initRow null) (object/get (array/first @sts) "name" "") (object/get @initRow "name" "")))
                               (tl : [CwTr] (array/map @trs (fn x

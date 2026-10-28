@@ -21,7 +21,7 @@ orbital EsignOrbital {
           auth: { scheme: bearer, credential: @config.accessToken },
           timeoutMs: @config.timeoutMs,
           json: {
-            emailSubject: (str/default @payload.emailSubject (str/concat "Please sign: " @payload.documentName)),
+            emailSubject: (default @payload.emailSubject (str/concat "Please sign: " @payload.documentName)),
             status: "sent",
             documents: [{
               documentBase64: (if (and (str/startsWith @payload.documentContent "data:") (str/includes @payload.documentContent ",")) (str/join (array/drop (str/split @payload.documentContent ",") 1) ",") @payload.documentContent),

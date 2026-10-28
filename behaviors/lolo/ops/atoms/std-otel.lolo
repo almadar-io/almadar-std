@@ -89,7 +89,7 @@ orbital OtelOrbital {
 
       START_SPAN -> idle
         (random-bytes 24 {
-          key: (json/stringify { name: @payload.name, traceId: (or @payload.traceId ""), parentSpanId: (or @payload.parentSpanId ""), kind: (if (= @payload.kind "server") 2 (if (= @payload.kind "client") 3 (if (= @payload.kind "producer") 4 (if (= @payload.kind "consumer") 5 1)))), attributes: (or @payload.attributes {}) }),
+          key: (json/stringify { name: @payload.name, traceId: (default @payload.traceId ""), parentSpanId: (default @payload.parentSpanId ""), kind: (if (= @payload.kind "server") 2 (if (= @payload.kind "client") 3 (if (= @payload.kind "producer") 4 (if (= @payload.kind "consumer") 5 1)))), attributes: (default @payload.attributes {}) }),
           emit: { success: OTEL_SPAN_DRAWN, failure: OTEL_RANDOM_FAILED }
         })
       OTEL_SPAN_DRAWN -> idle
@@ -116,7 +116,7 @@ orbital OtelOrbital {
       ADD_EVENT -> idle
         (persist batch [
           ["update", "OtelSpan", @payload.spanId, { lastEventTime: (time/now) }],
-          ["create", "OtelSpanEvent", { spanId: @payload.spanId, name: @payload.name, timestamp: (time/now), attributes: (or @payload.attributes {}), shipped: false }]
+          ["create", "OtelSpanEvent", { spanId: @payload.spanId, name: @payload.name, timestamp: (time/now), attributes: (default @payload.attributes {}), shipped: false }]
         ] { emit: { success: OTEL_EVENT_STORED, failure: OTEL_EVENT_REFUSED } })
       OTEL_EVENT_STORED -> idle
         (emit ADD_EVENT_RESULT { added: true })
@@ -128,8 +128,8 @@ orbital OtelOrbital {
           id: @payload.spanId,
           endTime: (time/now),
           state: "ending",
-          status: (or @payload.status ""),
-          statusMessage: (or @payload.statusMessage "")
+          status: (default @payload.status ""),
+          statusMessage: (default @payload.statusMessage "")
         } { emit: { success: OTEL_SPAN_STAMPED, failure: OTEL_SPAN_NOT_ENDED } })
       OTEL_SPAN_NOT_ENDED -> idle
         (emit END_SPAN_RESULT { ended: false, error: @payload.error })
@@ -180,7 +180,7 @@ orbital OtelOrbital {
 
       RECORD_METRIC -> idle
         (random-bytes 16 {
-          key: (json/stringify { name: @payload.name, metricType: (or @payload.type "counter"), value: (if (validate/number @payload.value) @payload.value 0), unit: (or @payload.unit ""), labels: (or @payload.labels {}) }),
+          key: (json/stringify { name: @payload.name, metricType: (default @payload.type "counter"), value: (if (validate/number @payload.value) @payload.value 0), unit: (default @payload.unit ""), labels: (default @payload.labels {}) }),
           emit: { success: OTEL_METRIC_DRAWN, failure: OTEL_RANDOM_FAILED }
         })
       OTEL_METRIC_DRAWN -> idle

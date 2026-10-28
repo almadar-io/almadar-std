@@ -51,22 +51,22 @@ orbital OrbLintFilterFieldNeverWrittenOrbital {
         (ids (array/map (array/filter @ents (fn e (object/get @e "identity" false))) (fn e (object/get @e "name")))))
    (let ((colOf (object/fromEntries (array/map (array/filter @ents (fn e (!= (object/get @e "collection" "") ""))) (fn e [(object/get @e "name"), (object/get @e "collection")]))))
          (mates (object/fromEntries (array/map (array/unique (array/map (array/filter @ents (fn e (!= (object/get @e "collection" "") ""))) (fn e (object/get @e "collection")))) (fn c [@c, (array/map (array/filter @ents (fn e (= (object/get @e "collection" "") @c))) (fn e (object/get @e "name")))])))))
-    (let ((ws (array/map (array/flatten (array/map (array/unique (array/flatten (array/map @orbs (fn o (array/flatten (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t (array/flatten (array/map (object/get (object/get @t "stateMachine") "transitions" []) (fn x (array/filter (object/get @x "effects" []) (fn e (validate/array @e))))))))))))) (fn eff (array/flatten (array/map (let ((src @eff)) (if (tree/fold @src (fn (hn hk) (if (validate/string @hn) (= @hn "persist") (if (validate/array @hk) (array/includes @hk true) (array/some (object/keys @hk) (fn hq (object/get @hk @hq)))))) LNode) (let ((nn (as (json/nodes @eff) LNodes))) (if (= @nn null) [] @nn)) [])) (fn n (let ((l (or (as @n LNodes) [])))
-      (let ((h (or (as (if (> (array/len @l) 0) (array/nth @l 0) null) LStr) "")) (a1 (or (as (if (> (array/len @l) 1) (array/nth @l 1) null) LStr) "")))
+    (let ((ws (array/map (array/flatten (array/map (array/unique (array/flatten (array/map @orbs (fn o (array/flatten (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t (array/flatten (array/map (object/get (object/get @t "stateMachine") "transitions" []) (fn x (array/filter (object/get @x "effects" []) (fn e (validate/array @e))))))))))))) (fn eff (array/flatten (array/map (let ((src @eff)) (if (tree/fold @src (fn (hn hk) (if (validate/string @hn) (= @hn "persist") (if (validate/array @hk) (array/includes @hk true) (array/some (object/keys @hk) (fn hq (= (object/get @hk @hq) true)))))) LNode) (let ((nn (as (json/nodes @eff) LNodes))) (if (= @nn null) [] @nn)) [])) (fn n (let ((l (default (as @n LNodes) [])))
+      (let ((h (default (as (if (> (array/len @l) 0) (array/nth @l 0) null) LStr) "")) (a1 (default (as (if (> (array/len @l) 1) (array/nth @l 1) null) LStr) "")))
         (if (or (!= @h "persist") (= @a1 "")) []
           (if (= @a1 "batch")
-            (let ((ops (or (as (if (> (array/len @l) 2) (array/nth @l 2) null) LNodes) [])))(array/flatten (array/map (array/filter (array/map (if (= (array/len @ops) 0) []
+            (let ((ops (default (as (if (> (array/len @l) 2) (array/nth @l 2) null) LNodes) [])))(array/flatten (array/map (array/filter (array/map (if (= (array/len @ops) 0) []
         (if (!= (as (if (> (array/len @ops) 0) (array/nth @ops 0) null) LStr) null)
-          (if (= (or (as (if (> (array/len @ops) 0) (array/nth @ops 0) null) LStr) "") "list") (array/drop @ops 1)
-            (if (and (= (or (as (if (> (array/len @ops) 0) (array/nth @ops 0) null) LStr) "") "array/map") (= (array/len @ops) 3))
-              (let ((fl (or (as (array/nth @ops 2) LNodes) []))) (if (and (> (array/len @fl) 2) (array/includes ["fn"] (or (as (if (> (array/len @fl) 0) (array/nth @fl 0) null) LStr) ""))) [(array/last @fl)] []))
+          (if (= (default (as (if (> (array/len @ops) 0) (array/nth @ops 0) null) LStr) "") "list") (array/drop @ops 1)
+            (if (and (= (default (as (if (> (array/len @ops) 0) (array/nth @ops 0) null) LStr) "") "array/map") (= (array/len @ops) 3))
+              (let ((fl (default (as (array/nth @ops 2) LNodes) []))) (if (and (> (array/len @fl) 2) (array/includes ["fn"] (default (as (if (> (array/len @fl) 0) (array/nth @fl 0) null) LStr) ""))) [(array/last @fl)] []))
               []))
-          @ops)) (fn el (or (as @el LNodes) []))) (fn tp (and (> (array/len @tp) 0) (array/includes ["create", "update", "delete"] (or (as (if (> (array/len @tp) 0) (array/nth @tp 0) null) LStr) "")))))
-        (fn tp (let ((a (or (as (if (> (array/len @tp) 0) (array/nth @tp 0) null) LStr) "")) (en (or (as (if (> (array/len @tp) 1) (array/nth @tp 1) null) LStr) "")))
+          @ops)) (fn el (default (as @el LNodes) []))) (fn tp (and (> (array/len @tp) 0) (array/includes ["create", "update", "delete"] (default (as (if (> (array/len @tp) 0) (array/nth @tp 0) null) LStr) "")))))
+        (fn tp (let ((a (default (as (if (> (array/len @tp) 0) (array/nth @tp 0) null) LStr) "")) (en (default (as (if (> (array/len @tp) 1) (array/nth @tp 1) null) LStr) "")))
           (if (or (= @a "delete") (= @en "") (str/startsWith @en (str/concat (quote "@") ""))) []
             (let ((dp (if (= @a "create") 2 3)))
               [{ a: @a, e: @en, has: (> (array/len @tp) @dp), d: (as (if (> (array/len @tp) @dp) (array/nth @tp @dp) null) LObj) }])))))))
-            (let ((e2 (or (as (if (> (array/len @l) 2) (array/nth @l 2) null) LStr) "")))
+            (let ((e2 (default (as (if (> (array/len @l) 2) (array/nth @l 2) null) LStr) "")))
               (if (and (!= @e2 "") (array/includes ["create", "upsert", "update"] @a1))
                 [{ a: @a1, e: @e2, has: (> (array/len @l) 3), d: (as (if (> (array/len @l) 3) (array/nth @l 3) null) LObj) }]
                 []))))))))))))
@@ -79,7 +79,7 @@ orbital OrbLintFilterFieldNeverWrittenOrbital {
        (let ((trs0 (object/get @o "traits" [])))
        (let ((inlK (array/filter (array/range 0 (array/len @trs0)) (fn i (object/has (array/nth @trs0 @i) "stateMachine")))))
        (let ((inl (array/map @inlK (fn i (array/nth @trs0 @i)))))
-       (let ((kids (array/map (array/range 0 (array/len @inl)) (fn kx (let ((t (array/nth @inl @kx)) (tix (str/concat @oi "-" (array/nth @inlK @kx)))) { n: (object/get @t "name" ""), ch: (array/unique (array/filter (array/map (array/concat (if (array/includes (object/get @entity.roots @tix []) (quote "@trait")) (let ((nn (as (json/nodes (array/map (object/values (object/get @t "config" {})) (fn f (object/get (or @f {}) "default" null)))) LNodes))) (if (= @nn null) [] @nn)) []) (array/concat (if (array/includes (object/get @entity.roots @tix []) (quote "@trait")) (let ((nn (as (json/nodes (array/map (object/get (object/get @t "stateMachine") "transitions" []) (fn x [(object/get @x "guard" null), (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r))))]))) LNodes))) (if (= @nn null) [] @nn)) []) (if (array/includes (object/get @entity.roots @tix []) (quote "@trait")) (let ((nn (as (json/nodes (array/map (object/get @t "ticks" []) (fn x [(object/get @x "guard" null), (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r))))]))) LNodes))) (if (= @nn null) [] @nn)) []))) (fn n (let ((s (or (as @n LStr) ""))) (if (str/startsWith @s (str/concat (quote "@") "trait.")) (array/first (str/split (array/first (str/split (str/slice @s 7 (str/len @s)) ".")) "[")) "")))) (fn c (and (!= @c "") (!= @c (object/get @t "name" "")))))) })))))
+       (let ((kids (array/map (array/range 0 (array/len @inl)) (fn kx (let ((t (array/nth @inl @kx)) (tix (str/concat @oi "-" (array/nth @inlK @kx)))) { n: (object/get @t "name" ""), ch: (array/unique (array/filter (array/map (array/concat (if (array/includes (object/get @entity.roots @tix []) (quote "@trait")) (let ((nn (as (json/nodes (array/map (object/values (object/get @t "config" {})) (fn f (object/get (default @f {}) "default" null)))) LNodes))) (if (= @nn null) [] @nn)) []) (array/concat (if (array/includes (object/get @entity.roots @tix []) (quote "@trait")) (let ((nn (as (json/nodes (array/map (object/get (object/get @t "stateMachine") "transitions" []) (fn x [(object/get @x "guard" null), (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r))))]))) LNodes))) (if (= @nn null) [] @nn)) []) (if (array/includes (object/get @entity.roots @tix []) (quote "@trait")) (let ((nn (as (json/nodes (array/map (object/get @t "ticks" []) (fn x [(object/get @x "guard" null), (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r))))]))) LNodes))) (if (= @nn null) [] @nn)) []))) (fn n (let ((s (default (as @n LStr) ""))) (if (str/startsWith @s (str/concat (quote "@") "trait.")) (array/first (str/split (array/first (str/split (str/slice @s 7 (str/len @s)) ".")) "[")) "")))) (fn c (and (!= @c "") (!= @c (object/get @t "name" "")))))) })))))
         (let ((seeds (array/flatten (array/map (array/filter (object/get @o "pages" []) (fn p (= (object/get @p "protocol" "") ""))) (fn p (array/map (object/get @p "traits" []) (fn r (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" ""))))))))) 
          (let ((bound (array/reduce (array/range 0 (+ (array/len @inl) 1)) (array/unique @seeds) (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map (array/filter @kids (fn k (array/includes @acc (object/get @k "n")))) (fn k (object/get @k "ch")))))))))) 
           (array/flatten (array/map (array/filter (array/range 0 (array/len @inl)) (fn kx (array/includes @bound (object/get (array/nth @inl @kx) "name" ""))))
@@ -87,31 +87,31 @@ orbital OrbLintFilterFieldNeverWrittenOrbital {
             (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
              (let ((effs (array/filter (object/get (array/nth @trs @ti) "effects" []) (fn e (validate/array @e)))))
               (array/flatten (array/map (array/flatten (array/map (if (array/includes (object/get @entity.heads (str/concat @tix "-" @ti) []) "fetch") (let ((nn (as (json/nodes @effs) LNodes))) (if (= @nn null) [] @nn)) [])
-  (fn n (let ((l (or (as @n LNodes) [])))
-    (let ((fe (or (as (if (> (array/len @l) 1) (array/nth @l 1) null) LStr) "")) (opts (as (if (> (array/len @l) 2) (array/nth @l 2) null) LObj)))
-      (if (and (= (or (as (if (> (array/len @l) 0) (array/nth @l 0) null) LStr) "") "fetch") (!= @fe "") (!= @opts null) (object/has @opts "filter")) [{ ent: @fe, nodes: (let ((nn (as (json/nodes (object/get @opts "filter")) LNodes))) (if (= @nn null) [] @nn)) }] []))))))
+  (fn n (let ((l (default (as @n LNodes) [])))
+    (let ((fe (default (as (if (> (array/len @l) 1) (array/nth @l 1) null) LStr) "")) (opts (as (if (> (array/len @l) 2) (array/nth @l 2) null) LObj)))
+      (if (and (= (default (as (if (> (array/len @l) 0) (array/nth @l 0) null) LStr) "") "fetch") (!= @fe "") (!= @opts null) (object/has @opts "filter")) [{ ent: @fe, nodes: (let ((nn (as (json/nodes (object/get @opts "filter")) LNodes))) (if (= @nn null) [] @nn)) }] []))))))
                (fn fe (let ((fent (object/get @fe "ent")) (fnodes (object/get @fe "nodes")))
                 (let ((edef (object/get @defs @fent null)))
                  (if (or (array/includes @ids @fent) (= @edef null)) []
                   (let ((fam (array/concat [@fent] (let ((cn (object/get @colOf @fent ""))) (if (= @cn "") [] (array/filter (object/get @mates @cn []) (fn m (!= @m @fent))))))))
                    (let ((hasCreator (array/some @ws (fn w (and (object/get @w "c") (array/includes @fam (object/get @w "e")))))))
                     (array/flatten (array/map (array/unique (array/flatten (array/map @fnodes
-  (fn n (let ((q (or (as @n LNodes) [])))
-    (let ((f (or (as (if (> (array/len @q) 2) (array/nth @q 2) null) LStr) "")))
-      (if (and (= (array/len @q) 3) (= (or (as (if (> (array/len @q) 0) (array/nth @q 0) null) LStr) "") "object/get") (= (or (as (if (> (array/len @q) 1) (array/nth @q 1) null) LStr) "") (str/concat (quote "@") "entity")) (!= @f "") (not (str/startsWith @f (str/concat (quote "@") ""))) (not (str/startsWith @f "?"))) [@f] [])))))))
+  (fn n (let ((q (default (as @n LNodes) [])))
+    (let ((f (default (as (if (> (array/len @q) 2) (array/nth @q 2) null) LStr) "")))
+      (if (and (= (array/len @q) 3) (= (default (as (if (> (array/len @q) 0) (array/nth @q 0) null) LStr) "") "object/get") (= (default (as (if (> (array/len @q) 1) (array/nth @q 1) null) LStr) "") (str/concat (quote "@") "entity")) (!= @f "") (not (str/startsWith @f (str/concat (quote "@") ""))) (not (str/startsWith @f "?"))) [@f] [])))))))
                      (fn field
                       (let ((supplied (array/some @ws (fn w (and (array/includes @fam (object/get @w "e")) (or (object/get @w "any") (array/includes (object/get @w "k") @field))))))
                             (declared (array/find (object/get @edef "fields" []) (fn f (= (object/get @f "name" "") @field)))))
                        (if (or @supplied (and (!= @declared null) (object/get @declared "intrinsic" false)) (and (!= @declared null) (not @hasCreator))) []
                         (let ((dflt (if (= @declared null) null (object/get @declared "default" null))) (cmps (array/flatten (array/map @fnodes
-  (fn n (let ((q (or (as @n LNodes) [])))
-    (if (and (= (array/len @q) 3) (= (or (as (if (> (array/len @q) 0) (array/nth @q 0) null) LStr) "") "="))
-      (if (let ((q (or (as (array/nth @q 1) LNodes) []))) (and (= (array/len @q) 3) (= (or (as (if (> (array/len @q) 0) (array/nth @q 0) null) LStr) "") "object/get") (= (or (as (if (> (array/len @q) 1) (array/nth @q 1) null) LStr) "") (str/concat (quote "@") "entity")) (= (or (as (if (> (array/len @q) 2) (array/nth @q 2) null) LStr) "") @field))) [(array/nth @q 2)] (if (let ((q (or (as (array/nth @q 2) LNodes) []))) (and (= (array/len @q) 3) (= (or (as (if (> (array/len @q) 0) (array/nth @q 0) null) LStr) "") "object/get") (= (or (as (if (> (array/len @q) 1) (array/nth @q 1) null) LStr) "") (str/concat (quote "@") "entity")) (= (or (as (if (> (array/len @q) 2) (array/nth @q 2) null) LStr) "") @field))) [(array/nth @q 1)] []))
+  (fn n (let ((q (default (as @n LNodes) [])))
+    (if (and (= (array/len @q) 3) (= (default (as (if (> (array/len @q) 0) (array/nth @q 0) null) LStr) "") "="))
+      (if (let ((q (default (as (array/nth @q 1) LNodes) []))) (and (= (array/len @q) 3) (= (default (as (if (> (array/len @q) 0) (array/nth @q 0) null) LStr) "") "object/get") (= (default (as (if (> (array/len @q) 1) (array/nth @q 1) null) LStr) "") (str/concat (quote "@") "entity")) (= (default (as (if (> (array/len @q) 2) (array/nth @q 2) null) LStr) "") @field))) [(array/nth @q 2)] (if (let ((q (default (as (array/nth @q 2) LNodes) []))) (and (= (array/len @q) 3) (= (default (as (if (> (array/len @q) 0) (array/nth @q 0) null) LStr) "") "object/get") (= (default (as (if (> (array/len @q) 1) (array/nth @q 1) null) LStr) "") (str/concat (quote "@") "entity")) (= (default (as (if (> (array/len @q) 2) (array/nth @q 2) null) LStr) "") @field))) [(array/nth @q 1)] []))
       [])))))))
                          (let ((folds (array/map @cmps (fn c
-  (if (array/some (let ((nn (as (json/nodes @c) LNodes))) (if (= @nn null) [] @nn)) (fn s (let ((ss (or (as @s LStr) ""))) (or (str/startsWith @ss (str/concat (quote "@") "entity")) (str/startsWith @ss (str/concat (quote "@") "payload")) (str/startsWith @ss (str/concat (quote "@") "user")) (str/startsWith @ss (str/concat (quote "@") "state")) (str/startsWith @ss "?")))))
+  (if (array/some (let ((nn (as (json/nodes @c) LNodes))) (if (= @nn null) [] @nn)) (fn s (let ((ss (default (as @s LStr) ""))) (or (str/startsWith @ss (str/concat (quote "@") "entity")) (str/startsWith @ss (str/concat (quote "@") "payload")) (str/startsWith @ss (str/concat (quote "@") "user")) (str/startsWith @ss (str/concat (quote "@") "state")) (str/startsWith @ss "?")))))
     []
-    (let ((cs (or (as @c LStr) "")))
+    (let ((cs (default (as @c LStr) "")))
       (if (!= (as @c LStr) null)
         (if (str/startsWith @cs (str/concat (quote "@") "config."))
           (let ((knob (str/slice @cs 8 (str/len @cs))))

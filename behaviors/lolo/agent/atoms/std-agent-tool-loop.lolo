@@ -195,7 +195,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.cancelled false)
         (set @entity.live (not @config.quiet))
         (set @entity.turnMessages ?messages)
-        (set @entity.turnInstructions (if (= (str/default ?context "") "") @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" ?context)))
+        (set @entity.turnInstructions (if (= (default ?context "") "") @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" ?context)))
         (set @entity.turnTools @config.tools)
         (program/inputs { select: (array/filter @config.tools (fn t (object/has @t event))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
       CONVERSE -> preparing when ?ephemeral
@@ -204,7 +204,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.cancelled false)
         (set @entity.live false)
         (set @entity.turnMessages ?messages)
-        (set @entity.turnInstructions (if (= (str/default ?instructions "") "") @config.instructions ?instructions))
+        (set @entity.turnInstructions (if (= (default ?instructions "") "") @config.instructions ?instructions))
         (set @entity.turnTools (object/get ? tools []))
         (program/inputs { select: (array/filter (object/get ? tools []) (fn t (object/has @t event))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
     }
@@ -220,14 +220,14 @@ orbital AgentToolLoopOrbital {
               (let ((r : [AgentToolBinding] (if (object/has @t scope)
                 (array/concat
                   (array/map @payload.result.inputs (fn x
-                    { name: (str/concat @x.event "_" (+ (array/findIndex @payload.result.inputs (fn z (= @z.address @x.address))) 1)), description: (str/concat (str/default @x.description @x.event) " (" @x.orbital " → " @x.trait ")"), parameters: @x.parameters, label: @x.address, kind: input, address: @x.address, contracted: false, fireAndForget: (object/get @t fireAndForget false) }))
+                    { name: (str/concat @x.event "_" (+ (array/findIndex @payload.result.inputs (fn z (= @z.address @x.address))) 1)), description: (str/concat (default @x.description @x.event) " (" @x.orbital " → " @x.trait ")"), parameters: @x.parameters, label: @x.address, kind: input, address: @x.address, contracted: false, fireAndForget: (object/get @t fireAndForget false) }))
                   (if (> (array/len @payload.result.entities) 0)
                     [{ name: "read", description: "Read the rows of an entity that you may see", parameters: { type: "object", properties: { entity: { type: "string", enum: @payload.result.entities } }, required: ["entity"] }, label: "read", kind: read, readAny: true }]
                     []))
                 (if (object/has @t read)
                   (let ((rd : AgentToolRead @t)) [{ name: (str/concat "read__" @rd.read), description: (str/concat "Read the " @rd.read " rows you may see"), parameters: { type: "object", properties: {} }, label: @rd.read, kind: read, entity: @rd.read }])
                   (let ((ev : AgentToolInputData @t)) (array/map (array/take (array/drop @payload.result.selected (array/count (array/take @entity.turnTools @i) (fn y (object/has @y event)))) 1) (fn s
-                    { name: (str/replaceAll @ev.event "." "__"), description: (str/default @s.description @ev.event), parameters: @s.parameters, label: @ev.event, kind: input, address: @s.address, contract: (object/get @ev payload []), contracted: (object/has @ev payload), fireAndForget: (object/get @ev fireAndForget false) }))))))) @r)))))))))
+                    { name: (str/replaceAll @ev.event "." "__"), description: (default @s.description @ev.event), parameters: @s.parameters, label: @ev.event, kind: input, address: @s.address, contract: (object/get @ev payload []), contracted: (object/has @ev payload), fireAndForget: (object/get @ev fireAndForget false) }))))))) @r)))))))))
           (do
             (set @entity.table @table)
             (emit LLM_CALL_TOOLS {
@@ -339,7 +339,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
       DISPATCHED -> running when (not @payload.result.ok)
-        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: (str/default @payload.result.error "dispatch failed"), content: ?text, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: (default @payload.result.error "dispatch failed"), content: ?text, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
       DISPATCH_FAILED -> running
@@ -367,7 +367,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.status idle)
       AWAIT_DISPATCHED -> awaitingResult when @payload.result.ok
       AWAIT_DISPATCHED -> running when (not @payload.result.ok)
-        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: (str/default @payload.result.error "dispatch failed"), content: ?text, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: (default @payload.result.error "dispatch failed"), content: ?text, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
       AWAIT_DISPATCH_FAILED -> running

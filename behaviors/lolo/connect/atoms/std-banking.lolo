@@ -61,8 +61,8 @@ orbital BankingOrbital {
         (emit BANKING_FAILED { code: null, message: (str/concat "GoCardless error " (format/number @payload.status) ": " @payload.body) })
       BANKING_REQUISITION_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
         (emit BANKING_REQUISITION_RESULT {
-          requisitionId: (or (object/get (json/parse @payload.body BankingRequisition) id null) ""),
-          link: (or (object/get (json/parse @payload.body BankingRequisition) link null) "")
+          requisitionId: (default (object/get (json/parse @payload.body BankingRequisition) id null) ""),
+          link: (default (object/get (json/parse @payload.body BankingRequisition) link null) "")
         })
 
       BANKING_LIST_ACCOUNTS -> idle
@@ -88,14 +88,14 @@ orbital BankingOrbital {
         (emit BANKING_FAILED { code: null, message: (str/concat "GoCardless error " (format/number @payload.status) ": " @payload.body) })
       BANKING_ACCOUNTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
         (emit BANKING_ACCOUNTS_RESULT {
-          accounts: (or (object/get (json/parse @payload.body BankingRequisitionReply) accounts null) [])
+          accounts: (default (object/get (json/parse @payload.body BankingRequisitionReply) accounts null) [])
         })
 
       BANKING_LIST_TRANSACTIONS -> idle
         (http GET @config.origin (str/concat "/accounts/" (str/join (array/map (str/split @payload.accountId "/") (fn p (str/encode-uri-component @p))) "/") "/transactions/") {
           query: {
-            date_from: (if (= (or @payload.dateFrom "") "") null @payload.dateFrom),
-            date_to: (if (= (or @payload.dateTo "") "") null @payload.dateTo)
+            date_from: (if (= (default @payload.dateFrom "") "") null @payload.dateFrom),
+            date_to: (if (= (default @payload.dateTo "") "") null @payload.dateTo)
           },
           headers: { Accept: "application/json", "Content-Type": "application/json" },
           auth: {
@@ -118,13 +118,13 @@ orbital BankingOrbital {
         (emit BANKING_FAILED { code: null, message: (str/concat "GoCardless error " (format/number @payload.status) ": " @payload.body) })
       BANKING_TRANSACTIONS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body))
         (let (
-            (booked (or (object/get (json/parse @payload.body BankingTransactionsReply) "transactions.booked" null) []))
+            (booked (default (object/get (json/parse @payload.body BankingTransactionsReply) "transactions.booked" null) []))
           )
           (let (
-              (rows (array/reduce @booked [] (fn acc tx (let ((amount (str/to-number (or (object/get @tx "transactionAmount.amount" null) "")))) (if (= @amount null) @acc (array/append @acc {
+              (rows (array/reduce @booked [] (fn acc tx (let ((amount (str/to-number (default (object/get @tx "transactionAmount.amount" null) "")))) (if (= @amount null) @acc (array/append @acc {
                 id: (if (validate/required (object/get @tx transactionId null)) (object/get @tx transactionId null) (object/get @tx internalTransactionId null)),
                 amount: @amount,
-                currency: (or (object/get @tx "transactionAmount.currency" null) ""),
+                currency: (default (object/get @tx "transactionAmount.currency" null) ""),
                 date: (object/get @tx bookingDate null),
                 description: (object/get @tx remittanceInformationUnstructured null),
                 counterparty: (if (validate/required (object/get @tx creditorName null)) (object/get @tx creditorName null) (object/get @tx debtorName null))

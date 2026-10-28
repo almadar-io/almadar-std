@@ -127,7 +127,7 @@ orbital CliOrbital {
         (set @entity.cmdCursor (+ @entity.cmdCursor 1))
         (emit CLI_ENV_NEXT { })
       CLI_SPAWN_FAILED -> idle when (or (!= @payload.kind "not-found") (>= (+ @entity.cmdCursor 1) (array/len @config.commands)))
-        (emit CLI_FAILED { stage: @entity.stage error: (or @payload.error "") code: "cli_spawn_failed" })
+        (emit CLI_FAILED { stage: @entity.stage error: (default @payload.error "") code: "cli_spawn_failed" })
         (set @entity.stage "")
       CLI_OUT_CHUNK -> running when (not @payload.eof)
         (set @entity.out (bytes/concat [@entity.out @payload.data]))
@@ -150,7 +150,7 @@ orbital CliOrbital {
         (os/close @entity.errFd { key: "close-err" emit: { failure: CLI_HOST_FAILED } })
         (os/wait @entity.pid { key: "wait" emit: { success: CLI_EXITED failure: CLI_HOST_FAILED } })
       CLI_HOST_FAILED -> idle
-        (emit CLI_FAILED { stage: @entity.stage error: (or @payload.error "") code: "cli_host_failed" })
+        (emit CLI_FAILED { stage: @entity.stage error: (default @payload.error "") code: "cli_host_failed" })
         (set @entity.stage "")
         (set @entity.pid 0)
       CLI_EXITED -> idle when (not @config.binaryOutput)
@@ -158,7 +158,7 @@ orbital CliOrbital {
         (let ((text (bytes/to-string @entity.out)) (errText (bytes/to-string @entity.err)))
           (if (or (== @text null) (== @errText null))
             (emit CLI_FAILED { stage: @entity.stage error: "the child wrote output that is not valid UTF-8 text" code: "cli_output_undecodable" })
-            (emit CLI_DONE { stage: @entity.stage exitCode: (if (== @payload.code null) -1 @payload.code) signal: (or @payload.signal 0) stdout: @text stdoutBytes: @entity.out stderr: @errText })))
+            (emit CLI_DONE { stage: @entity.stage exitCode: (if (== @payload.code null) -1 @payload.code) signal: (default @payload.signal 0) stdout: @text stdoutBytes: @entity.out stderr: @errText })))
         (set @entity.stage "")
         (set @entity.pid 0)
       CLI_EXITED -> idle when @config.binaryOutput
@@ -166,7 +166,7 @@ orbital CliOrbital {
         (let ((errText (bytes/to-string @entity.err)))
           (if (== @errText null)
             (emit CLI_FAILED { stage: @entity.stage error: "the child wrote output that is not valid UTF-8 text" code: "cli_output_undecodable" })
-            (emit CLI_DONE { stage: @entity.stage exitCode: (if (== @payload.code null) -1 @payload.code) signal: (or @payload.signal 0) stdout: "" stdoutBytes: @entity.out stderr: @errText })))
+            (emit CLI_DONE { stage: @entity.stage exitCode: (if (== @payload.code null) -1 @payload.code) signal: (default @payload.signal 0) stdout: "" stdoutBytes: @entity.out stderr: @errText })))
         (set @entity.stage "")
         (set @entity.pid 0)
     }

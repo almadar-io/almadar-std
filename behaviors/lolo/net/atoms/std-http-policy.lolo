@@ -41,8 +41,8 @@ orbital HttpPolicyOrbital {
       HTTP_DECIDE -> idle
         (set @entity.method @payload.method)
         (set @entity.path @payload.path)
-        (set @entity.contentLength (or @payload.contentLength 0))
-        (set @entity.responseSize (or @payload.responseSize 0))
+        (set @entity.contentLength (default @payload.contentLength 0))
+        (set @entity.responseSize (default @payload.responseSize 0))
         (let ((origin (array/find @payload.headers (fn h (= (str/lower @h.name) "origin"))))
               (asked (array/find @payload.headers (fn h (= (str/lower @h.name) "access-control-request-headers"))))
               (accept (array/find @payload.headers (fn h (= (str/lower @h.name) "accept-encoding"))))
@@ -55,8 +55,8 @@ orbital HttpPolicyOrbital {
                   (api (and (not @preflight) (str/startsWith @payload.path @config.apiPrefix))))
               (emit HTTP_DECIDED {
                 requestId: @payload.requestId,
-                verdict: (if @preflight "preflight" (if (> (or @payload.contentLength 0) @config.bodyLimitBytes) "payload-too-large" "ok")),
-                status: (if (and (not @preflight) (> (or @payload.contentLength 0) @config.bodyLimitBytes)) 413 200),
+                verdict: (if @preflight "preflight" (if (> (default @payload.contentLength 0) @config.bodyLimitBytes) "payload-too-large" "ok")),
+                status: (if (and (not @preflight) (> (default @payload.contentLength 0) @config.bodyLimitBytes)) 413 200),
                 responseHeaders: (array/concat
                   @cors
                   (if @preflight
@@ -65,7 +65,7 @@ orbital HttpPolicyOrbital {
                       (if (= @asked null) [] [{ name: "access-control-allow-headers", value: @asked.value }]))
                     [])
                   (if @api @config.securityHeaders [])),
-                compress: (if (or @preflight (str/startsWith (str/lower (or @payload.responseType "")) "text/event-stream") (< (or @payload.responseSize 0) @config.minCompressBytes)) "none"
+                compress: (if (or @preflight (str/startsWith (str/lower (default @payload.responseType "")) "text/event-stream") (< (default @payload.responseSize 0) @config.minCompressBytes)) "none"
                   (if (str/includes @acceptValue "br") "br" (if (str/includes @acceptValue "gzip") "gzip" "none")))
               }))))
     }

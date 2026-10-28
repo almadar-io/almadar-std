@@ -78,14 +78,14 @@ orbital ServeHandoffOrbital {
         (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: "emuHost" emit: { success: SERVE_EMU_HOST, failure: SERVE_EMU_UNSET } })
       SERVE_EMU_UNSET -> preparing
         (emit SERVE_CLIENT_READY { })
-      SERVE_EMU_HOST -> preparing when (= (or @payload.value "") "")
+      SERVE_EMU_HOST -> preparing when (= (default @payload.value "") "")
         (emit SERVE_CLIENT_READY { })
-      SERVE_EMU_HOST -> preparing when (!= (or @payload.value "") "")
+      SERVE_EMU_HOST -> preparing when (!= (default @payload.value "") "")
         (set @entity.emulatorHost @payload.value)
         (os/getenv "FIREBASE_PROJECT_ID" { key: "emuProject" emit: { success: SERVE_EMU_PROJECT, failure: SERVE_EMU_UNSET } })
-      SERVE_EMU_PROJECT -> preparing when (= (or @payload.value "") "")
+      SERVE_EMU_PROJECT -> preparing when (= (default @payload.value "") "")
         (emit SERVE_CLIENT_READY { })
-      SERVE_EMU_PROJECT -> preparing when (!= (or @payload.value "") "")
+      SERVE_EMU_PROJECT -> preparing when (!= (default @payload.value "") "")
         (set @entity.emulatorProject @payload.value)
         (os/mkdir { anchor: "cwd" path: (str/concat @entity.rel "/__/firebase") } true { key: "hosting" emit: { success: SERVE_HOSTING_DIR, failure: SERVE_PREP_FAILED } })
       SERVE_HOSTING_DIR -> preparing

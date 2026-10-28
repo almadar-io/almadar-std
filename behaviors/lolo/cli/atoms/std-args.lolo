@@ -20,9 +20,9 @@ orbital ArgsOrbital {
       INIT -> idle
       ARGS_PARSE -> idle
         (set @entity.acc { flags: {}, positionals: [], errors: [], words: [], pending: "" })
-        (set @entity.acc (let ((av (array/flatten (array/map (array/range 0 (array/len @payload.argv)) (fn i (let ((t (array/nth @payload.argv @i)) (prev (if (> @i 0) (array/nth @payload.argv (- @i 1)) "")) (nx (if (< (+ @i 1) (array/len @payload.argv)) (array/nth @payload.argv (+ @i 1)) ""))) (let ((ft (array/find @payload.flags (fn f (and (!= (object/get @f "defaultValue") null) (= (str/concat "--" (object/get @f "name")) @t))))) (fp (array/find @payload.flags (fn f (and (!= (object/get @f "defaultValue") null) (= (str/concat "--" (object/get @f "name")) @prev)))))) (if (and (!= @fp null) (array/includes (or (object/get @fp "choices") []) @t)) [] (if (!= @ft null) [(str/concat @t "=" (if (array/includes (or (object/get @ft "choices") []) @nx) @nx (object/get @ft "defaultValue")))] [@t]))))))))) (array/reduce @av @entity.acc (fn acc t
+        (set @entity.acc (let ((av (array/flatten (array/map (array/range 0 (array/len @payload.argv)) (fn i (let ((t (array/nth @payload.argv @i)) (prev (if (> @i 0) (array/nth @payload.argv (- @i 1)) "")) (nx (if (< (+ @i 1) (array/len @payload.argv)) (array/nth @payload.argv (+ @i 1)) ""))) (let ((ft (array/find @payload.flags (fn f (and (!= (object/get @f "defaultValue") null) (= (str/concat "--" (object/get @f "name")) @t))))) (fp (array/find @payload.flags (fn f (and (!= (object/get @f "defaultValue") null) (= (str/concat "--" (object/get @f "name")) @prev)))))) (if (and (!= @fp null) (array/includes (default (object/get @fp "choices") []) @t)) [] (if (!= @ft null) [(str/concat @t "=" (if (array/includes (default (object/get @ft "choices") []) @nx) @nx (object/get @ft "defaultValue")))] [@t]))))))))) (array/reduce @av @entity.acc (fn acc t
           (if (!= @acc.pending "")
-            (object/merge @acc { flags: (object/set @acc.flags @acc.pending (array/append (or (object/get @acc.flags @acc.pending) []) @t)), words: (array/append @acc.words @t), pending: "" })
+            (object/merge @acc { flags: (object/set @acc.flags @acc.pending (array/append (default (object/get @acc.flags @acc.pending) []) @t)), words: (array/append @acc.words @t), pending: "" })
             (if (and (str/startsWith @t "-") (> (str/len @t) 1))
               (let ((eq (and (str/startsWith @t "--") (str/includes @t "="))))
                 (let ((head (if @eq (array/first (str/split @t "=")) @t))
@@ -34,8 +34,8 @@ orbital ArgsOrbital {
                         (object/merge @acc { errors: (array/append @acc.errors (str/concat "repeated flag: " @head)), words: (array/append @acc.words @t) })
                         (if (object/get @flag "takesValue")
                           (if @eq
-                            (object/merge @acc { flags: (object/set @acc.flags (object/get @flag "name") (array/append (or (object/get @acc.flags (object/get @flag "name")) []) @val)), words: (array/concat @acc.words [@head, @val]) })
-                            (object/merge @acc { flags: (object/set @acc.flags (object/get @flag "name") (or (object/get @acc.flags (object/get @flag "name")) [])), words: (array/append @acc.words @t), pending: (object/get @flag "name") })
+                            (object/merge @acc { flags: (object/set @acc.flags (object/get @flag "name") (array/append (default (object/get @acc.flags (object/get @flag "name")) []) @val)), words: (array/concat @acc.words [@head, @val]) })
+                            (object/merge @acc { flags: (object/set @acc.flags (object/get @flag "name") (default (object/get @acc.flags (object/get @flag "name")) [])), words: (array/append @acc.words @t), pending: (object/get @flag "name") })
                           )
                           (if @eq
                             (object/merge @acc { errors: (array/append @acc.errors (str/concat "flag takes no value: " @head)), words: (array/concat @acc.words [@head, @val]) })

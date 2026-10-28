@@ -60,7 +60,7 @@ orbital DeploymentRegistryOrbital {
       DEPLOY -> idle
         (set @entity.artifact @payload.artifact)
         (set @entity.activates @payload.activates)
-        (set @entity.details (or @payload.details {}))
+        (set @entity.details (default @payload.details {}))
         (set @entity.retries 0)
         (emit DEPLOY_NEXT { })
       DEPLOY_NEXT -> idle
@@ -110,7 +110,7 @@ orbital DeploymentRegistryOrbital {
       ROLLBACK_LOADED -> idle when (not @payload.data.activates)
         (emit ROLLBACK_FAILED { artifact: @entity.artifact, code: "not-activatable", message: (str/concat "Version " @entity.version " of " @entity.artifact " cannot be active") })
       ROLLBACK_LOADED -> idle when @payload.data.activates
-        (set @entity.details (or @payload.data.details {}))
+        (set @entity.details (default @payload.data.details {}))
         (fetch ActiveDeployment { id: @entity.artifact, emit: { success: ROLLBACK_ACTIVE_LOADED, failure: ROLLBACK_ACTIVE_ABSENT } })
       ROLLBACK_ABSENT -> idle when (= @payload.code "not-found")
         (emit ROLLBACK_FAILED { artifact: @entity.artifact, code: "not-recorded", message: (str/concat @entity.artifact " has no recorded version " @entity.version) })
@@ -141,7 +141,7 @@ orbital DeploymentRegistryOrbital {
         (set @entity.artifact @payload.artifact)
         (fetch ActiveDeployment { id: @payload.artifact, emit: { success: RESOLVE_LOADED, failure: RESOLVE_ABSENT } })
       RESOLVE_LOADED -> idle
-        (emit RESOLVED { artifact: @entity.artifact, found: true, version: @payload.data.version, recordedAt: @payload.data.recordedAt, details: (or @payload.data.details {}) })
+        (emit RESOLVED { artifact: @entity.artifact, found: true, version: @payload.data.version, recordedAt: @payload.data.recordedAt, details: (default @payload.data.details {}) })
       RESOLVE_ABSENT -> idle when (= @payload.code "not-found")
         (emit RESOLVED { artifact: @entity.artifact, found: false, version: 0, recordedAt: 0, details: {} })
       RESOLVE_ABSENT -> idle when (!= @payload.code "not-found")

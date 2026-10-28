@@ -280,7 +280,7 @@ orbital AgentProposalOrbital {
         (set @entity.input ?value)
       CLOSE -> idle
         (render-ui @config.slot null)
-      START_TYPED -> working when (!= (str/default @entity.input "") "")
+      START_TYPED -> working when (!= (default @entity.input "") "")
         (set @entity.context "")
         (set @entity.request (str/concat @config.framing "\n\n" @entity.input))
         (set @entity.feedback "")
@@ -311,8 +311,8 @@ orbital AgentProposalOrbital {
         })
       PROPOSAL_REQUESTED -> working
         (set @entity.input ?input)
-        (set @entity.context (str/default ?context ""))
-        (set @entity.request (if (= (str/default ?context "") "") (str/concat @config.framing "\n\n" ?input) (str/concat @config.framing "\n\n" ?input "\n\nBackground:\n" ?context)))
+        (set @entity.context (default ?context ""))
+        (set @entity.request (if (= (default ?context "") "") (str/concat @config.framing "\n\n" ?input) (str/concat @config.framing "\n\n" ?input "\n\nBackground:\n" ?context)))
         (set @entity.feedback "")
         (emit PROPOSAL_RUN_REQUESTED { messages: [{ role: user, content: @entity.request }] })
         (render-ui @config.slot {
@@ -374,7 +374,7 @@ orbital AgentProposalOrbital {
       INIT -> idle when (not @config.withInputForm)
         (render-ui @config.slot null)
       PROPOSE -> review
-        (set @entity.summary (str/default ?summary ""))
+        (set @entity.summary (default ?summary ""))
         (set @entity.items ?items)
         (render-ui @config.slot {
           children: [{
@@ -544,18 +544,18 @@ orbital AgentProposalOrbital {
       FEEDBACK_CHANGED -> review
         (set @entity.feedback ?value)
       PROPOSE -> review
-        (set @entity.summary (str/default ?summary ""))
+        (set @entity.summary (default ?summary ""))
         (set @entity.items ?items)
       APPROVE -> idle when (== @config.slot main)
         (emit PROPOSAL_APPROVED { proposal: { summary: @entity.summary, items: @entity.items } })
       APPROVE -> idle when (!= @config.slot main)
         (emit PROPOSAL_APPROVED { proposal: { summary: @entity.summary, items: @entity.items } })
         (render-ui @config.slot null)
-      REVISE -> working when (!= (str/default @entity.feedback "") "")
+      REVISE -> working when (!= (default @entity.feedback "") "")
         (set @entity.request (str/concat @entity.request "\n\nYour earlier proposal:\n" (json/stringify { summary: @entity.summary, items: @entity.items }) "\n\nRevise it: " @entity.feedback))
         (emit PROPOSAL_RUN_REQUESTED { messages: [{ role: user, content: @entity.request }] })
         (set @entity.feedback "")
-      REVISE -> review when (= (str/default @entity.feedback "") "")
+      REVISE -> review when (= (default @entity.feedback "") "")
         (notify warning "Say what should change before asking for a revision.")
       DISCARD -> idle when (== @config.slot main)
         (emit PROPOSAL_DISCARDED {})

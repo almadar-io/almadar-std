@@ -153,9 +153,9 @@ orbital AgentSessionOrbital {
 
     state ready {
       INIT -> ready
-      OPEN_CHAT -> ready when (= (str/default ?chatId "") "")
+      OPEN_CHAT -> ready when (= (default ?chatId "") "")
         (emit AgentMessagesLoaded { data: [] })
-      OPEN_CHAT -> ready when (not (= (str/default ?chatId "") ""))
+      OPEN_CHAT -> ready when (not (= (default ?chatId "") ""))
         (fetch AgentMessage {
           emit: { failure: AgentMessagesLoadFailed, success: AgentThreadOpened }
           filter: (= (object/get @entity chatId) ?chatId)
@@ -165,7 +165,7 @@ orbital AgentSessionOrbital {
         (emit AgentMessagesLoadFailed { error: (str/concat "AgentMessage has " ?totalCount " messages in one conversation, over the maxRows cap of " @config.maxRows), code: "THREAD_OVER_CAP" })
       AgentThreadOpened -> ready
         (emit AgentMessagesLoaded { data: ?data })
-      SEND_IN_CHAT -> ready when (not (= (str/default ?message "") ""))
+      SEND_IN_CHAT -> ready when (not (= (default ?message "") ""))
         (persist create AgentMessage {
           ownerId: @user.id
           chatId: ?chatId
@@ -541,7 +541,7 @@ orbital AgentSessionOrbital {
           gap: sm
           type: stack
         })
-      ASK -> idle when (and (not @config.ephemeral) (not @entity.working) (not (= (str/default ?message "") "")))
+      ASK -> idle when (and (not @config.ephemeral) (not @entity.working) (not (= (default ?message "") "")))
         (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
         (set @entity.working true)
         (emit ASSISTANT_SEND { message: ?message })
@@ -613,7 +613,7 @@ orbital AgentSessionOrbital {
           gap: sm
           type: stack
         })
-      ASK -> idle when (and @config.ephemeral (not @entity.working) (not (= (str/default ?message "") "")))
+      ASK -> idle when (and @config.ephemeral (not @entity.working) (not (= (default ?message "") "")))
         (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
         (set @entity.working true)
         (emit ASSISTANT_EPHEMERAL_SEND {
@@ -691,12 +691,12 @@ orbital AgentSessionOrbital {
           type: stack
         })
       START_CHAT -> idle when (and @config.ephemeral (not @entity.working))
-        (set @entity.entries (if (= (str/default ?greeting "") "") [] [{ type: message, role: assistant, content: ?greeting, timestamp: @now }]))
-        (set @entity.chatInstructions (str/default ?instructions ""))
+        (set @entity.entries (if (= (default ?greeting "") "") [] [{ type: message, role: assistant, content: ?greeting, timestamp: @now }]))
+        (set @entity.chatInstructions (default ?instructions ""))
         (set @entity.chatTools (object/get ? tools []))
-        (set @entity.chatTitle (str/default ?title ""))
-        (set @entity.chatSubtitle (str/default ?subtitle ""))
-        (set @entity.chatAvatar (str/default ?avatar ""))
+        (set @entity.chatTitle (default ?title ""))
+        (set @entity.chatSubtitle (default ?subtitle ""))
+        (set @entity.chatAvatar (default ?avatar ""))
         (render-ui main {
           children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
@@ -1009,7 +1009,7 @@ orbital AgentSessionOrbital {
             renderItem: (fn item {
               children: [{
                 className: truncate
-                content: (if (= (str/default @item.title "") "") @config.untitledLabel @item.title)
+                content: (if (= (default @item.title "") "") @config.untitledLabel @item.title)
                 type: typography
                 variant: body
               }, {
@@ -1490,7 +1490,7 @@ orbital AgentChatsOrbital {
         })
       ChatsForHistory -> ready
         (emit ASSISTANT_CHAT_OPENED { chatId: (if (> (array/len ?data) 0) (object/get (array/first (array/sort ?data lastActiveAt desc)) id) "") })
-      SEND -> ready when (not (= (str/default ?message "") ""))
+      SEND -> ready when (not (= (default ?message "") ""))
         (set @entity.pendingMessage ?message)
         (fetch AgentChat {
           emit: { failure: AgentChatsLoadFailed, success: ChatsForSend }
@@ -1510,7 +1510,7 @@ orbital AgentChatsOrbital {
         (persist update AgentChat {
           id: (object/get (array/first (array/sort ?data lastActiveAt desc)) id)
           ownerId: (object/get (array/first (array/sort ?data lastActiveAt desc)) ownerId)
-          title: (if (= (str/default (object/get (array/first (array/sort ?data lastActiveAt desc)) title) "") "") @entity.pendingMessage (object/get (array/first (array/sort ?data lastActiveAt desc)) title))
+          title: (if (= (default (object/get (array/first (array/sort ?data lastActiveAt desc)) title) "") "") @entity.pendingMessage (object/get (array/first (array/sort ?data lastActiveAt desc)) title))
           startedAt: (object/get (array/first (array/sort ?data lastActiveAt desc)) startedAt)
           lastActiveAt: @now
         } {
@@ -1743,7 +1743,7 @@ orbital AgentChatsOrbital {
             renderItem: (fn item {
               children: [{
                 className: truncate
-                content: (if (= (str/default @item.title "") "") @config.untitledLabel @item.title)
+                content: (if (= (default @item.title "") "") @config.untitledLabel @item.title)
                 type: typography
                 variant: body
               }]
@@ -1806,7 +1806,7 @@ orbital AgentChatsOrbital {
             renderItem: (fn item {
               children: [{
                 className: truncate
-                content: (if (= (str/default @item.title "") "") @config.untitledLabel @item.title)
+                content: (if (= (default @item.title "") "") @config.untitledLabel @item.title)
                 type: typography
                 variant: body
               }]

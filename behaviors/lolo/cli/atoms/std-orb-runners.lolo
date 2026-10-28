@@ -129,7 +129,7 @@ orbital OrbRunnersOrbital {
     state reading {
       INIT -> reading
       RN_HOST_FAILED -> ready
-        (emit RUNNERS_ANSWERED { status: 500, body: (or @payload.error "host failure") })
+        (emit RUNNERS_ANSWERED { status: 500, body: (default @payload.error "host failure") })
       RN_ENV_NEXT -> reading when (= @entity.cursor 0)
         (os/getenv "GITHUB_ORG" { key: "GITHUB_ORG" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
       RN_ENV_NEXT -> reading when (= @entity.cursor 1)
@@ -150,10 +150,10 @@ orbital OrbRunnersOrbital {
         (os/getenv "RUNNER_DIR" { key: "RUNNER_DIR" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
       RN_ENV_NEXT -> reading when (= @entity.cursor 9)
         (os/getenv "RUNNER_LABELS" { key: "RUNNER_LABELS" emit: { success: RN_ENV_READ, failure: RN_HOST_FAILED } })
-      RN_ENV_READ -> ready when (or (= @payload.key null) (= (object/fromEntries [[@payload.key, (or @payload.value "")]]) null))
+      RN_ENV_READ -> ready when (or (= @payload.key null) (= (object/fromEntries [[@payload.key, (default @payload.value "")]]) null))
         (emit RUNNERS_ANSWERED { status: 500, body: "an environment variable answered without its name" })
-      RN_ENV_READ -> reading when (and (!= @payload.key null) (!= (object/fromEntries [[@payload.key, (or @payload.value "")]]) null))
-        (set @entity.vars (let ((entry (object/fromEntries [[@payload.key, (or @payload.value "")]]))) (if (= @entry null) @entity.vars (object/merge @entity.vars @entry))))
+      RN_ENV_READ -> reading when (and (!= @payload.key null) (!= (object/fromEntries [[@payload.key, (default @payload.value "")]]) null))
+        (set @entity.vars (let ((entry (object/fromEntries [[@payload.key, (default @payload.value "")]]))) (if (= @entry null) @entity.vars (object/merge @entity.vars @entry))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RN_ENV_NEXT { })
       RN_ENV_NEXT -> reading when (>= @entity.cursor 10)
@@ -176,7 +176,7 @@ orbital OrbRunnersOrbital {
       RN_DOTENV -> reading when (= (bytes/to-string @payload.data) null)
         (emit RN_START { })
       RN_DOTENV -> reading when (!= (bytes/to-string @payload.data) null)
-        (set @entity.pat (let ((text (bytes/to-string @payload.data))) (if (= @text null) @entity.pat (str/replace-pattern (or (array/first (array/map (array/filter (str/split @text "\n") (fn l (str/startsWith @l "GITHUB_TOKEN="))) (fn l (str/slice @l 13)))) "") "[\\x22'\\r]" ""))))
+        (set @entity.pat (let ((text (bytes/to-string @payload.data))) (if (= @text null) @entity.pat (str/replace-pattern (default (array/first (array/map (array/filter (str/split @text "\n") (fn l (str/startsWith @l "GITHUB_TOKEN="))) (fn l (str/slice @l 13)))) "") "[\\x22'\\r]" ""))))
         (emit RN_START { })
       RN_DOTENV_MISSING -> reading
         (emit RN_START { })
@@ -201,9 +201,9 @@ orbital OrbRunnersOrbital {
     state running {
       INIT -> running
       RN_HOST_FAILED -> ready
-        (emit RUNNERS_ANSWERED { status: 500, body: (or @payload.error "host failure") })
+        (emit RUNNERS_ANSWERED { status: 500, body: (default @payload.error "host failure") })
       RN_DOCKER_FAILED -> ready
-        (emit RUNNERS_ANSWERED { status: 500, body: (or @payload.error "docker failed") })
+        (emit RUNNERS_ANSWERED { status: 500, body: (default @payload.error "docker failed") })
       RN_PID -> running
         (set @entity.pid (str/concat @payload.pid))
       RN_HOME -> running when (= @entity.cont "mac-down")
@@ -324,11 +324,11 @@ orbital OrbRunnersOrbital {
       RN_SH_DONE -> running when (and (= @payload.stage "mac-remove") (= @entity.verb "up") (!= @entity.report "failed"))
         (emit RN_SLEEP { })
       RN_SH_FAILED -> ready
-        (emit RUNNERS_ANSWERED { status: 500, body: (or @payload.error "sh failed") })
+        (emit RUNNERS_ANSWERED { status: 500, body: (default @payload.error "sh failed") })
       RN_TTY_FAILED -> ready
-        (emit RUNNERS_ANSWERED { status: 500, body: (or @payload.error "sh failed") })
+        (emit RUNNERS_ANSWERED { status: 500, body: (default @payload.error "sh failed") })
       RN_DOCKER_TTY_FAILED -> ready
-        (emit RUNNERS_ANSWERED { status: 500, body: (or @payload.error "docker failed") })
+        (emit RUNNERS_ANSWERED { status: 500, body: (default @payload.error "docker failed") })
     }
 
     emits {

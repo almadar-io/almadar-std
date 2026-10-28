@@ -86,7 +86,7 @@ orbital DataImportOrbital {
         })
       UPLOAD_CSV -> uploaded
         (set @entity.id ?batchId)
-        (set @entity.pendingCsv (str/default (object/get (array/first ?files) content) ""))
+        (set @entity.pendingCsv (default (object/get (array/first ?files) content) ""))
         (set @entity.sourceName (or ?sourceName @config.sourceName))
         (set @entity.status uploaded)
         (set @entity.mappingJson @config.fieldMappingJson)
@@ -146,7 +146,7 @@ orbital DataImportOrbital {
         (emit STAGE_ROWS { rows: (array/map (csv/parse @entity.pendingCsv) (fn r (json/stringify @r))) })
       STAGE_ROWS -> staged when (> (array/len ?rows) 0)
         (set @entity.rowCount (array/len ?rows))
-        (set @entity.errorCount (or ?errorCount 0))
+        (set @entity.errorCount (default ?errorCount 0))
         (set @entity.status staged)
         (persist create ImportRow (array/map ?rows (fn r { batchId: @entity.id, rowJson: @r, status: staged, createdAt: @now })) {
           emit: { failure: IMPORT_PERSIST_FAILED, success: ROWS_STAGED }

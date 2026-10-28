@@ -162,20 +162,20 @@ orbital OrbLintInputOrbital {
                     (if (object/has @t "stateMachine")
                       (let ((tms (object/get @t "stateMachine.transitions" [])))
                         (let ((rest : LintValue (object/merge @t { stateMachine: (object/merge (object/get @t "stateMachine") { transitions: (array/map @tms (fn x (object/merge @x { effects: [] }))) }) })))
-                          (let ((ix (array/map (array/range 0 (+ 1 (array/len @tms))) (fn u (array/unique (or (tree/fold (if (= @u 0) @rest (object/get (array/nth @tms (- @u 1)) "effects" [])) (fn (n k)
+                          (let ((ix (array/map (array/range 0 (+ 1 (array/len @tms))) (fn u (array/unique (default (tree/fold (if (= @u 0) @rest (object/get (array/nth @tms (- @u 1)) "effects" [])) (fn (n k)
                           (if (validate/string @n)
                             (if (str/startsWith @n (quote "@")) [(str/concat "r:" (array/first (str/split @n ".")))] [])
                             (if (validate/array @n)
                               (array/concat
                                 (let ((o0 (array/nth @n 0))) (if (validate/string @o0) [(str/concat "h:" @o0)] []))
-                                (array/flatten @k))
-                              (if (validate/object @n) (array/flatten (object/values @k)) [])))) "LintValue") @nov))))))
+                                (array/flatten (array/filter @k (fn r (!= @r null)))))
+                              (if (validate/object @n) (array/flatten (array/filter (object/values @k) (fn r (!= @r null)))) [])))) "LintValue") @nov))))))
                             (let ((all (array/unique (array/flatten @ix))))
                               (array/map (array/range 0 (+ 1 (array/len @tms))) (fn u
                                 (let ((tk (if (= @u 0) @all (array/nth @ix @u))))
                                   { k: (if (= @u 0) (str/concat @oi "-" @ti) (str/concat @oi "-" @ti "-" (- @u 1))), h: (array/sort (array/map (array/filter @tk (fn s (str/startsWith @s "h:"))) (fn s (str/slice @s 2 (str/len @s))))), r: (array/sort (array/map (array/filter @tk (fn s (str/startsWith @s "r:"))) (fn s (str/slice @s 2 (str/len @s))))) })))))))
                       []))))))))))))
-            (emit LINT_INDEX { scope: @payload.scope, heads: (or (object/fromEntries (array/map @rows (fn w [(object/get @w "k"), (object/get @w "h")]))) {}), roots: (or (object/fromEntries (array/map @rows (fn w [(object/get @w "k"), (object/get @w "r")]))) {}) })))
+            (emit LINT_INDEX { scope: @payload.scope, heads: (default (object/fromEntries (array/map @rows (fn w [(object/get @w "k"), (object/get @w "h")]))) {}), roots: (default (object/fromEntries (array/map @rows (fn w [(object/get @w "k"), (object/get @w "r")]))) {}) })))
         (emit LINT_INPUT { file: @payload.file, raw: @payload.raw, latin: @payload.latin, program: @payload.program, scope: @payload.scope })
     }
 
@@ -200,7 +200,7 @@ orbital OrbLintInputOrbital {
       LANGUAGE_PACKS_DONE_HEARD -> reading when (= @payload.problem "")
         (set @entity.latin (let ((words ["app", "uses", "expects", "type", "theme", "orbital"]) (vocabs (array/map @entity.packs (fn k (json/parse (object/get @k "text") PackVocab)))))
           (if (str/startsWith (str/trim @entity.raw) "{")
-            (let ((keys (object/keys (or (json/parse @entity.raw DocObject) {}))))
+            (let ((keys (object/keys (default (json/parse @entity.raw DocObject) {}))))
               (or (array/includes @keys "orbitals") (not (array/some @vocabs (fn v (array/includes @keys (object/get (object/get @v "orb" {}) "orbitals" "")))))))
             (let ((tok (array/first (str/split (array/first (str/split (array/first (str/split (str/trim (array/find (str/split @entity.raw "\n") (fn l (let ((t (str/trim @l))) (and (!= @t "") (not (str/startsWith @t ";;"))))))) " ")) "[")) "("))))
               (or (array/includes @words @tok) (not (array/some @vocabs (fn v (array/some @words (fn w (= (object/get (object/get @v "keywords" {}) @w "") @tok)))))))))))
@@ -338,7 +338,7 @@ orbital OrbLintInputOrbital {
               (if (= @doc null)
                 (emit LINT_HOST_FACTS_UNREAD { error: "the installed @almadar/std operator table is not an operator table" })
                 (let ((names (array/sort (array/filter (object/keys (object/get @doc "operators")) (fn n (array/some @fields (fn f (!= (object/get @doc (str/concat "operators." @n "." @f) null) null))))))))
-                  (let ((ops (json/parse (json/stringify (or (object/fromEntries (array/map @names (fn n [@n, (or (object/fromEntries (array/filter (array/map @fields (fn f [@f, (object/get @doc (str/concat "operators." @n "." @f) null)])) (fn pr (!= (array/nth @pr 1) null)))) {})]))) {})) HostOpFactMap)))
+                  (let ((ops (json/parse (json/stringify (default (object/fromEntries (array/map @names (fn n [@n, (default (object/fromEntries (array/filter (array/map @fields (fn f [@f, (object/get @doc (str/concat "operators." @n "." @f) null)])) (fn pr (!= (array/nth @pr 1) null)))) {})]))) {})) HostOpFactMap)))
                     (if (= @ops null)
                       (emit LINT_HOST_FACTS_UNREAD { error: "the installed @almadar/std operator table has an operator whose closedCall, oauth, grant, defaultPorts, httpWire, family or emitKeys is not declared in the table's shape" })
                       (emit LINT_HOST_FACTS { operators: @ops }))))))))
@@ -352,14 +352,14 @@ orbital OrbLintInputOrbital {
         (emit LINT_SERVICES_UNREAD { error: "the installed @almadar/core services registry is not a services registry" })
         (emit LINT_PROGRAM_START { })
       LINT_SERVICES_FILE -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text SrRawRegistry) null)))
-        (emit LINT_SERVICES { services: (let ((reg (object/get (json/parse (or (bytes/to-string @payload.data) "") SrRawRegistry) "services")))
-          (or (json/parse (json/stringify (object/mapValues @reg (fn s
-            { actions: (or (object/fromEntries (array/map (object/get @s "actions" []) (fn a
+        (emit LINT_SERVICES { services: (let ((reg (object/get (json/parse (default (bytes/to-string @payload.data) "") SrRawRegistry) "services")))
+          (default (json/parse (json/stringify (object/mapValues @reg (fn s
+            { actions: (default (object/fromEntries (array/map (object/get @s "actions" []) (fn a
                 [(object/get @a "name"), { hasKey: (object/has (object/get @a "responseShape" {}) "key"),
                   params: (array/map (object/get @a "params" []) (fn p { name: (object/get @p "name"), type: (object/get @p "type" ""), required: (object/get @p "required" false), kind: (let ((tt (str/trim (object/get @p "type" "")))) (if (= @tt "string") "string" (if (= @tt "number") "number" (if (= @tt "boolean") "boolean" (if (or (= @tt "object") (= @tt "map")) "object" (if (or (= @tt "array") (str/endsWith @tt "[]")) "array" (if (str/startsWith @tt "'") "string" ""))))))) })) }]))) {}) }))) SrServices) {})) })
         (emit LINT_PROGRAM_START { })
       LINT_SERVICES_FAILED -> reading
-        (emit LINT_SERVICES_UNREAD { error: (or @payload.error "") })
+        (emit LINT_SERVICES_UNREAD { error: (default @payload.error "") })
         (emit LINT_PROGRAM_START { })
       LINT_PROGRAM_START -> reading
         (program/read "" { resolve: true text: false path: (if (os/path-is-absolute @entity.file) @entity.file (os/path-join @entity.cwd @entity.file)) } { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
@@ -378,19 +378,19 @@ orbital OrbLintInputOrbital {
       LINT_FACTS_TYPES -> reading when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text ProgTypeFile) null)))
         (emit LINT_FACTS_FAILED { error: "the installed @almadar/core program types are not a program type table" })
       LINT_FACTS_TYPES -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text ProgTypeFile) null)))
-        (set @entity.progTypes (or (json/parse (or (bytes/to-string @payload.data) "") ProgTypeFile) {}))
+        (set @entity.progTypes (default (json/parse (default (bytes/to-string @payload.data) "") ProgTypeFile) {}))
         (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot @entity.rulesFile))) { key: "lint-input-binding-rules" emit: { success: LINT_FACTS_RULES, failure: LINT_FACTS_FAILED } })
       LINT_FACTS_RULES -> reading when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text BindingRulesFile) null)))
         (emit LINT_FACTS_FAILED { error: "the installed @almadar/core binding rules are not a binding rule table" })
       LINT_FACTS_RULES -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text BindingRulesFile) null)))
-        (set @entity.guardSigils (object/get (object/get (json/parse (or (bytes/to-string @payload.data) "") BindingRulesFile) "guard" { allowed: [] }) "allowed" []))
-        (set @entity.effectSigils (object/get (object/get (json/parse (or (bytes/to-string @payload.data) "") BindingRulesFile) "effect" { allowed: [] }) "allowed" []))
-        (set @entity.tickSigils (object/get (object/get (json/parse (or (bytes/to-string @payload.data) "") BindingRulesFile) "tick" { allowed: [] }) "allowed" []))
+        (set @entity.guardSigils (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") BindingRulesFile) "guard" { allowed: [] }) "allowed" []))
+        (set @entity.effectSigils (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") BindingRulesFile) "effect" { allowed: [] }) "allowed" []))
+        (set @entity.tickSigils (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") BindingRulesFile) "tick" { allowed: [] }) "allowed" []))
         (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot @entity.vocabFile))) { key: "lint-input-vocabulary" emit: { success: LINT_FACTS_VOCAB, failure: LINT_FACTS_FAILED } })
       LINT_FACTS_VOCAB -> reading when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text VocabularyFile) null)))
         (emit LINT_FACTS_FAILED { error: "the installed @almadar/core vocabulary is not a vocabulary" })
       LINT_FACTS_VOCAB -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text VocabularyFile) null)))
-        (emit LINT_LANGUAGE_FACTS { programTypes: @entity.progTypes, guardSigils: @entity.guardSigils, effectSigils: @entity.effectSigils, tickSigils: @entity.tickSigils, fieldTypes: (object/get (json/parse (or (bytes/to-string @payload.data) "") VocabularyFile) "types" []) })
+        (emit LINT_LANGUAGE_FACTS { programTypes: @entity.progTypes, guardSigils: @entity.guardSigils, effectSigils: @entity.effectSigils, tickSigils: @entity.tickSigils, fieldTypes: (object/get (json/parse (default (bytes/to-string @payload.data) "") VocabularyFile) "types" []) })
         (emit LINT_UI_VOCAB_READ { })
       LINT_UI_VOCAB_READ -> reading when (= @entity.uiVocabFile "")
         (emit LINT_UI_VOCAB_UNREAD { error: "the installed @almadar/core declares no orbLanguage.uiVocabulary" })
@@ -401,13 +401,13 @@ orbital OrbLintInputOrbital {
         (emit LINT_UI_VOCAB_UNREAD { error: "the installed @almadar/core UI vocabulary is not a UI vocabulary" })
         (emit LINT_FACTS_DONE { })
       LINT_UI_VOCAB_FILE -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text UiVocabularyFile) null)))
-        (emit LINT_UI_VOCAB { slots: (object/get (json/parse (or (bytes/to-string @payload.data) "") UiVocabularyFile) "slots" []), itemActionBaseProps: (object/get (json/parse (or (bytes/to-string @payload.data) "") UiVocabularyFile) "itemActionBaseProps" []), lucideIcons: (object/get (json/parse (or (bytes/to-string @payload.data) "") UiVocabularyFile) "lucideIcons" []), themeKeys: (object/get (json/parse (or (bytes/to-string @payload.data) "") UiVocabularyFile) "themeKeys" []), deliveryRoots: (object/get (json/parse (or (bytes/to-string @payload.data) "") UiVocabularyFile) "deliveryRoots" []), eventSourceKeys: (object/get (json/parse (or (bytes/to-string @payload.data) "") UiVocabularyFile) "eventSourceKeys" []) })
+        (emit LINT_UI_VOCAB { slots: (object/get (json/parse (default (bytes/to-string @payload.data) "") UiVocabularyFile) "slots" []), itemActionBaseProps: (object/get (json/parse (default (bytes/to-string @payload.data) "") UiVocabularyFile) "itemActionBaseProps" []), lucideIcons: (object/get (json/parse (default (bytes/to-string @payload.data) "") UiVocabularyFile) "lucideIcons" []), themeKeys: (object/get (json/parse (default (bytes/to-string @payload.data) "") UiVocabularyFile) "themeKeys" []), deliveryRoots: (object/get (json/parse (default (bytes/to-string @payload.data) "") UiVocabularyFile) "deliveryRoots" []), eventSourceKeys: (object/get (json/parse (default (bytes/to-string @payload.data) "") UiVocabularyFile) "eventSourceKeys" []) })
         (emit LINT_FACTS_DONE { })
       LINT_UI_VOCAB_FAILED -> reading
-        (emit LINT_UI_VOCAB_UNREAD { error: (or @payload.error "") })
+        (emit LINT_UI_VOCAB_UNREAD { error: (default @payload.error "") })
         (emit LINT_FACTS_DONE { })
       LINT_FACTS_FAILED -> reading
-        (emit LINT_LANGUAGE_FACTS_UNREAD { error: (or @payload.error "") })
+        (emit LINT_LANGUAGE_FACTS_UNREAD { error: (default @payload.error "") })
         (emit LINT_FACTS_DONE { })
       LINT_FACTS_DONE -> ready when @entity.factsWaiting
         (set @entity.factsDone true)
@@ -417,7 +417,7 @@ orbital OrbLintInputOrbital {
       LINT_FACTS_DONE -> reading when (not @entity.factsWaiting)
         (set @entity.factsDone true)
       LINT_FILE_UNREAD -> ready
-        (emit LINT_INPUT_UNREAD { file: @entity.file, error: (or @payload.error "") })
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: (default @payload.error "") })
     }
 
     emits {

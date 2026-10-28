@@ -356,21 +356,6 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [{ name: 's', type: 'string', description: 'The string' }],
     example: '["str/snakeCase", "Hello World"] // => "hello_world"',
   },
-  'str/default': {
-    module: 'str',
-    category: 'std-str',
-    minArity: 2,
-    maxArity: 2,
-    description: 'Return default if value is null/undefined/empty',
-    hasSideEffects: false,
-    returnType: tv('T'),
-    returnSemantics: 'coalesce',
-    params: [
-      { name: 's', type: tv('T', union(STRING, NUMBER, BOOLEAN)), description: 'The value (a string, number or boolean)' },
-      { name: 'default', type: tv('T'), description: 'Default value' },
-    ],
-    example: '["str/default", null, "N/A"] // => "N/A"',
-  },
   'str/template': {
     module: 'str',
     category: 'std-str',

@@ -76,7 +76,7 @@ orbital OrbLintUserFieldExistsOrbital {
                     (fn ti
                       (let ((td (array/nth @trlist @ti)))
                         (if (and (validate/object @td) (validate/object (object/get @td "stateMachine" null)) (not (and (object/get @env "skip" false) (object/has @td "sourceBehavior"))))
-                          (let ((tp (str/concat "orbitals[" @oi " (" @orbName ")].traits[" @ti " (" (object/get @td "name" "") ")]")) (hs (or (tree/fold @td (fn (n k) (if (validate/string @n)
+                          (let ((tp (str/concat "orbitals[" @oi " (" @orbName ")].traits[" @ti " (" (object/get @td "name" "") ")]")) (hs (default (tree/fold @td (fn (n k) (if (validate/string @n)
   (let ((rest (str/slice @n 6)))
     (if (and (str/startsWith @n (quote "@user.")) (> (str/len @n) 6) (not (str/includes @rest ".")) (not (str/includes @rest "[")))
       [{ rel: "", f: @rest, b: @n }]
@@ -128,7 +128,7 @@ orbital OrbLintUserFieldExistsOrbital {
                         (let ((pol (object/get @sp "p" null)))
                           (if (= @pol null)
                             @nof
-                            (let ((hs (or (tree/fold @pol (fn (n k) (if (validate/string @n)
+                            (let ((hs (default (tree/fold @pol (fn (n k) (if (validate/string @n)
   (let ((rest (str/slice @n 6)))
     (if (and (str/startsWith @n (quote "@user.")) (> (str/len @n) 6) (not (str/includes @rest ".")) (not (str/includes @rest "[")))
       [{ rel: "", f: @rest, b: @n }]

@@ -28,7 +28,7 @@ orbital YoutubeOrbital {
       INIT -> idle
 
       YOUTUBE_SEARCH -> idle
-        (emit YOUTUBE_REQUEST { kind: "search", attempt: 0, query: @payload.query, maxResults: (or @payload.maxResults 10), type: (or @payload.type ""), id: "" })
+        (emit YOUTUBE_REQUEST { kind: "search", attempt: 0, query: @payload.query, maxResults: (default @payload.maxResults 10), type: (default @payload.type ""), id: "" })
       YOUTUBE_GET_VIDEO -> idle
         (emit YOUTUBE_REQUEST { kind: "video", attempt: 0, query: "", maxResults: 0, type: "", id: @payload.videoId })
       YOUTUBE_GET_CHANNEL -> idle
@@ -112,8 +112,8 @@ orbital YoutubeOrbital {
               (if (!= @error "") @error (if (>= @payload.status 400) @payload.body (str/concat "Request failed with status code " @payload.status)))
               (if (!= @error null)
                 (if (!= (object/get @error errors null) null)
-                  (str/join (array/map (object/get @error errors []) (fn detail (or (object/get @detail message null) ""))) "\n")
-                  (or (object/get @error message null) ""))
+                  (str/join (array/map (object/get @error errors []) (fn detail (default (object/get @detail message null) ""))) "\n")
+                  (default (object/get @error message null) ""))
                 (if (>= @payload.status 400) @payload.body (str/concat "Request failed with status code " @payload.status))))
           }))
 

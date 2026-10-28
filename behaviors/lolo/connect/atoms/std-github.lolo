@@ -79,7 +79,7 @@ orbital GithubOrbital {
         (emit GITHUB_GET_PR_COMMENTS_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
 
       GITHUB_LIST_ISSUES -> idle when (and (!= @config.owner "") (!= @config.repo ""))
-        (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/issues?state=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (if (not (validate/required @payload.state)) "open" @payload.state)) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29") "&per_page=" (math/min (if (= @payload.per_page null) 30 @payload.per_page) 100) (if (> (array/len (or @payload.labels [])) 0) (str/concat "&labels=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (str/join (or @payload.labels []) ",")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) "")) {
+        (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/issues?state=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (if (not (validate/required @payload.state)) "open" @payload.state)) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29") "&per_page=" (math/min (if (= @payload.per_page null) 30 @payload.per_page) 100) (if (> (array/len (default @payload.labels [])) 0) (str/concat "&labels=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (str/join (default @payload.labels []) ",")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) "")) {
           headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
           auth: { scheme: bearer, credential: @config.token },
           timeoutMs: @config.timeoutMs
@@ -131,7 +131,7 @@ orbital GithubOrbital {
 
       GITHUB_GET_FILE -> idle
         (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/contents/" @payload.path) {
-          query: { ref: (if (= (or @payload.ref "") "") null @payload.ref) },
+          query: { ref: (if (= (default @payload.ref "") "") null @payload.ref) },
           headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
           auth: { scheme: bearer, credential: @config.token },
           timeoutMs: @config.timeoutMs
@@ -148,7 +148,7 @@ orbital GithubOrbital {
         (emit GITHUB_GET_FILE_FAILED { code: "NETWORK_ERROR", message: (str/concat "GitHub API request failed: " @payload.error) })
 
       GITHUB_LIST_COMMITS -> idle
-        (let ((query (str/join (array/filter [(if (!= (or @payload.path "") "") (str/concat "path=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (or @payload.path "")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) ""), (if (!= (or @payload.ref "") "") (str/concat "sha=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (or @payload.ref "")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) ""), (if (!= (or @payload.per_page 0) 0) (str/concat "per_page=" @payload.per_page) "")] (fn p (!= @p ""))) "&")))
+        (let ((query (str/join (array/filter [(if (!= (default @payload.path "") "") (str/concat "path=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default @payload.path "")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) ""), (if (!= (default @payload.ref "") "") (str/concat "sha=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default @payload.ref "")) "%20" "+") "!" "%21") "~" "%7E") "'" "%27") "(" "%28") ")" "%29")) ""), (if (!= (default @payload.per_page 0) 0) (str/concat "per_page=" @payload.per_page) "")] (fn p (!= @p ""))) "&")))
           (http GET @config.origin (str/concat "/repos/" @payload.owner "/" @payload.repo "/commits" (if (= @query "") "" (str/concat "?" @query))) {
             headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },
             auth: { scheme: bearer, credential: @config.token },
@@ -184,7 +184,7 @@ orbital GithubOrbital {
       GITHUB_GRAPHQL -> idle
         (http POST @config.origin "/graphql" {
           headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion, Content-Type: "application/json" },
-          text: (str/concat "{\"query\":" (json/stringify @payload.query) ",\"variables\":" (if (= (or @payload.variables "") "") "{}" @payload.variables) "}"),
+          text: (str/concat "{\"query\":" (json/stringify @payload.query) ",\"variables\":" (if (= (default @payload.variables "") "") "{}" @payload.variables) "}"),
           auth: { scheme: bearer, credential: @config.token },
           timeoutMs: @config.timeoutMs
         } { emit: { success: GITHUB_GRAPHQL_REPLIED, failure: GITHUB_GRAPHQL_UNREACHABLE } })

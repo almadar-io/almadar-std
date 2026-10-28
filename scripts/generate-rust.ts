@@ -115,7 +115,7 @@ interface CanonicalOperatorEntry {
     pattern?: string;
     /** Enrichment (docs): human title, parameter docs, lolo examples, provenance. */
     title?: string;
-    params?: { name: string; type: unknown; description?: string; optional?: boolean; defaultValue?: unknown; rejectsNull?: boolean }[];
+    params?: { name: string; type: unknown; description?: string; optional?: boolean; defaultValue?: unknown }[];
     examples?: string[];
     docsSource?: string;
 }

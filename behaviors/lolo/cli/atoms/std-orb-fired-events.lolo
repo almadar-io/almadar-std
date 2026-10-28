@@ -42,16 +42,16 @@ orbital OrbFiredEventsOrbital {
         (set @entity.busExcluded @payload.busExcluded)
         (set @entity.targetOptions @payload.targetOptions)
       FIRED_INPUT_HEARD -> ready
-        (let ((sem @entity.semantics) (names @entity.names) (maps @entity.maps) (nr : FiredR { h: "", ok: false, it: [] }) (ns : FiredS { s: [], ls: [] }) (busSet (or (object/fromEntries (array/map @entity.busExcluded (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (tgtSet (or (object/fromEntries (array/map @entity.targetOptions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (fnSet (or (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
+        (let ((sem @entity.semantics) (names @entity.names) (maps @entity.maps) (nr : FiredR { h: "", ok: false, it: [] }) (ns : FiredS { s: [], ls: [] }) (busSet (default (object/fromEntries (array/map @entity.busExcluded (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (tgtSet (default (object/fromEntries (array/map @entity.targetOptions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (fnSet (default (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
           (let ((recs (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn o
                   (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t
                     (let ((cfg (object/get @t "config" {})))
-                      (let ((kn (object/fromEntries (array/map (array/filter (object/keys @cfg) (fn key (let ((d (object/get (or (object/get @cfg @key null) {}) "default" null))) (or (validate/string @d) (validate/number @d) (validate/boolean @d))))) (fn key [@key, (object/get (object/get @cfg @key) "default")]))))
+                      (let ((kn (object/fromEntries (array/map (array/filter (object/keys @cfg) (fn key (let ((d (object/get (default (object/get @cfg @key null) {}) "default" null))) (or (validate/string @d) (validate/number @d) (validate/boolean @d))))) (fn key [@key, (object/get (object/get @cfg @key) "default")]))))
                             (roots (array/concat
                                      (array/concat
                                        (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn x (array/map (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r })))))
                                        (array/flatten (array/map (object/get @t "ticks" []) (fn x (array/map (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))
-                                     (array/map (array/filter (array/map (object/keys @cfg) (fn key (object/get (or (object/get @cfg @key null) {}) "default" null))) (fn d (!= @d null))) (fn r { w: @r })))))
+                                     (array/map (array/filter (array/map (object/keys @cfg) (fn key (object/get (default (object/get @cfg @key null) {}) "default" null))) (fn d (!= @d null))) (fn r { w: @r })))))
                         (let ((fr (tree/fold @roots (fn (n k)
   (if (validate/array @n)
     (let ((len (array/len @k)))
@@ -79,8 +79,8 @@ orbital OrbFiredEventsOrbital {
                       { f: false, t: false, lit: false, v: "" })))))))))
     (if (validate/object @m)
       (let ((nk (array/len (object/keys @m)))) { f: (= @nk 0), t: (> @nk 0), lit: false, v: "" })
-      (let ((sub (and (= @jj 1) (validate/string @m) (str/startsWith @m (quote "@config.")) (object/has (or @kn {}) (str/slice @m 8)))))
-        (let ((tx (if @sub (json/stringify (object/get (or @kn {}) (str/slice @m 8) "")) (json/stringify @m))))
+      (let ((sub (and (= @jj 1) (validate/string @m) (str/startsWith @m (quote "@config.")) (object/has (default @kn {}) (str/slice @m 8)))))
+        (let ((tx (if @sub (json/stringify (object/get (default @kn {}) (str/slice @m 8) "")) (json/stringify @m))))
           (if (str/startsWith @tx "\"") { f: (= @tx "\"\""), t: (and (!= @tx "\"\"") (not (str/startsWith @tx "\"@"))), lit: (not (str/startsWith @tx "\"@")), v: @tx }
             (if (or (= @tx "true") (= @tx "false")) { f: (= @tx "false"), t: (= @tx "true"), lit: true, v: @tx }
               { f: (= (str/to-number @tx) 0), t: (!= (str/to-number @tx) 0), lit: true, v: @tx }))))))) "FiredNode")) "f")))))))
@@ -140,8 +140,8 @@ orbital OrbFiredEventsOrbital {
                       { f: false, t: false, lit: false, v: "" })))))))))
     (if (validate/object @m)
       (let ((nk (array/len (object/keys @m)))) { f: (= @nk 0), t: (> @nk 0), lit: false, v: "" })
-      (let ((sub (and (= @jj 1) (validate/string @m) (str/startsWith @m (quote "@config.")) (object/has (or @kn {}) (str/slice @m 8)))))
-        (let ((tx (if @sub (json/stringify (object/get (or @kn {}) (str/slice @m 8) "")) (json/stringify @m))))
+      (let ((sub (and (= @jj 1) (validate/string @m) (str/startsWith @m (quote "@config.")) (object/has (default @kn {}) (str/slice @m 8)))))
+        (let ((tx (if @sub (json/stringify (object/get (default @kn {}) (str/slice @m 8) "")) (json/stringify @m))))
           (if (str/startsWith @tx "\"") { f: (= @tx "\"\""), t: (and (!= @tx "\"\"") (not (str/startsWith @tx "\"@"))), lit: (not (str/startsWith @tx "\"@")), v: @tx }
             (if (or (= @tx "true") (= @tx "false")) { f: (= @tx "false"), t: (= @tx "true"), lit: true, v: @tx }
               { f: (= (str/to-number @tx) 0), t: (!= (str/to-number @tx) 0), lit: true, v: @tx }))))))) "FiredNode"))) "f")))))
@@ -189,8 +189,8 @@ orbital OrbFiredEventsOrbital {
                       { f: false, t: false, lit: false, v: "" })))))))))
     (if (validate/object @m)
       (let ((nk (array/len (object/keys @m)))) { f: (= @nk 0), t: (> @nk 0), lit: false, v: "" })
-      (let ((sub (and (= @jj 1) (validate/string @m) (str/startsWith @m (quote "@config.")) (object/has (or @kn {}) (str/slice @m 8)))))
-        (let ((tx (if @sub (json/stringify (object/get (or @kn {}) (str/slice @m 8) "")) (json/stringify @m))))
+      (let ((sub (and (= @jj 1) (validate/string @m) (str/startsWith @m (quote "@config.")) (object/has (default @kn {}) (str/slice @m 8)))))
+        (let ((tx (if @sub (json/stringify (object/get (default @kn {}) (str/slice @m 8) "")) (json/stringify @m))))
           (if (str/startsWith @tx "\"") { f: (= @tx "\"\""), t: (and (!= @tx "\"\"") (not (str/startsWith @tx "\"@"))), lit: (not (str/startsWith @tx "\"@")), v: @tx }
             (if (or (= @tx "true") (= @tx "false")) { f: (= @tx "false"), t: (= @tx "true"), lit: true, v: @tx }
               { f: (= (str/to-number @tx) 0), t: (!= (str/to-number @tx) 0), lit: true, v: @tx }))))))) "FiredNode"))) "f")))))
@@ -221,8 +221,8 @@ orbital OrbFiredEventsOrbital {
                   (g (array/groupBy @recs (fn r (str/replaceAll (str/replaceAll (object/get @r "trait" "") "~" "~t") "." "~d")))))
               (emit FIRED_EVENTS {
                 scope: @payload.scope,
-                byControl: (or (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ctl" []))))))]))) {}),
-                byEffect: (or (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ev" []))))))]))) {}) }))))
+                byControl: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ctl" []))))))]))) {}),
+                byEffect: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ev" []))))))]))) {}) }))))
     }
 
     emits {

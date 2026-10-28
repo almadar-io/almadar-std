@@ -187,7 +187,7 @@ orbital AgentPoolOrbital {
       WRITE -> ready when (and (> (array/len @config.allowedKinds) 0) (not (array/includes @config.allowedKinds ?kind)))
         (emit WRITE_FAILED { name: ?name, error: (str/concat "Unknown kind \"" ?kind "\". Allowed kinds: " (str/join @config.allowedKinds ", ")) })
       WRITE -> sourcing when (or (= (array/len @config.allowedKinds) 0) (array/includes @config.allowedKinds ?kind))
-        (set @entity.pending { name: ?name, kind: ?kind, topic: (str/default ?topic ""), fields: (if (== ?fields null) {} ?fields), description: ?description, key: (str/concat @config.prefix @config.poolName "/" ?name ".lolo"), value: ?value })
+        (set @entity.pending { name: ?name, kind: ?kind, topic: (default ?topic ""), fields: (if (== ?fields null) {} ?fields), description: ?description, key: (str/concat @config.prefix @config.poolName "/" ?name ".lolo"), value: ?value })
         (behavior/source ?value {
           emit: { failure: STEP_FAILED, success: SOURCED }
         })
@@ -354,7 +354,7 @@ orbital AgentPoolOrbital {
       ENTRIES_LOADED -> ready when (> ?totalCount (array/len ?data))
         (emit SEARCH_FAILED { error: (str/concat "PoolEntry has " ?totalCount " live entries in this pool, over the maxRows cap of " @config.maxRows) })
       ENTRIES_LOADED -> ready
-        (let ((found : [PoolHit] (array/take (array/sort (array/flatten (array/map (array/filter ?data (fn e (and (or (= (array/len @entity.queryKinds) 0) (array/includes @entity.queryKinds (object/get @e kind ""))) (not (array/includes @entity.queryExclude (object/get @e behavior "")))))) (fn e (let ((c (array/cosine (object/get @e vector []) @entity.queryVector))) (if (== @c null) [] [{ id: (object/get @e id), behavior: (object/get @e behavior ""), value: (object/get @e value), name: (object/get @e name ""), kind: (object/get @e kind ""), topic: (object/get @e topic ""), fields: (object/get @e fields {}), description: (object/get @e description ""), score: (+ (or @c 0) (* @config.weight (or (/ (- (+ (object/get @e likes 0) (object/get @e right 0)) (+ (object/get @e hides 0) (object/get @e wrong 0))) (+ 1 (object/get @e plays 0))) 0))) }]))))) score desc) @entity.queryTake))) (emit POOL_FOUND { hits: @found }))
+        (let ((found : [PoolHit] (array/take (array/sort (array/flatten (array/map (array/filter ?data (fn e (and (or (= (array/len @entity.queryKinds) 0) (array/includes @entity.queryKinds (object/get @e kind ""))) (not (array/includes @entity.queryExclude (object/get @e behavior "")))))) (fn e (let ((c (array/cosine (object/get @e vector []) @entity.queryVector))) (if (== @c null) [] [{ id: (object/get @e id), behavior: (object/get @e behavior ""), value: (object/get @e value), name: (object/get @e name ""), kind: (object/get @e kind ""), topic: (object/get @e topic ""), fields: (object/get @e fields {}), description: (object/get @e description ""), score: (+ (default @c 0) (* @config.weight (default (/ (- (+ (object/get @e likes 0) (object/get @e right 0)) (+ (object/get @e hides 0) (object/get @e wrong 0))) (+ 1 (object/get @e plays 0))) 0))) }]))))) score desc) @entity.queryTake))) (emit POOL_FOUND { hits: @found }))
       SEARCH_FAILED -> ready
         (emit POOL_FOUND { hits: [] })
         (render-ui toast { message: ?error, type: alert, variant: warning })
@@ -430,7 +430,7 @@ orbital AgentPoolOrbital {
               hides: (+ (object/get @e hides 0) (if (= @entity.signalOf "hide") 1 0))
               right: (+ (object/get @e right 0) (if (= @entity.signalOf "right") 1 0))
               wrong: (+ (object/get @e wrong 0) (if (= @entity.signalOf "wrong") 1 0))
-              retired: (and (>= @plays @config.minPlays) (>= (or (/ @bad (math/max @plays 1)) 0) @config.ratio))
+              retired: (and (>= @plays @config.minPlays) (>= (default (/ @bad (math/max @plays 1)) 0) @config.ratio))
             })))
       ENTRY_LOADED -> ready when (== ?data null)
         (emit SIGNAL_REFUSED { reason: "No such pool entry" })

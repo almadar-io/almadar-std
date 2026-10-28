@@ -89,9 +89,9 @@ orbital OrbLintSharedTypesOrbital {
         (os/read @payload.fd 4194304 { key: "chunk" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
       LINT_FILE_READ -> reading when (= (bytes/to-string @payload.data) null)
         (emit LINT_FILE_UNREAD { error: "the file is not valid text" })
-      LINT_FILE_READ -> reading when (and (!= (bytes/to-string @payload.data) null) (str/includes (str/concat "\n" (str/default (bytes/to-string @payload.data) "")) "\ntype "))
+      LINT_FILE_READ -> reading when (and (!= (bytes/to-string @payload.data) null) (str/includes (str/concat "\n" (default (bytes/to-string @payload.data) "")) "\ntype "))
         (program/read (bytes/to-string @payload.data) { emit: { success: LINT_PROGRAM_READ, failure: LINT_FILE_UNREAD } })
-      LINT_FILE_READ -> reading when (and (!= (bytes/to-string @payload.data) null) (not (str/includes (str/concat "\n" (str/default (bytes/to-string @payload.data) "")) "\ntype ")))
+      LINT_FILE_READ -> reading when (and (!= (bytes/to-string @payload.data) null) (not (str/includes (str/concat "\n" (default (bytes/to-string @payload.data) "")) "\ntype ")))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LINT_READ { })
       LINT_PROGRAM_READ -> reading

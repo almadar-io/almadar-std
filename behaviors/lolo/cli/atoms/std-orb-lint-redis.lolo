@@ -77,8 +77,8 @@ orbital OrbLintRedisOrbital {
         (emit LINT_FINISH { })
       LINT_INPUT -> ready when (not @entity.shapesUnread)
         (set @entity.scope @payload.scope)
-        (set @entity.egress (or (object/get @payload.program "egress" null) []))
-        (set @entity.sites (or (as (let ((orbitals (object/get @payload.program "orbitals" [])))
+        (set @entity.egress (default (object/get @payload.program "egress" null) []))
+        (set @entity.sites (default (as (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((o (array/nth @orbitals @oi)))
               (let ((trs (object/get @o "traits" [])))
@@ -86,23 +86,23 @@ orbital OrbLintRedisOrbital {
                   (let ((t (as (array/nth @trs @ti) PgTrait)))
                     (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
                       []
-                      (let ((base (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (cfg (or (object/get @t "config" null) {})) (decl (array/map (or (object/get @t "emits" null) []) (fn e (object/get @e "event")))))
-                        (let ((trans (or (object/get (object/get @t "stateMachine") "transitions" null) [])) (ticks (or (object/get @t "ticks" null) [])))
+                      (let ((base (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (cfg (default (object/get @t "config" null) {})) (decl (array/map (default (object/get @t "emits" null) []) (fn e (object/get @e "event")))))
+                        (let ((trans (default (object/get (object/get @t "stateMachine") "transitions" null) [])) (ticks (default (object/get @t "ticks" null) [])))
                           (let ((places (array/concat
                                   (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
                                     (let ((tr (array/nth @trans @i)))
                                       (array/concat
                                         (if (!= (object/get @tr "guard" null) null) [{ path: (str/concat @base ".stateMachine.transitions[" @i "].guard"), node: (object/get @tr "guard") }] [])
-                                        (let ((effs (or (object/get @tr "effects" null) [])))
+                                        (let ((effs (default (object/get @tr "effects" null) [])))
                                           (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat @base ".stateMachine.transitions[" @i "].effects[" @j "]"), node: (array/nth @effs @j) }))))))))
                                   (array/flatten (array/map (array/range 0 (array/len @ticks)) (fn i
                                     (let ((tk (array/nth @ticks @i)))
                                       (array/concat
                                         (if (!= (object/get @tk "guard" null) null) [{ path: (str/concat @base ".ticks[" @i "].guard"), node: (object/get @tk "guard") }] [])
-                                        (let ((effs (or (object/get @tk "effects" null) [])))
+                                        (let ((effs (default (object/get @tk "effects" null) [])))
                                           (array/map (array/range 0 (array/len @effs)) (fn j { path: (str/concat @base ".ticks[" @i "].effects[" @j "]"), node: (array/nth @effs @j) })))))))))))
                             (array/flatten (array/map @places (fn pl
-                              (array/map (or (as (array/map (object/get (or (as (tree/index (object/get @pl "node") ["redis"]) PgIndex) {}) "redis" []) (fn c (object/get @c "node" null))) PgCalls) [])
+                              (array/map (default (as (array/map (object/get (default (as (tree/index (object/get @pl "node") ["redis"]) PgIndex) {}) "redis" []) (fn c (object/get @c "node" null))) PgCalls) [])
                                 (fn call { path: (object/get @pl "path"), call: @call, config: @cfg, declared: @decl }))))))))))))))))))) PgSites) []))
         (emit LINT_PLAN { })
       LINT_PLAN -> ready
@@ -187,7 +187,7 @@ orbital OrbLintRedisOrbital {
             (let ((k (object/get @s "k")))
               (if (= @k "s")
                 (object/get @s "fs")
-                (object/get (or (array/find @entity.emitRes (fn r (= (object/get @r "id") (object/get @s "id")))) { id: "", findings: [] }) "findings")))))))
+                (object/get (default (array/find @entity.emitRes (fn r (= (object/get @r "id") (object/get @s "id")))) { id: "", findings: [] }) "findings")))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "redis", scope: @entity.scope, findings: @entity.findings })

@@ -379,14 +379,14 @@ orbital CouchdbOrbital {
         (set @entity.db @payload.db)
         (set @entity.selector @payload.selector)
         (set @entity.sort @payload.sort)
-        (set @entity.skip (or @payload.skip 0))
+        (set @entity.skip (default @payload.skip 0))
         (set @entity.limit (if (= @payload.limit null) -1 @payload.limit))
         (set @entity.bookmark "")
         (set @entity.acc [])
         (set @entity.count 0)
         (http POST @config.origin (str/concat "/" (str/encode-uri-component @payload.db) "/_find") {
           headers: { Accept: "application/json", Content-Type: "application/json" },
-          text: (str/concat "{\"selector\":" @payload.selector ",\"sort\":" @payload.sort @entity.fields (if (or (!= @payload.limit null) (> (or @payload.skip 0) 0)) (str/concat ",\"skip\":" (or @payload.skip 0)) "") ",\"limit\":" (if (= @payload.limit null) @config.pageSize @payload.limit) "}"),
+          text: (str/concat "{\"selector\":" @payload.selector ",\"sort\":" @payload.sort @entity.fields (if (or (!= @payload.limit null) (> (default @payload.skip 0) 0)) (str/concat ",\"skip\":" (default @payload.skip 0)) "") ",\"limit\":" (if (= @payload.limit null) @config.pageSize @payload.limit) "}"),
           auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
           timeoutMs: @config.timeoutMs
         } { emit: { success: COUCH_FIND_REPLIED, failure: COUCH_UNREACHABLE } })
@@ -399,7 +399,7 @@ orbital CouchdbOrbital {
         (set @entity.db @payload.db)
         (set @entity.selector @payload.selector)
         (set @entity.sort @payload.sort)
-        (set @entity.skip (or @payload.skip 0))
+        (set @entity.skip (default @payload.skip 0))
         (set @entity.limit 0)
         (set @entity.bookmark "")
         (set @entity.acc [])

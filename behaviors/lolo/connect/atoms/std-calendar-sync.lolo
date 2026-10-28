@@ -90,14 +90,14 @@ orbital CalendarSyncOrbital {
         })
       CAL_REMOTE_LISTED -> pulling when (> (array/len ?events) 0)
         (set @entity.pending ?events)
-        (set @entity.syncToken (str/default ?nextSyncToken ""))
+        (set @entity.syncToken (default ?nextSyncToken ""))
         (fetch CalendarEvent {
           emit: { failure: CAL_SYNC_FAILED, success: PULL_TARGET_LOADED }
           filter: (= (object/get @entity externalEventId) (object/get (array/first ?events) id))
           limit: @config.maxRows
         })
       CAL_REMOTE_LISTED -> idle when (= (array/len ?events) 0)
-        (set @entity.syncToken (str/default ?nextSyncToken ""))
+        (set @entity.syncToken (default ?nextSyncToken ""))
         (set @entity.lastSyncedAt @now)
         (emit CAL_SYNCED { syncedAt: @entity.lastSyncedAt })
       CAL_SYNC_FAILED -> idle

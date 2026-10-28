@@ -37,7 +37,6 @@ import { ANIM_OPERATORS } from './modules/anim.js';
 import { EASE_OPERATORS } from './modules/ease.js';
 import { NOISE_OPERATORS } from './modules/noise.js';
 import { PATH_OPERATORS } from './modules/path.js';
-import { withNullRejection } from './modules/null-operands.js';
 
 // Substrate modules
 import { LLM_OPERATORS } from './modules/llm.js';
@@ -58,7 +57,7 @@ import { BASE64_OPERATORS, BROTLI_OPERATORS, GZIP_OPERATORS, HASH_OPERATORS, HMA
 /**
  * Combined registry of all standard library operators.
  */
-export const STD_OPERATORS: Record<string, StdOperatorMeta> = withNullRejection({
+export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...CORE_OPERATORS,
   ...MATH_OPERATORS,
   ...STR_OPERATORS,
@@ -98,7 +97,7 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = withNullRejection(
   ...BROTLI_OPERATORS,
   ...HMAC_OPERATORS,
   ...XML_OPERATORS,
-});
+};
 
 /**
  * Module-specific operator registries.

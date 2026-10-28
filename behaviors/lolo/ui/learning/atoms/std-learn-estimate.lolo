@@ -251,7 +251,7 @@ orbital EstimateOrbital {
       LOCK_IN -> idle when (and (== @entity.active true) (and (== @entity.locked false) (== @entity.done false)))
         (let (
             (err (math/abs (- @entity.estimate @entity.answer)))
-            (rel (or (/ @err (math/max (math/abs @entity.answer) 0.0001)) 1))
+            (rel (default (/ @err (math/max (math/abs @entity.answer) 0.0001)) 1))
             (band (if (<= @rel @config.exactPct) "exact" (if (<= @rel @config.closePct) "close" "off")))
             (points (if (== @band "exact") @config.exactPoints (if (== @band "close") @config.closePoints 0)))
           )

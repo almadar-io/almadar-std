@@ -25,42 +25,42 @@ orbital DevPersonasOrbital {
       INIT -> ready
       PERSONAS_CALLED -> ready
         (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: "list" emit: { success: PERSONAS_HOST failure: PERSONAS_FAILED } })
-      PERSONAS_HOST -> ready when (!= (or @payload.value "") @config.authEmulatorHost)
+      PERSONAS_HOST -> ready when (!= (default @payload.value "") @config.authEmulatorHost)
         (emit PERSONAS_ANSWERED { status: 404, body: (json/stringify { success: false, error: "no dev personas: the Auth emulator is not configured" }) })
-      PERSONAS_HOST -> ready when (= (or @payload.value "") @config.authEmulatorHost)
+      PERSONAS_HOST -> ready when (= (default @payload.value "") @config.authEmulatorHost)
         (fetch DevPersona { limit: @config.maxRows emit: { success: PERSONAS_ROWS failure: PERSONAS_FAILED } })
       PERSONAS_ROWS -> ready when (> @payload.totalCount (array/len @payload.data))
         (emit PERSONAS_FAILED { error: (str/concat "DevPersona has " @payload.totalCount " rows, over the maxRows cap of " @config.maxRows) })
       PERSONAS_ROWS -> ready
-        (let ((rows (array/filter @payload.data (fn r (!= (or @r.id "") "")))))
+        (let ((rows (array/filter @payload.data (fn r (!= (default @r.id "") "")))))
           (emit PERSONAS_ANSWERED { status: 200, body: (json/stringify { success: true, personas: @rows, source: (if (> (array/len @rows) 0) "identity-entity" "none") }) }))
       PERSONAS_FAILED -> ready
-        (emit PERSONAS_ANSWERED { status: 500, body: (json/stringify { success: false, error: (or @payload.error "") }) })
+        (emit PERSONAS_ANSWERED { status: 500, body: (json/stringify { success: false, error: (default @payload.error "") }) })
 
-      SIGN_IN_CALLED -> ready when (= (or (object/get (json/parse (or @payload.rawBody "{}") PersonaSignInBody) "id") "") "")
+      SIGN_IN_CALLED -> ready when (= (default (object/get (json/parse (default @payload.rawBody "{}") PersonaSignInBody) "id") "") "")
         (emit PERSONA_SIGN_IN_ANSWERED { status: 400, body: (json/stringify { success: false, error: "expected { id }" }) })
-      SIGN_IN_CALLED -> ready when (!= (or (object/get (json/parse (or @payload.rawBody "{}") PersonaSignInBody) "id") "") "")
+      SIGN_IN_CALLED -> ready when (!= (default (object/get (json/parse (default @payload.rawBody "{}") PersonaSignInBody) "id") "") "")
         (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: (object/get (json/parse @payload.rawBody PersonaSignInBody) "id") emit: { success: SIGN_IN_HOST failure: SIGN_IN_FAILED } })
-      SIGN_IN_HOST -> ready when (!= (or @payload.value "") @config.authEmulatorHost)
+      SIGN_IN_HOST -> ready when (!= (default @payload.value "") @config.authEmulatorHost)
         (emit PERSONA_SIGN_IN_ANSWERED { status: 404, body: (json/stringify { success: false, error: "no dev personas: the Auth emulator is not configured" }) })
-      SIGN_IN_HOST -> ready when (= (or @payload.value "") @config.authEmulatorHost)
+      SIGN_IN_HOST -> ready when (= (default @payload.value "") @config.authEmulatorHost)
         (fetch DevPersona { id: @payload.key emit: { success: SIGN_IN_ROW failure: SIGN_IN_ROW_MISSED } })
       SIGN_IN_ROW -> ready when (> (array/len (array/filter (object/keys @payload.data) (fn k (array/includes @config.reservedClaims @k)))) 0)
         (emit PERSONA_SIGN_IN_ANSWERED { status: 500, body: (json/stringify { success: false, error: (str/concat "persona " @payload.data.id " has fields named like reserved token claims: " (str/join (array/filter (object/keys @payload.data) (fn k (array/includes @config.reservedClaims @k))) ", ")) }) })
       SIGN_IN_ROW -> ready when (= (array/len (array/filter (object/keys @payload.data) (fn k (array/includes @config.reservedClaims @k)))) 0)
         (http POST @config.authEmulatorOrigin (str/concat "/identitytoolkit.googleapis.com/v1/projects/" @config.projectId "/accounts") {
           headers: { Content-Type: "application/json", Authorization: "Bearer owner" },
-          text: (json/stringify (if (!= (or @payload.data.name "") "") { localId: @payload.data.id, displayName: @payload.data.name } { localId: @payload.data.id })),
+          text: (json/stringify (if (!= (default @payload.data.name "") "") { localId: @payload.data.id, displayName: @payload.data.name } { localId: @payload.data.id })),
           timeoutMs: 10000
         } { key: @payload.data.id, emit: { success: SIGN_IN_CREATED, failure: SIGN_IN_FAILED } })
-      SIGN_IN_CREATED -> ready when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (str/startsWith (or (object/get (object/get (if (json/valid @payload.body) (json/parse @payload.body EmulatorReply) { error: { message: "" } }) "error") "message") "") "DUPLICATE_LOCAL_ID")))
+      SIGN_IN_CREATED -> ready when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (str/startsWith (default (object/get (object/get (if (json/valid @payload.body) (json/parse @payload.body EmulatorReply) { error: { message: "" } }) "error") "message") "") "DUPLICATE_LOCAL_ID")))
         (emit PERSONA_SIGN_IN_ANSWERED { status: 500, body: (json/stringify { success: false, error: (str/concat "the Auth emulator refused to create " @payload.key ": " (str/concat @payload.status) " " @payload.body) }) })
-      SIGN_IN_CREATED -> ready when (or (and (>= @payload.status 200) (< @payload.status 300)) (str/startsWith (or (object/get (object/get (if (json/valid @payload.body) (json/parse @payload.body EmulatorReply) { error: { message: "" } }) "error") "message") "") "DUPLICATE_LOCAL_ID"))
+      SIGN_IN_CREATED -> ready when (or (and (>= @payload.status 200) (< @payload.status 300)) (str/startsWith (default (object/get (object/get (if (json/valid @payload.body) (json/parse @payload.body EmulatorReply) { error: { message: "" } }) "error") "message") "") "DUPLICATE_LOCAL_ID"))
         (fetch DevPersona { id: @payload.key emit: { success: SIGN_IN_CLAIMS failure: SIGN_IN_ROW_MISSED } })
       SIGN_IN_CLAIMS -> ready
         (http POST @config.authEmulatorOrigin (str/concat "/identitytoolkit.googleapis.com/v1/projects/" @config.projectId "/accounts:update") {
           headers: { Content-Type: "application/json", Authorization: "Bearer owner" },
-          text: (json/stringify (object/merge (if (!= (or @payload.data.name "") "") { localId: @payload.data.id, displayName: @payload.data.name } { localId: @payload.data.id }) { customAttributes: (json/stringify (object/fromEntries (array/filter (object/entries (object/omit @payload.data ["id", "email", "name"])) (fn e (!= (array/nth @e 1) null))))) })),
+          text: (json/stringify (object/merge (if (!= (default @payload.data.name "") "") { localId: @payload.data.id, displayName: @payload.data.name } { localId: @payload.data.id }) { customAttributes: (json/stringify (object/fromEntries (array/filter (object/entries (object/omit @payload.data ["id", "email", "name"])) (fn e (!= (array/nth @e 1) null))))) })),
           timeoutMs: 10000
         } { key: @payload.data.id, emit: { success: SIGN_IN_UPDATED, failure: SIGN_IN_FAILED } })
       SIGN_IN_UPDATED -> ready when (or (< @payload.status 200) (>= @payload.status 300))
@@ -72,7 +72,7 @@ orbital DevPersonasOrbital {
       SIGN_IN_ROW_MISSED -> ready when (!= @payload.code "not-found")
         (emit PERSONA_SIGN_IN_ANSWERED { status: 500, body: (json/stringify { success: false, error: @payload.error }) })
       SIGN_IN_FAILED -> ready
-        (emit PERSONA_SIGN_IN_ANSWERED { status: 500, body: (json/stringify { success: false, error: (or @payload.error "") }) })
+        (emit PERSONA_SIGN_IN_ANSWERED { status: 500, body: (json/stringify { success: false, error: (default @payload.error "") }) })
     }
 
     emits {

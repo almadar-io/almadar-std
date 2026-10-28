@@ -379,8 +379,8 @@ orbital EcdsaOrbital {
     state mod2 {
       INIT -> run
       BIG_REMAINDER -> run
-        (set @entity.b1 (array/map (array/range 0 256) (fn i (let ((pos (- 255 @i))) (let ((li (math/floor (/ @pos 24)))) (math/mod (math/floor (or (/ (if (< @li (array/len @entity.u1L)) (array/nth @entity.u1L @li) 0) (or (math/pow 2 (math/mod @pos 24)) 1)) 0)) 2))))))
-        (set @entity.b2 (array/map (array/range 0 256) (fn i (let ((pos (- 255 @i))) (let ((li (math/floor (/ @pos 24)))) (math/mod (math/floor (or (/ (if (< @li (array/len @payload.value)) (array/nth @payload.value @li) 0) (or (math/pow 2 (math/mod @pos 24)) 1)) 0)) 2))))))
+        (set @entity.b1 (array/map (array/range 0 256) (fn i (let ((pos (- 255 @i))) (let ((li (math/floor (/ @pos 24)))) (math/mod (math/floor (default (/ (if (< @li (array/len @entity.u1L)) (array/nth @entity.u1L @li) 0) (default (math/pow 2 (math/mod @pos 24)) 1)) 0)) 2))))))
+        (set @entity.b2 (array/map (array/range 0 256) (fn i (let ((pos (- 255 @i))) (let ((li (math/floor (/ @pos 24)))) (math/mod (math/floor (default (/ (if (< @li (array/len @payload.value)) (array/nth @payload.value @li) 0) (default (math/pow 2 (math/mod @pos 24)) 1)) 0)) 2))))))
         (set @entity.rnOk (let ((rn (object/get (array/reduce (array/range 0 12) { out: (array/range 0 0) c: 0 } (fn acc i (let ((v (+ (if (< @i 11) (+ (if (< @i (array/len @entity.rL)) (array/nth @entity.rL @i) 0) (array/nth @config.nl @i)) 0) @acc.c))) { out: (array/append @acc.out (math/mod @v @config.base)), c: (math/floor (/ @v @config.base)) }))) "out"))) (and (== (array/nth @rn 11) 0) (array/reduce (array/range 0 11) false (fn acc i (if (!= (array/nth @rn @i) (array/nth @config.pl @i)) (< (array/nth @rn @i) (array/nth @config.pl @i)) @acc))))))
         (set @entity.ms { regs: [[0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], @config.gx, @config.gy, (array/map (array/range 0 11) (fn i (if (< @i (array/len @entity.xL)) (array/nth @entity.xL @i) 0))), (array/map (array/range 0 11) (fn i (if (< @i (array/len @entity.yL)) (array/nth @entity.yL @i) 0))), @config.one, [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], (array/map (array/range 0 11) (fn i (if (< @i (array/len @entity.rL)) (array/nth @entity.rL @i) 0))), @config.r2, @config.bm, (array/slice (object/get (array/reduce (array/range 0 12) { out: (array/range 0 0) c: 0 } (fn acc i (let ((v (+ (if (< @i 11) (+ (if (< @i (array/len @entity.rL)) (array/nth @entity.rL @i) 0) (array/nth @config.nl @i)) 0) @acc.c))) { out: (array/append @acc.out (math/mod @v @config.base)), c: (math/floor (/ @v @config.base)) }))) "out") 0 11)], inf: true, mode: 0 })
         (emit EC_RUN { prog: 0 })
@@ -398,8 +398,8 @@ orbital EcdsaOrbital {
                 (array/range 0 (* (if (== @payload.prog 1) 256 1) @len))
                 @entity.ms
                 (fn st k
-                  (let ((ins (array/nth @tape (or (math/mod @k @len) 0)))
-                        (t (math/floor (or (/ @k @len) 0))))
+                  (let ((ins (array/nth @tape (default (math/mod @k @len) 0)))
+                        (t (math/floor (default (/ @k @len) 0))))
                     (let ((op (array/nth @ins 0))
                           (d (array/nth @ins 1))
                           (a (array/nth @ins 2))

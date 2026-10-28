@@ -70,11 +70,11 @@ orbital AgentContextOrbital {
         (set @entity.lastSize 0)
       COMPACT -> ready when (<= (array/len ?messages) @config.keepMessages)
         (set @entity.lastSize (array/len ?messages))
-        (emit COMPACTED { messages: ?messages, instructions: (str/default ?instructions ""), tools: (object/get ? tools []), ephemeral: (if ?ephemeral true false) })
+        (emit COMPACTED { messages: ?messages, instructions: (default ?instructions ""), tools: (object/get ? tools []), ephemeral: (if ?ephemeral true false) })
       COMPACT -> summarizing when (> (array/len ?messages) @config.keepMessages)
         (set @entity.lastSize (array/len ?messages))
         (set @entity.pendingMessages ?messages)
-        (set @entity.pendingInstructions (str/default ?instructions ""))
+        (set @entity.pendingInstructions (default ?instructions ""))
         (set @entity.pendingTools (object/get ? tools []))
         (set @entity.pendingEphemeral (if ?ephemeral true false))
         (emit LLM_SUMMARIZE {

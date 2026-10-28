@@ -84,7 +84,7 @@ orbital OrbLintBindingTraitsOrbital {
       (array/flatten
         (array/map @roots
           (fn x
-            (let ((hs (or (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
+            (let ((hs (default (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
   (if (and (str/startsWith @n @tP) (>= (str/len @n) 6)) [{ rel: "", s: @n, rd: false }] @nohits)
   (if (validate/array @n)
     (let ((op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
@@ -124,7 +124,7 @@ orbital OrbLintBindingTraitsOrbital {
       (let ((trts : [BtTrait] (object/get (array/nth @orbitals @oi) "traits" [])))
         (let ((inl (array/filter (array/range 0 (array/len @trts)) (fn ti (object/has (array/nth @trts @ti) "stateMachine")))))
           (let ((names : [string] (array/map @inl (fn ti (object/get (array/nth @trts @ti) "name" "")))))
-            (let ((adj : Map string [string] (or (object/fromEntries (array/map @inl (fn ti
+            (let ((adj : Map string [string] (default (object/fromEntries (array/map @inl (fn ti
                     (let ((t (array/nth @trts @ti)))
                       [(object/get @t "name" ""),
                        (array/unique (array/flatten (array/map

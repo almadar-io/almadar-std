@@ -81,7 +81,7 @@ orbital OrbSuperviseOrbital {
       SUPERVISE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (= (array/len @entity.command) 0) (!= (array/first @entity.command) "orb") (and (!= (object/get @payload.flags "debounce") null) (not (validate/pattern (array/last (object/get @payload.flags "debounce")) "^[0-9]+$"))))
         (emit SUPERVISE_ANSWERED { status: 400, body: "usage: orb supervise [--watch <glob>]... [--debounce <ms>] -- orb <args>..." })
       SUPERVISE_ARGS_DONE -> running when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (> (array/len @entity.command) 0) (= (array/first @entity.command) "orb") (or (= (object/get @payload.flags "debounce") null) (validate/pattern (array/last (object/get @payload.flags "debounce")) "^[0-9]+$")))
-        (set @entity.watches (or (object/get @payload.flags "watch") []))
+        (set @entity.watches (default (object/get @payload.flags "watch") []))
         (set @entity.debounce (if (!= (object/get @payload.flags "debounce") null) (str/to-number (array/last (object/get @payload.flags "debounce"))) @config.debounceMs))
         (set @entity.cursor 0)
         (emit SUPERVISE_BOOT { })
@@ -101,7 +101,7 @@ orbital OrbSuperviseOrbital {
       SUPERVISE_CHANGED -> running
         (emit SUPERVISE_RESTART { index: 0 })
       SUPERVISE_WATCH_FAILED -> stopping
-        (set @entity.pending (str/concat "watch failed: " (or @payload.error "host failure")))
+        (set @entity.pending (str/concat "watch failed: " (default @payload.error "host failure")))
         (emit SUPERVISE_STOP { })
       SUPERVISE_SIGNALLED -> stopping
         (set @entity.pending "")

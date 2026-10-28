@@ -73,14 +73,14 @@ orbital OrbLintHttpSiteOrbital {
      (if (or (= @t null) (= (object/get @t "stateMachine" null) null))
       []
       (let ((st (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tname (object/get @t "name")) (dispatch (object/get @t "dispatch" "")))
-       (let ((trans (or (object/get (object/get @t "stateMachine") "transitions" []) [])) (ticks (or (object/get @t "ticks" []) [])))
+       (let ((trans (default (object/get (object/get @t "stateMachine") "transitions" []) [])) (ticks (default (object/get @t "ticks" []) [])))
         (let ((grps (array/concat
-                      (array/map (array/zip (array/range 0 (array/len @trans)) @trans) (fn q { kind: "t", i: (array/nth @q 0), label: (object/get (array/nth @q 1) "event"), bg: false, effs: (or (object/get (array/nth @q 1) "effects" []) []) }))
-                      (array/map (array/zip (array/range 0 (array/len @ticks)) @ticks) (fn q { kind: "k", i: (array/nth @q 0), label: (object/get (array/nth @q 1) "name"), bg: (object/get (array/nth @q 1) "runsInBackground" false), effs: (or (object/get (array/nth @q 1) "effects" []) []) })))))
+                      (array/map (array/zip (array/range 0 (array/len @trans)) @trans) (fn q { kind: "t", i: (array/nth @q 0), label: (object/get (array/nth @q 1) "event"), bg: false, effs: (default (object/get (array/nth @q 1) "effects" []) []) }))
+                      (array/map (array/zip (array/range 0 (array/len @ticks)) @ticks) (fn q { kind: "k", i: (array/nth @q 0), label: (object/get (array/nth @q 1) "name"), bg: (object/get (array/nth @q 1) "runsInBackground" false), effs: (default (object/get (array/nth @q 1) "effects" []) []) })))))
          (let ((gis (array/map @grps (fn g
                  (let ((effs (object/get @g "effs")))
-                  (let ((cls (array/map @effs (fn eff (if (tree/fold @eff (fn (hn hk) (if (validate/string @hn) (= @hn "http") (if (validate/array @hk) (array/includes @hk true) (array/some (object/keys @hk) (fn hq (object/get @hk @hq)))))) HsVal) (array/map (object/get (or (as (tree/index @eff ["http"]) HsIndex) {}) "http" []) (fn c
-  (let ((n (or (as (object/get @c "node") HsNode) [])))
+                  (let ((cls (array/map @effs (fn eff (if (tree/fold @eff (fn (hn hk) (if (validate/string @hn) (= @hn "http") (if (validate/array @hk) (array/includes @hk true) (array/some (object/keys @hk) (fn hq (= (object/get @hk @hq) true)))))) HsVal) (array/map (object/get (default (as (tree/index @eff ["http"]) HsIndex) {}) "http" []) (fn c
+  (let ((n (default (as (object/get @c "node") HsNode) [])))
     (let ((r (if (> (array/len @n) 4) (array/nth @n 4) null)))
       (if (validate/object @r) (if (object/has @r "auth") "keyed" "keyless") (if (= @r null) "keyless" "opaque")))))) @nos)))))
                    { kind: (object/get @g "kind"), i: (object/get @g "i"), label: (object/get @g "label"), bg: (object/get @g "bg"),
@@ -89,7 +89,7 @@ orbital OrbLintHttpSiteOrbital {
   (let ((nob : [boolean] []) (nos : [string] []))
     (if (validate/array @n)
       (let ((len (array/len @n)) (h (if (> (array/len @n) 0) (array/first @n) null)) (kids @k))
-        (let ((anyf (array/some @kids (fn c (object/get @c "f")))) (chs (array/map @kids (fn c (object/get @c "h")))))
+        (let ((anyf (array/some @kids (fn c (= (object/get @c "f") true)))) (chs (array/map @kids (fn c (object/get @c "h")))))
           (if (and (validate/string @h) (array/includes ["if", "when"] @h) (>= @len 3))
             (let ((cn (array/nth @n 1)))
               (let ((live (not (object/get (tree/fold @cn (fn (c kk)

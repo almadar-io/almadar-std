@@ -83,7 +83,7 @@ orbital OrbShellCheckOrbital {
         (emit SHELL_CHECK_ANSWERED { status: 400, body: "usage: orb shell check [ROOT] [--json]", errors: [] })
       SC_ARGS_DONE -> listingRoot when (and (= (array/len @payload.errors) 0) (<= (array/len @payload.positionals) 1))
         (set @entity.root (if (= (array/len @payload.positionals) 0) "." (array/first @payload.positionals)))
-        (set @entity.json (> (array/len (or (object/get @payload.flags "json") [])) 0))
+        (set @entity.json (> (array/len (default (object/get @payload.flags "json") [])) 0))
         (set @entity.packs [])
         (os/list-dir { anchor: "cwd", path: @entity.root } { key: "root", emit: { success: SC_ROOT_LISTED, failure: SC_IO_FAILED } })
     }
@@ -139,7 +139,7 @@ orbital OrbShellCheckOrbital {
       SC_IO_FAILED -> ready
         (emit SHELL_CHECK_ANSWERED { status: 500, body: (str/concat "shell layout read failed: " @payload.error), errors: [(str/concat "shell layout read failed: " @payload.error)] })
       SC_ROLE_READ -> scanning
-        (set @entity.packs (let ((text (bytes/to-string @payload.data))) (if (= @text null) @entity.packs (array/append @entity.packs { path: (object/get @entity.current "path"), role: (str/default (object/get (json/parse @text ShellRoleDescriptor) "role") ""), empty: (= (array/len (array/filter @entity.entries (fn entry (!= (object/get @entry "name") @config.descriptor)))) 0) }))))
+        (set @entity.packs (let ((text (bytes/to-string @payload.data))) (if (= @text null) @entity.packs (array/append @entity.packs { path: (object/get @entity.current "path"), role: (default (object/get (json/parse @text ShellRoleDescriptor) "role") ""), empty: (= (array/len (array/filter @entity.entries (fn entry (!= (object/get @entry "name") @config.descriptor)))) 0) }))))
         (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit SC_IO_FAILED { error: (str/concat (object/get @entity.current "path") " is not readable text") }) (emit SC_NEXT { })))
     }
 

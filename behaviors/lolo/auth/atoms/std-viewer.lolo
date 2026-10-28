@@ -29,19 +29,19 @@ orbital ViewerOrbital {
       INIT -> idle
 
       VIEWER_RESOLVE -> idle when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), verified: (or @payload.verified null), sourceKind: @payload.sourceKind, sourceFields: (or @payload.sourceFields []) }))
+        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), verified: (or @payload.verified null), sourceKind: @payload.sourceKind, sourceFields: (default @payload.sourceFields []) }))
         (emit VIEWER_PUMP {})
       VIEWER_RESOLVE -> idle when (>= (array/len @entity.queue) @config.maxQueue)
-        (emit VIEWER_REFUSED { requestId: (or @payload.requestId 0), reason: "busy" })
+        (emit VIEWER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
       VIEWER_PUMP -> idle when (= (array/len @entity.queue) 0)
       VIEWER_NEXT -> idle
         (emit VIEWER_PUMP {})
       VIEWER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (not (array/includes ["none", "claims", "directory"] (object/get (array/first @entity.queue) "sourceKind"))))
-        (emit VIEWER_REFUSED { requestId: (or (object/get (array/first @entity.queue) "requestId") 0), reason: "source" })
+        (emit VIEWER_REFUSED { requestId: (default (object/get (array/first @entity.queue) "requestId") 0), reason: "source" })
         (set @entity.queue (array/slice @entity.queue 1))
         (emit VIEWER_NEXT {})
       VIEWER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (array/includes ["none", "claims", "directory"] (object/get (array/first @entity.queue) "sourceKind")) (= (object/get (array/first @entity.queue) "verified") null))
-        (emit VIEWER_RESOLVED { requestId: (or (object/get (array/first @entity.queue) "requestId") 0), viewer: { id: "anonymous", role: "anonymous", permissions: [], claims: [] } })
+        (emit VIEWER_RESOLVED { requestId: (default (object/get (array/first @entity.queue) "requestId") 0), viewer: { id: "anonymous", role: "anonymous", permissions: [], claims: [] } })
         (set @entity.queue (array/slice @entity.queue 1))
         (emit VIEWER_NEXT {})
       VIEWER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "sourceKind") "none") (!= (object/get (array/first @entity.queue) "verified") null))
@@ -49,7 +49,7 @@ orbital ViewerOrbital {
           (let ((tok @job.verified))
             (let ((named (array/filter @tok.claims (fn c (= (object/get @c "name") "role")))))
               (do
-                (emit VIEWER_RESOLVED { requestId: (or (object/get @job "requestId") 0), viewer: (if (> (array/len @named) 0) { id: @tok.uid, email: @tok.email, name: @tok.name, role: (object/get (array/first @named) "value" ""), permissions: [], claims: (array/append @tok.claims { name: "uid", value: @tok.uid }) } { id: @tok.uid, email: @tok.email, name: @tok.name, permissions: [], claims: (array/append @tok.claims { name: "uid", value: @tok.uid }) }) })
+                (emit VIEWER_RESOLVED { requestId: (default (object/get @job "requestId") 0), viewer: (if (> (array/len @named) 0) { id: @tok.uid, email: @tok.email, name: @tok.name, role: (object/get (array/first @named) "value" ""), permissions: [], claims: (array/append @tok.claims { name: "uid", value: @tok.uid }) } { id: @tok.uid, email: @tok.email, name: @tok.name, permissions: [], claims: (array/append @tok.claims { name: "uid", value: @tok.uid }) }) })
                 (set @entity.queue (array/slice @entity.queue 1))
                 (emit VIEWER_NEXT {})))))
       VIEWER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "sourceKind") "claims") (!= (object/get (array/first @entity.queue) "verified") null))
@@ -58,13 +58,13 @@ orbital ViewerOrbital {
             (let ((read (array/filter @tok.claims (fn c (array/includes @declared (object/get @c "name"))))))
               (let ((named (array/filter @read (fn c (= (object/get @c "name") "role")))))
                 (do
-                  (emit VIEWER_RESOLVED { requestId: (or (object/get @job "requestId") 0), viewer: (if (> (array/len @named) 0) { id: @tok.uid, email: @tok.email, name: @tok.name, role: (object/get (array/first @named) "value" ""), permissions: [], claims: @read } { id: @tok.uid, email: @tok.email, name: @tok.name, permissions: [], claims: @read }) })
+                  (emit VIEWER_RESOLVED { requestId: (default (object/get @job "requestId") 0), viewer: (if (> (array/len @named) 0) { id: @tok.uid, email: @tok.email, name: @tok.name, role: (object/get (array/first @named) "value" ""), permissions: [], claims: @read } { id: @tok.uid, email: @tok.email, name: @tok.name, permissions: [], claims: @read }) })
                   (set @entity.queue (array/slice @entity.queue 1))
                   (emit VIEWER_NEXT {}))))))
       VIEWER_PUMP -> looking when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "sourceKind") "directory") (!= (object/get (array/first @entity.queue) "verified") null))
         (let ((job (array/first @entity.queue)))
           (do
-            (set @entity.requestId (or (object/get @job "requestId") 0))
+            (set @entity.requestId (default (object/get @job "requestId") 0))
             (set @entity.verified (object/get @job "verified"))
             (set @entity.queue (array/slice @entity.queue 1))
             (fetch ViewerRow { id: (object/get (object/get @job "verified") "uid"), emit: { success: DIRECTORY_FOUND, failure: DIRECTORY_ABSENT } })))
@@ -74,9 +74,9 @@ orbital ViewerOrbital {
       INIT -> idle
 
       VIEWER_RESOLVE -> looking when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), verified: (or @payload.verified null), sourceKind: @payload.sourceKind, sourceFields: (or @payload.sourceFields []) }))
+        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), verified: (or @payload.verified null), sourceKind: @payload.sourceKind, sourceFields: (default @payload.sourceFields []) }))
       VIEWER_RESOLVE -> looking when (>= (array/len @entity.queue) @config.maxQueue)
-        (emit VIEWER_REFUSED { requestId: (or @payload.requestId 0), reason: "busy" })
+        (emit VIEWER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
       DIRECTORY_ABSENT -> idle when (= @payload.code "not-found")
         (emit VIEWER_RESOLVED { requestId: @entity.requestId, viewer: { id: @entity.verified.uid, email: @entity.verified.email, name: @entity.verified.name, permissions: [], claims: [] } })
         (emit VIEWER_PUMP {})

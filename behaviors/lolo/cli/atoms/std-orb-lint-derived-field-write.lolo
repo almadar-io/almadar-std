@@ -52,13 +52,13 @@ orbital OrbLintDerivedFieldWriteOrbital {
         (let ((trans (object/get (object/get @t "stateMachine" {}) "transitions" []))
               (lname (object/get @t "linkedEntity" "")))
          (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ni
-          (let ((hits (or (as (or (tree/fold (object/get (array/nth @trans @ni) "effects" []) (fn (n k)
+          (let ((hits (default (as (default (tree/fold (object/get (array/nth @trans @ni) "effects" []) (fn (n k)
                  (if (validate/array @n)
-                  (let ((l (or (as @n IxNodes) [])))
-                   (let ((h (if (> (array/len @l) 0) (or (as (array/nth @l 0) IxStr) "") ""))
-                         (a1 (if (> (array/len @l) 1) (or (as (array/nth @l 1) IxStr) "") ""))
-                         (a2 (if (> (array/len @l) 2) (or (as (array/nth @l 2) IxStr) "") ""))
-                         (last (if (> (array/len @l) 0) (or (as (array/last @l) IxObj) {}) {})))
+                  (let ((l (default (as @n IxNodes) [])))
+                   (let ((h (if (> (array/len @l) 0) (default (as (array/nth @l 0) IxStr) "") ""))
+                         (a1 (if (> (array/len @l) 1) (default (as (array/nth @l 1) IxStr) "") ""))
+                         (a2 (if (> (array/len @l) 2) (default (as (array/nth @l 2) IxStr) "") ""))
+                         (last (if (> (array/len @l) 0) (default (as (array/last @l) IxObj) {}) {})))
                     (array/concat
                      (if (and (= @h "set") (str/startsWith @a1 (quote "@entity.")) (array/includes (object/get @derivedOf @lname []) (str/slice @a1 8)))
                       [{ k: "set", e: @lname, f: (str/slice @a1 8) }]

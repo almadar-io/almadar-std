@@ -213,7 +213,7 @@ orbital RiggerOrbital {
       RIGGER_POSE_UNREACHABLE -> idle
         (emit RIGGER_POSE_FAILED { code: null, message: @payload.error })
 
-      RIGGER_GENERATE -> idle when (and (or (= @payload.model "z-image-turbo") (= @payload.model "kontext")) (or (!= @payload.model "kontext") (!= (or @payload.sourcePath "") "")))
+      RIGGER_GENERATE -> idle when (and (or (= @payload.model "z-image-turbo") (= @payload.model "kontext")) (or (!= @payload.model "kontext") (!= (default @payload.sourcePath "") "")))
         (http POST @config.origin "/generate" {
           headers: { Accept: "application/json", Content-Type: "application/json" },
           json: (object/merge { model: @payload.model, prompt: @payload.prompt, outDir: @payload.outDir } (if (= @payload.seed null) {} { seed: @payload.seed }) (if (= @payload.size null) {} { size: @payload.size }) (if (= @payload.steps null) {} { steps: @payload.steps }) (if (= @payload.sourcePath null) {} { sourcePath: @payload.sourcePath })),
@@ -221,7 +221,7 @@ orbital RiggerOrbital {
         } { emit: { success: RIGGER_GENERATE_REPLIED, failure: RIGGER_GENERATE_UNREACHABLE } })
       RIGGER_GENERATE -> idle when (and (!= @payload.model "z-image-turbo") (!= @payload.model "kontext"))
         (emit RIGGER_GENERATE_FAILED { code: "VALIDATION_ERROR", message: "Validation failed for rigger.generate: params: model must be one of z-image-turbo, kontext" })
-      RIGGER_GENERATE -> idle when (and (= @payload.model "kontext") (= (or @payload.sourcePath "") ""))
+      RIGGER_GENERATE -> idle when (and (= @payload.model "kontext") (= (default @payload.sourcePath "") ""))
         (emit RIGGER_GENERATE_FAILED { code: "VALIDATION_ERROR", message: "Validation failed for rigger.generate: params: sourcePath is required when model is kontext" })
       RIGGER_GENERATE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (let ((r (json/parse @payload.body RiggerGenerated)))

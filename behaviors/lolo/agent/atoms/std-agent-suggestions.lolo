@@ -239,17 +239,17 @@ orbital AgentSuggestionsOrbital {
       INIT -> ready
       PROPOSE_SUGGESTION -> ready when (and (> (array/len @config.allowedKinds) 0) (not (array/includes @config.allowedKinds ?kind)))
         (emit SUGGESTION_REJECTED { reason: (str/concat "Unknown kind \"" ?kind "\". Allowed kinds: " (str/join @config.allowedKinds ", ")) })
-      PROPOSE_SUGGESTION -> ready when (and (or (= (array/len @config.allowedKinds) 0) (array/includes @config.allowedKinds ?kind)) (> (array/len @config.allowedActions) 0) (not (array/includes @config.allowedActions (str/default ?action ""))))
-        (emit SUGGESTION_REJECTED { reason: (str/concat "Unknown action \"" (str/default ?action "") "\". Allowed actions: " (str/join @config.allowedActions ", ")) })
-      PROPOSE_SUGGESTION -> ready when (and (or (= (array/len @config.allowedKinds) 0) (array/includes @config.allowedKinds ?kind)) (or (= (array/len @config.allowedActions) 0) (array/includes @config.allowedActions (str/default ?action ""))))
+      PROPOSE_SUGGESTION -> ready when (and (or (= (array/len @config.allowedKinds) 0) (array/includes @config.allowedKinds ?kind)) (> (array/len @config.allowedActions) 0) (not (array/includes @config.allowedActions (default ?action ""))))
+        (emit SUGGESTION_REJECTED { reason: (str/concat "Unknown action \"" (default ?action "") "\". Allowed actions: " (str/join @config.allowedActions ", ")) })
+      PROPOSE_SUGGESTION -> ready when (and (or (= (array/len @config.allowedKinds) 0) (array/includes @config.allowedKinds ?kind)) (or (= (array/len @config.allowedActions) 0) (array/includes @config.allowedActions (default ?action ""))))
         (set @entity.pendingProposal {
           kind: ?kind
           title: ?title
-          body: (str/default ?body "")
-          action: (str/default ?action "")
-          href: (str/default ?href "")
+          body: (default ?body "")
+          action: (default ?action "")
+          href: (default ?href "")
           subject: ?subject
-          signature: (str/concat ?kind ":" (str/default ?action "") ":" ?subject)
+          signature: (str/concat ?kind ":" (default ?action "") ":" ?subject)
           payload: (if (== ?payload null) {} ?payload)
         })
         (fetch AgentSuggestion {
@@ -601,7 +601,7 @@ orbital AgentSuggestionsOrbital {
         } {
           emit: { failure: SuggestionResolveFailed, success: SuggestionAccepted }
         })
-      SuggestionAccepted -> open when (= (str/default ?href "") "")
+      SuggestionAccepted -> open when (= (default ?href "") "")
         (emit SUGGESTION_ACCEPTED { id: ?id, kind: ?kind, action: ?action, href: ?href, subject: ?subject, payload: ?payload })
         (set @entity.page 1)
         (fetch AgentSuggestion {
@@ -611,7 +611,7 @@ orbital AgentSuggestionsOrbital {
           offset: 0
           orderBy: "createdAt:desc"
         })
-      SuggestionAccepted -> open when (not (= (str/default ?href "") ""))
+      SuggestionAccepted -> open when (not (= (default ?href "") ""))
         (emit SUGGESTION_ACCEPTED { id: ?id, kind: ?kind, action: ?action, href: ?href, subject: ?subject, payload: ?payload })
         (set @entity.page 1)
         (fetch AgentSuggestion {

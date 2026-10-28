@@ -22,7 +22,7 @@ orbital OrbValueLeavesOrbital {
         (set @entity.semantics @payload.semantics)
         (set @entity.functions @payload.functions)
       VALUE_LEAVES_ASK -> ready
-        (let ((sem @entity.semantics) (nl : FiredLf { lf: [], ll: [] }) (fnSet (or (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
+        (let ((sem @entity.semantics) (nl : FiredLf { lf: [], ll: [] }) (fnSet (default (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
           (emit VALUE_LEAVES { requestId: @payload.requestId, leaves: (array/map @payload.values (fn v
             (if (validate/array @v)
               (let ((sr (tree/fold @v (fn (n k)

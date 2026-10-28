@@ -76,7 +76,7 @@ orbital OrbReferenceOrbital {
       REFERENCE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 1))
         (emit REFERENCE_ANSWERED { status: 400, body: "usage: orb reference [TOPIC]" })
       REFERENCE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (<= (array/len @payload.positionals) 1))
-        (emit REFERENCE_START { topic: (str/default (array/first @payload.positionals) ""), cwd: @entity.cwd })
+        (emit REFERENCE_START { topic: (default (array/first @payload.positionals) ""), cwd: @entity.cwd })
     }
 
     state working {
@@ -145,18 +145,18 @@ orbital OrbReferenceOrbital {
       INIT -> loading
       REFERENCE_FAILED -> idle
         (emit REFERENCE_ANSWERED { status: 500, body: (str/concat "orb reference: " @payload.error) })
-      REFERENCE_MANIFEST -> idle when (or (= (object/get (json/parse (str/default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") null) (= (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "constructs") null) (= (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "validationCodes") null) (= (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "vocabulary") null))
+      REFERENCE_MANIFEST -> idle when (or (= (object/get (json/parse (default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") null) (= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "constructs") null) (= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "validationCodes") null) (= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "vocabulary") null))
         (emit REFERENCE_ANSWERED { status: 500, body: "orb reference: the installed @almadar/core declares no orbLanguage constructs, validationCodes and vocabulary" })
-      REFERENCE_MANIFEST -> loading when (and (!= (object/get (json/parse (str/default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") null) (!= (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "constructs") null) (!= (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "validationCodes") null) (!= (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "vocabulary") null))
-        (set @entity.constructsPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "constructs")))
-        (set @entity.codesPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "validationCodes")))
-        (os/read-file { anchor: "cwd" path: (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "vocabulary")) } { key: "vocabulary" emit: { success: REFERENCE_VOCABULARY, failure: REFERENCE_FAILED } })
+      REFERENCE_MANIFEST -> loading when (and (!= (object/get (json/parse (default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "constructs") null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "validationCodes") null) (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "vocabulary") null))
+        (set @entity.constructsPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "constructs")))
+        (set @entity.codesPath (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "validationCodes")))
+        (os/read-file { anchor: "cwd" path: (str/concat "node_modules/@almadar/core/" (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") RefCoreManifest) "orbLanguage") "vocabulary")) } { key: "vocabulary" emit: { success: REFERENCE_VOCABULARY, failure: REFERENCE_FAILED } })
       REFERENCE_VOCABULARY -> loading
-        (let ((vocab (json/parse (str/default (bytes/to-string @payload.data) "") RefVocabulary))) (if (= @vocab null) (emit REFERENCE_FAILED { error: "the language vocabulary file is not valid JSON of the expected shape" }) (do (set @entity.vocabulary @vocab) (os/read-file { anchor: "cwd" path: @entity.constructsPath } { key: "constructs", emit: { success: REFERENCE_CONSTRUCTS, failure: REFERENCE_FAILED } }))))
+        (let ((vocab (json/parse (default (bytes/to-string @payload.data) "") RefVocabulary))) (if (= @vocab null) (emit REFERENCE_FAILED { error: "the language vocabulary file is not valid JSON of the expected shape" }) (do (set @entity.vocabulary @vocab) (os/read-file { anchor: "cwd" path: @entity.constructsPath } { key: "constructs", emit: { success: REFERENCE_CONSTRUCTS, failure: REFERENCE_FAILED } }))))
       REFERENCE_CONSTRUCTS -> loading
-        (let ((constructs (json/parse (str/default (bytes/to-string @payload.data) "") RefConstructs))) (if (= @constructs null) (emit REFERENCE_FAILED { error: (str/concat @entity.constructsPath ": not valid JSON of the expected shape") }) (do (set @entity.constructs @constructs) (os/read-file { anchor: "cwd" path: @entity.codesPath } { key: "codes", emit: { success: REFERENCE_CODES, failure: REFERENCE_FAILED } }))))
+        (let ((constructs (json/parse (default (bytes/to-string @payload.data) "") RefConstructs))) (if (= @constructs null) (emit REFERENCE_FAILED { error: (str/concat @entity.constructsPath ": not valid JSON of the expected shape") }) (do (set @entity.constructs @constructs) (os/read-file { anchor: "cwd" path: @entity.codesPath } { key: "codes", emit: { success: REFERENCE_CODES, failure: REFERENCE_FAILED } }))))
       REFERENCE_CODES -> loading
-        (let ((codes (json/parse (str/default (bytes/to-string @payload.data) "") RefCodes))) (if (= @codes null) (emit REFERENCE_FAILED { error: (str/concat @entity.codesPath ": not valid JSON of the expected shape") }) (emit REFERENCE_RUN { topic: @entity.topic, vocabulary: @entity.vocabulary, constructs: @entity.constructs, codes: @codes })))
+        (let ((codes (json/parse (default (bytes/to-string @payload.data) "") RefCodes))) (if (= @codes null) (emit REFERENCE_FAILED { error: (str/concat @entity.codesPath ": not valid JSON of the expected shape") }) (emit REFERENCE_RUN { topic: @entity.topic, vocabulary: @entity.vocabulary, constructs: @entity.constructs, codes: @codes })))
       REFERENCE_RUN -> idle when (= @payload.topic "")
         (emit REFERENCE_ANSWERED { status: 200, body: (json/stringify { constructs: (array/map @payload.constructs (fn c { name: (object/get @c "name"), kind: (object/get @c "kind") })), vocabulary: @payload.vocabulary, codes: (array/map (array/sort (array/unique (array/map @payload.codes (fn c (object/get @c "category"))))) (fn cat { topic: (str/concat "codes/" @cat), count: (array/len (array/filter @payload.codes (fn c (= (object/get @c "category") @cat)))) })) }) })
       REFERENCE_RUN -> idle when (= @payload.topic "vocabulary")
@@ -194,10 +194,10 @@ orbital OrbReferenceOrbital {
       EXAMPLES_PACKAGES -> finding when (array/some @payload.result (fn p (= (object/get @p "prefix") "almadar-std")))
         (set @entity.stdTree (os/path-relative @entity.cwd (object/get (array/find @payload.result (fn p (= (object/get @p "prefix") "almadar-std"))) "root")))
         (os/read-file { anchor: "cwd" path: (os/path-join (os/path-relative @entity.cwd (object/get (array/find @payload.result (fn p (= (object/get @p "prefix") "almadar-std"))) "root")) "package.json") } { key: "stdmanifest" emit: { success: EXAMPLES_MANIFEST, failure: EXAMPLES_FAILED } })
-      EXAMPLES_MANIFEST -> idle when (= (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") RefPackageManifest) "orb") "source") null)
+      EXAMPLES_MANIFEST -> idle when (= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") RefPackageManifest) "orb") "source") null)
         (emit REFERENCE_ANSWERED { status: 500, body: "orb reference: the installed almadar-std ships a materialized registry, not a .lolo tree to cut examples from" })
-      EXAMPLES_MANIFEST -> finding when (!= (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") RefPackageManifest) "orb") "source") null)
-        (set @entity.dirs [(os/path-join @entity.stdTree (object/get (object/get (json/parse (str/default (bytes/to-string @payload.data) "") RefPackageManifest) "orb") "source"))])
+      EXAMPLES_MANIFEST -> finding when (!= (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") RefPackageManifest) "orb") "source") null)
+        (set @entity.dirs [(os/path-join @entity.stdTree (object/get (object/get (json/parse (default (bytes/to-string @payload.data) "") RefPackageManifest) "orb") "source"))])
         (emit EXAMPLES_WALK { })
       EXAMPLES_WALK -> finding when (< @entity.dcursor (array/len @entity.dirs))
         (os/list-dir { anchor: "cwd" path: (array/nth @entity.dirs @entity.dcursor) } { key: "dir" emit: { success: EXAMPLES_LISTED, failure: EXAMPLES_FAILED } })
@@ -237,7 +237,7 @@ orbital OrbReferenceOrbital {
       EXAMPLES_PRINTED -> finding when (< (+ @entity.jcursor 1) (array/len @entity.jobs))
         (set @entity.pseq (array/append @entity.pseq @entity.seen))
         (set @entity.ploc (array/append @entity.ploc (+ (* @entity.fcursor 1000000) @entity.jcursor)))
-        (let ((scan : RefScan (array/reduce (array/range (array/len @payload.result)) { lasts: @entity.lasts, keys: @entity.keys } (fn a i (let ((t (array/nth @payload.result @i)) (n (bytes/length (bytes/from-string (array/nth @payload.result @i))))) (let ((hk (str/concat "l" @n)) (h (or (hash/sha256 @t "hex" "text") @t))) { lasts: (object/set (object/get @a "lasts") @hk @h), keys: (if (= (object/get (object/get @a "lasts") @hk) @h) (object/get @a "keys") (array/append (object/get @a "keys") (+ (* @n 1000000000) @entity.seen @i))) }))))))
+        (let ((scan : RefScan (array/reduce (array/range (array/len @payload.result)) { lasts: @entity.lasts, keys: @entity.keys } (fn a i (let ((t (array/nth @payload.result @i)) (n (bytes/length (bytes/from-string (array/nth @payload.result @i))))) (let ((hk (str/concat "l" @n)) (h (default (hash/sha256 @t "hex" "text") @t))) { lasts: (object/set (object/get @a "lasts") @hk @h), keys: (if (= (object/get (object/get @a "lasts") @hk) @h) (object/get @a "keys") (array/append (object/get @a "keys") (+ (* @n 1000000000) @entity.seen @i))) }))))))
           (do
             (set @entity.lasts (object/get @scan "lasts"))
             (set @entity.keys (object/get @scan "keys"))))
@@ -247,7 +247,7 @@ orbital OrbReferenceOrbital {
       EXAMPLES_PRINTED -> finding when (and (>= (+ @entity.jcursor 1) (array/len @entity.jobs)) (< (+ @entity.fcursor 1) (array/len @entity.files)))
         (set @entity.pseq (array/append @entity.pseq @entity.seen))
         (set @entity.ploc (array/append @entity.ploc (+ (* @entity.fcursor 1000000) @entity.jcursor)))
-        (let ((scan : RefScan (array/reduce (array/range (array/len @payload.result)) { lasts: @entity.lasts, keys: @entity.keys } (fn a i (let ((t (array/nth @payload.result @i)) (n (bytes/length (bytes/from-string (array/nth @payload.result @i))))) (let ((hk (str/concat "l" @n)) (h (or (hash/sha256 @t "hex" "text") @t))) { lasts: (object/set (object/get @a "lasts") @hk @h), keys: (if (= (object/get (object/get @a "lasts") @hk) @h) (object/get @a "keys") (array/append (object/get @a "keys") (+ (* @n 1000000000) @entity.seen @i))) }))))))
+        (let ((scan : RefScan (array/reduce (array/range (array/len @payload.result)) { lasts: @entity.lasts, keys: @entity.keys } (fn a i (let ((t (array/nth @payload.result @i)) (n (bytes/length (bytes/from-string (array/nth @payload.result @i))))) (let ((hk (str/concat "l" @n)) (h (default (hash/sha256 @t "hex" "text") @t))) { lasts: (object/set (object/get @a "lasts") @hk @h), keys: (if (= (object/get (object/get @a "lasts") @hk) @h) (object/get @a "keys") (array/append (object/get @a "keys") (+ (* @n 1000000000) @entity.seen @i))) }))))))
           (do
             (set @entity.lasts (object/get @scan "lasts"))
             (set @entity.keys (object/get @scan "keys"))))
@@ -257,7 +257,7 @@ orbital OrbReferenceOrbital {
       EXAMPLES_PRINTED -> finding when (and (>= (+ @entity.jcursor 1) (array/len @entity.jobs)) (>= (+ @entity.fcursor 1) (array/len @entity.files)))
         (set @entity.pseq (array/append @entity.pseq @entity.seen))
         (set @entity.ploc (array/append @entity.ploc (+ (* @entity.fcursor 1000000) @entity.jcursor)))
-        (let ((scan : RefScan (array/reduce (array/range (array/len @payload.result)) { lasts: @entity.lasts, keys: @entity.keys } (fn a i (let ((t (array/nth @payload.result @i)) (n (bytes/length (bytes/from-string (array/nth @payload.result @i))))) (let ((hk (str/concat "l" @n)) (h (or (hash/sha256 @t "hex" "text") @t))) { lasts: (object/set (object/get @a "lasts") @hk @h), keys: (if (= (object/get (object/get @a "lasts") @hk) @h) (object/get @a "keys") (array/append (object/get @a "keys") (+ (* @n 1000000000) @entity.seen @i))) }))))))
+        (let ((scan : RefScan (array/reduce (array/range (array/len @payload.result)) { lasts: @entity.lasts, keys: @entity.keys } (fn a i (let ((t (array/nth @payload.result @i)) (n (bytes/length (bytes/from-string (array/nth @payload.result @i))))) (let ((hk (str/concat "l" @n)) (h (default (hash/sha256 @t "hex" "text") @t))) { lasts: (object/set (object/get @a "lasts") @hk @h), keys: (if (= (object/get (object/get @a "lasts") @hk) @h) (object/get @a "keys") (array/append (object/get @a "keys") (+ (* @n 1000000000) @entity.seen @i))) }))))))
           (do
             (set @entity.lasts (object/get @scan "lasts"))
             (set @entity.keys (object/get @scan "keys"))))

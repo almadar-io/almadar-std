@@ -50,7 +50,7 @@ orbital OrbLaunchpadOrbital {
       LAUNCHPAD_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0))
         (emit LAUNCHPAD_ANSWERED { status: 400, body: "", stderr: "usage: orb launchpad [--port N] [--host H]" })
       LAUNCHPAD_ARGS_DONE -> parsing when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
-        (emit LAUNCHPAD_START { portText: (array/first (or (object/get @payload.flags "port") ["3030"])), portOk: (and (>= (str/to-number (array/first (or (object/get @payload.flags "port") ["3030"]))) 0) (<= (str/to-number (array/first (or (object/get @payload.flags "port") ["3030"]))) 65535) (= (str/to-int (array/first (or (object/get @payload.flags "port") ["3030"]))) (str/to-number (array/first (or (object/get @payload.flags "port") ["3030"]))))), host: (array/first (or (object/get @payload.flags "host") ["127.0.0.1"])) })
+        (emit LAUNCHPAD_START { portText: (array/first (default (object/get @payload.flags "port") ["3030"])), portOk: (and (>= (str/to-number (array/first (default (object/get @payload.flags "port") ["3030"]))) 0) (<= (str/to-number (array/first (default (object/get @payload.flags "port") ["3030"]))) 65535) (= (str/to-int (array/first (default (object/get @payload.flags "port") ["3030"]))) (str/to-number (array/first (default (object/get @payload.flags "port") ["3030"]))))), host: (array/first (default (object/get @payload.flags "host") ["127.0.0.1"])) })
       LAUNCHPAD_START -> ready when (not @payload.portOk)
         (emit LAUNCHPAD_ANSWERED { status: 400, body: "", stderr: (str/concat "error: invalid value '" @payload.portText "' for '--port <PORT>': not an integer from 0 to 65535") })
       LAUNCHPAD_START -> locating when @payload.portOk

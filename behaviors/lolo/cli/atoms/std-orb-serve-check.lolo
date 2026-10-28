@@ -93,8 +93,8 @@ orbital OrbServeCheckOrbital {
         (emit SERVE_CHECK_ANSWERED { status: 400, body: "usage: orb serve-check PROGRAM [--port N] [--cwd DIR]" })
       SC_ARGS_DONE -> starting when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
         (set @entity.program (array/first @payload.positionals))
-        (set @entity.workDir (if (> (array/len (or (object/get @payload.flags "cwd") [])) 0) (array/first (object/get @payload.flags "cwd")) (str/concat @entity.invokeCwd "/packages/almadar-std")))
-        (set @entity.port (if (> (array/len (or (object/get @payload.flags "port") [])) 0) (array/first (object/get @payload.flags "port")) ""))
+        (set @entity.workDir (if (> (array/len (default (object/get @payload.flags "cwd") [])) 0) (array/first (object/get @payload.flags "cwd")) (str/concat @entity.invokeCwd "/packages/almadar-std")))
+        (set @entity.port (if (> (array/len (default (object/get @payload.flags "port") [])) 0) (array/first (object/get @payload.flags "port")) ""))
         (set @entity.report "")
         (set @entity.failed false)
         (os/getenv "ORB_BIN" { key: "orbbin" emit: { success: SC_ORBBIN, failure: SC_HOST_FAILED } })
@@ -103,12 +103,12 @@ orbital OrbServeCheckOrbital {
     state starting {
       INIT -> starting
       SC_HOST_FAILED -> ready
-        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/concat "FAIL  host: " (or @payload.error "")) })
+        (emit SERVE_CHECK_ANSWERED { status: 500, body: (str/concat "FAIL  host: " (default @payload.error "")) })
       SC_ORBBIN -> starting when (!= @entity.port "")
-        (set @entity.orbBin (if (= (or @payload.value "") "") "orb" @payload.value))
+        (set @entity.orbBin (if (= (default @payload.value "") "") "orb" @payload.value))
         (emit SC_START { })
       SC_ORBBIN -> starting when (= @entity.port "")
-        (set @entity.orbBin (if (= (or @payload.value "") "") "orb" @payload.value))
+        (set @entity.orbBin (if (= (default @payload.value "") "") "orb" @payload.value))
         (emit SC_PY_RUN { stage: "port" argv: ["-c", "import socket; s=socket.socket(); s.bind((chr(49)+chr(50)+chr(55)+chr(46)+chr(48)+chr(46)+chr(48)+chr(46)+chr(49),0)); print(s.getsockname()[1])"] })
       SC_PY_DONE -> starting when (and (= @payload.stage "port") (= @payload.exitCode 0))
         (set @entity.port (str/trim @payload.stdout))

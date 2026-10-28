@@ -98,7 +98,7 @@ orbital OrbLintEventWiringOrbital {
                 (bc @entity.byControl) (be @entity.byEffect) (pc @entity.pControl) (pe @entity.pEffect)
                 (bus @entity.busExcluded)
                 (names @entity.names)
-                (nameSet (or (object/fromEntries (array/map @entity.names (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
+                (nameSet (default (object/fromEntries (array/map @entity.names (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
                 (orbitals (object/get @entity.program "orbitals" [])))
             (let ((recs (array/flatten (array/map @orbitals (fn o
   (let ((on (object/get @o "name" "")))
@@ -203,15 +203,15 @@ orbital OrbLintEventWiringOrbital {
                     (lisEvs (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "ls") (fn l (!= (object/get @l "scope") "external"))) (fn l (object/get @l "event")))))))
                     (psAll (array/flatten (array/map @recs (fn r (object/get @r "ps"))))))
                 (let ((emU : [EwPair] (let ((g : EwPairMap (array/groupBy @emPairs "ek"))) (array/map (array/sort (array/unique (array/map @emPairs (fn p (object/get @p "key"))))) (fn kk (array/first (object/get @g (str/replaceAll (str/replaceAll @kk "~" "~t") "." "~d")))))))
-                      (emSet (or (object/fromEntries (array/map @emPairs (fn x [ (str/replaceAll (str/replaceAll (object/get @x "ev") "~" "~t") "." "~d"), true]))) {}))
-                      (softSet (or (object/fromEntries (array/map @softEvs (fn x [ (str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
-                      (trigSet (or (object/fromEntries (array/map @trigEvs (fn x [ (str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
-                      (lisSet (or (object/fromEntries (array/map @lisEvs (fn x [ (str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
-                      (impSet (or (object/fromEntries (array/map (array/filter @recs (fn r (object/get @r "imp"))) (fn x [(object/get @x "n"), true]))) {}))
-                      (dynSet (or (object/fromEntries (array/map (array/filter @recs (fn r (object/get @r "dyn"))) (fn x [(object/get @x "n"), true]))) {}))
-                      (expSet (or (object/fromEntries (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "em") (fn x (= (object/get @x "scope") "external"))) (fn x [ (str/replaceAll (str/replaceAll (str/concat (object/get @r "n") "|" (object/get @x "event")) "~" "~t") "." "~d"), true])))))) {}))
-                      (csSet (or (object/fromEntries (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "em") (fn x (and (= (object/get @x "scope") "external") (object/get @x "ovr")))) (fn x [ (str/replaceAll (str/replaceAll (str/concat (object/get @r "n") "|" (object/get @x "event")) "~" "~t") "." "~d"), true])))))) {}))
-                      (offSet (or (object/fromEntries (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "em") (fn x (object/get @x "knob"))) (fn x [ (str/replaceAll (str/replaceAll (str/concat (object/get @r "n") "|" (object/get @x "event")) "~" "~t") "." "~d"), true])))))) {})))
+                      (emSet (default (object/fromEntries (array/map @emPairs (fn x [ (str/replaceAll (str/replaceAll (object/get @x "ev") "~" "~t") "." "~d"), true]))) {}))
+                      (softSet (default (object/fromEntries (array/map @softEvs (fn x [ (str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
+                      (trigSet (default (object/fromEntries (array/map @trigEvs (fn x [ (str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
+                      (lisSet (default (object/fromEntries (array/map @lisEvs (fn x [ (str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
+                      (impSet (default (object/fromEntries (array/map (array/filter @recs (fn r (object/get @r "imp"))) (fn x [(object/get @x "n"), true]))) {}))
+                      (dynSet (default (object/fromEntries (array/map (array/filter @recs (fn r (object/get @r "dyn"))) (fn x [(object/get @x "n"), true]))) {}))
+                      (expSet (default (object/fromEntries (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "em") (fn x (= (object/get @x "scope") "external"))) (fn x [ (str/replaceAll (str/replaceAll (str/concat (object/get @r "n") "|" (object/get @x "event")) "~" "~t") "." "~d"), true])))))) {}))
+                      (csSet (default (object/fromEntries (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "em") (fn x (and (= (object/get @x "scope") "external") (object/get @x "ovr")))) (fn x [ (str/replaceAll (str/replaceAll (str/concat (object/get @r "n") "|" (object/get @x "event")) "~" "~t") "." "~d"), true])))))) {}))
+                      (offSet (default (object/fromEntries (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "em") (fn x (object/get @x "knob"))) (fn x [ (str/replaceAll (str/replaceAll (str/concat (object/get @r "n") "|" (object/get @x "event")) "~" "~t") "." "~d"), true])))))) {})))
                   (let ((orphanPairs : [EwPair] (let ((ol : [EwPair] (array/flatten (array/map @recs (fn r (array/map (array/filter (object/get @r "ls") (fn l (and (!= (object/get @l "scope") "external") (!= (object/get @l "kind") "any") (!= (object/get @l "kind") "orbital") (not (object/has @emSet (str/replaceAll (str/replaceAll (object/get @l "event") "~" "~t") "." "~d"))) (not (object/has @softSet (str/replaceAll (str/replaceAll (object/get @l "event") "~" "~t") "." "~d"))) (not (object/has @trigSet (str/replaceAll (str/replaceAll (object/get @l "event") "~" "~t") "." "~d")))))) (fn l { ev: (object/get @l "event"), t: (object/get @r "n"), key: (str/concat (object/get @l "event") "|" (object/get @r "n")), ek: (str/replaceAll (str/replaceAll (str/concat (object/get @l "event") "|" (object/get @r "n")) "~" "~t") "." "~d") }))))))) (let ((g : EwPairMap (array/groupBy @ol "ek"))) (array/map (array/sort (array/unique (array/map @ol (fn p (object/get @p "key"))))) (fn kk (array/first (object/get @g (str/replaceAll (str/replaceAll @kk "~" "~t") "." "~d"))))))))
                         (byOrb : EwRecMap (array/groupBy @recs "o")))
                     (array/concat
@@ -230,7 +230,7 @@ orbital OrbLintEventWiringOrbital {
                       (array/flatten (array/map @orbitals (fn o
                         (let ((on (object/get @o "name" "")))
                           (let ((gs : [EwRec] (object/get @byOrb @on @norec)))
-                            (let ((fmap : EwStrMap (or (object/fromEntries (array/map @gs (fn r [(object/get @r "n"), (array/unique (array/concat (array/filter (object/get @r "fe") (fn e (array/includes (object/get @be (object/get @r "n") @nos) @e))) (object/get @r "ae")))]))) {})))
+                            (let ((fmap : EwStrMap (default (object/fromEntries (array/map @gs (fn r [(object/get @r "n"), (array/unique (array/concat (array/filter (object/get @r "fe") (fn e (array/includes (object/get @be (object/get @r "n") @nos) @e))) (object/get @r "ae")))]))) {})))
                               (array/flatten (array/map @gs (fn em
                                 (let ((en (object/get @em "n")))
                                   (array/flatten (array/map (array/sort (object/get @fmap @en @nos)) (fn ev

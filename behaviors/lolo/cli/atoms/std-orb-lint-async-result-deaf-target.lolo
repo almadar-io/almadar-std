@@ -58,10 +58,10 @@ orbital OrbLintAsyncResultDeafTargetOrbital {
                       (let ((trans (object/get (object/get @t "stateMachine") "transitions" [])))
                         (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
                           (let ((tr (array/nth @trans @i)))
-                            (let ((froms (or (as (let ((f (object/get @tr "from" ""))) (if (validate/array @f) @f [@f])) AdNames) [])) (to (object/get @tr "to" "")))
+                            (let ((froms (default (as (let ((f (object/get @tr "from" ""))) (if (validate/array @f) @f [@f])) AdNames) [])) (to (object/get @tr "to" "")))
                               (if (array/includes @froms @to)
                                 []
-                                (let ((results (array/unique (or (as (let ((ix (or (as (tree/index (object/get @tr "effects" []) ["fetch" "persist"]) FbIndex) {})))
+                                (let ((results (array/unique (default (as (let ((ix (default (as (tree/index (object/get @tr "effects" []) ["fetch" "persist"]) FbIndex) {})))
                                           (array/flatten (array/map (array/filter (array/concat (object/get @ix "fetch" []) (object/get @ix "persist" [])) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c
                                             (let ((n (object/get @c "node" null)))
                                               (if (validate/array @n)
@@ -73,7 +73,7 @@ orbital OrbLintAsyncResultDeafTargetOrbital {
                                                         (array/take [""] 0)))
                                                     (array/take [""] 0)))))
                                                 [])))))) AdNames) []))))
-                                  (let ((handled (array/map (array/filter @trans (fn a (or (array/includes (or (as (let ((f (object/get @a "from" ""))) (if (validate/array @f) @f [@f])) AdNames) []) @to) (array/includes (or (as (let ((f (object/get @a "from" ""))) (if (validate/array @f) @f [@f])) AdNames) []) "*")))) (fn a (object/get @a "event" "")))))
+                                  (let ((handled (array/map (array/filter @trans (fn a (or (array/includes (default (as (let ((f (object/get @a "from" ""))) (if (validate/array @f) @f [@f])) AdNames) []) @to) (array/includes (default (as (let ((f (object/get @a "from" ""))) (if (validate/array @f) @f [@f])) AdNames) []) "*")))) (fn a (object/get @a "event" "")))))
                                     (let ((deaf (array/sort (array/filter @results (fn r (not (array/includes @handled @r)))))))
                                       (if (= (array/len @deaf) 0)
                                         []

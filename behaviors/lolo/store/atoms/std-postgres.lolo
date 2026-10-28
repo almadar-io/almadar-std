@@ -19,8 +19,8 @@ orbital PostgresOrbital {
 
       PG_QUERY -> idle when (!= @payload.sql "")
         (if @config.authenticated
-          (postgres @config.origin @payload.sql (or @payload.params []) { auth: @config.password, user: @config.user, database: (if (!= @config.database "") @config.database null), tls: @config.tls, timeoutMs: @config.statementTimeoutMs } { key: "query", emit: { success: PG_QUERIED, failure: PG_CALL_FAILED } })
-          (postgres @config.origin @payload.sql (or @payload.params []) { user: @config.user, database: (if (!= @config.database "") @config.database null), tls: @config.tls, timeoutMs: @config.statementTimeoutMs } { key: "query", emit: { success: PG_QUERIED, failure: PG_CALL_FAILED } }))
+          (postgres @config.origin @payload.sql (default @payload.params []) { auth: @config.password, user: @config.user, database: (if (!= @config.database "") @config.database null), tls: @config.tls, timeoutMs: @config.statementTimeoutMs } { key: "query", emit: { success: PG_QUERIED, failure: PG_CALL_FAILED } })
+          (postgres @config.origin @payload.sql (default @payload.params []) { user: @config.user, database: (if (!= @config.database "") @config.database null), tls: @config.tls, timeoutMs: @config.statementTimeoutMs } { key: "query", emit: { success: PG_QUERIED, failure: PG_CALL_FAILED } }))
       PG_QUERY -> idle when (= @payload.sql "")
         (emit PG_FAILED { kind: "refused", code: null, message: "sql is required" })
       PG_QUERIED -> idle

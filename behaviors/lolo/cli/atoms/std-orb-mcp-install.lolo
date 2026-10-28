@@ -55,9 +55,9 @@ orbital OrbMcpInstallOrbital {
       INIT -> parsing
       MCP_ARGS_UNREAD -> ready
         (emit MCP_INSTALL_ANSWERED { status: 500, body: "Error: the call's arguments could not be read" })
-      MCP_ARGS_DONE -> ready when (not (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (array/includes ["claude", "cursor", "vscode"] (array/first (or (object/get @payload.flags "client") [])))))
+      MCP_ARGS_DONE -> ready when (not (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (array/includes ["claude", "cursor", "vscode"] (array/first (default (object/get @payload.flags "client") [])))))
         (emit MCP_INSTALL_ANSWERED { status: 400, body: "usage: orb mcp install --client <claude|cursor|vscode>" })
-      MCP_ARGS_DONE -> probing when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (array/includes ["claude", "cursor", "vscode"] (array/first (or (object/get @payload.flags "client") []))))
+      MCP_ARGS_DONE -> probing when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0) (array/includes ["claude", "cursor", "vscode"] (array/first (default (object/get @payload.flags "client") []))))
         (set @entity.client (array/first (object/get @payload.flags "client")))
         (set @entity.dir (if (= @entity.client "cursor") ".cursor" (if (= @entity.client "vscode") ".vscode" "")))
         (set @entity.path (if (= @entity.dir "") ".mcp.json" (str/concat @entity.dir "/mcp.json")))
@@ -80,10 +80,10 @@ orbital OrbMcpInstallOrbital {
       INIT -> reading
       MCP_HOST_FAILED -> ready
         (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path ": " @payload.error) })
-      MCP_READ -> ready when (not (and (json/valid (str/default (bytes/to-string @payload.data) "")) (str/startsWith (str/trim (str/default (bytes/to-string @payload.data) "")) "{") (!= (json/parse (str/default (bytes/to-string @payload.data) "") McpConfig) null)))
+      MCP_READ -> ready when (not (and (json/valid (default (bytes/to-string @payload.data) "")) (str/startsWith (str/trim (default (bytes/to-string @payload.data) "")) "{") (!= (json/parse (default (bytes/to-string @payload.data) "") McpConfig) null)))
         (emit MCP_INSTALL_ANSWERED { status: 500, body: (str/concat @entity.cwd "/" @entity.path) })
-      MCP_READ -> writing when (and (json/valid (str/default (bytes/to-string @payload.data) "")) (str/startsWith (str/trim (str/default (bytes/to-string @payload.data) "")) "{") (!= (json/parse (str/default (bytes/to-string @payload.data) "") McpConfig) null))
-        (set @entity.config (json/parse (str/default (bytes/to-string @payload.data) "") McpConfig))
+      MCP_READ -> writing when (and (json/valid (default (bytes/to-string @payload.data) "")) (str/startsWith (str/trim (default (bytes/to-string @payload.data) "")) "{") (!= (json/parse (default (bytes/to-string @payload.data) "") McpConfig) null))
+        (set @entity.config (json/parse (default (bytes/to-string @payload.data) "") McpConfig))
         (emit MCP_MERGE { })
     }
 

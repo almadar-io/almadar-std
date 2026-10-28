@@ -33,9 +33,9 @@ orbital CiRunLogsOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (not (and @config.loadOnInit (!= (str/default @payload.runId "") "")))
+      INIT -> idle when (not (and @config.loadOnInit (!= (default @payload.runId "") "")))
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: "No run log read yet." })
-      INIT -> idle when (and @config.loadOnInit (!= (str/default @payload.runId "") ""))
+      INIT -> idle when (and @config.loadOnInit (!= (default @payload.runId "") ""))
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Reading the log of run " @payload.runId "…") })
         (emit CI_LOGS_LOAD { owner: @payload.owner, repo: @payload.repo, runId: @payload.runId })
       CI_LOGS_LOAD -> reading

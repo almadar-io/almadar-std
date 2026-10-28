@@ -31,19 +31,19 @@ orbital ApiKeyVerifierOrbital {
       INIT -> idle
 
       VERIFY_KEY -> idle when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), token: @payload.token }))
+        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), token: @payload.token }))
         (emit KEY_PUMP {})
       VERIFY_KEY -> idle when (>= (array/len @entity.queue) @config.maxQueue)
-        (emit API_KEY_REFUSED { requestId: (or @payload.requestId 0), reason: "busy", message: "too many API keys waiting" })
+        (emit API_KEY_REFUSED { requestId: (default @payload.requestId 0), reason: "busy", message: "too many API keys waiting" })
       KEY_PUMP -> idle when (= (array/len @entity.queue) 0)
       KEY_PUMP -> idle when (and (> (array/len @entity.queue) 0) (!= (str/slice (object/get (array/first @entity.queue) "token") 0 (str/len @config.prefix)) @config.prefix))
-        (emit API_KEY_REFUSED { requestId: (or (object/get (array/first @entity.queue) "requestId") 0), reason: "not-a-key", message: "not an API key" })
+        (emit API_KEY_REFUSED { requestId: (default (object/get (array/first @entity.queue) "requestId") 0), reason: "not-a-key", message: "not an API key" })
         (set @entity.queue (array/slice @entity.queue 1))
         (emit KEY_NEXT {})
       KEY_NEXT -> idle
         (emit KEY_PUMP {})
       KEY_PUMP -> looking when (and (> (array/len @entity.queue) 0) (= (str/slice (object/get (array/first @entity.queue) "token") 0 (str/len @config.prefix)) @config.prefix))
-        (let ((tok (object/get (array/first @entity.queue) "token")) (rq (or (object/get (array/first @entity.queue) "requestId") 0)))
+        (let ((tok (object/get (array/first @entity.queue) "token")) (rq (default (object/get (array/first @entity.queue) "requestId") 0)))
           (do
             (set @entity.requestId @rq)
             (set @entity.queue (array/slice @entity.queue 1))
@@ -59,9 +59,9 @@ orbital ApiKeyVerifierOrbital {
       INIT -> idle
 
       VERIFY_KEY -> looking when (< (array/len @entity.queue) @config.maxQueue)
-        (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), token: @payload.token }))
+        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), token: @payload.token }))
       VERIFY_KEY -> looking when (>= (array/len @entity.queue) @config.maxQueue)
-        (emit API_KEY_REFUSED { requestId: (or @payload.requestId 0), reason: "busy", message: "too many API keys waiting" })
+        (emit API_KEY_REFUSED { requestId: (default @payload.requestId 0), reason: "busy", message: "too many API keys waiting" })
       SALT_UNUSABLE -> idle
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "salt", message: "the API key salt must be non-empty hex" })
         (emit KEY_PUMP {})
@@ -71,16 +71,16 @@ orbital ApiKeyVerifierOrbital {
       KEY_ABSENT -> idle when (!= @payload.code "not-found")
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "lookup", message: @payload.error })
         (emit KEY_PUMP {})
-      KEY_FOUND -> idle when (= (or @payload.data.owner "") "")
+      KEY_FOUND -> idle when (= (default @payload.data.owner "") "")
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "lookup", message: (str/concat "the API key row " @entity.keyHash " names no owner") })
         (emit KEY_PUMP {})
-      KEY_FOUND -> idle when (and (!= (or @payload.data.owner "") "") (= @payload.data.revoked true))
+      KEY_FOUND -> idle when (and (!= (default @payload.data.owner "") "") (= @payload.data.revoked true))
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "revoked", message: "revoked API key" })
         (emit KEY_PUMP {})
-      KEY_FOUND -> idle when (and (!= (or @payload.data.owner "") "") (!= @payload.data.revoked true) (> (or @payload.data.expiresAt 0) 0) (<= (or @payload.data.expiresAt 0) @now))
+      KEY_FOUND -> idle when (and (!= (default @payload.data.owner "") "") (!= @payload.data.revoked true) (> (default @payload.data.expiresAt 0) 0) (<= (default @payload.data.expiresAt 0) @now))
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "expired", message: "expired API key" })
         (emit KEY_PUMP {})
-      KEY_FOUND -> idle when (and (!= (or @payload.data.owner "") "") (!= @payload.data.revoked true) (not (and (> (or @payload.data.expiresAt 0) 0) (<= (or @payload.data.expiresAt 0) @now))))
+      KEY_FOUND -> idle when (and (!= (default @payload.data.owner "") "") (!= @payload.data.revoked true) (not (and (> (default @payload.data.expiresAt 0) 0) (<= (default @payload.data.expiresAt 0) @now))))
         (emit API_KEY_VERIFIED { requestId: @entity.requestId, owner: @payload.data.owner, claims: (array/map (object/entries (object/omit @payload.data ["id", "owner", "revoked", "expiresAt"])) (fn e { name: (array/nth @e 0), value: (str/concat (array/nth @e 1)) })) })
         (emit KEY_PUMP {})
     }

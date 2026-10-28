@@ -47,12 +47,12 @@ orbital SseOrbital {
 
       SSE_SEND -> serving when (not (array/includes @entity.open @payload.requestId))
         (emit SSE_REFUSED { requestId: @payload.requestId, kind: "closed", error: "no open stream has this id" })
-      SSE_SEND -> serving when (and (array/includes @entity.open @payload.requestId) (not (and (validate/pattern (or @payload.event "") @config.linePattern) (validate/pattern (or @payload.id "") @config.idPattern) (validate/pattern @payload.data @config.dataPattern))))
+      SSE_SEND -> serving when (and (array/includes @entity.open @payload.requestId) (not (and (validate/pattern (default @payload.event "") @config.linePattern) (validate/pattern (default @payload.id "") @config.idPattern) (validate/pattern @payload.data @config.dataPattern))))
         (emit SSE_REFUSED { requestId: @payload.requestId, kind: "invalid", error: "event and id take no CR or LF, id no NUL, data no CR" })
-      SSE_SEND -> serving when (and (array/includes @entity.open @payload.requestId) (validate/pattern (or @payload.event "") @config.linePattern) (validate/pattern (or @payload.id "") @config.idPattern) (validate/pattern @payload.data @config.dataPattern))
+      SSE_SEND -> serving when (and (array/includes @entity.open @payload.requestId) (validate/pattern (default @payload.event "") @config.linePattern) (validate/pattern (default @payload.id "") @config.idPattern) (validate/pattern @payload.data @config.dataPattern))
         (emit RESPOND_CHUNK { requestId: @payload.requestId, body: (bytes/from-string (str/concat
-          (if (> (str/len (or @payload.id "")) 0) (str/concat "id: " @payload.id "\n") "")
-          (if (> (str/len (or @payload.event "")) 0) (str/concat "event: " @payload.event "\n") "")
+          (if (> (str/len (default @payload.id "")) 0) (str/concat "id: " @payload.id "\n") "")
+          (if (> (str/len (default @payload.event "")) 0) (str/concat "event: " @payload.event "\n") "")
           (str/join (array/map (str/split @payload.data "\n") (fn l (str/concat "data: " @l "\n"))) "")
           "\n")) })
 

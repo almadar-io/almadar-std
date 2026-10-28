@@ -60,9 +60,9 @@ orbital PackageRegistryOrbital {
       INIT -> serving
       REQUEST_RECEIVED -> serving when (and (str/startsWith @payload.path (str/concat @config.apiPrefix "/packages/")) (not @entity.busy))
         (set @entity.busy true)
-        (emit REGISTRY_ENTER { requestId: @payload.requestId, method: @payload.method, path: @payload.path, authorization: (or (object/get @payload.headers "authorization") ""), body: (or @payload.body (bytes/from-string "")) })
+        (emit REGISTRY_ENTER { requestId: @payload.requestId, method: @payload.method, path: @payload.path, authorization: (default (object/get @payload.headers "authorization") ""), body: (or @payload.body (bytes/from-string "")) })
       REQUEST_RECEIVED -> serving when (and (str/startsWith @payload.path (str/concat @config.apiPrefix "/packages/")) @entity.busy)
-        (set @entity.queue (array/append @entity.queue { requestId: @payload.requestId, method: @payload.method, path: @payload.path, authorization: (or (object/get @payload.headers "authorization") ""), body: (or @payload.body (bytes/from-string "")) }))
+        (set @entity.queue (array/append @entity.queue { requestId: @payload.requestId, method: @payload.method, path: @payload.path, authorization: (default (object/get @payload.headers "authorization") ""), body: (or @payload.body (bytes/from-string "")) }))
       REGISTRY_DONE -> serving when (= (array/len @entity.queue) 0)
         (set @entity.busy false)
       REGISTRY_DONE -> serving when (> (array/len @entity.queue) 0)

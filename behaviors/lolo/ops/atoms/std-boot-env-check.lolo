@@ -19,27 +19,27 @@ orbital BootEnvCheckOrbital {
       INIT -> ready
 
       ENV_CHECK -> ready
-        (let ((e @payload.env) (provider (or @payload.env.authProvider "firebase")))
+        (let ((e @payload.env) (provider (default @payload.env.authProvider "firebase")))
           (let ((auth (if (not (array/includes ["firebase", "oidc"] @provider))
                         [(str/concat "AUTH_PROVIDER must be one of firebase, oidc, got '" @provider "'")]
                         (array/concat
-                          (if (!= (or @e.firebaseAuthEmulatorHost "") "") ["FIREBASE_AUTH_EMULATOR_HOST is set: the Auth emulator is for local dev only"] [])
+                          (if (!= (default @e.firebaseAuthEmulatorHost "") "") ["FIREBASE_AUTH_EMULATOR_HOST is set: the Auth emulator is for local dev only"] [])
                           (if (= @provider "firebase")
                             (array/concat
-                              (if (and (= (or @e.firebaseProjectId "") "") (= (or @e.firebaseServiceAccountPath "") "")) ["AUTH_PROVIDER=firebase needs FIREBASE_PROJECT_ID (with FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY or application-default credentials) or FIREBASE_SERVICE_ACCOUNT_PATH"] [])
-                              (if (str/startsWith (or @e.firebaseProjectId "") "demo-") [(str/concat "FIREBASE_PROJECT_ID=" @e.firebaseProjectId " is an emulator-only demo project")] []))
+                              (if (and (= (default @e.firebaseProjectId "") "") (= (default @e.firebaseServiceAccountPath "") "")) ["AUTH_PROVIDER=firebase needs FIREBASE_PROJECT_ID (with FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY or application-default credentials) or FIREBASE_SERVICE_ACCOUNT_PATH"] [])
+                              (if (str/startsWith (default @e.firebaseProjectId "") "demo-") [(str/concat "FIREBASE_PROJECT_ID=" @e.firebaseProjectId " is an emulator-only demo project")] []))
                             (array/concat
-                              (if (= (or @e.oidcIssuerUrl "") "") ["AUTH_PROVIDER=oidc needs OIDC_ISSUER_URL"] [])
-                              (if (= (or @e.oidcAudience "") "") ["AUTH_PROVIDER=oidc needs OIDC_AUDIENCE"] []))))))
-                (fire (if (and @payload.production (!= (or @e.firestoreEmulatorHost "") "")) ["FIRESTORE_EMULATOR_HOST is set: the Firestore emulator is for local dev only"] []))
+                              (if (= (default @e.oidcIssuerUrl "") "") ["AUTH_PROVIDER=oidc needs OIDC_ISSUER_URL"] [])
+                              (if (= (default @e.oidcAudience "") "") ["AUTH_PROVIDER=oidc needs OIDC_AUDIENCE"] []))))))
+                (fire (if (and @payload.production (!= (default @e.firestoreEmulatorHost "") "")) ["FIRESTORE_EMULATOR_HOST is set: the Firestore emulator is for local dev only"] []))
                 (mocked (or @payload.mock (or @e.integrationsMock false))))
             (let ((creds (if @mocked [] (array/concat
-                            (array/map (or @payload.missingCredentials []) (fn m (str/concat "missing required integration credential " @m)))
-                            (if (!= (or @payload.catalogError "") "") [(str/concat "the declared integration credentials could not be read: " @payload.catalogError)] [])))))
+                            (array/map (default @payload.missingCredentials []) (fn m (str/concat "missing required integration credential " @m)))
+                            (if (!= (default @payload.catalogError "") "") [(str/concat "the declared integration credentials could not be read: " @payload.catalogError)] [])))))
               (let ((all (array/concat @auth @fire @creds)))
                 (do
                   (set @entity.problems @all)
-                  (emit ENV_CHECKED { requestId: (or @payload.requestId 0), problems: @all, ok: (= (array/len @all) 0) }))))))
+                  (emit ENV_CHECKED { requestId: (default @payload.requestId 0), problems: @all, ok: (= (array/len @all) 0) }))))))
     }
 
     emits {

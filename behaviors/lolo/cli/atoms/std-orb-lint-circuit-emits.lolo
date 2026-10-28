@@ -48,8 +48,8 @@ orbital OrbLintCircuitEmitsOrbital {
                 (notr : [CeTransition] [])
                 (nohit : [CeHit] [])
                 (nr : CeR { s: [], c: 0, m: false, p: false, en: false, h: [] })
-                (busSet (or (object/fromEntries (array/map @entity.busExcluded (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
-                (nameSet (or (object/fromEntries (array/map @entity.names (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
+                (busSet (default (object/fromEntries (array/map @entity.busExcluded (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
+                (nameSet (default (object/fromEntries (array/map @entity.names (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
             (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn (o oi)
               (array/flatten (array/map (object/get @o "traits" []) (fn (t ti)
                 (if (not (object/has @t "stateMachine")) @nof
@@ -63,7 +63,7 @@ orbital OrbLintCircuitEmitsOrbital {
                               (array/concat
                                 (array/concat
                                   (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
-                                    (let ((evs (array/flatten (array/map (array/filter (object/get (or (as (tree/index (let ((e (array/nth @effs @ej))) (if (validate/array @e) @e [])) ["emit"]) CeIndex) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (if (and (validate/array @n) (>= (array/len @n) 2)) (let ((ev (array/nth @n 1))) (if (validate/string @ev) (if (object/has @busSet (str/replaceAll (str/replaceAll @ev "~" "~t") "." "~d")) [@ev] @nos) @nos)) @nos)))))))
+                                    (let ((evs (array/flatten (array/map (array/filter (object/get (default (as (tree/index (let ((e (array/nth @effs @ej))) (if (validate/array @e) @e [])) ["emit"]) CeIndex) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (if (and (validate/array @n) (>= (array/len @n) 2)) (let ((ev (array/nth @n 1))) (if (validate/string @ev) (if (object/has @busSet (str/replaceAll (str/replaceAll @ev "~" "~t") "." "~d")) [@ev] @nos) @nos)) @nos)))))))
  (array/map @evs (fn ev
                                         { code: "ORB_CIRCUIT_LIFECYCLE_EMIT_UNDELIVERED", path: (str/concat @ep @ej "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " emits lifecycle event '" @ev "' — the bus never delivers it"), suggestion: "route a named event whose arm re-enters via `EVENT -> ...`, or inline the target state's own effects directly into this arm; lifecycle events are never delivered through (emit ...)", severity: "error" }))))))
                                   (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
@@ -89,9 +89,9 @@ orbital OrbLintCircuitEmitsOrbital {
                                             @nof))
                                         @nof))))))
                                 (if (not (array/some @tl (fn t2 (and (= (object/get @t2 "e") (object/get @x "e")) (array/includes (object/get @t2 "f") (object/get @x "to")))))) @nof
-                                  (let ((mut (array/some (array/filter (object/get (or (as (tree/index (if (validate/array @effs) @effs []) ["set"]) CeIndex) {}) "set" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (and (validate/array @n) (>= (array/len @n) 2) (let ((tg (array/nth @n 1))) (if (validate/string @tg) (or (= @tg (quote "@entity")) (str/startsWith @tg (quote "@entity."))) false))))))))
+                                  (let ((mut (array/some (array/filter (object/get (default (as (tree/index (if (validate/array @effs) @effs []) ["set"]) CeIndex) {}) "set" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (and (validate/array @n) (>= (array/len @n) 2) (let ((tg (array/nth @n 1))) (if (validate/string @tg) (or (= @tg (quote "@entity")) (str/startsWith @tg (quote "@entity."))) false))))))))
                                     (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
-(let ((cnt (array/reduce (array/filter (object/get (or (as (tree/index (let ((e (array/nth @effs @ej))) (if (validate/array @e) @e [])) ["emit"]) CeIndex) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) 0 (fn (acc c) (+ @acc (let ((n (object/get @c "node"))) (if (and (validate/array @n) (>= (array/len @n) 2) (let ((h1 (array/nth @n 1))) (if (validate/string @h1) (= @h1 (object/get @x "e")) false)))
+(let ((cnt (array/reduce (array/filter (object/get (default (as (tree/index (let ((e (array/nth @effs @ej))) (if (validate/array @e) @e [])) ["emit"]) CeIndex) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) 0 (fn (acc c) (+ @acc (let ((n (object/get @c "node"))) (if (and (validate/array @n) (>= (array/len @n) 2) (let ((h1 (array/nth @n 1))) (if (validate/string @h1) (= @h1 (object/get @x "e")) false)))
                                                             (if (< (array/len @n) 3) 1
                                                               (let ((pl (array/nth @n 2)))
                                                                 (let ((pf (object/get (let ((q3 (tree/fold @pl (fn (n2 k2)

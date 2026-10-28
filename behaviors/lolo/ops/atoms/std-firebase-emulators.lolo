@@ -105,7 +105,7 @@ orbital FirebaseEmulatorsOrbital {
       EMULATORS_JAVA_CHECKED -> starting when @payload.ok
         (os/getenv "PATH" { emit: { success: EMULATORS_PATH failure: EMULATORS_HOST_FAILED } })
       EMULATORS_PATH -> starting
-        (set @entity.hostPath (str/concat @entity.javaHome "/bin:" (or @payload.value "")))
+        (set @entity.hostPath (str/concat @entity.javaHome "/bin:" (default @payload.value "")))
         (os/mkdir "~/.almadar/emulator-data/" true { emit: { success: EMULATORS_DIR_READY failure: EMULATORS_HOST_FAILED } })
       EMULATORS_DIR_READY -> starting
         (os/write-file "~/.almadar/emulator-data/firebase.json" (bytes/from-string (json/stringify { emulators: { ui: { enabled: false } singleProjectMode: { enabled: true } firestore: { host: "127.0.0.1" port: 8080 } auth: { host: "127.0.0.1" port: 9099 } } firestore: { rules: "firestore.rules" } })) { emit: { success: EMULATORS_CONFIG_WRITTEN failure: EMULATORS_HOST_FAILED } })
@@ -124,13 +124,13 @@ orbital FirebaseEmulatorsOrbital {
         (set @entity.deadline (+ @now 120000))
         (set @entity.pollDueAt (+ @now 500))
       EMULATORS_SPAWN_FAILED -> idle
-        (emit EMULATORS_FAILED { code: "emulators_spawn_failed" message: (str/concat "firebase did not start (it needs firebase-tools on the PATH): " (or @payload.error "")) })
+        (emit EMULATORS_FAILED { code: "emulators_spawn_failed" message: (str/concat "firebase did not start (it needs firebase-tools on the PATH): " (default @payload.error "")) })
       EMULATORS_POLL -> starting
         (set @entity.pollDueAt 0)
         (emit EMULATORS_PROBE { })
       EMULATORS_HOST_FAILED -> idle
         (set @entity.pollDueAt 0)
-        (emit EMULATORS_FAILED { code: "emulators_host_failed" message: (or @payload.error "") })
+        (emit EMULATORS_FAILED { code: "emulators_host_failed" message: (default @payload.error "") })
     }
 
     ticks {

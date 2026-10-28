@@ -29,10 +29,10 @@ orbital LaunchpadRecentsOrbital {
       INIT -> ready
       RECENTS_LOAD -> ready
         (os/read-file "~/.almadar/launchpad/recents.json" { key: "recents" emit: { success: RECENTS_READ, failure: RECENTS_READ_FAILED } })
-      RECENTS_READ -> ready when (= (json/parse (or (bytes/to-string ?data) "") RecentEntries) null)
+      RECENTS_READ -> ready when (= (json/parse (default (bytes/to-string ?data) "") RecentEntries) null)
         (emit RECENTS_FAILED { error: "the recents file is not a list of launches" })
-      RECENTS_READ -> ready when (!= (json/parse (or (bytes/to-string ?data) "") RecentEntries) null)
-        (set @entity.items (json/parse (or (bytes/to-string ?data) "") RecentEntries))
+      RECENTS_READ -> ready when (!= (json/parse (default (bytes/to-string ?data) "") RecentEntries) null)
+        (set @entity.items (json/parse (default (bytes/to-string ?data) "") RecentEntries))
         (emit RECENTS_LOADED { items: @entity.items })
       RECENTS_READ_FAILED -> ready when (= ?kind "not-found")
         (set @entity.items [])

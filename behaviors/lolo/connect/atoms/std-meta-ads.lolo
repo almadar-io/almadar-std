@@ -22,13 +22,13 @@ orbital MetaAdsOrbital {
     state idle {
       INIT -> idle
 
-      META_ADS_GET_SPEND -> idle when (= (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
+      META_ADS_GET_SPEND -> idle when (= (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
         (emit META_ADS_FAILED { code: null, message: "No ad account: pass `accountId` or set META_AD_ACCOUNT_ID" })
-      META_ADS_GET_SPEND -> idle when (!= (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
+      META_ADS_GET_SPEND -> idle when (!= (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
         (http GET @config.origin
           (str/concat "/" @config.apiVersion "/"
-            (if (str/startsWith (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "act_") "" "act_")
-            (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId)
+            (if (str/startsWith (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "act_") "" "act_")
+            (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId)
             "/insights")
           {
             query: {
@@ -45,7 +45,7 @@ orbital MetaAdsOrbital {
       META_ADS_SPEND_REPLIED -> idle when (and (< @payload.status 500) (or (< @payload.status 200) (>= @payload.status 300)))
         (emit META_ADS_FAILED { code: null, message: (str/concat "Meta Graph API error: " (or (object/get (json/parse @payload.body MetaErrorReply) "error.message" null) (format/number @payload.status))) })
       META_ADS_SPEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((row (array/first (or (object/get (json/parse @payload.body MetaInsightsReply) data []) []))))
+        (let ((row (array/first (default (object/get (json/parse @payload.body MetaInsightsReply) data []) []))))
           (emit META_ADS_SPEND_RESULT {
             spend: (if (= (str/trim (object/get @row spend "")) "") 0 (object/get (json/parse (str/concat "{\"v\":" (object/get @row spend "") "}") MetaCount) v null)),
             currency: (object/get @row account_currency ""),
@@ -59,18 +59,18 @@ orbital MetaAdsOrbital {
       META_ADS_SPEND_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (!= @payload.kind "timeout"))
         (emit META_ADS_FAILED { code: null, message: "fetch failed" })
 
-      META_ADS_LIST_CAMPAIGNS -> idle when (= (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
+      META_ADS_LIST_CAMPAIGNS -> idle when (= (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
         (emit META_ADS_FAILED { code: null, message: "No ad account: pass `accountId` or set META_AD_ACCOUNT_ID" })
-      META_ADS_LIST_CAMPAIGNS -> idle when (!= (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
+      META_ADS_LIST_CAMPAIGNS -> idle when (!= (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
         (http GET @config.origin
           (str/concat "/" @config.apiVersion "/"
-            (if (str/startsWith (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "act_") "" "act_")
-            (if (!= (or @payload.accountId "") "") @payload.accountId @config.defaultAccountId)
+            (if (str/startsWith (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "act_") "" "act_")
+            (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId)
             "/campaigns")
           {
             query: {
               fields: "id,name,status,daily_budget",
-              effective_status: (if (!= (or @payload.status "") "") (json/stringify [@payload.status]) null)
+              effective_status: (if (!= (default @payload.status "") "") (json/stringify [@payload.status]) null)
             },
             headers: { Accept: "*/*" },
             auth: { scheme: api-key, credential: @config.accessToken, name: "access_token", in: query },
@@ -82,11 +82,11 @@ orbital MetaAdsOrbital {
         (emit META_ADS_FAILED { code: null, message: (str/concat "Meta Graph API error: " (or (object/get (json/parse @payload.body MetaErrorReply) "error.message" null) (format/number @payload.status))) })
       META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (not (json/valid @payload.body)))
         (emit META_ADS_FAILED { code: "MALFORMED_REPLY", message: "Meta Graph API replied with a body that is not valid JSON" })
-      META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (not (validate/array (or (object/get (json/parse @payload.body MetaCampaignsReply) data []) []))))
+      META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (not (validate/array (default (object/get (json/parse @payload.body MetaCampaignsReply) data []) []))))
         (emit META_ADS_FAILED { code: "MALFORMED_REPLY", message: "Meta Graph API replied with campaigns that are not a list" })
-      META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (validate/array (or (object/get (json/parse @payload.body MetaCampaignsReply) data []) [])))
+      META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (validate/array (default (object/get (json/parse @payload.body MetaCampaignsReply) data []) [])))
         (emit META_ADS_CAMPAIGNS_RESULT {
-          campaigns: (array/map (or (object/get (json/parse @payload.body MetaCampaignsReply) data []) []) (fn row {
+          campaigns: (array/map (default (object/get (json/parse @payload.body MetaCampaignsReply) data []) []) (fn row {
             id: (object/get @row id ""),
             name: (object/get @row name ""),
             status: (object/get @row status ""),

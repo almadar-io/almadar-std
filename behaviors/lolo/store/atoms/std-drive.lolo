@@ -36,7 +36,7 @@ orbital DriveOrbital {
       DRIVE_LIST_FILES -> idle
         (http GET @config.origin "/drive/v3/files" {
           headers: { Accept: "*/*" },
-          query: { q: (str/concat "trashed = false" (if (!= (or @payload.folderId "") "") (str/concat " and '" (str/replaceAll @payload.folderId "'" "\\'") "' in parents") "") (if (!= (or @payload.query "") "") (str/concat " and " @payload.query) "")), pageSize: (if (= (or @payload.maxResults 0) 0) 100 @payload.maxResults), fields: "files(id, name, mimeType, size, modifiedTime, webViewLink)" },
+          query: { q: (str/concat "trashed = false" (if (!= (default @payload.folderId "") "") (str/concat " and '" (str/replaceAll @payload.folderId "'" "\\'") "' in parents") "") (if (!= (default @payload.query "") "") (str/concat " and " @payload.query) "")), pageSize: (if (= (default @payload.maxResults 0) 0) 100 @payload.maxResults), fields: "files(id, name, mimeType, size, modifiedTime, webViewLink)" },
           queryEncoding: rfc3986,
           retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 },
           auth: {
@@ -55,7 +55,7 @@ orbital DriveOrbital {
       DRIVE_LIST_FILES_AS_USER -> idle
         (http GET @config.origin "/drive/v3/files" {
           headers: { Accept: "*/*" },
-          query: { q: (str/concat "trashed = false" (if (!= (or @payload.folderId "") "") (str/concat " and '" (str/replaceAll @payload.folderId "'" "\\'") "' in parents") "") (if (!= (or @payload.query "") "") (str/concat " and " @payload.query) "")), pageSize: (if (= (or @payload.maxResults 0) 0) 100 @payload.maxResults), fields: "files(id, name, mimeType, size, modifiedTime, webViewLink)" },
+          query: { q: (str/concat "trashed = false" (if (!= (default @payload.folderId "") "") (str/concat " and '" (str/replaceAll @payload.folderId "'" "\\'") "' in parents") "") (if (!= (default @payload.query "") "") (str/concat " and " @payload.query) "")), pageSize: (if (= (default @payload.maxResults 0) 0) 100 @payload.maxResults), fields: "files(id, name, mimeType, size, modifiedTime, webViewLink)" },
           queryEncoding: rfc3986,
           retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 },
           auth: {
@@ -106,7 +106,7 @@ orbital DriveOrbital {
           headers: { Accept: "*/*" },
           query: { fields: "id" },
           queryEncoding: rfc3986,
-          json: { type: "user", role: (if (!= (or @payload.role "") "") @payload.role "reader"), emailAddress: @payload.email },
+          json: { type: "user", role: (if (!= (default @payload.role "") "") @payload.role "reader"), emailAddress: @payload.email },
           auth: {
             scheme: jwt-bearer,
             key: @config.serviceAccountKey,
@@ -125,7 +125,7 @@ orbital DriveOrbital {
           headers: { Accept: "*/*" },
           query: { fields: "id" },
           queryEncoding: rfc3986,
-          json: { type: "user", role: (if (!= (or @payload.role "") "") @payload.role "reader"), emailAddress: @payload.email },
+          json: { type: "user", role: (if (!= (default @payload.role "") "") @payload.role "reader"), emailAddress: @payload.email },
           auth: {
             scheme: token-exchange,
             tokenUrl: "https://oauth2.googleapis.com/token",
@@ -140,7 +140,7 @@ orbital DriveOrbital {
           headers: { Accept: "*/*" },
           query: { fields: "id, name, webViewLink", uploadType: "multipart" },
           queryEncoding: rfc3986,
-          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (or @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (or @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (or @payload.mimeType "") "") @payload.mimeType (if (!= (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "") (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "application/octet-stream")) }, bytes: (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ",") }] },
+          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (default @payload.mimeType "") "") @payload.mimeType (if (!= (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "") (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "application/octet-stream")) }, bytes: (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ",") }] },
           auth: {
             scheme: token-exchange,
             tokenUrl: "https://oauth2.googleapis.com/token",
@@ -155,7 +155,7 @@ orbital DriveOrbital {
           headers: { Accept: "*/*" },
           query: { fields: "id, name, webViewLink", uploadType: "multipart" },
           queryEncoding: rfc3986,
-          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (or @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (or @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (or @payload.mimeType "") "") @payload.mimeType "application/octet-stream") }, text: @payload.content }] },
+          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (default @payload.mimeType "") "") @payload.mimeType "application/octet-stream") }, text: @payload.content }] },
           auth: {
             scheme: token-exchange,
             tokenUrl: "https://oauth2.googleapis.com/token",
@@ -170,7 +170,7 @@ orbital DriveOrbital {
           headers: { Accept: "*/*" },
           query: { fields: "id, name, webViewLink", uploadType: "multipart" },
           queryEncoding: rfc3986,
-          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (or @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (or @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (or @payload.mimeType "") "") @payload.mimeType (if (!= (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "") (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "application/octet-stream")) }, text: (str/decode-uri-component (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ",")) }] },
+          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (default @payload.mimeType "") "") @payload.mimeType (if (!= (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "") (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "application/octet-stream")) }, text: (str/decode-uri-component (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ",")) }] },
           auth: {
             scheme: token-exchange,
             tokenUrl: "https://oauth2.googleapis.com/token",
@@ -187,7 +187,7 @@ orbital DriveOrbital {
           headers: { Accept: "*/*" },
           query: { fields: "id, name, webViewLink", uploadType: "multipart" },
           queryEncoding: rfc3986,
-          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (or @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (or @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (or @payload.mimeType "") "") @payload.mimeType (if (!= (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "") (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "application/octet-stream")) }, bytes: (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ",") }] },
+          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (default @payload.mimeType "") "") @payload.mimeType (if (!= (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "") (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "application/octet-stream")) }, bytes: (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ",") }] },
           auth: {
             scheme: jwt-bearer,
             key: @config.serviceAccountKey,
@@ -206,7 +206,7 @@ orbital DriveOrbital {
           headers: { Accept: "*/*" },
           query: { fields: "id, name, webViewLink", uploadType: "multipart" },
           queryEncoding: rfc3986,
-          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (or @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (or @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (or @payload.mimeType "") "") @payload.mimeType "application/octet-stream") }, text: @payload.content }] },
+          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (default @payload.mimeType "") "") @payload.mimeType "application/octet-stream") }, text: @payload.content }] },
           auth: {
             scheme: jwt-bearer,
             key: @config.serviceAccountKey,
@@ -225,7 +225,7 @@ orbital DriveOrbital {
           headers: { Accept: "*/*" },
           query: { fields: "id, name, webViewLink", uploadType: "multipart" },
           queryEncoding: rfc3986,
-          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (or @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (or @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (or @payload.mimeType "") "") @payload.mimeType (if (!= (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "") (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "application/octet-stream")) }, text: (str/decode-uri-component (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ",")) }] },
+          multipart: { kind: related, parts: [{ headers: { "content-type": "application/json" }, text: (json/stringify (if (!= (if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId) "") { name: @payload.name, parents: [(if (!= (default @payload.folderId "") "") @payload.folderId @config.defaultFolderId)] } { name: @payload.name })) }, { headers: { "content-type": (if (!= (default @payload.mimeType "") "") @payload.mimeType (if (!= (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "") (array/first (str/split (array/first (str/split (str/slice @payload.content 5) ",")) ";")) "application/octet-stream")) }, text: (str/decode-uri-component (str/join (array/drop (str/split (str/slice @payload.content 5) ",") 1) ",")) }] },
           auth: {
             scheme: jwt-bearer,
             key: @config.serviceAccountKey,
@@ -246,7 +246,7 @@ orbital DriveOrbital {
           headers: { Accept: "*/*" },
           query: { fields: "id, name" },
           queryEncoding: rfc3986,
-          json: (if (!= (if (!= (or @payload.parentId "") "") @payload.parentId @config.defaultFolderId) "") { name: @payload.name, mimeType: "application/vnd.google-apps.folder", parents: [(if (!= (or @payload.parentId "") "") @payload.parentId @config.defaultFolderId)] } { name: @payload.name, mimeType: "application/vnd.google-apps.folder" }),
+          json: (if (!= (if (!= (default @payload.parentId "") "") @payload.parentId @config.defaultFolderId) "") { name: @payload.name, mimeType: "application/vnd.google-apps.folder", parents: [(if (!= (default @payload.parentId "") "") @payload.parentId @config.defaultFolderId)] } { name: @payload.name, mimeType: "application/vnd.google-apps.folder" }),
           auth: {
             scheme: token-exchange,
             tokenUrl: "https://oauth2.googleapis.com/token",
@@ -261,7 +261,7 @@ orbital DriveOrbital {
           headers: { Accept: "*/*" },
           query: { fields: "id, name" },
           queryEncoding: rfc3986,
-          json: (if (!= (if (!= (or @payload.parentId "") "") @payload.parentId @config.defaultFolderId) "") { name: @payload.name, mimeType: "application/vnd.google-apps.folder", parents: [(if (!= (or @payload.parentId "") "") @payload.parentId @config.defaultFolderId)] } { name: @payload.name, mimeType: "application/vnd.google-apps.folder" }),
+          json: (if (!= (if (!= (default @payload.parentId "") "") @payload.parentId @config.defaultFolderId) "") { name: @payload.name, mimeType: "application/vnd.google-apps.folder", parents: [(if (!= (default @payload.parentId "") "") @payload.parentId @config.defaultFolderId)] } { name: @payload.name, mimeType: "application/vnd.google-apps.folder" }),
           auth: {
             scheme: jwt-bearer,
             key: @config.serviceAccountKey,
@@ -277,13 +277,13 @@ orbital DriveOrbital {
         } { key: (json/stringify { op: "folder", auth: "sa", tried: 1, p: (json/stringify @payload) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } })
       DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.key DriveCall) op "") "list"))
         (emit DRIVE_FILES_LISTED {
-          files: (array/map (or (object/get (json/parse @payload.body DriveListReply) files []) []) (fn f {
-            id: (or (object/get @f id "") ""),
-            name: (or (object/get @f name "") ""),
-            mimeType: (or (object/get @f mimeType "") ""),
-            size: (str/to-number (or (object/get @f size "") "")),
-            modifiedTime: (or (object/get @f modifiedTime "") ""),
-            webViewLink: (or (object/get @f webViewLink "") "")
+          files: (array/map (default (object/get (json/parse @payload.body DriveListReply) files []) []) (fn f {
+            id: (default (object/get @f id "") ""),
+            name: (default (object/get @f name "") ""),
+            mimeType: (default (object/get @f mimeType "") ""),
+            size: (str/to-number (default (object/get @f size "") "")),
+            modifiedTime: (default (object/get @f modifiedTime "") ""),
+            webViewLink: (default (object/get @f webViewLink "") "")
           }))
         })
       DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.key DriveCall) op "") "meta") (= (object/get (json/parse @payload.key DriveCall) auth "") "sa"))
@@ -306,7 +306,7 @@ orbital DriveOrbital {
             storeAs: { name: "drive:service-account-token", scope: app },
             grantRequest: { headers: { Accept: "application/json" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
           }
-          } { key: (json/stringify { op: "media", auth: "sa", tried: 1, p: (json/stringify { fileId: (object/get (json/parse (object/get (json/parse @payload.key DriveCall) p "") DriveGetParams) fileId ""), id: (or (object/get (json/parse @payload.body DriveMeta) id "") (object/get (json/parse (object/get (json/parse @payload.key DriveCall) p "") DriveGetParams) fileId "")), name: (or (object/get (json/parse @payload.body DriveMeta) name "") ""), mimeType: (or (object/get (json/parse @payload.body DriveMeta) mimeType "") "application/octet-stream") }) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } }))
+          } { key: (json/stringify { op: "media", auth: "sa", tried: 1, p: (json/stringify { fileId: (object/get (json/parse (object/get (json/parse @payload.key DriveCall) p "") DriveGetParams) fileId ""), id: (or (object/get (json/parse @payload.body DriveMeta) id "") (object/get (json/parse (object/get (json/parse @payload.key DriveCall) p "") DriveGetParams) fileId "")), name: (default (object/get (json/parse @payload.body DriveMeta) name "") ""), mimeType: (default (object/get (json/parse @payload.body DriveMeta) mimeType "") "application/octet-stream") }) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } }))
       DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.key DriveCall) op "") "meta") (= (object/get (json/parse @payload.key DriveCall) auth "") "user"))
         (let ((st (json/parse (object/get (json/parse @payload.key DriveCall) p "") DriveGetParams)))
           (http GET @config.origin (str/concat "/drive/v3/files/" (str/encode-uri-component (object/get @st fileId ""))) {
@@ -323,7 +323,7 @@ orbital DriveOrbital {
             storeAs: { name: "drive:user-token", scope: app },
             grantRequest: { headers: { Accept: "*/*" }, retry: { max: 3, on: ["1xx", "408", "429", "5xx", "failed", "timeout"], scheduleMs: [100, 500, 1500], noResponseMax: 2 } }
           }
-          } { key: (json/stringify { op: "media", auth: "user", tried: 1, p: (json/stringify { fileId: (object/get (json/parse (object/get (json/parse @payload.key DriveCall) p "") DriveGetParams) fileId ""), id: (or (object/get (json/parse @payload.body DriveMeta) id "") (object/get (json/parse (object/get (json/parse @payload.key DriveCall) p "") DriveGetParams) fileId "")), name: (or (object/get (json/parse @payload.body DriveMeta) name "") ""), mimeType: (or (object/get (json/parse @payload.body DriveMeta) mimeType "") "application/octet-stream") }) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } }))
+          } { key: (json/stringify { op: "media", auth: "user", tried: 1, p: (json/stringify { fileId: (object/get (json/parse (object/get (json/parse @payload.key DriveCall) p "") DriveGetParams) fileId ""), id: (or (object/get (json/parse @payload.body DriveMeta) id "") (object/get (json/parse (object/get (json/parse @payload.key DriveCall) p "") DriveGetParams) fileId "")), name: (default (object/get (json/parse @payload.body DriveMeta) name "") ""), mimeType: (default (object/get (json/parse @payload.body DriveMeta) mimeType "") "application/octet-stream") }) }), emit: { success: DRIVE_REPLIED, failure: DRIVE_CALL_FAILED } }))
       DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.key DriveCall) op "") "media"))
         (emit DRIVE_FILE_FETCHED {
           id: (object/get (json/parse (object/get (json/parse @payload.key DriveCall) p "") DriveGetState) id ""),
@@ -334,21 +334,21 @@ orbital DriveOrbital {
         })
       DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.key DriveCall) op "") "upload"))
         (emit DRIVE_FILE_UPLOADED {
-          id: (or (object/get (json/parse @payload.body DriveUploadReply) id "") ""),
+          id: (default (object/get (json/parse @payload.body DriveUploadReply) id "") ""),
           name: (or (object/get (json/parse @payload.body DriveUploadReply) name "") (object/get (json/parse (object/get (json/parse @payload.key DriveCall) p "") DriveUploadParams) name "")),
-          webViewLink: (or (object/get (json/parse @payload.body DriveUploadReply) webViewLink "") "")
+          webViewLink: (default (object/get (json/parse @payload.body DriveUploadReply) webViewLink "") "")
         })
       DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.key DriveCall) op "") "folder"))
         (emit DRIVE_FOLDER_CREATED {
-          id: (or (object/get (json/parse @payload.body DriveFolderReply) id "") ""),
+          id: (default (object/get (json/parse @payload.body DriveFolderReply) id "") ""),
           name: (or (object/get (json/parse @payload.body DriveFolderReply) name "") (object/get (json/parse (object/get (json/parse @payload.key DriveCall) p "") DriveFolderParams) name ""))
         })
       DRIVE_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.key DriveCall) op "") "share"))
-        (emit DRIVE_FILE_SHARED { shared: true, permissionId: (or (object/get (json/parse @payload.body DriveShareReply) id "") "") })
+        (emit DRIVE_FILE_SHARED { shared: true, permissionId: (default (object/get (json/parse @payload.body DriveShareReply) id "") "") })
       DRIVE_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (= (object/get (json/parse @payload.key DriveCall) op "") "media"))
-        (emit DRIVE_FAILED { code: null, message: (if (= (object/get (json/parse (base64/decode @payload.body) DriveErrorReply) error null) null) (if (>= @payload.status 400) (if (str/startsWith (json/stringify (json/parse (base64/decode @payload.body) DriveErrorReply)) "{") "[object Object]" (base64/decode @payload.body)) (str/concat "Request failed with status code " @payload.status)) (if (str/startsWith (json/stringify (object/get (json/parse (base64/decode @payload.body) DriveErrorReply) error null)) "\"") (object/get (json/parse (base64/decode @payload.body) DriveErrorStringReply) error "") (if (object/has (json/parse (base64/decode @payload.body) DriveErrorReply) "error.errors") (str/join (array/map (object/get (json/parse (base64/decode @payload.body) DriveErrorReply) "error.errors" []) (fn e (or (object/get @e message "") ""))) "\n") (or (object/get (json/parse (base64/decode @payload.body) DriveErrorReply) "error.message" "") "")))) })
+        (emit DRIVE_FAILED { code: null, message: (if (= (object/get (json/parse (base64/decode @payload.body) DriveErrorReply) error null) null) (if (>= @payload.status 400) (if (str/startsWith (json/stringify (json/parse (base64/decode @payload.body) DriveErrorReply)) "{") "[object Object]" (base64/decode @payload.body)) (str/concat "Request failed with status code " @payload.status)) (if (str/startsWith (json/stringify (object/get (json/parse (base64/decode @payload.body) DriveErrorReply) error null)) "\"") (object/get (json/parse (base64/decode @payload.body) DriveErrorStringReply) error "") (if (object/has (json/parse (base64/decode @payload.body) DriveErrorReply) "error.errors") (str/join (array/map (object/get (json/parse (base64/decode @payload.body) DriveErrorReply) "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get (json/parse (base64/decode @payload.body) DriveErrorReply) "error.message" "") "")))) })
       DRIVE_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (!= (object/get (json/parse @payload.key DriveCall) op "") "media"))
-        (emit DRIVE_FAILED { code: null, message: (if (= (object/get (json/parse @payload.body DriveErrorReply) error null) null) (if (>= @payload.status 400) (if (str/startsWith (json/stringify (json/parse @payload.body DriveErrorReply)) "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status)) (if (str/startsWith (json/stringify (object/get (json/parse @payload.body DriveErrorReply) error null)) "\"") (object/get (json/parse @payload.body DriveErrorStringReply) error "") (if (object/has (json/parse @payload.body DriveErrorReply) "error.errors") (str/join (array/map (object/get (json/parse @payload.body DriveErrorReply) "error.errors" []) (fn e (or (object/get @e message "") ""))) "\n") (or (object/get (json/parse @payload.body DriveErrorReply) "error.message" "") "")))) })
+        (emit DRIVE_FAILED { code: null, message: (if (= (object/get (json/parse @payload.body DriveErrorReply) error null) null) (if (>= @payload.status 400) (if (str/startsWith (json/stringify (json/parse @payload.body DriveErrorReply)) "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status)) (if (str/startsWith (json/stringify (object/get (json/parse @payload.body DriveErrorReply) error null)) "\"") (object/get (json/parse @payload.body DriveErrorStringReply) error "") (if (object/has (json/parse @payload.body DriveErrorReply) "error.errors") (str/join (array/map (object/get (json/parse @payload.body DriveErrorReply) "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get (json/parse @payload.body DriveErrorReply) "error.message" "") "")))) })
       DRIVE_CALL_FAILED -> idle when (and (= @payload.kind "unconfigured") (= (object/get (json/parse @payload.key DriveCall) op "") "list") (= (object/get (json/parse @payload.key DriveCall) tried 0) 0))
         (let ((st (json/parse (object/get (json/parse @payload.key DriveCall) p "") DriveListParams))) (emit DRIVE_LIST_FILES_AS_USER { folderId: (object/get @st folderId ""), query: (object/get @st query ""), maxResults: (object/get @st maxResults 0) }))
       DRIVE_CALL_FAILED -> idle when (and (= @payload.kind "unconfigured") (= (object/get (json/parse @payload.key DriveCall) op "") "meta") (= (object/get (json/parse @payload.key DriveCall) tried 0) 0))
@@ -362,9 +362,9 @@ orbital DriveOrbital {
       DRIVE_CALL_FAILED -> idle when (and (= @payload.kind "unconfigured") (= (object/get (json/parse @payload.key DriveCall) tried 0) 1))
         (credential-status { credential: @config.refreshToken, scope: app } { emit: { success: DRIVE_REFRESH_PROBED } })
       DRIVE_CALL_FAILED -> idle when (and (= @payload.phase "grant") (!= @payload.kind "unconfigured") (= (object/get (json/parse @payload.key DriveCall) auth "") "sa"))
-        (emit DRIVE_FAILED { code: null, message: (if (!= (or (object/get (json/parse @payload.grantBody DriveGrantError) error "") "") "") (str/concat (or (object/get (json/parse @payload.grantBody DriveGrantError) error "") "") (if (!= (or (object/get (json/parse @payload.grantBody DriveGrantError) error_description "") "") "") (str/concat ": " (or (object/get (json/parse @payload.grantBody DriveGrantError) error_description "") "")) "")) (if (= (object/get (json/parse @payload.grantBody DriveErrorReply) error null) null) (if (>= @payload.grantStatus 400) (if (str/startsWith (json/stringify (json/parse @payload.grantBody DriveErrorReply)) "{") "[object Object]" @payload.grantBody) (str/concat "Request failed with status code " @payload.grantStatus)) (if (str/startsWith (json/stringify (object/get (json/parse @payload.grantBody DriveErrorReply) error null)) "\"") (object/get (json/parse @payload.grantBody DriveErrorStringReply) error "") (if (object/has (json/parse @payload.grantBody DriveErrorReply) "error.errors") (str/join (array/map (object/get (json/parse @payload.grantBody DriveErrorReply) "error.errors" []) (fn e (or (object/get @e message "") ""))) "\n") (or (object/get (json/parse @payload.grantBody DriveErrorReply) "error.message" "") ""))))) })
+        (emit DRIVE_FAILED { code: null, message: (if (!= (default (object/get (json/parse @payload.grantBody DriveGrantError) error "") "") "") (str/concat (default (object/get (json/parse @payload.grantBody DriveGrantError) error "") "") (if (!= (default (object/get (json/parse @payload.grantBody DriveGrantError) error_description "") "") "") (str/concat ": " (default (object/get (json/parse @payload.grantBody DriveGrantError) error_description "") "")) "")) (if (= (object/get (json/parse @payload.grantBody DriveErrorReply) error null) null) (if (>= @payload.grantStatus 400) (if (str/startsWith (json/stringify (json/parse @payload.grantBody DriveErrorReply)) "{") "[object Object]" @payload.grantBody) (str/concat "Request failed with status code " @payload.grantStatus)) (if (str/startsWith (json/stringify (object/get (json/parse @payload.grantBody DriveErrorReply) error null)) "\"") (object/get (json/parse @payload.grantBody DriveErrorStringReply) error "") (if (object/has (json/parse @payload.grantBody DriveErrorReply) "error.errors") (str/join (array/map (object/get (json/parse @payload.grantBody DriveErrorReply) "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get (json/parse @payload.grantBody DriveErrorReply) "error.message" "") ""))))) })
       DRIVE_CALL_FAILED -> idle when (and (= @payload.phase "grant") (!= @payload.kind "unconfigured") (= (object/get (json/parse @payload.key DriveCall) auth "") "user"))
-        (emit DRIVE_FAILED { code: null, message: (if (and (= (or (object/get (json/parse @payload.grantBody DriveGrantError) error "") "") "invalid_grant") (str/includes (str/lower (or (object/get (json/parse @payload.grantBody DriveGrantError) error_description "") "")) "reauth")) (json/stringify (json/parse @payload.grantBody DriveGrantError)) (if (= (object/get (json/parse @payload.grantBody DriveErrorReply) error null) null) (if (>= @payload.grantStatus 400) (if (str/startsWith (json/stringify (json/parse @payload.grantBody DriveErrorReply)) "{") "[object Object]" @payload.grantBody) (str/concat "Request failed with status code " @payload.grantStatus)) (if (str/startsWith (json/stringify (object/get (json/parse @payload.grantBody DriveErrorReply) error null)) "\"") (object/get (json/parse @payload.grantBody DriveErrorStringReply) error "") (if (object/has (json/parse @payload.grantBody DriveErrorReply) "error.errors") (str/join (array/map (object/get (json/parse @payload.grantBody DriveErrorReply) "error.errors" []) (fn e (or (object/get @e message "") ""))) "\n") (or (object/get (json/parse @payload.grantBody DriveErrorReply) "error.message" "") ""))))) })
+        (emit DRIVE_FAILED { code: null, message: (if (and (= (default (object/get (json/parse @payload.grantBody DriveGrantError) error "") "") "invalid_grant") (str/includes (str/lower (default (object/get (json/parse @payload.grantBody DriveGrantError) error_description "") "")) "reauth")) (json/stringify (json/parse @payload.grantBody DriveGrantError)) (if (= (object/get (json/parse @payload.grantBody DriveErrorReply) error null) null) (if (>= @payload.grantStatus 400) (if (str/startsWith (json/stringify (json/parse @payload.grantBody DriveErrorReply)) "{") "[object Object]" @payload.grantBody) (str/concat "Request failed with status code " @payload.grantStatus)) (if (str/startsWith (json/stringify (object/get (json/parse @payload.grantBody DriveErrorReply) error null)) "\"") (object/get (json/parse @payload.grantBody DriveErrorStringReply) error "") (if (object/has (json/parse @payload.grantBody DriveErrorReply) "error.errors") (str/join (array/map (object/get (json/parse @payload.grantBody DriveErrorReply) "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get (json/parse @payload.grantBody DriveErrorReply) "error.message" "") ""))))) })
       DRIVE_CALL_FAILED -> idle when (and (!= @payload.kind "unconfigured") (!= @payload.phase "grant"))
         (emit DRIVE_FAILED { code: null, message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
       DRIVE_REFRESH_PROBED -> idle when @payload.connected

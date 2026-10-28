@@ -747,7 +747,7 @@ orbital LlmOrbital {
         (emit LLM_TOOLS_SEND { session: @payload.session })
 
       LLM_EMBED -> idle when (= (array/len @payload.texts) 0)
-        (emit LLM_EMBED_RESULT { embeddings: [], usage: { promptTokens: 0, totalTokens: 0 }, key: (str/default @payload.key ""), model: (if (and (!= @payload.model null) (!= @payload.model "")) @payload.model @config.embedModel) })
+        (emit LLM_EMBED_RESULT { embeddings: [], usage: { promptTokens: 0, totalTokens: 0 }, key: (default @payload.key ""), model: (if (and (!= @payload.model null) (!= @payload.model "")) @payload.model @config.embedModel) })
       LLM_EMBED -> idle when (> (array/len @payload.texts) 0)
         (emit LLM_EMBED_SEND {
           job: (json/stringify {

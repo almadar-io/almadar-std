@@ -31,7 +31,7 @@ orbital TagTaxonomyOrbital {
       LEVEL_RELOAD -> loading
         (set @entity.page ?page)
         (fetch Tag {
-          filter: (= (object/get @entity parentId) (str/default ?tagId ""))
+          filter: (= (object/get @entity parentId) (default ?tagId ""))
           emit: { failure: TagLoadFailed, success: TagLoaded }
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)
@@ -342,7 +342,7 @@ orbital TagTaxonomyOrbital {
       COMMIT_TAG -> creating
         (persist create Tag {
           name: (object/get ?data name)
-          parentId: (str/default (object/get ?data parentId) "")
+          parentId: (default (object/get ?data parentId) "")
         } {
           emit: { failure: TagCreateFailed, success: TagCreated }
         })
@@ -385,7 +385,7 @@ orbital TagTaxonomyOrbital {
         })
         (set @entity.page 1)
         (fetch Tag {
-          filter: (= (object/get @entity parentId) (str/default ?parentId ""))
+          filter: (= (object/get @entity parentId) (default ?parentId ""))
           emit: { failure: TagLoadFailed, success: TagLoaded }
           limit: @config.pageSize
           offset: 0

@@ -73,7 +73,7 @@ orbital SupervisorOrbital {
       CHILD_EXITED -> deciding
         (let ((idx (array/reduce (array/range (array/len @entity.pids)) -1 (fn acc i (if (== (array/nth @entity.pids @i) (str/to-number @payload.key)) @i @acc)))))
           (do (set @entity.exitIndex @idx)
-          (set @entity.exitFailed (or (!= (or @payload.code 0) 0) (validate/required @payload.signal)))
+          (set @entity.exitFailed (or (!= (default @payload.code 0) 0) (validate/required @payload.signal)))
           (set @entity.exitCode (if (== @payload.code null) -1 @payload.code))
           (set @entity.pids (array/map @entity.pids (fn p i (if (== @i @idx) 0 @p))))
           (emit DECIDE { })))

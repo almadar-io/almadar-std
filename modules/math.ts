@@ -246,20 +246,6 @@ export const MATH_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["math/randomInt", 1, 6] // => 4',
   },
-  'math/default': {
-    module: 'math',
-    category: 'std-math',
-    minArity: 2,
-    maxArity: 2,
-    description: 'Return default if value is null, undefined, or NaN',
-    hasSideEffects: false,
-    returnType: 'number',
-    params: [
-      { name: 'n', type: { kind: 'union', of: ['number', { kind: 'literal', value: null }] }, description: 'The value' },
-      { name: 'default', type: 'number', description: 'Default value' },
-    ],
-    example: '["math/default", null, 0] // => 0',
-  },
   'math/sin': {
     module: 'math',
     category: 'std-math',

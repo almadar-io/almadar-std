@@ -44,11 +44,11 @@ orbital BearerVerifyOrbital {
 
     state idle {
       KEY_SALT_READ -> idle
-        (set @entity.keysEnabled (!= (or @payload.value "") ""))
+        (set @entity.keysEnabled (!= (default @payload.value "") ""))
       KEY_SALT_UNREAD -> idle
         (set @entity.keysEnabled false)
       EMULATOR_READ -> idle
-        (set @entity.emulator (!= (or @payload.value "") ""))
+        (set @entity.emulator (!= (default @payload.value "") ""))
       EMULATOR_UNREAD -> idle
         (set @entity.emulator false)
       INIT -> idle
@@ -57,80 +57,80 @@ orbital BearerVerifyOrbital {
         (os/getenv "ALMADAR_API_KEY_SALT" { emit: { success: KEY_SALT_READ failure: KEY_SALT_UNREAD } })
         (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { emit: { success: EMULATOR_READ failure: EMULATOR_UNREAD } })
         (when @config.issuerFromEnv (os/getenv "AUTH_PROVIDER" { emit: { success: PROVIDER_READ failure: ISSUER_UNREAD } }))
-      PROVIDER_READ -> idle when (= (or @payload.value "") "firebase")
+      PROVIDER_READ -> idle when (= (default @payload.value "") "firebase")
         (os/getenv "FIREBASE_PROJECT_ID" { emit: { success: PROJECT_READ failure: ISSUER_UNREAD } })
-      PROVIDER_READ -> idle when (= (or @payload.value "") "oidc")
+      PROVIDER_READ -> idle when (= (default @payload.value "") "oidc")
         (os/getenv "OIDC_ISSUER_URL" { emit: { success: OIDC_ISSUER_READ failure: ISSUER_UNREAD } })
-      PROVIDER_READ -> idle when (and (!= (or @payload.value "") "firebase") (!= (or @payload.value "") "oidc"))
-      PROJECT_READ -> idle when (!= (or @payload.value "") "")
+      PROVIDER_READ -> idle when (and (!= (default @payload.value "") "firebase") (!= (default @payload.value "") "oidc"))
+      PROJECT_READ -> idle when (!= (default @payload.value "") "")
         (set @entity.issuer (str/concat "https://securetoken.google.com/" @payload.value))
         (set @entity.audience @payload.value)
-      PROJECT_READ -> idle when (= (or @payload.value "") "")
-      OIDC_ISSUER_READ -> idle when (!= (or @payload.value "") "")
+      PROJECT_READ -> idle when (= (default @payload.value "") "")
+      OIDC_ISSUER_READ -> idle when (!= (default @payload.value "") "")
         (set @entity.issuer @payload.value)
         (os/getenv "OIDC_AUDIENCE" { emit: { success: OIDC_AUDIENCE_READ failure: ISSUER_UNREAD } })
-      OIDC_ISSUER_READ -> idle when (= (or @payload.value "") "")
-      OIDC_AUDIENCE_READ -> idle when (!= (or @payload.value "") "")
+      OIDC_ISSUER_READ -> idle when (= (default @payload.value "") "")
+      OIDC_AUDIENCE_READ -> idle when (!= (default @payload.value "") "")
         (set @entity.audience @payload.value)
-      OIDC_AUDIENCE_READ -> idle when (= (or @payload.value "") "")
+      OIDC_AUDIENCE_READ -> idle when (= (default @payload.value "") "")
       ISSUER_UNREAD -> idle
 
-      BEARER_VERIFY -> idle when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
-        (emit VERIFY_KEY { requestId: (or @payload.requestId 0), token: (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) })
-      BEARER_VERIFY -> idle when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
-        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: "keys-disabled" })
+      BEARER_VERIFY -> idle when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
+        (emit VERIFY_KEY { requestId: (default @payload.requestId 0), token: (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) })
+      BEARER_VERIFY -> idle when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
+        (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "keys-disabled" })
       API_KEY_VERIFIED -> idle
-        (emit BEARER_VERIFIED { requestId: (or @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
+        (emit BEARER_VERIFIED { requestId: (default @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
       API_KEY_REFUSED -> idle
-        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
-      BEARER_VERIFY -> idle when (and (not (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
-        (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), authorization: (or @payload.authorization "") }))
+        (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
+      BEARER_VERIFY -> idle when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
+        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") }))
         (emit BEARER_PUMP {})
-      BEARER_VERIFY -> idle when (and (not (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
-        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: "busy" })
+      BEARER_VERIFY -> idle when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
+        (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
       BEARER_PUMP -> idle when (= (array/len @entity.queue) 0)
-      BEARER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (= (or (object/get (array/first @entity.queue) "authorization") "") ""))
-        (emit BEARER_ANONYMOUS { requestId: (or (or (object/get (array/first @entity.queue) "requestId") 0) 0) })
+      BEARER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (= (default (object/get (array/first @entity.queue) "authorization") "") ""))
+        (emit BEARER_ANONYMOUS { requestId: (default (default (object/get (array/first @entity.queue) "requestId") 0) 0) })
         (set @entity.queue (array/slice @entity.queue 1))
         (emit BEARER_NEXT {})
-      BEARER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (and (!= (or (object/get (array/first @entity.queue) "authorization") "") "") (or (not (str/startsWith (object/get (array/first @entity.queue) "authorization") "Bearer ")) (!= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3))))
-        (emit BEARER_REFUSED { requestId: (or (or (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" })
+      BEARER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (and (!= (default (object/get (array/first @entity.queue) "authorization") "") "") (or (not (str/startsWith (object/get (array/first @entity.queue) "authorization") "Bearer ")) (!= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3))))
+        (emit BEARER_REFUSED { requestId: (default (default (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" })
         (set @entity.queue (array/slice @entity.queue 1))
         (emit BEARER_NEXT {})
-      BEARER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (!= (or (object/get (array/first @entity.queue) "authorization") "") "") (and (str/startsWith (object/get (array/first @entity.queue) "authorization") "Bearer ") (= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3)) (or (not (base64/valid (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))) (let ((d (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (or (= @d null) (not (json/valid @d)))) (not (base64/valid (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 1) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))) (let ((d (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 1) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (or (= @d null) (not (json/valid @d))))))
-        (emit BEARER_REFUSED { requestId: (or (or (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" })
+      BEARER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (!= (default (object/get (array/first @entity.queue) "authorization") "") "") (and (str/startsWith (object/get (array/first @entity.queue) "authorization") "Bearer ") (= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3)) (or (not (base64/valid (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))) (let ((d (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (or (= @d null) (not (json/valid @d)))) (not (base64/valid (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 1) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))) (let ((d (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 1) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (or (= @d null) (not (json/valid @d))))))
+        (emit BEARER_REFUSED { requestId: (default (default (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" })
         (set @entity.queue (array/slice @entity.queue 1))
         (emit BEARER_NEXT {})
-      BEARER_PUMP -> verifying when (and @entity.emulator (> (array/len @entity.queue) 0) (str/startsWith (or (object/get (array/first @entity.queue) "authorization") "") "Bearer ") (= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3) (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (and (!= @hd null) (= (object/get (json/parse @hd BearerJwsHeader) "alg" "") "none"))))
+      BEARER_PUMP -> verifying when (and @entity.emulator (> (array/len @entity.queue) 0) (str/startsWith (default (object/get (array/first @entity.queue) "authorization") "") "Bearer ") (= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3) (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (and (!= @hd null) (= (object/get (json/parse @hd BearerJwsHeader) "alg" "") "none"))))
         (let ((token (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization")))))
           (let ((pj (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 1) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4)))))))
             (let ((header (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @hd null) null (json/parse @hd BearerJwsHeader)))) (claims (if (= @pj null) null (json/parse @pj BearerClaims))) (xtra (if (= @pj null) null (json/parse @pj BearerExtra))))
               (do
                 (set @entity.token @token)
-                (set @entity.requestId (or (or (object/get (array/first @entity.queue) "requestId") 0) 0))
+                (set @entity.requestId (default (default (object/get (array/first @entity.queue) "requestId") 0) 0))
                 (set @entity.queue (array/slice @entity.queue 1))
                 (let ((merged (if (or (= @header null) (= @claims null) (= @xtra null)) null (object/set @claims extra @xtra))))
                   (if (= @merged null)
                     (emit JWS_REFUSED { reason: "malformed" })
                     (emit JWS_VERIFIED { header: @header, payload: @merged })))))))
-      BEARER_PUMP -> verifying when (and (> (array/len @entity.queue) 0) (and (!= (or (object/get (array/first @entity.queue) "authorization") "") "") (str/startsWith (object/get (array/first @entity.queue) "authorization") "Bearer ") (= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3) (> @entity.expiresAt @now) (> (array/len @entity.keys) 0) (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (and (!= @hd null) (let ((kid (object/get (json/parse @hd BearerHeader) "kid" ""))) (or (= @kid "") (array/some @entity.keys (fn k (= (object/get @k "kid" "") @kid)))))))))
+      BEARER_PUMP -> verifying when (and (> (array/len @entity.queue) 0) (and (!= (default (object/get (array/first @entity.queue) "authorization") "") "") (str/startsWith (object/get (array/first @entity.queue) "authorization") "Bearer ") (= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3) (> @entity.expiresAt @now) (> (array/len @entity.keys) 0) (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (and (!= @hd null) (let ((kid (object/get (json/parse @hd BearerHeader) "kid" ""))) (or (= @kid "") (array/some @entity.keys (fn k (= (object/get @k "kid" "") @kid)))))))))
         (let ((token (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization")))))
-          (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split @token ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @hd null) (emit BEARER_REFUSED { requestId: (or (or (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" }) (let ((kid (object/get (json/parse @hd BearerHeader) "kid" "")))
+          (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split @token ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @hd null) (emit BEARER_REFUSED { requestId: (default (default (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" }) (let ((kid (object/get (json/parse @hd BearerHeader) "kid" "")))
             (let ((cands (array/filter @entity.keys (fn k (and (or (= @kid "") (= (object/get @k "kid" "") @kid)) (or (= (object/get @k "use" "") "") (= (object/get @k "use" "") "sig")))))))
               (do
                 (set @entity.token @token)
-                (set @entity.requestId (or (or (object/get (array/first @entity.queue) "requestId") 0) 0))
+                (set @entity.requestId (default (default (object/get (array/first @entity.queue) "requestId") 0) 0))
                 (set @entity.kid @kid)
                 (set @entity.candidates @cands)
                 (set @entity.attempt 0)
                 (emit JWS_VERIFY { token: @token, jwk: (array/nth @cands 0) })))))))
         (set @entity.queue (array/slice @entity.queue 1))
-      BEARER_PUMP -> fetching when (and (> (array/len @entity.queue) 0) (!= (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) null) (and (!= (or (object/get (array/first @entity.queue) "authorization") "") "") (str/startsWith (object/get (array/first @entity.queue) "authorization") "Bearer ") (= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3) (not (and (> @entity.expiresAt @now) (> (array/len @entity.keys) 0) (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (and (!= @hd null) (let ((kid (object/get (json/parse @hd BearerHeader) "kid" ""))) (or (= @kid "") (array/some @entity.keys (fn k (= (object/get @k "kid" "") @kid)))))))))))
+      BEARER_PUMP -> fetching when (and (> (array/len @entity.queue) 0) (!= (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))) null) (and (!= (default (object/get (array/first @entity.queue) "authorization") "") "") (str/startsWith (object/get (array/first @entity.queue) "authorization") "Bearer ") (= (array/len (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".")) 3) (not (and (> @entity.expiresAt @now) (> (array/len @entity.keys) 0) (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization"))) ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (and (!= @hd null) (let ((kid (object/get (json/parse @hd BearerHeader) "kid" ""))) (or (= @kid "") (array/some @entity.keys (fn k (= (object/get @k "kid" "") @kid)))))))))))
         (let ((token (str/slice (object/get (array/first @entity.queue) "authorization") 7 (str/len (object/get (array/first @entity.queue) "authorization")))))
           (do
             (set @entity.token @token)
-                (set @entity.requestId (or (or (object/get (array/first @entity.queue) "requestId") 0) 0))
-            (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split @token ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @hd null) (emit BEARER_REFUSED { requestId: (or (or (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" }) (do (set @entity.kid (object/get (json/parse @hd BearerHeader) "kid" "")) (http GET @config.jwksOrigin @config.jwksPath {
+                (set @entity.requestId (default (default (object/get (array/first @entity.queue) "requestId") 0) 0))
+            (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (array/nth (str/split @token ".") 0) "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @hd null) (emit BEARER_REFUSED { requestId: (default (default (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" }) (do (set @entity.kid (object/get (json/parse @hd BearerHeader) "kid" "")) (http GET @config.jwksOrigin @config.jwksPath {
               headers: { Accept: "application/json" },
               timeoutMs: @config.timeoutMs
             } { emit: { success: JWKS_REPLIED, failure: JWKS_UNREACHABLE } }))))))
@@ -141,25 +141,25 @@ orbital BearerVerifyOrbital {
 
     state fetching {
       KEY_SALT_READ -> fetching
-        (set @entity.keysEnabled (!= (or @payload.value "") ""))
+        (set @entity.keysEnabled (!= (default @payload.value "") ""))
       KEY_SALT_UNREAD -> fetching
         (set @entity.keysEnabled false)
       EMULATOR_READ -> fetching
-        (set @entity.emulator (!= (or @payload.value "") ""))
+        (set @entity.emulator (!= (default @payload.value "") ""))
       EMULATOR_UNREAD -> fetching
         (set @entity.emulator false)
-      BEARER_VERIFY -> fetching when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
-        (emit VERIFY_KEY { requestId: (or @payload.requestId 0), token: (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) })
-      BEARER_VERIFY -> fetching when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
-        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: "keys-disabled" })
+      BEARER_VERIFY -> fetching when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
+        (emit VERIFY_KEY { requestId: (default @payload.requestId 0), token: (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) })
+      BEARER_VERIFY -> fetching when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
+        (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "keys-disabled" })
       API_KEY_VERIFIED -> fetching
-        (emit BEARER_VERIFIED { requestId: (or @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
+        (emit BEARER_VERIFIED { requestId: (default @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
       API_KEY_REFUSED -> fetching
-        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
-      BEARER_VERIFY -> fetching when (and (not (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
-        (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), authorization: (or @payload.authorization "") }))
-      BEARER_VERIFY -> fetching when (and (not (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
-        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: "busy" })
+        (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
+      BEARER_VERIFY -> fetching when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
+        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") }))
+      BEARER_VERIFY -> fetching when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
+        (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
       INIT -> idle
       JWKS_REPLIED -> idle when (or (!= @payload.status 200) (not (json/valid @payload.body)))
         (emit BEARER_REFUSED { requestId: @entity.requestId, reason: "keys-unavailable" })
@@ -197,25 +197,25 @@ orbital BearerVerifyOrbital {
 
     state certifying {
       KEY_SALT_READ -> certifying
-        (set @entity.keysEnabled (!= (or @payload.value "") ""))
+        (set @entity.keysEnabled (!= (default @payload.value "") ""))
       KEY_SALT_UNREAD -> certifying
         (set @entity.keysEnabled false)
       EMULATOR_READ -> certifying
-        (set @entity.emulator (!= (or @payload.value "") ""))
+        (set @entity.emulator (!= (default @payload.value "") ""))
       EMULATOR_UNREAD -> certifying
         (set @entity.emulator false)
-      BEARER_VERIFY -> certifying when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
-        (emit VERIFY_KEY { requestId: (or @payload.requestId 0), token: (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) })
-      BEARER_VERIFY -> certifying when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
-        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: "keys-disabled" })
+      BEARER_VERIFY -> certifying when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
+        (emit VERIFY_KEY { requestId: (default @payload.requestId 0), token: (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) })
+      BEARER_VERIFY -> certifying when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
+        (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "keys-disabled" })
       API_KEY_VERIFIED -> certifying
-        (emit BEARER_VERIFIED { requestId: (or @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
+        (emit BEARER_VERIFIED { requestId: (default @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
       API_KEY_REFUSED -> certifying
-        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
-      BEARER_VERIFY -> certifying when (and (not (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
-        (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), authorization: (or @payload.authorization "") }))
-      BEARER_VERIFY -> certifying when (and (not (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
-        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: "busy" })
+        (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
+      BEARER_VERIFY -> certifying when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
+        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") }))
+      BEARER_VERIFY -> certifying when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
+        (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
       INIT -> idle
       X509_PARSED -> certifying when (> (array/len @entity.certQueue) 1)
         (set @entity.certKeys (array/append @entity.certKeys { kty: "RSA", n: (str/replaceAll (str/replaceAll (str/replaceAll (str/template "{{value}}" { value: @payload.n }) "+" "-") "/" "_") "=" ""), e: (str/replaceAll (str/replaceAll (str/replaceAll (str/template "{{value}}" { value: @payload.e }) "+" "-") "/" "_") "=" ""), kid: (object/get (array/first @entity.certQueue) "kid"), alg: "RS256", use: "sig" }))
@@ -246,25 +246,25 @@ orbital BearerVerifyOrbital {
 
     state verifying {
       KEY_SALT_READ -> verifying
-        (set @entity.keysEnabled (!= (or @payload.value "") ""))
+        (set @entity.keysEnabled (!= (default @payload.value "") ""))
       KEY_SALT_UNREAD -> verifying
         (set @entity.keysEnabled false)
       EMULATOR_READ -> verifying
-        (set @entity.emulator (!= (or @payload.value "") ""))
+        (set @entity.emulator (!= (default @payload.value "") ""))
       EMULATOR_UNREAD -> verifying
         (set @entity.emulator false)
-      BEARER_VERIFY -> verifying when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
-        (emit VERIFY_KEY { requestId: (or @payload.requestId 0), token: (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) })
-      BEARER_VERIFY -> verifying when (and (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
-        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: "keys-disabled" })
+      BEARER_VERIFY -> verifying when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
+        (emit VERIFY_KEY { requestId: (default @payload.requestId 0), token: (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) })
+      BEARER_VERIFY -> verifying when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
+        (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "keys-disabled" })
       API_KEY_VERIFIED -> verifying
-        (emit BEARER_VERIFIED { requestId: (or @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
+        (emit BEARER_VERIFIED { requestId: (default @payload.requestId 0), viewer: { id: @payload.owner, claims: @payload.claims } })
       API_KEY_REFUSED -> verifying
-        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
-      BEARER_VERIFY -> verifying when (and (not (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
-        (set @entity.queue (array/append @entity.queue { requestId: (or @payload.requestId 0), authorization: (or @payload.authorization "") }))
-      BEARER_VERIFY -> verifying when (and (not (and (str/startsWith (or @payload.authorization "") "Bearer ") (str/startsWith (str/slice (or @payload.authorization "") 7 (str/len (or @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
-        (emit BEARER_REFUSED { requestId: (or @payload.requestId 0), reason: "busy" })
+        (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
+      BEARER_VERIFY -> verifying when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
+        (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") }))
+      BEARER_VERIFY -> verifying when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
+        (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
       INIT -> idle
       JWS_REFUSED -> verifying when (and (= @entity.kid "") (array/includes ["signature", "key-type", "alg-mismatch", "curve", "key-missing"] @payload.reason) (< (+ @entity.attempt 1) (array/len @entity.candidates)))
         (emit JWS_VERIFY { token: @entity.token, jwk: (array/nth @entity.candidates (+ @entity.attempt 1)) })
@@ -278,13 +278,13 @@ orbital BearerVerifyOrbital {
                        (if (<= @c.exp (- @nowS @skew)) "expired"
                          (if (and (!= @c.nbf null) (> @c.nbf 0) (> @c.nbf (+ @nowS @skew))) "not-yet-valid"
                            (if (and (!= @c.iat null) (> @c.iat 0) (> @c.iat (+ @nowS @skew))) "issued-in-future"
-                             (if (!= (or @c.iss "") @entity.issuer) "issuer"
+                             (if (!= (default @c.iss "") @entity.issuer) "issuer"
                                (if (not (if (str/startsWith (json/stringify @c.aud) "[") (let ((auds (json/parse (json/stringify @c.aud) BearerAudList))) (if (= @auds null) false (array/includes @auds @entity.audience))) (= (json/stringify @c.aud) (json/stringify @entity.audience)))) "audience"
-                                 (if (= (or @c.sub "") "") "subject"
-                                   (if (and @config.requireAuthTime (or (<= (or @c.auth_time 0) 0) (> @c.auth_time @nowS))) "auth-time"
-                                     (if (and (> (array/len @config.allowedTenants) 0) (not (array/includes @config.allowedTenants (or (object/get (or @c.firebase {}) "tenant" "") "")))) "tenant" (if (and (array/includes (object/keys @c.extra) "role") (not (str/startsWith (json/stringify (object/get @c.extra "role")) "\""))) "claims" (if (and (array/includes (object/keys @c.extra) "permissions") (not (validate/pattern (json/stringify (object/get @c.extra "permissions")) "^\\[(?:\"(?:[^\"\\\\]|\\\\.)*\"(?:,\"(?:[^\"\\\\]|\\\\.)*\")*)?\\]$"))) "claims" "")))))))))))))
+                                 (if (= (default @c.sub "") "") "subject"
+                                   (if (and @config.requireAuthTime (or (<= (default @c.auth_time 0) 0) (> @c.auth_time @nowS))) "auth-time"
+                                     (if (and (> (array/len @config.allowedTenants) 0) (not (array/includes @config.allowedTenants (default (object/get (default @c.firebase {}) "tenant" "") "")))) "tenant" (if (and (array/includes (object/keys @c.extra) "role") (not (str/startsWith (json/stringify (object/get @c.extra "role")) "\""))) "claims" (if (and (array/includes (object/keys @c.extra) "permissions") (not (validate/pattern (json/stringify (object/get @c.extra "permissions")) "^\\[(?:\"(?:[^\"\\\\]|\\\\.)*\"(?:,\"(?:[^\"\\\\]|\\\\.)*\")*)?\\]$"))) "claims" "")))))))))))))
             (if (= @why "")
-              (let ((v (json/parse (json/stringify { id: (or @c.sub ""), email: @c.email, name: @c.name, role: (if (array/includes (object/keys @c.extra) "role") (object/get (json/parse (json/stringify @c.extra) BearerRolePerms) "role" "") null), permissions: (if (array/includes (object/keys @c.extra) "permissions") (object/get (json/parse (json/stringify @c.extra) BearerRolePerms) "permissions" []) null), claims: (array/map (object/entries (object/omit (or @c.extra {}) ["iss", "aud", "exp", "nbf", "iat", "auth_time", "sub", "email", "name", "role", "permissions"])) (fn t { name: (array/nth @t 0), value: (array/nth @t 1) })) }) Viewer)))
+              (let ((v (json/parse (json/stringify { id: (default @c.sub ""), email: @c.email, name: @c.name, role: (if (array/includes (object/keys @c.extra) "role") (object/get (json/parse (json/stringify @c.extra) BearerRolePerms) "role" "") null), permissions: (if (array/includes (object/keys @c.extra) "permissions") (object/get (json/parse (json/stringify @c.extra) BearerRolePerms) "permissions" []) null), claims: (array/map (object/entries (object/omit (default @c.extra {}) ["iss", "aud", "exp", "nbf", "iat", "auth_time", "sub", "email", "name", "role", "permissions"])) (fn t { name: (array/nth @t 0), value: (array/nth @t 1) })) }) Viewer)))
                 (if (= @v null)
                   (emit BEARER_REFUSED { requestId: @entity.requestId, reason: "claims" })
                   (emit BEARER_VERIFIED { requestId: @entity.requestId, viewer: @v })))

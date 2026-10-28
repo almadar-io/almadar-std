@@ -127,9 +127,9 @@ orbital QueueOrbital {
       INIT -> idle
       ENQUEUE -> idle
         (set @entity.wantQueue ?queue)
-        (set @entity.wantPriority (math/default ?priority 0))
+        (set @entity.wantPriority (default ?priority 0))
         (set @entity.wantEnqueuedAt @now)
-        (persist create @config.jobEntity (object/merge ?job { queue: ?queue, priority: (math/default ?priority 0), status: "pending", enqueuedAt: @now, availableAt: (+ @now (math/default ?delay 0)), attempts: 0, leaseExpiresAt: 0 }) {
+        (persist create @config.jobEntity (object/merge ?job { queue: ?queue, priority: (default ?priority 0), status: "pending", enqueuedAt: @now, availableAt: (+ @now (default ?delay 0)), attempts: 0, leaseExpiresAt: 0 }) {
           emit: { failure: EnqFailed, success: EnqCreated }
         })
       EnqCreated -> idle
@@ -458,7 +458,7 @@ orbital QueueOrbital {
         (set @entity.wantId ?jobId)
         (set @entity.wantAttempt ?attempt)
         (set @entity.wantOutcome "completed")
-        (set @entity.wantText (str/default ?result ""))
+        (set @entity.wantText (default ?result ""))
         (fetch @config.jobEntity {
           emit: { failure: FinFailed, success: FinJobLoaded }
           filter: (= (object/get @entity id) @entity.wantId)
@@ -468,7 +468,7 @@ orbital QueueOrbital {
         (set @entity.wantId ?jobId)
         (set @entity.wantAttempt ?attempt)
         (set @entity.wantOutcome "failed")
-        (set @entity.wantText (str/default ?error ""))
+        (set @entity.wantText (default ?error ""))
         (fetch @config.jobEntity {
           emit: { failure: FinFailed, success: FinJobLoaded }
           filter: (= (object/get @entity id) @entity.wantId)

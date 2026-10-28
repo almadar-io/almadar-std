@@ -65,7 +65,7 @@ orbital HttpDispatchOrbital {
           (let ((n (array/len @parts)) (m (str/upper @payload.method)))
             (let ((kind (if (and (= @m "POST") (= @n 4) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 3) "events")) "events" (if (and (= @m "POST") (= @n 8) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 3) "traits") (= (array/nth @parts 5) "entities") (= (array/nth @parts 7) "events")) "entity-events" (if (and (= @m "POST") (= @n 4) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 3) "inputs")) "inputs" (if (and (= @m "GET") (= @n 3) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 2) "inputs")) "inputs-list" (if (and (= @m "POST") (= @n 3) (= (array/nth @parts 1) "orbitals") (= (array/nth @parts 2) "resolve-rows")) "resolve-rows" (if (and (= @m "POST") (= @n 3) (= (array/nth @parts 1) "hooks")) "hook" (if (and (= @m "GET") (= @n 2) (= (array/nth @parts 1) "trace")) "trace" "none"))))))))  )
               (do
-                (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, kind: @kind, orbital: (if (and (>= @n 3) (or (= @kind "events") (= @kind "entity-events") (= @kind "inputs"))) (array/nth @parts 2) ""), traitName: (if (= @kind "entity-events") (array/nth @parts 4) ""), entityId: (if (= @kind "entity-events") (array/nth @parts 6) ""), stream: (or (str/includes (or @payload.query "") "stream=true") (str/includes (or (object/get @payload.headers "accept") "") "text/event-stream")), authorization: (or (object/get @payload.headers "authorization") ""), body: (or @payload.body (bytes/from-string "")), hookName: (if (= @kind "hook") (array/nth @parts 2) ""), hookKey: (if (= @kind "hook") (str/concat "hook-" (json/stringify @payload.requestId)) ""), hookHeaders: (if (= @kind "hook") (or @payload.headers {}) {}), dispatchKey: (if (or (= @kind "events") (= @kind "entity-events") (= @kind "inputs")) (str/concat "dispatch-" (json/stringify @payload.requestId)) (if (= @kind "resolve-rows") (str/concat "rows-" (json/stringify @payload.requestId)) "")), responseHeaders: [] }))
+                (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, kind: @kind, orbital: (if (and (>= @n 3) (or (= @kind "events") (= @kind "entity-events") (= @kind "inputs"))) (array/nth @parts 2) ""), traitName: (if (= @kind "entity-events") (array/nth @parts 4) ""), entityId: (if (= @kind "entity-events") (array/nth @parts 6) ""), stream: (or (str/includes (default @payload.query "") "stream=true") (str/includes (default (object/get @payload.headers "accept") "") "text/event-stream")), authorization: (default (object/get @payload.headers "authorization") ""), body: (or @payload.body (bytes/from-string "")), hookName: (if (= @kind "hook") (array/nth @parts 2) ""), hookKey: (if (= @kind "hook") (str/concat "hook-" (json/stringify @payload.requestId)) ""), hookHeaders: (if (= @kind "hook") (default @payload.headers {}) {}), dispatchKey: (if (or (= @kind "events") (= @kind "entity-events") (= @kind "inputs")) (str/concat "dispatch-" (json/stringify @payload.requestId)) (if (= @kind "resolve-rows") (str/concat "rows-" (json/stringify @payload.requestId)) "")), responseHeaders: [] }))
 ))))
       ROUTE_EXTERNAL -> serving when (array/some @entity.pending (fn p (= @p.requestId @payload.requestId)))
         (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) (object/merge @p { responseHeaders: @payload.responseHeaders }) @p))))
@@ -97,19 +97,19 @@ orbital HttpDispatchOrbital {
       ROUTE_DISPATCH -> serving when (and (!= @payload.kind "none") (!= @payload.kind "hook"))
         (emit BEARER_VERIFY { requestId: @payload.requestId, authorization: (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "authorization") })
 
-      BEARER_VERIFIED -> serving when (array/some @entity.pending (fn p (= @p.requestId (or @payload.requestId 0))))
+      BEARER_VERIFIED -> serving when (array/some @entity.pending (fn p (= @p.requestId (default @payload.requestId 0))))
         (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) (object/merge @p { viewer: @payload.viewer }) @p))))
         (emit DISPATCH_ADMITTED { requestId: @payload.requestId })
 
-      BEARER_ANONYMOUS -> serving when (and (not @config.requireSignIn) (array/some @entity.pending (fn p (= @p.requestId (or @payload.requestId 0)))))
+      BEARER_ANONYMOUS -> serving when (and (not @config.requireSignIn) (array/some @entity.pending (fn p (= @p.requestId (default @payload.requestId 0)))))
         (emit DISPATCH_ADMITTED { requestId: @payload.requestId })
 
-      BEARER_ANONYMOUS -> serving when (and @config.requireSignIn (array/some @entity.pending (fn p (= @p.requestId (or @payload.requestId 0)))))
+      BEARER_ANONYMOUS -> serving when (and @config.requireSignIn (array/some @entity.pending (fn p (= @p.requestId (default @payload.requestId 0)))))
         (emit REQUEST_UNAUTHORIZED { requestId: @payload.requestId, error: { error: "Unauthorized", code: "UNAUTHORIZED" } })
         (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
 
-      BEARER_REFUSED -> serving when (array/some @entity.pending (fn p (= @p.requestId (or @payload.requestId 0))))
+      BEARER_REFUSED -> serving when (array/some @entity.pending (fn p (= @p.requestId (default @payload.requestId 0))))
         (emit REQUEST_UNAUTHORIZED { requestId: @payload.requestId, error: { error: "Unauthorized", code: "UNAUTHORIZED" } })
         (emit RESPOND { requestId: @payload.requestId, status: 401, headers: (array/append (object/get (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Unauthorized", code: "UNAUTHORIZED" })) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
@@ -208,13 +208,13 @@ orbital HttpDispatchOrbital {
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @entity.inflight))))
         (emit DISPATCH_DONE {})
 
-      DISPATCH_ANSWERED -> serving when (and (!= (or @payload.key "") "") (array/some @entity.pending (fn q (and (= @q.dispatchKey @payload.key) (not @q.stream)))))
+      DISPATCH_ANSWERED -> serving when (and (!= (default @payload.key "") "") (array/some @entity.pending (fn q (and (= @q.dispatchKey @payload.key) (not @q.stream)))))
         (let ((p (array/find @entity.pending (fn q (= @q.dispatchKey @payload.key)))))
-          (emit RESPOND { requestId: (object/get @p "requestId"), status: (if (array/some (or @payload.result.rejections []) (fn r (or (= @r.code "not-an-external-input") (= @r.code "inbound-only-event")))) 403 200), headers: (array/append (object/get @p "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify @payload.result)) }))
+          (emit RESPOND { requestId: (object/get @p "requestId"), status: (if (array/some (default @payload.result.rejections []) (fn r (or (= @r.code "not-an-external-input") (= @r.code "inbound-only-event")))) 403 200), headers: (array/append (object/get @p "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify @payload.result)) }))
         (set @entity.pending (array/filter @entity.pending (fn q (!= @q.dispatchKey @payload.key))))
         (emit DISPATCH_DONE {})
 
-      DISPATCH_ANSWERED -> serving when (and (!= (or @payload.key "") "") (array/some @entity.pending (fn q (and (= @q.dispatchKey @payload.key) @q.stream))))
+      DISPATCH_ANSWERED -> serving when (and (!= (default @payload.key "") "") (array/some @entity.pending (fn q (and (= @q.dispatchKey @payload.key) @q.stream))))
         (if (!= @payload.result.items null)
           (do
             (let ((id (object/get (array/find @entity.pending (fn q (= @q.dispatchKey @payload.key))) "requestId")))
@@ -234,12 +234,12 @@ orbital HttpDispatchOrbital {
         (emit SSE_CLOSE { requestId: @payload.requestId })
         (set @entity.frames (array/filter @entity.frames (fn q (!= @q.requestId @payload.requestId))))
 
-      DISPATCH_FAILED -> serving when (and (!= (or @payload.key "") "") (array/some @entity.pending (fn q (and (= @q.dispatchKey @payload.key) (not @q.stream)))))
-        (let ((p (array/find @entity.pending (fn q (= @q.dispatchKey @payload.key)))) (e (array/first (or @payload.errors []))))
+      DISPATCH_FAILED -> serving when (and (!= (default @payload.key "") "") (array/some @entity.pending (fn q (and (= @q.dispatchKey @payload.key) (not @q.stream)))))
+        (let ((p (array/find @entity.pending (fn q (= @q.dispatchKey @payload.key)))) (e (array/first (default @payload.errors []))))
           (emit RESPOND { requestId: (object/get @p "requestId"), status: (if (= @e null) 500 (object/get @e "status" 500)), headers: (array/append (object/get @p "responseHeaders") { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: @payload.error, code: (if (= @e null) "EVENT_PROCESSING_ERROR" (object/get @e "code" "EVENT_PROCESSING_ERROR")) })) }))
         (set @entity.pending (array/filter @entity.pending (fn q (!= @q.dispatchKey @payload.key))))
         (emit DISPATCH_DONE {})
-      DISPATCH_FAILED -> serving when (and (!= (or @payload.key "") "") (array/some @entity.pending (fn q (and (= @q.dispatchKey @payload.key) @q.stream))))
+      DISPATCH_FAILED -> serving when (and (!= (default @payload.key "") "") (array/some @entity.pending (fn q (and (= @q.dispatchKey @payload.key) @q.stream))))
         (let ((id (object/get (array/find @entity.pending (fn q (= @q.dispatchKey @payload.key))) "requestId")))
           (do
             (set @entity.frames (array/append @entity.frames { requestId: @id, frames: [(json/stringify { type: "error", data: { message: @payload.error }, timestamp: @now })] }))

@@ -51,12 +51,12 @@ orbital OrbUpdateNoticeOrbital {
       INIT -> ready
       UPDATE_NOTICE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit UPDATE_NOTICE_ANSWERED { status: 500, body: "", stderr: "Error: orb update-notice: the command arguments could not be read" })
-      UPDATE_NOTICE_CALLED -> writing when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (str/default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "record"))
+      UPDATE_NOTICE_CALLED -> writing when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "record"))
         (set @entity.mode "record")
         (set @entity.nowSec (math/floor (/ (time/now) 1000)))
         (set @entity.found [])
         (emit UN_WRITE { })
-      UPDATE_NOTICE_CALLED -> gating when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (str/default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "record"))
+      UPDATE_NOTICE_CALLED -> gating when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "record"))
         (set @entity.mode "check")
         (set @entity.nowSec (math/floor (/ (time/now) 1000)))
         (set @entity.found [])
@@ -85,11 +85,11 @@ orbital OrbUpdateNoticeOrbital {
 
     state reading {
       INIT -> reading
-      UN_CACHE_READ -> reading when (!= (json/parse (str/default (bytes/to-string @payload.data) "") NoticeCache) null)
-        (set @entity.checkedAt (object/get (json/parse (str/default (bytes/to-string @payload.data) "") NoticeCache) "checkedAt"))
-        (set @entity.cached (object/get (json/parse (str/default (bytes/to-string @payload.data) "") NoticeCache) "available"))
+      UN_CACHE_READ -> reading when (!= (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) null)
+        (set @entity.checkedAt (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "checkedAt"))
+        (set @entity.cached (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) "available"))
         (emit UN_DUE { })
-      UN_CACHE_READ -> reading when (= (json/parse (str/default (bytes/to-string @payload.data) "") NoticeCache) null)
+      UN_CACHE_READ -> reading when (= (json/parse (default (bytes/to-string @payload.data) "") NoticeCache) null)
         (set @entity.checkedAt 0)
         (set @entity.cached [])
         (emit UN_DUE { })
@@ -105,11 +105,11 @@ orbital OrbUpdateNoticeOrbital {
 
     state scanning {
       INIT -> scanning
-      UN_MANIFEST_READ -> scanning when (!= (json/parse (str/default (bytes/to-string @payload.data) "") NoticeManifest) null)
-        (set @entity.deps (array/map (array/filter (object/entries (object/get (json/parse (str/default (bytes/to-string @payload.data) "") NoticeManifest) "dependencies" {})) (fn t (str/startsWith (array/nth @t 0) (quote "@almadar/")))) (fn t { name: (array/nth @t 0), range: (array/nth @t 1) })))
+      UN_MANIFEST_READ -> scanning when (!= (json/parse (default (bytes/to-string @payload.data) "") NoticeManifest) null)
+        (set @entity.deps (array/map (array/filter (object/entries (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeManifest) "dependencies" {})) (fn t (str/startsWith (array/nth @t 0) (quote "@almadar/")))) (fn t { name: (array/nth @t 0), range: (array/nth @t 1) })))
         (set @entity.cursor 0)
         (emit UN_NEXT { })
-      UN_MANIFEST_READ -> writing when (= (json/parse (str/default (bytes/to-string @payload.data) "") NoticeManifest) null)
+      UN_MANIFEST_READ -> writing when (= (json/parse (default (bytes/to-string @payload.data) "") NoticeManifest) null)
         (emit UN_WRITE { })
       UN_MANIFEST_ABSENT -> writing
         (emit UN_WRITE { })
@@ -120,11 +120,11 @@ orbital OrbUpdateNoticeOrbital {
       UN_PKG_ABSENT -> scanning
         (set @entity.cursor (+ @entity.cursor 1))
         (emit UN_NEXT { })
-      UN_PKG_READ -> scanning when (= (object/get (json/parse (str/default (bytes/to-string @payload.data) "") NoticeInstalled) "version") null)
+      UN_PKG_READ -> scanning when (= (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeInstalled) "version") null)
         (set @entity.cursor (+ @entity.cursor 1))
         (emit UN_NEXT { })
-      UN_PKG_READ -> looking when (!= (object/get (json/parse (str/default (bytes/to-string @payload.data) "") NoticeInstalled) "version") null)
-        (set @entity.installed (object/get (json/parse (str/default (bytes/to-string @payload.data) "") NoticeInstalled) "version"))
+      UN_PKG_READ -> looking when (!= (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeInstalled) "version") null)
+        (set @entity.installed (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeInstalled) "version"))
         (emit UN_ASK { requestId: (str/concat @entity.cursor), name: (object/get (array/nth @entity.deps @entity.cursor) "name"), tag: "latest" })
     }
 

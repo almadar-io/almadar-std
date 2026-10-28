@@ -45,12 +45,12 @@ orbital OrbLintBindingFieldsOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((nohits : [BfHit] []) (noroots : [BfRoot] []) (nof : [OrbFinding] []) (pP : string (str/concat (quote "@") "payload.")) (fP : string (str/concat (quote "@") "fromEntity.")) (eP : string (str/concat (quote "@") "entity.")) (orbitals : [BfOrbital] (object/get @payload.program "orbitals" [])))
-  (let ((defIdx : Map string BfDef (or (object/fromEntries
+  (let ((defIdx : Map string BfDef (default (object/fromEntries
   (array/flatten (array/map @orbitals (fn o
     (array/map
       (array/filter (array/concat [(object/get @o "entity" null)] (object/get @o "auxiliaryEntities" [])) (fn e (validate/object @e)))
       (fn e [(object/get @e "name" ""), { name: (object/get @e "name" ""), fields: (array/map (object/get @e "fields" []) (fn f (object/get @f "name" ""))) }]))))))
-  {})) (plIdx : Map string [BfField] (or (object/fromEntries
+  {})) (plIdx : Map string [BfField] (default (object/fromEntries
   (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
     (let ((trts : [BfTrait] (object/get (array/nth @orbitals @oi) "traits" [])))
       (array/flatten (array/map (array/range 0 (array/len @trts)) (fn ti
@@ -114,7 +114,7 @@ orbital OrbLintBindingFieldsOrbital {
     (array/flatten
       (array/map @roots
         (fn x
-          (let ((hs (or (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
+          (let ((hs (default (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
   (if (str/startsWith @n (quote "@")) [{ rel: "", s: @n }] @nohits)
   (if (validate/array @n)
     (array/flatten

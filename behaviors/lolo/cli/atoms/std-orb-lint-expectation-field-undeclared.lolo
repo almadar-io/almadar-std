@@ -49,23 +49,23 @@ orbital OrbLintExpectationFieldUndeclaredOrbital {
          (array/flatten (array/map (array/concat
   (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ti (array/map (array/range 0 (array/len (object/get (array/nth @trans @ti) "effects" []))) (fn ei { p: (str/concat @base ".stateMachine.transitions[" @ti "].effects[" @ei "]"), eff: (array/nth (object/get (array/nth @trans @ti) "effects" []) @ei) })))))
   (array/flatten (array/map (array/range 0 (array/len @ticks)) (fn ti (array/map (array/range 0 (array/len (object/get (array/nth @ticks @ti) "effects" []))) (fn ei { p: (str/concat @base ".ticks[" @ti "].effects[" @ei "]"), eff: (array/nth (object/get (array/nth @ticks @ti) "effects" []) @ei) }))))))
-          (fn s (array/flatten (array/map (let ((eff (object/get @s "eff"))) (let ((l (or (as @eff LNodes) [])))
-  (if (or (< (array/len @l) 3) (!= (or (as (if (> (array/len @l) 0) (array/nth @l 0) null) LStr) "") "persist")) []
-    (let ((a1 (or (as (if (> (array/len @l) 1) (array/nth @l 1) null) LStr) "")))
+          (fn s (array/flatten (array/map (let ((eff (object/get @s "eff"))) (let ((l (default (as @eff LNodes) [])))
+  (if (or (< (array/len @l) 3) (!= (default (as (if (> (array/len @l) 0) (array/nth @l 0) null) LStr) "") "persist")) []
+    (let ((a1 (default (as (if (> (array/len @l) 1) (array/nth @l 1) null) LStr) "")))
       (if (= @a1 "batch")
-        (array/filter (let ((ops (or (as (if (> (array/len @l) 2) (array/nth @l 2) null) LNodes) [])))(array/flatten (array/map (array/filter (array/map (if (= (array/len @ops) 0) []
+        (array/filter (let ((ops (default (as (if (> (array/len @l) 2) (array/nth @l 2) null) LNodes) [])))(array/flatten (array/map (array/filter (array/map (if (= (array/len @ops) 0) []
         (if (!= (as (if (> (array/len @ops) 0) (array/nth @ops 0) null) LStr) null)
-          (if (= (or (as (if (> (array/len @ops) 0) (array/nth @ops 0) null) LStr) "") "list") (array/drop @ops 1)
-            (if (and (= (or (as (if (> (array/len @ops) 0) (array/nth @ops 0) null) LStr) "") "array/map") (= (array/len @ops) 3))
-              (let ((fl (or (as (array/nth @ops 2) LNodes) []))) (if (and (> (array/len @fl) 2) (array/includes ["fn"] (or (as (if (> (array/len @fl) 0) (array/nth @fl 0) null) LStr) ""))) [(array/last @fl)] []))
+          (if (= (default (as (if (> (array/len @ops) 0) (array/nth @ops 0) null) LStr) "") "list") (array/drop @ops 1)
+            (if (and (= (default (as (if (> (array/len @ops) 0) (array/nth @ops 0) null) LStr) "") "array/map") (= (array/len @ops) 3))
+              (let ((fl (default (as (array/nth @ops 2) LNodes) []))) (if (and (> (array/len @fl) 2) (array/includes ["fn"] (default (as (if (> (array/len @fl) 0) (array/nth @fl 0) null) LStr) ""))) [(array/last @fl)] []))
               []))
-          @ops)) (fn el (or (as @el LNodes) []))) (fn tp (and (> (array/len @tp) 0) (array/includes ["create", "update", "delete"] (or (as (if (> (array/len @tp) 0) (array/nth @tp 0) null) LStr) "")))))
-        (fn tp (let ((a (or (as (if (> (array/len @tp) 0) (array/nth @tp 0) null) LStr) "")) (en (or (as (if (> (array/len @tp) 1) (array/nth @tp 1) null) LStr) "")))
+          @ops)) (fn el (default (as @el LNodes) []))) (fn tp (and (> (array/len @tp) 0) (array/includes ["create", "update", "delete"] (default (as (if (> (array/len @tp) 0) (array/nth @tp 0) null) LStr) "")))))
+        (fn tp (let ((a (default (as (if (> (array/len @tp) 0) (array/nth @tp 0) null) LStr) "")) (en (default (as (if (> (array/len @tp) 1) (array/nth @tp 1) null) LStr) "")))
           (if (or (= @a "delete") (= @en "") (str/startsWith @en (str/concat (quote "@") ""))) []
             (let ((dp (if (= @a "create") 2 3)))
               [{ a: @a, e: @en, has: (> (array/len @tp) @dp), d: (as (if (> (array/len @tp) @dp) (array/nth @tp @dp) null) LObj) }]))))))) (fn w (!= (object/get @w "d") null)))
         (let ((ei (if (array/includes ["create", "upsert", "update", "delete"] @a1) 2 1)))
-          (let ((en (or (as (if (> (array/len @l) @ei) (array/nth @l @ei) null) LStr) "")) (pd (as (if (> (array/len @l) (+ @ei 1)) (array/nth @l (+ @ei 1)) null) LObj)))
+          (let ((en (default (as (if (> (array/len @l) @ei) (array/nth @l @ei) null) LStr) "")) (pd (as (if (> (array/len @l) (+ @ei 1)) (array/nth @l (+ @ei 1)) null) LObj)))
             (if (or (= @en "") (= @pd null) (and (= (+ @ei 1) (- (array/len @l) 1)) (object/has @pd "emit"))) []
               [{ e: @en, d: @pd }]))))))))
            (fn tg (let ((own (array/find @exps (fn e (and (= (object/get @e "kind" "") "entity") (= (object/get @e "name" "") (object/get @tg "e")) (not (object/get @e "strict" false)))))))

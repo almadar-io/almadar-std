@@ -55,7 +55,7 @@ orbital OrbLintBindingSettersOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((nostr : [string] []) (nonum : [number] []) (nof : [OrbFinding] []) (nosc : [SsSiteC] []) (noxs : [SsX] []) (nofields : [SsField] []) (nosets : [SsSets] []) (nosite : SsSite { pn: "", pl: "", ev: "", sf: [], ss: {}, pay: null, hasPay: false }) (nolinks : [SsLink] []) (busEx : [string] @entity.busExcluded) (eP : string (str/concat (quote "@") "entity.")) (eB : string (str/concat (quote "@") "entity")) (tP2 : string (str/concat (quote "@") "trait.")) (pP : string (str/concat (quote "@") "payload.")) (cP : string (str/concat (quote "@") "callsitePayload.")) (cpP : string (str/concat (quote "@") "callsitePayload.")) (orbitals : [SsOrbital] (object/get @payload.program "orbitals" [])))
-  (let ((entIdx : Map string SsDef (or (object/fromEntries
+  (let ((entIdx : Map string SsDef (default (object/fromEntries
   (array/flatten (array/map @orbitals (fn o
     (array/map
       (array/filter (array/concat [(object/get @o "entity" null)] (object/get @o "auxiliaryEntities" [])) (fn e (validate/object @e)))
@@ -79,7 +79,7 @@ orbital OrbLintBindingSettersOrbital {
                         (array/map @effs (fn ef { w: "e", j: @j, x: @ef })))))))
                   (array/flatten (array/map @tks (fn tk (array/map (object/get @tk "effects" []) (fn ef { w: "t", j: 0, x: @ef }))))))
                 (array/flatten (array/map (object/keys @cfgm) (fn kn (if (= (object/get (object/get @cfgm @kn) "default" null) null) @noxs [{ w: "c", j: 0, x: (object/get (object/get @cfgm @kn) "default" null) }])))))))
-          (let ((tx : [SsXT] (array/map @xs (fn q { w: (object/get @q "w" ""), j: (object/get @q "j" 0), t: (or (tree/fold (object/get @q "x" null) (fn (n k) (if (validate/string @n)
+          (let ((tx : [SsXT] (array/map @xs (fn q { w: (object/get @q "w" ""), j: (object/get @q "j" 0), t: (default (tree/fold (object/get @q "x" null) (fn (n k) (if (validate/string @n)
   (if (str/startsWith @n @eP)
     (let ((fld (array/first (str/split (array/first (str/split (str/slice @n 8) ".")) "["))))
       (array/concat
@@ -121,11 +121,11 @@ orbital OrbLintBindingSettersOrbital {
               tk: (array/flatten (array/map (array/filter @tx (fn q (= (object/get @q "w" "") "t"))) (fn q (object/get @q "t" @nostr)))),
               cfg: (array/flatten (array/map (array/filter @tx (fn q (= (object/get @q "w" "") "c"))) (fn q (object/get @q "t" @nostr)))),
               hasCfg: (object/has @t "config"),
-              pls: (or (object/fromEntries (array/flatten (array/map (object/get (object/get @t "stateMachine" { events: [] }) "events" []) (fn e (if (object/has @e "payloadSchema") [[(object/get @e "key" ""), (object/get @e "payloadSchema")]] []))))) {}),
+              pls: (default (object/fromEntries (array/flatten (array/map (object/get (object/get @t "stateMachine" { events: [] }) "events" []) (fn e (if (object/has @e "payloadSchema") [[(object/get @e "key" ""), (object/get @e "payloadSchema")]] []))))) {}),
               ro: (array/every @trs (fn tr (array/includes @busEx (object/get @tr "event" "")))) }))))))))
       (let ((names : [string] (array/map @rows (fn r (object/get @r "n" ""))))
             (setsRows : [SsSets] (array/map @rows (fn r { n: (object/get @r "n" ""), s: (array/unique (array/map (array/filter (array/concat (array/flatten (array/map (object/get @r "trs" []) (fn tr (array/concat (object/get @tr "g" @nostr) (object/get @tr "e" @nostr))))) (object/get @r "tk" @nostr)) (fn q (str/startsWith @q "s:"))) (fn q (str/slice @q 2)))) })))
-            (roByName : Map string boolean (or (object/fromEntries (array/map @rows (fn r [(object/get @r "n" ""), (object/get @r "ro" false)]))) {})))
+            (roByName : Map string boolean (default (object/fromEntries (array/map @rows (fn r [(object/get @r "n" ""), (object/get @r "ro" false)]))) {})))
         (let ((setsByName : Map string [SsSets] (array/groupBy @setsRows "n"))
               (sc : [SsSiteC] (array/flatten (array/map (array/range 0 (array/len @rows)) (fn k
         (let ((rw (array/nth @rows @k)))
@@ -137,7 +137,7 @@ orbital OrbLintBindingSettersOrbital {
                   [{ emb: @emb,
                      site: { pn: (object/get @rw "n" ""), pl: (object/get @rw "l" ""), ev: (object/get @tr "ev" ""),
                              sf: (array/unique (array/map (array/filter @toks (fn q (str/startsWith @q "s:"))) (fn q (str/slice @q 2)))),
-                             ss: (or (object/fromEntries (array/map (array/filter (object/get @tr "e" @nostr) (fn q (str/startsWith @q "v:"))) (fn q [(array/first (str/split (str/slice @q 2) "|")), (str/slice (str/slice @q 2) (+ 1 (str/len (array/first (str/split (str/slice @q 2) "|")))))]))) {}),
+                             ss: (default (object/fromEntries (array/map (array/filter (object/get @tr "e" @nostr) (fn q (str/startsWith @q "v:"))) (fn q [(array/first (str/split (str/slice @q 2) "|")), (str/slice (str/slice @q 2) (+ 1 (str/len (array/first (str/split (str/slice @q 2) "|")))))]))) {}),
                              pay: (object/get (object/get @rw "pls" {}) (object/get @tr "ev" "") null),
                              hasPay: (object/has (object/get @rw "pls" {}) (object/get @tr "ev" "")) } }])))))))))))
       (sites : [SsSite] (array/map @sc (fn c (object/get @c "site" @nosite))))

@@ -466,8 +466,6 @@ export interface StdOperatorMeta extends OperatorMeta {
     description: string;
     optional?: boolean;
     defaultValue?: unknown;
-    /** The kernel raises when this operand is null; `orb validate` refuses a value that can be missing here. */
-    rejectsNull?: boolean;
   }[];
   /** Example usage */
   example?: string;

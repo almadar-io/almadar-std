@@ -42,44 +42,44 @@ orbital ReviewCycleOrbital {
       INIT -> draft
       ReviewSubmitted -> in_review when @config.enabled
         (set @entity.round 1)
-        (set @entity.lastNote (str/default ?note ""))
-        (emit ReviewRequested { itemId: (str/default ?id ""), round: 1, resubmission: false })
-        (persist create ReviewEvent { itemId: (str/default ?id ""), fromState: @fromState, toState: @toState, round: 1, actor: (str/default @user.id ""), note: (str/default ?note ""), at: @now } { emit: { success: ReviewLogged, failure: ReviewLogFailed } })
+        (set @entity.lastNote (default ?note ""))
+        (emit ReviewRequested { itemId: (default ?id ""), round: 1, resubmission: false })
+        (persist create ReviewEvent { itemId: (default ?id ""), fromState: @fromState, toState: @toState, round: 1, actor: (default @user.id ""), note: (default ?note ""), at: @now } { emit: { success: ReviewLogged, failure: ReviewLogFailed } })
     }
 
     state in_review {
       INIT -> in_review
       ReviewLogged -> in_review
-        (set @entity.lastLogId (str/default ?id ""))
+        (set @entity.lastLogId (default ?id ""))
       ReviewLogFailed -> in_review
         (notify error (str/concat "Couldn't record the review history — " ?error))
       ReviewChangesRequested -> changes_requested
-        (set @entity.lastNote (str/default ?note ""))
-        (emit ReviewDecided { itemId: (str/default ?id ""), decision: @toState, round: @entity.round })
-        (persist create ReviewEvent { itemId: (str/default ?id ""), fromState: @fromState, toState: @toState, round: @entity.round, actor: (str/default @user.id ""), note: (str/default ?note ""), at: @now } { emit: { success: ReviewLogged, failure: ReviewLogFailed } })
+        (set @entity.lastNote (default ?note ""))
+        (emit ReviewDecided { itemId: (default ?id ""), decision: @toState, round: @entity.round })
+        (persist create ReviewEvent { itemId: (default ?id ""), fromState: @fromState, toState: @toState, round: @entity.round, actor: (default @user.id ""), note: (default ?note ""), at: @now } { emit: { success: ReviewLogged, failure: ReviewLogFailed } })
       ReviewApproved -> approved when (or (not @config.requireSeparateApproval) (not (array/some @prevStates (fn s (or (= @s "draft") (= @s "changes_requested"))))))
-        (set @entity.lastNote (str/default ?note ""))
-        (emit ReviewDecided { itemId: (str/default ?id ""), decision: @toState, round: @entity.round })
-        (persist create ReviewEvent { itemId: (str/default ?id ""), fromState: @fromState, toState: @toState, round: @entity.round, actor: (str/default @user.id ""), note: (str/default ?note ""), at: @now } { emit: { success: ReviewLogged, failure: ReviewLogFailed } })
+        (set @entity.lastNote (default ?note ""))
+        (emit ReviewDecided { itemId: (default ?id ""), decision: @toState, round: @entity.round })
+        (persist create ReviewEvent { itemId: (default ?id ""), fromState: @fromState, toState: @toState, round: @entity.round, actor: (default @user.id ""), note: (default ?note ""), at: @now } { emit: { success: ReviewLogged, failure: ReviewLogFailed } })
     }
 
     state changes_requested {
       INIT -> changes_requested
       ReviewLogged -> changes_requested
-        (set @entity.lastLogId (str/default ?id ""))
+        (set @entity.lastLogId (default ?id ""))
       ReviewLogFailed -> changes_requested
         (notify error (str/concat "Couldn't record the review history — " ?error))
       ReviewSubmitted -> in_review
         (set @entity.round (+ @entity.round 1))
-        (set @entity.lastNote (str/default ?note ""))
-        (emit ReviewRequested { itemId: (str/default ?id ""), round: @entity.round, resubmission: true })
-        (persist create ReviewEvent { itemId: (str/default ?id ""), fromState: @fromState, toState: @toState, round: @entity.round, actor: (str/default @user.id ""), note: (str/default ?note ""), at: @now } { emit: { success: ReviewLogged, failure: ReviewLogFailed } })
+        (set @entity.lastNote (default ?note ""))
+        (emit ReviewRequested { itemId: (default ?id ""), round: @entity.round, resubmission: true })
+        (persist create ReviewEvent { itemId: (default ?id ""), fromState: @fromState, toState: @toState, round: @entity.round, actor: (default @user.id ""), note: (default ?note ""), at: @now } { emit: { success: ReviewLogged, failure: ReviewLogFailed } })
     }
 
     state approved {
       INIT -> approved
       ReviewLogged -> approved
-        (set @entity.lastLogId (str/default ?id ""))
+        (set @entity.lastLogId (default ?id ""))
       ReviewLogFailed -> approved
         (notify error (str/concat "Couldn't record the review history — " ?error))
     }

@@ -35,7 +35,7 @@ orbital OrbEmbedChainOrbital {
                   (pairs (array/flatten (array/map (array/range 0 (array/len @inl)) (fn kx
                     (let ((t (array/nth @inl @kx))) (let ((tn (object/get @t "name" "")))
                       (let ((gt (array/includes (object/get @entity.roots (str/concat @oi "-" (array/nth @inlK @kx)) []) (quote "@trait")))) (let ((roots (if @gt (array/concat (array/concat
-                                      (array/map (object/values (object/get @t "config" {})) (fn f { x: (object/get (or @f {}) "default" null) }))
+                                      (array/map (object/values (object/get @t "config" {})) (fn f { x: (object/get (default @f {}) "default" null) }))
                                       (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn x [{ x: (object/get @x "guard" null) }, { x: (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) }]))))
                                       (array/flatten (array/map (object/get @t "ticks" []) (fn x [{ x: (object/get @x "guard" null) }, { x: (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) }])))) [])))
                         (if @gt
@@ -43,11 +43,11 @@ orbital OrbEmbedChainOrbital {
   (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nr @r))))
     (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @nr @r))))
       (if (and (validate/string @n) (str/startsWith @n (quote "@trait."))) [(array/first (str/split (array/first (str/split (str/slice @n 7 (str/len @n)) ".")) "["))] @nr)))) "FiredNode")))
-                            (array/map (array/filter (array/unique (or @fr [])) (fn c (and (!= @c "") (!= @c @tn)))) (fn c [@c, @tn])))
+                            (array/map (array/filter (array/unique (default @fr [])) (fn c (and (!= @c "") (!= @c @tn)))) (fn c [@c, @tn])))
                           []))))))))))
-              (let ((hosts (or (object/fromEntries (array/reverse @pairs)) {})))
+              (let ((hosts (default (object/fromEntries (array/reverse @pairs)) {})))
                 (let ((chains (object/fromEntries (array/map @names (fn nm [@nm, (object/get (array/reduce (array/range 0 (+ (array/len @names) 1)) { cur: @nm, ch: (array/drop @names (array/len @names)), stop: false } (fn (acc i) (if (object/get @acc "stop") @acc (let ((h (object/get @hosts (object/get @acc "cur") ""))) (if (or (= @h "") (= @h @nm) (array/includes (object/get @acc "ch") @h)) { cur: (object/get @acc "cur"), ch: (object/get @acc "ch"), stop: true } { cur: @h, ch: (array/append (object/get @acc "ch") @h), stop: false}))))) "ch")])))))
-                  (or @chains {}))))))))))) }))
+                  (default @chains {}))))))))))) }))
     }
 
     emits {
