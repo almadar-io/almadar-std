@@ -152,7 +152,7 @@ orbital OrbLintConfigRoleListsOrbital {
             (let ((orb (array/nth @orbs @oi)))
               (let ((exps (array/filter (object/get @orb "expects" []) (fn e (= (object/get @e "kind" "") "identity")))))
                 (let ((hasShape (and (> (array/len @exps) 0) (object/has (array/first @exps) "shape"))) (exp (array/first @exps)))
-                  (let ((hasEnv (or @hasDecl @hasShape)) (skip (not @hasDecl)) (flds (if @hasDecl (object/get @declared "fields" []) (object/get @exp "shape" []))) (idName (if @hasDecl (object/get @declared "name" "") (if (and @hasShape (object/has @exp "name")) (object/get @exp "name" "") (quote "@user")))))
+                  (let ((hasEnv (or @hasDecl @hasShape)) (skip (not @hasDecl)) (flds (if @hasDecl (object/get @declared "fields" []) (if @hasShape (object/get @exp "shape" []) []))) (idName (if @hasDecl (object/get @declared "name" "") (if (and @hasShape (object/has @exp "name")) (object/get @exp "name" "") (quote "@user")))))
                     (let ((rf (default (as (default (object/fromEntries (array/flatten (array/map @flds (fn f (let ((v1 (object/get @f "values" @nostr))) (let ((vs (if (> (array/len @v1) 0) @v1 (object/get (object/get @f "items" { values: [] }) "values" @nostr)))) (if (> (array/len @vs) 0) [[(object/get @f "name" ""), @vs]] @nopair))))))) {}) RlRfMap) @norf)))
                       (if (or (not @hasEnv) (= (array/len (object/keys @rf)) 0))
                         @noctx

@@ -89,7 +89,7 @@ orbital OrbLintHttpSiteOrbital {
   (let ((nob : [boolean] []) (nos : [string] []))
     (if (validate/array @n)
       (let ((len (array/len @n)) (h (if (> (array/len @n) 0) (array/first @n) null)) (kids @k))
-        (let ((anyf (array/some @kids (fn c (= (object/get @c "f") true)))) (chs (array/map @kids (fn c (object/get @c "h")))))
+        (let ((anyf (array/some @kids (fn c (if (validate/object @c) (= (object/get @c "f") true) false)))) (chs (array/map @kids (fn c (if (validate/object @c) (object/get @c "h") false)))))
           (if (and (validate/string @h) (array/includes ["if", "when"] @h) (>= @len 3))
             (let ((cn (array/nth @n 1)))
               (let ((live (not (object/get (tree/fold @cn (fn (c kk)
@@ -118,15 +118,15 @@ orbital OrbLintHttpSiteOrbital {
       { sf: (= (array/len (object/keys @c)) 0), st: (> (array/len (object/keys @c)) 0) }
       { sf: (or (= @c null) (and (validate/boolean @c) (not @c)) (and (validate/number @c) (= @c 0)) (and (validate/string @c) (= @c ""))),
         st: (or (and (validate/boolean @c) @c) (and (validate/number @c) (!= @c 0)) (and (validate/string @c) (!= @c "") (not (str/startsWith @c (quote "@"))))) }))) HsVal) "sf"))))
-                (let ((f (or (and @live (object/get (array/nth @kids 2) "f")) (and (= @h "if") (> @len 3) (object/get (array/nth @kids 3) "f")) (and (= @h "when") @live (array/some (array/slice @kids 3 (array/len @kids)) (fn c (object/get @c "f")))))))
+                (let ((f (or (and @live (object/get (array/nth @kids 2) "f")) (and (= @h "if") (> @len 3) (object/get (array/nth @kids 3) "f")) (and (= @h "when") @live (array/some (array/slice @kids 3 (array/len @kids)) (fn c (if (validate/object @c) (object/get @c "f") false)))))))
                   { f: @f, h: @f, ch: @chs })))
             (if (and (validate/string @h) (= @h "let") (>= @len 2))
               (let ((b (array/nth @kids 1)))
                 (let ((bound (if (validate/array (array/nth @n 1)) (array/some (object/get @b "ch") (fn x @x)) (object/get @b "f"))))
-                  (let ((f (or @bound (array/some (array/slice @kids 2 (array/len @kids)) (fn c (object/get @c "f"))))))
+                  (let ((f (or @bound (array/some (array/slice @kids 2 (array/len @kids)) (fn c (if (validate/object @c) (object/get @c "f") false))))))
                     { f: @f, h: @f, ch: @chs })))
               (if (and (validate/string @h) (array/includes ["fn"] @h) (>= @len 3))
-                (let ((f (array/some (array/slice @kids 2 (array/len @kids)) (fn c (object/get @c "f")))))
+                (let ((f (array/some (array/slice @kids 2 (array/len @kids)) (fn c (if (validate/object @c) (object/get @c "f") false)))))
                   { f: @f, h: @f, ch: @chs })
                 { f: (or @anyf
                          (and (validate/string @h) (array/includes @servers @h)

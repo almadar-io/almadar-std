@@ -2,7 +2,7 @@
  * JSON Module - JSON parsing and serialization
  *
  * `(json/parse s)` — pure, deterministic: string → parsed value. Invalid JSON
- * or non-string input → null, never throws — guards can branch on null. No
+ * → null — guards can branch on null; non-string input is a type mismatch. No
  * reviver, no prototype access, no side effects. `(json/stringify v)` is the
  * inverse: any value → JSON string.
  *
@@ -29,7 +29,7 @@ export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-json',
     minArity: 2,
     maxArity: 2,
-    description: 'Parse a JSON string into a value of the declared shape (the second argument names a type); invalid JSON or non-string input returns null (never throws)',
+    description: 'Parse a JSON string into a value of the declared shape (the second argument names a type); invalid JSON or text not of the shape returns null; a non-string input (null included) is a type mismatch',
     hasSideEffects: false,
     failable: {},
     returnType: nullable(SHAPE),

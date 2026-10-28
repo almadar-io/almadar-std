@@ -243,7 +243,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-validate',
     minArity: 2,
     maxArity: 2,
-    description: 'Check if string matches a regex pattern of the shared dialect (the subset ECMAScript and the Rust regex crate evaluate identically: no lookaround, backreferences, named groups or inline flags; \\d \\w \\b are ASCII; \\p{L} \\p{N} general categories are supported). A non-string value, or an invalid or unsupported pattern, is false',
+    description: 'Check if string matches a regex pattern of the shared dialect (the subset ECMAScript and the Rust regex crate evaluate identically: no lookaround, backreferences, named groups or inline flags; \\d \\w \\b are ASCII; \\p{L} \\p{N} general categories are supported). An invalid or unsupported pattern is false; a non-string value or pattern is a type mismatch',
     hasSideEffects: false,
     returnType: 'boolean',
     params: [

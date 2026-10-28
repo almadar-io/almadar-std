@@ -57,7 +57,7 @@ orbital OrbLintUserIdentityOrbital {
    (let ((hasExp (> (array/len @exps) 0)))
     (let ((exp (array/first @exps)))
      (let ((hasShape (and @hasExp (object/has @exp "shape"))))
-      (let ((expNm (if (object/has @exp "name") (object/get @exp "name" "") (quote "@user"))))
+      (let ((expNm (if (and @hasExp (object/has @exp "name")) (object/get @exp "name" "") (quote "@user"))))
        (let ((envs (array/concat
                     (if @hasDecl [{ f: (object/get @declared "fields" []), nm: (object/get @declared "name" ""), skip: false }] (if @hasShape [{ f: (object/get @exp "shape" []), nm: @expNm, skip: true }] []))
                     (if (and @hasDecl @hasShape) [{ f: (object/get @exp "shape" []), nm: @expNm, skip: true }] []))))

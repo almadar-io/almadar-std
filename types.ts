@@ -188,7 +188,7 @@ export interface HttpWireMeta {
 export type EffectFamily = 'on-device' | 'tab';
 
 /** A host outside the runtime that executes an effect. */
-export type EffectHost = 'program' | 'os' | 'kv';
+export type EffectHost = 'program' | 'os' | 'kv' | 'substrate';
 
 export interface OperatorMeta {
   /** Operator category */
@@ -240,7 +240,7 @@ export interface OperatorMeta {
   family?: EffectFamily;
   /** Execution site of an effect operator; set on every `hasSideEffects` operator, absent on pure ones. */
   runsOn?: RunsOn;
-  /** The host that executes this effect: `program` = the shared program host (`@almadar/runtime` `host/program` `runProgramEffect`), on both execution paths. `os` = the `os/` family, executed by the OS host under a declared grant. Absent for effects the runtime executes itself. */
+  /** The host that executes this effect: `program` = the shared program host (`@almadar/runtime` `host/program` `runProgramEffect`), on both execution paths. `os` = the `os/` family, executed by the OS host under a declared grant. `substrate` = the substrate services (llm, memory, trace, session, workspace), answered by the substrate and lowered as Custom effects. Absent for effects the runtime executes itself. */
   host?: EffectHost;
 }
 

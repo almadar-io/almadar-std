@@ -14,6 +14,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
   'llm/generate': {
     module: 'llm',
     category: 'std-llm',
+    host: 'substrate',
     minArity: 1,
     maxArity: 2,
     description: 'Generate text from an LLM. Returns the generated string.',
@@ -29,6 +30,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
   'llm/call-tools': {
     module: 'llm',
     category: 'std-llm',
+    host: 'substrate',
     minArity: 2,
     maxArity: 2,
     description: 'Call the LLM with tool definitions. Returns the assistant response with optional tool calls and token usage.',
@@ -44,6 +46,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
   'llm/embed': {
     module: 'llm',
     category: 'std-llm',
+    host: 'substrate',
     minArity: 1,
     maxArity: 1,
     description: 'Generate embeddings for an array of texts. Returns a 2D array of floats.',
@@ -58,6 +61,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
   'llm/token-count': {
     module: 'llm',
     category: 'std-llm',
+    host: 'substrate',
     minArity: 0,
     maxArity: 0,
     description: 'Get the current token count in the context window.',
@@ -69,6 +73,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
   'llm/switch': {
     module: 'llm',
     category: 'std-llm',
+    host: 'substrate',
     minArity: 1,
     maxArity: 2,
     description: 'Switch the active LLM provider and optionally the model.',
@@ -84,6 +89,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
   'llm/compact': {
     module: 'llm',
     category: 'std-llm',
+    host: 'substrate',
     minArity: 0,
     maxArity: 1,
     description: 'Compact the context window. Returns before/after token counts.',

@@ -14,6 +14,7 @@ import { STRING, list } from '../signature.js';
 export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
   'session/read-spec': {
     module: 'session', category: 'std-session',
+    host: 'substrate',
     minArity: 1, maxArity: 1,
     description: 'Read the per-orbital spec.json from the session store.',
     hasSideEffects: false,
@@ -23,6 +24,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'session/write-spec': {
     module: 'session', category: 'std-session',
+    host: 'substrate',
     minArity: 2, maxArity: 2,
     description: 'Write the per-orbital spec.json to the session store.',
     hasSideEffects: true, runsOn: 'any', returnType: 'void',
@@ -34,6 +36,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'session/read-memory': {
     module: 'session', category: 'std-session',
+    host: 'substrate',
     minArity: 1, maxArity: 1,
     description: 'Read the per-orbital memory from the session store.',
     hasSideEffects: false,
@@ -43,6 +46,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'session/write-memory': {
     module: 'session', category: 'std-session',
+    host: 'substrate',
     minArity: 2, maxArity: 2,
     description: 'Write per-orbital memory to the session store.',
     hasSideEffects: true, runsOn: 'any', returnType: 'void',
@@ -54,6 +58,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'session/read-history': {
     module: 'session', category: 'std-session',
+    host: 'substrate',
     minArity: 1, maxArity: 1,
     description: 'Read the per-orbital conversation history.',
     hasSideEffects: false,
@@ -63,6 +68,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'session/append-history': {
     module: 'session', category: 'std-session',
+    host: 'substrate',
     minArity: 2, maxArity: 2,
     description: 'Append an entry to the per-orbital conversation history.',
     hasSideEffects: true, runsOn: 'any', returnType: 'void',
@@ -74,6 +80,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'session/read-errors': {
     module: 'session', category: 'std-session',
+    host: 'substrate',
     minArity: 1, maxArity: 1,
     description: 'Read validation errors for an orbital.',
     hasSideEffects: false,
@@ -83,6 +90,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'session/write-errors': {
     module: 'session', category: 'std-session',
+    host: 'substrate',
     minArity: 2, maxArity: 2,
     description: 'Write validation errors for an orbital.',
     hasSideEffects: true, runsOn: 'any', returnType: 'void',
@@ -94,6 +102,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'session/read-analysis': {
     module: 'session', category: 'std-session',
+    host: 'substrate',
     minArity: 0, maxArity: 0,
     description: 'Read the pre-computed analysis result.',
     hasSideEffects: false,

@@ -22,6 +22,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Componentwise vector addition a+b',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'vector',
     params: [
       { name: 'a', type: 'vector', description: 'First vector {x,y[,z]}' },
@@ -36,6 +37,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Componentwise vector subtraction a-b',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'vector',
     params: [
       { name: 'a', type: 'vector', description: 'First vector {x,y[,z]}' },
@@ -50,6 +52,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Componentwise scalar multiply a*k',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'vector',
     params: [
       { name: 'a', type: 'vector', description: 'Vector {x,y[,z]}' },
@@ -64,6 +67,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Dot product ax·bx+ay·by(+az·bz)',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'number',
     params: [
       { name: 'a', type: 'vector', description: 'First vector {x,y[,z]}' },
@@ -78,6 +82,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: '3D cross product → vector; 2D → scalar ax·by-ay·bx',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: union('vector', NUMBER),
     params: [
       { name: 'a', type: 'vector', description: 'First vector {x,y[,z]}' },
@@ -92,6 +97,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Vector magnitude sqrt(dot(a,a))',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'number',
     params: [{ name: 'a', type: 'vector', description: 'Vector {x,y[,z]}' }],
     example: '["vec/length", {"x":3,"y":4}] // => 5',
@@ -103,6 +109,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Squared magnitude dot(a,a)',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'number',
     params: [{ name: 'a', type: 'vector', description: 'Vector {x,y[,z]}' }],
     example: '["vec/length-sq", {"x":3,"y":4}] // => 25',
@@ -114,6 +121,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Unit vector a/len; zero-length → zero vector (same dim)',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'vector',
     params: [{ name: 'a', type: 'vector', description: 'Vector {x,y[,z]}' }],
     example: '["vec/normalize", {"x":3,"y":4}] // => {"x":0.6,"y":0.8}',
@@ -125,6 +133,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Euclidean distance length(sub(a,b))',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'number',
     params: [
       { name: 'a', type: 'vector', description: 'First vector {x,y[,z]}' },
@@ -139,6 +148,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Squared distance length-sq(sub(a,b))',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'number',
     params: [
       { name: 'a', type: 'vector', description: 'First vector {x,y[,z]}' },
@@ -153,6 +163,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 3,
     description: 'Componentwise linear interpolation a+(b-a)*t',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'vector',
     params: [
       { name: 'a', type: 'vector', description: 'Start vector {x,y[,z]}' },
@@ -168,6 +179,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Heading atan2(y,x) (1 arg) or angle between two vectors (2 args), radians',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'number',
     params: [
       { name: 'a', type: 'vector', description: 'Vector {x,y[,z]}' },
@@ -182,6 +194,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: '2D rotate by rad (z preserved): x\'=x·cos-y·sin, y\'=x·sin+y·cos',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'vector',
     params: [
       { name: 'a', type: 'vector', description: 'Vector {x,y[,z]}' },
@@ -196,6 +209,7 @@ export const VEC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Clamp magnitude to max (preserves direction)',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'vector',
     params: [
       { name: 'a', type: 'vector', description: 'Vector {x,y[,z]}' },

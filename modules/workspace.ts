@@ -14,6 +14,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
   'workspace/read-orbital': {
     module: 'workspace',
     category: 'std-workspace',
+    host: 'substrate',
     minArity: 1, maxArity: 1,
     description: 'Read an orbital definition from the workspace by name.',
     hasSideEffects: false,
@@ -24,6 +25,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
   'workspace/write-orbital': {
     module: 'workspace',
     category: 'std-workspace',
+    host: 'substrate',
     minArity: 2, maxArity: 2,
     description: 'Write an orbital definition to the workspace.',
     hasSideEffects: true,
@@ -38,6 +40,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
   'workspace/read-file': {
     module: 'workspace',
     category: 'std-workspace',
+    host: 'substrate',
     minArity: 1, maxArity: 1,
     description: 'Read a file from the workspace.',
     hasSideEffects: false,
@@ -48,6 +51,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
   'workspace/write-file': {
     module: 'workspace',
     category: 'std-workspace',
+    host: 'substrate',
     minArity: 2, maxArity: 2,
     description: 'Write a file to the workspace.',
     hasSideEffects: true,
@@ -62,6 +66,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
   'workspace/exists': {
     module: 'workspace',
     category: 'std-workspace',
+    host: 'substrate',
     minArity: 1, maxArity: 1,
     description: 'Check if a file exists in the workspace.',
     hasSideEffects: false,
@@ -72,6 +77,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
   'workspace/list-orbitals': {
     module: 'workspace',
     category: 'std-workspace',
+    host: 'substrate',
     minArity: 0, maxArity: 0,
     description: 'List all orbital names in the workspace.',
     hasSideEffects: false,
@@ -82,6 +88,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
   'workspace/read-schema': {
     module: 'workspace',
     category: 'std-workspace',
+    host: 'substrate',
     minArity: 0, maxArity: 0,
     description: 'Read the composed schema.orb from the workspace.',
     hasSideEffects: false,
@@ -92,6 +99,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
   'workspace/write-schema': {
     module: 'workspace',
     category: 'std-workspace',
+    host: 'substrate',
     minArity: 1, maxArity: 1,
     description: 'Write the composed schema.orb to the workspace.',
     hasSideEffects: true,
@@ -103,6 +111,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
   'workspace/read-plan': {
     module: 'workspace',
     category: 'std-workspace',
+    host: 'substrate',
     minArity: 0, maxArity: 0,
     description: 'Read the plan snapshot from the workspace.',
     hasSideEffects: false,
@@ -113,6 +122,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
   'workspace/write-plan': {
     module: 'workspace',
     category: 'std-workspace',
+    host: 'substrate',
     minArity: 1, maxArity: 1,
     description: 'Write the plan snapshot to the workspace.',
     hasSideEffects: true,
@@ -124,6 +134,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
   'workspace/archive-orbital': {
     module: 'workspace',
     category: 'std-workspace',
+    host: 'substrate',
     minArity: 1, maxArity: 1,
     description: 'Archive (remove from active set) an orbital from the workspace.',
     hasSideEffects: true,

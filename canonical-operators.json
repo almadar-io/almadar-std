@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-28T08:40:16.905Z",
+  "generated": "2026-10-28T11:45:58.721Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -2396,7 +2396,19 @@
         },
         {
           "name": "dir",
-          "type": "string",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "asc"
+              },
+              {
+                "kind": "literal",
+                "value": "desc"
+              }
+            ]
+          },
           "description": "\"asc\" or \"desc\"",
           "optional": true,
           "defaultValue": "asc"
@@ -2701,7 +2713,7 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "boolean",
-      "description": "True iff base64/decode would succeed on the string (standard base64 decoding to valid UTF-8); null is false",
+      "description": "True iff base64/decode would succeed on the string (standard base64 decoding to valid UTF-8); a non-string input (null included) is a type mismatch",
       "module": "base64",
       "params": [
         {
@@ -7086,9 +7098,9 @@
         }
       ],
       "examples": [
-        "(ease/apply 0.5 \"in-quad\") // => 0.25"
+        "(ease/apply \"in-quad\" 0.5) // => 0.25"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "ease/smoothstep": {
       "category": "std-ease",
@@ -8090,9 +8102,9 @@
         }
       ],
       "examples": [
-        "(grid/screen-to-iso 640 360 1)"
+        "(grid/screen-to-iso {\"x\":32,\"y\":16} 64 32) // => {\"x\":1,\"y\":0}"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "grid/to-world": {
       "category": "std-grid",
@@ -8115,9 +8127,9 @@
         }
       ],
       "examples": [
-        "(grid/to-world 10 15) // => 150"
+        "(grid/to-world {\"x\":2,\"y\":3} 32) // => {\"x\":80,\"y\":112}"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "gzip/compress": {
       "category": "std-codec",
@@ -9945,7 +9957,7 @@
           }
         ]
       },
-      "description": "Parse a JSON string into a value of the declared shape (the second argument names a type); invalid JSON or non-string input returns null (never throws)",
+      "description": "Parse a JSON string into a value of the declared shape (the second argument names a type); invalid JSON or text not of the shape returns null; a non-string input (null included) is a type mismatch",
       "module": "json",
       "failable": {},
       "params": [
@@ -10448,6 +10460,7 @@
       "module": "llm",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Call LLM With Tools",
       "params": [
         {
@@ -10487,6 +10500,7 @@
       "module": "llm",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Compact Context",
       "params": [
         {
@@ -10536,6 +10550,7 @@
       "module": "llm",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Embed",
       "params": [
         {
@@ -10561,6 +10576,7 @@
       "module": "llm",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Generate",
       "params": [
         {
@@ -10598,6 +10614,7 @@
       "module": "llm",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Switch LLM",
       "params": [
         {
@@ -10624,6 +10641,7 @@
       "returnType": "number",
       "description": "Get the current token count in the context window.",
       "module": "llm",
+      "host": "substrate",
       "title": "Token Count",
       "examples": [
         "(llm/token-count) // => 5432"
@@ -11465,6 +11483,7 @@
       },
       "description": "List all memories, optionally filtered by category.",
       "module": "memory",
+      "host": "substrate",
       "title": "List Memories",
       "params": [
         {
@@ -11489,6 +11508,7 @@
       },
       "description": "Search memories by semantic query. Returns matching memory records.",
       "module": "memory",
+      "host": "substrate",
       "title": "Recall Memory",
       "params": [
         {
@@ -11517,6 +11537,7 @@
       "module": "memory",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Store Memory",
       "params": [
         {
@@ -22823,6 +22844,7 @@
       "module": "session",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Append History",
       "params": [
         {
@@ -22848,6 +22870,7 @@
       "returnType": "AnalysisResult",
       "description": "Read the pre-computed analysis result.",
       "module": "session",
+      "host": "substrate",
       "title": "Read Analysis",
       "examples": [
         "(session/read-analysis)"
@@ -22864,6 +22887,7 @@
       },
       "description": "Read validation errors for an orbital.",
       "module": "session",
+      "host": "substrate",
       "title": "Read Errors",
       "params": [
         {
@@ -22887,6 +22911,7 @@
       },
       "description": "Read the per-orbital conversation history.",
       "module": "session",
+      "host": "substrate",
       "title": "Read History",
       "params": [
         {
@@ -22910,6 +22935,7 @@
       },
       "description": "Read the per-orbital memory from the session store.",
       "module": "session",
+      "host": "substrate",
       "title": "Read Memory",
       "params": [
         {
@@ -22930,6 +22956,7 @@
       "returnType": "OrbitalDefinition",
       "description": "Read the per-orbital spec.json from the session store.",
       "module": "session",
+      "host": "substrate",
       "title": "Read Spec",
       "params": [
         {
@@ -22952,6 +22979,7 @@
       "module": "session",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Write Errors",
       "params": [
         {
@@ -22982,6 +23010,7 @@
       "module": "session",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Write Memory",
       "params": [
         {
@@ -23012,6 +23041,7 @@
       "module": "session",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Write Spec",
       "params": [
         {
@@ -23187,7 +23217,7 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": "number",
-      "description": "Compare two strings by the CLDR root collation (Unicode Collation Algorithm, tertiary strength): -1, 0 or 1. Case-insensitive first, accents beside their letter, the same on every execution path; null on either side is null",
+      "description": "Compare two strings by the CLDR root collation (Unicode Collation Algorithm, tertiary strength): -1, 0 or 1. Case-insensitive first, accents beside their letter, the same on every execution path; a non-string on either side (null included) is a type mismatch",
       "module": "str",
       "params": [
         {
@@ -23211,7 +23241,7 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "string",
-      "description": "A sort key of the string under the CLDR root collation: a string (lowercase hex) whose code-point order is the collation order, so array/sort by a field holding it sorts by collation; null is null",
+      "description": "A sort key of the string under the CLDR root collation: a string (lowercase hex) whose code-point order is the collation order, so array/sort by a field holding it sorts by collation; a non-string input (null included) is a type mismatch",
       "module": "str",
       "params": [
         {
@@ -23268,7 +23298,7 @@
           }
         ]
       },
-      "description": "Decode a percent-encoded URI component (JavaScript decodeURIComponent; %XX sequences as UTF-8, + is not a space, malformed input is an evaluation error, null yields null)",
+      "description": "Decode a percent-encoded URI component (JavaScript decodeURIComponent; %XX sequences as UTF-8, + is not a space, malformed input answers null, a non-string input (null included) is a type mismatch)",
       "module": "str",
       "failable": {},
       "params": [
@@ -23991,7 +24021,7 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "boolean",
-      "description": "True iff str/decode-uri-component would succeed on the string (well-formed percent escapes decoding to valid UTF-8); null is false",
+      "description": "True iff str/decode-uri-component would succeed on the string (well-formed percent escapes decoding to valid UTF-8); a non-string input (null included) is a type mismatch",
       "module": "str",
       "params": [
         {
@@ -24848,7 +24878,7 @@
           }
         ]
       },
-      "description": "Parse an ISO 8601 / RFC 3339 date or date-time to epoch ms (a date is midnight UTC; no offset reads as UTC); a date or datetime value already held as epoch ms is that number; anything else answers null",
+      "description": "Parse an ISO 8601 / RFC 3339 date or date-time to epoch ms (a date is midnight UTC; no offset reads as UTC); a date or datetime value already held as epoch ms is that number; an unparseable string answers null; any other kind (null included) is a type mismatch",
       "module": "time",
       "failable": {},
       "title": "Parse",
@@ -25200,7 +25230,7 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "boolean",
-      "description": "True iff time/parse would succeed on the string (an ISO 8601 / RFC 3339 date or date-time); null is false",
+      "description": "True iff time/parse would succeed on the string (an ISO 8601 / RFC 3339 date or date-time); a non-string input (null included) is a type mismatch",
       "module": "time",
       "params": [
         {
@@ -25263,6 +25293,7 @@
       "module": "trace",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Emit",
       "params": [
         {
@@ -25297,6 +25328,7 @@
       "module": "trace",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Log",
       "params": [
         {
@@ -25478,7 +25510,7 @@
         "kind": "var",
         "name": "T"
       },
-      "description": "Resolved IR only, never written in .lolo: the value, checked to be of the type the program declared for it. `orb resolve` writes it at an operator argument whose declared type is a list of a union or of SExpr, so the kernel binds the operator's type variable to that declared type instead of reading one from the items. An item outside the declared type is a type mismatch.",
+      "description": "Resolved IR only, never written in .lolo: a static ascription. The declared type (a `let` local annotation, a knob's type) is the validator's; the kernel evaluates the value and answers it, checking nothing at run time. A run-time shape check is `as T` or `json/parse T`.",
       "module": "core",
       "returnSemantics": "identity-of-arg<0>",
       "params": [
@@ -25493,7 +25525,7 @@
         {
           "name": "type",
           "type": "string",
-          "description": "The declared type, as the JSON of an IR type"
+          "description": "The declared type, as the JSON of an IR type (read by the validator only)"
         }
       ],
       "examples": [
@@ -25993,7 +26025,7 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": "boolean",
-      "description": "Check if string matches a regex pattern of the shared dialect (the subset ECMAScript and the Rust regex crate evaluate identically: no lookaround, backreferences, named groups or inline flags; \\d \\w \\b are ASCII; \\p{L} \\p{N} general categories are supported). A non-string value, or an invalid or unsupported pattern, is false",
+      "description": "Check if string matches a regex pattern of the shared dialect (the subset ECMAScript and the Rust regex crate evaluate identically: no lookaround, backreferences, named groups or inline flags; \\d \\w \\b are ASCII; \\p{L} \\p{N} general categories are supported). An invalid or unsupported pattern is false; a non-string value or pattern is a type mismatch",
       "module": "validate",
       "title": "Pattern",
       "params": [
@@ -26173,9 +26205,9 @@
         }
       ],
       "examples": [
-        "(vec/add [1 2 3] [4 5 6]) // => [5 7 9]"
+        "(vec/add {\"x\":1,\"y\":2} {\"x\":3,\"y\":4}) // => {\"x\":4,\"y\":6}"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "vec/angle": {
       "category": "std-vec",
@@ -26199,9 +26231,9 @@
         }
       ],
       "examples": [
-        "(vec/angle [1 1]) // => 0.785"
+        "(vec/angle {\"x\":1,\"y\":0} {\"x\":0,\"y\":1}) // => 1.5707963267948966"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "vec/clamp-length": {
       "category": "std-vec",
@@ -26224,9 +26256,9 @@
         }
       ],
       "examples": [
-        "(vec/clamp-length [10 10] 12) // => [8.485 8.485]"
+        "(vec/clamp-length {\"x\":3,\"y\":4} 2.5) // => {\"x\":1.5,\"y\":2}"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "vec/cross": {
       "category": "std-vec",
@@ -26255,9 +26287,9 @@
         }
       ],
       "examples": [
-        "(vec/cross [1 0 0] [0 1 0]) // => [0 0 1]"
+        "(vec/cross {\"x\":1,\"y\":0} {\"x\":0,\"y\":1}) // => 1"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "vec/distance": {
       "category": "std-vec",
@@ -26280,9 +26312,9 @@
         }
       ],
       "examples": [
-        "(vec/distance [0 0] [3 4]) // => 5"
+        "(vec/distance {\"x\":0,\"y\":0} {\"x\":3,\"y\":4}) // => 5"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "vec/distance-sq": {
       "category": "std-vec",
@@ -26305,9 +26337,9 @@
         }
       ],
       "examples": [
-        "(vec/distance-sq [0 0] [3 4]) // => 25"
+        "(vec/distance-sq {\"x\":0,\"y\":0} {\"x\":3,\"y\":4}) // => 25"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "vec/dot": {
       "category": "std-vec",
@@ -26330,9 +26362,9 @@
         }
       ],
       "examples": [
-        "(vec/dot [1 2 3] [4 5 6]) // => 32"
+        "(vec/dot {\"x\":1,\"y\":2} {\"x\":3,\"y\":4}) // => 11"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "vec/length": {
       "category": "std-vec",
@@ -26350,9 +26382,9 @@
         }
       ],
       "examples": [
-        "(vec/length [3 4]) // => 5"
+        "(vec/length {\"x\":3,\"y\":4}) // => 5"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "vec/length-sq": {
       "category": "std-vec",
@@ -26370,9 +26402,9 @@
         }
       ],
       "examples": [
-        "(vec/length-sq [3 4]) // => 25"
+        "(vec/length-sq {\"x\":3,\"y\":4}) // => 25"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "vec/lerp": {
       "category": "std-vec",
@@ -26400,9 +26432,9 @@
         }
       ],
       "examples": [
-        "(vec/lerp [0 0] [10 10] 0.5) // => [5 5]"
+        "(vec/lerp {\"x\":0,\"y\":0} {\"x\":10,\"y\":20} 0.5) // => {\"x\":5,\"y\":10}"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "vec/normalize": {
       "category": "std-vec",
@@ -26420,9 +26452,9 @@
         }
       ],
       "examples": [
-        "(vec/normalize [3 4]) // => [0.6 0.8]"
+        "(vec/normalize {\"x\":3,\"y\":4}) // => {\"x\":0.6,\"y\":0.8}"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "vec/rotate": {
       "category": "std-vec",
@@ -26445,9 +26477,9 @@
         }
       ],
       "examples": [
-        "(vec/rotate [1 0] 1.57) // => [0 1]"
+        "(vec/rotate {\"x\":1,\"y\":0} 1.5707963267948966) // => {\"x\":0,\"y\":1}"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "vec/scale": {
       "category": "std-vec",
@@ -26470,9 +26502,9 @@
         }
       ],
       "examples": [
-        "(vec/scale [1 2 3] 2) // => [2 4 6]"
+        "(vec/scale {\"x\":2,\"y\":3} 2) // => {\"x\":4,\"y\":6}"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "vec/sub": {
       "category": "std-vec",
@@ -26495,9 +26527,9 @@
         }
       ],
       "examples": [
-        "(vec/sub [5 7 9] [1 2 3]) // => [4 5 6]"
+        "(vec/sub {\"x\":5,\"y\":7} {\"x\":1,\"y\":2}) // => {\"x\":4,\"y\":5}"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "when": {
       "category": "control",
@@ -26535,6 +26567,7 @@
       "module": "workspace",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Archive Orbital",
       "params": [
         {
@@ -26555,6 +26588,7 @@
       "returnType": "boolean",
       "description": "Check if a file exists in the workspace.",
       "module": "workspace",
+      "host": "substrate",
       "title": "Exists",
       "params": [
         {
@@ -26578,6 +26612,7 @@
       },
       "description": "List all orbital names in the workspace.",
       "module": "workspace",
+      "host": "substrate",
       "title": "List Orbitals",
       "examples": [
         "(workspace/list-orbitals) // => [\"orbital1\" \"orbital2\"]"
@@ -26591,6 +26626,7 @@
       "returnType": "string",
       "description": "Read a file from the workspace.",
       "module": "workspace",
+      "host": "substrate",
       "title": "Read File",
       "params": [
         {
@@ -26611,6 +26647,7 @@
       "returnType": "OrbitalDefinition",
       "description": "Read an orbital definition from the workspace by name.",
       "module": "workspace",
+      "host": "substrate",
       "title": "Read Orbital",
       "params": [
         {
@@ -26631,6 +26668,7 @@
       "returnType": "PlanSnapshot",
       "description": "Read the plan snapshot from the workspace.",
       "module": "workspace",
+      "host": "substrate",
       "title": "Read Plan",
       "examples": [
         "(workspace/read-plan)"
@@ -26644,6 +26682,7 @@
       "returnType": "OrbitalSchema",
       "description": "Read the composed schema.orb from the workspace.",
       "module": "workspace",
+      "host": "substrate",
       "title": "Read Schema",
       "examples": [
         "(workspace/read-schema)"
@@ -26659,6 +26698,7 @@
       "module": "workspace",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Write File",
       "params": [
         {
@@ -26686,6 +26726,7 @@
       "module": "workspace",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Write Orbital",
       "params": [
         {
@@ -26715,6 +26756,7 @@
       "module": "workspace",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Write Plan",
       "params": [
         {
@@ -26737,6 +26779,7 @@
       "module": "workspace",
       "hasSideEffects": true,
       "runsOn": "any",
+      "host": "substrate",
       "title": "Write Schema",
       "params": [
         {

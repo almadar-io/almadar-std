@@ -59,7 +59,7 @@ orbital OrbLintUserFieldExistsOrbital {
       (let ((orb (array/nth @orbs @oi)))
         (let ((envs : [UfEnv] (let ((exps (array/filter (object/get @orb "expects" []) (fn e (= (object/get @e "kind" "") "identity")))))
   (let ((hasShape (and (> (array/len @exps) 0) (object/has (array/first @exps) "shape"))) (exp (array/first @exps)))
-    (let ((expNm (if (and (> (array/len @exps) 0) (object/has @exp "name")) (object/get @exp "name" "") "")) (shapeNames : [string] (array/map (object/get @exp "shape" []) (fn f (object/get @f "name" "")))) (declNames : [string] (array/map (object/get @declared "fields" []) (fn f (object/get @f "name" "")))))
+    (let ((expNm (if (and (> (array/len @exps) 0) (object/has @exp "name")) (object/get @exp "name" "") "")) (shapeNames : [string] (if (> (array/len @exps) 0) (array/map (object/get @exp "shape" []) (fn f (object/get @f "name" ""))) [])) (declNames : [string] (if @hasDecl (array/map (object/get @declared "fields" []) (fn f (object/get @f "name" ""))) [])))
       (let ((expEnv : [UfEnv] [{ kind: "expectation", names: (array/sort (array/concat @shapeNames (array/filter @viewer (fn v (not (array/includes @shapeNames @v)))))), idName: (if (= @expNm "") (quote "@user") @expNm), expName: @expNm, skip: true }]))
         (if @hasDecl
           (array/concat
@@ -109,7 +109,7 @@ orbital OrbLintUserFieldExistsOrbital {
       (let ((orb (array/nth @orbs @oi)))
         (let ((envs : [UfEnv] (let ((exps (array/filter (object/get @orb "expects" []) (fn e (= (object/get @e "kind" "") "identity")))))
   (let ((hasShape (and (> (array/len @exps) 0) (object/has (array/first @exps) "shape"))) (exp (array/first @exps)))
-    (let ((expNm (if (and (> (array/len @exps) 0) (object/has @exp "name")) (object/get @exp "name" "") "")) (shapeNames : [string] (array/map (object/get @exp "shape" []) (fn f (object/get @f "name" "")))) (declNames : [string] (array/map (object/get @declared "fields" []) (fn f (object/get @f "name" "")))))
+    (let ((expNm (if (and (> (array/len @exps) 0) (object/has @exp "name")) (object/get @exp "name" "") "")) (shapeNames : [string] (if (> (array/len @exps) 0) (array/map (object/get @exp "shape" []) (fn f (object/get @f "name" ""))) [])) (declNames : [string] (if @hasDecl (array/map (object/get @declared "fields" []) (fn f (object/get @f "name" ""))) [])))
       (let ((expEnv : [UfEnv] [{ kind: "expectation", names: (array/sort (array/concat @shapeNames (array/filter @viewer (fn v (not (array/includes @shapeNames @v)))))), idName: (if (= @expNm "") (quote "@user") @expNm), expName: @expNm, skip: true }]))
         (if @hasDecl
           (array/concat

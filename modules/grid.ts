@@ -22,6 +22,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Cell to world-space center point',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'point',
     params: [
       { name: 'cell', type: 'cell', description: 'Grid cell {x,y}' },
@@ -65,6 +66,7 @@ export const GRID_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 3,
     description: 'Screen point to isometric cell coordinates',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'point',
     params: [
       { name: 'point', type: 'point', description: 'Screen point {x,y}' },

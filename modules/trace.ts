@@ -13,6 +13,7 @@ import { rec } from '../signature.js';
 export const TRACE_OPERATORS: Record<string, StdOperatorMeta> = {
   'trace/emit': {
     module: 'trace', category: 'std-trace',
+    host: 'substrate',
     minArity: 1, maxArity: 2,
     description: 'Emit a structured trace event for observability (115 call sites in rabit today).',
     hasSideEffects: true,
@@ -26,6 +27,7 @@ export const TRACE_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'trace/log': {
     module: 'trace', category: 'std-trace',
+    host: 'substrate',
     minArity: 2, maxArity: 2,
     description: 'Log a message at the given level.',
     hasSideEffects: true,

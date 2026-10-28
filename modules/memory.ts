@@ -13,6 +13,7 @@ import { list } from '../signature.js';
 export const MEMORY_OPERATORS: Record<string, StdOperatorMeta> = {
   'memory/recall': {
     module: 'memory', category: 'std-memory',
+    host: 'substrate',
     minArity: 1, maxArity: 2,
     description: 'Search memories by semantic query. Returns matching memory records.',
     hasSideEffects: false,
@@ -25,6 +26,7 @@ export const MEMORY_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'memory/store': {
     module: 'memory', category: 'std-memory',
+    host: 'substrate',
     minArity: 2, maxArity: 3,
     description: 'Store a new memory. Returns the new memory ID.',
     hasSideEffects: true,
@@ -39,6 +41,7 @@ export const MEMORY_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'memory/list': {
     module: 'memory', category: 'std-memory',
+    host: 'substrate',
     minArity: 0, maxArity: 1,
     description: 'List all memories, optionally filtered by category.',
     hasSideEffects: false,

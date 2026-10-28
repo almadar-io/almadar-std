@@ -50,7 +50,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 1,
     maxArity: 1,
-    description: 'Parse an ISO 8601 / RFC 3339 date or date-time to epoch ms (a date is midnight UTC; no offset reads as UTC); a date or datetime value already held as epoch ms is that number; anything else answers null',
+    description: 'Parse an ISO 8601 / RFC 3339 date or date-time to epoch ms (a date is midnight UTC; no offset reads as UTC); a date or datetime value already held as epoch ms is that number; an unparseable string answers null; any other kind (null included) is a type mismatch',
     hasSideEffects: false,
     failable: {},
     returnType: nullable('number'),
@@ -65,7 +65,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-time',
     minArity: 1,
     maxArity: 1,
-    description: 'True iff time/parse would succeed on the string (an ISO 8601 / RFC 3339 date or date-time); null is false',
+    description: 'True iff time/parse would succeed on the string (an ISO 8601 / RFC 3339 date or date-time); a non-string input (null included) is a type mismatch',
     hasSideEffects: false,
     returnType: 'boolean',
     params: [

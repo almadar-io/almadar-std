@@ -21,6 +21,7 @@ export const EASE_OPERATORS: Record<string, StdOperatorMeta> = {
     description:
       'Apply an easing curve to t∈[0,1]: linear, in-quad, out-quad, in-out-quad, in-cubic, out-cubic, in-out-cubic, elastic-out, bounce-out (unknown → linear)',
     hasSideEffects: false,
+    exampleSource: 'module',
     returnType: 'number',
     params: [
       { name: 'curve', type: 'string', description: 'Easing curve name' },

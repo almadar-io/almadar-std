@@ -10,7 +10,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, NUMBER, STRING, each, fn, keyOf, list, mapOf, nullable, shape, tuple, tv, union } from '../signature.js';
+import { BOOLEAN, NUMBER, STRING, each, fn, keyOf, list, lit, mapOf, nullable, shape, tuple, tv, union } from '../signature.js';
 
 /**
  * Array module operators.
@@ -209,7 +209,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'arr', type: list(tv('T')), description: 'The array' },
       { name: 'key', type: keyOf('T'), description: 'Field to sort by (for objects)', optional: true },
-      { name: 'dir', type: 'string', description: '"asc" or "desc"', optional: true, defaultValue: 'asc' },
+      { name: 'dir', type: union(lit('asc'), lit('desc')), description: '"asc" or "desc"', optional: true, defaultValue: 'asc' },
     ],
     example: '["array/sort", [{"price": 3}, {"price": 9}, {"price": 5}], "price", "desc"]',
   },

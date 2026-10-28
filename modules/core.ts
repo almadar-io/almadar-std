@@ -487,13 +487,13 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 2,
     maxArity: 2,
     description:
-      'Resolved IR only, never written in .lolo: the value, checked to be of the type the program declared for it. `orb resolve` writes it at an operator argument whose declared type is a list of a union or of SExpr, so the kernel binds the operator\'s type variable to that declared type instead of reading one from the items. An item outside the declared type is a type mismatch.',
+      'Resolved IR only, never written in .lolo: a static ascription. The declared type (a `let` local annotation, a knob\'s type) is the validator\'s; the kernel evaluates the value and answers it, checking nothing at run time. A run-time shape check is `as T` or `json/parse T`.',
     hasSideEffects: false,
     returnType: tv('T'),
     returnSemantics: 'identity-of-arg<0>',
     params: [
       { name: 'value', type: tv('T'), description: 'The argument value' },
-      { name: 'type', type: 'string', description: 'The declared type, as the JSON of an IR type' },
+      { name: 'type', type: 'string', description: 'The declared type, as the JSON of an IR type (read by the validator only)' },
     ],
     example: '["typed", "@entity.via", "{\\"kind\\":\\"array\\",\\"inner\\":{\\"kind\\":\\"sexpr\\"}}"]',
   },

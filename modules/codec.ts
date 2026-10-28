@@ -42,7 +42,7 @@ export const BASE64_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-codec',
     minArity: 1,
     maxArity: 1,
-    description: 'True iff base64/decode would succeed on the string (standard base64 decoding to valid UTF-8); null is false',
+    description: 'True iff base64/decode would succeed on the string (standard base64 decoding to valid UTF-8); a non-string input (null included) is a type mismatch',
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 's', type: STRING, description: 'The base64 text to check' }],
