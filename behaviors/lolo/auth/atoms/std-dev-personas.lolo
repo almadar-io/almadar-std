@@ -60,7 +60,7 @@ orbital DevPersonasOrbital {
       SIGN_IN_CLAIMS -> ready
         (http POST @config.authEmulatorOrigin (str/concat "/identitytoolkit.googleapis.com/v1/projects/" @config.projectId "/accounts:update") {
           headers: { Content-Type: "application/json", Authorization: "Bearer owner" },
-          text: (json/stringify (object/merge (if (!= (default @payload.data.name "") "") { localId: @payload.data.id, displayName: @payload.data.name } { localId: @payload.data.id }) { customAttributes: (json/stringify (object/fromEntries (array/filter (object/entries (object/omit @payload.data ["id", "email", "name"])) (fn e (!= (array/nth @e 1) null))))) })),
+          text: (json/stringify (object/merge (if (!= (default @payload.data.name "") "") { localId: @payload.data.id, displayName: @payload.data.name } { localId: @payload.data.id }) { customAttributes: (json/stringify (object/omit @payload.data ["id", "email", "name"])) })),
           timeoutMs: 10000
         } { key: @payload.data.id, emit: { success: SIGN_IN_UPDATED, failure: SIGN_IN_FAILED } })
       SIGN_IN_UPDATED -> ready when (or (< @payload.status 200) (>= @payload.status 300))

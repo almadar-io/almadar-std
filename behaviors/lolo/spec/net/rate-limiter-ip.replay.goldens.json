@@ -366,6 +366,197 @@
      }
     }
    ]
+  },
+  {
+   "id": "expired-client-dropped-same-answers",
+   "config": {
+    "enabled": true,
+    "requestsPerMinute": 3,
+    "windowSeconds": 10
+   },
+   "now": 0,
+   "steps": [
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 1,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 1,
+         "remaining": 2
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 2,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 2,
+         "remaining": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 3,
+      "ip": "B"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 3,
+         "remaining": 2
+        }
+       }
+      ]
+     },
+     "now": 10000
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 4,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 4,
+         "remaining": 2
+        }
+       }
+      ]
+     },
+     "now": 10000
+    }
+   ],
+   "skip": "needs PS1 config/now"
+  },
+  {
+   "id": "CONTROL live-client-kept-when-another-opens",
+   "config": {
+    "enabled": true,
+    "requestsPerMinute": 3,
+    "windowSeconds": 10
+   },
+   "now": 0,
+   "steps": [
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 1,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 1,
+         "remaining": 2
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 2,
+      "ip": "B"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 2,
+         "remaining": 2
+        }
+       }
+      ]
+     },
+     "now": 5000
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 3,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 3,
+         "remaining": 1
+        }
+       }
+      ]
+     },
+     "now": 6000
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 4,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ADMITTED",
+        "payload": {
+         "requestId": 4,
+         "remaining": 0
+        }
+       }
+      ]
+     },
+     "now": 6000
+    },
+    {
+     "event": "REQUEST",
+     "payload": {
+      "requestId": 5,
+      "ip": "A"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "THROTTLED",
+        "payload": {
+         "requestId": 5
+        }
+       }
+      ]
+     },
+     "now": 6000
+    }
+   ],
+   "skip": "needs PS1 config/now"
   }
  ]
 }

@@ -257,7 +257,7 @@ orbital AgentToolLoopOrbital {
       ToolsCancelled -> idle when (and @entity.cancelled (= ?key "agent-tool-loop"))
         (set @entity.cancelled false)
       CONVERSE -> thinking when @entity.cancelled
-        (emit ASSISTANT_REPLY_FAILED { error: "The previous request is still being cancelled; ask again in a moment.", ephemeral: (if ?ephemeral true false) })
+        (emit ASSISTANT_REPLY_FAILED { error: "The previous request is still being cancelled; ask again in a moment.", ephemeral: (default ?ephemeral false) })
       ToolsStep -> thinking when (and @entity.live (not @entity.cancelled))
         (emit ASSISTANT_STEP { activity: ?activity })
       ToolsStep -> thinking when (or (not @entity.live) @entity.cancelled)

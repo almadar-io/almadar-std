@@ -337,7 +337,7 @@ orbital EcdsaOrbital {
       INIT -> idle
       BIG_INVERTED -> decE
         (set @entity.wL @payload.value)
-        (emit EC_FROM_BYTES { data: (bytes/slice (hash/sha256 @entity.msg "base64") 0 32) })
+        (emit EC_FROM_BYTES { data: (bytes/slice (default (bytes/from-base64 (default (hash/sha256 @entity.msg "base64") "")) (bytes/from-string "")) 0 32) })
       BIG_REFUSED -> idle
         (emit ECDSA_REFUSED { reason: "bigint" })
     }
@@ -501,7 +501,7 @@ orbital EcdsaOrbital {
       EC_DONE -> run when (== @payload.prog 1)
         (emit EC_RUN { prog: 2 })
       EC_DONE -> idle when (== @payload.prog 2)
-        (emit ECDSA_VERIFIED { valid: (and (not @entity.ms.inf) (or (== (array/sum (array/map (array/range 0 11) (fn i (math/abs (- (array/nth (array/nth @entity.ms.regs 0) @i) (array/nth (array/nth @entity.ms.regs 13) @i)))))) 0) (and @entity.rnOk (== (array/sum (array/map (array/range 0 11) (fn i (math/abs (- (array/nth (array/nth @entity.ms.regs 0) @i) (array/nth (array/nth @entity.ms.regs 14) @i)))))) 0)))) })
+        (emit ECDSA_VERIFIED { valid: (and (not @entity.ms.inf) (or (== (array/sum (array/map (array/range 0 11) (fn i (math/abs (- (default (array/nth (default (array/nth @entity.ms.regs 0) []) @i) 0) (default (array/nth (default (array/nth @entity.ms.regs 13) []) @i) 0)))))) 0) (and @entity.rnOk (== (array/sum (array/map (array/range 0 11) (fn i (math/abs (- (default (array/nth (default (array/nth @entity.ms.regs 0) []) @i) 0) (default (array/nth (default (array/nth @entity.ms.regs 14) []) @i) 0)))))) 0)))) })
     }
 
     emits {

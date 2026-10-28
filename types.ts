@@ -111,6 +111,8 @@ export interface FailableMeta {
   unlessPositive?: number[];
   /** Argument positions whose type name is a nominal type: the conversion is checked at validate, so the call cannot fail (`as` to CallKey). */
   unlessNominal?: number[];
+  /** Argument positions whose value, typed non-optional, cannot make the call fail (`tree/fold` of a present value). */
+  unlessPresent?: number[];
 }
 
 /** What the sign of a numeric result is: always at least zero, or derived from the arguments' signs. */

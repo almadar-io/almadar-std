@@ -280,14 +280,14 @@ orbital AgentSuggestionsOrbital {
           emit: { failure: SuggestionSaveFailed, success: SUGGESTION_ADDED }
         })
       SuggestionCheckFailed -> ready
-        (emit SUGGESTION_REJECTED { reason: (str/concat "Could not check earlier suggestions: " ?error) })
+        (emit SUGGESTION_REJECTED { reason: (str/concat "Could not check earlier suggestions: " (default ?error "")) })
         (render-ui toast {
           message: ?error
           type: alert
           variant: warning
         })
       SuggestionSaveFailed -> ready
-        (emit SUGGESTION_REJECTED { reason: (str/concat "Could not store the suggestion: " ?error) })
+        (emit SUGGESTION_REJECTED { reason: (str/concat "Could not store the suggestion: " (default ?error "")) })
         (render-ui toast {
           message: ?error
           type: alert

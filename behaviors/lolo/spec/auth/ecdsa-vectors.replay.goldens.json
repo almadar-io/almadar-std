@@ -1,0 +1,56 @@
+{
+ "source": "openssl ecparam prime256v1 + openssl dgst -sha256 -sign over the text 'header.payload'; DER (r, s) converted to 64 raw bytes r||s",
+ "spec": "spec/auth/ecdsa.lolo",
+ "atom": "auth/atoms/std-ecdsa.lolo",
+ "trait": "EcdsaVerifier",
+ "cases": [
+  {
+   "id": "a real signature over the message verifies",
+   "steps": [
+    {
+     "event": "ECDSA_VERIFY",
+     "payload": {
+      "x": "DWCBVhKCGPAV0CVSa7Nu/svWxAWs1ejOo2PZPNjNAHE=",
+      "y": "786l0mh1J2aMm6STYLEz60poSi5F6aNJi4BnV6yCOMY=",
+      "message": "header.payload",
+      "signature": "eAQcvqokeZHzlZ0shvZjYSxtc12OnlR9IZgH9nCRSoqlNKyYQx0YNoLL0SpkJkGsbGfmF1a4OIfG0VncqUiwgQ=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ECDSA_VERIFIED",
+        "payload": {
+         "valid": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL the same signature with its last bit flipped does not verify",
+   "steps": [
+    {
+     "event": "ECDSA_VERIFY",
+     "payload": {
+      "x": "DWCBVhKCGPAV0CVSa7Nu/svWxAWs1ejOo2PZPNjNAHE=",
+      "y": "786l0mh1J2aMm6STYLEz60poSi5F6aNJi4BnV6yCOMY=",
+      "message": "header.payload",
+      "signature": "eAQcvqokeZHzlZ0shvZjYSxtc12OnlR9IZgH9nCRSoqlNKyYQx0YNoLL0SpkJkGsbGfmF1a4OIfG0VncqUiwgA=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ECDSA_VERIFIED",
+        "payload": {
+         "valid": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

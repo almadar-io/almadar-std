@@ -94,7 +94,7 @@ orbital AgentMemoryOrbital {
           orderBy: "createdAt:desc"
         })
       MemoriesForList -> ready
-        (emit ASSISTANT_MEMORIES_LOADED { data: (array/map (array/sort ?data createdAt desc) (fn item { id: @item.id, content: @item.content, createdAt: @item.createdAt })), totalCount: ?totalCount })
+        (emit ASSISTANT_MEMORIES_LOADED { data: (array/map (array/sort (default ?data []) createdAt desc) (fn item { id: @item.id, content: @item.content, createdAt: @item.createdAt })), totalCount: ?totalCount })
       MemoryListFailed -> ready
         (emit ASSISTANT_MEMORIES_LOADED { data: [] })
         (render-ui toast {
@@ -132,7 +132,7 @@ orbital AgentMemoryOrbital {
       MemoriesForRecall -> ready
         (emit RECALLED {
           messages: @entity.pendingMessages
-          context: (str/join (array/map (array/take (array/sort (array/map (array/filter ?data (fn item (and (> (array/len @entity.queryVector) 0) (= (array/len @item.embedding) (array/len @entity.queryVector))))) (fn item { content: @item.content, score: (array/cosine @item.embedding @entity.queryVector) })) score desc) @config.recallLimit) (fn item @item.content)) "\n")
+          context: (str/join (array/map (array/take (array/sort (array/map (array/filter (default ?data []) (fn item (and (> (array/len @entity.queryVector) 0) (= (array/len @item.embedding) (array/len @entity.queryVector))))) (fn item { content: @item.content, score: (array/cosine @item.embedding @entity.queryVector) })) score desc) @config.recallLimit) (fn item @item.content)) "\n")
         })
       MemoryEmbedFailed -> ready
         (emit RECALLED { messages: @entity.pendingMessages, context: "" })

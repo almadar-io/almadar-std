@@ -38,7 +38,8 @@ orbital BigIntOrbital {
 
       FROM_BYTES -> idle when (validate/pattern @payload.data @config.base64Pattern)
         (emit FROM_BYTES_ANSWERED
-          { value: (let ((n (bytes/length @payload.data)))
+          { value: (let ((raw (default (bytes/from-base64 @payload.data) (bytes/from-string ""))))
+                   (let ((n (bytes/length @raw)))
                      (let ((t (array/map
                                (array/range 0 (math/ceil (/ @n 3)))
                                (fn k
@@ -52,8 +53,8 @@ orbital BigIntOrbital {
                                          (+
                                            @s
                                            (*
-                                             (bytes/read-uint @payload.data @p 1 "be")
-                                             (math/pow 256 @t)))
+                                             (default (bytes/read-uint @raw @p 1 "be") 0)
+                                             (default (math/pow 256 @t) 1)))
                                          @s))))))))
                        (array/slice
                          @t
@@ -63,7 +64,7 @@ orbital BigIntOrbital {
                            (array/reduce
                              (array/range 0 (array/len @t))
                              -1
-                             (fn m i (if (!= (array/nth @t @i) 0) @i @m))))))) })
+                             (fn m i (if (!= (array/nth @t @i) 0) @i @m)))))))) })
 
       TO_BYTES -> idle when (not
           (and
@@ -144,7 +145,7 @@ orbital BigIntOrbital {
                          (array/range 0 @n)
                          (fn k
                            (let ((p (- (- @n 1) @k)))
-                             (bytes/write-uint
+                             (default (bytes/write-uint
                                (math/mod
                                  (math/floor
                                    (default (/
@@ -154,10 +155,10 @@ orbital BigIntOrbital {
                                          (< (math/floor (/ @p 3)) (array/len @payload.value)))
                                        (default (array/nth @payload.value (math/floor (/ @p 3))) 0)
                                        0)
-                                     (math/pow 256 (math/mod @p 3))) 0))
+                                     (default (math/pow 256 (math/mod @p 3)) 1)) 0))
                                  256)
                                1
-                               "be")))))) })
+                               "be") (bytes/from-string ""))))))) })
 
       COMPARE -> idle when (not
           (and
@@ -926,7 +927,7 @@ orbital BigIntOrbital {
                                     (array/range 0 24)
                                     (fn k
                                       (<=
-                                        (math/pow 2 @k)
+                                        (default (math/pow 2 @k) 1)
                                         (default (array/nth @payload.e (- (array/len @payload.e) 1)) 0))))))))
                          (bs (object/get
                               (let ((da15 @payload.a)
@@ -1803,7 +1804,7 @@ orbital BigIntOrbital {
                                                           (array/len @payload.e)))
                                                       (default (array/nth @payload.e (math/floor (/ @j 24))) 0)
                                                       0)
-                                                    (math/pow 2 (math/mod @j 24))) 0))
+                                                    (default (math/pow 2 (math/mod @j 24)) 1)) 0))
                                                 2)
                                               1)
                                             (object/get

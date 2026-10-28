@@ -9,7 +9,7 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 - **Cross-repo gaps don't go here.** If fixing it needs another repo, describe it in your report or PR body; the monorepo coordinator files it.
 
 
-Next code: `G-STD-173`
+Next code: `G-STD-174`
 
 - **G-STD-172** — `orb evaluate` refuses every result that is not a string: its `EVALUATED` event declares `value : string`, so the emit entry check (EXEC-EVAL-10) rejects a list or map result (`orb evaluate '["json/nodes", ["list", 1]]'` → "Payload validation failed for event 'EVALUATED': value (wrong-type, expected string)") [mechanical]. Owner: packages/almadar-std/behaviors/lolo/cli/atoms/std-orb-eval.lolo. Fix: carry the printed text, or declare the value as the evaluated SExpr union. Prevention rung: (3) a golden that evaluates a non-string expression. Root cause: A4.
 

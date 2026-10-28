@@ -1,0 +1,56 @@
+{
+ "source": "openssl genrsa 2048 + openssl dgst -sha256 -sign over the text 'header.payload' (RSASSA-PKCS1-v1_5 SHA-256)",
+ "spec": "spec/auth/rsa.lolo",
+ "atom": "auth/atoms/std-rsa.lolo",
+ "trait": "RsaVerifier",
+ "cases": [
+  {
+   "id": "a real signature over the message verifies",
+   "steps": [
+    {
+     "event": "RSA_VERIFY",
+     "payload": {
+      "n": "pCJTqfijo+dyUDx+uHmap/Y5yXaRg99QNf+AUbAjWRKsgBhvqMknk2SpB9A40VwydKdtoHbWp0z4bHSNmlHooqeFd7mAxpmtsuumAiE+ICdkcPZ63j2OvqlrJna3xB4PX677BZhFYhDhYCjjlLTDwmZRBymA8vSCtDLQZ7MRkX1fxVHML+wJi1LzTwniItB/hoSKx8b4i0w4ZuesAB+/RPTjR8ktRGsUWyzW83Bcfg5IR+8bZLMNyx6XwsAuZ7nQ2+qJXSFXoq2O/a+jdtfagyJBGAD26wx6bnuReRg2x57t6nB3CYYUREhcAJAJR9BLKkNZgk/peUKeb8QHwQBgPw==",
+      "e": "AQAB",
+      "message": "header.payload",
+      "signature": "RA4mgYzrg/dfjqlRbUcGMN4Vr7k7ChWG3Jsbpkz93OKGJfIJ8D8zpGCOvaMfc1WN0pWnwuPuSxHgsOMaC4bh1qH5tS1FJWFxL//Lg28IIrWHM/olBCAUXbhsqNvf3g7m50XNVmM8RvmMDZOXuBJkLm4GLAptJaSgUyK2pPFV0CCKx4zIFjtoL1ZvtZvwgT6er9VWheX+3wNm7MQwtHKYTH77z4XVi2K/+rkY7QNdh9GohExwK6cDy8sCuLG7Kjb1YykNxEcZxR8k/1X6NqZC1svDj1ghejKGi+Tkkf7nCfVH7lDIzE+FisrCetfZG8eNQ4ROWAmAA4gWv2Hjd+isWg=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RSA_VERIFIED",
+        "payload": {
+         "valid": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL the same signature with its last bit flipped does not verify",
+   "steps": [
+    {
+     "event": "RSA_VERIFY",
+     "payload": {
+      "n": "pCJTqfijo+dyUDx+uHmap/Y5yXaRg99QNf+AUbAjWRKsgBhvqMknk2SpB9A40VwydKdtoHbWp0z4bHSNmlHooqeFd7mAxpmtsuumAiE+ICdkcPZ63j2OvqlrJna3xB4PX677BZhFYhDhYCjjlLTDwmZRBymA8vSCtDLQZ7MRkX1fxVHML+wJi1LzTwniItB/hoSKx8b4i0w4ZuesAB+/RPTjR8ktRGsUWyzW83Bcfg5IR+8bZLMNyx6XwsAuZ7nQ2+qJXSFXoq2O/a+jdtfagyJBGAD26wx6bnuReRg2x57t6nB3CYYUREhcAJAJR9BLKkNZgk/peUKeb8QHwQBgPw==",
+      "e": "AQAB",
+      "message": "header.payload",
+      "signature": "RA4mgYzrg/dfjqlRbUcGMN4Vr7k7ChWG3Jsbpkz93OKGJfIJ8D8zpGCOvaMfc1WN0pWnwuPuSxHgsOMaC4bh1qH5tS1FJWFxL//Lg28IIrWHM/olBCAUXbhsqNvf3g7m50XNVmM8RvmMDZOXuBJkLm4GLAptJaSgUyK2pPFV0CCKx4zIFjtoL1ZvtZvwgT6er9VWheX+3wNm7MQwtHKYTH77z4XVi2K/+rkY7QNdh9GohExwK6cDy8sCuLG7Kjb1YykNxEcZxR8k/1X6NqZC1svDj1ghejKGi+Tkkf7nCfVH7lDIzE+FisrCetfZG8eNQ4ROWAmAA4gWv2Hjd+isWw=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RSA_VERIFIED",
+        "payload": {
+         "valid": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

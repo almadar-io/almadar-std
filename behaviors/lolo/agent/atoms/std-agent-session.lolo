@@ -1489,7 +1489,7 @@ orbital AgentChatsOrbital {
           orderBy: "lastActiveAt:desc"
         })
       ChatsForHistory -> ready
-        (emit ASSISTANT_CHAT_OPENED { chatId: (if (> (array/len (default ?data [])) 0) (object/get (array/first (array/sort ?data lastActiveAt desc)) id) "") })
+        (emit ASSISTANT_CHAT_OPENED { chatId: (if (> (array/len (default ?data [])) 0) (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) id) "") })
       SEND -> ready when (not (= (default ?message "") ""))
         (set @entity.pendingMessage ?message)
         (fetch AgentChat {
@@ -1508,10 +1508,10 @@ orbital AgentChatsOrbital {
         })
       ChatsForSend -> ready when (> (array/len (default ?data [])) 0)
         (persist update AgentChat {
-          id: (object/get (array/first (array/sort ?data lastActiveAt desc)) id)
-          ownerId: (object/get (array/first (array/sort ?data lastActiveAt desc)) ownerId)
-          title: (if (= (default (object/get (array/first (array/sort ?data lastActiveAt desc)) title) "") "") @entity.pendingMessage (object/get (array/first (array/sort ?data lastActiveAt desc)) title))
-          startedAt: (object/get (array/first (array/sort ?data lastActiveAt desc)) startedAt)
+          id: (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) id)
+          ownerId: (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) ownerId)
+          title: (if (= (default (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) title) "") "") @entity.pendingMessage (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) title))
+          startedAt: (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) startedAt)
           lastActiveAt: @now
         } {
           emit: { failure: AgentChatsLoadFailed, success: ChatReadyForSend }
@@ -1527,7 +1527,7 @@ orbital AgentChatsOrbital {
           orderBy: "lastActiveAt:desc"
         })
       ChatsForReply -> ready
-        (emit ASSISTANT_REPLY_IN_CHAT { chatId: (if (> (array/len (default ?data [])) 0) (object/get (array/first (array/sort ?data lastActiveAt desc)) id) ""), reply: @entity.pendingReply })
+        (emit ASSISTANT_REPLY_IN_CHAT { chatId: (if (> (array/len (default ?data [])) 0) (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) id) ""), reply: @entity.pendingReply })
       NEW_CHAT -> ready
         (persist create AgentChat {
           ownerId: @user.id
@@ -1550,10 +1550,10 @@ orbital AgentChatsOrbital {
         (emit AgentChatsLoadFailed { error: (str/concat "AgentChat has " ?totalCount " conversations for one person, over the maxRows cap of " @config.maxRows), code: "CHATS_OVER_CAP" })
       ChatsForSelect -> ready when (> (array/len (default ?data [])) 0)
         (persist update AgentChat {
-          id: (object/get (array/first ?data) id)
-          ownerId: (object/get (array/first ?data) ownerId)
-          title: (object/get (array/first ?data) title)
-          startedAt: (object/get (array/first ?data) startedAt)
+          id: (object/get (default (array/first (default ?data [])) {}) id)
+          ownerId: (object/get (default (array/first (default ?data [])) {}) ownerId)
+          title: (object/get (default (array/first (default ?data [])) {}) title)
+          startedAt: (object/get (default (array/first (default ?data [])) {}) startedAt)
           lastActiveAt: @now
         } {
           emit: { failure: AgentChatsLoadFailed, success: ChatSelected }
@@ -1578,7 +1578,7 @@ orbital AgentChatsOrbital {
           orderBy: "lastActiveAt:desc"
         })
       ChatsForList -> ready
-        (emit ASSISTANT_CHATS_LOADED { data: (array/map (array/sort ?data lastActiveAt desc) (fn item { id: @item.id, title: @item.title, lastActiveAt: @item.lastActiveAt })) })
+        (emit ASSISTANT_CHATS_LOADED { data: (array/map (array/sort (default ?data []) lastActiveAt desc) (fn item { id: @item.id, title: @item.title, lastActiveAt: @item.lastActiveAt })) })
       AgentChatsLoadFailed -> ready
         (emit ASSISTANT_THREAD_FAILED { error: ?error })
         (render-ui toast {

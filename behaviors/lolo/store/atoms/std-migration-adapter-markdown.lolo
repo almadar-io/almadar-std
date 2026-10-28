@@ -10,14 +10,14 @@ orbital MigrationAdapterMarkdownOrbital {
   type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string?, content : string?, parentRef : string?, metadata : Map string ImportFieldValue, source : string!, span : string? }
   type ExtractedUnits = [ExtractedUnit]
   type MarkdownPair = { front : string!, back : string!, line : number! }
-  type MarkdownQa = { pairs : [MarkdownPair], remaining : string! }
-  type MarkdownSection = { heading : string!, depth : number!, headingLine : number!, bodyStartLine : number!, bodyEndLine : number!, body : string!, slug : string!, ref : string!, parentRef : string!, qa : MarkdownQa }
+  type MarkdownQa = { pairs : [MarkdownPair]!, remaining : string! }
+  type MarkdownSection = { heading : string!, depth : number!, headingLine : number!, bodyStartLine : number!, bodyEndLine : number!, body : string!, slug : string!, ref : string!, parentRef : string!, qa : MarkdownQa! }
   type MarkdownFolder = { path : string!, title : string!, parentRef : string? }
   type MarkdownSlugItem = { k : number!, slug : string!, ref : string!, parentRef : string! }
   type MarkdownSlugItems = [MarkdownSlugItem]
   type MarkdownSlugBases = [string]
   type MarkdownSlugAcc = { items : MarkdownSlugItems!, bases : MarkdownSlugBases! }
-  type MarkdownDocument = { ref : string!, lineCount : number!, title : string!, titleFromHeading : boolean!, preamble : string!, titleBody : string!, titleBodyStart : number!, folderParent : string?, newFolders : [MarkdownFolder], preQa : MarkdownQa, bodyQa : MarkdownQa, sections : [MarkdownSection]! }
+  type MarkdownDocument = { ref : string!, lineCount : number!, title : string!, titleFromHeading : boolean!, preamble : string!, titleBody : string!, titleBodyStart : number!, folderParent : string?, newFolders : [MarkdownFolder]!, preQa : MarkdownQa!, bodyQa : MarkdownQa!, sections : [MarkdownSection]! }
 
   entity MigrationAdapterMarkdownRun [runtime] {
     id : string!
@@ -742,8 +742,7 @@ orbital MigrationAdapterMarkdownOrbital {
                      (array/map
                        @entity.documents
                        (fn d
-                         (array/concat
-                           (array/map
+                         (let ((folderUnits : ExtractedUnits (array/map
                              (object/get @d "newFolders")
                              (fn f
                                {
@@ -755,14 +754,14 @@ orbital MigrationAdapterMarkdownOrbital {
                                  source: "markdown",
                                  span: null,
                                  metadata: { path: (object/get @f "path") }
-                               }))
+                               })))) (array/concat @folderUnits
                            (if
                              (and
                                (= (object/get @d "preamble") "")
                                (= (object/get @d "titleBody") "")
                                (= (array/len (object/get @d "sections")) 0)
                                (not (object/get @d "titleFromHeading")))
-                             (json/parse "[]" ExtractedUnits)
+                             (let ((noUnits : ExtractedUnits [])) @noUnits)
                              (array/concat
                                [
                                 (let ((rc (str/join
@@ -795,28 +794,28 @@ orbital MigrationAdapterMarkdownOrbital {
                                      ref: (str/concat "doc:" (object/get @d "ref") "#qa:" (+ @i 1)),
                                      kind: qa,
                                      title: (object/get
-                                              (array/nth
+                                              (default (array/nth
                                                 (array/concat
                                                   (object/get (object/get @d "preQa") "pairs")
                                                   (object/get (object/get @d "bodyQa") "pairs"))
-                                                @i)
+                                                @i) {})
                                               "front"),
                                      content: (if
                                                 (!=
                                                   (object/get
-                                                    (array/nth
+                                                    (default (array/nth
                                                       (array/concat
                                                         (object/get (object/get @d "preQa") "pairs")
                                                         (object/get (object/get @d "bodyQa") "pairs"))
-                                                      @i)
+                                                      @i) {})
                                                     "back")
                                                   "")
                                                 (object/get
-                                                  (array/nth
+                                                  (default (array/nth
                                                     (array/concat
                                                       (object/get (object/get @d "preQa") "pairs")
                                                       (object/get (object/get @d "bodyQa") "pairs"))
-                                                    @i)
+                                                    @i) {})
                                                   "back")
                                                 null),
                                      parentRef: (str/concat "doc:" (object/get @d "ref")),
@@ -824,26 +823,26 @@ orbital MigrationAdapterMarkdownOrbital {
                                      span: (str/concat
                                              "L"
                                              (object/get
-                                               (array/nth
+                                               (default (array/nth
                                                  (array/concat
                                                    (object/get (object/get @d "preQa") "pairs")
                                                    (object/get (object/get @d "bodyQa") "pairs"))
-                                                 @i)
+                                                 @i) {})
                                                "line")),
                                      metadata: {
                                                  front: (object/get
-                                                          (array/nth
+                                                          (default (array/nth
                                                             (array/concat
                                                               (object/get (object/get @d "preQa") "pairs")
                                                               (object/get (object/get @d "bodyQa") "pairs"))
-                                                            @i)
+                                                            @i) {})
                                                           "front"),
                                                  back: (object/get
-                                                         (array/nth
+                                                         (default (array/nth
                                                            (array/concat
                                                              (object/get (object/get @d "preQa") "pairs")
                                                              (object/get (object/get @d "bodyQa") "pairs"))
-                                                           @i)
+                                                           @i) {})
                                                          "back")
                                                }
                                    }))
@@ -896,22 +895,22 @@ orbital MigrationAdapterMarkdownOrbital {
                                                       (+ @offset @i 1)),
                                                kind: qa,
                                                title: (object/get
-                                                        (array/nth
+                                                        (default (array/nth
                                                           (object/get (object/get @s "qa") "pairs")
-                                                          @i)
+                                                          @i) {})
                                                         "front"),
                                                content: (if
                                                           (!=
                                                             (object/get
-                                                              (array/nth
+                                                              (default (array/nth
                                                                 (object/get (object/get @s "qa") "pairs")
-                                                                @i)
+                                                                @i) {})
                                                               "back")
                                                             "")
                                                           (object/get
-                                                            (array/nth
+                                                            (default (array/nth
                                                               (object/get (object/get @s "qa") "pairs")
-                                                              @i)
+                                                              @i) {})
                                                             "back")
                                                           null),
                                                parentRef: (object/get @s "ref"),
@@ -919,25 +918,25 @@ orbital MigrationAdapterMarkdownOrbital {
                                                span: (str/concat
                                                        "L"
                                                        (object/get
-                                                         (array/nth
+                                                         (default (array/nth
                                                            (object/get (object/get @s "qa") "pairs")
-                                                           @i)
+                                                           @i) {})
                                                          "line")),
                                                metadata: {
                                                            front: (object/get
-                                                                    (array/nth
+                                                                    (default (array/nth
                                                                       (object/get
                                                                         (object/get @s "qa")
                                                                         "pairs")
-                                                                      @i)
+                                                                      @i) {})
                                                                     "front"),
                                                            back: (object/get
-                                                                   (array/nth
+                                                                   (default (array/nth
                                                                      (object/get (object/get @s "qa") "pairs")
-                                                                     @i)
+                                                                     @i) {})
                                                                    "back")
                                                          }
-                                             }))))))))))))),
+                                             })))))))))))))),
             skipped: (array/flatten
                        (array/map
                          @entity.documents

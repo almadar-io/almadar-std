@@ -132,7 +132,7 @@ orbital SocialGraphOrbital {
       INIT -> idle
       TokensDrawn -> issuing
         (set @entity.reqRandom ?value)
-        (persist batch (array/map (array/range 0 (array/len @entity.reqMembers)) (fn i ["create" "PeerToken" { id: (str/slice ?value (* @i (* @config.tokenBytes 4 (/ 1 3))) (* (+ @i 1) (* @config.tokenBytes 4 (/ 1 3)))), peerId: (object/get (array/nth @entity.reqMembers @i) memberId ""), issuedTo: @entity.reqMember, nodeKey: @entity.reqKey, expiresAt: (+ @now @config.tokenTtlMs) }])) { emit: { success: TokensStored, failure: PeerFailed } })
+        (persist batch (let ((mems (let ((noMems : [NodePresence] [])) (default @entity.reqMembers @noMems)))) (array/map (array/range 0 (array/len @mems)) (fn i ["create" "PeerToken" { id: (str/slice ?value (* @i (* @config.tokenBytes 4 (/ 1 3))) (* (+ @i 1) (* @config.tokenBytes 4 (/ 1 3)))), peerId: (object/get (default (array/nth @mems @i) {}) memberId ""), issuedTo: @entity.reqMember, nodeKey: @entity.reqKey, expiresAt: (+ @now @config.tokenTtlMs) }]))) { emit: { success: TokensStored, failure: PeerFailed } })
       PeerFailed -> idle
         (emit SOCIAL_FAILED { error: ?error })
     }
@@ -141,20 +141,20 @@ orbital SocialGraphOrbital {
       INIT -> idle
       TokensStored -> idle
         (emit SOCIAL_PEERS_LISTED {
-          peers: (array/map (array/sort
-            (array/map (array/range 0 (array/len @entity.reqMembers))
-              (fn i (let ((vm (array/nth @entity.reqMembers @i))
-                          (vstat (array/find @entity.reqStats (fn s (= (object/get @s memberId "") (object/get (array/nth @entity.reqMembers @i) memberId ""))))))
+          peers: (let ((mems (let ((noMems : [NodePresence] [])) (default @entity.reqMembers @noMems))) (stats (let ((noStats : SocialMemberStats [])) (default @entity.reqStats @noStats)))) (array/map (array/sort
+            (array/map (array/range 0 (array/len @mems))
+              (fn i (let ((vm (default (array/nth @mems @i) {}))
+                          (vstat (default (array/find @stats (fn s (= (object/get @s memberId "") (object/get (default (array/nth @mems @i) {}) memberId "")))) {})))
                 (let ((vpct (object/get @vstat convergencePct 0)))
                   {
                     peerRef: (str/slice @entity.reqRandom (* @i (* @config.tokenBytes 4 (/ 1 3))) (* (+ @i 1) (* @config.tokenBytes 4 (/ 1 3))))
-                    handle: (str/concat "peer-" (str/slice (hash/sha256 (object/get @vm memberId "") "hex") 0 6))
+                    handle: (str/concat "peer-" (str/slice (default (hash/sha256 (object/get @vm memberId "") "hex") "") 0 6))
                     conceptsCompleted: (object/get @vstat completed 0)
                     convergencePct: @vpct
                     activeNow: (<= (- @now (object/get @vm lastSeenOnNode 0)) (* @config.activeNowMinutes 60000))
                     rank: (+ (* 2 @vpct) (if (<= (- @now (object/get @vm lastSeenOnNode 0)) (* @config.activeNowMinutes 60000)) 1 0))
                   }))))
-            rank desc) (fn p { peerRef: (object/get @p peerRef ""), handle: (object/get @p handle ""), conceptsCompleted: (object/get @p conceptsCompleted 0), convergencePct: (object/get @p convergencePct 0), activeNow: (object/get @p activeNow false) }))
+            rank desc) (fn p { peerRef: (object/get @p peerRef ""), handle: (object/get @p handle ""), conceptsCompleted: (object/get @p conceptsCompleted 0), convergencePct: (object/get @p convergencePct 0), activeNow: (object/get @p activeNow false) })))
         })
       PeerFailed -> idle
         (emit SOCIAL_FAILED { error: ?error })
@@ -382,7 +382,7 @@ orbital SocialGraphOrbital {
         (set @entity.reqPeerId (object/get (array/first ?data) peerId ""))
         (set @entity.reqOriginKind (object/get (array/first ?data) originKind ""))
         (set @entity.reqOriginId (object/get (array/first ?data) originId ""))
-        (emit BadgesReady { labels: (if (> (array/len @entity.reqLabels) 0) @entity.reqLabels [(object/get (array/first ?data) originId "")]) })
+        (emit BadgesReady { labels: (if (> (array/len (let ((noLabels : SocialStrings [])) (default @entity.reqLabels @noLabels))) 0) @entity.reqLabels [(object/get (array/first ?data) originId "")]) })
       PendingLoaded -> cleaning when (and (> (array/len ?data) 0) (= @entity.reqOp "scored") (= (object/get (array/first ?data) kind "") "moderation"))
         (set @entity.pendingId (object/get (array/first ?data) id ""))
         (persist update SocialMessage { id: (object/get (array/first ?data) messageId ""), moderationScore: @entity.reqScore, flagged: (< @entity.reqScore @config.flagThreshold), moderationReason: @entity.reqReason } { emit: { success: ModerationStored, failure: ConnFailed } })
@@ -488,7 +488,7 @@ orbital SocialGraphOrbital {
         (emit SOCIAL_SENT { messageId: @entity.resultMessage })
       ActivityStored -> idle when @config.moderationFromLlm
         (emit SOCIAL_SENT { messageId: @entity.resultMessage })
-        (persist create SocialPending { id: (str/concat "social-moderation:" @entity.resultMessage), kind: "moderation", memberId: @entity.reqMember, messageId: @entity.resultMessage, content: @entity.reqContent, badgeLabel: (object/get (array/find (let ((noSocialBadges : SocialBadges [])) (object/get (array/first @entity.scratchConn) badges @noSocialBadges)) (fn b (= (object/get @b id "") (if (= @entity.reqBadge "") (object/get (array/first @entity.scratchConn) activeBadgeId "") @entity.reqBadge)))) label "") } { emit: { success: PendingStored, failure: ConnFailed } })
+        (persist create SocialPending { id: (str/concat "social-moderation:" @entity.resultMessage), kind: "moderation", memberId: @entity.reqMember, messageId: @entity.resultMessage, content: @entity.reqContent, badgeLabel: (object/get (default (array/find (let ((noSocialBadges : SocialBadges [])) (object/get (default (array/first @entity.scratchConn) {}) badges @noSocialBadges)) (fn b (= (object/get @b id "") (if (= @entity.reqBadge "") (object/get (default (array/first @entity.scratchConn) {}) activeBadgeId "") @entity.reqBadge)))) {}) label "") } { emit: { success: PendingStored, failure: ConnFailed } })
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
     }

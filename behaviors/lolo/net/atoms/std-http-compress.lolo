@@ -58,11 +58,11 @@ orbital HttpCompressOrbital {
             (emit BROTLI { data: @q.body })))
 
       GZIP_ANSWERED -> serving when (array/some @entity.jobs (fn j (= @j.stage "encoding")))
-        (emit CANDIDATE { requestId: (object/get (array/find @entity.jobs (fn j (= @j.stage "encoding"))) "requestId"), encoding: "gzip", data: @payload.data })
+        (emit CANDIDATE { requestId: (object/get (default (array/find @entity.jobs (fn j (= @j.stage "encoding"))) { requestId: -1, status: 0, headers: [], body: (bytes/from-string ""), accept: "", encoding: "", stage: "" }) "requestId"), encoding: "gzip", data: @payload.data })
       GZIP_REFUSED -> serving when (array/some @entity.jobs (fn j (= @j.stage "encoding")))
-        (emit CANDIDATE { requestId: (object/get (array/find @entity.jobs (fn j (= @j.stage "encoding"))) "requestId"), encoding: "gzip", data: (object/get (array/find @entity.jobs (fn j (= @j.stage "encoding"))) "body") })
+        (emit CANDIDATE { requestId: (object/get (default (array/find @entity.jobs (fn j (= @j.stage "encoding"))) { requestId: -1, status: 0, headers: [], body: (bytes/from-string ""), accept: "", encoding: "", stage: "" }) "requestId"), encoding: "gzip", data: (object/get (default (array/find @entity.jobs (fn j (= @j.stage "encoding"))) { requestId: -1, status: 0, headers: [], body: (bytes/from-string ""), accept: "", encoding: "", stage: "" }) "body") })
       BROTLI_ANSWERED -> serving when (array/some @entity.jobs (fn j (= @j.stage "encoding")))
-        (emit CANDIDATE { requestId: (object/get (array/find @entity.jobs (fn j (= @j.stage "encoding"))) "requestId"), encoding: "br", data: @payload.data })
+        (emit CANDIDATE { requestId: (object/get (default (array/find @entity.jobs (fn j (= @j.stage "encoding"))) { requestId: -1, status: 0, headers: [], body: (bytes/from-string ""), accept: "", encoding: "", stage: "" }) "requestId"), encoding: "br", data: @payload.data })
 
       CANDIDATE -> serving when (< (bytes/length @payload.data) (bytes/length (default (object/get (default (array/find @entity.jobs (fn j (= @j.requestId @payload.requestId))) { requestId: -1, status: 0, headers: [], body: (bytes/from-string ""), accept: "", encoding: "", stage: "" }) "body") (bytes/from-string ""))))
         (let ((job (array/find @entity.jobs (fn j (= @j.requestId @payload.requestId)))))

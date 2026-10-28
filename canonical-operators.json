@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-28T13:18:06.639Z",
+  "generated": "2026-10-28T17:49:09.075Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -24050,9 +24050,16 @@
       "returnType": {
         "kind": "var",
         "name": "T",
-        "bound": "number"
+        "bound": {
+          "kind": "union",
+          "of": [
+            "date",
+            "datetime",
+            "instant"
+          ]
+        }
       },
-      "description": "Add time to timestamp (calendar units in UTC)",
+      "description": "Add time to a date or datetime (calendar units in UTC)",
       "module": "time",
       "title": "Add",
       "params": [
@@ -24061,9 +24068,16 @@
           "type": {
             "kind": "var",
             "name": "T",
-            "bound": "number"
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
-          "description": "Timestamp"
+          "description": "Date or datetime; the result keeps its shape (a date takes day-or-longer units only)"
         },
         {
           "name": "amount",
@@ -24186,14 +24200,21 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "number",
-      "description": "Get day of month from timestamp (UTC, 1-31)",
+      "description": "Get day of month from a date or datetime (UTC, 1-31)",
       "module": "time",
       "title": "Day",
       "params": [
         {
           "name": "date",
-          "type": "number",
-          "description": "Timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Date or datetime"
         }
       ],
       "examples": [
@@ -24206,19 +24227,33 @@
       "minArity": 2,
       "maxArity": 3,
       "returnType": "number",
-      "description": "Difference between timestamps",
+      "description": "Signed difference a - b: a number of ms, or of whole units with the third argument",
       "module": "time",
       "title": "Diff",
       "params": [
         {
           "name": "a",
-          "type": "number",
-          "description": "First timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "First date or datetime"
         },
         {
           "name": "b",
-          "type": "number",
-          "description": "Second timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Second date or datetime"
         },
         {
           "name": "unit",
@@ -24360,7 +24395,14 @@
       "returnType": {
         "kind": "var",
         "name": "T",
-        "bound": "number"
+        "bound": {
+          "kind": "union",
+          "of": [
+            "date",
+            "datetime",
+            "instant"
+          ]
+        }
       },
       "description": "Get end of time period (UTC)",
       "module": "time",
@@ -24371,9 +24413,16 @@
           "type": {
             "kind": "var",
             "name": "T",
-            "bound": "number"
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
-          "description": "Timestamp"
+          "description": "Date or datetime; the result keeps its shape (a date takes day-or-longer units only)"
         },
         {
           "name": "unit",
@@ -24490,32 +24539,22 @@
       "category": "std-time",
       "minArity": 2,
       "maxArity": 2,
-      "returnType": {
-        "kind": "union",
-        "of": [
-          "string",
-          {
-            "kind": "literal",
-            "value": null
-          }
-        ]
-      },
-      "description": "Format timestamp to string, in UTC",
+      "returnType": "string",
+      "description": "Format a date or datetime to text, in UTC; a time-of-day token (HH, mm, ss, H, m, s) on a bare date is refused",
       "module": "time",
-      "failable": {
-        "unlessTyped": [
-          {
-            "arg": 0,
-            "type": "instant"
-          }
-        ]
-      },
       "title": "Format",
       "params": [
         {
           "name": "date",
-          "type": "number",
-          "description": "Timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Date or datetime"
         },
         {
           "name": "format",
@@ -24533,14 +24572,20 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "number",
-      "description": "Get hour from timestamp (UTC, 0-23)",
+      "description": "Get hour from a date or datetime (UTC, 0-23)",
       "module": "time",
       "title": "Hour",
       "params": [
         {
           "name": "date",
-          "type": "number",
-          "description": "Timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Datetime (a bare date has no time of day and is refused)"
         }
       ],
       "examples": [
@@ -24559,13 +24604,27 @@
       "params": [
         {
           "name": "a",
-          "type": "number",
-          "description": "First timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "First date or datetime"
         },
         {
           "name": "b",
-          "type": "number",
-          "description": "Second timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Second date or datetime"
         }
       ],
       "examples": [
@@ -24584,13 +24643,27 @@
       "params": [
         {
           "name": "a",
-          "type": "number",
-          "description": "First timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "First date or datetime"
         },
         {
           "name": "b",
-          "type": "number",
-          "description": "Second timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Second date or datetime"
         }
       ],
       "examples": [
@@ -24609,17 +24682,38 @@
       "params": [
         {
           "name": "date",
-          "type": "number",
-          "description": "Timestamp to check"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Date or datetime to check"
         },
         {
           "name": "start",
-          "type": "number",
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
           "description": "Range start"
         },
         {
           "name": "end",
-          "type": "number",
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
           "description": "Range end"
         }
       ],
@@ -24633,14 +24727,20 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "boolean",
-      "description": "Check if timestamp is in the future",
+      "description": "Check if date or datetime is in the future",
       "module": "time",
       "title": "Is Future Date",
       "params": [
         {
           "name": "date",
-          "type": "number",
-          "description": "Timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Datetime (a bare date is not an instant and is refused)"
         }
       ],
       "examples": [
@@ -24653,14 +24753,20 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "boolean",
-      "description": "Check if timestamp is in the past",
+      "description": "Check if date or datetime is in the past",
       "module": "time",
       "title": "Is Past Date",
       "params": [
         {
           "name": "date",
-          "type": "number",
-          "description": "Timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Datetime (a bare date is not an instant and is refused)"
         }
       ],
       "examples": [
@@ -24673,19 +24779,33 @@
       "minArity": 2,
       "maxArity": 3,
       "returnType": "boolean",
-      "description": "Check if timestamps are same (optionally by unit, compared in UTC)",
+      "description": "Check if date or datetimes are same (optionally by unit, compared in UTC)",
       "module": "time",
       "title": "Is Same",
       "params": [
         {
           "name": "a",
-          "type": "number",
-          "description": "First timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "First date or datetime"
         },
         {
           "name": "b",
-          "type": "number",
-          "description": "Second timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Second date or datetime"
         },
         {
           "name": "unit",
@@ -24804,14 +24924,21 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "boolean",
-      "description": "Check if timestamp falls on today's UTC date",
+      "description": "Check if date or datetime falls on today's UTC date",
       "module": "time",
       "title": "Is Today",
       "params": [
         {
           "name": "date",
-          "type": "number",
-          "description": "Timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Date or datetime"
         }
       ],
       "examples": [
@@ -24824,14 +24951,20 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "number",
-      "description": "Get minute from timestamp (UTC, 0-59)",
+      "description": "Get minute from a date or datetime (UTC, 0-59)",
       "module": "time",
       "title": "Minute",
       "params": [
         {
           "name": "date",
-          "type": "number",
-          "description": "Timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Datetime (a bare date has no time of day and is refused)"
         }
       ],
       "examples": [
@@ -24844,14 +24977,21 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "number",
-      "description": "Get month from timestamp (UTC, 1-12)",
+      "description": "Get month from a date or datetime (UTC, 1-12)",
       "module": "time",
       "title": "Month",
       "params": [
         {
           "name": "date",
-          "type": "number",
-          "description": "Timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Date or datetime"
         }
       ],
       "examples": [
@@ -24864,7 +25004,7 @@
       "minArity": 0,
       "maxArity": 0,
       "returnType": "instant",
-      "description": "Current timestamp",
+      "description": "Current moment as an ISO-8601 instant (UTC)",
       "module": "time",
       "title": "Now",
       "examples": [
@@ -24879,14 +25019,20 @@
       "returnType": {
         "kind": "union",
         "of": [
-          "number",
+          {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime"
+            ]
+          },
           {
             "kind": "literal",
             "value": null
           }
         ]
       },
-      "description": "Parse an ISO 8601 / RFC 3339 date or date-time to epoch ms (a date is midnight UTC; no offset reads as UTC); a date or datetime value already held as epoch ms is that number; an unparseable string answers null; any other kind (null included) is a type mismatch",
+      "description": "Parse ISO 8601 text: text with no time answers a `date` (YYYY-MM-DD); text with a time and a zone answers a UTC `datetime`; an unparseable string, or a date-time without a zone, answers null; any other kind (null included) is a type mismatch",
       "module": "time",
       "failable": {},
       "title": "Parse",
@@ -24901,7 +25047,7 @@
               "datetime"
             ]
           },
-          "description": "ISO 8601 date or date-time (e.g. 2024-01-18 or 2024-01-18T09:30:00+02:00), or a date/datetime value"
+          "description": "ISO 8601 date (2024-01-18) or date-time with a zone (2024-01-18T09:30:00+02:00)"
         }
       ],
       "examples": [
@@ -24920,8 +25066,14 @@
       "params": [
         {
           "name": "date",
-          "type": "number",
-          "description": "Timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Datetime (a bare date is refused)"
         }
       ],
       "examples": [
@@ -24934,14 +25086,20 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "number",
-      "description": "Get second from timestamp (UTC, 0-59)",
+      "description": "Get second from a date or datetime (UTC, 0-59)",
       "module": "time",
       "title": "Second",
       "params": [
         {
           "name": "date",
-          "type": "number",
-          "description": "Timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Datetime (a bare date has no time of day and is refused)"
         }
       ],
       "examples": [
@@ -24956,7 +25114,14 @@
       "returnType": {
         "kind": "var",
         "name": "T",
-        "bound": "number"
+        "bound": {
+          "kind": "union",
+          "of": [
+            "date",
+            "datetime",
+            "instant"
+          ]
+        }
       },
       "description": "Get start of time period (UTC)",
       "module": "time",
@@ -24967,9 +25132,16 @@
           "type": {
             "kind": "var",
             "name": "T",
-            "bound": "number"
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
-          "description": "Timestamp"
+          "description": "Date or datetime; the result keeps its shape (a date takes day-or-longer units only)"
         },
         {
           "name": "unit",
@@ -25089,9 +25261,16 @@
       "returnType": {
         "kind": "var",
         "name": "T",
-        "bound": "number"
+        "bound": {
+          "kind": "union",
+          "of": [
+            "date",
+            "datetime",
+            "instant"
+          ]
+        }
       },
-      "description": "Subtract time from timestamp (calendar units in UTC)",
+      "description": "Subtract time from a date or datetime (calendar units in UTC)",
       "module": "time",
       "title": "Subtract",
       "params": [
@@ -25100,9 +25279,16 @@
           "type": {
             "kind": "var",
             "name": "T",
-            "bound": "number"
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
-          "description": "Timestamp"
+          "description": "Date or datetime; the result keeps its shape (a date takes day-or-longer units only)"
         },
         {
           "name": "amount",
@@ -25225,7 +25411,7 @@
       "minArity": 0,
       "maxArity": 0,
       "returnType": "instant",
-      "description": "Today at midnight UTC (the host timezone is never read)",
+      "description": "Today at midnight UTC as an ISO-8601 instant (the host timezone is never read)",
       "module": "time",
       "title": "Today",
       "examples": [
@@ -25238,7 +25424,7 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "boolean",
-      "description": "True iff time/parse would succeed on the string (an ISO 8601 / RFC 3339 date or date-time); a non-string input (null included) is a type mismatch",
+      "description": "True iff time/parse would succeed on the string (an ISO 8601 date, or a date-time with a zone); a non-string input (null included) is a type mismatch",
       "module": "time",
       "params": [
         {
@@ -25263,8 +25449,15 @@
       "params": [
         {
           "name": "date",
-          "type": "number",
-          "description": "Timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Date or datetime"
         }
       ],
       "examples": [
@@ -25277,14 +25470,21 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "number",
-      "description": "Get year from timestamp (UTC)",
+      "description": "Get year from a date or datetime (UTC)",
       "module": "time",
       "title": "Year",
       "params": [
         {
           "name": "date",
-          "type": "number",
-          "description": "Timestamp"
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Date or datetime"
         }
       ],
       "examples": [
@@ -25395,7 +25595,11 @@
       "description": "The structural bottom-up fold over a value of a recursive type (the third argument names it). The children of a node are its fields whose declared type is the type itself, a list of it or a Map of it, read from the type, never from names or the value's shape; a union node is read through the variant it belongs to. The step is called once per node with (node childResults), childResults holding one entry per child field present, in its position: a field holds the child's result, a list the list of results, a map the map of results; a leaf gets {}. Every call works on a strict subterm of a finite value, so the fold terminates. An absent value folds to null",
       "module": "json",
       "returnSemantics": "lambda-result",
-      "failable": {},
+      "failable": {
+        "unlessPresent": [
+          0
+        ]
+      },
       "lambdaArgPosition": 1,
       "params": [
         {

@@ -117,9 +117,9 @@ orbital RsaOrbital {
           (bytes/concat
           (array/concat
             (array/concat
-              [(bytes/write-uint 1 2 "be")]
-              (array/map (array/range 0 (- @entity.k 54)) (fn i (bytes/write-uint 255 1 "be"))))
-            [@config.digestInfo (hash/sha256 @entity.msg "base64")]))) })
+              [(default (bytes/write-uint 1 2 "be") (bytes/from-string ""))]
+              (array/map (array/range 0 (- @entity.k 54)) (fn i (default (bytes/write-uint 255 1 "be") (bytes/from-string "")))))
+            [(default (bytes/from-base64 @config.digestInfo) (bytes/from-string "")) (default (bytes/from-base64 (default (hash/sha256 @entity.msg "base64") "")) (bytes/from-string ""))]))) })
       BIG_REFUSED -> idle
         (emit RSA_REFUSED { reason: "bigint" })
     }

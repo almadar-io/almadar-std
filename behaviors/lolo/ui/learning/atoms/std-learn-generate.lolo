@@ -246,11 +246,11 @@ orbital LearnGenerateOrbital {
         (set @entity.status filling)
         (emit CONVERSE {
           messages: [{ role: "user", content: (str/concat "Subject: " @entity.subject (if (= @entity.context "") "" (str/concat "\nContext: " @entity.context))) }]
-          instructions: (str/concat "You write the content roster for the learning instrument " @entity.chosen ": " (object/get (array/find @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen))) description "") "\nCall the FILL tool once with a roster of realistic, accurate, pedagogically useful content about the subject. If the tool reports issues, call it again with them fixed. Then reply with one sentence.")
+          instructions: (str/concat "You write the content roster for the learning instrument " @entity.chosen ": " (object/get (default (array/find @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen))) {}) description "") "\nCall the FILL tool once with a roster of realistic, accurate, pedagogically useful content about the subject. If the tool reports issues, call it again with them fixed. Then reply with one sentence.")
           tools: [{
             fireAndForget: true
             event: @config.fillEvent
-            payload: [{ name: "roster", type: "object", required: true, properties: (object/get (array/find @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen))) fields []) }]
+            payload: [{ name: "roster", type: "object", required: true, properties: (object/get (default (array/find @entity.instruments (fn i (= (object/get @i behavior) @entity.chosen))) {}) fields []) }]
           }]
           ephemeral: true
         })

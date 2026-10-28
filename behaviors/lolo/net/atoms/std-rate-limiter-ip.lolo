@@ -1,6 +1,6 @@
 app std-rate-limiter-ip [
   version: "1.0.0",
-  description: "std-rate-limiter-ip — the per-client fixed-window rate limiter of the HTTP server, mirroring orbital-server RateWindows. Each client address ip on REQUEST { requestId, ip } has its own window {count, windowStart}: the first request opens it, the count rises per request, admitted while count <= limit (exactly limit admissions), then THROTTLED until a request arrives at or after windowStart plus windowSeconds, which opens a new window at that request (lazy roll from the clock at request time, no ticks). ADMITTED { remaining = limit - count floored at 0, resetIn = floor((window ms - elapsed ms) / 1000) } ; THROTTLED carries the same resetIn. A request with no ip, or a disabled limiter, is admitted without counting and with counted false (the Rust layer sends no ratelimit headers then). Entries are never evicted, as in RateWindows. Defaults 300 requests per 900 s. Bound to spec/net/rate-limiter-ip.lolo and spec/net/rate-limit.goldens.json."
+  description: "std-rate-limiter-ip — the per-client fixed-window rate limiter of the HTTP server, mirroring orbital-server RateWindows. Each client address ip on REQUEST { requestId, ip } has its own window {count, windowStart}: the first request opens it, the count rises per request, admitted while count <= limit (exactly limit admissions), then THROTTLED until a request arrives at or after windowStart plus windowSeconds, which opens a new window at that request (lazy roll from the clock at request time, no ticks). ADMITTED { remaining = limit - count floored at 0, resetIn = floor((window ms - elapsed ms) / 1000) } ; THROTTLED carries the same resetIn. A request with no ip, or a disabled limiter, is admitted without counting and with counted false (the Rust layer sends no ratelimit headers then). A client opening a window drops every other client whose window has passed (an expired window and none take the same branch), so the list holds only clients seen within one window. Defaults 300 requests per 900 s. Bound to spec/net/rate-limiter-ip.lolo and spec/net/rate-limit.goldens.json."
 ]
 uses Spec from "almadar-std/rate-limiter-ip"
 
@@ -9,7 +9,7 @@ type RateKey = { ip : string!, count : number!, windowStart : number! }
 orbital RateClientOrbital {
   entity RateClient [runtime] {
     id : string
-    buckets : [RateKey] @description "One count and window start per client address, rolled lazily at the first request at or after start plus window." @synonyms "windows, per-ip counts, client buckets" = []
+    buckets : [RateKey] @description "One count and window start per client address seen within the last window, rolled lazily at the first request at or after start plus window; expired entries are dropped when any client opens a window." @synonyms "windows, per-ip counts, client buckets" = []
   }
 
   trait RateKeyRateLimiter -> RateClient [client] {
@@ -21,7 +21,7 @@ orbital RateClientOrbital {
       REQUEST -> counting when (not (and @config.enabled (!= (default @payload.ip "") "")))
         (emit ADMITTED { requestId: @payload.requestId, remaining: @config.requestsPerMinute, resetIn: @config.windowSeconds, limit: @config.requestsPerMinute, window: @config.windowSeconds, counted: false })
       REQUEST -> counting when (and @config.enabled (!= (default @payload.ip "") "") (or (= (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) null) (>= (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart")) (* @config.windowSeconds 1000))))
-        (set @entity.buckets (array/append (array/filter @entity.buckets (fn b (!= @b.ip @payload.ip))) { ip: @payload.ip, count: 1, windowStart: (time/now) }))
+        (set @entity.buckets (array/append (array/filter @entity.buckets (fn b (and (!= @b.ip @payload.ip) (< (- (time/now) @b.windowStart) (* @config.windowSeconds 1000))))) { ip: @payload.ip, count: 1, windowStart: (time/now) }))
         (emit ADMITTED { requestId: @payload.requestId, remaining: (- @config.requestsPerMinute 1), resetIn: @config.windowSeconds, limit: @config.requestsPerMinute, window: @config.windowSeconds })
       REQUEST -> counting when (and @config.enabled (!= (default @payload.ip "") "") (not (or (= (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) null) (>= (- (time/now) (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "windowStart")) (* @config.windowSeconds 1000)))) (< (object/get (array/find @entity.buckets (fn b (= @b.ip @payload.ip))) "count") @config.requestsPerMinute))
         (set @entity.buckets (array/map @entity.buckets (fn b (if (= @b.ip @payload.ip) { ip: @b.ip, count: (+ @b.count 1), windowStart: @b.windowStart } @b))))
