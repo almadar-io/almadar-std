@@ -10,7 +10,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, SEXPR, SHAPE, STRING, childrenOf, fn, list, mapOf, openShape, shape, tv, nullable } from '../signature.js';
+import { BOOLEAN, NUMBER, SEXPR, SHAPE, STRING, childrenOf, fn, list, mapOf, openShape, shape, tv, nullable } from '../signature.js';
 
 export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
   'json/valid': {
@@ -54,15 +54,16 @@ export const JSON_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'json',
     category: 'std-json',
     minArity: 2,
-    maxArity: 2,
-    description: 'Every call form in a value, grouped by its head, in one walk: a call form is a list whose first item is a string listed in `heads`. The walk is pre-order over lists (items in order) and objects (values in key order), like json/nodes, and continues inside a call form. Each hit carries its node and its path from the value: `[i]` for a list item, `.key` for an object field and `key` for a field of the value itself (e.g. `orbitals[0].traits[1]`, `[2][1].then`). The result has one entry per listed head, an empty list when the head never occurs. For indexing a program once so readers look up the calls they inspect instead of walking it',
+    maxArity: 3,
+    description: 'Every call form in a value, grouped by its head, in one walk: a call form is a list whose first item is a string listed in `heads`. The walk is pre-order over lists (items in order) and objects (values in key order), like json/nodes, and continues inside a call form. Each hit carries its node, its path from the value (`[i]` for a list item, `.key` for an object field and `key` for a field of the value itself, e.g. `orbitals[0].traits[1]`, `[2][1].then`) and `at`, its 0-based position in the walk (the count of nodes visited before it), so hits of several heads merge back into walk order by `at`. The result has one entry per listed head, an empty list when the head never occurs. With `options.prefixes`, every string leaf starting with a listed prefix is also collected, under the first listed prefix that matches, as a hit whose node is the string; a string that is the first item of a list (a call head) is not a leaf, and every listed prefix is a key, an empty list when nothing matches. `options` must be a record and `prefixes` a list of strings. For indexing a program once so readers look up the calls and references they inspect instead of walking it',
     hasSideEffects: false,
-    returnType: mapOf(STRING, list(shape({ path: STRING, node: SEXPR }))),
+    returnType: mapOf(STRING, list(shape({ path: STRING, node: SEXPR, at: NUMBER }))),
     params: [
       { name: 'value', type: tv('T'), description: 'The value to index' },
       { name: 'heads', type: list(STRING), description: 'The heads to collect' },
+      { name: 'options', type: shape({ prefixes: list(STRING) }, ['prefixes']), description: 'Optional `prefixes`: string prefixes whose leaves are collected too', optional: true },
     ],
-    example: '["tree/index", [["emit", "A"], ["if", true, ["emit", "B"]]], ["emit"]] // => {"emit": [{"path": "[0]", "node": ["emit", "A"]}, {"path": "[1][2]", "node": ["emit", "B"]}]}',
+    example: '["tree/index", [["emit", "A"], ["if", true, ["emit", "B"]]], ["emit"]] // => {"emit": [{"path": "[0]", "node": ["emit", "A"], "at": 1}, {"path": "[1][2]", "node": ["emit", "B"], "at": 7}]}',
   },
   'tree/fold': {
     module: 'json',

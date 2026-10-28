@@ -204,7 +204,7 @@ describe('host effect and key metadata', () => {
       const m = STD_OPERATORS[name];
       expect(allowed.has(name) || name.startsWith('os/') || name.startsWith('kv/') || name.startsWith('browser/') || m.host === 'program', name).toBe(true);
     }
-    for (const name of ['fetch', 'persist', 'ref', 'watch', 'fetch-stream', 'credential-set']) expect(keyed, name).not.toContain(name);
+    for (const name of ['fetch', 'persist', 'fetch-stream', 'credential-set']) expect(keyed, name).not.toContain(name);
   });
 });
 

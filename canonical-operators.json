@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-27T19:38:53.527Z",
+  "generated": "2026-10-28T05:40:16.062Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -2699,29 +2699,6 @@
       ],
       "examples": [
         "(as \"search\" \"CallKey\") // => \"search\""
-      ],
-      "docsSource": "generated"
-    },
-    "atomic": {
-      "category": "effect",
-      "minArity": 1,
-      "maxArity": null,
-      "returnType": "void",
-      "description": "Run effects as one server transaction: all succeed or all roll back",
-      "module": "core",
-      "hasSideEffects": true,
-      "runsOn": "server",
-      "params": [
-        {
-          "name": "effects",
-          "type": {
-            "kind": "sexpr"
-          },
-          "description": "The effects to group"
-        }
-      ],
-      "examples": [
-        "(atomic (set @entity.x 10) (set @entity.y 20))"
       ],
       "docsSource": "generated"
     },
@@ -7085,55 +7062,6 @@
       ],
       "examples": [
         "(csv/parse \"name,age\\nAda,36\") // => [{name: \"Ada\", age: \"36\"}]"
-      ],
-      "docsSource": "generated"
-    },
-    "deref": {
-      "category": "effect",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "var",
-        "name": "T"
-      },
-      "description": "Snapshot read of a binding or entity, without subscribing to changes",
-      "module": "core",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "params": [
-        {
-          "name": "target",
-          "type": {
-            "kind": "binding",
-            "shape": {
-              "kind": "var",
-              "name": "T"
-            }
-          },
-          "description": "The binding to read (`@entity.health`)"
-        },
-        {
-          "name": "options",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "id": "string",
-              "filter": {
-                "kind": "sexpr"
-              },
-              "include": {
-                "kind": "array",
-                "of": "string"
-              }
-            },
-            "open": true
-          },
-          "description": "Selector: id | filter | include",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(deref @entity.health)"
       ],
       "docsSource": "generated"
     },
@@ -22896,89 +22824,6 @@
       ],
       "docsSource": "generated"
     },
-    "ref": {
-      "category": "effect",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": "void",
-      "description": "Reactive entity reference (deprecated, use fetch with listens in V2)",
-      "module": "core",
-      "hasSideEffects": true,
-      "effect": {
-        "kind": "ref",
-        "produces": {
-          "kind": "object",
-          "fields": {
-            "data": {
-              "kind": "union",
-              "of": [
-                {
-                  "kind": "entity"
-                },
-                {
-                  "kind": "array",
-                  "of": {
-                    "kind": "entity"
-                  }
-                }
-              ]
-            },
-            "totalCount": "number"
-          },
-          "open": false
-        }
-      },
-      "emitKeys": [
-        "onChange",
-        "failure"
-      ],
-      "runsOn": "any",
-      "title": "Reference",
-      "params": [
-        {
-          "name": "entity",
-          "type": {
-            "kind": "entity"
-          },
-          "description": "Target entity name"
-        },
-        {
-          "name": "options",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "id": "string",
-              "filter": {
-                "kind": "sexpr"
-              },
-              "include": {
-                "kind": "array",
-                "of": "string"
-              },
-              "emit": {
-                "kind": "object",
-                "fields": {
-                  "onChange": {
-                    "kind": "eventKey"
-                  },
-                  "failure": {
-                    "kind": "eventKey"
-                  }
-                },
-                "open": true
-              }
-            },
-            "open": true
-          },
-          "description": "Ref options: id | filter | include | emit",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(ref \"Task\")"
-      ],
-      "docsSource": "generated"
-    },
     "render-ui": {
       "category": "effect",
       "minArity": 2,
@@ -24346,36 +24191,6 @@
       ],
       "examples": [
         "(str/uri-component-valid \"a%20b\") // => true"
-      ],
-      "docsSource": "generated"
-    },
-    "swap": {
-      "category": "effect",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "void",
-      "description": "Atomic compare-and-swap of an entity field on the server",
-      "module": "core",
-      "hasSideEffects": true,
-      "runsOn": "server",
-      "params": [
-        {
-          "name": "target",
-          "type": {
-            "kind": "binding"
-          },
-          "description": "The field to swap (`@entity.counter`)"
-        },
-        {
-          "name": "update",
-          "type": {
-            "kind": "sexpr"
-          },
-          "description": "The new value, computed from the current one"
-        }
-      ],
-      "examples": [
-        "(swap @entity.counter (+ @entity.counter 1))"
       ],
       "docsSource": "generated"
     },
@@ -25791,7 +25606,7 @@
     "tree/index": {
       "category": "std-json",
       "minArity": 2,
-      "maxArity": 2,
+      "maxArity": 3,
       "returnType": {
         "kind": "map",
         "key": "string",
@@ -25803,12 +25618,13 @@
               "path": "string",
               "node": {
                 "kind": "sexpr"
-              }
+              },
+              "at": "number"
             }
           }
         }
       },
-      "description": "Every call form in a value, grouped by its head, in one walk: a call form is a list whose first item is a string listed in `heads`. The walk is pre-order over lists (items in order) and objects (values in key order), like json/nodes, and continues inside a call form. Each hit carries its node and its path from the value: `[i]` for a list item, `.key` for an object field and `key` for a field of the value itself (e.g. `orbitals[0].traits[1]`, `[2][1].then`). The result has one entry per listed head, an empty list when the head never occurs. For indexing a program once so readers look up the calls they inspect instead of walking it",
+      "description": "Every call form in a value, grouped by its head, in one walk: a call form is a list whose first item is a string listed in `heads`. The walk is pre-order over lists (items in order) and objects (values in key order), like json/nodes, and continues inside a call form. Each hit carries its node, its path from the value (`[i]` for a list item, `.key` for an object field and `key` for a field of the value itself, e.g. `orbitals[0].traits[1]`, `[2][1].then`) and `at`, its 0-based position in the walk (the count of nodes visited before it), so hits of several heads merge back into walk order by `at`. The result has one entry per listed head, an empty list when the head never occurs. With `options.prefixes`, every string leaf starting with a listed prefix is also collected, under the first listed prefix that matches, as a hit whose node is the string; a string that is the first item of a list (a call head) is not a leaf, and every listed prefix is a key, an empty list when nothing matches. `options` must be a record and `prefixes` a list of strings. For indexing a program once so readers look up the calls and references they inspect instead of walking it",
       "module": "json",
       "params": [
         {
@@ -25826,6 +25642,23 @@
             "of": "string"
           },
           "description": "The heads to collect"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "prefixes": {
+                "kind": "array",
+                "of": "string"
+              }
+            },
+            "optional": [
+              "prefixes"
+            ]
+          },
+          "description": "Optional `prefixes`: string prefixes whose leaves are collected too",
+          "optional": true
         }
       ],
       "examples": [
@@ -26861,60 +26694,6 @@
       ],
       "examples": [
         "(vec/sub [5 7 9] [1 2 3]) // => [4 5 6]"
-      ],
-      "docsSource": "generated"
-    },
-    "watch": {
-      "category": "effect",
-      "minArity": 2,
-      "maxArity": 3,
-      "returnType": "void",
-      "description": "Emit an event whenever a watched binding changes",
-      "module": "core",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "params": [
-        {
-          "name": "target",
-          "type": {
-            "kind": "binding"
-          },
-          "description": "The binding to watch"
-        },
-        {
-          "name": "event",
-          "type": {
-            "kind": "eventKey"
-          },
-          "description": "Event emitted on each change"
-        },
-        {
-          "name": "options",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "debounce": "number",
-              "emit": {
-                "kind": "object",
-                "fields": {
-                  "success": {
-                    "kind": "eventKey"
-                  },
-                  "failure": {
-                    "kind": "eventKey"
-                  }
-                },
-                "open": true
-              }
-            },
-            "open": false
-          },
-          "description": "debounce (ms) | emit",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(watch @entity.status \"STATUS_UPDATED\" {\"debounce\":100})"
       ],
       "docsSource": "generated"
     },

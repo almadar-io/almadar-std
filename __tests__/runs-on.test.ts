@@ -28,9 +28,9 @@ describe('runsOn', () => {
 
   it('the server set is the data-owning effects, the OS watchers, and the effects that read installed packages through orb', () => {
     expect(getOperatorsRunningOn('server')).toEqual([
-      'atomic', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http',
+      'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http',
       'oauth-authorize', 'oauth-connection-forget', 'oauth-connection-status', ...OS_EFFECTS,
-      'persist', 'persist/read-named', 'postgres', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/print', 'program/read', 'program/self', 'program/step', 'program/validate', 'random-bytes', 'redis', 'swap',
+      'persist', 'persist/read-named', 'postgres', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/print', 'program/read', 'program/self', 'program/step', 'program/validate', 'random-bytes', 'redis',
     ].sort());
   });
 
@@ -114,7 +114,7 @@ describe('runsOn', () => {
   });
 
   it('reads that run on either side stay `any`, and the three sets partition the effects', () => {
-    for (const op of ['emit', 'set', 'log', 'notify', 'ref', 'deref', 'watch', 'spawn', 'despawn']) {
+    for (const op of ['emit', 'set', 'log', 'notify', 'spawn', 'despawn']) {
       expect(getOperatorRunsOn(op), op).toBe('any');
     }
     const partitioned = (['client', 'server', 'any'] as const).flatMap((s) => getOperatorsRunningOn(s));

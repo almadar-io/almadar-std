@@ -411,7 +411,6 @@ export interface OperatorEffectMeta {
     | 'persist'
     | 'fetch'
     | 'fetch-stream'
-    | 'ref'
     | 'render-ui'
     | 'navigate'
     | 'navigate-back'
