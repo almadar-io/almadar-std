@@ -161,7 +161,7 @@ orbital AgentSessionOrbital {
           filter: (= (object/get @entity chatId) ?chatId)
           limit: @config.maxRows
         })
-      AgentThreadOpened -> ready when (> ?totalCount (array/len ?data))
+      AgentThreadOpened -> ready when (> ?totalCount (array/len (default ?data [])))
         (emit AgentMessagesLoadFailed { error: (str/concat "AgentMessage has " ?totalCount " messages in one conversation, over the maxRows cap of " @config.maxRows), code: "THREAD_OVER_CAP" })
       AgentThreadOpened -> ready
         (emit AgentMessagesLoaded { data: ?data })
@@ -181,7 +181,7 @@ orbital AgentSessionOrbital {
           filter: (= (object/get @entity chatId) ?chatId)
           limit: @config.maxRows
         })
-      AgentConversationLoaded -> ready when (> ?totalCount (array/len ?data))
+      AgentConversationLoaded -> ready when (> ?totalCount (array/len (default ?data [])))
         (emit AgentMessagesLoadFailed { error: (str/concat "AgentMessage has " ?totalCount " messages in one conversation, over the maxRows cap of " @config.maxRows), code: "THREAD_OVER_CAP" })
       AgentConversationLoaded -> ready
         (emit CONVERSE {
@@ -835,7 +835,7 @@ orbital AgentSessionOrbital {
           gap: sm
           type: stack
         })
-      REPLIED -> idle when (= (if ?ephemeral true false) @config.ephemeral)
+      REPLIED -> idle when (= (default ?ephemeral false) @config.ephemeral)
         (set @entity.entries (array/append @entity.entries { type: message, role: assistant, content: ?reply, timestamp: @now }))
         (set @entity.working false)
         (render-ui main {
@@ -1221,7 +1221,7 @@ orbital AgentSessionOrbital {
           gap: sm
           type: stack
         })
-      REPLY_FAILED -> idle when (= (if ?ephemeral true false) @config.ephemeral)
+      REPLY_FAILED -> idle when (= (default ?ephemeral false) @config.ephemeral)
         (set @entity.entries (array/append @entity.entries { type: error, message: ?error, timestamp: @now }))
         (set @entity.working false)
         (render-ui main {
@@ -1489,7 +1489,7 @@ orbital AgentChatsOrbital {
           orderBy: "lastActiveAt:desc"
         })
       ChatsForHistory -> ready
-        (emit ASSISTANT_CHAT_OPENED { chatId: (if (> (array/len ?data) 0) (object/get (array/first (array/sort ?data lastActiveAt desc)) id) "") })
+        (emit ASSISTANT_CHAT_OPENED { chatId: (if (> (array/len (default ?data [])) 0) (object/get (array/first (array/sort ?data lastActiveAt desc)) id) "") })
       SEND -> ready when (not (= (default ?message "") ""))
         (set @entity.pendingMessage ?message)
         (fetch AgentChat {
@@ -1497,7 +1497,7 @@ orbital AgentChatsOrbital {
           limit: 1
           orderBy: "lastActiveAt:desc"
         })
-      ChatsForSend -> ready when (= (array/len ?data) 0)
+      ChatsForSend -> ready when (= (array/len (default ?data [])) 0)
         (persist create AgentChat {
           ownerId: @user.id
           title: @entity.pendingMessage
@@ -1506,7 +1506,7 @@ orbital AgentChatsOrbital {
         } {
           emit: { failure: AgentChatsLoadFailed, success: ChatReadyForSend }
         })
-      ChatsForSend -> ready when (> (array/len ?data) 0)
+      ChatsForSend -> ready when (> (array/len (default ?data [])) 0)
         (persist update AgentChat {
           id: (object/get (array/first (array/sort ?data lastActiveAt desc)) id)
           ownerId: (object/get (array/first (array/sort ?data lastActiveAt desc)) ownerId)
@@ -1519,7 +1519,7 @@ orbital AgentChatsOrbital {
       ChatReadyForSend -> ready
         (emit ASSISTANT_SEND_IN_CHAT { chatId: ?id, message: @entity.pendingMessage })
         (emit ASSISTANT_CHATS_CHANGED {})
-      REPLIED -> ready when (not ?ephemeral)
+      REPLIED -> ready when (not (default ?ephemeral false))
         (set @entity.pendingReply ?reply)
         (fetch AgentChat {
           emit: { failure: AgentChatsLoadFailed, success: ChatsForReply }
@@ -1527,7 +1527,7 @@ orbital AgentChatsOrbital {
           orderBy: "lastActiveAt:desc"
         })
       ChatsForReply -> ready
-        (emit ASSISTANT_REPLY_IN_CHAT { chatId: (if (> (array/len ?data) 0) (object/get (array/first (array/sort ?data lastActiveAt desc)) id) ""), reply: @entity.pendingReply })
+        (emit ASSISTANT_REPLY_IN_CHAT { chatId: (if (> (array/len (default ?data [])) 0) (object/get (array/first (array/sort ?data lastActiveAt desc)) id) ""), reply: @entity.pendingReply })
       NEW_CHAT -> ready
         (persist create AgentChat {
           ownerId: @user.id
@@ -1546,9 +1546,9 @@ orbital AgentChatsOrbital {
           filter: (= (object/get @entity id) ?chatId)
           limit: @config.maxRows
         })
-      ChatsForSelect -> ready when (> ?totalCount (array/len ?data))
+      ChatsForSelect -> ready when (> ?totalCount (array/len (default ?data [])))
         (emit AgentChatsLoadFailed { error: (str/concat "AgentChat has " ?totalCount " conversations for one person, over the maxRows cap of " @config.maxRows), code: "CHATS_OVER_CAP" })
-      ChatsForSelect -> ready when (> (array/len ?data) 0)
+      ChatsForSelect -> ready when (> (array/len (default ?data [])) 0)
         (persist update AgentChat {
           id: (object/get (array/first ?data) id)
           ownerId: (object/get (array/first ?data) ownerId)

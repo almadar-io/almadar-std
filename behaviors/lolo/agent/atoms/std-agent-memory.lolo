@@ -104,14 +104,14 @@ orbital AgentMemoryOrbital {
         })
       RECALL -> ready when ?ephemeral
         (emit RECALLED { messages: ?messages, context: "", instructions: (default ?instructions ""), tools: (object/get ? tools []), ephemeral: true })
-      RECALL -> recalling when (not ?ephemeral)
+      RECALL -> recalling when (not (default ?ephemeral false))
         (set @entity.pendingMessages ?messages)
-        (set @entity.pendingQuery (object/get (array/last ?messages) content))
+        (set @entity.pendingQuery (object/get (default (array/last ?messages) {}) content ""))
         (emit LLM_EMBED {
-          texts: (array/prepend [] (object/get (array/last ?messages) content))
+          texts: (array/prepend [] (object/get (default (array/last ?messages) {}) content ""))
         })
       REMEMBER -> ready when ?ephemeral
-      REMEMBER -> remembering when (not ?ephemeral)
+      REMEMBER -> remembering when (not (default ?ephemeral false))
         (set @entity.pendingContent (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply))
         (emit LLM_EMBED {
           texts: (array/prepend [] (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply))
@@ -127,7 +127,7 @@ orbital AgentMemoryOrbital {
           emit: { failure: AgentMemoriesLoadFailed, success: MemoriesForRecall }
           limit: @config.maxRows
         })
-      MemoriesForRecall -> recalling when (> ?totalCount (array/len ?data))
+      MemoriesForRecall -> recalling when (> ?totalCount (array/len (default ?data [])))
         (emit AgentMemoriesLoadFailed { error: (str/concat "AgentMemory has " ?totalCount " rows, over the maxRows cap of " @config.maxRows), code: "AGENT_MEMORY_OVER_CAP" })
       MemoriesForRecall -> ready
         (emit RECALLED {

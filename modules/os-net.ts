@@ -65,19 +65,4 @@ export const OS_NET_OPERATORS: Record<string, StdOperatorMeta> = {
     stream: true,
     example: '["os/watch-port", 3000, "tcp", { "emit": { "success": "PORT_CHANGED", "failure": "WATCH_FAILED", "key": "port-3000" } }]',
   }),
-  'os/watch-http': {
-    module: 'os',
-    category: 'std-os',
-    minArity: 1,
-    maxArity: 2,
-    description: 'Register HTTP response interceptor. Emits OS_HTTP_RESPONSE events with { url, method, status, headers, body, duration } payload.',
-    hasSideEffects: true,
-    runsOn: 'server',
-    returnType: 'void',
-    params: [
-      { name: 'urlPattern', type: STRING, description: 'URL pattern to intercept (e.g., "https://api.example.com/*")' },
-      { name: 'method', type: STRING, description: 'HTTP method filter (e.g., "POST")', optional: true },
-    ],
-    example: '["os/watch-http", "https://api.example.com/*", "POST"]',
-  },
 };

@@ -41,10 +41,12 @@ orbital LearnTracePlayerOrbital {
         (set @entity.frameIndex 0)
         (set @entity.running false)
         (set @entity.statusNote "Paused")
-        (set @entity.frameLabel (object/get (array/nth @entity.frames @entity.frameIndex) label))
-        (set @entity.frameCaption (object/get (array/nth @entity.frames @entity.frameIndex) caption))
-        (set @entity.bars (array/map (object/get (array/nth @entity.frames @entity.frameIndex) values)
-          { value: @item, color: (if (array/includes (object/get (array/nth @entity.frames @entity.frameIndex) highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))
+        (let ((fr (default (array/nth @entity.frames @entity.frameIndex) { label: "", caption: "", values: [], highlights: [] })))
+          (do
+            (set @entity.frameLabel (object/get @fr label))
+            (set @entity.frameCaption (object/get @fr caption))
+            (set @entity.bars (array/map (object/get @fr values)
+              { value: @item, color: (if (array/includes (object/get @fr highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))))
         (render-ui main {
           type: box
           padding: md
@@ -89,10 +91,12 @@ orbital LearnTracePlayerOrbital {
         (set @entity.frameIndex 0)
         (set @entity.running false)
         (set @entity.statusNote "Paused")
-        (set @entity.frameLabel (object/get (array/nth @entity.frames @entity.frameIndex) label))
-        (set @entity.frameCaption (object/get (array/nth @entity.frames @entity.frameIndex) caption))
-        (set @entity.bars (array/map (object/get (array/nth @entity.frames @entity.frameIndex) values)
-          { value: @item, color: (if (array/includes (object/get (array/nth @entity.frames @entity.frameIndex) highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))
+        (let ((fr (default (array/nth @entity.frames @entity.frameIndex) { label: "", caption: "", values: [], highlights: [] })))
+          (do
+            (set @entity.frameLabel (object/get @fr label))
+            (set @entity.frameCaption (object/get @fr caption))
+            (set @entity.bars (array/map (object/get @fr values)
+              { value: @item, color: (if (array/includes (object/get @fr highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))))
         (render-ui main {
           type: box
           padding: md
@@ -132,10 +136,12 @@ orbital LearnTracePlayerOrbital {
         (set @entity.frameIndex 0)
         (set @entity.running false)
         (set @entity.statusNote "Paused")
-        (set @entity.frameLabel (object/get (array/nth ?frames @entity.frameIndex) label))
-        (set @entity.frameCaption (object/get (array/nth ?frames @entity.frameIndex) caption))
-        (set @entity.bars (array/map (object/get (array/nth ?frames @entity.frameIndex) values)
-          { value: @item, color: (if (array/includes (object/get (array/nth ?frames @entity.frameIndex) highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))
+        (let ((fr (default (array/nth ?frames @entity.frameIndex) { label: "", caption: "", values: [], highlights: [] })))
+          (do
+            (set @entity.frameLabel (object/get @fr label))
+            (set @entity.frameCaption (object/get @fr caption))
+            (set @entity.bars (array/map (object/get @fr values)
+              { value: @item, color: (if (array/includes (object/get @fr highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))))
         (render-ui main {
           type: box
           padding: md
@@ -318,10 +324,12 @@ orbital LearnTracePlayerOrbital {
         (set @entity.frameIndex 0)
         (set @entity.running false)
         (set @entity.statusNote "Paused")
-        (set @entity.frameLabel (object/get (array/nth @entity.frames @entity.frameIndex) label))
-        (set @entity.frameCaption (object/get (array/nth @entity.frames @entity.frameIndex) caption))
-        (set @entity.bars (array/map (object/get (array/nth @entity.frames @entity.frameIndex) values)
-          { value: @item, color: (if (array/includes (object/get (array/nth @entity.frames @entity.frameIndex) highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))
+        (let ((fr (default (array/nth @entity.frames @entity.frameIndex) { label: "", caption: "", values: [], highlights: [] })))
+          (do
+            (set @entity.frameLabel (object/get @fr label))
+            (set @entity.frameCaption (object/get @fr caption))
+            (set @entity.bars (array/map (object/get @fr values)
+              { value: @item, color: (if (array/includes (object/get @fr highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))))
         (render-ui main {
           type: box
           padding: md
@@ -365,10 +373,12 @@ orbital LearnTracePlayerOrbital {
             (set @entity.elapsedMs 0)
             (set @entity.running (if (and (>= @entity.frameIndex (- (array/len @entity.frames) 1)) (not @config.loop)) false @entity.running))
             (set @entity.frameIndex (if (>= @entity.frameIndex (- (array/len @entity.frames) 1)) (if @config.loop 0 @entity.frameIndex) (+ @entity.frameIndex 1)))
-            (set @entity.frameLabel (object/get (array/nth @entity.frames @entity.frameIndex) label))
-            (set @entity.frameCaption (object/get (array/nth @entity.frames @entity.frameIndex) caption))
-            (set @entity.bars (array/map (object/get (array/nth @entity.frames @entity.frameIndex) values)
-              { value: @item, color: (if (array/includes (object/get (array/nth @entity.frames @entity.frameIndex) highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))
+            (let ((fr (default (array/nth @entity.frames @entity.frameIndex) { label: "", caption: "", values: [], highlights: [] })))
+              (do
+                (set @entity.frameLabel (object/get @fr label))
+                (set @entity.frameCaption (object/get @fr caption))
+                (set @entity.bars (array/map (object/get @fr values)
+                  { value: @item, color: (if (array/includes (object/get @fr highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))))
             (set @entity.statusNote (if @entity.running "Playing" (if (>= (+ @entity.frameIndex 1) (array/len @entity.frames)) "Finished" "Paused")))
             (render-ui main {
               type: box

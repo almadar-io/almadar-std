@@ -62,7 +62,7 @@ orbital FeedRankingOrbital {
                         (not (and (!= (object/get @c lastSeen null) null) (< (- ?asOf (object/get @c lastSeen 0)) @cooldownMs)))
                         (= (object/get @c level 0) @config.frontierLevel)
                         (array/every (object/get @c prerequisites @noStrs)
-                          (fn p (>= (object/get (array/find ?candidates (fn x (= (object/get @x key "") @p))) level 0) @config.prerequisiteLevel))))))
+                          (fn p (>= (object/get (default (array/find ?candidates (fn x (= (object/get @x key "") @p))) {}) level 0) @config.prerequisiteLevel))))))
                       (fn c (object/merge @c { nameKey: (str/collate-key (object/get @c name "")) }))) nameKey asc) sequence asc) tier asc)))
                     (array/concat
                       (array/filter @ranked (fn c (array/includes @liftedKeys (object/get @c key ""))))
@@ -95,7 +95,7 @@ orbital FeedRankingOrbital {
     emits {
       FEED_RANKED -> external {
         picks : [FeedPick]!
-        nextCursor : string
+        nextCursor : string?
       }
         @description "One page of the feed: the picked item keys, each tagged review, frontier or explore, in serving order, and a cursor for the next page (absent when nothing is left)."
         @synonyms "feed page, ranked items, next cards"
@@ -124,7 +124,7 @@ orbital FeedRankingOrbital {
         explore : [FeedExploreItem]
         limit : number
         mix : FeedMix
-        cursor : string
+        cursor : string?
       }
         @description "Rank the supplied candidates and answer one page; send the cursor of the previous page to continue, and the same candidates."
         @synonyms "rank feed, next page, build feed"

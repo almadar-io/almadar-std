@@ -1,6 +1,6 @@
 app std-arxiv [
   version: "1.0.0",
-  description: "std-arxiv — arXiv paper search through the keyless public Atom API (export.arxiv.org). ARXIV_SEARCH requests a relevance-ranked feed; a blank query or a non-2xx reply answers an empty result list. A 2xx feed is read with xml/parse into the paper list; a failed call or a 2xx body that is not well-formed XML answers ARXIV_SEARCH_ERROR { error, kind } (kind: timeout, failed, refused, unconfigured or malformed).",
+  description: "std-arxiv — arXiv paper search through the keyless public Atom API (export.arxiv.org). ARXIV_SEARCH requests a relevance-ranked feed of papers that contain every word of the query (each word searched in all fields, joined with AND); a blank query or a non-2xx reply answers an empty result list. A 2xx feed is read with xml/parse into the paper list; a failed call or a 2xx body that is not well-formed XML answers ARXIV_SEARCH_ERROR { error, kind } (kind: timeout, failed, refused, unconfigured or malformed).",
   egress: ["https://export.arxiv.org"]
 ]
 type ArxivAuthor = { name : string }
@@ -22,7 +22,7 @@ orbital ArxivOrbital {
       ARXIV_SEARCH -> idle when (!= (str/trim @payload.query) "")
         (http GET @config.origin "/api/query" {
           query: {
-            search_query: (str/concat "all:" (str/trim @payload.query)),
+            search_query: (str/join (array/map (array/filter (str/split (str/trim @payload.query) " ") (fn w (!= @w ""))) (fn w (str/concat "all:" @w))) " AND "),
             start: 0,
             max_results: (default @payload.maxResults 8),
             sortBy: "relevance"

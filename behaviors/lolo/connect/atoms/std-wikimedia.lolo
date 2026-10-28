@@ -28,7 +28,7 @@ orbital WikimediaOrbital {
       WIKIMEDIA_PAGE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (emit WIKIMEDIA_PAGE_RESULT {})
       WIKIMEDIA_PAGE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
-        (let ((page (array/first (object/values (object/get (object/get (json/parse @payload.body WikimediaReply) query {}) pages {})))))
+        (let ((page (array/first (object/values (object/get (object/get (default (json/parse @payload.body WikimediaReply) {}) query {}) pages {})))))
           (emit WIKIMEDIA_PAGE_RESULT (if (or (= @page null) (object/has @page missing)) {}
             (object/merge
               (if (validate/required (object/get @page title null)) { title: (object/get @page title "") } {})

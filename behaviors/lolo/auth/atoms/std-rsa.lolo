@@ -10,8 +10,8 @@ orbital RsaOrbital {
     id : string!
     k : number @description "Modulus length in bytes." = 0
     msg : string @description "The message being verified." = ""
-    eB : string @description "The exponent bytes awaiting decode." = ""
-    sB : string @description "The signature bytes awaiting decode." = ""
+    eB : bytes @description "The exponent bytes awaiting decode." = ""
+    sB : bytes @description "The signature bytes awaiting decode." = ""
     nL : [number] @description "Modulus limbs." = []
     eL : [number] @description "Exponent limbs." = []
     sL : [number] @description "Signature limbs." = []
@@ -49,15 +49,15 @@ orbital RsaOrbital {
 
     state idle {
       INIT -> idle
-      RSA_VERIFY -> idle when (not (and (and (validate/pattern @payload.n @config.base64Pattern) (validate/pattern @payload.e @config.base64Pattern)) (validate/pattern @payload.signature @config.base64Pattern)))
+      RSA_VERIFY -> idle when (not (and (and (validate/pattern (bytes/to-base64 @payload.n) @config.base64Pattern) (validate/pattern (bytes/to-base64 @payload.e) @config.base64Pattern)) (validate/pattern (bytes/to-base64 @payload.signature) @config.base64Pattern)))
         (emit RSA_REFUSED { reason: "invalid" })
-      RSA_VERIFY -> idle when (and (and (and (validate/pattern @payload.n @config.base64Pattern) (validate/pattern @payload.e @config.base64Pattern)) (validate/pattern @payload.signature @config.base64Pattern)) (or (or (< (bytes/length @payload.n) @config.minModulusBytes) (== (bytes/at @payload.n 0) 0)) (or (== (bytes/length @payload.e) 0) (>= (bytes/length @payload.e) (bytes/length @payload.n)))))
+      RSA_VERIFY -> idle when (and (and (and (validate/pattern (bytes/to-base64 @payload.n) @config.base64Pattern) (validate/pattern (bytes/to-base64 @payload.e) @config.base64Pattern)) (validate/pattern (bytes/to-base64 @payload.signature) @config.base64Pattern)) (or (or (< (bytes/length @payload.n) @config.minModulusBytes) (== (bytes/at @payload.n 0) 0)) (or (== (bytes/length @payload.e) 0) (>= (bytes/length @payload.e) (bytes/length @payload.n)))))
         (emit RSA_REFUSED { reason: "key-size" })
-      RSA_VERIFY -> idle when (and (and (and (and (validate/pattern @payload.n @config.base64Pattern) (validate/pattern @payload.e @config.base64Pattern)) (validate/pattern @payload.signature @config.base64Pattern)) (not (or (or (< (bytes/length @payload.n) @config.minModulusBytes) (== (bytes/at @payload.n 0) 0)) (or (== (bytes/length @payload.e) 0) (>= (bytes/length @payload.e) (bytes/length @payload.n)))))) (!= (bytes/length @payload.signature) (bytes/length @payload.n)))
+      RSA_VERIFY -> idle when (and (and (and (and (validate/pattern (bytes/to-base64 @payload.n) @config.base64Pattern) (validate/pattern (bytes/to-base64 @payload.e) @config.base64Pattern)) (validate/pattern (bytes/to-base64 @payload.signature) @config.base64Pattern)) (not (or (or (< (bytes/length @payload.n) @config.minModulusBytes) (== (bytes/at @payload.n 0) 0)) (or (== (bytes/length @payload.e) 0) (>= (bytes/length @payload.e) (bytes/length @payload.n)))))) (!= (bytes/length @payload.signature) (bytes/length @payload.n)))
         (emit RSA_REFUSED { reason: "signature-length" })
-      RSA_VERIFY -> idle when (and (and (and (and (and (validate/pattern @payload.n @config.base64Pattern) (validate/pattern @payload.e @config.base64Pattern)) (validate/pattern @payload.signature @config.base64Pattern)) (not (or (or (< (bytes/length @payload.n) @config.minModulusBytes) (== (bytes/at @payload.n 0) 0)) (or (== (bytes/length @payload.e) 0) (>= (bytes/length @payload.e) (bytes/length @payload.n)))))) (not (!= (bytes/length @payload.signature) (bytes/length @payload.n)))) (bytes/equals @payload.signature @payload.n))
+      RSA_VERIFY -> idle when (and (and (and (and (and (validate/pattern (bytes/to-base64 @payload.n) @config.base64Pattern) (validate/pattern (bytes/to-base64 @payload.e) @config.base64Pattern)) (validate/pattern (bytes/to-base64 @payload.signature) @config.base64Pattern)) (not (or (or (< (bytes/length @payload.n) @config.minModulusBytes) (== (bytes/at @payload.n 0) 0)) (or (== (bytes/length @payload.e) 0) (>= (bytes/length @payload.e) (bytes/length @payload.n)))))) (not (!= (bytes/length @payload.signature) (bytes/length @payload.n)))) (bytes/equals @payload.signature @payload.n))
         (emit RSA_REFUSED { reason: "signature-range" })
-      RSA_VERIFY -> decN when (and (and (and (and (and (validate/pattern @payload.n @config.base64Pattern) (validate/pattern @payload.e @config.base64Pattern)) (validate/pattern @payload.signature @config.base64Pattern)) (not (or (or (< (bytes/length @payload.n) @config.minModulusBytes) (== (bytes/at @payload.n 0) 0)) (or (== (bytes/length @payload.e) 0) (>= (bytes/length @payload.e) (bytes/length @payload.n)))))) (not (!= (bytes/length @payload.signature) (bytes/length @payload.n)))) (not (bytes/equals @payload.signature @payload.n)))
+      RSA_VERIFY -> decN when (and (and (and (and (and (validate/pattern (bytes/to-base64 @payload.n) @config.base64Pattern) (validate/pattern (bytes/to-base64 @payload.e) @config.base64Pattern)) (validate/pattern (bytes/to-base64 @payload.signature) @config.base64Pattern)) (not (or (or (< (bytes/length @payload.n) @config.minModulusBytes) (== (bytes/at @payload.n 0) 0)) (or (== (bytes/length @payload.e) 0) (>= (bytes/length @payload.e) (bytes/length @payload.n)))))) (not (!= (bytes/length @payload.signature) (bytes/length @payload.n)))) (not (bytes/equals @payload.signature @payload.n)))
         (set @entity.k (bytes/length @payload.n))
         (set @entity.msg @payload.message)
         (set @entity.eB @payload.e)
@@ -138,7 +138,7 @@ orbital RsaOrbital {
         @synonyms "signature refused, bad key"
         @tier "primary"
       RSA_FROM_BYTES -> external {
-        data : string!
+        data : bytes!
       }
         @description "Internal: decode bytes to limbs."
         @tier "internal"
@@ -165,10 +165,10 @@ orbital RsaOrbital {
 
     listens {
       RSA_VERIFY {
-        n : string!
-        e : string!
+        n : bytes!
+        e : bytes!
         message : string!
-        signature : string!
+        signature : bytes!
       }
         @description "Verify an RS256 signature: modulus, exponent and signature as base64 bytes, message as text."
         @synonyms "verify rsa, check rs256"

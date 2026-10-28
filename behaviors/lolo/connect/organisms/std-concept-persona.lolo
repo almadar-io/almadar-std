@@ -94,24 +94,24 @@ orbital ConceptPersonaOrbital {
         (emit LLM_EXTRACT { text: (str/concat @entity.prompt "\n\n[Previous attempt failed with: The persona draft needs a non-empty name, description and greeting]\nPlease output valid JSON that matches the expected schema."), schema: "{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"description\":{\"type\":\"string\"},\"greeting\":{\"type\":\"string\"}},\"required\":[\"name\",\"description\",\"greeting\"]}", systemPrompt: @config.systemPrompt, temperature: (if (= @entity.correction "") 0.3 0.2) })
       CONCEPT_PERSONA_DRAFTED -> idle when (and (not (let ((d (json/parse ?json PersonaDraft))) (and (!= @d null) (!= (str/trim (object/get @d name "")) "") (!= (str/trim (object/get @d description "")) "") (!= (str/trim (object/get @d greeting "")) "")))) (>= @entity.attempts 2))
         (emit CONCEPT_PERSONA_FAILED { code: "SERVICE_ERROR", message: "The persona draft needs a non-empty name, description and greeting" })
-      CONCEPT_PERSONA_DRAFTED -> drafting when (and (let ((d (json/parse ?json PersonaDraft))) (and (!= @d null) (!= (str/trim (object/get @d name "")) "") (!= (str/trim (object/get @d description "")) "") (!= (str/trim (object/get @d greeting "")) ""))) (= (str/replace-pattern (str/lower (str/trim (object/get (json/parse ?json PersonaDraft) name ""))) "[^\\p{L}\\p{N}]" "") (str/replace-pattern (str/lower @entity.label) "[^\\p{L}\\p{N}]" "")) (= @entity.correction ""))
-        (set @entity.correction (str/trim (object/get (json/parse ?json PersonaDraft) name "")))
+      CONCEPT_PERSONA_DRAFTED -> drafting when (and (let ((d (json/parse ?json PersonaDraft))) (and (!= @d null) (!= (str/trim (object/get @d name "")) "") (!= (str/trim (object/get @d description "")) "") (!= (str/trim (object/get @d greeting "")) ""))) (= (str/replace-pattern (str/lower (str/trim (object/get (default (json/parse ?json PersonaDraft) {}) name ""))) "[^\\p{L}\\p{N}]" "") (str/replace-pattern (str/lower @entity.label) "[^\\p{L}\\p{N}]" "")) (= @entity.correction ""))
+        (set @entity.correction (str/trim (object/get (default (json/parse ?json PersonaDraft) {}) name "")))
         (set @entity.prompt (str/concat @entity.base "\n\nIMPORTANT: \"" @entity.correction "\" is the concept itself, not a person. You MUST name the real human being who created or pioneered \"" @entity.label "\"."))
         (set @entity.attempts 0)
         (emit LLM_EXTRACT { text: @entity.prompt, schema: "{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"description\":{\"type\":\"string\"},\"greeting\":{\"type\":\"string\"}},\"required\":[\"name\",\"description\",\"greeting\"]}", systemPrompt: @config.systemPrompt, temperature: 0.2 })
-      CONCEPT_PERSONA_DRAFTED -> storing when (and (let ((d (json/parse ?json PersonaDraft))) (and (!= @d null) (!= (str/trim (object/get @d name "")) "") (!= (str/trim (object/get @d description "")) "") (!= (str/trim (object/get @d greeting "")) ""))) (= (str/replace-pattern (str/lower (str/trim (object/get (json/parse ?json PersonaDraft) name ""))) "[^\\p{L}\\p{N}]" "") (str/replace-pattern (str/lower @entity.label) "[^\\p{L}\\p{N}]" "")) (!= @entity.correction ""))
+      CONCEPT_PERSONA_DRAFTED -> storing when (and (let ((d (json/parse ?json PersonaDraft))) (and (!= @d null) (!= (str/trim (object/get @d name "")) "") (!= (str/trim (object/get @d description "")) "") (!= (str/trim (object/get @d greeting "")) ""))) (= (str/replace-pattern (str/lower (str/trim (object/get (default (json/parse ?json PersonaDraft) {}) name ""))) "[^\\p{L}\\p{N}]" "") (str/replace-pattern (str/lower @entity.label) "[^\\p{L}\\p{N}]" "")) (!= @entity.correction ""))
         (set @entity.resultName (str/concat @entity.label " Tutor"))
         (set @entity.resultDescription (str/concat "Your AI tutor for " @entity.label "."))
         (set @entity.resultPortrait "")
-        (set @entity.resultGreeting (str/trim (object/get (json/parse ?json PersonaDraft) greeting "")))
+        (set @entity.resultGreeting (str/trim (object/get (default (json/parse ?json PersonaDraft) {}) greeting "")))
         (set @entity.resultBio "")
         (persist create ConceptPersonaCache { id: @entity.key, name: @entity.resultName, description: @entity.resultDescription, portraitUrl: "", greeting: @entity.resultGreeting, bio: "", cachedAt: @now } {
           emit: { success: CONCEPT_PERSONA_STORED, failure: CONCEPT_PERSONA_STORE_FAILED }
         })
-      CONCEPT_PERSONA_DRAFTED -> wiki when (and (let ((d (json/parse ?json PersonaDraft))) (and (!= @d null) (!= (str/trim (object/get @d name "")) "") (!= (str/trim (object/get @d description "")) "") (!= (str/trim (object/get @d greeting "")) ""))) (!= (str/replace-pattern (str/lower (str/trim (object/get (json/parse ?json PersonaDraft) name ""))) "[^\\p{L}\\p{N}]" "") (str/replace-pattern (str/lower @entity.label) "[^\\p{L}\\p{N}]" "")))
-        (set @entity.draftName (str/trim (object/get (json/parse ?json PersonaDraft) name "")))
-        (set @entity.draftDescription (str/trim (object/get (json/parse ?json PersonaDraft) description "")))
-        (set @entity.draftGreeting (str/trim (object/get (json/parse ?json PersonaDraft) greeting "")))
+      CONCEPT_PERSONA_DRAFTED -> wiki when (and (let ((d (json/parse ?json PersonaDraft))) (and (!= @d null) (!= (str/trim (object/get @d name "")) "") (!= (str/trim (object/get @d description "")) "") (!= (str/trim (object/get @d greeting "")) ""))) (!= (str/replace-pattern (str/lower (str/trim (object/get (default (json/parse ?json PersonaDraft) {}) name ""))) "[^\\p{L}\\p{N}]" "") (str/replace-pattern (str/lower @entity.label) "[^\\p{L}\\p{N}]" "")))
+        (set @entity.draftName (str/trim (object/get (default (json/parse ?json PersonaDraft) {}) name "")))
+        (set @entity.draftDescription (str/trim (object/get (default (json/parse ?json PersonaDraft) {}) description "")))
+        (set @entity.draftGreeting (str/trim (object/get (default (json/parse ?json PersonaDraft) {}) greeting "")))
         (emit WIKIMEDIA_GET_PAGE { title: @entity.draftName })
     }
 
@@ -238,7 +238,7 @@ orbital ConceptPersonaOrbital {
     listens {
       CONCEPT_PERSONA -> input {
         conceptLabel : string!
-        context : string
+        context : string?
       }
         @description "Resolve a concept label to the real person behind it; the optional context is the learner's subject, so an ambiguous concept resolves in the right field."
         @synonyms "find concept originator, who invented, persona for concept"

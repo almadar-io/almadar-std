@@ -1404,6 +1404,193 @@
           }
         }
       ]
+    },
+    {
+      "id": "forwarded-for-is-ignored-when-no-proxy-hops-are-trusted",
+      "entity": {
+        "pending": [],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 9,
+            "method": "GET",
+            "path": "/api/x",
+            "query": "",
+            "headers": {
+              "x-forwarded-for": "9.9.9.9, 8.8.8.8"
+            },
+            "peer": "1.2.3.4:5000"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "HTTP_DECIDE",
+                "payload": {
+                  "requestId": 9,
+                  "method": "GET",
+                  "path": "/api/x",
+                  "headers": [
+                    {
+                      "name": "x-forwarded-for",
+                      "value": "9.9.9.9, 8.8.8.8"
+                    }
+                  ],
+                  "contentLength": 0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "routing",
+          "event": "HTTP_DECIDED",
+          "payload": {
+            "requestId": 9,
+            "verdict": "ok",
+            "status": 200,
+            "responseHeaders": [],
+            "compress": "none"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RATE_REQUEST",
+                "payload": {
+                  "requestId": 9,
+                  "ip": "1.2.3.4"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-without-forwarded-for-the-peer-address-keys-the-request",
+      "entity": {
+        "pending": [],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 9,
+            "method": "GET",
+            "path": "/api/x",
+            "query": "",
+            "headers": {},
+            "peer": "1.2.3.4:5000"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "HTTP_DECIDE",
+                "payload": {
+                  "requestId": 9,
+                  "method": "GET",
+                  "path": "/api/x",
+                  "headers": [],
+                  "contentLength": 0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "routing",
+          "event": "HTTP_DECIDED",
+          "payload": {
+            "requestId": 9,
+            "verdict": "ok",
+            "status": 200,
+            "responseHeaders": [],
+            "compress": "none"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RATE_REQUEST",
+                "payload": {
+                  "requestId": 9,
+                  "ip": "1.2.3.4"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-ipv6-peer-keeps-its-bracketed-address",
+      "entity": {
+        "pending": [],
+        "vapidKey": "",
+        "tickInvoker": ""
+      },
+      "steps": [
+        {
+          "from": "routing",
+          "event": "REQUEST_RECEIVED",
+          "payload": {
+            "requestId": 9,
+            "method": "GET",
+            "path": "/api/x",
+            "query": "",
+            "headers": {},
+            "peer": "[::1]:5000"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "HTTP_DECIDE",
+                "payload": {
+                  "requestId": 9,
+                  "method": "GET",
+                  "path": "/api/x",
+                  "headers": [],
+                  "contentLength": 0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "from": "routing",
+          "event": "HTTP_DECIDED",
+          "payload": {
+            "requestId": 9,
+            "verdict": "ok",
+            "status": 200,
+            "responseHeaders": [],
+            "compress": "none"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RATE_REQUEST",
+                "payload": {
+                  "requestId": 9,
+                  "ip": "[::1]"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

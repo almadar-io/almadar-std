@@ -47,13 +47,13 @@ orbital AnalyticsOrbital {
       ANALYTICS_PAGEVIEW_FACTS -> active when (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))
         (emit REPORTED { sent: false })
       ANALYTICS_PAGEVIEW_FACTS -> active when (and (not (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))) (and (= @payload.referrer "") (= @payload.screenWidth null)))
-        (browser/beacon @config.endpoint { text: (json/stringify { n: "pageview", d: (if (= (object/get (json/parse @payload.key AnalyticsCtx) domain "") "") @payload.hostname (object/get (json/parse @payload.key AnalyticsCtx) domain "")), u: (object/get (json/parse @payload.key AnalyticsCtx) path "/") }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
+        (browser/beacon @config.endpoint { text: (json/stringify { n: "pageview", d: (if (= (object/get (default (json/parse @payload.key AnalyticsCtx) {}) domain "") "") @payload.hostname (object/get (default (json/parse @payload.key AnalyticsCtx) {}) domain "")), u: (object/get (default (json/parse @payload.key AnalyticsCtx) {}) path "/") }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
       ANALYTICS_PAGEVIEW_FACTS -> active when (and (not (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))) (and (!= @payload.referrer "") (= @payload.screenWidth null)))
-        (browser/beacon @config.endpoint { text: (json/stringify { n: "pageview", d: (if (= (object/get (json/parse @payload.key AnalyticsCtx) domain "") "") @payload.hostname (object/get (json/parse @payload.key AnalyticsCtx) domain "")), u: (object/get (json/parse @payload.key AnalyticsCtx) path "/"), r: @payload.referrer }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
+        (browser/beacon @config.endpoint { text: (json/stringify { n: "pageview", d: (if (= (object/get (default (json/parse @payload.key AnalyticsCtx) {}) domain "") "") @payload.hostname (object/get (default (json/parse @payload.key AnalyticsCtx) {}) domain "")), u: (object/get (default (json/parse @payload.key AnalyticsCtx) {}) path "/"), r: @payload.referrer }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
       ANALYTICS_PAGEVIEW_FACTS -> active when (and (not (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))) (and (= @payload.referrer "") (!= @payload.screenWidth null)))
-        (browser/beacon @config.endpoint { text: (json/stringify { n: "pageview", d: (if (= (object/get (json/parse @payload.key AnalyticsCtx) domain "") "") @payload.hostname (object/get (json/parse @payload.key AnalyticsCtx) domain "")), u: (object/get (json/parse @payload.key AnalyticsCtx) path "/"), w: @payload.screenWidth }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
+        (browser/beacon @config.endpoint { text: (json/stringify { n: "pageview", d: (if (= (object/get (default (json/parse @payload.key AnalyticsCtx) {}) domain "") "") @payload.hostname (object/get (default (json/parse @payload.key AnalyticsCtx) {}) domain "")), u: (object/get (default (json/parse @payload.key AnalyticsCtx) {}) path "/"), w: @payload.screenWidth }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
       ANALYTICS_PAGEVIEW_FACTS -> active when (and (not (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))) (and (!= @payload.referrer "") (!= @payload.screenWidth null)))
-        (browser/beacon @config.endpoint { text: (json/stringify { n: "pageview", d: (if (= (object/get (json/parse @payload.key AnalyticsCtx) domain "") "") @payload.hostname (object/get (json/parse @payload.key AnalyticsCtx) domain "")), u: (object/get (json/parse @payload.key AnalyticsCtx) path "/"), r: @payload.referrer, w: @payload.screenWidth }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
+        (browser/beacon @config.endpoint { text: (json/stringify { n: "pageview", d: (if (= (object/get (default (json/parse @payload.key AnalyticsCtx) {}) domain "") "") @payload.hostname (object/get (default (json/parse @payload.key AnalyticsCtx) {}) domain "")), u: (object/get (default (json/parse @payload.key AnalyticsCtx) {}) path "/"), r: @payload.referrer, w: @payload.screenWidth }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
 
       ANALYTICS_TRACK -> active when (= @payload.name "pageview")
         (emit ANALYTICS_FAILED { code: "VALIDATION_ERROR", message: "Event name 'pageview' is reserved; call pageview" })
@@ -65,10 +65,10 @@ orbital AnalyticsOrbital {
         (browser/page-facts [hostname] { key: (json/stringify { path: @payload.path, domain: (default @payload.domain ""), name: @payload.name, hasProps: (!= @payload.props null), props: (default @payload.props {}) }), emit: { success: ANALYTICS_TRACK_FACTS, failure: ANALYTICS_FACTS_FAILED } })
       ANALYTICS_TRACK_FACTS -> active when (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))
         (emit REPORTED { sent: false })
-      ANALYTICS_TRACK_FACTS -> active when (and (not (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))) (not (object/get (json/parse @payload.key AnalyticsCtx) hasProps false)))
-        (browser/beacon @config.endpoint { text: (json/stringify { n: (object/get (json/parse @payload.key AnalyticsCtx) name ""), d: (if (= (object/get (json/parse @payload.key AnalyticsCtx) domain "") "") @payload.hostname (object/get (json/parse @payload.key AnalyticsCtx) domain "")), u: (object/get (json/parse @payload.key AnalyticsCtx) path "/") }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
-      ANALYTICS_TRACK_FACTS -> active when (and (not (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))) (object/get (json/parse @payload.key AnalyticsCtx) hasProps false))
-        (browser/beacon @config.endpoint { text: (json/stringify { n: (object/get (json/parse @payload.key AnalyticsCtx) name ""), d: (if (= (object/get (json/parse @payload.key AnalyticsCtx) domain "") "") @payload.hostname (object/get (json/parse @payload.key AnalyticsCtx) domain "")), u: (object/get (json/parse @payload.key AnalyticsCtx) path "/"), p: (object/get (json/parse @payload.key AnalyticsCtx) props {}) }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
+      ANALYTICS_TRACK_FACTS -> active when (and (not (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))) (not (object/get (default (json/parse @payload.key AnalyticsCtx) {}) hasProps false)))
+        (browser/beacon @config.endpoint { text: (json/stringify { n: (object/get (default (json/parse @payload.key AnalyticsCtx) {}) name ""), d: (if (= (object/get (default (json/parse @payload.key AnalyticsCtx) {}) domain "") "") @payload.hostname (object/get (default (json/parse @payload.key AnalyticsCtx) {}) domain "")), u: (object/get (default (json/parse @payload.key AnalyticsCtx) {}) path "/") }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
+      ANALYTICS_TRACK_FACTS -> active when (and (not (or (array/includes ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", ""] @payload.hostname) (and (>= (str/len @payload.hostname) 6) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 6)) ".local")) (and (>= (str/len @payload.hostname) 10) (= (str/slice @payload.hostname (- (str/len @payload.hostname) 10)) ".localhost")))) (object/get (default (json/parse @payload.key AnalyticsCtx) {}) hasProps false))
+        (browser/beacon @config.endpoint { text: (json/stringify { n: (object/get (default (json/parse @payload.key AnalyticsCtx) {}) name ""), d: (if (= (object/get (default (json/parse @payload.key AnalyticsCtx) {}) domain "") "") @payload.hostname (object/get (default (json/parse @payload.key AnalyticsCtx) {}) domain "")), u: (object/get (default (json/parse @payload.key AnalyticsCtx) {}) path "/"), p: (object/get (default (json/parse @payload.key AnalyticsCtx) {}) props {}) }) } { emit: { success: ANALYTICS_BEACON_DONE, failure: ANALYTICS_BEACON_FAILED } })
 
       ANALYTICS_BEACON_DONE -> active
         (emit REPORTED { sent: @payload.sent })
@@ -105,13 +105,13 @@ orbital AnalyticsOrbital {
         available : boolean!
         hostname : string!
         referrer : string!
-        screenWidth : number
-        key : string
+        screenWidth : number?
+        key : string!
       }
       ANALYTICS_TRACK_FACTS {
         available : boolean!
         hostname : string!
-        key : string
+        key : string!
       }
       ANALYTICS_FACTS_FAILED {
         error : string!
@@ -140,13 +140,13 @@ orbital AnalyticsOrbital {
         available : boolean!
         hostname : string!
         referrer : string!
-        screenWidth : number
-        key : string
+        screenWidth : number?
+        key : string!
       }
       ANALYTICS_TRACK_FACTS {
         available : boolean!
         hostname : string!
-        key : string
+        key : string!
       }
       ANALYTICS_FACTS_FAILED {
         error : string!

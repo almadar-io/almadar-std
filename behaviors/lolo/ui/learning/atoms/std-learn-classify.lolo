@@ -68,16 +68,16 @@ orbital LearnClassifyOrbital {
     items : [LearnClassifyItem] = []
     categories : [LearnClassifyOption] = []
     title : string
-    itemIndex : number
+    itemIndex : number = 0
     itemText : string
     itemHint : string
-    itemExplanation : string
+    itemExplanation : string = ""
     correctCategory : string
     selectedCategory : string
     feedback : string
     verdict : string
-    correctCount : number
-    attemptedCount : number
+    correctCount : number = 0
+    attemptedCount : number = 0
     totalItems : number = 0
     roundComplete : boolean = false
     running : boolean = false
@@ -113,10 +113,10 @@ orbital LearnClassifyOrbital {
             (item (array/nth @entity.items 0))
           )
           (do
-            (set @entity.itemText (object/get @item text))
-            (set @entity.itemHint (object/get @item hint ""))
-            (set @entity.itemExplanation (object/get @item explanation ""))
-            (set @entity.correctCategory (object/get @item category))
+            (set @entity.itemText (if (== @item null) "" (object/get @item text)))
+            (set @entity.itemHint (if (== @item null) "" (object/get @item hint "")))
+            (set @entity.itemExplanation (if (== @item null) "" (object/get @item explanation "")))
+            (set @entity.correctCategory (if (== @item null) "" (object/get @item category)))
           )
         )
         (let (
@@ -134,13 +134,13 @@ orbital LearnClassifyOrbital {
             (revealed (!= @entity.selectedCategory ""))
             (rects (array/flatten (array/map (array/range @categoryCount) (fn i (let (
                   (category (array/nth @entity.categories @i))
-                  (categoryValue (object/get @category value))
+                  (categoryValue (if (== @category null) "" (object/get @category value)))
                   (w (- @maxWidth (* @i @widthStep)))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                   (x (- @centerX (/ @w 2)))
                   (isCorrectCategory (== @categoryValue @entity.correctCategory))
                   (isSelectedCategory (== @categoryValue @entity.selectedCategory))
-                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
+                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (if (== @category null) "" (object/get @category color)))))
                   (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: @fillColor, fillTone: @fillColor, fillStyle: "tint" })
                 )
                 (if (and @revealed @isSelectedCategory)
@@ -152,7 +152,7 @@ orbital LearnClassifyOrbital {
                   (category (array/nth @entity.categories @i))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                 )
-                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), textSize: "sm", align: "center", tone: "label" }))))
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (if (== @category null) "" (object/get @category label)), textSize: "sm", align: "center", tone: "label" }))))
             (backdropShapes (array/concat @rects @labels))
             (summaryView [
               { type: typography, variant: h4, content: "Round Complete" },
@@ -166,7 +166,8 @@ orbital LearnClassifyOrbital {
                 ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
               { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADVANCE, KeyR: RETRY } },
               { type: stack, direction: vertical, gap: sm, children: (let (
-                    (itemOptions (object/get (array/nth @entity.items @entity.itemIndex) options []))
+                    (curItem (array/nth @entity.items @entity.itemIndex))
+                    (itemOptions (if (== @curItem null) [] (object/get @curItem options [])))
                     (locked (!= @entity.selectedCategory ""))
                   ) (if (> (array/len @itemOptions) 0)
                     (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), size: lg, disabled: @locked, variant: (if (not @locked) "secondary" (if (== (object/get @o category) @entity.correctCategory) "success" (if (== (object/get @o category) @entity.selectedCategory) "danger" "ghost"))) }))
@@ -235,10 +236,10 @@ orbital LearnClassifyOrbital {
             (item (array/nth @entity.items 0))
           )
           (do
-            (set @entity.itemText (object/get @item text))
-            (set @entity.itemHint (object/get @item hint ""))
-            (set @entity.itemExplanation (object/get @item explanation ""))
-            (set @entity.correctCategory (object/get @item category))
+            (set @entity.itemText (if (== @item null) "" (object/get @item text)))
+            (set @entity.itemHint (if (== @item null) "" (object/get @item hint "")))
+            (set @entity.itemExplanation (if (== @item null) "" (object/get @item explanation "")))
+            (set @entity.correctCategory (if (== @item null) "" (object/get @item category)))
           )
         )
         (let (
@@ -256,13 +257,13 @@ orbital LearnClassifyOrbital {
             (revealed (!= @entity.selectedCategory ""))
             (rects (array/flatten (array/map (array/range @categoryCount) (fn i (let (
                   (category (array/nth @entity.categories @i))
-                  (categoryValue (object/get @category value))
+                  (categoryValue (if (== @category null) "" (object/get @category value)))
                   (w (- @maxWidth (* @i @widthStep)))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                   (x (- @centerX (/ @w 2)))
                   (isCorrectCategory (== @categoryValue @entity.correctCategory))
                   (isSelectedCategory (== @categoryValue @entity.selectedCategory))
-                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
+                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (if (== @category null) "" (object/get @category color)))))
                   (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: @fillColor, fillTone: @fillColor, fillStyle: "tint" })
                 )
                 (if (and @revealed @isSelectedCategory)
@@ -274,7 +275,7 @@ orbital LearnClassifyOrbital {
                   (category (array/nth @entity.categories @i))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                 )
-                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), textSize: "sm", align: "center", tone: "label" }))))
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (if (== @category null) "" (object/get @category label)), textSize: "sm", align: "center", tone: "label" }))))
             (backdropShapes (array/concat @rects @labels))
             (summaryView [
               { type: typography, variant: h4, content: "Round Complete" },
@@ -288,7 +289,8 @@ orbital LearnClassifyOrbital {
                 ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
               { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADVANCE, KeyR: RETRY } },
               { type: stack, direction: horizontal, gap: xs, children: (let (
-                    (itemOptions (object/get (array/nth @entity.items @entity.itemIndex) options []))
+                    (curItem (array/nth @entity.items @entity.itemIndex))
+                    (itemOptions (if (== @curItem null) [] (object/get @curItem options [])))
                   ) (if (> (array/len @itemOptions) 0)
                     (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), variant: (if (== @entity.selectedCategory (object/get @o category)) "primary" "secondary"), size: sm }))
                     (array/map (array/reverse @entity.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })))) },
@@ -344,10 +346,10 @@ orbital LearnClassifyOrbital {
             (item (array/nth @entity.items 0))
           )
           (do
-            (set @entity.itemText (object/get @item text))
-            (set @entity.itemHint (object/get @item hint ""))
-            (set @entity.itemExplanation (object/get @item explanation ""))
-            (set @entity.correctCategory (object/get @item category))
+            (set @entity.itemText (if (== @item null) "" (object/get @item text)))
+            (set @entity.itemHint (if (== @item null) "" (object/get @item hint "")))
+            (set @entity.itemExplanation (if (== @item null) "" (object/get @item explanation "")))
+            (set @entity.correctCategory (if (== @item null) "" (object/get @item category)))
           )
         )
         (let (
@@ -365,13 +367,13 @@ orbital LearnClassifyOrbital {
             (revealed (!= @entity.selectedCategory ""))
             (rects (array/flatten (array/map (array/range @categoryCount) (fn i (let (
                   (category (array/nth @entity.categories @i))
-                  (categoryValue (object/get @category value))
+                  (categoryValue (if (== @category null) "" (object/get @category value)))
                   (w (- @maxWidth (* @i @widthStep)))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                   (x (- @centerX (/ @w 2)))
                   (isCorrectCategory (== @categoryValue @entity.correctCategory))
                   (isSelectedCategory (== @categoryValue @entity.selectedCategory))
-                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
+                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (if (== @category null) "" (object/get @category color)))))
                   (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: @fillColor, fillTone: @fillColor, fillStyle: "tint" })
                 )
                 (if (and @revealed @isSelectedCategory)
@@ -383,7 +385,7 @@ orbital LearnClassifyOrbital {
                   (category (array/nth @entity.categories @i))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                 )
-                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), textSize: "sm", align: "center", tone: "label" }))))
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (if (== @category null) "" (object/get @category label)), textSize: "sm", align: "center", tone: "label" }))))
             (backdropShapes (array/concat @rects @labels))
             (summaryView [
               { type: typography, variant: h4, content: "Round Complete" },
@@ -397,7 +399,8 @@ orbital LearnClassifyOrbital {
                 ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
               { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADVANCE, KeyR: RETRY } },
               { type: stack, direction: vertical, gap: sm, children: (let (
-                    (itemOptions (object/get (array/nth @entity.items @entity.itemIndex) options []))
+                    (curItem (array/nth @entity.items @entity.itemIndex))
+                    (itemOptions (if (== @curItem null) [] (object/get @curItem options [])))
                     (locked (!= @entity.selectedCategory ""))
                   ) (if (> (array/len @itemOptions) 0)
                     (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), size: lg, disabled: @locked, variant: (if (not @locked) "secondary" (if (== (object/get @o category) @entity.correctCategory) "success" (if (== (object/get @o category) @entity.selectedCategory) "danger" "ghost"))) }))
@@ -450,7 +453,7 @@ orbital LearnClassifyOrbital {
         (let (
             (isCorrect (== @entity.selectedCategory @entity.correctCategory))
             (correctOption (array/first (array/filter @entity.categories (fn c (== (object/get @c value) @entity.correctCategory)))))
-            (baseMessage (if @isCorrect "Correct!" (str/concat "Not quite — the correct answer is " (object/get @correctOption label) ".")))
+            (baseMessage (if @isCorrect "Correct!" (str/concat "Not quite — the correct answer is " (if (== @correctOption null) "" (object/get @correctOption label)) ".")))
             (fullMessage (if (!= @entity.itemExplanation "") (str/concat @baseMessage " " @entity.itemExplanation) @baseMessage))
           )
           (do
@@ -479,13 +482,13 @@ orbital LearnClassifyOrbital {
             (revealed (!= @entity.selectedCategory ""))
             (rects (array/flatten (array/map (array/range @categoryCount) (fn i (let (
                   (category (array/nth @entity.categories @i))
-                  (categoryValue (object/get @category value))
+                  (categoryValue (if (== @category null) "" (object/get @category value)))
                   (w (- @maxWidth (* @i @widthStep)))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                   (x (- @centerX (/ @w 2)))
                   (isCorrectCategory (== @categoryValue @entity.correctCategory))
                   (isSelectedCategory (== @categoryValue @entity.selectedCategory))
-                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
+                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (if (== @category null) "" (object/get @category color)))))
                   (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: @fillColor, fillTone: @fillColor, fillStyle: "tint" })
                 )
                 (if (and @revealed @isSelectedCategory)
@@ -497,7 +500,7 @@ orbital LearnClassifyOrbital {
                   (category (array/nth @entity.categories @i))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                 )
-                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), textSize: "sm", align: "center", tone: "label" }))))
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (if (== @category null) "" (object/get @category label)), textSize: "sm", align: "center", tone: "label" }))))
             (backdropShapes (array/concat @rects @labels))
             (summaryView [
               { type: typography, variant: h4, content: "Round Complete" },
@@ -511,7 +514,8 @@ orbital LearnClassifyOrbital {
                 ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
               { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADVANCE, KeyR: RETRY } },
               { type: stack, direction: horizontal, gap: xs, children: (let (
-                    (itemOptions (object/get (array/nth @entity.items @entity.itemIndex) options []))
+                    (curItem (array/nth @entity.items @entity.itemIndex))
+                    (itemOptions (if (== @curItem null) [] (object/get @curItem options [])))
                   ) (if (> (array/len @itemOptions) 0)
                     (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), variant: (if (== @entity.selectedCategory (object/get @o category)) "primary" "secondary"), size: sm }))
                     (array/map (array/reverse @entity.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })))) },
@@ -565,10 +569,10 @@ orbital LearnClassifyOrbital {
               )
               (do
                 (set @entity.itemIndex @nextIndex)
-                (set @entity.itemText (object/get @item text))
-                (set @entity.itemHint (object/get @item hint ""))
-                (set @entity.itemExplanation (object/get @item explanation ""))
-                (set @entity.correctCategory (object/get @item category))
+                (set @entity.itemText (if (== @item null) "" (object/get @item text)))
+                (set @entity.itemHint (if (== @item null) "" (object/get @item hint "")))
+                (set @entity.itemExplanation (if (== @item null) "" (object/get @item explanation "")))
+                (set @entity.correctCategory (if (== @item null) "" (object/get @item category)))
                 (set @entity.selectedCategory "")
                 (set @entity.feedback "")
                 (set @entity.verdict "")
@@ -591,13 +595,13 @@ orbital LearnClassifyOrbital {
             (revealed (!= @entity.selectedCategory ""))
             (rects (array/flatten (array/map (array/range @categoryCount) (fn i (let (
                   (category (array/nth @entity.categories @i))
-                  (categoryValue (object/get @category value))
+                  (categoryValue (if (== @category null) "" (object/get @category value)))
                   (w (- @maxWidth (* @i @widthStep)))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                   (x (- @centerX (/ @w 2)))
                   (isCorrectCategory (== @categoryValue @entity.correctCategory))
                   (isSelectedCategory (== @categoryValue @entity.selectedCategory))
-                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
+                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (if (== @category null) "" (object/get @category color)))))
                   (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: @fillColor, fillTone: @fillColor, fillStyle: "tint" })
                 )
                 (if (and @revealed @isSelectedCategory)
@@ -609,7 +613,7 @@ orbital LearnClassifyOrbital {
                   (category (array/nth @entity.categories @i))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                 )
-                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), textSize: "sm", align: "center", tone: "label" }))))
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (if (== @category null) "" (object/get @category label)), textSize: "sm", align: "center", tone: "label" }))))
             (backdropShapes (array/concat @rects @labels))
             (summaryView [
               { type: typography, variant: h4, content: "Round Complete" },
@@ -623,7 +627,8 @@ orbital LearnClassifyOrbital {
                 ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
               { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADVANCE, KeyR: RETRY } },
               { type: stack, direction: horizontal, gap: xs, children: (let (
-                    (itemOptions (object/get (array/nth @entity.items @entity.itemIndex) options []))
+                    (curItem (array/nth @entity.items @entity.itemIndex))
+                    (itemOptions (if (== @curItem null) [] (object/get @curItem options [])))
                   ) (if (> (array/len @itemOptions) 0)
                     (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), variant: (if (== @entity.selectedCategory (object/get @o category)) "primary" "secondary"), size: sm }))
                     (array/map (array/reverse @entity.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })))) },
@@ -676,10 +681,10 @@ orbital LearnClassifyOrbital {
             (item (array/nth @entity.items 0))
           )
           (do
-            (set @entity.itemText (object/get @item text))
-            (set @entity.itemHint (object/get @item hint ""))
-            (set @entity.itemExplanation (object/get @item explanation ""))
-            (set @entity.correctCategory (object/get @item category))
+            (set @entity.itemText (if (== @item null) "" (object/get @item text)))
+            (set @entity.itemHint (if (== @item null) "" (object/get @item hint "")))
+            (set @entity.itemExplanation (if (== @item null) "" (object/get @item explanation "")))
+            (set @entity.correctCategory (if (== @item null) "" (object/get @item category)))
           )
         )
         (let (
@@ -697,13 +702,13 @@ orbital LearnClassifyOrbital {
             (revealed (!= @entity.selectedCategory ""))
             (rects (array/flatten (array/map (array/range @categoryCount) (fn i (let (
                   (category (array/nth @entity.categories @i))
-                  (categoryValue (object/get @category value))
+                  (categoryValue (if (== @category null) "" (object/get @category value)))
                   (w (- @maxWidth (* @i @widthStep)))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                   (x (- @centerX (/ @w 2)))
                   (isCorrectCategory (== @categoryValue @entity.correctCategory))
                   (isSelectedCategory (== @categoryValue @entity.selectedCategory))
-                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (object/get @category color))))
+                  (fillColor (if (and @revealed @isCorrectCategory) @config.correctColor (if (and @revealed @isSelectedCategory) @config.incorrectColor (if (== @category null) "" (object/get @category color)))))
                   (baseRect { type: rect, id: (str/concat "category-" @i), x: @x, y: @yTop, width: @w, height: @tierHeight, tone: @fillColor, fillTone: @fillColor, fillStyle: "tint" })
                 )
                 (if (and @revealed @isSelectedCategory)
@@ -715,7 +720,7 @@ orbital LearnClassifyOrbital {
                   (category (array/nth @entity.categories @i))
                   (yTop (- @plotBottom (* (+ @i 1) @tierHeight)))
                 )
-                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (object/get @category label), textSize: "sm", align: "center", tone: "label" }))))
+                { type: text, id: (str/concat "category-label-" @i), x: @centerX, y: (+ @yTop (/ @tierHeight 2) 5), text: (if (== @category null) "" (object/get @category label)), textSize: "sm", align: "center", tone: "label" }))))
             (backdropShapes (array/concat @rects @labels))
             (summaryView [
               { type: typography, variant: h4, content: "Round Complete" },
@@ -729,7 +734,8 @@ orbital LearnClassifyOrbital {
                 ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
               { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate, keyMap: { Space: TOGGLE_RUN, ArrowRight: ADVANCE, KeyR: RETRY } },
               { type: stack, direction: horizontal, gap: xs, children: (let (
-                    (itemOptions (object/get (array/nth @entity.items @entity.itemIndex) options []))
+                    (curItem (array/nth @entity.items @entity.itemIndex))
+                    (itemOptions (if (== @curItem null) [] (object/get @curItem options [])))
                   ) (if (> (array/len @itemOptions) 0)
                     (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), variant: (if (== @entity.selectedCategory (object/get @o category)) "primary" "secondary"), size: sm }))
                     (array/map (array/reverse @entity.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })))) },

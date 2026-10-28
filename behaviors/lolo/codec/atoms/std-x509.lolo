@@ -8,7 +8,7 @@ orbital X509Orbital {
 
   entity X509Run [runtime] {
     id : string!
-    der : string @description "The certificate DER being walked." = ""
+    der : bytes @description "The certificate DER being walked." = ""
     pos : number @description "Offset of the element the walk is at." = 0
     phase : string @description "Which element the walk expects next." = ""
     left : number @description "Fields still to skip in the current phase." = 0
@@ -27,7 +27,7 @@ orbital X509Orbital {
         @description "The pattern the certificate body must match: whole groups of four, correct padding."
         @synonyms "base64 rule, padded base64"
         @tier "domain"
-      rsaOid : string = "BgkqhkiG9w0BAQE="
+      rsaOid : bytes = "BgkqhkiG9w0BAQE="
         @label "rsaEncryption OID"
         @description "The DER of the rsaEncryption object identifier (06 09 2A 86 48 86 F7 0D 01 01 01): the only key type read."
         @synonyms "rsa oid, key algorithm"
@@ -42,7 +42,7 @@ orbital X509Orbital {
       X509_PARSE -> ready when (and (str/includes @payload.pem "-----BEGIN CERTIFICATE-----") (not (validate/pattern (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @payload.pem "-----BEGIN CERTIFICATE-----" "") "-----END CERTIFICATE-----" "") "\n" "") "\r" "") " " "") @config.base64Pattern)))
         (emit X509_REFUSED { reason: "invalid" })
       X509_PARSE -> ready when (and (str/includes @payload.pem "-----BEGIN CERTIFICATE-----") (validate/pattern (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @payload.pem "-----BEGIN CERTIFICATE-----" "") "-----END CERTIFICATE-----" "") "\n" "") "\r" "") " " "") @config.base64Pattern))
-        (set @entity.der (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @payload.pem "-----BEGIN CERTIFICATE-----" "") "-----END CERTIFICATE-----" "") "\n" "") "\r" "") " " ""))
+        (set @entity.der (default (bytes/from-base64 (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @payload.pem "-----BEGIN CERTIFICATE-----" "") "-----END CERTIFICATE-----" "") "\n" "") "\r" "") " " "")) (bytes/from-string "")))
         (set @entity.pos 0)
         (set @entity.phase "cert")
         (set @entity.left 0)
@@ -58,8 +58,8 @@ orbital X509Orbital {
         (let ((b (bytes/at @entity.der (+ @entity.pos 1))))
           (if (!= @b null)
             (let ((hl (if (< @b 128) 2 (+ 2 (- @b 128))))
-                  (cl (if (< @b 128) @b (if (= @b 129) (bytes/at @entity.der (+ @entity.pos 2)) (bytes/read-uint @entity.der (+ @entity.pos 2) 2 "be")))))
-              (if (and (!= @cl null) (<= (+ @entity.pos @hl @cl) (bytes/length @entity.der)))
+                  (cl (if (< @b 128) @b (if (= @b 129) (default (bytes/at @entity.der (+ @entity.pos 2)) -1) (default (bytes/read-uint @entity.der (+ @entity.pos 2) 2 "be") -1)))))
+              (if (and (>= @cl 0) (<= (+ @entity.pos @hl @cl) (bytes/length @entity.der)))
                 (do
                   (set @entity.tag (bytes/at @entity.der @entity.pos))
                   (set @entity.hl @hl)
@@ -93,9 +93,9 @@ orbital X509Orbital {
         (set @entity.pos (+ @entity.pos @entity.hl))
         (set @entity.phase "alg")
         (emit X509_STEP { at: (+ @entity.pos @entity.hl) })
-      X509_ACT -> ready when (and (= @entity.phase "alg") (= @entity.tag 48) (not (bytes/equals (bytes/slice @entity.der (+ @entity.pos @entity.hl) (+ @entity.pos @entity.hl (bytes/length @config.rsaOid))) @config.rsaOid)))
+      X509_ACT -> ready when (and (= @entity.phase "alg") (= @entity.tag 48) (not (bytes/equals (bytes/slice @entity.der (+ @entity.pos @entity.hl) (+ @entity.pos @entity.hl (bytes/length (default (bytes/from-base64 @config.rsaOid) (bytes/from-string ""))))) (default (bytes/from-base64 @config.rsaOid) (bytes/from-string "")))))
         (emit X509_REFUSED { reason: "key-type" })
-      X509_ACT -> ready when (and (= @entity.phase "alg") (= @entity.tag 48) (bytes/equals (bytes/slice @entity.der (+ @entity.pos @entity.hl) (+ @entity.pos @entity.hl (bytes/length @config.rsaOid))) @config.rsaOid))
+      X509_ACT -> ready when (and (= @entity.phase "alg") (= @entity.tag 48) (bytes/equals (bytes/slice @entity.der (+ @entity.pos @entity.hl) (+ @entity.pos @entity.hl (bytes/length (default (bytes/from-base64 @config.rsaOid) (bytes/from-string ""))))) (default (bytes/from-base64 @config.rsaOid) (bytes/from-string ""))))
         (set @entity.pos (+ @entity.pos @entity.hl @entity.cl))
         (set @entity.phase "bits")
         (emit X509_STEP { at: (+ @entity.pos @entity.hl @entity.cl) })

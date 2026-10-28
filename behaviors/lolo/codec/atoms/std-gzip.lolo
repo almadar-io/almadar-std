@@ -38,7 +38,7 @@ orbital GzipOrbital {
             (set @entity.size (bytes/length @entity.result.data))
             (set @entity.crc @entity.result.crc)
             (emit GUNZIP_ANSWERED { data: @entity.result.data, size: @entity.size, crc: @entity.crc })))
-      GUNZIP_CHECKED -> idle when (not @entity.result.ok)
+      GUNZIP_CHECKED -> idle when (not (default @entity.result.ok false))
         (emit GZIP_REFUSED { reason: @entity.result.code })
     }
     emits {

@@ -21,7 +21,7 @@ orbital HttpCompressOrbital {
       INIT -> serving
 
       REQUEST_RECEIVED -> serving
-        (set @entity.reqs (array/append (array/filter @entity.reqs (fn r (!= @r.requestId @payload.requestId))) { requestId: @payload.requestId, method: @payload.method, path: @payload.path, headers: (array/map (object/keys @payload.headers) (fn k { name: @k, value: (object/get @payload.headers @k) })) }))
+        (set @entity.reqs (array/append (array/filter @entity.reqs (fn r (!= @r.requestId @payload.requestId))) { requestId: @payload.requestId, method: @payload.method, path: @payload.path, headers: (array/map (object/keys (default @payload.headers {})) (fn k { name: @k, value: (default (object/get (default @payload.headers {}) @k) "") })) }))
 
       STREAM_CLOSED -> serving
         (set @entity.reqs (array/filter @entity.reqs (fn r (!= @r.requestId @payload.requestId))))
@@ -64,12 +64,12 @@ orbital HttpCompressOrbital {
       BROTLI_ANSWERED -> serving when (array/some @entity.jobs (fn j (= @j.stage "encoding")))
         (emit CANDIDATE { requestId: (object/get (array/find @entity.jobs (fn j (= @j.stage "encoding"))) "requestId"), encoding: "br", data: @payload.data })
 
-      CANDIDATE -> serving when (< (bytes/length @payload.data) (bytes/length (object/get (array/find @entity.jobs (fn j (= @j.requestId @payload.requestId))) "body")))
+      CANDIDATE -> serving when (< (bytes/length @payload.data) (bytes/length (default (object/get (default (array/find @entity.jobs (fn j (= @j.requestId @payload.requestId))) { requestId: -1, status: 0, headers: [], body: (bytes/from-string ""), accept: "", encoding: "", stage: "" }) "body") (bytes/from-string ""))))
         (let ((job (array/find @entity.jobs (fn j (= @j.requestId @payload.requestId)))))
           (emit RESPOND { requestId: @payload.requestId, status: @job.status, headers: (array/concat @job.headers [{ name: "content-encoding", value: @payload.encoding }, { name: "vary", value: "accept-encoding" }]), body: @payload.data }))
         (set @entity.jobs (array/filter @entity.jobs (fn j (!= @j.requestId @payload.requestId))))
         (emit ENCODE_NEXT {})
-      CANDIDATE -> serving when (>= (bytes/length @payload.data) (bytes/length (object/get (array/find @entity.jobs (fn j (= @j.requestId @payload.requestId))) "body")))
+      CANDIDATE -> serving when (>= (bytes/length @payload.data) (bytes/length (default (object/get (default (array/find @entity.jobs (fn j (= @j.requestId @payload.requestId))) { requestId: -1, status: 0, headers: [], body: (bytes/from-string ""), accept: "", encoding: "", stage: "" }) "body") (bytes/from-string ""))))
         (let ((job (array/find @entity.jobs (fn j (= @j.requestId @payload.requestId)))))
           (emit RESPOND { requestId: @payload.requestId, status: @job.status, headers: @job.headers, body: @job.body }))
         (set @entity.jobs (array/filter @entity.jobs (fn j (!= @j.requestId @payload.requestId))))

@@ -12,9 +12,9 @@ orbital EcdsaOrbital {
   entity EcdsaRun [runtime] {
     id : string!
     msg : string @description "The message being verified." = ""
-    sig : string @description "The signature bytes." = ""
-    xB : string @description "Key x bytes." = ""
-    yB : string @description "Key y bytes." = ""
+    sig : bytes @description "The signature bytes." = ""
+    xB : bytes @description "Key x bytes." = ""
+    yB : bytes @description "Key y bytes." = ""
     rL : [number] @description "r limbs." = []
     sL : [number] @description "s limbs." = []
     xL : [number] @description "Key x limbs." = []
@@ -259,11 +259,11 @@ orbital EcdsaOrbital {
 
     state idle {
       INIT -> idle
-      ECDSA_VERIFY -> idle when (not (and (and (validate/pattern @payload.x @config.base64Pattern) (validate/pattern @payload.y @config.base64Pattern)) (validate/pattern @payload.signature @config.base64Pattern)))
+      ECDSA_VERIFY -> idle when (not (and (and (validate/pattern (bytes/to-base64 @payload.x) @config.base64Pattern) (validate/pattern (bytes/to-base64 @payload.y) @config.base64Pattern)) (validate/pattern (bytes/to-base64 @payload.signature) @config.base64Pattern)))
         (emit ECDSA_REFUSED { reason: "invalid" })
-      ECDSA_VERIFY -> idle when (and (and (and (validate/pattern @payload.x @config.base64Pattern) (validate/pattern @payload.y @config.base64Pattern)) (validate/pattern @payload.signature @config.base64Pattern)) (or (or (!= (bytes/length @payload.x) 32) (!= (bytes/length @payload.y) 32)) (!= (bytes/length @payload.signature) 64)))
+      ECDSA_VERIFY -> idle when (and (and (and (validate/pattern (bytes/to-base64 @payload.x) @config.base64Pattern) (validate/pattern (bytes/to-base64 @payload.y) @config.base64Pattern)) (validate/pattern (bytes/to-base64 @payload.signature) @config.base64Pattern)) (or (or (!= (bytes/length @payload.x) 32) (!= (bytes/length @payload.y) 32)) (!= (bytes/length @payload.signature) 64)))
         (emit ECDSA_REFUSED { reason: "length" })
-      ECDSA_VERIFY -> decR when (and (and (and (validate/pattern @payload.x @config.base64Pattern) (validate/pattern @payload.y @config.base64Pattern)) (validate/pattern @payload.signature @config.base64Pattern)) (not (or (or (!= (bytes/length @payload.x) 32) (!= (bytes/length @payload.y) 32)) (!= (bytes/length @payload.signature) 64))))
+      ECDSA_VERIFY -> decR when (and (and (and (validate/pattern (bytes/to-base64 @payload.x) @config.base64Pattern) (validate/pattern (bytes/to-base64 @payload.y) @config.base64Pattern)) (validate/pattern (bytes/to-base64 @payload.signature) @config.base64Pattern)) (not (or (or (!= (bytes/length @payload.x) 32) (!= (bytes/length @payload.y) 32)) (!= (bytes/length @payload.signature) 64))))
         (set @entity.msg @payload.message)
         (set @entity.sig @payload.signature)
         (set @entity.xB @payload.x)
@@ -304,9 +304,9 @@ orbital EcdsaOrbital {
 
     state decY {
       INIT -> idle
-      BIG_DECODED -> idle when (or (array/reduce (array/range 0 11) true (fn acc i (let ((a (if (< @i (array/len @entity.xL)) (array/nth @entity.xL @i) 0))) (if (!= @a (array/nth @config.pl @i)) (> @a (array/nth @config.pl @i)) @acc)))) (array/reduce (array/range 0 11) true (fn acc i (let ((a (if (< @i (array/len @payload.value)) (array/nth @payload.value @i) 0))) (if (!= @a (array/nth @config.pl @i)) (> @a (array/nth @config.pl @i)) @acc)))))
+      BIG_DECODED -> idle when (or (array/reduce (array/range 0 11) true (fn acc i (let ((a (if (< @i (array/len @entity.xL)) (default (array/nth @entity.xL @i) 0) 0))) (if (!= @a (array/nth @config.pl @i)) (> @a (default (array/nth @config.pl @i) 0)) @acc)))) (array/reduce (array/range 0 11) true (fn acc i (let ((a (if (< @i (array/len @payload.value)) (default (array/nth @payload.value @i) 0) 0))) (if (!= @a (array/nth @config.pl @i)) (> @a (default (array/nth @config.pl @i) 0)) @acc)))))
         (emit ECDSA_REFUSED { reason: "point" })
-      BIG_DECODED -> cmpR when (not (or (array/reduce (array/range 0 11) true (fn acc i (let ((a (if (< @i (array/len @entity.xL)) (array/nth @entity.xL @i) 0))) (if (!= @a (array/nth @config.pl @i)) (> @a (array/nth @config.pl @i)) @acc)))) (array/reduce (array/range 0 11) true (fn acc i (let ((a (if (< @i (array/len @payload.value)) (array/nth @payload.value @i) 0))) (if (!= @a (array/nth @config.pl @i)) (> @a (array/nth @config.pl @i)) @acc))))))
+      BIG_DECODED -> cmpR when (not (or (array/reduce (array/range 0 11) true (fn acc i (let ((a (if (< @i (array/len @entity.xL)) (default (array/nth @entity.xL @i) 0) 0))) (if (!= @a (array/nth @config.pl @i)) (> @a (default (array/nth @config.pl @i) 0)) @acc)))) (array/reduce (array/range 0 11) true (fn acc i (let ((a (if (< @i (array/len @payload.value)) (default (array/nth @payload.value @i) 0) 0))) (if (!= @a (array/nth @config.pl @i)) (> @a (default (array/nth @config.pl @i) 0)) @acc))))))
         (set @entity.yL @payload.value)
         (emit EC_COMPARE { a: @entity.rL, b: @config.nl })
       BIG_REFUSED -> idle
@@ -379,10 +379,10 @@ orbital EcdsaOrbital {
     state mod2 {
       INIT -> run
       BIG_REMAINDER -> run
-        (set @entity.b1 (array/map (array/range 0 256) (fn i (let ((pos (- 255 @i))) (let ((li (math/floor (/ @pos 24)))) (math/mod (math/floor (default (/ (if (< @li (array/len @entity.u1L)) (array/nth @entity.u1L @li) 0) (default (math/pow 2 (math/mod @pos 24)) 1)) 0)) 2))))))
-        (set @entity.b2 (array/map (array/range 0 256) (fn i (let ((pos (- 255 @i))) (let ((li (math/floor (/ @pos 24)))) (math/mod (math/floor (default (/ (if (< @li (array/len @payload.value)) (array/nth @payload.value @li) 0) (default (math/pow 2 (math/mod @pos 24)) 1)) 0)) 2))))))
-        (set @entity.rnOk (let ((rn (object/get (array/reduce (array/range 0 12) { out: (array/range 0 0) c: 0 } (fn acc i (let ((v (+ (if (< @i 11) (+ (if (< @i (array/len @entity.rL)) (array/nth @entity.rL @i) 0) (array/nth @config.nl @i)) 0) @acc.c))) { out: (array/append @acc.out (math/mod @v @config.base)), c: (math/floor (/ @v @config.base)) }))) "out"))) (and (== (array/nth @rn 11) 0) (array/reduce (array/range 0 11) false (fn acc i (if (!= (array/nth @rn @i) (array/nth @config.pl @i)) (< (array/nth @rn @i) (array/nth @config.pl @i)) @acc))))))
-        (set @entity.ms { regs: [[0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], @config.gx, @config.gy, (array/map (array/range 0 11) (fn i (if (< @i (array/len @entity.xL)) (array/nth @entity.xL @i) 0))), (array/map (array/range 0 11) (fn i (if (< @i (array/len @entity.yL)) (array/nth @entity.yL @i) 0))), @config.one, [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], (array/map (array/range 0 11) (fn i (if (< @i (array/len @entity.rL)) (array/nth @entity.rL @i) 0))), @config.r2, @config.bm, (array/slice (object/get (array/reduce (array/range 0 12) { out: (array/range 0 0) c: 0 } (fn acc i (let ((v (+ (if (< @i 11) (+ (if (< @i (array/len @entity.rL)) (array/nth @entity.rL @i) 0) (array/nth @config.nl @i)) 0) @acc.c))) { out: (array/append @acc.out (math/mod @v @config.base)), c: (math/floor (/ @v @config.base)) }))) "out") 0 11)], inf: true, mode: 0 })
+        (set @entity.b1 (array/map (array/range 0 256) (fn i (let ((pos (- 255 @i))) (let ((li (math/floor (/ @pos 24)))) (math/mod (math/floor (default (/ (if (< @li (array/len @entity.u1L)) (default (array/nth @entity.u1L @li) 0) 0) (default (math/pow 2 (math/mod @pos 24)) 1)) 0)) 2))))))
+        (set @entity.b2 (array/map (array/range 0 256) (fn i (let ((pos (- 255 @i))) (let ((li (math/floor (/ @pos 24)))) (math/mod (math/floor (default (/ (if (< @li (array/len @payload.value)) (default (array/nth @payload.value @li) 0) 0) (default (math/pow 2 (math/mod @pos 24)) 1)) 0)) 2))))))
+        (set @entity.rnOk (let ((rn (object/get (array/reduce (array/range 0 12) { out: (array/range 0 0) c: 0 } (fn acc i (let ((v (+ (if (< @i 11) (+ (if (< @i (array/len @entity.rL)) (default (array/nth @entity.rL @i) 0) 0) (default (array/nth @config.nl @i) 0)) 0) @acc.c))) { out: (array/append @acc.out (math/mod @v @config.base)), c: (math/floor (/ @v @config.base)) }))) "out"))) (and (== (array/nth @rn 11) 0) (array/reduce (array/range 0 11) false (fn acc i (if (!= (array/nth @rn @i) (array/nth @config.pl @i)) (< (default (array/nth @rn @i) 0) (default (array/nth @config.pl @i) 0)) @acc))))))
+        (set @entity.ms { regs: [[0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], @config.gx, @config.gy, (array/map (array/range 0 11) (fn i (if (< @i (array/len @entity.xL)) (default (array/nth @entity.xL @i) 0) 0))), (array/map (array/range 0 11) (fn i (if (< @i (array/len @entity.yL)) (default (array/nth @entity.yL @i) 0) 0))), @config.one, [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0], (array/map (array/range 0 11) (fn i (if (< @i (array/len @entity.rL)) (default (array/nth @entity.rL @i) 0) 0))), @config.r2, @config.bm, (array/slice (object/get (array/reduce (array/range 0 12) { out: (array/range 0 0) c: 0 } (fn acc i (let ((v (+ (if (< @i 11) (+ (if (< @i (array/len @entity.rL)) (default (array/nth @entity.rL @i) 0) 0) (default (array/nth @config.nl @i) 0)) 0) @acc.c))) { out: (array/append @acc.out (math/mod @v @config.base)), c: (math/floor (/ @v @config.base)) }))) "out") 0 11)], inf: true, mode: 0 })
         (emit EC_RUN { prog: 0 })
       BIG_REFUSED -> idle
         (emit ECDSA_REFUSED { reason: "bigint" })
@@ -392,19 +392,19 @@ orbital EcdsaOrbital {
       INIT -> idle
       EC_RUN -> run
         (set @entity.ms
-          (let ((tape (array/nth @config.progs @payload.prog)))
+          (let ((tape (default (array/nth @config.progs @payload.prog) [])))
             (let ((len (array/len @tape)))
               (array/reduce
                 (array/range 0 (* (if (== @payload.prog 1) 256 1) @len))
                 @entity.ms
                 (fn st k
-                  (let ((ins (array/nth @tape (default (math/mod @k @len) 0)))
+                  (let ((ins (default (array/nth @tape (default (math/mod @k @len) 0)) []))
                         (t (math/floor (default (/ @k @len) 0))))
-                    (let ((op (array/nth @ins 0))
-                          (d (array/nth @ins 1))
-                          (a (array/nth @ins 2))
-                          (b (array/nth @ins 3))
-                          (g (array/nth @ins 4)))
+                    (let ((op (default (array/nth @ins 0) 0))
+                          (d (default (array/nth @ins 1) 0))
+                          (a (default (array/nth @ins 2) 0))
+                          (b (default (array/nth @ins 3) 0))
+                          (g (default (array/nth @ins 4) 0)))
                       (if
                         (if (== @g 0)
                           true
@@ -419,12 +419,12 @@ orbital EcdsaOrbital {
                             (if (== @op 5)
                               { regs: @st.regs, inf: @st.inf, mode: (if (== (array/nth (if (== @a 1) @entity.b1 @entity.b2) @t) 1) (if @st.inf 2 1) 0) }
                               (if (== @op 6)
-                                { regs: @st.regs, inf: @st.inf, mode: (if (array/every (array/nth @st.regs 11) (fn l (== @l 0))) (if (array/every (array/nth @st.regs 15) (fn l (== @l 0))) 3 4) @st.mode) }
+                                { regs: @st.regs, inf: @st.inf, mode: (if (array/every (default (array/nth @st.regs 11) []) (fn l (== @l 0))) (if (array/every (default (array/nth @st.regs 15) []) (fn l (== @l 0))) 3 4) @st.mode) }
                                 (if (== @op 7)
                                   { regs: @st.regs, inf: true, mode: @st.mode }
                                   { regs: @st.regs, inf: @st.inf, mode: 0 }))))
-                          (let ((ra (array/nth @st.regs @a))
-                                (rb (array/nth @st.regs @b)))
+                          (let ((ra (default (array/nth @st.regs @a) []))
+                                (rb (default (array/nth @st.regs @b) [])))
                             (let ((val (if (== @op 3)
                                          @ra
                                          (let ((tv (if (== @op 0)
@@ -437,7 +437,7 @@ orbital EcdsaOrbital {
                                                                        (fn s i
                                                                          (let ((j (- @kk @i)))
                                                                            (if (and (>= @j 0) (< @j 11))
-                                                                             (let ((pp (* (array/nth @ra @i) (array/nth @rb @j))))
+                                                                             (let ((pp (* (default (array/nth @ra @i) 0) (default (array/nth @rb @j) 0))))
                                                                                { lo: (+ @s.lo (math/mod @pp @config.base)), hi: (+ @s.hi (math/floor (/ @pp @config.base))) })
                                                                              @s))))))))
                                                        (let ((tt (object/get
@@ -445,14 +445,14 @@ orbital EcdsaOrbital {
                                                                      (array/range 0 23)
                                                                      { out: (array/range 0 0) c: 0 }
                                                                      (fn acc i
-                                                                       (let ((v (+ (+ (if (< @i 22) (object/get (array/nth @cols @i) "lo") 0) (if (> @i 0) (object/get (array/nth @cols (- @i 1)) "hi") 0)) @acc.c)))
+                                                                       (let ((v (+ (+ (if (< @i 22) (default (object/get (default (array/nth @cols @i) { lo: 0 hi: 0 }) "lo") 0) 0) (if (> @i 0) (default (object/get (default (array/nth @cols (- @i 1)) { lo: 0 hi: 0 }) "hi") 0) 0)) @acc.c)))
                                                                          { out: (array/append @acc.out (math/mod @v @config.base)), c: (math/floor (/ @v @config.base)) })))
                                                                    "out")))
                                                          (array/reduce
                                                            (array/range 0 11)
                                                            @tt
                                                            (fn t0 ii
-                                                             (let ((m (array/nth @t0 0)))
+                                                             (let ((m (default (array/nth @t0 0) 0)))
                                                                (array/append
                                                                  (array/slice
                                                                    (object/get
@@ -460,7 +460,7 @@ orbital EcdsaOrbital {
                                                                        (array/range 0 23)
                                                                        { out: (array/range 0 0) c: 0 }
                                                                        (fn acc j
-                                                                         (let ((v (+ (+ (array/nth @t0 @j) (if (< @j 11) (* @m (array/nth @config.pl @j)) 0)) @acc.c)))
+                                                                         (let ((v (+ (+ (default (array/nth @t0 @j) 0) (if (< @j 11) (* @m (default (array/nth @config.pl @j) 0)) 0)) @acc.c)))
                                                                            { out: (array/append @acc.out (math/mod @v @config.base)), c: (math/floor (/ @v @config.base)) })))
                                                                      "out")
                                                                    1
@@ -472,7 +472,7 @@ orbital EcdsaOrbital {
                                                                      (array/range 0 11)
                                                                      { out: (array/range 0 0) br: 0 }
                                                                      (fn acc j
-                                                                       (let ((v (- (- (array/nth @config.pl @j) (array/nth @rb @j)) @acc.br)))
+                                                                       (let ((v (- (- (default (array/nth @config.pl @j) 0) (default (array/nth @rb @j) 0)) @acc.br)))
                                                                          { out: (array/append @acc.out (if (< @v 0) (+ @v @config.base) @v)), br: (if (< @v 0) 1 0) })))
                                                                    "out")
                                                                  @rb)))
@@ -481,22 +481,22 @@ orbital EcdsaOrbital {
                                                            (array/range 0 12)
                                                            { out: (array/range 0 0) c: 0 }
                                                            (fn acc j
-                                                             (let ((v (+ (if (< @j 11) (+ (array/nth @ra @j) (array/nth @bb @j)) 0) @acc.c)))
+                                                             (let ((v (+ (if (< @j 11) (+ (default (array/nth @ra @j) 0) (default (array/nth @bb @j) 0)) 0) @acc.c)))
                                                                { out: (array/append @acc.out (math/mod @v @config.base)), c: (math/floor (/ @v @config.base)) })))
                                                          "out")))))
                                            (let ((dd (array/reduce
                                                        (array/range 0 12)
                                                        { out: (array/range 0 0) br: 0 }
                                                        (fn acc j
-                                                         (let ((v (- (- (array/nth @tv @j) (if (< @j 11) (array/nth @config.pl @j) 0)) @acc.br)))
+                                                         (let ((v (- (- (default (array/nth @tv @j) 0) (if (< @j 11) (default (array/nth @config.pl @j) 0) 0)) @acc.br)))
                                                            { out: (array/append @acc.out (if (< @v 0) (+ @v @config.base) @v)), br: (if (< @v 0) 1 0) }))))) 
                                              (array/slice (if (== @dd.br 0) @dd.out @tv) 0 11))))))
-                              { regs: (array/map (array/range 0 22) (fn i (if (== @i @d) @val (array/nth @st.regs @i)))), inf: @st.inf, mode: @st.mode })))
+                              { regs: (array/map (array/range 0 22) (fn i (if (== @i @d) @val (default (array/nth @st.regs @i) [])))), inf: @st.inf, mode: @st.mode })))
                         @st))))))))
         (emit EC_DONE { prog: @payload.prog })
-      EC_DONE -> run when (and (== @payload.prog 0) (not (array/every (array/nth @entity.ms.regs 11) (fn l (== @l 0)))))
+      EC_DONE -> run when (and (== @payload.prog 0) (not (array/every (default (array/nth @entity.ms.regs 11) []) (fn l (== @l 0)))))
         (emit ECDSA_REFUSED { reason: "point" })
-      EC_DONE -> run when (and (== @payload.prog 0) (array/every (array/nth @entity.ms.regs 11) (fn l (== @l 0))))
+      EC_DONE -> run when (and (== @payload.prog 0) (array/every (default (array/nth @entity.ms.regs 11) []) (fn l (== @l 0))))
         (emit EC_RUN { prog: 1 })
       EC_DONE -> run when (== @payload.prog 1)
         (emit EC_RUN { prog: 2 })
@@ -553,10 +553,10 @@ orbital EcdsaOrbital {
 
     listens {
       ECDSA_VERIFY {
-        x : string!
-        y : string!
+        x : bytes!
+        y : bytes!
         message : string!
-        signature : string!
+        signature : bytes!
       }
         @description "Verify an ES256 signature: key coordinates and signature as base64 bytes, message as text."
         @synonyms "verify ecdsa, check es256"

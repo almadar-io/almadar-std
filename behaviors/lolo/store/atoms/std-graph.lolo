@@ -41,7 +41,7 @@ orbital GraphOrbital {
     reqEdgeTypes : [string] @intrinsic = []
     scratchNodes : [GraphNodeRow] @intrinsic = []
     scratchEdges : [GraphEdgeRow] @intrinsic = []
-    pendingUpdates : [GraphNodeUpdate] @intrinsic
+    pendingUpdates : [GraphNodeUpdate] @intrinsic = []
     engineCyclic : boolean @intrinsic = false
     edgeEndpointsExist : boolean @intrinsic = false
     edgeDuplicate : boolean @intrinsic = false
@@ -222,7 +222,7 @@ orbital GraphOrbital {
                                 id: (object/get @row id "")
                                 depth: @i
                                 deps: (object/get @row deps @noStrs)
-                                closure: (array/unique (array/flatten (array/map (object/get @row deps @noStrs) (fn d (array/prepend (object/get (array/find (object/get @acc done []) (fn r (= (object/get @r id "") @d))) closure []) @d)))))
+                                closure: (array/unique (array/flatten (array/map (object/get @row deps @noStrs) (fn d (array/prepend (object/get (default (array/find (object/get @acc done []) (fn r (= (object/get @r id "") @d))) {}) closure []) @d)))))
                               })))
                           remaining: (array/reject (object/get @acc remaining @noDeps) (fn row (array/some @ready (fn q (= (object/get @q id "") (object/get @row id ""))))))
                         }))))))
@@ -236,10 +236,10 @@ orbital GraphOrbital {
                   (array/map
                     (array/filter (object/get @run done [])
                       (fn r (let ((n (array/find @entity.scratchNodes (fn x (= (object/get @x nodeId "") (object/get @r id ""))))))
-                        (or
+                        (if (= @n null) true (or
                           (!= (object/get @n depth 0) (object/get @r depth 0))
                           (not (and (= (array/len (object/get @n dependencyClosure [])) (array/len (object/get @r closure []))) (array/every (object/get @r closure []) (fn c (array/includes (object/get @n dependencyClosure []) @c)))))
-                          (not (and (= (array/len (object/get @n dependencyIds [])) (array/len (object/get @r deps []))) (array/every (object/get @r deps []) (fn c (array/includes (object/get @n dependencyIds []) @c)))))))))
+                          (not (and (= (array/len (object/get @n dependencyIds [])) (array/len (object/get @r deps []))) (array/every (object/get @r deps []) (fn c (array/includes (object/get @n dependencyIds []) @c))))))))))
                     (fn r {
                       rowId: (str/concat @entity.reqGraphId ":" (object/get @r id ""))
                       depth: (object/get @r depth 0)

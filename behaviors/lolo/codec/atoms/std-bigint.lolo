@@ -98,7 +98,7 @@ orbital BigIntOrbital {
               (if
                 (== (array/len @payload.value) 0)
                 1
-                (let ((top (array/nth @payload.value (- (array/len @payload.value) 1))))
+                (let ((top (default (array/nth @payload.value (- (array/len @payload.value) 1)) 0)))
                   (+
                     (* 3 (- (array/len @payload.value) 1))
                     (if (< @top 256) 1 (if (< @top 65536) 2 3))))))))
@@ -124,7 +124,7 @@ orbital BigIntOrbital {
                 (if
                   (== (array/len @payload.value) 0)
                   1
-                  (let ((top (array/nth @payload.value (- (array/len @payload.value) 1))))
+                  (let ((top (default (array/nth @payload.value (- (array/len @payload.value) 1)) 0)))
                     (+
                       (* 3 (- (array/len @payload.value) 1))
                       (if (< @top 256) 1 (if (< @top 65536) 2 3)))))))))
@@ -134,7 +134,7 @@ orbital BigIntOrbital {
                              (if
                                (== (array/len @payload.value) 0)
                                1
-                               (let ((top (array/nth @payload.value (- (array/len @payload.value) 1))))
+                               (let ((top (default (array/nth @payload.value (- (array/len @payload.value) 1)) 0)))
                                  (+
                                    (* 3 (- (array/len @payload.value) 1))
                                    (if (< @top 256) 1 (if (< @top 65536) 2 3)))))
@@ -152,7 +152,7 @@ orbital BigIntOrbital {
                                        (and
                                          (>= (math/floor (/ @p 3)) 0)
                                          (< (math/floor (/ @p 3)) (array/len @payload.value)))
-                                       (array/nth @payload.value (math/floor (/ @p 3)))
+                                       (default (array/nth @payload.value (math/floor (/ @p 3))) 0)
                                        0)
                                      (math/pow 256 (math/mod @p 3))) 0))
                                  256)
@@ -204,7 +204,7 @@ orbital BigIntOrbital {
                            (!= @r 0)
                            @r
                            (let ((i (- (- (array/len @payload.a) 1) @t)))
-                             (math/sign (- (array/nth @payload.a @i) (array/nth @payload.b @i)))))))) })
+                             (math/sign (- (default (array/nth @payload.a @i) 0) (default (array/nth @payload.b @i) 0)))))))) })
 
       ADD -> idle when (not
           (and
@@ -250,11 +250,11 @@ orbital BigIntOrbital {
                                  (let ((s (+
                                            (if
                                              (and (>= @i 0) (< @i (array/len @payload.a)))
-                                             (array/nth @payload.a @i)
+                                             (default (array/nth @payload.a @i) 0)
                                              0)
                                            (if
                                              (and (>= @i 0) (< @i (array/len @payload.b)))
-                                             (array/nth @payload.b @i)
+                                             (default (array/nth @payload.b @i) 0)
                                              0)
                                            @acc.c)))
                                    { out: (array/append @acc.out (math/mod @s @config.base)),
@@ -316,7 +316,7 @@ orbital BigIntOrbital {
                     (!= @r 0)
                     @r
                     (let ((i (- (- (array/len @payload.a) 1) @t)))
-                      (math/sign (- (array/nth @payload.a @i) (array/nth @payload.b @i))))))))
+                      (math/sign (- (default (array/nth @payload.a @i) 0) (default (array/nth @payload.b @i) 0))))))))
             0))
         (emit BIGINT_REFUSED { operation: "bigint/sub" reason: "negative" })
 
@@ -349,7 +349,7 @@ orbital BigIntOrbital {
                       (!= @r 0)
                       @r
                       (let ((i (- (- (array/len @payload.a) 1) @t)))
-                        (math/sign (- (array/nth @payload.a @i) (array/nth @payload.b @i))))))))
+                        (math/sign (- (default (array/nth @payload.a @i) 0) (default (array/nth @payload.b @i) 0))))))))
               0)))
         (emit SUB_ANSWERED
           { value: (let ((t (object/get
@@ -361,11 +361,11 @@ orbital BigIntOrbital {
                                            (-
                                              (if
                                                (and (>= @i 0) (< @i (array/len @payload.a)))
-                                               (array/nth @payload.a @i)
+                                               (default (array/nth @payload.a @i) 0)
                                                0)
                                              (if
                                                (and (>= @i 0) (< @i (array/len @payload.b)))
-                                               (array/nth @payload.b @i)
+                                               (default (array/nth @payload.b @i) 0)
                                                0))
                                            @acc.c)))
                                    { out: (array/append
@@ -558,7 +558,7 @@ orbital BigIntOrbital {
                                     (let ((j (- @k @i)))
                                       (if
                                         (and (>= @j 0) (< @j @nb3))
-                                        (let ((p (* (array/nth @ma0 @i) (array/nth @mb1 @j))))
+                                        (let ((p (* (default (array/nth @ma0 @i) 0) (default (array/nth @mb1 @j) 0))))
                                           { lo: (+ @s.lo (math/mod @p @config.base)),
                                             hi: (+ @s.hi (math/floor (/ @p @config.base))) })
                                         @s))))))))
@@ -566,14 +566,14 @@ orbital BigIntOrbital {
                                (array/range 0 (array/len @cols4))
                                (fn k
                                  (+
-                                   (object/get (array/nth @cols4 @k) "lo")
-                                   (if (> @k 0) (object/get (array/nth @cols4 (- @k 1)) "hi") 0))))))
+                                   (default (object/get (default (array/nth @cols4 @k) { lo: 0 hi: 0 }) "lo") 0)
+                                   (if (> @k 0) (default (object/get (default (array/nth @cols4 (- @k 1)) { lo: 0 hi: 0 }) "hi") 0) 0))))))
                     (let ((t (object/get
                               (array/reduce
                                 (array/range 0 (array/len @tot5))
                                 { out: (array/range 0 0) c: 0 }
                                 (fn acc i
-                                  (let ((s (+ (array/nth @tot5 @i) @acc.c)))
+                                  (let ((s (+ (default (array/nth @tot5 @i) 0) @acc.c)))
                                     { out: (array/append @acc.out (math/mod @s @config.base)),
                                       c: (math/floor (/ @s @config.base)) })))
                               "out")))
@@ -623,7 +623,7 @@ orbital BigIntOrbital {
                                       (!= @r 0)
                                       @r
                                       (let ((i (- (- (array/len @r110) 1) @t)))
-                                        (math/sign (- (array/nth @r110 @i) (array/nth @db7 @i))))))))
+                                        (math/sign (- (default (array/nth @r110 @i) 0) (default (array/nth @db7 @i) 0))))))))
                               0)
                             { q: (array/prepend @st.q 0) r: @r110 }
                             (let ((qh11 (math/max
@@ -638,7 +638,7 @@ orbital BigIntOrbital {
                                                        (and
                                                          (>= (- @m9 0) 0)
                                                          (< (- @m9 0) (array/len @r110)))
-                                                       (array/nth @r110 (- @m9 0))
+                                                       (default (array/nth @r110 (- @m9 0)) 0)
                                                        0)
                                                      @config.base
                                                      @config.base)
@@ -647,14 +647,14 @@ orbital BigIntOrbital {
                                                        (and
                                                          (>= (- @m9 1) 0)
                                                          (< (- @m9 1) (array/len @r110)))
-                                                       (array/nth @r110 (- @m9 1))
+                                                       (default (array/nth @r110 (- @m9 1)) 0)
                                                        0)
                                                      @config.base))
                                                  (if
                                                    (and
                                                      (>= (- @m9 2) 0)
                                                      (< (- @m9 2) (array/len @r110)))
-                                                   (array/nth @r110 (- @m9 2))
+                                                   (default (array/nth @r110 (- @m9 2)) 0)
                                                    0))
                                                (+
                                                  (+
@@ -663,14 +663,14 @@ orbital BigIntOrbital {
                                                        (and
                                                          (>= (- @m9 1) 0)
                                                          (< (- @m9 1) (array/len @db7)))
-                                                       (array/nth @db7 (- @m9 1))
+                                                       (default (array/nth @db7 (- @m9 1)) 0)
                                                        0)
                                                      @config.base)
                                                    (if
                                                      (and
                                                        (>= (- @m9 2) 0)
                                                        (< (- @m9 2) (array/len @db7)))
-                                                     (array/nth @db7 (- @m9 2))
+                                                     (default (array/nth @db7 (- @m9 2)) 0)
                                                      0))
                                                  1)) 0))
                                            1))))
@@ -685,7 +685,7 @@ orbital BigIntOrbital {
                                                                      (and
                                                                        (>= @i 0)
                                                                        (< @i (array/len @db7)))
-                                                                     (array/nth @db7 @i)
+                                                                     (default (array/nth @db7 @i) 0)
                                                                      0)
                                                                    @qh11)
                                                                  @acc.c)))
@@ -714,13 +714,13 @@ orbital BigIntOrbital {
                                                                        (and
                                                                          (>= @i 0)
                                                                          (< @i (array/len @r110)))
-                                                                       (array/nth @r110 @i)
+                                                                       (default (array/nth @r110 @i) 0)
                                                                        0)
                                                                      (if
                                                                        (and
                                                                          (>= @i 0)
                                                                          (< @i (array/len @ms12)))
-                                                                       (array/nth @ms12 @i)
+                                                                       (default (array/nth @ms12 @i) 0)
                                                                        0))
                                                                    @acc.c)))
                                                            { out: (array/append
@@ -760,8 +760,8 @@ orbital BigIntOrbital {
                                                              (let ((i (- (- (array/len @w.r) 1) @t)))
                                                                (math/sign
                                                                  (-
-                                                                   (array/nth @w.r @i)
-                                                                   (array/nth @db7 @i))))))))
+                                                                   (default (array/nth @w.r @i) 0)
+                                                                   (default (array/nth @db7 @i) 0))))))))
                                                      0)
                                                    { r: (let ((t (object/get
                                                                   (array/reduce
@@ -777,9 +777,9 @@ orbital BigIntOrbital {
                                                                                         @i
                                                                                         (array/len
                                                                                           @w.r)))
-                                                                                    (array/nth
+                                                                                    (default (array/nth
                                                                                       @w.r
-                                                                                      @i)
+                                                                                      @i) 0)
                                                                                     0)
                                                                                   (if
                                                                                     (and
@@ -788,9 +788,9 @@ orbital BigIntOrbital {
                                                                                         @i
                                                                                         (array/len
                                                                                           @db7)))
-                                                                                    (array/nth
+                                                                                    (default (array/nth
                                                                                       @db7
-                                                                                      @i)
+                                                                                      @i) 0)
                                                                                     0))
                                                                                 @acc.c)))
                                                                         { out: (array/append
@@ -927,7 +927,7 @@ orbital BigIntOrbital {
                                     (fn k
                                       (<=
                                         (math/pow 2 @k)
-                                        (array/nth @payload.e (- (array/len @payload.e) 1)))))))))
+                                        (default (array/nth @payload.e (- (array/len @payload.e) 1)) 0))))))))
                          (bs (object/get
                               (let ((da15 @payload.a)
                                     (db16 @payload.m))
@@ -965,8 +965,8 @@ orbital BigIntOrbital {
                                                     (let ((i (- (- (array/len @r119) 1) @t)))
                                                       (math/sign
                                                         (-
-                                                          (array/nth @r119 @i)
-                                                          (array/nth @db16 @i))))))))
+                                                          (default (array/nth @r119 @i) 0)
+                                                          (default (array/nth @db16 @i) 0))))))))
                                             0)
                                           { q: (array/prepend @st.q 0) r: @r119 }
                                           (let ((qh20 (math/max
@@ -983,7 +983,7 @@ orbital BigIntOrbital {
                                                                        (<
                                                                          (- @m18 0)
                                                                          (array/len @r119)))
-                                                                     (array/nth @r119 (- @m18 0))
+                                                                     (default (array/nth @r119 (- @m18 0)) 0)
                                                                      0)
                                                                    @config.base
                                                                    @config.base)
@@ -994,14 +994,14 @@ orbital BigIntOrbital {
                                                                        (<
                                                                          (- @m18 1)
                                                                          (array/len @r119)))
-                                                                     (array/nth @r119 (- @m18 1))
+                                                                     (default (array/nth @r119 (- @m18 1)) 0)
                                                                      0)
                                                                    @config.base))
                                                                (if
                                                                  (and
                                                                    (>= (- @m18 2) 0)
                                                                    (< (- @m18 2) (array/len @r119)))
-                                                                 (array/nth @r119 (- @m18 2))
+                                                                 (default (array/nth @r119 (- @m18 2)) 0)
                                                                  0))
                                                              (+
                                                                (+
@@ -1012,7 +1012,7 @@ orbital BigIntOrbital {
                                                                        (<
                                                                          (- @m18 1)
                                                                          (array/len @db16)))
-                                                                     (array/nth @db16 (- @m18 1))
+                                                                     (default (array/nth @db16 (- @m18 1)) 0)
                                                                      0)
                                                                    @config.base)
                                                                  (if
@@ -1021,7 +1021,7 @@ orbital BigIntOrbital {
                                                                      (<
                                                                        (- @m18 2)
                                                                        (array/len @db16)))
-                                                                   (array/nth @db16 (- @m18 2))
+                                                                   (default (array/nth @db16 (- @m18 2)) 0)
                                                                    0))
                                                                1)) 0))
                                                          1))))
@@ -1039,9 +1039,9 @@ orbital BigIntOrbital {
                                                                                        @i
                                                                                        (array/len
                                                                                          @db16)))
-                                                                                   (array/nth
+                                                                                   (default (array/nth
                                                                                      @db16
-                                                                                     @i)
+                                                                                     @i) 0)
                                                                                    0)
                                                                                  @qh20)
                                                                                @acc.c)))
@@ -1079,9 +1079,9 @@ orbital BigIntOrbital {
                                                                                          @i
                                                                                          (array/len
                                                                                            @r119)))
-                                                                                     (array/nth
+                                                                                     (default (array/nth
                                                                                        @r119
-                                                                                       @i)
+                                                                                       @i) 0)
                                                                                      0)
                                                                                    (if
                                                                                      (and
@@ -1090,9 +1090,9 @@ orbital BigIntOrbital {
                                                                                          @i
                                                                                          (array/len
                                                                                            @ms21)))
-                                                                                     (array/nth
+                                                                                     (default (array/nth
                                                                                        @ms21
-                                                                                       @i)
+                                                                                       @i) 0)
                                                                                      0))
                                                                                  @acc.c)))
                                                                          { out: (array/append
@@ -1149,10 +1149,10 @@ orbital BigIntOrbital {
                                                                                      @t)))
                                                                              (math/sign
                                                                                (-
-                                                                                 (array/nth @w.r @i)
-                                                                                 (array/nth
+                                                                                 (default (array/nth @w.r @i) 0)
+                                                                                 (default (array/nth
                                                                                    @db16
-                                                                                   @i))))))))
+                                                                                   @i) 0))))))))
                                                                    0)
                                                                  { r: (let ((t (object/get
                                                                                 (array/reduce
@@ -1175,9 +1175,9 @@ orbital BigIntOrbital {
                                                                                                       @i
                                                                                                       (array/len
                                                                                                         @w.r)))
-                                                                                                  (array/nth
+                                                                                                  (default (array/nth
                                                                                                     @w.r
-                                                                                                    @i)
+                                                                                                    @i) 0)
                                                                                                   0)
                                                                                                 (if
                                                                                                   (and
@@ -1188,9 +1188,9 @@ orbital BigIntOrbital {
                                                                                                       @i
                                                                                                       (array/len
                                                                                                         @db16)))
-                                                                                                  (array/nth
+                                                                                                  (default (array/nth
                                                                                                     @db16
-                                                                                                    @i)
+                                                                                                    @i) 0)
                                                                                                   0))
                                                                                               @acc.c)))
                                                                                       { out: (array/append
@@ -1271,12 +1271,12 @@ orbital BigIntOrbital {
                                                                                                  @j
                                                                                                  @nb27))
                                                                                              (let ((p (*
-                                                                                                       (array/nth
+                                                                                                       (default (array/nth
                                                                                                          @ma24
-                                                                                                         @i)
-                                                                                                       (array/nth
+                                                                                                         @i) 0)
+                                                                                                       (default (array/nth
                                                                                                          @mb25
-                                                                                                         @j))))
+                                                                                                         @j) 0))))
                                                                                                { lo: (+
                                                                                                        @s.lo
                                                                                                        (math/mod
@@ -1296,20 +1296,20 @@ orbital BigIntOrbital {
                                                                                         @cols28))
                                                                                     (fn k
                                                                                       (+
-                                                                                        (object/get
-                                                                                          (array/nth
+                                                                                        (default (object/get
+                                                                                          (default (array/nth
                                                                                             @cols28
-                                                                                            @k)
-                                                                                          "lo")
+                                                                                            @k) { lo: 0 hi: 0 })
+                                                                                          "lo") 0)
                                                                                         (if
                                                                                           (> @k 0)
-                                                                                          (object/get
-                                                                                            (array/nth
+                                                                                          (default (object/get
+                                                                                            (default (array/nth
                                                                                               @cols28
                                                                                               (-
                                                                                                 @k
-                                                                                                1))
-                                                                                            "hi")
+                                                                                                1)) { lo: 0 hi: 0 })
+                                                                                            "hi") 0)
                                                                                           0))))))
                                                                         (let ((t (object/get
                                                                                   (array/reduce
@@ -1323,9 +1323,9 @@ orbital BigIntOrbital {
                                                                                       c: 0 }
                                                                                     (fn acc i
                                                                                       (let ((s (+
-                                                                                                (array/nth
+                                                                                                (default (array/nth
                                                                                                   @tot29
-                                                                                                  @i)
+                                                                                                  @i) 0)
                                                                                                 @acc.c)))
                                                                                         { out: (array/append
                                                                                                  @acc.out
@@ -1415,8 +1415,8 @@ orbital BigIntOrbital {
                                                                                    @t)))
                                                                            (math/sign
                                                                              (-
-                                                                               (array/nth @r134 @i)
-                                                                               (array/nth @db31 @i))))))))
+                                                                               (default (array/nth @r134 @i) 0)
+                                                                               (default (array/nth @db31 @i) 0))))))))
                                                                  0)
                                                                { q: (array/prepend @st.q 0),
                                                                  r: @r134 }
@@ -1441,11 +1441,11 @@ orbital BigIntOrbital {
                                                                                                 0)
                                                                                               (array/len
                                                                                                 @r134)))
-                                                                                          (array/nth
+                                                                                          (default (array/nth
                                                                                             @r134
                                                                                             (-
                                                                                               @m33
-                                                                                              0))
+                                                                                              0)) 0)
                                                                                           0)
                                                                                         @config.base
                                                                                         @config.base)
@@ -1463,11 +1463,11 @@ orbital BigIntOrbital {
                                                                                                 1)
                                                                                               (array/len
                                                                                                 @r134)))
-                                                                                          (array/nth
+                                                                                          (default (array/nth
                                                                                             @r134
                                                                                             (-
                                                                                               @m33
-                                                                                              1))
+                                                                                              1)) 0)
                                                                                           0)
                                                                                         @config.base))
                                                                                     (if
@@ -1479,9 +1479,9 @@ orbital BigIntOrbital {
                                                                                           (- @m33 2)
                                                                                           (array/len
                                                                                             @r134)))
-                                                                                      (array/nth
+                                                                                      (default (array/nth
                                                                                         @r134
-                                                                                        (- @m33 2))
+                                                                                        (- @m33 2)) 0)
                                                                                       0))
                                                                                   (+
                                                                                     (+
@@ -1499,11 +1499,11 @@ orbital BigIntOrbital {
                                                                                                 1)
                                                                                               (array/len
                                                                                                 @db31)))
-                                                                                          (array/nth
+                                                                                          (default (array/nth
                                                                                             @db31
                                                                                             (-
                                                                                               @m33
-                                                                                              1))
+                                                                                              1)) 0)
                                                                                           0)
                                                                                         @config.base)
                                                                                       (if
@@ -1519,9 +1519,9 @@ orbital BigIntOrbital {
                                                                                               2)
                                                                                             (array/len
                                                                                               @db31)))
-                                                                                        (array/nth
+                                                                                        (default (array/nth
                                                                                           @db31
-                                                                                          (- @m33 2))
+                                                                                          (- @m33 2)) 0)
                                                                                         0))
                                                                                     1)) 0))
                                                                               1))))
@@ -1546,9 +1546,9 @@ orbital BigIntOrbital {
                                                                                                             @i
                                                                                                             (array/len
                                                                                                               @db31)))
-                                                                                                        (array/nth
+                                                                                                        (default (array/nth
                                                                                                           @db31
-                                                                                                          @i)
+                                                                                                          @i) 0)
                                                                                                         0)
                                                                                                       @qh35)
                                                                                                     @acc.c)))
@@ -1603,9 +1603,9 @@ orbital BigIntOrbital {
                                                                                                               @i
                                                                                                               (array/len
                                                                                                                 @r134)))
-                                                                                                          (array/nth
+                                                                                                          (default (array/nth
                                                                                                             @r134
-                                                                                                            @i)
+                                                                                                            @i) 0)
                                                                                                           0)
                                                                                                         (if
                                                                                                           (and
@@ -1616,9 +1616,9 @@ orbital BigIntOrbital {
                                                                                                               @i
                                                                                                               (array/len
                                                                                                                 @ms36)))
-                                                                                                          (array/nth
+                                                                                                          (default (array/nth
                                                                                                             @ms36
-                                                                                                            @i)
+                                                                                                            @i) 0)
                                                                                                           0))
                                                                                                       @acc.c)))
                                                                                               { out: (array/append
@@ -1697,12 +1697,12 @@ orbital BigIntOrbital {
                                                                                                           @t)))
                                                                                                   (math/sign
                                                                                                     (-
-                                                                                                      (array/nth
+                                                                                                      (default (array/nth
                                                                                                         @w.r
-                                                                                                        @i)
-                                                                                                      (array/nth
+                                                                                                        @i) 0)
+                                                                                                      (default (array/nth
                                                                                                         @db31
-                                                                                                        @i))))))))
+                                                                                                        @i) 0))))))))
                                                                                         0)
                                                                                       { r: (let ((t (object/get
                                                                                                      (array/reduce
@@ -1726,9 +1726,9 @@ orbital BigIntOrbital {
                                                                                                                            @i
                                                                                                                            (array/len
                                                                                                                              @w.r)))
-                                                                                                                       (array/nth
+                                                                                                                       (default (array/nth
                                                                                                                          @w.r
-                                                                                                                         @i)
+                                                                                                                         @i) 0)
                                                                                                                        0)
                                                                                                                      (if
                                                                                                                        (and
@@ -1739,9 +1739,9 @@ orbital BigIntOrbital {
                                                                                                                            @i
                                                                                                                            (array/len
                                                                                                                              @db31)))
-                                                                                                                       (array/nth
+                                                                                                                       (default (array/nth
                                                                                                                          @db31
-                                                                                                                         @i)
+                                                                                                                         @i) 0)
                                                                                                                        0))
                                                                                                                    @acc.c)))
                                                                                                            { out: (array/append
@@ -1801,7 +1801,7 @@ orbital BigIntOrbital {
                                                         (<
                                                           (math/floor (/ @j 24))
                                                           (array/len @payload.e)))
-                                                      (array/nth @payload.e (math/floor (/ @j 24)))
+                                                      (default (array/nth @payload.e (math/floor (/ @j 24))) 0)
                                                       0)
                                                     (math/pow 2 (math/mod @j 24))) 0))
                                                 2)
@@ -1835,12 +1835,12 @@ orbital BigIntOrbital {
                                                                                             @j
                                                                                             @nb42))
                                                                                         (let ((p (*
-                                                                                                  (array/nth
+                                                                                                  (default (array/nth
                                                                                                     @ma39
-                                                                                                    @i)
-                                                                                                  (array/nth
+                                                                                                    @i) 0)
+                                                                                                  (default (array/nth
                                                                                                     @mb40
-                                                                                                    @j))))
+                                                                                                    @j) 0))))
                                                                                           { lo: (+
                                                                                                   @s.lo
                                                                                                   (math/mod
@@ -1859,18 +1859,18 @@ orbital BigIntOrbital {
                                                                                  (array/len @cols43))
                                                                                (fn k
                                                                                  (+
-                                                                                   (object/get
-                                                                                     (array/nth
+                                                                                   (default (object/get
+                                                                                     (default (array/nth
                                                                                        @cols43
-                                                                                       @k)
-                                                                                     "lo")
+                                                                                       @k) { lo: 0 hi: 0 })
+                                                                                     "lo") 0)
                                                                                    (if
                                                                                      (> @k 0)
-                                                                                     (object/get
-                                                                                       (array/nth
+                                                                                     (default (object/get
+                                                                                       (default (array/nth
                                                                                          @cols43
-                                                                                         (- @k 1))
-                                                                                       "hi")
+                                                                                         (- @k 1)) { lo: 0 hi: 0 })
+                                                                                       "hi") 0)
                                                                                      0))))))
                                                                    (let ((t (object/get
                                                                              (array/reduce
@@ -1883,9 +1883,9 @@ orbital BigIntOrbital {
                                                                                  c: 0 }
                                                                                (fn acc i
                                                                                  (let ((s (+
-                                                                                           (array/nth
+                                                                                           (default (array/nth
                                                                                              @tot44
-                                                                                             @i)
+                                                                                             @i) 0)
                                                                                            @acc.c)))
                                                                                    { out: (array/append
                                                                                             @acc.out
@@ -1967,8 +1967,8 @@ orbital BigIntOrbital {
                                                                               @t)))
                                                                       (math/sign
                                                                         (-
-                                                                          (array/nth @r149 @i)
-                                                                          (array/nth @db46 @i))))))))
+                                                                          (default (array/nth @r149 @i) 0)
+                                                                          (default (array/nth @db46 @i) 0))))))))
                                                             0)
                                                           { q: (array/prepend @st.q 0) r: @r149 }
                                                           (let ((qh50 (math/max
@@ -1988,9 +1988,9 @@ orbital BigIntOrbital {
                                                                                          (- @m48 0)
                                                                                          (array/len
                                                                                            @r149)))
-                                                                                     (array/nth
+                                                                                     (default (array/nth
                                                                                        @r149
-                                                                                       (- @m48 0))
+                                                                                       (- @m48 0)) 0)
                                                                                      0)
                                                                                    @config.base
                                                                                    @config.base)
@@ -2004,9 +2004,9 @@ orbital BigIntOrbital {
                                                                                          (- @m48 1)
                                                                                          (array/len
                                                                                            @r149)))
-                                                                                     (array/nth
+                                                                                     (default (array/nth
                                                                                        @r149
-                                                                                       (- @m48 1))
+                                                                                       (- @m48 1)) 0)
                                                                                      0)
                                                                                    @config.base))
                                                                                (if
@@ -2016,9 +2016,9 @@ orbital BigIntOrbital {
                                                                                      (- @m48 2)
                                                                                      (array/len
                                                                                        @r149)))
-                                                                                 (array/nth
+                                                                                 (default (array/nth
                                                                                    @r149
-                                                                                   (- @m48 2))
+                                                                                   (- @m48 2)) 0)
                                                                                  0))
                                                                              (+
                                                                                (+
@@ -2032,9 +2032,9 @@ orbital BigIntOrbital {
                                                                                          (- @m48 1)
                                                                                          (array/len
                                                                                            @db46)))
-                                                                                     (array/nth
+                                                                                     (default (array/nth
                                                                                        @db46
-                                                                                       (- @m48 1))
+                                                                                       (- @m48 1)) 0)
                                                                                      0)
                                                                                    @config.base)
                                                                                  (if
@@ -2046,9 +2046,9 @@ orbital BigIntOrbital {
                                                                                        (- @m48 2)
                                                                                        (array/len
                                                                                          @db46)))
-                                                                                   (array/nth
+                                                                                   (default (array/nth
                                                                                      @db46
-                                                                                     (- @m48 2))
+                                                                                     (- @m48 2)) 0)
                                                                                    0))
                                                                                1)) 0))
                                                                          1))))
@@ -2073,9 +2073,9 @@ orbital BigIntOrbital {
                                                                                                        @i
                                                                                                        (array/len
                                                                                                          @db46)))
-                                                                                                   (array/nth
+                                                                                                   (default (array/nth
                                                                                                      @db46
-                                                                                                     @i)
+                                                                                                     @i) 0)
                                                                                                    0)
                                                                                                  @qh50)
                                                                                                @acc.c)))
@@ -2130,9 +2130,9 @@ orbital BigIntOrbital {
                                                                                                          @i
                                                                                                          (array/len
                                                                                                            @r149)))
-                                                                                                     (array/nth
+                                                                                                     (default (array/nth
                                                                                                        @r149
-                                                                                                       @i)
+                                                                                                       @i) 0)
                                                                                                      0)
                                                                                                    (if
                                                                                                      (and
@@ -2143,9 +2143,9 @@ orbital BigIntOrbital {
                                                                                                          @i
                                                                                                          (array/len
                                                                                                            @ms51)))
-                                                                                                     (array/nth
+                                                                                                     (default (array/nth
                                                                                                        @ms51
-                                                                                                       @i)
+                                                                                                       @i) 0)
                                                                                                      0))
                                                                                                  @acc.c)))
                                                                                          { out: (array/append
@@ -2220,12 +2220,12 @@ orbital BigIntOrbital {
                                                                                                      @t)))
                                                                                              (math/sign
                                                                                                (-
-                                                                                                 (array/nth
+                                                                                                 (default (array/nth
                                                                                                    @w.r
-                                                                                                   @i)
-                                                                                                 (array/nth
+                                                                                                   @i) 0)
+                                                                                                 (default (array/nth
                                                                                                    @db46
-                                                                                                   @i))))))))
+                                                                                                   @i) 0))))))))
                                                                                    0)
                                                                                  { r: (let ((t (object/get
                                                                                                 (array/reduce
@@ -2249,9 +2249,9 @@ orbital BigIntOrbital {
                                                                                                                       @i
                                                                                                                       (array/len
                                                                                                                         @w.r)))
-                                                                                                                  (array/nth
+                                                                                                                  (default (array/nth
                                                                                                                     @w.r
-                                                                                                                    @i)
+                                                                                                                    @i) 0)
                                                                                                                   0)
                                                                                                                 (if
                                                                                                                   (and
@@ -2262,9 +2262,9 @@ orbital BigIntOrbital {
                                                                                                                       @i
                                                                                                                       (array/len
                                                                                                                         @db46)))
-                                                                                                                  (array/nth
+                                                                                                                  (default (array/nth
                                                                                                                     @db46
-                                                                                                                    @i)
+                                                                                                                    @i) 0)
                                                                                                                   0))
                                                                                                               @acc.c)))
                                                                                                       { out: (array/append
@@ -2343,7 +2343,7 @@ orbital BigIntOrbital {
                                              @r
                                              (let ((i (- (- (array/len @r158) 1) @t)))
                                                (math/sign
-                                                 (- (array/nth @r158 @i) (array/nth @db55 @i))))))))
+                                                 (- (default (array/nth @r158 @i) 0) (default (array/nth @db55 @i) 0))))))))
                                      0)
                                    { q: (array/prepend @st.q 0) r: @r158 }
                                    (let ((qh59 (math/max
@@ -2358,7 +2358,7 @@ orbital BigIntOrbital {
                                                               (and
                                                                 (>= (- @m57 0) 0)
                                                                 (< (- @m57 0) (array/len @r158)))
-                                                              (array/nth @r158 (- @m57 0))
+                                                              (default (array/nth @r158 (- @m57 0)) 0)
                                                               0)
                                                             @config.base
                                                             @config.base)
@@ -2367,14 +2367,14 @@ orbital BigIntOrbital {
                                                               (and
                                                                 (>= (- @m57 1) 0)
                                                                 (< (- @m57 1) (array/len @r158)))
-                                                              (array/nth @r158 (- @m57 1))
+                                                              (default (array/nth @r158 (- @m57 1)) 0)
                                                               0)
                                                             @config.base))
                                                         (if
                                                           (and
                                                             (>= (- @m57 2) 0)
                                                             (< (- @m57 2) (array/len @r158)))
-                                                          (array/nth @r158 (- @m57 2))
+                                                          (default (array/nth @r158 (- @m57 2)) 0)
                                                           0))
                                                       (+
                                                         (+
@@ -2383,14 +2383,14 @@ orbital BigIntOrbital {
                                                               (and
                                                                 (>= (- @m57 1) 0)
                                                                 (< (- @m57 1) (array/len @db55)))
-                                                              (array/nth @db55 (- @m57 1))
+                                                              (default (array/nth @db55 (- @m57 1)) 0)
                                                               0)
                                                             @config.base)
                                                           (if
                                                             (and
                                                               (>= (- @m57 2) 0)
                                                               (< (- @m57 2) (array/len @db55)))
-                                                            (array/nth @db55 (- @m57 2))
+                                                            (default (array/nth @db55 (- @m57 2)) 0)
                                                             0))
                                                         1)) 0))
                                                   1))))
@@ -2407,7 +2407,7 @@ orbital BigIntOrbital {
                                                                               (<
                                                                                 @i
                                                                                 (array/len @db55)))
-                                                                            (array/nth @db55 @i)
+                                                                            (default (array/nth @db55 @i) 0)
                                                                             0)
                                                                           @qh59)
                                                                         @acc.c)))
@@ -2439,7 +2439,7 @@ orbital BigIntOrbital {
                                                                                 (<
                                                                                   @i
                                                                                   (array/len @r158)))
-                                                                              (array/nth @r158 @i)
+                                                                              (default (array/nth @r158 @i) 0)
                                                                               0)
                                                                             (if
                                                                               (and
@@ -2447,7 +2447,7 @@ orbital BigIntOrbital {
                                                                                 (<
                                                                                   @i
                                                                                   (array/len @ms60)))
-                                                                              (array/nth @ms60 @i)
+                                                                              (default (array/nth @ms60 @i) 0)
                                                                               0))
                                                                           @acc.c)))
                                                                   { out: (array/append
@@ -2494,8 +2494,8 @@ orbital BigIntOrbital {
                                                                               @t)))
                                                                       (math/sign
                                                                         (-
-                                                                          (array/nth @w.r @i)
-                                                                          (array/nth @db55 @i))))))))
+                                                                          (default (array/nth @w.r @i) 0)
+                                                                          (default (array/nth @db55 @i) 0))))))))
                                                             0)
                                                           { r: (let ((t (object/get
                                                                          (array/reduce
@@ -2516,9 +2516,9 @@ orbital BigIntOrbital {
                                                                                                @i
                                                                                                (array/len
                                                                                                  @w.r)))
-                                                                                           (array/nth
+                                                                                           (default (array/nth
                                                                                              @w.r
-                                                                                             @i)
+                                                                                             @i) 0)
                                                                                            0)
                                                                                          (if
                                                                                            (and
@@ -2529,9 +2529,9 @@ orbital BigIntOrbital {
                                                                                                @i
                                                                                                (array/len
                                                                                                  @db55)))
-                                                                                           (array/nth
+                                                                                           (default (array/nth
                                                                                              @db55
-                                                                                             @i)
+                                                                                             @i) 0)
                                                                                            0))
                                                                                        @acc.c)))
                                                                                { out: (array/append
@@ -2613,7 +2613,7 @@ orbital BigIntOrbital {
                     (!= @r 0)
                     @r
                     (let ((i (- (- (array/len @payload.m) 1) @t)))
-                      (math/sign (- (array/nth @payload.m @i) (array/nth [1] @i))))))))
+                      (math/sign (- (default (array/nth @payload.m @i) 0) (default (array/nth [1] @i) 0))))))))
             0))
         (emit BIGINT_REFUSED { operation: "bigint/modinv" reason: "modulus" })
 
@@ -2646,7 +2646,7 @@ orbital BigIntOrbital {
                       (!= @r 0)
                       @r
                       (let ((i (- (- (array/len @payload.m) 1) @t)))
-                        (math/sign (- (array/nth @payload.m @i) (array/nth [1] @i))))))))
+                        (math/sign (- (default (array/nth @payload.m @i) 0) (default (array/nth [1] @i) 0))))))))
               0)))
         (set @entity.inv
           (let ((F (array/reduce
@@ -2687,7 +2687,7 @@ orbital BigIntOrbital {
                                                   @r
                                                   (let ((i (- (- (array/len @r167) 1) @t)))
                                                     (math/sign
-                                                      (- (array/nth @r167 @i) (array/nth @db64 @i))))))))
+                                                      (- (default (array/nth @r167 @i) 0) (default (array/nth @db64 @i) 0))))))))
                                           0)
                                         { q: (array/prepend @st.q 0) r: @r167 }
                                         (let ((qh68 (math/max
@@ -2704,7 +2704,7 @@ orbital BigIntOrbital {
                                                                      (<
                                                                        (- @m66 0)
                                                                        (array/len @r167)))
-                                                                   (array/nth @r167 (- @m66 0))
+                                                                   (default (array/nth @r167 (- @m66 0)) 0)
                                                                    0)
                                                                  @config.base
                                                                  @config.base)
@@ -2715,14 +2715,14 @@ orbital BigIntOrbital {
                                                                      (<
                                                                        (- @m66 1)
                                                                        (array/len @r167)))
-                                                                   (array/nth @r167 (- @m66 1))
+                                                                   (default (array/nth @r167 (- @m66 1)) 0)
                                                                    0)
                                                                  @config.base))
                                                              (if
                                                                (and
                                                                  (>= (- @m66 2) 0)
                                                                  (< (- @m66 2) (array/len @r167)))
-                                                               (array/nth @r167 (- @m66 2))
+                                                               (default (array/nth @r167 (- @m66 2)) 0)
                                                                0))
                                                            (+
                                                              (+
@@ -2733,14 +2733,14 @@ orbital BigIntOrbital {
                                                                      (<
                                                                        (- @m66 1)
                                                                        (array/len @db64)))
-                                                                   (array/nth @db64 (- @m66 1))
+                                                                   (default (array/nth @db64 (- @m66 1)) 0)
                                                                    0)
                                                                  @config.base)
                                                                (if
                                                                  (and
                                                                    (>= (- @m66 2) 0)
                                                                    (< (- @m66 2) (array/len @db64)))
-                                                                 (array/nth @db64 (- @m66 2))
+                                                                 (default (array/nth @db64 (- @m66 2)) 0)
                                                                  0))
                                                              1)) 0))
                                                        1))))
@@ -2758,9 +2758,9 @@ orbital BigIntOrbital {
                                                                                      @i
                                                                                      (array/len
                                                                                        @db64)))
-                                                                                 (array/nth
+                                                                                 (default (array/nth
                                                                                    @db64
-                                                                                   @i)
+                                                                                   @i) 0)
                                                                                  0)
                                                                                @qh68)
                                                                              @acc.c)))
@@ -2796,9 +2796,9 @@ orbital BigIntOrbital {
                                                                                        @i
                                                                                        (array/len
                                                                                          @r167)))
-                                                                                   (array/nth
+                                                                                   (default (array/nth
                                                                                      @r167
-                                                                                     @i)
+                                                                                     @i) 0)
                                                                                    0)
                                                                                  (if
                                                                                    (and
@@ -2807,9 +2807,9 @@ orbital BigIntOrbital {
                                                                                        @i
                                                                                        (array/len
                                                                                          @ms69)))
-                                                                                   (array/nth
+                                                                                   (default (array/nth
                                                                                      @ms69
-                                                                                     @i)
+                                                                                     @i) 0)
                                                                                    0))
                                                                                @acc.c)))
                                                                        { out: (array/append
@@ -2863,8 +2863,8 @@ orbital BigIntOrbital {
                                                                                    @t)))
                                                                            (math/sign
                                                                              (-
-                                                                               (array/nth @w.r @i)
-                                                                               (array/nth @db64 @i))))))))
+                                                                               (default (array/nth @w.r @i) 0)
+                                                                               (default (array/nth @db64 @i) 0))))))))
                                                                  0)
                                                                { r: (let ((t (object/get
                                                                               (array/reduce
@@ -2887,9 +2887,9 @@ orbital BigIntOrbital {
                                                                                                     @i
                                                                                                     (array/len
                                                                                                       @w.r)))
-                                                                                                (array/nth
+                                                                                                (default (array/nth
                                                                                                   @w.r
-                                                                                                  @i)
+                                                                                                  @i) 0)
                                                                                                 0)
                                                                                               (if
                                                                                                 (and
@@ -2900,9 +2900,9 @@ orbital BigIntOrbital {
                                                                                                     @i
                                                                                                     (array/len
                                                                                                       @db64)))
-                                                                                                (array/nth
+                                                                                                (default (array/nth
                                                                                                   @db64
-                                                                                                  @i)
+                                                                                                  @i) 0)
                                                                                                 0))
                                                                                             @acc.c)))
                                                                                     { out: (array/append
@@ -2983,8 +2983,8 @@ orbital BigIntOrbital {
                                                       (let ((i (- (- (array/len @r176) 1) @t)))
                                                         (math/sign
                                                           (-
-                                                            (array/nth @r176 @i)
-                                                            (array/nth @db73 @i))))))))
+                                                            (default (array/nth @r176 @i) 0)
+                                                            (default (array/nth @db73 @i) 0))))))))
                                               0)
                                             { q: (array/prepend @st.q 0) r: @r176 }
                                             (let ((qh77 (math/max
@@ -3001,7 +3001,7 @@ orbital BigIntOrbital {
                                                                          (<
                                                                            (- @m75 0)
                                                                            (array/len @r176)))
-                                                                       (array/nth @r176 (- @m75 0))
+                                                                       (default (array/nth @r176 (- @m75 0)) 0)
                                                                        0)
                                                                      @config.base
                                                                      @config.base)
@@ -3012,7 +3012,7 @@ orbital BigIntOrbital {
                                                                          (<
                                                                            (- @m75 1)
                                                                            (array/len @r176)))
-                                                                       (array/nth @r176 (- @m75 1))
+                                                                       (default (array/nth @r176 (- @m75 1)) 0)
                                                                        0)
                                                                      @config.base))
                                                                  (if
@@ -3021,7 +3021,7 @@ orbital BigIntOrbital {
                                                                      (<
                                                                        (- @m75 2)
                                                                        (array/len @r176)))
-                                                                   (array/nth @r176 (- @m75 2))
+                                                                   (default (array/nth @r176 (- @m75 2)) 0)
                                                                    0))
                                                                (+
                                                                  (+
@@ -3032,7 +3032,7 @@ orbital BigIntOrbital {
                                                                          (<
                                                                            (- @m75 1)
                                                                            (array/len @db73)))
-                                                                       (array/nth @db73 (- @m75 1))
+                                                                       (default (array/nth @db73 (- @m75 1)) 0)
                                                                        0)
                                                                      @config.base)
                                                                    (if
@@ -3041,7 +3041,7 @@ orbital BigIntOrbital {
                                                                        (<
                                                                          (- @m75 2)
                                                                          (array/len @db73)))
-                                                                     (array/nth @db73 (- @m75 2))
+                                                                     (default (array/nth @db73 (- @m75 2)) 0)
                                                                      0))
                                                                  1)) 0))
                                                            1))))
@@ -3059,9 +3059,9 @@ orbital BigIntOrbital {
                                                                                          @i
                                                                                          (array/len
                                                                                            @db73)))
-                                                                                     (array/nth
+                                                                                     (default (array/nth
                                                                                        @db73
-                                                                                       @i)
+                                                                                       @i) 0)
                                                                                      0)
                                                                                    @qh77)
                                                                                  @acc.c)))
@@ -3103,9 +3103,9 @@ orbital BigIntOrbital {
                                                                                            @i
                                                                                            (array/len
                                                                                              @r176)))
-                                                                                       (array/nth
+                                                                                       (default (array/nth
                                                                                          @r176
-                                                                                         @i)
+                                                                                         @i) 0)
                                                                                        0)
                                                                                      (if
                                                                                        (and
@@ -3114,9 +3114,9 @@ orbital BigIntOrbital {
                                                                                            @i
                                                                                            (array/len
                                                                                              @ms78)))
-                                                                                       (array/nth
+                                                                                       (default (array/nth
                                                                                          @ms78
-                                                                                         @i)
+                                                                                         @i) 0)
                                                                                        0))
                                                                                    @acc.c)))
                                                                            { out: (array/append
@@ -3173,12 +3173,12 @@ orbital BigIntOrbital {
                                                                                        @t)))
                                                                                (math/sign
                                                                                  (-
-                                                                                   (array/nth
+                                                                                   (default (array/nth
                                                                                      @w.r
-                                                                                     @i)
-                                                                                   (array/nth
+                                                                                     @i) 0)
+                                                                                   (default (array/nth
                                                                                      @db73
-                                                                                     @i))))))))
+                                                                                     @i) 0))))))))
                                                                      0)
                                                                    { r: (let ((t (object/get
                                                                                   (array/reduce
@@ -3202,9 +3202,9 @@ orbital BigIntOrbital {
                                                                                                         @i
                                                                                                         (array/len
                                                                                                           @w.r)))
-                                                                                                    (array/nth
+                                                                                                    (default (array/nth
                                                                                                       @w.r
-                                                                                                      @i)
+                                                                                                      @i) 0)
                                                                                                     0)
                                                                                                   (if
                                                                                                     (and
@@ -3215,9 +3215,9 @@ orbital BigIntOrbital {
                                                                                                         @i
                                                                                                         (array/len
                                                                                                           @db73)))
-                                                                                                    (array/nth
+                                                                                                    (default (array/nth
                                                                                                       @db73
-                                                                                                      @i)
+                                                                                                      @i) 0)
                                                                                                     0))
                                                                                                 @acc.c)))
                                                                                         { out: (array/append
@@ -3309,12 +3309,12 @@ orbital BigIntOrbital {
                                                                                                                     @j
                                                                                                                     @nb84))
                                                                                                                 (let ((p (*
-                                                                                                                          (array/nth
+                                                                                                                          (default (array/nth
                                                                                                                             @ma81
-                                                                                                                            @i)
-                                                                                                                          (array/nth
+                                                                                                                            @i) 0)
+                                                                                                                          (default (array/nth
                                                                                                                             @mb82
-                                                                                                                            @j))))
+                                                                                                                            @j) 0))))
                                                                                                                   { lo: (+
                                                                                                                           @s.lo
                                                                                                                           (math/mod
@@ -3334,22 +3334,22 @@ orbital BigIntOrbital {
                                                                                                            @cols85))
                                                                                                        (fn k
                                                                                                          (+
-                                                                                                           (object/get
-                                                                                                             (array/nth
+                                                                                                           (default (object/get
+                                                                                                             (default (array/nth
                                                                                                                @cols85
-                                                                                                               @k)
-                                                                                                             "lo")
+                                                                                                               @k) { lo: 0 hi: 0 })
+                                                                                                             "lo") 0)
                                                                                                            (if
                                                                                                              (>
                                                                                                                @k
                                                                                                                0)
-                                                                                                             (object/get
-                                                                                                               (array/nth
+                                                                                                             (default (object/get
+                                                                                                               (default (array/nth
                                                                                                                  @cols85
                                                                                                                  (-
                                                                                                                    @k
-                                                                                                                   1))
-                                                                                                               "hi")
+                                                                                                                   1)) { lo: 0 hi: 0 })
+                                                                                                               "hi") 0)
                                                                                                              0))))))
                                                                                            (let ((t (object/get
                                                                                                      (array/reduce
@@ -3363,9 +3363,9 @@ orbital BigIntOrbital {
                                                                                                          c: 0 }
                                                                                                        (fn acc i
                                                                                                          (let ((s (+
-                                                                                                                   (array/nth
+                                                                                                                   (default (array/nth
                                                                                                                      @tot86
-                                                                                                                     @i)
+                                                                                                                     @i) 0)
                                                                                                                    @acc.c)))
                                                                                                            { out: (array/append
                                                                                                                     @acc.out
@@ -3468,12 +3468,12 @@ orbital BigIntOrbital {
                                                                                                       @t)))
                                                                                               (math/sign
                                                                                                 (-
-                                                                                                  (array/nth
+                                                                                                  (default (array/nth
                                                                                                     @r191
-                                                                                                    @i)
-                                                                                                  (array/nth
+                                                                                                    @i) 0)
+                                                                                                  (default (array/nth
                                                                                                     @db88
-                                                                                                    @i))))))))
+                                                                                                    @i) 0))))))))
                                                                                     0)
                                                                                   { q: (array/prepend
                                                                                          @st.q
@@ -3500,11 +3500,11 @@ orbital BigIntOrbital {
                                                                                                                    0)
                                                                                                                  (array/len
                                                                                                                    @r191)))
-                                                                                                             (array/nth
+                                                                                                             (default (array/nth
                                                                                                                @r191
                                                                                                                (-
                                                                                                                  @m90
-                                                                                                                 0))
+                                                                                                                 0)) 0)
                                                                                                              0)
                                                                                                            @config.base
                                                                                                            @config.base)
@@ -3522,11 +3522,11 @@ orbital BigIntOrbital {
                                                                                                                    1)
                                                                                                                  (array/len
                                                                                                                    @r191)))
-                                                                                                             (array/nth
+                                                                                                             (default (array/nth
                                                                                                                @r191
                                                                                                                (-
                                                                                                                  @m90
-                                                                                                                 1))
+                                                                                                                 1)) 0)
                                                                                                              0)
                                                                                                            @config.base))
                                                                                                        (if
@@ -3542,11 +3542,11 @@ orbital BigIntOrbital {
                                                                                                                2)
                                                                                                              (array/len
                                                                                                                @r191)))
-                                                                                                         (array/nth
+                                                                                                         (default (array/nth
                                                                                                            @r191
                                                                                                            (-
                                                                                                              @m90
-                                                                                                             2))
+                                                                                                             2)) 0)
                                                                                                          0))
                                                                                                      (+
                                                                                                        (+
@@ -3564,11 +3564,11 @@ orbital BigIntOrbital {
                                                                                                                    1)
                                                                                                                  (array/len
                                                                                                                    @db88)))
-                                                                                                             (array/nth
+                                                                                                             (default (array/nth
                                                                                                                @db88
                                                                                                                (-
                                                                                                                  @m90
-                                                                                                                 1))
+                                                                                                                 1)) 0)
                                                                                                              0)
                                                                                                            @config.base)
                                                                                                          (if
@@ -3584,11 +3584,11 @@ orbital BigIntOrbital {
                                                                                                                  2)
                                                                                                                (array/len
                                                                                                                  @db88)))
-                                                                                                           (array/nth
+                                                                                                           (default (array/nth
                                                                                                              @db88
                                                                                                              (-
                                                                                                                @m90
-                                                                                                               2))
+                                                                                                               2)) 0)
                                                                                                            0))
                                                                                                        1)) 0))
                                                                                                  1))))
@@ -3615,9 +3615,9 @@ orbital BigIntOrbital {
                                                                                                                                @i
                                                                                                                                (array/len
                                                                                                                                  @db88)))
-                                                                                                                           (array/nth
+                                                                                                                           (default (array/nth
                                                                                                                              @db88
-                                                                                                                             @i)
+                                                                                                                             @i) 0)
                                                                                                                            0)
                                                                                                                          @qh92)
                                                                                                                        @acc.c)))
@@ -3673,9 +3673,9 @@ orbital BigIntOrbital {
                                                                                                                                  @i
                                                                                                                                  (array/len
                                                                                                                                    @r191)))
-                                                                                                                             (array/nth
+                                                                                                                             (default (array/nth
                                                                                                                                @r191
-                                                                                                                               @i)
+                                                                                                                               @i) 0)
                                                                                                                              0)
                                                                                                                            (if
                                                                                                                              (and
@@ -3686,9 +3686,9 @@ orbital BigIntOrbital {
                                                                                                                                  @i
                                                                                                                                  (array/len
                                                                                                                                    @ms93)))
-                                                                                                                             (array/nth
+                                                                                                                             (default (array/nth
                                                                                                                                @ms93
-                                                                                                                               @i)
+                                                                                                                               @i) 0)
                                                                                                                              0))
                                                                                                                          @acc.c)))
                                                                                                                  { out: (array/append
@@ -3769,12 +3769,12 @@ orbital BigIntOrbital {
                                                                                                                              @t)))
                                                                                                                      (math/sign
                                                                                                                        (-
-                                                                                                                         (array/nth
+                                                                                                                         (default (array/nth
                                                                                                                            @w.r
-                                                                                                                           @i)
-                                                                                                                         (array/nth
+                                                                                                                           @i) 0)
+                                                                                                                         (default (array/nth
                                                                                                                            @db88
-                                                                                                                           @i))))))))
+                                                                                                                           @i) 0))))))))
                                                                                                            0)
                                                                                                          { r: (let ((t (object/get
                                                                                                                         (array/reduce
@@ -3798,9 +3798,9 @@ orbital BigIntOrbital {
                                                                                                                                               @i
                                                                                                                                               (array/len
                                                                                                                                                 @w.r)))
-                                                                                                                                          (array/nth
+                                                                                                                                          (default (array/nth
                                                                                                                                             @w.r
-                                                                                                                                            @i)
+                                                                                                                                            @i) 0)
                                                                                                                                           0)
                                                                                                                                         (if
                                                                                                                                           (and
@@ -3811,9 +3811,9 @@ orbital BigIntOrbital {
                                                                                                                                               @i
                                                                                                                                               (array/len
                                                                                                                                                 @db88)))
-                                                                                                                                          (array/nth
+                                                                                                                                          (default (array/nth
                                                                                                                                             @db88
-                                                                                                                                            @i)
+                                                                                                                                            @i) 0)
                                                                                                                                           0))
                                                                                                                                       @acc.c)))
                                                                                                                               { out: (array/append
@@ -3879,9 +3879,9 @@ orbital BigIntOrbital {
                                                                                            @i
                                                                                            (array/len
                                                                                              @sa96)))
-                                                                                       (array/nth
+                                                                                       (default (array/nth
                                                                                          @sa96
-                                                                                         @i)
+                                                                                         @i) 0)
                                                                                        0)
                                                                                      (if
                                                                                        (and
@@ -3890,9 +3890,9 @@ orbital BigIntOrbital {
                                                                                            @i
                                                                                            (array/len
                                                                                              @sb97)))
-                                                                                       (array/nth
+                                                                                       (default (array/nth
                                                                                          @sb97
-                                                                                         @i)
+                                                                                         @i) 0)
                                                                                        0))
                                                                                    @acc.c)))
                                                                            { out: (array/append
@@ -3934,13 +3934,13 @@ orbital BigIntOrbital {
                                                                           (and
                                                                             (>= @i 0)
                                                                             (< @i (array/len @aa98)))
-                                                                          (array/nth @aa98 @i)
+                                                                          (default (array/nth @aa98 @i) 0)
                                                                           0)
                                                                         (if
                                                                           (and
                                                                             (>= @i 0)
                                                                             (< @i (array/len @ab99)))
-                                                                          (array/nth @ab99 @i)
+                                                                          (default (array/nth @ab99 @i) 0)
                                                                           0)
                                                                         @acc.c)))
                                                                 { out: (array/append
@@ -3996,8 +3996,8 @@ orbital BigIntOrbital {
                                                         (let ((i (- (- (array/len @r1104) 1) @t)))
                                                           (math/sign
                                                             (-
-                                                              (array/nth @r1104 @i)
-                                                              (array/nth @db101 @i))))))))
+                                                              (default (array/nth @r1104 @i) 0)
+                                                              (default (array/nth @db101 @i) 0))))))))
                                                 0)
                                               { q: (array/prepend @st.q 0) r: @r1104 }
                                               (let ((qh105 (math/max
@@ -4014,9 +4014,9 @@ orbital BigIntOrbital {
                                                                             (<
                                                                               (- @m103 0)
                                                                               (array/len @r1104)))
-                                                                          (array/nth
+                                                                          (default (array/nth
                                                                             @r1104
-                                                                            (- @m103 0))
+                                                                            (- @m103 0)) 0)
                                                                           0)
                                                                         @config.base
                                                                         @config.base)
@@ -4027,9 +4027,9 @@ orbital BigIntOrbital {
                                                                             (<
                                                                               (- @m103 1)
                                                                               (array/len @r1104)))
-                                                                          (array/nth
+                                                                          (default (array/nth
                                                                             @r1104
-                                                                            (- @m103 1))
+                                                                            (- @m103 1)) 0)
                                                                           0)
                                                                         @config.base))
                                                                     (if
@@ -4038,7 +4038,7 @@ orbital BigIntOrbital {
                                                                         (<
                                                                           (- @m103 2)
                                                                           (array/len @r1104)))
-                                                                      (array/nth @r1104 (- @m103 2))
+                                                                      (default (array/nth @r1104 (- @m103 2)) 0)
                                                                       0))
                                                                   (+
                                                                     (+
@@ -4049,9 +4049,9 @@ orbital BigIntOrbital {
                                                                             (<
                                                                               (- @m103 1)
                                                                               (array/len @db101)))
-                                                                          (array/nth
+                                                                          (default (array/nth
                                                                             @db101
-                                                                            (- @m103 1))
+                                                                            (- @m103 1)) 0)
                                                                           0)
                                                                         @config.base)
                                                                       (if
@@ -4060,9 +4060,9 @@ orbital BigIntOrbital {
                                                                           (<
                                                                             (- @m103 2)
                                                                             (array/len @db101)))
-                                                                        (array/nth
+                                                                        (default (array/nth
                                                                           @db101
-                                                                          (- @m103 2))
+                                                                          (- @m103 2)) 0)
                                                                         0))
                                                                     1)) 0))
                                                               1))))
@@ -4081,9 +4081,9 @@ orbital BigIntOrbital {
                                                                                             @i
                                                                                             (array/len
                                                                                               @db101)))
-                                                                                        (array/nth
+                                                                                        (default (array/nth
                                                                                           @db101
-                                                                                          @i)
+                                                                                          @i) 0)
                                                                                         0)
                                                                                       @qh105)
                                                                                     @acc.c)))
@@ -4129,9 +4129,9 @@ orbital BigIntOrbital {
                                                                                               @i
                                                                                               (array/len
                                                                                                 @r1104)))
-                                                                                          (array/nth
+                                                                                          (default (array/nth
                                                                                             @r1104
-                                                                                            @i)
+                                                                                            @i) 0)
                                                                                           0)
                                                                                         (if
                                                                                           (and
@@ -4142,9 +4142,9 @@ orbital BigIntOrbital {
                                                                                               @i
                                                                                               (array/len
                                                                                                 @ms106)))
-                                                                                          (array/nth
+                                                                                          (default (array/nth
                                                                                             @ms106
-                                                                                            @i)
+                                                                                            @i) 0)
                                                                                           0))
                                                                                       @acc.c)))
                                                                               { out: (array/append
@@ -4201,12 +4201,12 @@ orbital BigIntOrbital {
                                                                                           @t)))
                                                                                   (math/sign
                                                                                     (-
-                                                                                      (array/nth
+                                                                                      (default (array/nth
                                                                                         @w.r
-                                                                                        @i)
-                                                                                      (array/nth
+                                                                                        @i) 0)
+                                                                                      (default (array/nth
                                                                                         @db101
-                                                                                        @i))))))))
+                                                                                        @i) 0))))))))
                                                                         0)
                                                                       { r: (let ((t (object/get
                                                                                      (array/reduce
@@ -4230,9 +4230,9 @@ orbital BigIntOrbital {
                                                                                                            @i
                                                                                                            (array/len
                                                                                                              @w.r)))
-                                                                                                       (array/nth
+                                                                                                       (default (array/nth
                                                                                                          @w.r
-                                                                                                         @i)
+                                                                                                         @i) 0)
                                                                                                        0)
                                                                                                      (if
                                                                                                        (and
@@ -4243,9 +4243,9 @@ orbital BigIntOrbital {
                                                                                                            @i
                                                                                                            (array/len
                                                                                                              @db101)))
-                                                                                                       (array/nth
+                                                                                                       (default (array/nth
                                                                                                          @db101
-                                                                                                         @i)
+                                                                                                         @i) 0)
                                                                                                        0))
                                                                                                    @acc.c)))
                                                                                            { out: (array/append
@@ -4302,7 +4302,7 @@ orbital BigIntOrbital {
                         (!= @r 0)
                         @r
                         (let ((i (- (- (array/len @F.r0) 1) @t)))
-                          (math/sign (- (array/nth @F.r0 @i) (array/nth [1] @i))))))))
+                          (math/sign (- (default (array/nth @F.r0 @i) 0) (default (array/nth [1] @i) 0))))))))
                 0)
               @F.t0
               (array/range 0 0))))
@@ -4398,7 +4398,7 @@ orbital BigIntOrbital {
         @description "Decode big-endian base64 bytes into limbs."
       TO_BYTES -> input {
         value : [number]!
-        size : number
+        size : number?
       }
         @description "Encode limbs as big-endian base64, left-padded to size bytes when given."
       ADD -> input {

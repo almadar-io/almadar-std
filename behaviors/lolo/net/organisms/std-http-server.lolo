@@ -73,6 +73,11 @@ orbital HttpServerOrbital {
       @description "Whether /api requests are counted against the per-client window and throttled; off takes the limiter out of the request path (replaces ORB_DISABLE_RATE_LIMIT)."
       @synonyms "throttle, disable rate limit, request cap"
       @tier "policy"
+    trustedProxyHops : number = 0
+      @label "Trusted proxy hops"
+      @description "How many proxies in front of the server append to X-Forwarded-For; the client address that keys the rate limit is the Nth entry from the right. 0 (the default) uses the connection's peer address and ignores X-Forwarded-For. Set it to exactly the proxies the deployment controls: a larger number lets a client choose its own address."
+      @synonyms "proxy hops, x-forwarded-for, client ip, trust proxy"
+      @tier "policy"
     calledServices : [string] = []
       @label "Called services"
       @description "The services the hosted program calls; the boot check asks for each one's required credentials unless integrations are mocked. Empty asks for none."
@@ -182,6 +187,7 @@ orbital HttpServerOrbital {
     config {
       clientFallback: true
       externalPrefixes: ["/api/orbitals", "/api/hooks/"]
+      trustedProxyHops: @config.trustedProxyHops
     }
     listens {
       Http1.REQUEST_RECEIVED -> REQUEST_RECEIVED

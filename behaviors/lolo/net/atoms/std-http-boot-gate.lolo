@@ -75,15 +75,15 @@ orbital HttpBootGateOrbital {
       READ_ALMADAR_INTEGRATIONS_MODE -> reading
         (emit ENV_COLLECTED { vars: (array/append @entity.read { name: "ALMADAR_INTEGRATIONS_MODE", value: (default @payload.value "") }), services: @config.calledServices })
 
-      ENV_COLLECTED -> reading when (or (= (array/len @payload.services) 0) (or @config.mock (= (object/get (array/find @payload.vars (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) "value") "mock")))
+      ENV_COLLECTED -> reading when (or (= (array/len @payload.services) 0) (or @config.mock (= (object/get (default (array/find @payload.vars (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) { name: "", value: "" }) "value") "mock")))
         (set @entity.read @payload.vars)
         (set @entity.services @payload.services)
-        (set @entity.production (= (object/get (array/find @payload.vars (fn v (= @v.name "NODE_ENV"))) "value") "production"))
+        (set @entity.production (= (object/get (default (array/find @payload.vars (fn v (= @v.name "NODE_ENV"))) { name: "", value: "" }) "value") "production"))
         (emit ENV_ASK { missing: [], error: "" })
-      ENV_COLLECTED -> reading when (and (> (array/len @payload.services) 0) (not (or @config.mock (= (object/get (array/find @payload.vars (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) "value") "mock"))))
+      ENV_COLLECTED -> reading when (and (> (array/len @payload.services) 0) (not (or @config.mock (= (object/get (default (array/find @payload.vars (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) { name: "", value: "" }) "value") "mock"))))
         (set @entity.read @payload.vars)
         (set @entity.services @payload.services)
-        (set @entity.production (= (object/get (array/find @payload.vars (fn v (= @v.name "NODE_ENV"))) "value") "production"))
+        (set @entity.production (= (object/get (default (array/find @payload.vars (fn v (= @v.name "NODE_ENV"))) { name: "", value: "" }) "value") "production"))
         (credential-list {} { emit: { success: CRED_LISTED failure: CRED_UNLISTED } })
 
       CRED_LISTED -> reading
@@ -100,16 +100,16 @@ orbital HttpBootGateOrbital {
       ENV_ASK -> reading
         (emit ENV_CHECK {
           env: {
-            authProvider: (object/get (array/find @entity.read (fn v (= @v.name "AUTH_PROVIDER"))) "value"),
-            oidcIssuerUrl: (object/get (array/find @entity.read (fn v (= @v.name "OIDC_ISSUER_URL"))) "value"),
-            oidcAudience: (object/get (array/find @entity.read (fn v (= @v.name "OIDC_AUDIENCE"))) "value"),
-            firebaseProjectId: (object/get (array/find @entity.read (fn v (= @v.name "FIREBASE_PROJECT_ID"))) "value"),
-            firebaseServiceAccountPath: (object/get (array/find @entity.read (fn v (= @v.name "FIREBASE_SERVICE_ACCOUNT_PATH"))) "value"),
-            firebaseAuthEmulatorHost: (object/get (array/find @entity.read (fn v (= @v.name "FIREBASE_AUTH_EMULATOR_HOST"))) "value"),
-            firestoreEmulatorHost: (object/get (array/find @entity.read (fn v (= @v.name "FIRESTORE_EMULATOR_HOST"))) "value")
+            authProvider: (default (object/get (default (array/find @entity.read (fn v (= @v.name "AUTH_PROVIDER"))) { name: "", value: "" }) "value") ""),
+            oidcIssuerUrl: (default (object/get (default (array/find @entity.read (fn v (= @v.name "OIDC_ISSUER_URL"))) { name: "", value: "" }) "value") ""),
+            oidcAudience: (default (object/get (default (array/find @entity.read (fn v (= @v.name "OIDC_AUDIENCE"))) { name: "", value: "" }) "value") ""),
+            firebaseProjectId: (default (object/get (default (array/find @entity.read (fn v (= @v.name "FIREBASE_PROJECT_ID"))) { name: "", value: "" }) "value") ""),
+            firebaseServiceAccountPath: (default (object/get (default (array/find @entity.read (fn v (= @v.name "FIREBASE_SERVICE_ACCOUNT_PATH"))) { name: "", value: "" }) "value") ""),
+            firebaseAuthEmulatorHost: (default (object/get (default (array/find @entity.read (fn v (= @v.name "FIREBASE_AUTH_EMULATOR_HOST"))) { name: "", value: "" }) "value") ""),
+            firestoreEmulatorHost: (default (object/get (default (array/find @entity.read (fn v (= @v.name "FIRESTORE_EMULATOR_HOST"))) { name: "", value: "" }) "value") "")
           },
           production: @entity.production,
-          mock: (or @config.mock (= (object/get (array/find @entity.read (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) "value") "mock")),
+          mock: (or @config.mock (= (object/get (default (array/find @entity.read (fn v (= @v.name "ALMADAR_INTEGRATIONS_MODE"))) { name: "", value: "" }) "value") "mock")),
           missingCredentials: @payload.missing,
           catalogError: @payload.error
         })

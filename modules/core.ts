@@ -481,23 +481,6 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["as", "search", "CallKey"] // => "search"',
   },
 
-  typed: {
-    module: 'core',
-    category: 'logic',
-    minArity: 2,
-    maxArity: 2,
-    description:
-      'Resolved IR only, never written in .lolo: a static ascription. The declared type (a `let` local annotation, a knob\'s type) is the validator\'s; the kernel evaluates the value and answers it, checking nothing at run time. A run-time shape check is `as T` or `json/parse T`.',
-    hasSideEffects: false,
-    returnType: tv('T'),
-    returnSemantics: 'identity-of-arg<0>',
-    params: [
-      { name: 'value', type: tv('T'), description: 'The argument value' },
-      { name: 'type', type: 'string', description: 'The declared type, as the JSON of an IR type (read by the validator only)' },
-    ],
-    example: '["typed", "@entity.via", "{\\"kind\\":\\"array\\",\\"inner\\":{\\"kind\\":\\"sexpr\\"}}"]',
-  },
-
   // --- control ----------------------------------------------------------------
 
   let: {

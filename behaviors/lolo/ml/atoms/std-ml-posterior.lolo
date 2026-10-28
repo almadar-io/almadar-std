@@ -1,6 +1,6 @@
 app std-ml-posterior [
   version: "1.0.0",
-  description: "std-ml-posterior — the statistical rung (R2) of the intelligence ladder. Holds a Beta(alpha, beta) belief over an unknown success rate and updates it from boolean observations (Bayesian updating, knowledge tracing, Thompson-sampling prior). After each observation it draws samples from the posterior, computes a credible interval, and decides: MASTERY_REACHED when the mean clears the floor with a tight interval, REMEDIATION_NEEDED when the mean sits at or below the ceiling with the same confidence, or EVIDENCE_INSUFFICIENT — the abstain — when the interval is still too wide to trust. Use when a hand-tuned score needs to become a belief that can say 'not enough evidence yet' (mastery, skill, risk, preference, difficulty)."
+  description: "std-ml-posterior — the statistical rung (R2) of the intelligence ladder. Holds a Beta(alpha, beta) belief over an unknown success rate and updates it from boolean observations (OBSERVE) or rebuilds it from success and failure counts (OBSERVE_COUNTS) (Bayesian updating, knowledge tracing, Thompson-sampling prior). After each observation it draws samples from the posterior, computes a credible interval, and decides: MASTERY_REACHED when the mean clears the floor with a tight interval, REMEDIATION_NEEDED when the mean sits at or below the ceiling with the same confidence, or EVIDENCE_INSUFFICIENT — the abstain — when the interval is still too wide to trust. Use when a hand-tuned score needs to become a belief that can say 'not enough evidence yet' (mastery, skill, risk, preference, difficulty)."
 ]
 orbital MlPosteriorOrbital {
 
@@ -31,6 +31,14 @@ orbital MlPosteriorOrbital {
         (set @entity.beta (if ?outcome @entity.beta (+ @entity.beta 1)))
         (set @entity.observations (+ @entity.observations 1))
         (set @entity.mean (/ @entity.alpha (+ @entity.alpha @entity.beta)))
+        (emit POSTERIOR_DECIDE {})
+      OBSERVE_COUNTS -> idle
+        (set @entity.alpha (+ @config.priorAlpha ?successes))
+        (set @entity.beta (+ @config.priorBeta ?failures))
+        (set @entity.observations (+ ?successes ?failures))
+        (set @entity.mean (/ @entity.alpha (+ @entity.alpha @entity.beta)))
+        (emit POSTERIOR_DECIDE {})
+      POSTERIOR_DECIDE -> idle
         (let ((samples (prob/sample @config.sampleCount (prob/beta @entity.alpha @entity.beta)))
               (interval (prob/credible-interval @samples 0.05)))
           (if (= @interval null)
@@ -72,12 +80,22 @@ orbital MlPosteriorOrbital {
       EVIDENCE_INSUFFICIENT -> external { mean : float!, intervalLow : float?, intervalHigh : float? }
         @description "The abstain — the credible interval is still wider than intervalWidthMax, or no interval could be drawn (null bounds), so no verdict is licensed yet."
         @tier "primary"
+      POSTERIOR_DECIDE -> internal {}
+        @description "Internal: draw from the current posterior and emit its verdict."
+        @tier "internal"
     }
 
     listens {
       OBSERVE {
         outcome : boolean!
       }
+        @description "Fold one boolean observation into the posterior."
+      OBSERVE_COUNTS {
+        successes : number!
+        failures : number!
+      }
+        @description "Replace the posterior with the prior plus these success and failure counts (the sufficient statistics of a Bernoulli sample), then decide. For a belief recomputed from a whole evidence set at once rather than observed one outcome at a time."
+      POSTERIOR_DECIDE {}
     }
 
     config {

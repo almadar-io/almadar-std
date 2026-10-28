@@ -7,7 +7,7 @@ orbital MigrationAdapterMarkdownOrbital {
   type ImportRawDocument = { ref : string!, raw : string! }
   type ImportSkip = { ref : string!, reason : string! }
   type ImportSkips = [ImportSkip]
-  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string, content : string, parentRef : string, metadata : Map string ImportFieldValue, source : string!, span : string }
+  type ExtractedUnit = { ref : string!, kind : "root" | "folder" | "section" | "qa", title : string?, content : string?, parentRef : string?, metadata : Map string ImportFieldValue, source : string!, span : string? }
   type ExtractedUnits = [ExtractedUnit]
   type MarkdownPair = { front : string!, back : string!, line : number! }
   type MarkdownQa = { pairs : [MarkdownPair], remaining : string! }
@@ -45,8 +45,8 @@ orbital MigrationAdapterMarkdownOrbital {
                            (array/range @n)
                            { inFence: false, marker: "", heads: [] }
                            (fn acc i
-                             (let ((line (array/nth @lines @i))
-                                   (tl (str/trimStart (array/nth @lines @i)))
+                             (let ((line (default (array/nth @lines @i) ""))
+                                   (tl (str/trimStart @line))
                                    (mk (str/slice @tl 0 3))
                                    (isFence (or (str/startsWith @tl "```") (str/startsWith @tl "~~~"))))
                                (if
@@ -88,23 +88,23 @@ orbital MigrationAdapterMarkdownOrbital {
                     (m (array/len @heads))
                     (promote (and
                               (> @m 0)
-                              (= (object/get (array/nth @heads 0) "depth") 1)
+                              (= (object/get (default (array/nth @heads 0) {}) "depth" 0) 1)
                               (= (array/count @heads (fn x (= (object/get @x "depth") 1))) 1)))
                     (startK (if @promote 1 0))
-                    (h1 (array/find @heads (fn x (= (object/get @x "depth") 1))))
-                    (fromHeading (and (!= @h1 null) (!= (object/get @h1 "heading" "") "")))
+                    (h1Heading (default (array/first (array/map (array/filter @heads (fn x (= (object/get @x "depth" 0) 1))) (fn x (object/get @x "heading" "")))) ""))
+                    (fromHeading (!= @h1Heading ""))
                     (title (if
                             @fromHeading
-                            (object/get @h1 "heading")
+                            @h1Heading
                             (if @collection (object/get @d "ref") "document")))
-                    (firstHeadingLine (if (> @m 0) (object/get (array/nth @heads 0) "headingLine") (+ @n 1)))
+                    (firstHeadingLine (if (> @m 0) (object/get (default (array/nth @heads 0) {}) "headingLine" 0) (+ @n 1)))
                     (preRaw (str/join (array/slice @lines 0 (- @firstHeadingLine 1)) "\n"))
                     (secs (array/reduce
                            (array/range @startK @m)
                            (let ((seed : MarkdownSlugAcc { items: [], bases: [] })) @seed)
                            (fn acc k
                              (let ((base (let ((s1 (str/replace-pattern
-                                                   (str/lower (object/get (array/nth @heads @k) "heading"))
+                                                   (str/lower (object/get (default (array/nth @heads @k) {}) "heading" ""))
                                                    "[^a-z0-9]+"
                                                    "-"))
                                               (s2 (str/replace-pattern @s1 "^-+|-+$" "")))
@@ -113,18 +113,21 @@ orbital MigrationAdapterMarkdownOrbital {
                                                   (array/range @startK @k)
                                                   (fn j
                                                     (<
-                                                      (object/get (array/nth @heads @j) "depth")
-                                                      (object/get (array/nth @heads @k) "depth"))))))
-                                          (if (> (array/len @c) 0) (array/last @c) (- 0 1))))
+                                                      (object/get (default (array/nth @heads @j) {}) "depth" 0)
+                                                      (object/get (default (array/nth @heads @k) {}) "depth" 0))))))
+                                          (if (> (array/len @c) 0) (default (array/last @c) (- 0 1)) (- 0 1))))
                                    (seen (array/count (object/get @acc "bases") (fn b (= @b @base))))
                                    (parentRef (if
                                                (< @pidx 0)
                                                @docRef
                                                (object/get
-                                                 (array/find
-                                                   (object/get @acc "items")
-                                                   (fn it (= (object/get @it "k") @pidx)))
-                                                 "ref")))
+                                                 (default
+                                                   (array/find
+                                                     (object/get @acc "items")
+                                                     (fn it (= (object/get @it "k") @pidx)))
+                                                   {})
+                                                 "ref"
+                                                 "")))
                                    (slug (if (= @seen 0) @base (str/concat @base "-" (+ @seen 1)))))
                                {
                                  items: (array/append
@@ -149,16 +152,16 @@ orbital MigrationAdapterMarkdownOrbital {
                                  (str/join
                                    (array/slice
                                      @lines
-                                     (object/get (array/nth @heads 0) "headingLine")
+                                     (object/get (default (array/nth @heads 0) {}) "headingLine" 0)
                                      (if
                                        (< (+ 0 1) @m)
-                                       (- (object/get (array/nth @heads (+ 0 1)) "headingLine") 1)
+                                       (- (object/get (default (array/nth @heads (+ 0 1)) {}) "headingLine" 0) 1)
                                        @n))
                                    "\n")
                                  "\\n+$"
                                  "")
                                ""),
-                  titleBodyStart: (if @promote (+ (object/get (array/nth @heads 0) "headingLine") 1) 1),
+                  titleBodyStart: (if @promote (+ (object/get (default (array/nth @heads 0) {}) "headingLine" 0) 1) 1),
                   folderParent: (if
                                   (and
                                     @collection
@@ -283,7 +286,7 @@ orbital MigrationAdapterMarkdownOrbital {
                                                       1)))
                                                 (+ @i 1))
                                               "/"),
-                                      title: (array/nth
+                                      title: (default (array/nth
                                                (array/take
                                                  (array/filter
                                                    (str/split (object/get @d "ref") "/")
@@ -296,7 +299,7 @@ orbital MigrationAdapterMarkdownOrbital {
                                                          (str/split (object/get @d "ref") "/")
                                                          (fn s (!= @s ""))))
                                                      1)))
-                                               @i),
+                                               @i) ""),
                                       parentRef: (if
                                                    (> @i 0)
                                                    (str/concat
@@ -327,24 +330,24 @@ orbital MigrationAdapterMarkdownOrbital {
                               (fn it
                                 (let ((k (object/get @it "k")))
                                   {
-                                    heading: (object/get (array/nth @heads @k) "heading"),
-                                    depth: (object/get (array/nth @heads @k) "depth"),
-                                    headingLine: (object/get (array/nth @heads @k) "headingLine"),
-                                    bodyStartLine: (+ (object/get (array/nth @heads @k) "headingLine") 1),
+                                    heading: (object/get (default (array/nth @heads @k) {}) "heading" ""),
+                                    depth: (object/get (default (array/nth @heads @k) {}) "depth" 0),
+                                    headingLine: (object/get (default (array/nth @heads @k) {}) "headingLine" 0),
+                                    bodyStartLine: (+ (object/get (default (array/nth @heads @k) {}) "headingLine" 0) 1),
                                     bodyEndLine: (if
                                                    (< (+ @k 1) @m)
                                                    (-
-                                                     (object/get (array/nth @heads (+ @k 1)) "headingLine")
+                                                     (object/get (default (array/nth @heads (+ @k 1)) {}) "headingLine" 0)
                                                      1)
                                                    @n),
                                     body: (str/replace-pattern
                                             (str/join
                                               (array/slice
                                                 @lines
-                                                (object/get (array/nth @heads @k) "headingLine")
+                                                (object/get (default (array/nth @heads @k) {}) "headingLine" 0)
                                                 (if
                                                   (< (+ @k 1) @m)
-                                                  (- (object/get (array/nth @heads (+ @k 1)) "headingLine") 1)
+                                                  (- (object/get (default (array/nth @heads (+ @k 1)) {}) "headingLine" 0) 1)
                                                   @n))
                                               "\n")
                                             "\\n+$"
@@ -372,18 +375,18 @@ orbital MigrationAdapterMarkdownOrbital {
                                         (fn i
                                           (or
                                             (validate/pattern
-                                              (array/nth @ls @i)
+                                              (default (array/nth @ls @i) "")
                                               "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
                                             (validate/pattern
-                                              (array/nth @ls @i)
+                                              (default (array/nth @ls @i) "")
                                               "^\\*\\*[^\\r\\n\\u2028\\u2029]+?\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))))
                                       (fn i
                                         (if
                                           (validate/pattern
-                                            (array/nth @ls @i)
+                                            (default (array/nth @ls @i) "")
                                             "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
                                           {
-                                            front: (let ((rest (str/slice (array/nth @ls @i) 3)))
+                                            front: (let ((rest (str/slice (default (array/nth @ls @i) "") 3)))
                                                      (if
                                                        (= (str/trim @rest) "")
                                                        (str/slice
@@ -403,9 +406,9 @@ orbital MigrationAdapterMarkdownOrbital {
                                                     (and
                                                       (< (+ @i 1) @n)
                                                       (validate/pattern
-                                                        (array/nth @ls (+ @i 1))
+                                                        (default (array/nth @ls (+ @i 1)) "")
                                                         "^A::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))
-                                                    (let ((rest (str/slice (array/nth @ls (+ @i 1)) 3)))
+                                                    (let ((rest (str/slice (default (array/nth @ls (+ @i 1)) "") 3)))
                                                       (if
                                                         (= (str/trim @rest) "")
                                                         (str/slice
@@ -424,13 +427,13 @@ orbital MigrationAdapterMarkdownOrbital {
                                                     ""),
                                             line: (+ 1 @i)
                                           }
-                                          (let ((line (array/nth @ls @i))
-                                                (k (array/find
-                                                    (array/range 1 (str/len (array/nth @ls @i)))
+                                          (let ((line (default (array/nth @ls @i) ""))
+                                                (k (default (array/find
+                                                    (array/range 1 (str/len (default (array/nth @ls @i) "")))
                                                     (fn k
                                                       (validate/pattern
-                                                        (str/slice (array/nth @ls @i) (+ 2 @k))
-                                                        "^\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))))
+                                                        (str/slice (default (array/nth @ls @i) "") (+ 2 @k))
+                                                        "^\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))) 0))
                                                 (after (str/slice @line (+ 2 @k)))
                                                 (stripped (str/replace-pattern @after "^\\*\\*\\s+—\\s+" "")))
                                             {
@@ -461,22 +464,22 @@ orbital MigrationAdapterMarkdownOrbital {
                                                   (and
                                                     (not
                                                       (validate/pattern
-                                                        (array/nth @ls @i)
+                                                        (default (array/nth @ls @i) "")
                                                         "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))
                                                     (not
                                                       (validate/pattern
-                                                        (array/nth @ls @i)
+                                                        (default (array/nth @ls @i) "")
                                                         "^\\*\\*[^\\r\\n\\u2028\\u2029]+?\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))
                                                     (not
                                                       (and
                                                         (> @i 0)
                                                         (validate/pattern
-                                                          (array/nth @ls @i)
+                                                          (default (array/nth @ls @i) "")
                                                           "^A::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
                                                         (validate/pattern
-                                                          (array/nth @ls (- @i 1))
+                                                          (default (array/nth @ls (- @i 1)) "")
                                                           "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))))))
-                                              (fn i (array/nth @ls @i)))
+                                              (fn i (default (array/nth @ls @i) "")))
                                             "\n")
                                           "^\\n+|\\n+$"
                                           "")
@@ -490,18 +493,18 @@ orbital MigrationAdapterMarkdownOrbital {
                                          (fn i
                                            (or
                                              (validate/pattern
-                                               (array/nth @ls @i)
+                                               (default (array/nth @ls @i) "")
                                                "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
                                              (validate/pattern
-                                               (array/nth @ls @i)
+                                               (default (array/nth @ls @i) "")
                                                "^\\*\\*[^\\r\\n\\u2028\\u2029]+?\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))))
                                        (fn i
                                          (if
                                            (validate/pattern
-                                             (array/nth @ls @i)
+                                             (default (array/nth @ls @i) "")
                                              "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
                                            {
-                                             front: (let ((rest (str/slice (array/nth @ls @i) 3)))
+                                             front: (let ((rest (str/slice (default (array/nth @ls @i) "") 3)))
                                                       (if
                                                         (= (str/trim @rest) "")
                                                         (str/slice
@@ -521,9 +524,9 @@ orbital MigrationAdapterMarkdownOrbital {
                                                      (and
                                                        (< (+ @i 1) @n)
                                                        (validate/pattern
-                                                         (array/nth @ls (+ @i 1))
+                                                         (default (array/nth @ls (+ @i 1)) "")
                                                          "^A::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))
-                                                     (let ((rest (str/slice (array/nth @ls (+ @i 1)) 3)))
+                                                     (let ((rest (str/slice (default (array/nth @ls (+ @i 1)) "") 3)))
                                                        (if
                                                          (= (str/trim @rest) "")
                                                          (str/slice
@@ -542,13 +545,13 @@ orbital MigrationAdapterMarkdownOrbital {
                                                      ""),
                                              line: (+ (object/get @d "titleBodyStart") @i)
                                            }
-                                           (let ((line (array/nth @ls @i))
-                                                 (k (array/find
-                                                     (array/range 1 (str/len (array/nth @ls @i)))
+                                           (let ((line (default (array/nth @ls @i) ""))
+                                                 (k (default (array/find
+                                                     (array/range 1 (str/len (default (array/nth @ls @i) "")))
                                                      (fn k
                                                        (validate/pattern
-                                                         (str/slice (array/nth @ls @i) (+ 2 @k))
-                                                         "^\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))))
+                                                         (str/slice (default (array/nth @ls @i) "") (+ 2 @k))
+                                                         "^\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))) 0))
                                                  (after (str/slice @line (+ 2 @k)))
                                                  (stripped (str/replace-pattern @after "^\\*\\*\\s+—\\s+" "")))
                                              {
@@ -579,22 +582,22 @@ orbital MigrationAdapterMarkdownOrbital {
                                                    (and
                                                      (not
                                                        (validate/pattern
-                                                         (array/nth @ls @i)
+                                                         (default (array/nth @ls @i) "")
                                                          "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))
                                                      (not
                                                        (validate/pattern
-                                                         (array/nth @ls @i)
+                                                         (default (array/nth @ls @i) "")
                                                          "^\\*\\*[^\\r\\n\\u2028\\u2029]+?\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))
                                                      (not
                                                        (and
                                                          (> @i 0)
                                                          (validate/pattern
-                                                           (array/nth @ls @i)
+                                                           (default (array/nth @ls @i) "")
                                                            "^A::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
                                                          (validate/pattern
-                                                           (array/nth @ls (- @i 1))
+                                                           (default (array/nth @ls (- @i 1)) "")
                                                            "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))))))
-                                               (fn i (array/nth @ls @i)))
+                                               (fn i (default (array/nth @ls @i) "")))
                                              "\n")
                                            "^\\n+|\\n+$"
                                            "")
@@ -614,18 +617,18 @@ orbital MigrationAdapterMarkdownOrbital {
                                                        (fn i
                                                          (or
                                                            (validate/pattern
-                                                             (array/nth @ls @i)
+                                                             (default (array/nth @ls @i) "")
                                                              "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
                                                            (validate/pattern
-                                                             (array/nth @ls @i)
+                                                             (default (array/nth @ls @i) "")
                                                              "^\\*\\*[^\\r\\n\\u2028\\u2029]+?\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))))
                                                      (fn i
                                                        (if
                                                          (validate/pattern
-                                                           (array/nth @ls @i)
+                                                           (default (array/nth @ls @i) "")
                                                            "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
                                                          {
-                                                           front: (let ((rest (str/slice (array/nth @ls @i) 3)))
+                                                           front: (let ((rest (str/slice (default (array/nth @ls @i) "") 3)))
                                                                     (if
                                                                       (= (str/trim @rest) "")
                                                                       (str/slice
@@ -645,10 +648,10 @@ orbital MigrationAdapterMarkdownOrbital {
                                                                    (and
                                                                      (< (+ @i 1) @n)
                                                                      (validate/pattern
-                                                                       (array/nth @ls (+ @i 1))
+                                                                       (default (array/nth @ls (+ @i 1)) "")
                                                                        "^A::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))
                                                                    (let ((rest (str/slice
-                                                                                (array/nth @ls (+ @i 1))
+                                                                                (default (array/nth @ls (+ @i 1)) "")
                                                                                 3)))
                                                                      (if
                                                                        (= (str/trim @rest) "")
@@ -668,15 +671,15 @@ orbital MigrationAdapterMarkdownOrbital {
                                                                    ""),
                                                            line: (+ (object/get @s "bodyStartLine") @i)
                                                          }
-                                                         (let ((line (array/nth @ls @i))
-                                                               (k (array/find
+                                                         (let ((line (default (array/nth @ls @i) ""))
+                                                               (k (default (array/find
                                                                    (array/range
                                                                      1
-                                                                     (str/len (array/nth @ls @i)))
+                                                                     (str/len (default (array/nth @ls @i) "")))
                                                                    (fn k
                                                                      (validate/pattern
-                                                                       (str/slice (array/nth @ls @i) (+ 2 @k))
-                                                                       "^\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))))
+                                                                       (str/slice (default (array/nth @ls @i) "") (+ 2 @k))
+                                                                       "^\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))) 0))
                                                                (after (str/slice @line (+ 2 @k)))
                                                                (stripped (str/replace-pattern
                                                                           @after
@@ -710,22 +713,22 @@ orbital MigrationAdapterMarkdownOrbital {
                                                                  (and
                                                                    (not
                                                                      (validate/pattern
-                                                                       (array/nth @ls @i)
+                                                                       (default (array/nth @ls @i) "")
                                                                        "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))
                                                                    (not
                                                                      (validate/pattern
-                                                                       (array/nth @ls @i)
+                                                                       (default (array/nth @ls @i) "")
                                                                        "^\\*\\*[^\\r\\n\\u2028\\u2029]+?\\*\\*\\s+\\u2014\\s+[^\\r\\n\\u2028\\u2029]+?\\s*$"))
                                                                    (not
                                                                      (and
                                                                        (> @i 0)
                                                                        (validate/pattern
-                                                                         (array/nth @ls @i)
+                                                                         (default (array/nth @ls @i) "")
                                                                          "^A::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$")
                                                                        (validate/pattern
-                                                                         (array/nth @ls (- @i 1))
+                                                                         (default (array/nth @ls (- @i 1)) "")
                                                                          "^Q::\\s*[^\\r\\n\\u2028\\u2029]+?\\s*$"))))))
-                                                             (fn i (array/nth @ls @i)))
+                                                             (fn i (default (array/nth @ls @i) "")))
                                                            "\n")
                                                          "^\\n+|\\n+$"
                                                          "")

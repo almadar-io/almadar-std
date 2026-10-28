@@ -25,7 +25,7 @@ orbital EstimateOrbital {
     promptText : string
     promptHint : string
     answer : number = 0
-    unit : string
+    unit : string = ""
     feedback : string
     view : [node]
   }
@@ -49,10 +49,10 @@ orbital EstimateOrbital {
             (set @entity.band "")
             (set @entity.score 0)
             (set @entity.done false)
-            (set @entity.promptText (object/get @first prompt))
-            (set @entity.promptHint (object/get @first hint ""))
-            (set @entity.answer (object/get @first answer))
-            (set @entity.unit (object/get @first unit ""))
+            (set @entity.promptText (if (== @first null) "" (object/get @first prompt)))
+            (set @entity.promptHint (if (== @first null) "" (object/get @first hint "")))
+            (set @entity.answer (if (== @first null) 0 (object/get @first answer)))
+            (set @entity.unit (if (== @first null) "" (object/get @first unit "")))
             (set @entity.feedback "")
             (set @entity.view [
               { type: card, variant: bordered, padding: md, children: [
@@ -109,10 +109,10 @@ orbital EstimateOrbital {
             (set @entity.band "")
             (set @entity.score 0)
             (set @entity.done false)
-            (set @entity.promptText (object/get @first prompt))
-            (set @entity.promptHint (object/get @first hint ""))
-            (set @entity.answer (object/get @first answer))
-            (set @entity.unit (object/get @first unit ""))
+            (set @entity.promptText (if (== @first null) "" (object/get @first prompt)))
+            (set @entity.promptHint (if (== @first null) "" (object/get @first hint "")))
+            (set @entity.answer (if (== @first null) 0 (object/get @first answer)))
+            (set @entity.unit (if (== @first null) "" (object/get @first unit "")))
             (set @entity.feedback "")
             (set @entity.view [
               { type: card, variant: bordered, padding: md, children: [
@@ -165,10 +165,10 @@ orbital EstimateOrbital {
             (set @entity.band "")
             (set @entity.score 0)
             (set @entity.done false)
-            (set @entity.promptText (object/get @first prompt))
-            (set @entity.promptHint (object/get @first hint ""))
-            (set @entity.answer (object/get @first answer))
-            (set @entity.unit (object/get @first unit ""))
+            (set @entity.promptText (if (== @first null) "" (object/get @first prompt)))
+            (set @entity.promptHint (if (== @first null) "" (object/get @first hint "")))
+            (set @entity.answer (if (== @first null) 0 (object/get @first answer)))
+            (set @entity.unit (if (== @first null) "" (object/get @first unit "")))
             (set @entity.feedback "")
             (set @entity.view [
               { type: card, variant: bordered, padding: md, children: [
@@ -211,7 +211,7 @@ orbital EstimateOrbital {
         (render-ui main null)
 
       SET_ESTIMATE -> idle when (and (== @entity.active true) (and (== @entity.locked false) (== @entity.done false)))
-        (set @entity.estimate (math/clamp ?value @config.sliderMin @config.sliderMax))
+        (set @entity.estimate (math/clamp (default ?value @entity.estimate) @config.sliderMin @config.sliderMax))
         (set @entity.view [
           { type: card, variant: bordered, padding: md, children: [
               { type: typography, variant: body, content: @entity.promptText },
@@ -310,10 +310,10 @@ orbital EstimateOrbital {
             (set @entity.locked false)
             (set @entity.band "")
             (set @entity.estimate @config.sliderDefault)
-            (set @entity.promptText (if @finished @entity.promptText (object/get @next prompt)))
-            (set @entity.promptHint (if @finished @entity.promptHint (object/get @next hint "")))
-            (set @entity.answer (if @finished @entity.answer (object/get @next answer)))
-            (set @entity.unit (if @finished @entity.unit (object/get @next unit "")))
+            (set @entity.promptText (if @finished @entity.promptText (if (== @next null) "" (object/get @next prompt))))
+            (set @entity.promptHint (if @finished @entity.promptHint (if (== @next null) "" (object/get @next hint ""))))
+            (set @entity.answer (if @finished @entity.answer (if (== @next null) 0 (object/get @next answer))))
+            (set @entity.unit (if @finished @entity.unit (if (== @next null) "" (object/get @next unit ""))))
             (set @entity.feedback "")
             (set @entity.view (if @finished
               [
@@ -370,10 +370,10 @@ orbital EstimateOrbital {
             (set @entity.band "")
             (set @entity.score 0)
             (set @entity.done false)
-            (set @entity.promptText (object/get @first prompt))
-            (set @entity.promptHint (object/get @first hint ""))
-            (set @entity.answer (object/get @first answer))
-            (set @entity.unit (object/get @first unit ""))
+            (set @entity.promptText (if (== @first null) "" (object/get @first prompt)))
+            (set @entity.promptHint (if (== @first null) "" (object/get @first hint "")))
+            (set @entity.answer (if (== @first null) 0 (object/get @first answer)))
+            (set @entity.unit (if (== @first null) "" (object/get @first unit "")))
             (set @entity.feedback "")
             (set @entity.view [
               { type: card, variant: bordered, padding: md, children: [

@@ -12,7 +12,7 @@ const OS_EFFECTS = [
   'os/network-interfaces', 'os/network-stats', 'os/notify', 'os/open', 'os/pid', 'os/ppid', 'os/read', 'os/read-file', 'os/readlink', 'os/realpath', 'os/recv', 'os/recvfrom', 'os/remove',
   'os/rename', 'os/rmdir', 'os/seek', 'os/send', 'os/sendto', 'os/setenv', 'os/shutdown', 'os/spawn', 'os/speak', 'os/stat', 'os/stderr-write', 'os/stdin-read', 'os/stdout-write',
   'os/suspend', 'os/symlink', 'os/tcp-connect', 'os/tcp-listen', 'os/thermal-zones', 'os/truncate', 'os/tty-size', 'os/udp-bind', 'os/uid', 'os/uname', 'os/unsetenv', 'os/uptime',
-  'os/username', 'os/utimes', 'os/volume-get', 'os/volume-mute', 'os/volume-set', 'os/wait', 'os/watch-cron', 'os/watch-env', 'os/watch-files', 'os/watch-http', 'os/watch-port',
+  'os/username', 'os/utimes', 'os/volume-get', 'os/volume-mute', 'os/volume-set', 'os/wait', 'os/watch-cron', 'os/watch-env', 'os/watch-files', 'os/watch-port',
   'os/watch-process', 'os/watch-signal', 'os/write', 'os/write-file',
 ];
 

@@ -374,7 +374,7 @@ orbital SocialGraphOrbital {
 
     state loadingPending {
       INIT -> idle
-      PendingLoaded -> idle when (or (= (array/len ?data) 0) (and (= @entity.reqOp "badges") (!= (object/get (array/first ?data) kind "") "badges")) (and (!= @entity.reqOp "badges") (!= (object/get (array/first ?data) kind "") "moderation")))
+      PendingLoaded -> idle when (or (= (array/len ?data) 0) (and (= @entity.reqOp "badges") (!= (object/get (default (array/first ?data) {}) kind "") "badges")) (and (!= @entity.reqOp "badges") (!= (object/get (default (array/first ?data) {}) kind "") "moderation")))
         (emit SOCIAL_CONNECTION_REJECTED { reason: "unknown-key" })
       PendingLoaded -> opening when (and (> (array/len ?data) 0) (= @entity.reqOp "badges") (= (object/get (array/first ?data) kind "") "badges"))
         (set @entity.pendingId (object/get (array/first ?data) id ""))
@@ -403,13 +403,13 @@ orbital SocialGraphOrbital {
 
     state loadingConn {
       INIT -> idle
-      ConnLoaded -> idle when (not (and (> (array/len ?data) 0) (array/includes (object/get (array/first ?data) participants (json/parse "[]" SocialStrings)) @entity.reqMember)))
+      ConnLoaded -> idle when (not (and (> (array/len ?data) 0) (array/includes (let ((noSocialStrings : SocialStrings [])) (object/get (array/first ?data) participants @noSocialStrings)) @entity.reqMember)))
         (emit SOCIAL_CONNECTION_REJECTED { reason: "not-found" })
-      ConnLoaded -> archiving when (and (and (> (array/len ?data) 0) (array/includes (object/get (array/first ?data) participants (json/parse "[]" SocialStrings)) @entity.reqMember)) (and (= (object/get (array/first ?data) status "") "active") (>= (- @now (object/get (array/first ?data) lastActivityAt 0)) (* @config.dormantDays 86400000))))
+      ConnLoaded -> archiving when (and (and (> (array/len ?data) 0) (array/includes (let ((noSocialStrings : SocialStrings [])) (object/get (array/first ?data) participants @noSocialStrings)) @entity.reqMember)) (and (= (object/get (array/first ?data) status "") "active") (>= (- @now (object/get (array/first ?data) lastActivityAt 0)) (* @config.dormantDays 86400000))))
         (set @entity.scratchConn ?data)
         (set @entity.scratchStatus "archived")
         (persist update SocialConnection { id: @entity.reqConnection, status: "archived", archivedAt: @now } { emit: { success: ConnArchived, failure: ConnFailed } })
-      ConnLoaded -> routing when (and (and (> (array/len ?data) 0) (array/includes (object/get (array/first ?data) participants (json/parse "[]" SocialStrings)) @entity.reqMember)) (not (and (= (object/get (array/first ?data) status "") "active") (>= (- @now (object/get (array/first ?data) lastActivityAt 0)) (* @config.dormantDays 86400000)))))
+      ConnLoaded -> routing when (and (and (> (array/len ?data) 0) (array/includes (let ((noSocialStrings : SocialStrings [])) (object/get (array/first ?data) participants @noSocialStrings)) @entity.reqMember)) (not (and (= (object/get (array/first ?data) status "") "active") (>= (- @now (object/get (array/first ?data) lastActivityAt 0)) (* @config.dormantDays 86400000)))))
         (set @entity.scratchConn ?data)
         (set @entity.scratchStatus (object/get (array/first ?data) status ""))
         (emit ConnReady)
@@ -431,19 +431,19 @@ orbital SocialGraphOrbital {
         (fetch SocialMessage { filter: (= (object/get @entity connectionId) @entity.reqConnection), orderBy: "sentAt:desc", limit: @config.pageSize, offset: 0, emit: { success: MessagesLoaded, failure: ConnFailed } })
       ConnReady -> idle when (and (!= @entity.reqOp "view") (= @entity.scratchStatus "archived"))
         (emit SOCIAL_CONNECTION_REJECTED { reason: "archived" })
-      ConnReady -> idle when (and (= @entity.reqOp "badge") (!= @entity.scratchStatus "archived") (not (array/some (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge)))))
+      ConnReady -> idle when (and (= @entity.reqOp "badge") (!= @entity.scratchStatus "archived") (not (array/some (let ((noSocialBadges : SocialBadges [])) (object/get (default (array/first @entity.scratchConn) {}) badges @noSocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge)))))
         (emit SOCIAL_CONNECTION_REJECTED { reason: "badge-not-found" })
-      ConnReady -> saving when (and (= @entity.reqOp "badge") (!= @entity.scratchStatus "archived") (array/some (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge))))
+      ConnReady -> saving when (and (= @entity.reqOp "badge") (!= @entity.scratchStatus "archived") (array/some (let ((noSocialBadges : SocialBadges [])) (object/get (default (array/first @entity.scratchConn) {}) badges @noSocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge))))
         (persist update SocialConnection { id: @entity.reqConnection, activeBadgeId: @entity.reqBadge } { emit: { success: BadgeStored, failure: ConnFailed } })
-      ConnReady -> idle when (and (= @entity.reqOp "send") (!= @entity.scratchStatus "archived") (!= @entity.reqBadge "") (not (array/some (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge)))))
+      ConnReady -> idle when (and (= @entity.reqOp "send") (!= @entity.scratchStatus "archived") (!= @entity.reqBadge "") (not (array/some (let ((noSocialBadges : SocialBadges [])) (object/get (default (array/first @entity.scratchConn) {}) badges @noSocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge)))))
         (emit SOCIAL_CONNECTION_REJECTED { reason: "badge-not-found" })
-      ConnReady -> saving when (and (= @entity.reqOp "send") (!= @entity.scratchStatus "archived") (or (= @entity.reqBadge "") (array/some (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge)))))
+      ConnReady -> saving when (and (= @entity.reqOp "send") (!= @entity.scratchStatus "archived") (or (= @entity.reqBadge "") (array/some (let ((noSocialBadges : SocialBadges [])) (object/get (default (array/first @entity.scratchConn) {}) badges @noSocialBadges)) (fn b (= (object/get @b id "") @entity.reqBadge)))))
         (persist create SocialMessage {
           connectionId: @entity.reqConnection
           senderId: @entity.reqMember
           content: @entity.reqContent
           sentAt: @now
-          badgeId: (if (= @entity.reqBadge "") (object/get (array/first @entity.scratchConn) activeBadgeId "") @entity.reqBadge)
+          badgeId: (if (= @entity.reqBadge "") (object/get (default (array/first @entity.scratchConn) {}) activeBadgeId "") @entity.reqBadge)
           flagged: false
           moderationScore: 1
           moderationReason: ""
@@ -454,20 +454,20 @@ orbital SocialGraphOrbital {
 
     state loadingMessages {
       INIT -> idle
-      MessagesLoaded -> idle when (= (hash/sha256 (if (= (object/get (array/first @entity.scratchConn) callerId "") @entity.reqMember) (object/get (array/first @entity.scratchConn) peerId "") (object/get (array/first @entity.scratchConn) callerId "")) "hex") null)
+      MessagesLoaded -> idle when (= (hash/sha256 (if (= (object/get (default (array/first @entity.scratchConn) {}) callerId "") @entity.reqMember) (object/get (default (array/first @entity.scratchConn) {}) peerId "") (object/get (default (array/first @entity.scratchConn) {}) callerId "")) "hex") null)
         (emit SOCIAL_CONNECTION_FAILED { error: "the peer handle could not be derived" })
-      MessagesLoaded -> idle when (!= (hash/sha256 (if (= (object/get (array/first @entity.scratchConn) callerId "") @entity.reqMember) (object/get (array/first @entity.scratchConn) peerId "") (object/get (array/first @entity.scratchConn) callerId "")) "hex") null)
+      MessagesLoaded -> idle when (!= (hash/sha256 (if (= (object/get (default (array/first @entity.scratchConn) {}) callerId "") @entity.reqMember) (object/get (default (array/first @entity.scratchConn) {}) peerId "") (object/get (default (array/first @entity.scratchConn) {}) callerId "")) "hex") null)
         (let ((vconn (array/first @entity.scratchConn)))
-          (emit SOCIAL_VIEWED {
+          (if (= @vconn null) (emit SOCIAL_CONNECTION_FAILED { error: "the connection was not loaded" }) (emit SOCIAL_VIEWED {
             connectionId: @entity.reqConnection
             status: @entity.scratchStatus
-            peerHandle: (str/concat "peer-" (str/slice (hash/sha256 (if (= (object/get (array/first @entity.scratchConn) callerId "") @entity.reqMember) (object/get (array/first @entity.scratchConn) peerId "") (object/get (array/first @entity.scratchConn) callerId "")) "hex") 0 6))
+            peerHandle: (str/concat "peer-" (str/slice (default (hash/sha256 (if (= (object/get @vconn callerId "") @entity.reqMember) (object/get @vconn peerId "") (object/get @vconn callerId "")) "hex") "") 0 6))
             originKind: (object/get @vconn originKind "")
             originLabel: (object/get @vconn originId "")
-            badges: (array/map (object/get @vconn badges (json/parse "[]" SocialBadges)) (fn b { id: (object/get @b id ""), label: (object/get @b label ""), kind: (object/get @b kind ""), active: (= (object/get @b id "") (object/get @vconn activeBadgeId "")) }))
+            badges: (array/map (let ((noSocialBadges : SocialBadges [])) (object/get @vconn badges @noSocialBadges)) (fn b { id: (object/get @b id ""), label: (object/get @b label ""), kind: (object/get @b kind ""), active: (= (object/get @b id "") (object/get @vconn activeBadgeId "")) }))
             totalCount: ?totalCount
             messages: (array/map (array/sort ?data "sentAt" "asc") (fn m { id: (object/get @m id ""), fromViewer: (= (object/get @m senderId "") @entity.reqMember), content: (object/get @m content ""), createdAt: (object/get @m sentAt 0), flagged: (object/get @m flagged false), moderationReason: (object/get @m moderationReason "") }))
-          }))
+          })))
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
     }
@@ -488,7 +488,7 @@ orbital SocialGraphOrbital {
         (emit SOCIAL_SENT { messageId: @entity.resultMessage })
       ActivityStored -> idle when @config.moderationFromLlm
         (emit SOCIAL_SENT { messageId: @entity.resultMessage })
-        (persist create SocialPending { id: (str/concat "social-moderation:" @entity.resultMessage), kind: "moderation", memberId: @entity.reqMember, messageId: @entity.resultMessage, content: @entity.reqContent, badgeLabel: (object/get (array/find (object/get (array/first @entity.scratchConn) badges (json/parse "[]" SocialBadges)) (fn b (= (object/get @b id "") (if (= @entity.reqBadge "") (object/get (array/first @entity.scratchConn) activeBadgeId "") @entity.reqBadge)))) label "") } { emit: { success: PendingStored, failure: ConnFailed } })
+        (persist create SocialPending { id: (str/concat "social-moderation:" @entity.resultMessage), kind: "moderation", memberId: @entity.reqMember, messageId: @entity.resultMessage, content: @entity.reqContent, badgeLabel: (object/get (array/find (let ((noSocialBadges : SocialBadges [])) (object/get (array/first @entity.scratchConn) badges @noSocialBadges)) (fn b (= (object/get @b id "") (if (= @entity.reqBadge "") (object/get (array/first @entity.scratchConn) activeBadgeId "") @entity.reqBadge)))) label "") } { emit: { success: PendingStored, failure: ConnFailed } })
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
     }

@@ -171,14 +171,17 @@ orbital LearnDiagramOrbital {
 
       SELECT_PART -> idle when (== @entity.active true)
         (let (
-            (idx (array/first (array/filter (array/range (array/len @entity.parts)) (fn i (== (object/get (array/nth @entity.parts @i) id) ?partId)))))
+            (idx (default (array/first (array/filter (array/range (array/len @entity.parts)) (fn i (== (object/get (default (array/nth @entity.parts @i) { id: "", label: "", x: 0, y: 0 }) id) ?partId)))) -1))
             (part (array/nth @entity.parts @idx))
           )
-          (do
-            (set @entity.selectedId ?partId)
-            (set @entity.selectedIndex @idx)
-            (set @entity.captionText (object/get @part description))
-            (set @entity.readoutText (str/concat "Part " (str/concat "" (+ @idx 1)) " of " (str/concat "" (array/len @entity.parts)) " selected: " (object/get @part label)))
+          (if (!= @part null)
+            (do
+              (set @entity.selectedId ?partId)
+              (set @entity.selectedIndex @idx)
+              (set @entity.captionText (object/get @part description))
+              (set @entity.readoutText (str/concat "Part " (str/concat "" (+ @idx 1)) " of " (str/concat "" (array/len @entity.parts)) " selected: " (object/get @part label)))
+            )
+            null
           )
         )
         (let (

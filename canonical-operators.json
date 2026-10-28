@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-28T11:45:58.721Z",
+  "generated": "2026-10-28T13:18:06.639Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -1276,10 +1276,19 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": {
-        "kind": "var",
-        "name": "T"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "var",
+            "name": "T"
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
       },
-      "description": "Find first element matching predicate (element type of input array, undefined when no match)",
+      "description": "Find first element matching predicate (element type of input array; null when nothing matches)",
       "module": "array",
       "lambdaArgPosition": 1,
       "title": "Find",
@@ -1361,10 +1370,19 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": {
-        "kind": "var",
-        "name": "T"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "var",
+            "name": "T"
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
       },
-      "description": "Get first element (element type of input array, may be undefined when empty)",
+      "description": "Get first element (element type of input array; null when the array is empty)",
       "module": "array",
       "title": "First",
       "params": [
@@ -1435,7 +1453,7 @@
           }
         }
       },
-      "description": "Group elements by field value",
+      "description": "Group elements by the text of a field or of a key function; an item whose key is missing, null or not text is an error",
       "module": "array",
       "title": "Group By",
       "params": [
@@ -1598,10 +1616,19 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": {
-        "kind": "var",
-        "name": "T"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "var",
+            "name": "T"
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
       },
-      "description": "Get last element (element type of input array, may be undefined when empty)",
+      "description": "Get last element (element type of input array; null when the array is empty)",
       "module": "array",
       "title": "Last",
       "params": [
@@ -1844,10 +1871,19 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": {
-        "kind": "var",
-        "name": "T"
+        "kind": "union",
+        "of": [
+          {
+            "kind": "var",
+            "name": "T"
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
       },
-      "description": "Get element at index (element type of input array, may be undefined out-of-bounds). A pair or tuple of unlike types (an entry of object/entries) is indexed too; its element type is then not determined",
+      "description": "Get element at index (element type of input array; null out of bounds). A pair or tuple of unlike types (an entry of object/entries) is indexed too; its element type is then not determined",
       "module": "array",
       "returnSemantics": "tuple-element",
       "title": "Nth",
@@ -19534,34 +19570,6 @@
       ],
       "docsSource": "generated"
     },
-    "os/watch-http": {
-      "category": "std-os",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": "void",
-      "description": "Register HTTP response interceptor. Emits OS_HTTP_RESPONSE events with { url, method, status, headers, body, duration } payload.",
-      "module": "os",
-      "hasSideEffects": true,
-      "runsOn": "server",
-      "title": "Watch HTTP",
-      "params": [
-        {
-          "name": "urlPattern",
-          "type": "string",
-          "description": "URL pattern to intercept (e.g., \"https://api.example.com/*\")"
-        },
-        {
-          "name": "method",
-          "type": "string",
-          "description": "HTTP method filter (e.g., \"POST\")",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(os/watch-http \"https://api.example.com\")"
-      ],
-      "docsSource": "generated"
-    },
     "os/watch-port": {
       "category": "std-os",
       "minArity": 2,
@@ -25499,37 +25507,6 @@
       ],
       "examples": [
         "(tree/index [[\"emit\",\"A\"],[\"if\",true,[\"emit\",\"B\"]]] [\"emit\"]) // => {\"emit\": [{\"path\": \"[0]\", \"node\": [\"emit\", \"A\"]}, {\"path\": \"[1][2]\", \"node\": [\"emit\", \"B\"]}]}"
-      ],
-      "docsSource": "generated"
-    },
-    "typed": {
-      "category": "logic",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "var",
-        "name": "T"
-      },
-      "description": "Resolved IR only, never written in .lolo: a static ascription. The declared type (a `let` local annotation, a knob's type) is the validator's; the kernel evaluates the value and answers it, checking nothing at run time. A run-time shape check is `as T` or `json/parse T`.",
-      "module": "core",
-      "returnSemantics": "identity-of-arg<0>",
-      "params": [
-        {
-          "name": "value",
-          "type": {
-            "kind": "var",
-            "name": "T"
-          },
-          "description": "The argument value"
-        },
-        {
-          "name": "type",
-          "type": "string",
-          "description": "The declared type, as the JSON of an IR type (read by the validator only)"
-        }
-      ],
-      "examples": [
-        "(typed @entity.via \"{\\\"kind\\\":\\\"array\\\",\\\"inner\\\":{\\\"kind\\\":\\\"sexpr\\\"}}\")"
       ],
       "docsSource": "generated"
     },

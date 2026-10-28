@@ -4,7 +4,7 @@ app std-api-key-verifier [
 ]
 uses Spec from "almadar-std/api-key-verifier"
 type KeyClaim = { name : string!, value : string! }
-type KeyJob = { requestId : number, token : string }
+type KeyJob = { requestId : number, token : string! }
 orbital ApiKeyVerifierOrbital {
   type VERIFY_KEY = Event { requestId : number, token : string! } "Verify one presented bearer."
 
@@ -36,14 +36,14 @@ orbital ApiKeyVerifierOrbital {
       VERIFY_KEY -> idle when (>= (array/len @entity.queue) @config.maxQueue)
         (emit API_KEY_REFUSED { requestId: (default @payload.requestId 0), reason: "busy", message: "too many API keys waiting" })
       KEY_PUMP -> idle when (= (array/len @entity.queue) 0)
-      KEY_PUMP -> idle when (and (> (array/len @entity.queue) 0) (!= (str/slice (object/get (array/first @entity.queue) "token") 0 (str/len @config.prefix)) @config.prefix))
+      KEY_PUMP -> idle when (and (> (array/len @entity.queue) 0) (!= (str/slice (default (object/get (array/first @entity.queue) "token") "") 0 (str/len @config.prefix)) @config.prefix))
         (emit API_KEY_REFUSED { requestId: (default (object/get (array/first @entity.queue) "requestId") 0), reason: "not-a-key", message: "not an API key" })
         (set @entity.queue (array/slice @entity.queue 1))
         (emit KEY_NEXT {})
       KEY_NEXT -> idle
         (emit KEY_PUMP {})
-      KEY_PUMP -> looking when (and (> (array/len @entity.queue) 0) (= (str/slice (object/get (array/first @entity.queue) "token") 0 (str/len @config.prefix)) @config.prefix))
-        (let ((tok (object/get (array/first @entity.queue) "token")) (rq (default (object/get (array/first @entity.queue) "requestId") 0)))
+      KEY_PUMP -> looking when (and (> (array/len @entity.queue) 0) (= (str/slice (default (object/get (array/first @entity.queue) "token") "") 0 (str/len @config.prefix)) @config.prefix))
+        (let ((tok (default (object/get (array/first @entity.queue) "token") "")) (rq (default (object/get (array/first @entity.queue) "requestId") 0)))
           (do
             (set @entity.requestId @rq)
             (set @entity.queue (array/slice @entity.queue 1))
