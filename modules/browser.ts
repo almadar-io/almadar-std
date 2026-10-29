@@ -18,9 +18,9 @@ import { BOOLEAN, BYTES, NUMBER, STRING, list, lit, mapOf, nullable, openShape, 
 
 const EVENT_KEY: OperatorTypeRef = { kind: 'eventKey' };
 
-const PAGE_FACT_FIELD: OperatorTypeRef = union(lit('hostname'), lit('referrer'), lit('screenWidth'));
+const PAGE_FACT_FIELD: OperatorTypeRef = union(lit('hostname'), lit('referrer'), lit('screenWidth'), lit('href'));
 
-const PAGE_FACTS_PRODUCES = shape({ available: BOOLEAN, hostname: STRING, referrer: STRING, screenWidth: nullable(NUMBER) });
+const PAGE_FACTS_PRODUCES = shape({ available: BOOLEAN, hostname: STRING, referrer: STRING, screenWidth: nullable(NUMBER), href: STRING });
 
 const BEACON_PRODUCES = shape({ sent: BOOLEAN, via: union(lit('queue'), lit('fetch')), status: nullable(NUMBER), key: nullable(STRING) });
 
@@ -210,7 +210,7 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1,
     maxArity: 2,
     description:
-      'Read the requested page facts (hostname, referrer, screenWidth) in list order. Resolves with { available, hostname, referrer, screenWidth } via the trailing { emit } envelope; a fact that was not requested keeps its default and is not readable. Without a page (no window or document) available is false, hostname and referrer are empty and screenWidth is null. A getter that throws emits failure { error }, which is not the no-page outcome.',
+      'Read the requested page facts (hostname, referrer, screenWidth, href) in list order. Resolves with { available, hostname, referrer, screenWidth, href } via the trailing { emit } envelope; a fact that was not requested keeps its default and is not readable. Without a page (no window or document) available is false, hostname, referrer and href are empty and screenWidth is null; href is the full URL of the current location. A getter that throws emits failure { error }, which is not the no-page outcome.',
     hasSideEffects: true,
     runsOn: 'client',
     returnType: PAGE_FACTS_PRODUCES,
@@ -218,7 +218,7 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
       {
         name: 'fields',
         type: list(PAGE_FACT_FIELD),
-        description: 'A non-empty, duplicate-free list of bare words from hostname | referrer | screenWidth; the list order is the read order',
+        description: 'A non-empty, duplicate-free list of bare words from hostname | referrer | screenWidth | href; the list order is the read order',
       },
       {
         name: 'options',

@@ -197,12 +197,12 @@ describe('host effect and key metadata', () => {
     expect(Object.keys(fields(options))).toEqual(['appName', 'layout', 'theme']);
   });
 
-  it('carries a key only on the ask families that echo one: call/http/redis/postgres, random-bytes, oauth-authorize, os/, kv/, browser/ and the program host', () => {
+  it('carries a key only on the ask families that echo one: call/http/redis/postgres, random-bytes, oauth-authorize, os/, kv/, browser/, auth/sign-in and the program host', () => {
     const keyed = Object.entries(STD_OPERATORS).filter(([, m]) => m.params?.some((p) => typeof p.type === 'object' && p.type.kind === 'object' && 'key' in p.type.fields)).map(([name]) => name);
     const allowed = new Set(['call-service', 'http', 'redis', 'postgres', 'random-bytes', 'oauth-authorize']);
     for (const name of keyed) {
       const m = STD_OPERATORS[name];
-      expect(allowed.has(name) || name.startsWith('os/') || name.startsWith('kv/') || name.startsWith('browser/') || m.host === 'program', name).toBe(true);
+      expect(allowed.has(name) || name.startsWith('os/') || name.startsWith('kv/') || name.startsWith('browser/') || name === 'auth/sign-in' || m.host === 'program', name).toBe(true);
     }
     for (const name of ['fetch', 'persist', 'fetch-stream', 'credential-set']) expect(keyed, name).not.toContain(name);
   });

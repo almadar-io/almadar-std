@@ -10,6 +10,8 @@ uses Spec from "almadar-std/lint-binding-traits"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type BtShape = string | number | boolean | [BtShape?] | Map string BtShape?
+type BtNodes = [BtShape?]
+type BtS = string
 type BtCfg = { type : string, default : BtShape? }
 type BtTransition = { guard : BtShape?, effects : [BtShape] }
 type BtTick = { guard : BtShape?, effects : [BtShape] }
@@ -131,7 +133,7 @@ orbital OrbLintBindingTraitsOrbital {
                          (array/concat
                            (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn tr (array/map (array/filter (object/get @tr "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r })))))
                            (array/flatten (array/map (object/get @t "ticks" []) (fn tk (array/map (array/filter (object/get @tk "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))
-                         (fn e (tree/fold @e (fn (n k) (if (validate/string @n) (if (and (str/startsWith @n @tP2) (!= (array/first (str/split (array/first (str/split (str/slice @n 7) ".")) "[")) "")) [(array/first (str/split (str/slice @n 7) "."))] @nostr) (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nostr @r)))) (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @nostr @r)))) @nostr)))) BtShape)))))]))))
+                         (fn e (array/map (array/filter (array/map (array/filter (default (as (json/nodes @e) BtNodes) []) (fn y (validate/string @y))) (fn y (default (as @y BtS) ""))) (fn y (and (str/startsWith @y @tP2) (!= (array/first (str/split (array/first (str/split (str/slice @y 7) ".")) "[")) "")))) (fn y (array/first (str/split (str/slice @y 7) "."))))))))]))))
    {})))
               (if (= (array/len (array/flatten (object/values @adj))) 0)
                 @nof

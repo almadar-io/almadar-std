@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-29T09:35:05.306Z",
+  "generated": "2026-10-29T10:02:59.336Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -2873,9 +2873,9 @@
         }
       ],
       "examples": [
-        "(auth/sign-in \"email\" \"ada@example.com\" \"secret\")"
+        "(auth/sign-in {\"method\":\"email\",\"email\":\"ada@example.com\",\"password\":\"secret\"} {\"emit\":{\"success\":\"SIGNED_IN\",\"failure\":\"SIGN_IN_FAILED\"}})"
       ],
-      "docsSource": "generated"
+      "docsSource": "module"
     },
     "auth/sign-out": {
       "category": "std-auth",
@@ -4587,10 +4587,11 @@
                 "value": null
               }
             ]
-          }
+          },
+          "href": "string"
         }
       },
-      "description": "Read the requested page facts (hostname, referrer, screenWidth) in list order. Resolves with { available, hostname, referrer, screenWidth } via the trailing { emit } envelope; a fact that was not requested keeps its default and is not readable. Without a page (no window or document) available is false, hostname and referrer are empty and screenWidth is null. A getter that throws emits failure { error }, which is not the no-page outcome.",
+      "description": "Read the requested page facts (hostname, referrer, screenWidth, href) in list order. Resolves with { available, hostname, referrer, screenWidth, href } via the trailing { emit } envelope; a fact that was not requested keeps its default and is not readable. Without a page (no window or document) available is false, hostname, referrer and href are empty and screenWidth is null; href is the full URL of the current location. A getter that throws emits failure { error }, which is not the no-page outcome.",
       "module": "browser",
       "hasSideEffects": true,
       "effect": {
@@ -4610,7 +4611,8 @@
                   "value": null
                 }
               ]
-            }
+            },
+            "href": "string"
           }
         }
       },
@@ -4638,11 +4640,15 @@
                 {
                   "kind": "literal",
                   "value": "screenWidth"
+                },
+                {
+                  "kind": "literal",
+                  "value": "href"
                 }
               ]
             }
           },
-          "description": "A non-empty, duplicate-free list of bare words from hostname | referrer | screenWidth; the list order is the read order"
+          "description": "A non-empty, duplicate-free list of bare words from hostname | referrer | screenWidth | href; the list order is the read order"
         },
         {
           "name": "options",
