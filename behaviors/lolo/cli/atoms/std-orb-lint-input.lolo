@@ -60,10 +60,10 @@ type OperatorTable = { operators : Map string OperatorEntry! }
 type PatternProp = { kind : string, eventField : string }
 type PatternEntry = { propsSchema : Map string PatternProp }
 type PatternRegistry = { patterns : Map string PatternEntry! }
-type PatternRegProp = { types : [string], enumValues : [string], required : boolean | [string], kind : string, itemKind : string, payloadFor : string, requiredFields : [string], items : PatternRegProp?, properties : Map string PatternRegProp? }
+type PatternRegProp = { types : [string], enumValues : [string], required : boolean | [string], kind : string, itemKind : string, cardinality : string, payloadFor : string, requiredFields : [string], items : PatternRegProp?, properties : Map string PatternRegProp? }
 type PatternRegEntry = { requiresAction : boolean, drawHost : boolean, drawable : boolean, fieldsContract : string, accessibleName : [string], propsSchema : Map string PatternRegProp }
 type PatternRegFile = { patterns : Map string PatternRegEntry! }
-type PatternPropShape = { types : [string]!, requiredOnParent : boolean!, requiredNames : [string]!, enumValues : [string]?, kind : string?, itemKind : string?, payloadFor : string?, requiredFields : [string]?, items : PatternPropShape?, properties : Map string PatternPropShape? }
+type PatternPropShape = { types : [string]!, requiredOnParent : boolean!, requiredNames : [string]!, enumValues : [string]?, kind : string?, itemKind : string?, cardinality : string?, payloadFor : string?, requiredFields : [string]?, items : PatternPropShape?, properties : Map string PatternPropShape? }
 type PatternShape = { requiresAction : boolean!, drawHost : boolean!, drawable : boolean!, fieldsContract : string!, accessibleName : [string]?, props : Map string PatternPropShape? }
 type ProgTypeNode = { type : string!, required : boolean, nullable : boolean, items : ProgTypeNode, properties : Map string ProgTypeNode, values : [string] }
 type ProgTypeFile = Map string ProgTypeNode
@@ -277,6 +277,7 @@ orbital OrbLintInputOrbital {
                         { types: (array/filter (object/get @node "types" []) (fn t (!= @t "unknown"))), requiredOnParent: (let ((rq (object/get @node "required" false))) (and (validate/boolean @rq) (= @rq true))), requiredNames: (let ((rq (object/get @node "required" false))) (if (validate/array @rq) @rq [])) }
                         (if (!= (object/get @node "kind" "") "") { kind: (object/get @node "kind") } {})
                         (if (!= (object/get @node "itemKind" "") "") { itemKind: (object/get @node "itemKind") } {})
+                        (if (!= (object/get @node "cardinality" "") "") { cardinality: (object/get @node "cardinality") } {})
                         (if (!= (object/get @node "payloadFor" "") "") { payloadFor: (object/get @node "payloadFor") } {})
                         (if (object/has @node "requiredFields") { requiredFields: (object/get @node "requiredFields") } {})
                         (if (object/has @node "enumValues") { enumValues: (object/get @node "enumValues") } {})

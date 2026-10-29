@@ -1,7 +1,7 @@
 {
  "atom": "cli/atoms/std-orb-lint-circuit-item-actions.lolo",
  "trait": "OrbLintCircuitItemActions",
- "note": "Cases mirror closed_circuit.rs extract_item_actions with validate_orphan_events, validate_dead_handlers and validate_duplicate_events, with the VALUE_LEAVES answers of std-orb-value-leaves for each program's itemActions and actions values (conditional branches, concatenation, mapped lambda, slice) and paired controls. Expected findings are the code, path, message and suggestion the Rust validator reports for the same program.",
+ "note": "Cases mirror closed_circuit.rs extract_item_actions with validate_orphan_events, validate_dead_handlers and validate_duplicate_events, validate_action_component_match and validate_state_appropriate_actions (the pattern registry arrives as PATTERNS_HEARD), with the VALUE_LEAVES answers of std-orb-value-leaves for each program's itemActions and actions values (conditional branches, concatenation, mapped lambda, slice) and paired controls. Expected findings are the code, path, message and suggestion the Rust validator reports for the same program.",
  "cases": [
   {
    "id": "action-event-no-transition-handles",
@@ -3980,6 +3980,1900 @@
            "severity": "error"
           }
          ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-invalid-action-on-a-component-is-a-mismatch",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "table-view",
+                 "entity": "Task",
+                 "actions": [
+                  {
+                   "label": "Go",
+                   "event": "CREATE"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "CREATE"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "VALUE_LEAVES_ASK",
+        "payload": {
+         "requestId": "",
+         "values": [
+          [
+           {
+            "label": "Go",
+            "event": "CREATE"
+           }
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LEAVES_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "",
+      "leaves": [
+       [
+        "[{\"label\":\"Go\",\"event\":\"CREATE\"}]"
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-item-actions",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_ACTION_COMPONENT_MISMATCH",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.actions",
+           "message": "Action 'CREATE' is not valid on 'table-view' component",
+           "suggestion": "Valid actions for 'table-view': VIEW, EDIT, DELETE, SELECT, SORT, PAGE. Invalid: SAVE, CANCEL, SUBMIT, CREATE, CLOSE",
+           "severity": "error",
+           "validValues": [
+            "VIEW",
+            "EDIT",
+            "DELETE",
+            "SELECT",
+            "SORT",
+            "PAGE"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-valid-action-on-a-component-is-clean",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "table-view",
+                 "entity": "Task",
+                 "actions": [
+                  {
+                   "label": "Go",
+                   "event": "VIEW"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "VIEW"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "VALUE_LEAVES_ASK",
+        "payload": {
+         "requestId": "",
+         "values": [
+          [
+           {
+            "label": "Go",
+            "event": "VIEW"
+           }
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LEAVES_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "",
+      "leaves": [
+       [
+        "[{\"label\":\"Go\",\"event\":\"VIEW\"}]"
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-item-actions",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-form-action-in-a-state-with-no-form-pattern",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "table-view",
+                 "entity": "Task",
+                 "actions": [
+                  {
+                   "label": "Go",
+                   "event": "SAVE"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "VALUE_LEAVES_ASK",
+        "payload": {
+         "requestId": "",
+         "values": [
+          [
+           {
+            "label": "Go",
+            "event": "SAVE"
+           }
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LEAVES_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "",
+      "leaves": [
+       [
+        "[{\"label\":\"Go\",\"event\":\"SAVE\"}]"
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-item-actions",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_ACTION_COMPONENT_MISMATCH",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.actions",
+           "message": "Action 'SAVE' is not valid on 'table-view' component",
+           "suggestion": "Valid actions for 'table-view': VIEW, EDIT, DELETE, SELECT, SORT, PAGE. Invalid: SAVE, CANCEL, SUBMIT, CREATE, CLOSE",
+           "severity": "error",
+           "validValues": [
+            "VIEW",
+            "EDIT",
+            "DELETE",
+            "SELECT",
+            "SORT",
+            "PAGE"
+           ]
+          },
+          {
+           "code": "CIRCUIT_ACTION_COMPONENT_MISMATCH",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.actions",
+           "message": "Form action 'SAVE' in state 'idle' which renders non-form patterns: {\"table-view\"}",
+           "suggestion": "Form actions should be used in states that render form patterns",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-form-action-in-a-state-that-paints-a-form",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "form",
+                 "entity": "Task",
+                 "actions": [
+                  {
+                   "label": "Go",
+                   "event": "SAVE"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "VALUE_LEAVES_ASK",
+        "payload": {
+         "requestId": "",
+         "values": [
+          [
+           {
+            "label": "Go",
+            "event": "SAVE"
+           }
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LEAVES_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "",
+      "leaves": [
+       [
+        "[{\"label\":\"Go\",\"event\":\"SAVE\"}]"
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-item-actions",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-list-action-is-reported-in-every-painted-state-while-no-pattern-is-a-list",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "page-header",
+                 "entity": "Task",
+                 "actions": [
+                  {
+                   "label": "Go",
+                   "event": "SORT"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SORT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "VALUE_LEAVES_ASK",
+        "payload": {
+         "requestId": "",
+         "values": [
+          [
+           {
+            "label": "Go",
+            "event": "SORT"
+           }
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LEAVES_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "",
+      "leaves": [
+       [
+        "[{\"label\":\"Go\",\"event\":\"SORT\"}]"
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-item-actions",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_ACTION_COMPONENT_MISMATCH",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.actions",
+           "message": "List action 'SORT' in state 'idle' which renders non-list patterns: {\"page-header\"}",
+           "suggestion": "List actions should be used in states that render list/table patterns",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-item-actions-entry-is-record-scoped",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "data-list",
+                 "entity": "Task",
+                 "itemActions": [
+                  {
+                   "label": "Go",
+                   "event": "SAVE"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "VALUE_LEAVES_ASK",
+        "payload": {
+         "requestId": "",
+         "values": [
+          [
+           {
+            "label": "Go",
+            "event": "SAVE"
+           }
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LEAVES_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "",
+      "leaves": [
+       [
+        "[{\"label\":\"Go\",\"event\":\"SAVE\"}]"
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-item-actions",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-actions-on-a-single-record-pattern-are-record-scoped",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {
+       "detail-panel": {
+        "props": {
+         "entity": {
+          "types": [
+           "object"
+          ],
+          "kind": "entity",
+          "cardinality": "record"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "detail-panel",
+                 "entity": "Task",
+                 "actions": [
+                  {
+                   "label": "Go",
+                   "event": "SAVE"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "VALUE_LEAVES_ASK",
+        "payload": {
+         "requestId": "",
+         "values": [
+          [
+           {
+            "label": "Go",
+            "event": "SAVE"
+           }
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LEAVES_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "",
+      "leaves": [
+       [
+        "[{\"label\":\"Go\",\"event\":\"SAVE\"}]"
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-item-actions",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "actions-on-a-pattern-that-does-not-bind-one-record-are-checked",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {
+       "detail-panel": {
+        "props": {
+         "entity": {
+          "types": [
+           "object"
+          ],
+          "kind": "entity"
+         }
+        }
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "detail-panel",
+                 "entity": "Task",
+                 "actions": [
+                  {
+                   "label": "Go",
+                   "event": "SAVE"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "VALUE_LEAVES_ASK",
+        "payload": {
+         "requestId": "",
+         "values": [
+          [
+           {
+            "label": "Go",
+            "event": "SAVE"
+           }
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LEAVES_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "",
+      "leaves": [
+       [
+        "[{\"label\":\"Go\",\"event\":\"SAVE\"}]"
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-item-actions",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_ACTION_COMPONENT_MISMATCH",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.actions",
+           "message": "Action 'SAVE' is not valid on 'detail-panel' component",
+           "suggestion": "Valid actions for 'detail-panel': EDIT, DELETE, CLOSE, BACK. Invalid: SAVE, CREATE, SELECT, SUBMIT",
+           "severity": "error",
+           "validValues": [
+            "EDIT",
+            "DELETE",
+            "CLOSE",
+            "BACK"
+           ]
+          },
+          {
+           "code": "CIRCUIT_ACTION_COMPONENT_MISMATCH",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.actions",
+           "message": "Form action 'SAVE' in state 'idle' which renders non-form patterns: {\"detail-panel\"}",
+           "suggestion": "Form actions should be used in states that render form patterns",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-second-pattern-in-the-state-supplies-the-form",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "table-view",
+                 "entity": "Task",
+                 "actions": [
+                  {
+                   "label": "Go",
+                   "event": "SAVE"
+                  }
+                 ]
+                }
+               ],
+               [
+                "render-ui",
+                "side",
+                {
+                 "type": "form",
+                 "entity": "Task"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "VALUE_LEAVES_ASK",
+        "payload": {
+         "requestId": "",
+         "values": [
+          [
+           {
+            "label": "Go",
+            "event": "SAVE"
+           }
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LEAVES_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "",
+      "leaves": [
+       [
+        "[{\"label\":\"Go\",\"event\":\"SAVE\"}]"
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-item-actions",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_ACTION_COMPONENT_MISMATCH",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.actions",
+           "message": "Action 'SAVE' is not valid on 'table-view' component",
+           "suggestion": "Valid actions for 'table-view': VIEW, EDIT, DELETE, SELECT, SORT, PAGE. Invalid: SAVE, CANCEL, SUBMIT, CREATE, CLOSE",
+           "severity": "error",
+           "validValues": [
+            "VIEW",
+            "EDIT",
+            "DELETE",
+            "SELECT",
+            "SORT",
+            "PAGE"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-action-on-a-component-without-affinity-is-only-state-checked",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stat-card",
+                 "entity": "Task",
+                 "actions": [
+                  {
+                   "label": "Go",
+                   "event": "CANCEL"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "CANCEL"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "VALUE_LEAVES_ASK",
+        "payload": {
+         "requestId": "",
+         "values": [
+          [
+           {
+            "label": "Go",
+            "event": "CANCEL"
+           }
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LEAVES_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "",
+      "leaves": [
+       [
+        "[{\"label\":\"Go\",\"event\":\"CANCEL\"}]"
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-item-actions",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_ACTION_COMPONENT_MISMATCH",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].props.actions",
+           "message": "Form action 'CANCEL' in state 'idle' which renders non-form patterns: {\"stat-card\"}",
+           "suggestion": "Form actions should be used in states that render form patterns",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-action-of-neither-kind-on-an-unlisted-component",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stat-card",
+                 "entity": "Task",
+                 "actions": [
+                  {
+                   "label": "Go",
+                   "event": "OPEN"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "OPEN"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "VALUE_LEAVES_ASK",
+        "payload": {
+         "requestId": "",
+         "values": [
+          [
+           {
+            "label": "Go",
+            "event": "OPEN"
+           }
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LEAVES_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "",
+      "leaves": [
+       [
+        "[{\"label\":\"Go\",\"event\":\"OPEN\"}]"
+       ]
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitItemActions",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-item-actions",
+         "scope": "",
+         "findings": []
         }
        }
       ]

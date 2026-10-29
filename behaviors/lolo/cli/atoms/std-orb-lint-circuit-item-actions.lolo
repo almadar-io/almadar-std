@@ -4,11 +4,11 @@ app std-orb-lint-circuit-item-actions [
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-circuit-item-actions - the `orb lint circuit-item-actions <file>` command, the port of the item-action checks of validate_closed_circuit (circuit/closed_circuit.rs). For every render-ui effect of a transition (a top-level effect painting a typed pattern payload) it reads the descriptors of the pattern's `itemActions` and `actions` props through std-orb-value-leaves (every leaf of the value, a descriptor list or a single descriptor; an action is a descriptor with an event string and an action, event or label string) and reports CIRCUIT_ORPHAN_EVENT (an action whose event no transition of the trait, no transition or listens route of the orbital and no declared emit of the trait carries), CIRCUIT_DEAD_HANDLER (an action whose event the trait handles, but not from the state the action is rendered in nor from a wildcard) and CIRCUIT_DUPLICATE_EVENT (the same event twice in one render-ui effect, branch and slot). A value with several leaves reports its paths with a .branch[i] suffix. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint circuit-item-actions: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-circuit-item-actions - the `orb lint circuit-item-actions <file>` command, the port of the item-action checks of validate_closed_circuit (circuit/closed_circuit.rs). For every render-ui effect of a transition (a top-level effect painting a typed pattern payload) it reads the descriptors of the pattern's `itemActions` and `actions` props through std-orb-value-leaves (every leaf of the value, a descriptor list or a single descriptor; an action is a descriptor with an event string and an action, event or label string) and reports CIRCUIT_ORPHAN_EVENT (an action whose event no transition of the trait, no transition or listens route of the orbital and no declared emit of the trait carries), CIRCUIT_DEAD_HANDLER (an action whose event the trait handles, but not from the state the action is rendered in nor from a wildcard) and CIRCUIT_DUPLICATE_EVENT (the same event twice in one render-ui effect, branch and slot). It also reports CIRCUIT_ACTION_COMPONENT_MISMATCH (a non-record-scoped action that the affinity knob lists as invalid for its component, and a form or list action in a state whose painted patterns include no form or list pattern; an itemActions entry, and an actions entry on a pattern whose entity prop declares record cardinality in LINT_PATTERNS, is record-scoped and exempt); the affinity table, form and list patterns and actions are the rule's knobs. CIRCUIT_DEAD_END_COMPONENT is retired: its interactive-pattern set has been empty since G-ORB-053. A value with several leaves reports its paths with a .branch[i] suffix. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint circuit-item-actions: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-circuit-item-actions"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
 type CiNode = string | number | boolean | [CiNode?] | Map string CiNode?
 type CiFrom = string | [string]
 type CiEmit = { event : string }
@@ -19,7 +19,11 @@ type CiTrait = { name : string, emits : [CiEmit], listens : [CiListen], stateMac
 type CiOrbital = { name : string, traits : [CiTrait] }
 type CiProgram = { orbitals : [CiOrbital] }
 type CiSite = { oi : number!, ti : number!, tj : number!, ej : number!, prop : string!, ty : string!, to : string!, slot : string! }
-type CiAct = { action : string!, event : string!, ty : string!, to : string!, slot : string!, path : string!, oi : number!, ti : number!, tk : string!, dk : string! }
+type CiPatProp = { kind : string, cardinality : string }
+type CiPat = { props : Map string CiPatProp? }
+type CiAffinity = { pattern : string!, valid : [string]!, invalid : [string]! }
+type CiPaint = { to : string!, ty : string! }
+type CiAct = { prop : string!, action : string!, event : string!, ty : string!, to : string!, slot : string!, path : string!, oi : number!, ti : number!, tk : string!, dk : string! }
 type CiTr = { f : [string]!, e : string! }
 type CiActMap = Map string [CiAct]
 type CiSiteV = { oi : number!, ti : number!, tj : number!, ej : number!, prop : string!, ty : string!, to : string!, slot : string!, val : CiNode? }
@@ -33,6 +37,8 @@ orbital OrbLintCircuitItemActionsOrbital {
     scope : string = ""
     program : CiProgram = {}
     sites : [CiSite] = []
+    patterns : Map string CiPat = {}
+    acts : [CiAct] = []
     findings : [OrbFinding] = []
   }
 
@@ -41,6 +47,8 @@ orbital OrbLintCircuitItemActionsOrbital {
 
     state ready {
       INIT -> ready
+      PATTERNS_HEARD -> ready
+        (set @entity.patterns @payload.patterns)
       LINT_INPUT -> ready
         (set @entity.program @payload.program)
         (set @entity.scope @payload.scope)
@@ -85,7 +93,7 @@ orbital OrbLintCircuitItemActionsOrbital {
                       @nos0))
                   @nos0)))))))))))))))))) (fn s (object/get @s "val"))) })
       LEAVES_HEARD -> ready when (= @payload.requestId @entity.scope)
-        (set @entity.findings (let ((nos : [string] [])
+        (set @entity.acts (let ((nos : [string] [])
                 (nof : [OrbFinding] [])
                 (noact : [CiAct] [])
                 (notd : [CiTrait] [])
@@ -96,7 +104,7 @@ orbital OrbLintCircuitItemActionsOrbital {
                 (orbitals (object/get @entity.program "orbitals" []))
                 (sites : [CiSite] @entity.sites)
                 (lv @payload.leaves))
-  (let ((acts : [CiAct] (array/flatten (array/map (array/range 0 (array/len @sites)) (fn i
+          (array/flatten (array/map (array/range 0 (array/len @sites)) (fn i
             (let ((s (array/nth @sites @i)) (ls (array/nth @lv @i)))
               (let ((o (array/nth @orbitals (object/get @s "oi"))))
                 (let ((t (array/nth (object/get @o "traits" @notd) (object/get @s "ti"))))
@@ -111,12 +119,24 @@ orbital OrbLintCircuitItemActionsOrbital {
                                 (let ((av (if (object/has @d "action") (object/get @d "action") (if (object/has @d "event") (object/get @d "event") (object/get @d "label" null))))
                                       (ev (object/get @d "event" null)))
                                   (if (and (validate/string @av) (validate/string @ev))
-                                    [{ action: @av, event: @ev, ty: (object/get @s "ty"), to: (object/get @s "to"), slot: (object/get @s "slot"),
+                                    [{ prop: (object/get @s "prop"), action: @av, event: @ev, ty: (object/get @s "ty"), to: (object/get @s "to"), slot: (object/get @s "slot"),
                                        path: (str/concat @base ".props." (object/get @s "prop") (if @multi (str/concat ".branch[" @li "]") "")),
                                        oi: (object/get @s "oi"), ti: (object/get @s "ti"),
                                        tk: (str/concat (object/get @s "oi") "-" (object/get @s "ti")),
                                        dk: (str/replaceAll (str/replaceAll (str/concat (object/get @s "oi") "-" (object/get @s "ti") ":" @base ":" (if @multi (str/concat @li "]") "") ":" (object/get @s "slot") ":" @ev) "~" "~t") "." "~d") }]
                                     @noact)))))))))))))))))))))
+        (set @entity.findings (let ((nos : [string] [])
+                (nof : [OrbFinding] [])
+                (noact : [CiAct] [])
+                (notd : [CiTrait] [])
+                (notr : [CiTransition] [])
+                (noem : [CiEmit] [])
+                (nolis : [CiListen] [])
+                (nonode : [CiNode?] [])
+                (orbitals (object/get @entity.program "orbitals" []))
+                (sites : [CiSite] @entity.sites)
+                (lv @payload.leaves))
+  (let ((acts : [CiAct] @entity.acts))
     (let ((byTk : CiActMap (array/groupBy @acts "tk")) (byDk : CiActMap (array/groupBy @acts "dk")))
       (array/flatten (array/map (array/unique (array/map @acts (fn a (object/get @a "tk")))) (fn k
         (let ((grp (object/get @byTk @k @noact)))
@@ -141,6 +161,47 @@ orbital OrbLintCircuitItemActionsOrbital {
                     (array/flatten (array/map (array/unique (array/map @grp (fn a (object/get @a "dk")))) (fn dk
                       (array/map (array/drop (object/get @byDk @dk @noact) 1) (fn a
                         { code: "CIRCUIT_DUPLICATE_EVENT", path: (object/get @a "path"), message: (str/concat "Event '" (object/get @a "event") "' is emitted multiple times in the same render-ui effect (actions '" (object/get (array/first (object/get @byDk @dk @noact)) "action") "' and '" (object/get @a "action") "')"), suggestion: "Remove duplicate action or use unique event names", severity: "error" }))))))))))))))))))
+        (set @entity.findings (array/concat @entity.findings
+          (let ((nof : [OrbFinding] [])
+                (noact : [CiAct] [])
+                (nop : [CiPaint] [])
+                (notd : [CiTrait] [])
+                (notr : [CiTransition] [])
+                (orbitals (object/get @entity.program "orbitals" []))
+                (acts : [CiAct] @entity.acts)
+                (pats @entity.patterns)
+                (aff : [CiAffinity] @config.affinity))
+            (let ((byTk : CiActMap (array/groupBy @acts "tk")))
+              (array/flatten (array/map (array/unique (array/map @acts (fn a (object/get @a "tk")))) (fn k
+                (let ((grp (object/get @byTk @k @noact)))
+                  (let ((o (array/nth @orbitals (object/get (array/first @grp) "oi"))))
+                    (let ((t (array/nth (object/get @o "traits" @notd) (object/get (array/first @grp) "ti"))))
+                      (let ((paints : [CiPaint] (array/flatten (array/map (object/get @t "stateMachine.transitions" @notr) (fn x
+                              (array/flatten (array/map (object/get @x "effects" []) (fn e
+                                (if (and (validate/array @e) (> (array/len @e) 2) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (= @h0 "render-ui") false)))
+                                  (let ((sl (array/nth @e 1)) (pl (array/nth @e 2)))
+                                    (if (and (validate/string @sl) (validate/object @pl))
+                                      (let ((tv (object/get @pl "type" null)))
+                                        (if (validate/string @tv) [{ to: (object/get @x "to" ""), ty: @tv }] @nop))
+                                      @nop))
+                                  @nop))))))))
+                            (live (array/filter @grp (fn a (not (or (= (object/get @a "prop") "itemActions") (and (= (object/get @a "prop") "actions") (array/some (object/values (object/get (object/get @pats (object/get @a "ty") {}) "props" {})) (fn p (and (= (object/get (default @p {}) "kind" "") "entity") (= (object/get (default @p {}) "cardinality" "") "record")))))))))))
+                        (array/concat
+                          (array/flatten (array/map @live (fn a
+                            (let ((row (array/find @aff (fn r (= (object/get @r "pattern") (object/get @a "ty"))))))
+                              (if (or (= @row null) (not (array/includes (object/get @row "invalid") (object/get @a "action")))) @nof
+                                [{ code: "CIRCUIT_ACTION_COMPONENT_MISMATCH", path: (object/get @a "path"), message: (str/concat "Action '" (object/get @a "action") "' is not valid on '" (object/get @a "ty") "' component"), suggestion: (str/concat "Valid actions for '" (object/get @a "ty") "': " (str/join (object/get @row "valid") ", ") ". Invalid: " (str/join (object/get @row "invalid") ", ")), severity: "error", validValues: (object/get @row "valid") }])))))
+                          (array/flatten (array/map @live (fn a
+                            (let ((ps (array/sort (array/unique (array/map (array/filter @paints (fn pt (= (object/get @pt "to") (object/get @a "to")))) (fn pt (object/get @pt "ty")))))))
+                              (if (= (array/len @ps) 0) @nof
+                                (let ((setText (str/concat "{" (str/join (array/map @ps (fn q (str/concat "\"" @q "\""))) ", ") "}")))
+                                  (array/concat
+                                    (if (and (array/includes @config.formActions (object/get @a "action")) (not (array/some @ps (fn q (array/includes @config.formPatterns @q)))))
+                                      [{ code: "CIRCUIT_ACTION_COMPONENT_MISMATCH", path: (object/get @a "path"), message: (str/concat "Form action '" (object/get @a "action") "' in state '" (object/get @a "to") "' which renders non-form patterns: " @setText), suggestion: "Form actions should be used in states that render form patterns", severity: "error" }]
+                                      @nof)
+                                    (if (and (array/includes @config.listActions (object/get @a "action")) (not (array/some @ps (fn q (array/includes @config.listPatterns @q)))))
+                                      [{ code: "CIRCUIT_ACTION_COMPONENT_MISMATCH", path: (object/get @a "path"), message: (str/concat "List action '" (object/get @a "action") "' in state '" (object/get @a "to") "' which renders non-list patterns: " @setText), suggestion: "List actions should be used in states that render list/table patterns", severity: "error" }]
+                                      @nof))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "circuit-item-actions", scope: @entity.scope, findings: @entity.findings })
@@ -162,9 +223,30 @@ orbital OrbLintCircuitItemActionsOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CiProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      PATTERNS_HEARD { patterns : Map string CiPat! }
+        @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry's props, each with its kind and cardinality."
+      OrbLintInput.LINT_PATTERNS -> PATTERNS_HEARD
       LEAVES_HEARD { requestId : string!  leaves : [[string]]! }
         @description "std-orb-value-leaves' VALUE_LEAVES: the JSON text of each leaf of each asked value."
       OrbValueLeaves.VALUE_LEAVES -> LEAVES_HEARD
+    }
+
+    config {
+      affinity : [CiAffinity] = [{ pattern: "table-view", valid: ["VIEW", "EDIT", "DELETE", "SELECT", "SORT", "PAGE"], invalid: ["SAVE", "CANCEL", "SUBMIT", "CREATE", "CLOSE"] }, { pattern: "data-list", valid: ["VIEW", "EDIT", "DELETE", "SELECT"], invalid: ["SAVE", "CANCEL", "SUBMIT", "CREATE", "CLOSE"] }, { pattern: "data-grid", valid: ["VIEW", "EDIT", "DELETE", "SELECT"], invalid: ["SAVE", "CANCEL", "SUBMIT", "CREATE", "CLOSE"] }, { pattern: "page-header", valid: ["CREATE", "REFRESH", "EXPORT", "IMPORT", "BACK", "FILTER"], invalid: ["SAVE", "VIEW", "EDIT", "DELETE", "SUBMIT"] }, { pattern: "form", valid: ["SAVE", "CANCEL", "SUBMIT", "CLOSE", "RESET", "FIELD_CHANGE", "FIELD_BLUR"], invalid: ["VIEW", "DELETE", "CREATE", "SELECT", "EDIT"] }, { pattern: "form-section", valid: ["FIELD_CHANGE", "FIELD_BLUR"], invalid: ["SAVE", "VIEW", "DELETE", "CREATE", "SELECT", "EDIT"] }, { pattern: "form-actions", valid: ["SAVE", "CANCEL", "SUBMIT", "RESET"], invalid: ["VIEW", "DELETE", "CREATE", "SELECT", "EDIT"] }, { pattern: "detail-panel", valid: ["EDIT", "DELETE", "CLOSE", "BACK"], invalid: ["SAVE", "CREATE", "SELECT", "SUBMIT"] }, { pattern: "entity-detail", valid: ["EDIT", "DELETE", "CLOSE", "BACK"], invalid: ["SAVE", "CREATE", "SELECT", "SUBMIT"] }, { pattern: "modal", valid: ["CLOSE", "CONFIRM", "CANCEL"], invalid: ["VIEW", "CREATE", "EDIT", "DELETE"] }, { pattern: "modal-container", valid: ["CLOSE", "CONFIRM", "CANCEL"], invalid: ["VIEW", "CREATE", "EDIT", "DELETE"] }, { pattern: "drawer", valid: ["CLOSE"], invalid: ["VIEW", "CREATE", "DELETE"] }, { pattern: "tabs", valid: ["SELECT_TAB"], invalid: ["SAVE", "CREATE", "DELETE", "VIEW", "EDIT"] }, { pattern: "tab-bar", valid: ["SELECT_TAB"], invalid: ["SAVE", "CREATE", "DELETE", "VIEW", "EDIT"] }, { pattern: "wizard-navigation", valid: ["NEXT", "PREV", "GO_TO", "COMPLETE"], invalid: ["SAVE", "CREATE", "DELETE", "VIEW", "EDIT"] }, { pattern: "wizard-progress", valid: ["GO_TO"], invalid: ["SAVE", "CREATE", "DELETE", "VIEW", "EDIT", "NEXT", "PREV"] }, { pattern: "filter-group", valid: ["SET_FILTER", "CLEAR_FILTER", "CLEAR_ALL"], invalid: ["SAVE", "CREATE", "DELETE", "VIEW", "EDIT"] }, { pattern: "search-bar", valid: ["SEARCH", "CLEAR_SEARCH"], invalid: ["SAVE", "CREATE", "DELETE", "VIEW", "EDIT"] }, { pattern: "search-input", valid: ["SEARCH", "CLEAR_SEARCH"], invalid: ["SAVE", "CREATE", "DELETE", "VIEW", "EDIT"] }, { pattern: "pagination", valid: ["NEXT_PAGE", "PREV_PAGE", "GO_TO_PAGE", "SET_PAGE_SIZE"], invalid: ["SAVE", "CREATE", "DELETE", "VIEW", "EDIT"] }, { pattern: "confirm-dialog", valid: ["CONFIRM", "CANCEL"], invalid: ["VIEW", "CREATE", "EDIT", "DELETE", "SAVE"] }, { pattern: "empty-state", valid: ["CREATE"], invalid: ["SAVE", "VIEW", "EDIT", "DELETE", "CANCEL"] }, { pattern: "loading-state", valid: [], invalid: ["SAVE", "VIEW", "EDIT", "DELETE", "CREATE", "CANCEL"] }, { pattern: "stats", valid: [], invalid: ["SAVE", "VIEW", "EDIT", "DELETE", "CREATE", "CANCEL"] }, { pattern: "game-canvas", valid: ["INPUT", "PAUSE", "UNPAUSE"], invalid: ["SAVE", "CREATE", "DELETE"] }, { pattern: "game-hud", valid: ["PAUSE"], invalid: ["SAVE", "CREATE", "DELETE", "VIEW", "EDIT"] }, { pattern: "game-controls", valid: ["INPUT", "ACTION"], invalid: ["SAVE", "CREATE", "DELETE", "VIEW", "EDIT"] }, { pattern: "game-menu", valid: ["START", "OPTIONS", "QUIT", "SELECT"], invalid: ["SAVE", "CREATE", "DELETE", "VIEW", "EDIT"] }, { pattern: "game-pause-overlay", valid: ["RESUME", "QUIT", "OPTIONS"], invalid: ["SAVE", "CREATE", "DELETE", "VIEW", "EDIT"] }, { pattern: "game-over-screen", valid: ["RETRY", "QUIT", "MAIN_MENU"], invalid: ["SAVE", "CREATE", "DELETE", "VIEW", "EDIT"] }]
+        @label "Action affinity"
+        @description "Per component, the actions that belong on it and the ones that never do."
+      formPatterns : [string] = ["form", "form-section", "form-actions"]
+        @label "Form patterns"
+        @description "The patterns that count as a form for the state-appropriate action check."
+      formActions : [string] = ["SAVE", "CANCEL", "SUBMIT", "RESET", "FIELD_CHANGE", "FIELD_BLUR"]
+        @label "Form actions"
+        @description "The action names that belong to a form."
+      listPatterns : [string] = []
+        @label "List patterns"
+        @description "The patterns that count as a list; none, so a list action in any painted state is reported (G-ORB-053)."
+      listActions : [string] = ["SELECT", "SELECT_ALL", "PAGE", "SORT", "FILTER"]
+        @label "List actions"
+        @description "The action names that belong to a list."
     }
 
   }

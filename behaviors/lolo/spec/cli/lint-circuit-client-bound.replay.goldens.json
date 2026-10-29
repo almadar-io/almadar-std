@@ -64956,6 +64956,13 @@
            "message": "transition idle--[GO]-->idle declares `emit: { failure: FAIL }` but state 'idle' has no arm handling 'FAIL' \u2014 the failure is never caught",
            "suggestion": "Add a transition `from: 'idle', event: 'FAIL'` that handles the failure (e.g. render an error toast).",
            "severity": "error"
+          },
+          {
+           "code": "ORB_T_TRAIT_UNMOUNTED",
+           "path": "orbitals[0 (O)].traits[2 (C)]",
+           "message": "'O.C' owns a state machine (2 transition(s)) but is listed on no page (route or protocol endpoint) and no page's @trait embed closure reaches it \u2014 nothing mounts it, so it can never handle an event in the shipped app",
+           "suggestion": "declare C on a page \u2014 its traits follow `->`, comma-separated, e.g. `page \"/path\" as SomePage -> C` \u2014 or embed it in a mounted trait's render-ui as @trait.C",
+           "severity": "error"
           }
          ]
         }
@@ -70160,6 +70167,1556 @@
              "ref": "A"
             }
            ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-client-bound",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-trait-on-no-page-of-an-orbital-with-pages-is-unmounted",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "INDEX_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "heads": {},
+      "roots": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Home",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          },
+          {
+           "name": "Worker",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "H",
+           "path": "/h",
+           "traits": [
+            {
+             "ref": "Home"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-client-bound",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_T_TRAIT_UNMOUNTED",
+           "path": "orbitals[0 (O)].traits[1 (Worker)]",
+           "message": "'O.Worker' owns a state machine (1 transition(s)) but is listed on no page (route or protocol endpoint) and no page's @trait embed closure reaches it \u2014 nothing mounts it, so it can never handle an event in the shipped app",
+           "suggestion": "declare Worker on a page \u2014 its traits follow `->`, comma-separated, e.g. `page \"/path\" as SomePage -> Worker` \u2014 or embed it in a mounted trait's render-ui as @trait.Worker",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-trait-a-page-lists-is-mounted",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "INDEX_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "heads": {},
+      "roots": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Home",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "H",
+           "path": "/h",
+           "traits": [
+            {
+             "ref": "Home"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-client-bound",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-atom-with-no-pages-may-mount-nothing",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "INDEX_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "heads": {},
+      "roots": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Worker",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": []
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-client-bound",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-orbital-without-pages-is-a-program-beside-another-orbital",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "INDEX_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "heads": {},
+      "roots": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Worker",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": []
+        },
+        {
+         "name": "Sibling",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [],
+         "pages": []
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-client-bound",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_T_TRAIT_UNMOUNTED",
+           "path": "orbitals[0 (A)].traits[0 (Worker)]",
+           "message": "'A.Worker' owns a state machine (1 transition(s)) but is listed on no page (route or protocol endpoint) and no page's @trait embed closure reaches it \u2014 nothing mounts it, so it can never handle an event in the shipped app",
+           "suggestion": "declare Worker on a page \u2014 its traits follow `->`, comma-separated, e.g. `page \"/path\" as SomePage -> Worker` \u2014 or embed it in a mounted trait's render-ui as @trait.Worker",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-spec-orbital-beside-an-atom-does-not-make-it-a-program",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "INDEX_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "heads": {},
+      "roots": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Worker",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": []
+        },
+        {
+         "name": "Spec",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [],
+         "pages": [],
+         "spec": true
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-client-bound",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-trait-another-orbitals-page-lists-is-mounted",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "INDEX_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "heads": {},
+      "roots": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "Front",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Front",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": []
+        },
+        {
+         "name": "App",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Home",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "H",
+           "path": "/h",
+           "traits": [
+            {
+             "ref": "Home"
+            },
+            {
+             "ref": "Front"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-client-bound",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-trait-no-orbitals-page-lists-is-unmounted",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "INDEX_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "heads": {},
+      "roots": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "Front",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Front",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": []
+        },
+        {
+         "name": "App",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Home",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "H",
+           "path": "/h",
+           "traits": [
+            {
+             "ref": "Home"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-client-bound",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_T_TRAIT_UNMOUNTED",
+           "path": "orbitals[0 (Front)].traits[0 (Front)]",
+           "message": "'Front.Front' owns a state machine (1 transition(s)) but is listed on no page (route or protocol endpoint) and no page's @trait embed closure reaches it \u2014 nothing mounts it, so it can never handle an event in the shipped app",
+           "suggestion": "declare Front on a page \u2014 its traits follow `->`, comma-separated, e.g. `page \"/path\" as SomePage -> Front` \u2014 or embed it in a mounted trait's render-ui as @trait.Front",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-trait-on-a-protocol-endpoint-is-mounted",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "INDEX_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "heads": {},
+      "roots": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Home",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          },
+          {
+           "name": "Worker",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "H",
+           "path": "/h",
+           "traits": [
+            {
+             "ref": "Home"
+            }
+           ]
+          },
+          {
+           "name": "B",
+           "path": "",
+           "traits": [
+            {
+             "ref": "Worker"
+            }
+           ],
+           "protocol": "boot"
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-client-bound",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-trait-with-no-transitions-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "INDEX_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "heads": {},
+      "roots": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Stateless",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "H",
+           "path": "/h",
+           "traits": []
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-client-bound",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-suggestion-names-the-page-that-mounts-an-embedded-child",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "INDEX_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "heads": {},
+      "roots": {
+       "0-0": [
+        "@trait"
+       ]
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Wrapper",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                "@trait.Child"
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          },
+          {
+           "name": "Child",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "path": "/home",
+           "traits": [
+            {
+             "ref": "Child"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-client-bound",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_T_TRAIT_UNMOUNTED",
+           "path": "orbitals[0 (O)].traits[0 (Wrapper)]",
+           "message": "'O.Wrapper' owns a state machine (1 transition(s)) but is listed on no page (route or protocol endpoint) and no page's @trait embed closure reaches it \u2014 nothing mounts it, so it can never handle an event in the shipped app",
+           "suggestion": "add Wrapper to the page decl already mounting one of its embedded children (/home): page \"/home\" as Home -> Wrapper, Child",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-trait-embedded-by-a-mounted-trait-is-mounted",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "INDEX_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "heads": {},
+      "roots": {
+       "0-0": [
+        "@trait"
+       ]
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "PATTERNS_HEARD",
+     "from": "ready",
+     "payload": {
+      "patterns": {}
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintCircuitClientBound",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                "@trait.Inner"
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          },
+          {
+           "name": "Inner",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "H",
+           "path": "/h",
+           "traits": [
+            {
+             "ref": "Host"
+            }
+           ],
+           "protocol": "boot"
           }
          ]
         }
