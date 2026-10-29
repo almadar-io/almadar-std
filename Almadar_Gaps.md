@@ -10,7 +10,9 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 
 
 
-Next code: `G-STD-178`
+Next code: `G-STD-179`
+
+- **G-STD-178** `[mechanical]` — `os/spawn`'s declared config type gives `env` as `Map string string?`-less: `nullable(mapOf(STRING, STRING))` in `packages/almadar-std/modules/os-process.ts`, but the host treats a null env VALUE as "inherit this variable from the parent, if granted" (orbital-core runtime host/os_host/process.rs ~209-235), so the legal literal `env: { PATH: null, HOME: null }` in `std-supervisor` raises `ORB_X_OPERATOR_ARG_UNDETERMINED` (a null map value has no type). Owning package: almadar-std (operator table). Reproduction: `orb validate packages/almadar-std/behaviors/lolo/flow/atoms/std-supervisor.lolo` shows the one finding at the second SPAWN_STEP arm. Fix: staged patch `floor-held/L2/os-spawn-env-nullable.patch` (`env: nullable(mapOf(STRING, nullable(STRING)))`), then regenerate the operator table. Prevention rung: (2) orb validate / the operator table's declared type. Root cause: one-off.
 
 - **G-STD-177** — Add the `cli` hook routability lint to `std-orb-lint-inbound` (or a sibling `std-orb-lint-cli-hook`): a `cli-` hook that collides with a reserved bootloader word (`update`, `add`, `remove`, `list`, `run`, `help`) or whose words start with `-` is refused; a hook `cli-a` shadowed by another declared longer hook `cli-a-b` (argv starting `b` routes to the longer one) warns. The reserved list lives in `orbital-cli` `RESERVED_COMMANDS` today and must be shared through core so the lint and the bootloader agree. Lands with the longest-first routing in G-ORB-487 (orbital-rust). std `cli/` lint [mechanical] — prevention rung: `orb validate`. Root cause: A3.
 

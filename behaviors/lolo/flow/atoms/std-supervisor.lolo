@@ -10,7 +10,7 @@ orbital SupervisorOrbital {
     id : string!
     children : [SupervisedChild] @description "The child specs in effect: the configured children until a START carries its own." = []
     pids : [number] @description "Process id per child, index-aligned with the configured children; 0 = not running." = []
-    restartLog : [number] @description "Epoch-millisecond stamps of the restarts inside the current period." = []
+    restartLog : [instant] @description "Instants of the restarts inside the current period." = []
     cursor : number @description "Child index the running spawn or kill sweep is on." = 0
     spawnFrom : number @description "First child index of the pending respawn sweep." = 0
     spawnTo : number @description "Exclusive end index of the spawn sweep." = 0
@@ -46,23 +46,31 @@ orbital SupervisorOrbital {
         (set @entity.pids [])
         (set @entity.restartLog [])
         (set @entity.cursor 0)
-      SPAWN_STEP -> spawning when (== @config.command "")
+      SPAWN_STEP -> spawning when (and (== @config.command "") (validate/required (array/nth @config.children @entity.cursor)))
         (os/spawn (object/get (array/nth @config.children @entity.cursor) "command") (object/get (array/nth @config.children @entity.cursor) "args") { cwd: null, env: null, stdin: "null", stdout: "inherit", stderr: "inherit", detached: false } { key: "spawn", emit: { success: CHILD_SPAWNED, failure: CHILD_SPAWN_FAILED } })
-      SPAWN_STEP -> spawning when (!= @config.command "")
+      SPAWN_STEP -> spawning when (and (!= @config.command "") (validate/required (array/nth @entity.children @entity.cursor)))
         (os/spawn @config.command (object/get (array/nth @entity.children @entity.cursor) "args") { cwd: null, env: { PATH: null, HOME: null }, stdin: "null", stdout: "inherit", stderr: "inherit", detached: false } { key: "spawn", emit: { success: CHILD_SPAWNED, failure: CHILD_SPAWN_FAILED } })
-      CHILD_SPAWNED -> spawning when (< (+ @entity.cursor 1) @entity.spawnTo)
+      SPAWN_STEP -> idle when (and (== @config.command "") (not (validate/required (array/nth @config.children @entity.cursor))))
+        (emit SUPERVISOR_GAVE_UP { reason: "child-index", child: "", restarts: (array/len @entity.restartLog) })
+      SPAWN_STEP -> idle when (and (!= @config.command "") (not (validate/required (array/nth @entity.children @entity.cursor))))
+        (emit SUPERVISOR_GAVE_UP { reason: "child-index", child: "", restarts: (array/len @entity.restartLog) })
+      CHILD_SPAWNED -> spawning when (and (< (+ @entity.cursor 1) @entity.spawnTo) (validate/required (array/nth @entity.children @entity.cursor)))
         (set @entity.pids (array/map @entity.pids (fn p i (if (== @i @entity.cursor) @payload.pid @p))))
         (os/wait @payload.pid { key: (str/concat @payload.pid), emit: { success: CHILD_EXITED, failure: CHILD_WAIT_FAILED } })
         (emit CHILD_STARTED { name: (object/get (array/nth @entity.children @entity.cursor) "name"), pid: @payload.pid })
         (set @entity.cursor (+ @entity.cursor 1))
         (emit SPAWN_STEP { })
-      CHILD_SPAWNED -> running when (>= (+ @entity.cursor 1) @entity.spawnTo)
+      CHILD_SPAWNED -> running when (and (>= (+ @entity.cursor 1) @entity.spawnTo) (validate/required (array/nth @entity.children @entity.cursor)))
         (set @entity.pids (array/map @entity.pids (fn p i (if (== @i @entity.cursor) @payload.pid @p))))
         (os/wait @payload.pid { key: (str/concat @payload.pid), emit: { success: CHILD_EXITED, failure: CHILD_WAIT_FAILED } })
         (emit CHILD_STARTED { name: (object/get (array/nth @entity.children @entity.cursor) "name"), pid: @payload.pid })
         (emit SUPERVISOR_READY { children: (array/len @entity.children) })
-      CHILD_SPAWN_FAILED -> idle
+      CHILD_SPAWNED -> idle when (not (validate/required (array/nth @entity.children @entity.cursor)))
+        (emit SUPERVISOR_GAVE_UP { reason: "child-index", child: "", restarts: (array/len @entity.restartLog) })
+      CHILD_SPAWN_FAILED -> idle when (validate/required (array/nth @entity.children @entity.cursor))
         (emit SUPERVISOR_GAVE_UP { reason: "spawn-failed", child: (object/get (array/nth @entity.children @entity.cursor) "name"), restarts: (array/len @entity.restartLog), error: @payload.error })
+      CHILD_SPAWN_FAILED -> idle when (not (validate/required (array/nth @entity.children @entity.cursor)))
+        (emit SUPERVISOR_GAVE_UP { reason: "spawn-failed", child: "", restarts: (array/len @entity.restartLog), error: @payload.error })
     }
 
     state running {
@@ -90,7 +98,7 @@ orbital SupervisorOrbital {
         (set @entity.exitCode -1)
         (set @entity.pids (array/map @entity.pids (fn p i (if (== @i @payload.index) 0 @p))))
         (emit DECIDE { })
-      RESTART -> running when (and (>= @payload.index 0) (< @payload.index (array/len @entity.pids)) (!= (array/nth @entity.pids @payload.index) 0) (not @entity.requested))
+      RESTART -> running when (and (>= @payload.index 0) (< @payload.index (array/len @entity.pids)) (validate/required (array/nth @entity.pids @payload.index)) (!= (array/nth @entity.pids @payload.index) 0) (not @entity.requested))
         (set @entity.requested true)
         (os/kill (array/nth @entity.pids @payload.index) "TERM" { key: "restart", emit: { failure: CHILD_KILL_FAILED } })
       CHILD_KILL_FAILED -> running
@@ -110,7 +118,9 @@ orbital SupervisorOrbital {
         (set @entity.restartLog [])
         (set @entity.cursor 0)
       DECIDE -> running when (< @entity.exitIndex 0)
-      DECIDE -> judged when (>= @entity.exitIndex 0)
+      DECIDE -> idle when (and (>= @entity.exitIndex 0) (not (validate/required (array/nth @entity.children @entity.exitIndex))))
+        (emit SUPERVISOR_GAVE_UP { reason: "child-index", child: "", restarts: (array/len @entity.restartLog) })
+      DECIDE -> judged when (and (>= @entity.exitIndex 0) (validate/required (array/nth @entity.children @entity.exitIndex)))
         (set @entity.exitRestartable (or (== (object/get (array/nth @entity.children @entity.exitIndex) "restart") "permanent") (and (== (object/get (array/nth @entity.children @entity.exitIndex) "restart") "transient") @entity.exitFailed)))
         (emit JUDGE { })
     }
@@ -120,30 +130,32 @@ orbital SupervisorOrbital {
         (set @entity.pids [])
         (set @entity.restartLog [])
         (set @entity.cursor 0)
-      JUDGE -> stopping when @entity.requested
+      JUDGE -> idle when (not (validate/required (array/nth @entity.children @entity.exitIndex)))
+        (emit SUPERVISOR_GAVE_UP { reason: "child-index", child: "", restarts: (array/len @entity.restartLog) })
+      JUDGE -> stopping when (and @entity.requested (validate/required (array/nth @entity.children @entity.exitIndex)))
         (set @entity.requested false)
         (set @entity.after "restart")
         (set @entity.cursor 0)
         (set @entity.killTo 0)
         (set @entity.spawnFrom @entity.exitIndex)
         (set @entity.spawnTo (+ @entity.exitIndex 1))
-        (emit CHILD_RESTARTING { name: (object/get (array/nth @entity.children @entity.exitIndex) "name"), strategy: "requested", code: @entity.exitCode, restarts: (array/len (array/filter @entity.restartLog (fn t (>= @t (- @now @config.periodMs))))) })
+        (emit CHILD_RESTARTING { name: (object/get (array/nth @entity.children @entity.exitIndex) "name"), strategy: "requested", code: @entity.exitCode, restarts: (array/len (array/filter @entity.restartLog (fn t (not (time/isBefore @t (time/subtract @now @config.periodMs "ms")))))) })
         (emit KILL_STEP { at: 0 })
-      JUDGE -> running when (and (not @entity.requested) (not @entity.exitRestartable))
+      JUDGE -> running when (and (not @entity.requested) (not @entity.exitRestartable) (validate/required (array/nth @entity.children @entity.exitIndex)))
         (emit CHILD_RETIRED { name: (object/get (array/nth @entity.children @entity.exitIndex) "name"), code: @entity.exitCode, abnormal: @entity.exitFailed })
-      JUDGE -> stopping when (and (not @entity.requested) @entity.exitRestartable (>= (array/len (array/filter @entity.restartLog (fn t (>= @t (- @now @config.periodMs))))) @config.maxRestarts))
+      JUDGE -> stopping when (and (not @entity.requested) @entity.exitRestartable (validate/required (array/nth @entity.children @entity.exitIndex)) (>= (array/len (array/filter @entity.restartLog (fn t (not (time/isBefore @t (time/subtract @now @config.periodMs "ms")))))) @config.maxRestarts))
         (set @entity.after "giveup")
         (set @entity.cursor 0)
         (set @entity.killTo (array/len @entity.pids))
         (emit KILL_STEP { at: 0 })
-      JUDGE -> stopping when (and (not @entity.requested) @entity.exitRestartable (< (array/len (array/filter @entity.restartLog (fn t (>= @t (- @now @config.periodMs))))) @config.maxRestarts))
-        (set @entity.restartLog (array/append (array/filter @entity.restartLog (fn t (>= @t (- @now @config.periodMs)))) @now))
+      JUDGE -> stopping when (and (not @entity.requested) @entity.exitRestartable (validate/required (array/nth @entity.children @entity.exitIndex)) (< (array/len (array/filter @entity.restartLog (fn t (not (time/isBefore @t (time/subtract @now @config.periodMs "ms")))))) @config.maxRestarts))
+        (set @entity.restartLog (array/append (array/filter @entity.restartLog (fn t (not (time/isBefore @t (time/subtract @now @config.periodMs "ms"))))) @now))
         (set @entity.after "restart")
         (set @entity.cursor (if (== @config.strategy "rest-for-one") (+ @entity.exitIndex 1) 0))
         (set @entity.killTo (if (== @config.strategy "one-for-one") 0 (array/len @entity.pids)))
         (set @entity.spawnFrom (if (== @config.strategy "one-for-all") 0 @entity.exitIndex))
         (set @entity.spawnTo (if (== @config.strategy "one-for-one") (+ @entity.exitIndex 1) (array/len @entity.pids)))
-        (emit CHILD_RESTARTING { name: (object/get (array/nth @entity.children @entity.exitIndex) "name"), strategy: @config.strategy, code: @entity.exitCode, restarts: (array/len (array/filter @entity.restartLog (fn t (>= @t (- @now @config.periodMs))))) })
+        (emit CHILD_RESTARTING { name: (object/get (array/nth @entity.children @entity.exitIndex) "name"), strategy: @config.strategy, code: @entity.exitCode, restarts: (array/len (array/filter @entity.restartLog (fn t (not (time/isBefore @t (time/subtract @now @config.periodMs "ms")))))) })
         (emit KILL_STEP { at: 0 })
     }
 
@@ -152,7 +164,9 @@ orbital SupervisorOrbital {
         (set @entity.pids [])
         (set @entity.restartLog [])
         (set @entity.cursor 0)
-      KILL_STEP -> stopping when (and (< @entity.cursor @entity.killTo) (!= (array/nth @entity.pids @entity.cursor) 0))
+      KILL_STEP -> idle when (and (< @entity.cursor @entity.killTo) (not (validate/required (array/nth @entity.pids @entity.cursor))))
+        (emit SUPERVISOR_GAVE_UP { reason: "pid-index", child: "", restarts: (array/len @entity.restartLog) })
+      KILL_STEP -> stopping when (and (< @entity.cursor @entity.killTo) (validate/required (array/nth @entity.pids @entity.cursor)) (!= (array/nth @entity.pids @entity.cursor) 0))
         (os/kill (array/nth @entity.pids @entity.cursor) "TERM" { key: "kill", emit: { failure: CHILD_KILL_FAILED } })
         (set @entity.pids (array/map @entity.pids (fn p i (if (== @i @entity.cursor) 0 @p))))
         (set @entity.cursor (+ @entity.cursor 1))
@@ -163,7 +177,9 @@ orbital SupervisorOrbital {
       KILL_STEP -> spawning when (and (>= @entity.cursor @entity.killTo) (== @entity.after "restart"))
         (set @entity.cursor @entity.spawnFrom)
         (emit SPAWN_STEP { })
-      KILL_STEP -> idle when (and (>= @entity.cursor @entity.killTo) (== @entity.after "giveup"))
+      KILL_STEP -> idle when (and (>= @entity.cursor @entity.killTo) (== @entity.after "giveup") (not (validate/required (array/nth @entity.children @entity.exitIndex))))
+        (emit SUPERVISOR_GAVE_UP { reason: "child-index", child: "", restarts: (array/len @entity.restartLog) })
+      KILL_STEP -> idle when (and (>= @entity.cursor @entity.killTo) (== @entity.after "giveup") (validate/required (array/nth @entity.children @entity.exitIndex)))
         (emit SUPERVISOR_GAVE_UP { reason: "intensity", child: (object/get (array/nth @entity.children @entity.exitIndex) "name"), restarts: (array/len @entity.restartLog) })
       KILL_STEP -> idle when (and (>= @entity.cursor @entity.killTo) (== @entity.after "stop"))
         (emit SUPERVISOR_STOPPED { })
@@ -234,7 +250,7 @@ orbital SupervisorOrbital {
         restarts : number!
         error : string
       }
-        @description "Escalation: restart intensity (maxRestarts inside periodMs) was exceeded or a spawn failed (error then names why); the remaining children were stopped."
+        @description "Escalation: restart intensity (maxRestarts inside periodMs) was exceeded a spawn failed (error then names why), or a child or pid index was out of range (reason child-index or pid-index); the remaining children were stopped."
         @synonyms "escalate, intensity exceeded, failed for good"
         @tier "domain"
       SUPERVISOR_STOPPED -> external {
