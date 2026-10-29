@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-29T05:37:23.726Z",
+  "generated": "2026-10-29T09:35:05.306Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -154,6 +154,18 @@
     },
     "std-workspace": {
       "description": "Workspace I/O substrate (runtime)",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-audio": {
+      "description": "Host audio asks (play, stop, music) — client host effects",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-auth": {
+      "description": "Host session asks (sign-in, sign-out) — client host effects",
       "target": [
         "ts"
       ]
@@ -2693,6 +2705,190 @@
       ],
       "examples": [
         "(as \"search\" \"CallKey\") // => \"search\""
+      ],
+      "docsSource": "generated"
+    },
+    "audio/change-music": {
+      "category": "std-audio",
+      "minArity": 0,
+      "maxArity": 1,
+      "returnType": "void",
+      "description": "Crossfade to the looping track the host manifest names by key; with no key, stop the music.",
+      "module": "audio",
+      "hasSideEffects": true,
+      "runsOn": "client",
+      "host": "substrate",
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "Manifest key of the track; absent stops the music",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(audio/change-music \"theme\")"
+      ],
+      "docsSource": "generated"
+    },
+    "audio/play-sound": {
+      "category": "std-audio",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "void",
+      "description": "Play the one-shot sound the host manifest names by key.",
+      "module": "audio",
+      "hasSideEffects": true,
+      "runsOn": "client",
+      "host": "substrate",
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "Manifest key of the sound"
+        }
+      ],
+      "examples": [
+        "(audio/play-sound \"footstep\")"
+      ],
+      "docsSource": "generated"
+    },
+    "audio/stop-music": {
+      "category": "std-audio",
+      "minArity": 0,
+      "maxArity": 0,
+      "returnType": "void",
+      "description": "Stop the looping music.",
+      "module": "audio",
+      "hasSideEffects": true,
+      "runsOn": "client",
+      "host": "substrate",
+      "examples": [
+        "(audio/stop-music)"
+      ],
+      "docsSource": "generated"
+    },
+    "audio/stop-sound": {
+      "category": "std-audio",
+      "minArity": 0,
+      "maxArity": 1,
+      "returnType": "void",
+      "description": "Stop the sound the host manifest names by key; with no key, stop every sound.",
+      "module": "audio",
+      "hasSideEffects": true,
+      "runsOn": "client",
+      "host": "substrate",
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "Manifest key of the sound; absent stops all",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(audio/stop-sound \"footstep\")"
+      ],
+      "docsSource": "generated"
+    },
+    "auth/sign-in": {
+      "category": "std-auth",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Start the viewer session through the host auth provider. The request names the method: google; email (email, password); emailLink with a continueUrl sends the link, with a link completes the sign-in (exactly one of the two); customToken (token). Success carries { uid, email?, displayName? } (emailLink send: { sent: true }); failure carries { error, kind } with kind cancelled, denied, invalid or unavailable.",
+      "module": "auth",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "uid": "string",
+            "email": "string",
+            "displayName": "string",
+            "sent": "boolean",
+            "key": "string"
+          },
+          "optional": [
+            "uid",
+            "email",
+            "displayName",
+            "sent",
+            "key"
+          ]
+        }
+      },
+      "runsOn": "client",
+      "host": "substrate",
+      "params": [
+        {
+          "name": "request",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "method": "string",
+              "email": "string",
+              "password": "string",
+              "token": "string",
+              "continueUrl": "string",
+              "link": "string"
+            },
+            "optional": [
+              "email",
+              "password",
+              "token",
+              "continueUrl",
+              "link"
+            ]
+          },
+          "description": "The method (google | email | emailLink | customToken) and the credentials it takes"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(auth/sign-in \"email\" \"ada@example.com\" \"secret\")"
+      ],
+      "docsSource": "generated"
+    },
+    "auth/sign-out": {
+      "category": "std-auth",
+      "minArity": 0,
+      "maxArity": 0,
+      "returnType": "void",
+      "description": "End the viewer session through the host auth provider.",
+      "module": "auth",
+      "hasSideEffects": true,
+      "runsOn": "client",
+      "host": "substrate",
+      "examples": [
+        "(auth/sign-out)"
       ],
       "docsSource": "generated"
     },

@@ -2,7 +2,7 @@ app std-orb-gaps [
   version: "1.0.0",
   inbound: ["cli-gaps"],
   fs: { "~/.almadar/gaps-out/**": [write, create], cwd: "**": [read, write] },
-  description: "std-orb-gaps — the `orb gaps` command, (check, sync, rollup). `check` reads docs/Almadar_Gaps.md under the directory the command runs in (the cwd grant anchor) and every repo ledger its generated roll-up names, then reports duplicate gap codes, repo ledgers without a Next code counter, unreadable ledgers and entries without a [mechanical], [architectural] or [owner-decision] tag, one line each (status 500, exit 1); a clean tree answers `gaps: clean` (status 200, exit 0). `sync` and `status` reconcile the master with the repo ledgers by gap code: the owners come from the .gitmodules files and the explicit foldedLedgers paths, fenced code blocks never count, a three-way merge against the baseline knob file (.almadar/gaps-sync-state.json) decides which side wins per entry and refuses divergent edits, a repo's Next code never decreases, and the preview names every change; --write saves the ledger files and the baseline, --out <dir> saves the proposed files and the baseline under the outRoot knob (~/.almadar/gaps-out, the out grant), --check fails while any ledger file would change, --from master|repos makes one side authoritative. `rollup` rebuilds the master's generated roll-up from the repo ledgers. Any unknown command answers the usage (status 400, exit 2)."
+  description: "std-orb-gaps — the `orb gaps` command, (check, sync, rollup). `check` reads docs/Almadar_Gaps.md under the directory the command runs in (the cwd grant anchor) and every repo ledger its generated roll-up names, then reports duplicate gap codes, repo ledgers without a Next code counter, unreadable ledgers and entries without a [mechanical], [architectural] or [owner-decision] tag, one line each (status 500, exit 1); a clean tree answers `gaps: clean` (status 200, exit 0). `sync` and `status` reconcile the master with the repo ledgers by gap code: the owners come from the .gitmodules files and the explicit foldedLedgers paths, fenced code blocks never count, a three-way merge against the baseline knob file (.almadar/gaps-sync-state.json) decides which side wins per entry and refuses divergent edits, a repo's Next code never decreases, and the preview names every change; --write saves the ledger files and the baseline, --out <dir> saves the proposed files and the baseline under the outRoot knob (~/.almadar/gaps-out, the out grant), --check fails while any ledger file would change, --from master|repos makes one side authoritative. `rollup` rebuilds the master's generated roll-up from the repo ledgers. `plans [--write | --check]` aligns docs/Almadar_Plans.md with docs/Almadar_Gaps.md by root cause: every ledger entry carries exactly one `Root cause: <TAG>.` tag, the tag is a cause id of the P-017 section (the bullets under its cause subsections) or one-off or periphery, a cause with no open gaps is marked [closed] and a [closed] cause has none, and the table between the p017-gaps markers is generated (--write replaces only that block; the default and --check refuse with one line per problem, status 500, exit 1; aligned answers `plans: aligned (N open: ...)`). Any unknown command answers the usage (status 400, exit 2)."
 ]
 uses Spec from "almadar-std/orb-gaps"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -20,6 +20,8 @@ type GapDirEntry = { name : string!, kind : string! }
 type GapSortKey = { sort : string!, path : string! }
 type GapSig = { code : string!, side : string!, repo : string!, heading : string!, body : string! }
 type GapRow = { code : string!, side : string!, m : string!, l : string!, p : string!, pRepo : string!, eRepo : string!, eHeading : string!, eBody : string! }
+type GapTag = { code : string!, tags : [string]! }
+type GapCause = { id : string!, name : string!, closed : boolean!, codes : [string]! }
 type GapBaseline = { version : number!, entries : [[string, { repo : string!, heading : string!, body : string! }]]! }
 
 orbital OrbGapsOrbital {
@@ -101,6 +103,17 @@ orbital OrbGapsOrbital {
     ucur : number = 0
     uPrefix : string = ""
     uCi : number = 0
+    pLines : [string] = []
+    pSec : number = 0
+    pEndSec : number = 0
+    pTags : [GapTag] = []
+    pCauses : [GapCause] = []
+    pTable : [string] = []
+    pBeginAt : number = 0
+    pEndAt : number = 0
+    pDrift : boolean = false
+    pSummary : string = ""
+    pFail : string = ""
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -124,7 +137,7 @@ orbital OrbGapsOrbital {
         (set @entity.mode (if (!= (object/get @payload.flags "write") null) "write" (if (!= (object/get @payload.flags "check") null) "check" (if (!= (object/get @payload.flags "out") null) "out" "preview"))))
         (set @entity.outDir (if (!= (object/get @payload.flags "out") null) (default (array/first (object/get @payload.flags "out")) "") ""))
         (set @entity.from (if (!= (object/get @payload.flags "from") null) (default (array/first (object/get @payload.flags "from")) "") ""))
-        (set @entity.fail (if (not (array/includes (str/split "check|sync|status|rollup" "|") @entity.cmd)) "usage"
+        (set @entity.fail (if (not (array/includes (str/split "check|sync|status|rollup|plans" "|") @entity.cmd)) "usage"
           (if (and (= @entity.cmd "check") (> (array/len @payload.words) 0)) "usage"
             (default (array/find (array/concat
               (array/map @payload.errors (fn e (if (str/startsWith @e "unknown flag: ") (str/concat "unrecognized option: " (str/replace @e "unknown flag: " ""))
@@ -132,7 +145,7 @@ orbital OrbGapsOrbital {
                   (if (str/startsWith @e "missing value for --") (str/concat "--" (str/replace @e "missing value for --" "") " needs a value")
                     (str/concat "unrecognized option: " (str/replace @e "flag takes no value: " "")))))))
               (array/map @payload.positionals (fn t (str/concat "unrecognized option: " @t)))
-              (array/map (array/filter ["--from", "--out", "--write", "--check"] (fn f (and (!= (object/get @payload.flags (str/replace @f "--" "")) null) (not (array/includes (if (= @entity.cmd "sync") ["--from", "--out", "--write", "--check"] (if (= @entity.cmd "rollup") ["--out", "--write", "--check"] (array/take ["--out"] 0))) @f))))) (fn f (str/concat "unrecognized option: " @f)))
+              (array/map (array/filter ["--from", "--out", "--write", "--check"] (fn f (and (!= (object/get @payload.flags (str/replace @f "--" "")) null) (not (array/includes (if (= @entity.cmd "sync") ["--from", "--out", "--write", "--check"] (if (= @entity.cmd "rollup") ["--out", "--write", "--check"] (if (= @entity.cmd "plans") ["--write", "--check"] (array/take ["--out"] 0)))) @f))))) (fn f (str/concat "unrecognized option: " @f)))
               (array/map (array/filter ["--from", "--out"] (fn f (and (> (array/len (default (object/get @payload.flags (str/replace @f "--" "")) [])) 0) (str/startsWith (array/first (object/get @payload.flags (str/replace @f "--" ""))) "--")))) (fn f (str/concat @f " needs a value")))
               [(if (> (+ (if (!= (object/get @payload.flags "write") null) 1 0) (if (!= (object/get @payload.flags "check") null) 1 0) (if (!= (object/get @payload.flags "out") null) 1 0)) 1) "choose only one of --write, --check, --out" "")
                (if (and (!= (object/get @payload.flags "from") null) (not (or (= @entity.from "master") (= @entity.from "repos")))) "--from must be master or repos" "")
@@ -202,15 +215,30 @@ orbital OrbGapsOrbital {
         (set @entity.nextMaster "")
         (set @entity.outFiles [])
         (set @entity.wcur 0)
+        (set @entity.pLines [])
+        (set @entity.pSec 0)
+        (set @entity.pEndSec 0)
+        (set @entity.pTags [])
+        (set @entity.pCauses [])
+        (set @entity.pTable [])
+        (set @entity.pBeginAt 0)
+        (set @entity.pEndAt 0)
+        (set @entity.pDrift false)
+        (set @entity.pSummary "")
+        (set @entity.pFail "")
         (set @entity.outRel @entity.outDir)
         (emit GAPS_PARSED { })
       GAPS_PARSED -> ready when (!= @entity.fail "")
-        (emit GAPS_ANSWERED { status: (if (= @entity.fail "usage") 400 500), body: (if (= @entity.fail "usage") "usage: orb gaps check | sync [--from master|repos] [--write | --check | --out <dir>] | status | rollup [--write | --check | --out <dir>]" (str/concat "error: " @entity.fail)) })
+        (emit GAPS_ANSWERED { status: (if (= @entity.fail "usage") 400 500), body: (if (= @entity.fail "usage") "usage: orb gaps check | sync [--from master|repos] [--write | --check | --out <dir>] | status | rollup [--write | --check | --out <dir>] | plans [--write | --check]" (str/concat "error: " @entity.fail)) })
       GAPS_PARSED -> reading when (and (= @entity.fail "") (= @entity.cmd "check"))
         (set @entity.queue (str/split "docs/Almadar_Gaps.md" "|"))
         (set @entity.stage "c1")
         (emit GAPS_READ { })
-      GAPS_PARSED -> probing when (and (= @entity.fail "") (!= @entity.cmd "check"))
+      GAPS_PARSED -> reading when (and (= @entity.fail "") (= @entity.cmd "plans"))
+        (set @entity.queue (str/split "docs/Almadar_Gaps.md|docs/Almadar_Plans.md" "|"))
+        (set @entity.stage "p1")
+        (emit GAPS_READ { })
+      GAPS_PARSED -> probing when (and (= @entity.fail "") (!= @entity.cmd "check") (!= @entity.cmd "plans"))
         (set @entity.work (array/concat [{ path: ".", nested: false }] (array/map @config.foldedLedgers (fn p { path: @p, nested: true }))))
         (emit GAPS_PROBE { })
     }
@@ -296,6 +324,14 @@ orbital OrbGapsOrbital {
         (set @entity.scans [])
         (set @entity.cursor 0)
         (emit GAPS_SCAN { })
+      GAPS_READ -> ready when (and (>= @entity.cursor (array/len @entity.queue)) (= @entity.stage "p1") (array/some @entity.reads (fn r (not (object/get @r "ok")))))
+        (emit GAPS_ANSWERED { status: 500, body: (str/join (array/map (array/filter @entity.reads (fn r (not (object/get @r "ok")))) (fn r (str/concat "error: cannot read " (object/get @r "path")))) "\n") })
+      GAPS_READ -> scanning when (and (>= @entity.cursor (array/len @entity.queue)) (= @entity.stage "p1") (not (array/some @entity.reads (fn r (not (object/get @r "ok"))))))
+        (set @entity.jobs (array/map (array/filter @entity.reads (fn r (= (object/get @r "path") "docs/Almadar_Gaps.md"))) (fn r { key: "docs/Almadar_Gaps.md", text: (object/get @r "text"), repo: "ROOT" })))
+        (set @entity.stage "p2")
+        (set @entity.scans [])
+        (set @entity.cursor 0)
+        (emit GAPS_SCAN { })
       GAPS_READ -> ready when (and (>= @entity.cursor (array/len @entity.queue)) (= @entity.stage "s2") (not (object/get (array/find @entity.reads (fn r (= (object/get @r "path") "docs/Almadar_Gaps.md"))) "ok")))
         (emit GAPS_ANSWERED { status: 500, body: "error: cannot read docs/Almadar_Gaps.md" })
       GAPS_READ -> scanning when (and (>= @entity.cursor (array/len @entity.queue)) (= @entity.stage "s2") (object/get (array/find @entity.reads (fn r (= (object/get @r "path") "docs/Almadar_Gaps.md"))) "ok"))
@@ -369,6 +405,8 @@ orbital OrbGapsOrbital {
         (set @entity.cursor 1)
         (set @entity.stage "c3")
         (emit GAPS_READ { })
+      GAPS_SCAN -> planning when (and (>= @entity.cursor (array/len @entity.jobs)) (= @entity.stage "p2"))
+        (emit GAPS_PLANS { })
       GAPS_SCAN -> analyzing when (and (>= @entity.cursor (array/len @entity.jobs)) (= @entity.stage "c4"))
         (set @entity.jobs [])
         (emit GAPS_CHECK { })
@@ -564,6 +602,71 @@ orbital OrbGapsOrbital {
         (set @entity.outFiles (array/concat @entity.utexts (if (!= @entity.nextMaster @entity.masterText) [{ path: "docs/Almadar_Gaps.md", ok: true, text: @entity.nextMaster }] (array/take @entity.utexts 0)) [{ path: @config.baseline, ok: true, text: (str/concat "{\n  \"version\": 1,\n  \"entries\": " (if (= (array/len @entity.merged) 0) "[]" (str/concat "[\n" (str/join (array/map @entity.merged (fn e (str/concat "    [\n      " (json/stringify (object/get @e "code")) ",\n      {\n        \"repo\": " (json/stringify (object/get @e "repo")) ",\n        \"heading\": " (json/stringify (object/get @e "heading")) ",\n        \"body\": " (json/stringify (object/get @e "body")) "\n      }\n    ]"))) ",\n") "\n  ]")) "\n}\n") }]))
         (set @entity.wcur 0)
         (emit GAPS_W_NEXT { })
+    }
+
+    state planning {
+      INIT -> planning
+      GAPS_PLANS -> planning
+        (set @entity.pLines (str/split (str/join (array/map (array/filter @entity.reads (fn r (= (object/get @r "path") "docs/Almadar_Plans.md"))) (fn r (object/get @r "text"))) "") "\n"))
+        (set @entity.pSec (array/findIndex @entity.pLines (fn l (str/startsWith @l @config.planHeading))))
+        (set @entity.pEndSec (if (< @entity.pSec 0) 0
+          (let ((n (array/findIndex (array/slice @entity.pLines (+ @entity.pSec 1) (array/len @entity.pLines)) (fn l (str/startsWith @l "## ")))))
+            (if (< @n 0) (array/len @entity.pLines) (+ @entity.pSec 1 @n)))))
+        (set @entity.pTags (array/map (array/flatten (array/map @entity.scans (fn s (object/get @s "entries")))) (fn e
+          { code: (object/get @e "code"),
+            tags: (array/map (array/drop (str/split (object/get @e "body") "Root cause: ") 1) (fn p (str/trim (default (array/first (str/split @p ".")) "")))) })))
+        (set @entity.pCauses (if (< @entity.pSec 0) (array/take [{ id: "", name: "", closed: false, codes: [""] }] 0)
+          (let ((sec (array/slice @entity.pLines @entity.pSec @entity.pEndSec)))
+            (let ((flags (array/reduce @sec (array/take [true] 0) (fn acc l
+                    (array/append @acc
+                      (if (str/startsWith @l "### ") (array/some @config.causeSections (fn h (str/startsWith @l @h)))
+                        (if (str/startsWith @l "## ") false
+                          (if (= (array/len @acc) 0) false (array/last @acc)))))))))
+              (array/map (array/filter (array/range 0 (array/len @sec)) (fn i (and (default (array/nth @flags @i) false) (validate/pattern (default (array/nth @sec @i) "") "^- \\*\\*[A-Z]+[0-9]+ [^*]+\\*\\*"))))
+                (fn i
+                  (let ((line (default (array/nth @sec @i) "")))
+                    (let ((bold (default (array/nth (str/split @line "**") 1) "")))
+                      (let ((cid (default (array/first (str/split @bold " ")) "")))
+                        { id: @cid,
+                          name: @bold,
+                          closed: (str/includes @line "[closed]"),
+                          codes: (array/map (array/filter @entity.pTags (fn t (and (= (array/len (object/get @t "tags")) 1) (= (array/first (object/get @t "tags")) @cid)))) (fn t (object/get @t "code"))) })))))))))
+        (emit GAPS_PLANS_B { })
+      GAPS_PLANS_B -> planning
+        (set @entity.pBeginAt (let ((hits (array/filter (array/range (math/max @entity.pSec 0) @entity.pEndSec) (fn i (= (array/nth @entity.pLines @i) @config.markerBegin))))) (if (= (array/len @hits) 1) (default (array/first @hits) -1) -1)))
+        (set @entity.pEndAt (let ((hits (array/filter (array/range (math/max @entity.pSec 0) @entity.pEndSec) (fn i (= (array/nth @entity.pLines @i) @config.markerEnd))))) (if (= (array/len @hits) 1) (default (array/first @hits) -1) -1)))
+        (set @entity.pTable (array/concat
+          ["| Cause | Open | Gaps |", "|---|---|---|"]
+          (array/map @entity.pCauses (fn c (str/concat "| " (object/get @c "name") " | " (array/len (object/get @c "codes")) " | " (if (= (array/len (object/get @c "codes")) 0) "(none)" (str/join (object/get @c "codes") ", ")) " |")))
+          (array/map @config.freeTags (fn f (str/concat "| " @f " | " (array/len (array/filter @entity.pTags (fn t (and (= (array/len (object/get @t "tags")) 1) (= (array/first (object/get @t "tags")) @f))))) " | (see docs/Almadar_Gaps.md) |")))))
+        (set @entity.pDrift (and (>= @entity.pBeginAt 0) (>= @entity.pEndAt 0) (> @entity.pEndAt @entity.pBeginAt)
+          (!= (str/join (array/slice @entity.pLines (+ @entity.pBeginAt 1) @entity.pEndAt) "\n") (str/join @entity.pTable "\n"))))
+        (set @entity.pSummary (str/concat (array/len @entity.pTags) " open: "
+          (str/join (array/concat
+            (array/map (array/filter @entity.pCauses (fn c (> (array/len (object/get @c "codes")) 0))) (fn c (str/concat (default (array/first (str/split (object/get @c "name") " ")) "") " " (array/len (object/get @c "codes")))))
+            (array/map (array/filter @config.freeTags (fn f (> (array/len (array/filter @entity.pTags (fn t (and (= (array/len (object/get @t "tags")) 1) (= (array/first (object/get @t "tags")) @f))))) 0))) (fn f (str/concat @f " " (array/len (array/filter @entity.pTags (fn t (and (= (array/len (object/get @t "tags")) 1) (= (array/first (object/get @t "tags")) @f))))))))) ", ")))
+        (set @entity.errs (if (< @entity.pSec 0) (array/append (array/take ["x"] 0) "docs/Almadar_Plans.md has no P-017 section")
+          (array/concat
+            (if (= (array/len @entity.pCauses) 0) (array/append (array/take ["x"] 0) "docs/Almadar_Plans.md P-017 lists no causes under its cause subsections") (array/take ["x"] 0))
+            (if (or (< @entity.pBeginAt 0) (< @entity.pEndAt 0) (< @entity.pEndAt @entity.pBeginAt)) (array/append (array/take ["x"] 0) "docs/Almadar_Plans.md P-017 needs exactly one ordered p017-gaps marker pair") (array/take ["x"] 0))
+            (array/map (array/filter (array/map @entity.pCauses (fn c (object/get @c "id"))) (fn i (< (array/indexOf (array/map @entity.pCauses (fn c (object/get @c "id"))) @i) @index))) (fn i (str/concat "duplicate cause id: " @i)))
+            (array/map (array/filter (array/map @entity.pTags (fn t (object/get @t "code"))) (fn c (< (array/indexOf (array/map @entity.pTags (fn t (object/get @t "code"))) @c) @index))) (fn c (str/concat "duplicate gap code: " @c)))
+            (array/map (array/filter @entity.pTags (fn t (= (array/len (object/get @t "tags")) 0))) (fn t (str/concat "untagged: " (object/get @t "code") " has no Root cause tag")))
+            (array/map (array/filter @entity.pTags (fn t (> (array/len (object/get @t "tags")) 1))) (fn t (str/concat "double-tagged: " (object/get @t "code") " (" (str/join (object/get @t "tags") ", ") ")")))
+            (array/map (array/filter @entity.pTags (fn t (and (= (array/len (object/get @t "tags")) 1) (not (array/includes (array/concat (array/map @entity.pCauses (fn c (object/get @c "id"))) @config.freeTags) (array/first (object/get @t "tags"))))))) (fn t (str/concat "unknown tag: " (object/get @t "code") " is tagged " (default (array/first (object/get @t "tags")) ""))))
+            (array/map (array/filter @entity.pCauses (fn c (and (= (array/len (object/get @c "codes")) 0) (not (object/get @c "closed"))))) (fn c (str/concat "cause " (object/get @c "id") " has no open gaps and is not marked [closed]")))
+            (array/map (array/filter @entity.pCauses (fn c (and (> (array/len (object/get @c "codes")) 0) (object/get @c "closed")))) (fn c (str/concat "cause " (object/get @c "id") " is marked [closed] but has open gaps: " (str/join (object/get @c "codes") ", ")))))))
+        (set @entity.pFail (str/join (array/concat @entity.errs (if (and @entity.pDrift (!= @entity.mode "write")) (array/append (array/take ["x"] 0) "docs/Almadar_Plans.md P-017 gap table is stale; run: orb gaps plans --write") (array/take ["x"] 0))) "\n"))
+        (emit GAPS_PLANS_C { })
+      GAPS_PLANS_C -> ready when (!= @entity.pFail "")
+        (emit GAPS_ANSWERED { status: 500, body: @entity.pFail })
+      GAPS_PLANS_C -> writing when (and (= @entity.pFail "") (= @entity.mode "write") @entity.pDrift)
+        (set @entity.outFiles [{ path: "docs/Almadar_Plans.md", ok: true, text: (str/join (array/concat (array/slice @entity.pLines 0 (+ @entity.pBeginAt 1)) @entity.pTable (array/slice @entity.pLines @entity.pEndAt (array/len @entity.pLines))) "\n") }])
+        (set @entity.out [(str/concat "plans: written (" @entity.pSummary ")")])
+        (set @entity.wcur 0)
+        (emit GAPS_W_NEXT { })
+      GAPS_PLANS_C -> ready when (and (= @entity.pFail "") (or (!= @entity.mode "write") (not @entity.pDrift)))
+        (emit GAPS_ANSWERED { status: 200, body: (str/concat "plans: aligned (" @entity.pSummary ")") })
     }
 
     state updating {
@@ -801,6 +904,15 @@ orbital OrbGapsOrbital {
       GAPS_RENDERED { }
         @description "Internal: the roll-up was rendered."
         @tier "internal"
+      GAPS_PLANS { }
+        @description "Internal: read the cause list and the gap tags."
+        @tier "internal"
+      GAPS_PLANS_B { }
+        @description "Internal: build the table and list the problems."
+        @tier "internal"
+      GAPS_PLANS_C { }
+        @description "Internal: answer, or write the table."
+        @tier "internal"
       GAPS_W_NEXT { }
         @description "Internal: write the next file."
         @tier "internal"
@@ -820,6 +932,21 @@ orbital OrbGapsOrbital {
     }
 
     config {
+      planHeading : string = "## P-017 "
+        @label "Plans heading"
+        @description "The heading prefix of the Plans section whose causes the ledger tags name."
+      causeSections : [string] = ["### Kernel", "### Language front", "### Hosts", "### Tooling", "### std, apps, release"]
+        @label "Cause subsections"
+        @description "Heading prefixes of the subsections that list the causes as bullets."
+      freeTags : [string] = ["one-off", "periphery"]
+        @label "Free tags"
+        @description "Root-cause tags that name no cause."
+      markerBegin : string = "<!-- p017-gaps:begin -->"
+        @label "Table begin marker"
+        @description "The line that opens the generated gap table in the Plans section."
+      markerEnd : string = "<!-- p017-gaps:end -->"
+        @label "Table end marker"
+        @description "The line that closes the generated gap table in the Plans section."
       baseline : string = ".almadar/gaps-sync-state.json"
         @label "Baseline"
         @description "The sync baseline file, relative to the working root; gitignored."

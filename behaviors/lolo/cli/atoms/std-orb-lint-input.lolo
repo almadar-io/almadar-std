@@ -119,6 +119,7 @@ orbital OrbLintInputOrbital {
     factsDone : boolean = true
     factsWaiting : boolean = false
     pendingProgram : LintProgram?
+    childIndex : number = 0
   }
 
   trait Versions = Semver.traits.Semver {
@@ -151,7 +152,10 @@ orbital OrbLintInputOrbital {
         (set @entity.packs [])
         (os/realpath { anchor: "cwd" path: "." } { key: "lint-input-cwd" emit: { success: LINT_CWD, failure: LINT_FILE_UNREAD } })
       LINT_CHILD_REQUEST -> ready
-        (emit LINT_INPUT_OFFER { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: (object/get (array/nth @entity.lazy @payload.index) "program"), scope: (object/get (array/nth @entity.lazy @payload.index) "orbital") })
+        (set @entity.childIndex @payload.index)
+        (os/realpath { anchor: "cwd" path: "." } { key: "lint-input-child" emit: { success: LINT_CHILD_BEGIN, failure: LINT_FILE_UNREAD } })
+      LINT_CHILD_BEGIN -> ready
+        (emit LINT_INPUT_OFFER { file: @entity.file, raw: @entity.raw, latin: @entity.latin, program: (object/get (array/nth @entity.lazy @entity.childIndex) "program"), scope: (object/get (array/nth @entity.lazy @entity.childIndex) "orbital") })
       LINT_INPUT_OFFER -> ready
         (let ((nov : [string] []))
           (let ((rows (let ((orbs (object/get @payload.program "orbitals" [])))
@@ -563,6 +567,8 @@ orbital OrbLintInputOrbital {
         @description "Ask the language engine to scan the installed language packs."
         @tier "internal"
       LINT_CWD { path : string! }
+      LINT_CHILD_BEGIN { path : string! }
+        @description "A lazy child pass starts in a dispatch of its own: the keyed cwd ask of LINT_CHILD_REQUEST answered, so the pass does not draw on the step cap of the pass that asked for it (EXEC-QUEUE-10)."
         @description "The working directory read."
         @tier "internal"
     }

@@ -44,6 +44,8 @@ import { WORKSPACE_OPERATORS } from './modules/workspace.js';
 import { SESSION_OPERATORS } from './modules/session.js';
 import { MEMORY_OPERATORS } from './modules/memory.js';
 import { TRACE_OPERATORS } from './modules/trace.js';
+import { AUDIO_OPERATORS } from './modules/audio.js';
+import { AUTH_OPERATORS } from './modules/auth.js';
 import { BEHAVIOR_OPERATORS } from './modules/behavior.js';
 import { PROGRAM_OPERATORS } from './modules/program.js';
 import { BYTES_OPERATORS } from './modules/bytes.js';
@@ -85,6 +87,8 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...LLM_OPERATORS,
   ...WORKSPACE_OPERATORS,
   ...SESSION_OPERATORS,
+  ...AUDIO_OPERATORS,
+  ...AUTH_OPERATORS,
   ...MEMORY_OPERATORS,
   ...TRACE_OPERATORS,
   ...BEHAVIOR_OPERATORS,
@@ -137,6 +141,8 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   session: SESSION_OPERATORS,
   memory: MEMORY_OPERATORS,
   trace: TRACE_OPERATORS,
+  audio: AUDIO_OPERATORS,
+  auth: AUTH_OPERATORS,
   behavior: BEHAVIOR_OPERATORS,
   program: PROGRAM_OPERATORS,
   bytes: BYTES_OPERATORS,

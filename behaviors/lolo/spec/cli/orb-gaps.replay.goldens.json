@@ -1,0 +1,1488 @@
+{
+  "atom": "cli/atoms/std-orb-gaps.lolo",
+  "trait": "OrbGaps",
+  "note": "Each step seeds the entity at the state where `plans` has read both files and scanned the master ledger (reads carries the Plans text, scans carries the ledger entries with their Root cause tags); the replay kernel answers os writes with an unsupported failure, so the write case asserts the os/write-file effect.",
+  "cases": [
+    {
+      "id": "aligned-answers-the-open-count",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "check",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** [closed] (0): done\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n<!-- p017-gaps:begin -->\n| Cause | Open | Gaps |\n|---|---|---|\n| K1 One value model | 1 | G-CROSS-001 |\n| K2 Check once | 0 | (none) |\n| A1 Lossless lowering | 1 | G-CROSS-002 |\n| one-off | 1 | (see docs/Almadar_Gaps.md) |\n| periphery | 0 | (see docs/Almadar_Gaps.md) |\n<!-- p017-gaps:end -->\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "plans: aligned (3 open: K1 1, A1 1, one-off 1)"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "untagged-entry-is-refused",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "check",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** [closed] (0): done\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n<!-- p017-gaps:begin -->\n| Cause | Open | Gaps |\n|---|---|---|\n| K1 One value model | 1 | G-CROSS-001 |\n| K2 Check once | 0 | (none) |\n| A1 Lossless lowering | 1 | G-CROSS-002 |\n| one-off | 1 | (see docs/Almadar_Gaps.md) |\n| periphery | 0 | (see docs/Almadar_Gaps.md) |\n<!-- p017-gaps:end -->\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-004",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-004** \u2014 gap text.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "untagged: G-CROSS-004 has no Root cause tag"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "double-tagged-entry-is-refused",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "check",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** [closed] (0): done\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n<!-- p017-gaps:begin -->\n| Cause | Open | Gaps |\n|---|---|---|\n| K1 One value model | 1 | G-CROSS-001 |\n| K2 Check once | 0 | (none) |\n| A1 Lossless lowering | 1 | G-CROSS-002 |\n| one-off | 1 | (see docs/Almadar_Gaps.md) |\n| periphery | 0 | (see docs/Almadar_Gaps.md) |\n<!-- p017-gaps:end -->\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "double-tagged: G-CROSS-001 (K1, A1)\ncause K1 has no open gaps and is not marked [closed]\ndocs/Almadar_Plans.md P-017 gap table is stale; run: orb gaps plans --write"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-tag-is-refused-and-a-bullet-outside-the-cause-subsections-is-no-cause",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "check",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** [closed] (0): done\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n<!-- p017-gaps:begin -->\n| Cause | Open | Gaps |\n|---|---|---|\n| K1 One value model | 1 | G-CROSS-001 |\n| K2 Check once | 0 | (none) |\n| A1 Lossless lowering | 1 | G-CROSS-002 |\n| one-off | 1 | (see docs/Almadar_Gaps.md) |\n| periphery | 0 | (see docs/Almadar_Gaps.md) |\n<!-- p017-gaps:end -->\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-004",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-004** \u2014 gap text. Root cause: Z9.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "unknown tag: G-CROSS-004 is tagged Z9"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "duplicate-gap-code-is-refused",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "check",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** [closed] (0): done\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n<!-- p017-gaps:begin -->\n| Cause | Open | Gaps |\n|---|---|---|\n| K1 One value model | 1 | G-CROSS-001 |\n| K2 Check once | 0 | (none) |\n| A1 Lossless lowering | 1 | G-CROSS-002 |\n| one-off | 1 | (see docs/Almadar_Gaps.md) |\n| periphery | 0 | (see docs/Almadar_Gaps.md) |\n<!-- p017-gaps:end -->\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "duplicate gap code: G-CROSS-001\ndocs/Almadar_Plans.md P-017 gap table is stale; run: orb gaps plans --write"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty-cause-that-is-not-closed-is-refused",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "check",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** (0): not closed\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n<!-- p017-gaps:begin -->\n| Cause | Open | Gaps |\n|---|---|---|\n| K1 One value model | 1 | G-CROSS-001 |\n| K2 Check once | 0 | (none) |\n| A1 Lossless lowering | 1 | G-CROSS-002 |\n| one-off | 1 | (see docs/Almadar_Gaps.md) |\n| periphery | 0 | (see docs/Almadar_Gaps.md) |\n<!-- p017-gaps:end -->\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "cause K2 has no open gaps and is not marked [closed]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "closed-cause-with-open-gaps-is-refused",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "check",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** [closed] (0): done\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n<!-- p017-gaps:begin -->\n| Cause | Open | Gaps |\n|---|---|---|\n| K1 One value model | 1 | G-CROSS-001 |\n| K2 Check once | 0 | (none) |\n| A1 Lossless lowering | 1 | G-CROSS-002 |\n| one-off | 1 | (see docs/Almadar_Gaps.md) |\n| periphery | 0 | (see docs/Almadar_Gaps.md) |\n<!-- p017-gaps:end -->\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-004",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-004** \u2014 gap text. Root cause: K2.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "cause K2 is marked [closed] but has open gaps: G-CROSS-004\ndocs/Almadar_Plans.md P-017 gap table is stale; run: orb gaps plans --write"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing-markers-are-refused",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "check",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** [closed] (0): done\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "docs/Almadar_Plans.md P-017 needs exactly one ordered p017-gaps marker pair"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "duplicated-markers-are-refused",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "check",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** [closed] (0): done\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n<!-- p017-gaps:begin -->\n| Cause | Open | Gaps |\n|---|---|---|\n| K1 One value model | 1 | G-CROSS-001 |\n| K2 Check once | 0 | (none) |\n| A1 Lossless lowering | 1 | G-CROSS-002 |\n| one-off | 1 | (see docs/Almadar_Gaps.md) |\n| periphery | 0 | (see docs/Almadar_Gaps.md) |\n<!-- p017-gaps:end -->\n<!-- p017-gaps:begin -->\n<!-- p017-gaps:end -->\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "docs/Almadar_Plans.md P-017 needs exactly one ordered p017-gaps marker pair"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "drifted-block-is-refused-by-check",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "check",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** [closed] (0): done\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n<!-- p017-gaps:begin -->\n| Cause | Open | Gaps |\n|---|---|---|\n| K1 One value model | 9 | G-X |\n<!-- p017-gaps:end -->\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "docs/Almadar_Plans.md P-017 gap table is stale; run: orb gaps plans --write"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing-p017-section-is-refused",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "check",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "docs/Almadar_Plans.md has no P-017 section"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "section-without-causes-is-refused",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "check",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-017 Release\nprose\n<!-- p017-gaps:begin -->\n<!-- p017-gaps:end -->\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "docs/Almadar_Plans.md P-017 lists no causes under its cause subsections\nunknown tag: G-CROSS-001 is tagged K1\nunknown tag: G-CROSS-002 is tagged A1\ndocs/Almadar_Plans.md P-017 gap table is stale; run: orb gaps plans --write"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "write-on-a-drifted-block-writes-and-does-not-refuse",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "write",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** [closed] (0): done\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n<!-- p017-gaps:begin -->\n| Cause | Open | Gaps |\n|---|---|---|\n| K1 One value model | 9 | G-X |\n<!-- p017-gaps:end -->\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_PLANS_B",
+                "payload": {}
+              },
+              {
+                "event": "GAPS_PLANS_C",
+                "payload": {}
+              },
+              {
+                "event": "GAPS_W_NEXT",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "GAPS_ANSWERED"
+            ]
+          }
+        },
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "check",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** [closed] (0): done\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n<!-- p017-gaps:begin -->\n| Cause | Open | Gaps |\n|---|---|---|\n| K1 One value model | 1 | G-CROSS-001 |\n| K2 Check once | 0 | (none) |\n| A1 Lossless lowering | 1 | G-CROSS-002 |\n| one-off | 1 | (see docs/Almadar_Gaps.md) |\n| periphery | 0 | (see docs/Almadar_Gaps.md) |\n<!-- p017-gaps:end -->\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "plans: aligned (3 open: K1 1, A1 1, one-off 1)"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "write-on-an-aligned-block-writes-nothing",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "write",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** [closed] (0): done\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n<!-- p017-gaps:begin -->\n| Cause | Open | Gaps |\n|---|---|---|\n| K1 One value model | 1 | G-CROSS-001 |\n| K2 Check once | 0 | (none) |\n| A1 Lossless lowering | 1 | G-CROSS-002 |\n| one-off | 1 | (see docs/Almadar_Gaps.md) |\n| periphery | 0 | (see docs/Almadar_Gaps.md) |\n<!-- p017-gaps:end -->\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "plans: aligned (3 open: K1 1, A1 1, one-off 1)"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GAPS_W_NEXT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "write-is-refused-while-a-tag-problem-stands",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "write",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** [closed] (0): done\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n<!-- p017-gaps:begin -->\n| Cause | Open | Gaps |\n|---|---|---|\n| K1 One value model | 9 | G-X |\n<!-- p017-gaps:end -->\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-004",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-004** \u2014 gap text.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "untagged: G-CROSS-004 has no Root cause tag"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GAPS_W_NEXT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "preview-mode-refuses-a-drifted-block-like-check",
+      "steps": [
+        {
+          "event": "GAPS_PLANS",
+          "payload": {},
+          "from": "planning",
+          "entity": {
+            "id": "run",
+            "mode": "preview",
+            "reads": [
+              {
+                "path": "docs/Almadar_Gaps.md",
+                "ok": true,
+                "text": ""
+              },
+              {
+                "path": "docs/Almadar_Plans.md",
+                "ok": true,
+                "text": "# Plans\n## P-016 Old plan\n- **K1 Old copy** (1): not a P-017 cause\n## P-017 Release: fix the structural causes `[active]`\nintro prose\n### Kernel (core)\n- **K1 One value model** (1): one value\n- **K2 Check once** [closed] (0): done\n### Language front (lolo)\n- **A1 Lossless lowering** (1): lossless\n### Other notes\n- **Z9 Not a cause** (0): outside the cause subsections\n<!-- p017-gaps:begin -->\n| Cause | Open | Gaps |\n|---|---|---|\n| K1 One value model | 9 | G-X |\n<!-- p017-gaps:end -->\n## Periphery\ntail\n"
+              }
+            ],
+            "scans": [
+              {
+                "key": "docs/Almadar_Gaps.md",
+                "lines": [],
+                "flags": [],
+                "entries": [
+                  {
+                    "code": "G-CROSS-001",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-001** \u2014 gap text. Root cause: K1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-002",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-002** \u2014 gap text. Root cause: A1.",
+                    "at": 0,
+                    "endAt": 1
+                  },
+                  {
+                    "code": "G-CROSS-003",
+                    "repo": "ROOT",
+                    "heading": "",
+                    "body": "- **G-CROSS-003** \u2014 gap text. Root cause: one-off.",
+                    "at": 0,
+                    "endAt": 1
+                  }
+                ],
+                "gapLines": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "docs/Almadar_Plans.md P-017 gap table is stale; run: orb gaps plans --write"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "plans-takes-no-out-option",
+      "steps": [
+        {
+          "event": "GAPS_ARGS_DONE",
+          "payload": {
+            "stage": "gaps",
+            "flags": {
+              "out": [
+                "x"
+              ]
+            },
+            "positionals": [],
+            "errors": [],
+            "words": []
+          },
+          "from": "ready",
+          "entity": {
+            "id": "run",
+            "cwd": "/w",
+            "cmd": "plans"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_PARSED",
+                "payload": {}
+              },
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "error: unrecognized option: --out"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "plans-takes-no-from-option",
+      "steps": [
+        {
+          "event": "GAPS_ARGS_DONE",
+          "payload": {
+            "stage": "gaps",
+            "flags": {
+              "from": [
+                "master"
+              ]
+            },
+            "positionals": [],
+            "errors": [],
+            "words": []
+          },
+          "from": "ready",
+          "entity": {
+            "id": "run",
+            "cwd": "/w",
+            "cmd": "plans"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_PARSED",
+                "payload": {}
+              },
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "error: unrecognized option: --from"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "plans-takes-no-positional",
+      "steps": [
+        {
+          "event": "GAPS_ARGS_DONE",
+          "payload": {
+            "stage": "gaps",
+            "flags": {},
+            "positionals": [
+              "extra"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "from": "ready",
+          "entity": {
+            "id": "run",
+            "cwd": "/w",
+            "cmd": "plans"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_PARSED",
+                "payload": {}
+              },
+              {
+                "event": "GAPS_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "error: unrecognized option: extra"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "sync-still-takes-out-control",
+      "steps": [
+        {
+          "event": "GAPS_ARGS_DONE",
+          "payload": {
+            "stage": "gaps",
+            "flags": {
+              "out": [
+                "x"
+              ]
+            },
+            "positionals": [],
+            "errors": [],
+            "words": []
+          },
+          "from": "ready",
+          "entity": {
+            "id": "run",
+            "cwd": "/w",
+            "cmd": "sync"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_PARSED",
+                "payload": {}
+              },
+              {
+                "event": "GAPS_PROBE",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "GAPS_ANSWERED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "plans-write-and-check-read-the-ledger-and-the-plans-first",
+      "steps": [
+        {
+          "event": "GAPS_ARGS_DONE",
+          "payload": {
+            "stage": "gaps",
+            "flags": {
+              "write": [
+                "true"
+              ]
+            },
+            "positionals": [],
+            "errors": [],
+            "words": []
+          },
+          "from": "ready",
+          "entity": {
+            "id": "run",
+            "cwd": "/w",
+            "cmd": "plans"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_PARSED",
+                "payload": {}
+              },
+              {
+                "event": "GAPS_READ",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "GAPS_PROBE"
+            ]
+          }
+        },
+        {
+          "event": "GAPS_ARGS_DONE",
+          "payload": {
+            "stage": "gaps",
+            "flags": {
+              "check": [
+                "true"
+              ]
+            },
+            "positionals": [],
+            "errors": [],
+            "words": []
+          },
+          "from": "ready",
+          "entity": {
+            "id": "run",
+            "cwd": "/w",
+            "cmd": "plans"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GAPS_PARSED",
+                "payload": {}
+              },
+              {
+                "event": "GAPS_READ",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "GAPS_PROBE"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

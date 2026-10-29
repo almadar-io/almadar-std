@@ -44,6 +44,8 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
       'std-composition': { description: 'Behavior composition (compile-time)', target: ['ts', 'rust'] },
     'std-llm': { description: 'LLM interaction substrate (runtime)', target: ['ts'] },
     'std-workspace': { description: 'Workspace I/O substrate (runtime)', target: ['ts'] },
+    'std-audio': { description: 'Host audio asks (play, stop, music) — client host effects', target: ['ts'] },
+    'std-auth': { description: 'Host session asks (sign-in, sign-out) — client host effects', target: ['ts'] },
     'std-session': { description: 'Session state substrate (runtime)', target: ['ts'] },
     'std-memory': { description: 'Agent memory substrate (runtime)', target: ['ts'] },
     'std-trace': { description: 'Execution tracing substrate (runtime)', target: ['ts'] },

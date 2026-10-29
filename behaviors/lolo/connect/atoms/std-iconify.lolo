@@ -53,7 +53,7 @@ orbital IconifyOrbital {
           timeoutMs: @config.timeoutMs
         } { key: @payload.iconId, emit: { success: ICONIFY_BODY_REPLIED, failure: ICONIFY_BODY_FAILED } })
       ICONIFY_GET_ICON_BODY -> idle when (or (< (array/len (str/split @payload.iconId ":")) 2) (= (array/nth (str/split @payload.iconId ":") 0) "") (= (array/nth (str/split @payload.iconId ":") 1) ""))
-        (emit ICONIFY_ICON_BODY_RESULT { body: null })
+        (emit ICONIFY_ICON_BODY_RESULT {})
       ICONIFY_BODY_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (emit ICONIFY_ICON_BODY_RESULT {
           body: (or
@@ -61,9 +61,9 @@ orbital IconifyOrbital {
             (object/get (object/get (object/get (json/parse @payload.body IconifyIconSet) aliases {}) (array/nth (str/split @payload.key ":") 1) {}) body null))
         })
       ICONIFY_BODY_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
-        (emit ICONIFY_ICON_BODY_RESULT { body: null })
+        (emit ICONIFY_ICON_BODY_RESULT {})
       ICONIFY_BODY_FAILED -> idle
-        (emit ICONIFY_ICON_BODY_RESULT { body: null })
+        (emit ICONIFY_ICON_BODY_RESULT {})
     }
 
     emits {
@@ -82,7 +82,7 @@ orbital IconifyOrbital {
       ICONIFY_ICON_BODY_RESULT -> external {
         body : string
       }
-        @description "The SVG body of the requested icon id, resolved through the set's aliases when the icon itself is absent; null when the id is malformed, unknown or the call failed."
+        @description "The SVG body of the requested icon id, resolved through the set's aliases when the icon itself is absent; absent when the id is malformed, unknown or the call failed."
         @synonyms "icon svg body, icon markup, resolved icon"
         @tier "primary"
       ICONIFY_SVG_REPLIED {

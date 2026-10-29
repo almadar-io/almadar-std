@@ -103,12 +103,12 @@ orbital LlmLocalOrbital {
         })
 
       LLM_LOCAL_FAILED -> idle
-        (emit LLM_FAILED {
-          code: (match @payload.kind ("unconfigured" "NOT_CONFIGURED") ("unavailable" "MODEL_UNAVAILABLE") (_ null)),
-          message: @payload.error,
-          key: (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) callKey ""),
-          action: (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) action "")
-        })
+        (let ((k (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) callKey "")) (a (object/get (json/parse (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key))))) (if (= @e null) @payload.key (object/get @e job ""))) LocalJob) action "")))
+          (if (= @payload.kind "unconfigured")
+            (emit LLM_FAILED { code: "NOT_CONFIGURED", message: @payload.error, key: @k, action: @a })
+            (if (= @payload.kind "unavailable")
+              (emit LLM_FAILED { code: "MODEL_UNAVAILABLE", message: @payload.error, key: @k, action: @a })
+              (emit LLM_FAILED { message: @payload.error, key: @k, action: @a }))))
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
 
       LLM_LOCAL_CANCELLED -> idle
