@@ -6,7 +6,8 @@
  */
 
 import type { OperatorTypeRef, OsGrantNeed, StdOperatorMeta } from '../types.js';
-import { EMIT_ENVELOPE, NUMBER, STRING, list, lit, shape, tv, union } from '../signature.js';
+import { withKey } from './os-common.js';
+import { BOOLEAN, EMIT_ENVELOPE, NUMBER, STRING, list, lit, shape, tv, union } from '../signature.js';
 
 type KvParam = NonNullable<StdOperatorMeta['params']>[number];
 
@@ -25,7 +26,7 @@ const OPTIONS: KvParam = {
   optional: true,
 };
 
-function kvEffect(def: { grant: OsGrantNeed[]; description: string; params: KvParam[]; example: string }): StdOperatorMeta {
+function kvEffect(def: { grant: OsGrantNeed[]; description: string; params: KvParam[]; example: string; answer?: OperatorTypeRef }): StdOperatorMeta {
   const required = def.params.filter((p) => p.optional !== true).length;
   return {
     module: 'kv',
@@ -40,6 +41,7 @@ function kvEffect(def: { grant: OsGrantNeed[]; description: string; params: KvPa
     returnType: 'void',
     params: [...def.params, OPTIONS],
     example: def.example,
+    ...(def.answer === undefined ? {} : { effect: { kind: 'custom', produces: withKey(def.answer) } }),
   };
 }
 
@@ -51,24 +53,28 @@ export const KV_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["kv/get", "rows", "order/1", { "emit": { "success": "ROW_READ", "failure": "KV_FAILED" } }]',
   }),
   'kv/put': kvEffect({
+    answer: shape({ storedKey: STRING }),
     grant: [{ kind: 'kv', access: 'write', store: 0 }],
     description: 'Write one key, replacing any value (grant kv: write). The value must be JSON. Success payload: { storedKey }.',
     params: [STORE, KEY, { name: 'value', type: VALUE, description: 'A JSON value' }],
     example: '["kv/put", "rows", "order/1", { "id": "1" }, { "emit": { "success": "ROW_PUT", "failure": "KV_FAILED" } }]',
   }),
   'kv/delete': kvEffect({
+    answer: shape({ existed: BOOLEAN }),
     grant: [{ kind: 'kv', access: 'write', store: 0 }],
     description: 'Delete one key (grant kv: write). Success payload: { existed }; deleting a miss succeeds with existed: false.',
     params: [STORE, KEY],
     example: '["kv/delete", "rows", "order/1", { "emit": { "success": "ROW_DELETED", "failure": "KV_FAILED" } }]',
   }),
   'kv/scan': kvEffect({
+    answer: shape({ entries: list(shape({ key: STRING, value: VALUE })) }),
     grant: [{ kind: 'kv', access: 'read', store: 0 }],
     description: 'Every key starting with prefix, ascending in UTF-8 byte order, at most limit (grant kv: read). Success payload: { entries: [{ key, value }] }.',
     params: [STORE, { name: 'prefix', type: STRING, description: 'Key prefix; "" is the whole store' }, { name: 'limit', type: NUMBER, description: 'Most entries to return', optional: true }],
     example: '["kv/scan", "rows", "order/", { "emit": { "success": "ROWS_SCANNED", "failure": "KV_FAILED" } }]',
   }),
   'kv/batch': kvEffect({
+    answer: shape({ applied: NUMBER }),
     grant: [{ kind: 'kv', access: 'write', store: 0 }],
     description: 'Apply puts and deletes to one store all-or-nothing (grant kv: write). Success payload: { applied }.',
     params: [STORE, { name: 'ops', type: list(BATCH_OP), description: 'The puts and deletes, applied in order' }],

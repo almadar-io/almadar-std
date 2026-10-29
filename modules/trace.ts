@@ -25,20 +25,6 @@ export const TRACE_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["trace/emit", "coordinator_state_changed", {"phase": "planning"}]',
   },
-  'trace/log': {
-    module: 'trace', category: 'std-trace',
-    host: 'substrate',
-    minArity: 2, maxArity: 2,
-    description: 'Log a message at the given level.',
-    hasSideEffects: true,
-    runsOn: 'any',
-    returnType: 'void',
-    params: [
-      { name: 'level', type: { kind: 'union', of: [{ kind: 'literal', value: 'info' }, { kind: 'literal', value: 'warn' }, { kind: 'literal', value: 'error' }, { kind: 'literal', value: 'debug' }] }, description: 'Log level' },
-      { name: 'message', type: 'string', description: 'Log message' },
-    ],
-    example: '["trace/log", "info", "coordinator started"]',
-  },
 };
 
 export function getTraceOperators(): string[] {

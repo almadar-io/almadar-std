@@ -43,7 +43,19 @@ const STREAM_OPTIONS: OsParam = {
   optional: true,
 };
 
+/** An answer's payload with the call's `key` beside it: present only when the call is keyed. */
+export function withKey(answer: OperatorTypeRef): OperatorTypeRef {
+  if (typeof answer === 'string' || answer.kind !== 'object') throw new Error('an os answer is an object shape');
+  return { ...answer, fields: { ...answer.fields, key: STRING }, optional: [...(answer.optional ?? []), 'key'] };
+}
+
 interface OsEffectDef {
+  /** The success payload (`emit.success`); absent when the contract states none. */
+  answer?: OperatorTypeRef;
+  /** Each event of a stream (`emit.onMessage`). */
+  events?: OperatorTypeRef;
+  /** The answer of a stream op called with no `onMessage` route. */
+  unrouted?: OperatorTypeRef;
   grant: OsGrantNeed[];
   description: string;
   params: OsParam[];
@@ -67,6 +79,16 @@ export function osEffect(def: OsEffectDef): StdOperatorMeta {
     returnType: 'void',
     params: [...def.params, def.stream ? STREAM_OPTIONS : OPTIONS],
     example: def.example,
+    ...(def.answer === undefined
+      ? {}
+      : {
+          effect: {
+            kind: 'custom' as const,
+            produces: withKey(def.answer),
+            ...(def.events === undefined ? {} : { events: withKey(def.events) }),
+            ...(def.unrouted === undefined ? {} : { unrouted: withKey(def.unrouted) }),
+          },
+        }),
   };
 }
 

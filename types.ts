@@ -443,6 +443,10 @@ export interface OperatorEffectMeta {
     | 'custom';
   /** What the effect puts onto the bus / state when it resolves. */
   produces?: OperatorTypeRef;
+  /** What each event of a stream puts onto the bus (`emit.onMessage`). */
+  events?: OperatorTypeRef;
+  /** What the effect puts onto the bus when called with no `onMessage` route, where that differs from `produces`. */
+  unrouted?: OperatorTypeRef;
   /** Effect-specific config keys and their declared types. */
   config?: Record<string, OperatorTypeRef>;
 }

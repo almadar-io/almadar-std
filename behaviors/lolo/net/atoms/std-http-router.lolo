@@ -5,7 +5,7 @@ app std-http-router [
 ]
 uses Spec from "almadar-std/http-router"
 type RouterHeader = { name : string!, value : string! }
-type RouterPending = { requestId : number!, method : string!, path : string!, query : string!, authorization : string!, ip : string!, responseHeaders : [RouterHeader]! }
+type RouterPending = { requestId : number!, method : string!, path : string!, query : string!, authorization : string!, ip : string!, ifNoneMatch : string!, responseHeaders : [RouterHeader]! }
 type RouterTick = { trait : string!, tick : string! }
 type RouterTickAnswer = { ran : [RouterTick]! }
 type RouterStream = { requestId : number!, ticket : string! }
@@ -94,7 +94,7 @@ orbital HttpRouterOrbital {
         (emit RESPOND { requestId: @payload.requestId, status: 400, headers: [{ name: "content-type", value: "application/json" }], body: (bytes/from-string (json/stringify { error: "Invalid Content-Length", code: "BAD_CONTENT_LENGTH" })) })
         (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 400, headers: [{ name: "content-type", value: "application/json" }], body: (json/stringify { error: "Invalid Content-Length", code: "BAD_CONTENT_LENGTH" }) })
       REQUEST_RECEIVED -> routing when (!= (str/to-number (default (object/get (default @payload.headers {}) "content-length") "0")) null)
-        (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, method: @payload.method, path: @payload.path, query: (default @payload.query ""), authorization: (default (object/get (default @payload.headers {}) "authorization") ""), ip: (let ((peerIp (str/join (array/slice (str/split (default @payload.peer "") ":") 0 (- (array/len (str/split (default @payload.peer "") ":")) 1)) ":")) (forwarded (array/map (array/filter (str/split (default (object/get (default @payload.headers {}) "x-forwarded-for") "") ",") (fn h (!= (str/trim @h) ""))) (fn h (str/trim @h))))) (if (and (> @config.trustedProxyHops 0) (>= (array/len @forwarded) @config.trustedProxyHops)) (default (array/nth @forwarded (- (array/len @forwarded) @config.trustedProxyHops)) @peerIp) @peerIp)), responseHeaders: [] }))
+        (set @entity.pending (array/append @entity.pending { requestId: @payload.requestId, method: @payload.method, path: @payload.path, query: (default @payload.query ""), authorization: (default (object/get (default @payload.headers {}) "authorization") ""), ifNoneMatch: (default (object/get (default @payload.headers {}) "if-none-match") ""), ip: (let ((peerIp (str/join (array/slice (str/split (default @payload.peer "") ":") 0 (- (array/len (str/split (default @payload.peer "") ":")) 1)) ":")) (forwarded (array/map (array/filter (str/split (default (object/get (default @payload.headers {}) "x-forwarded-for") "") ",") (fn h (!= (str/trim @h) ""))) (fn h (str/trim @h))))) (if (and (> @config.trustedProxyHops 0) (>= (array/len @forwarded) @config.trustedProxyHops)) (default (array/nth @forwarded (- (array/len @forwarded) @config.trustedProxyHops)) @peerIp) @peerIp)), responseHeaders: [] }))
         (emit HTTP_DECIDE {
           requestId: @payload.requestId,
           method: @payload.method,
@@ -113,10 +113,10 @@ orbital HttpRouterOrbital {
         (emit RESPOND { requestId: @payload.requestId, status: 413, headers: (array/append @payload.responseHeaders { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: "Payload too large", code: "PAYLOAD_TOO_LARGE" })) })
         (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 413, headers: (array/append @payload.responseHeaders { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Payload too large", code: "PAYLOAD_TOO_LARGE" }) })
       HTTP_DECIDED -> routing when (and (= @payload.verdict "ok") (str/startsWith (default (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) null (object/get @found "path"))) "") @config.apiPrefix))
-        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, query: @p.query, authorization: @p.authorization, ip: @p.ip, responseHeaders: @payload.responseHeaders } @p))))
+        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, query: @p.query, authorization: @p.authorization, ip: @p.ip, ifNoneMatch: @p.ifNoneMatch, responseHeaders: @payload.responseHeaders } @p))))
         (emit RATE_REQUEST { requestId: @payload.requestId, ip: (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) "" (object/get @found "ip"))) })
       HTTP_DECIDED -> routing when (and (= @payload.verdict "ok") (not (str/startsWith (default (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) null (object/get @found "path"))) "") @config.apiPrefix)))
-        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, query: @p.query, authorization: @p.authorization, ip: @p.ip, responseHeaders: @payload.responseHeaders } @p))))
+        (set @entity.pending (array/map @entity.pending (fn p (if (= @p.requestId @payload.requestId) { requestId: @p.requestId, method: @p.method, path: @p.path, query: @p.query, authorization: @p.authorization, ip: @p.ip, ifNoneMatch: @p.ifNoneMatch, responseHeaders: @payload.responseHeaders } @p))))
         (emit ROUTE_REQUEST { requestId: @payload.requestId, rateHeaders: [] })
       ADMITTED -> routing when (= @payload.counted false)
         (emit ROUTE_REQUEST { requestId: @payload.requestId, rateHeaders: [] })
@@ -284,7 +284,7 @@ orbital HttpRouterOrbital {
         (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 404, headers: (array/append (array/concat (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) [] (object/get @found "responseHeaders"))) @payload.rateHeaders) { name: "content-type", value: "application/json" }), body: (json/stringify { error: "Not found", code: "NOT_FOUND" }) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
       ROUTE_REQUEST -> routing when (let ((req (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (and (!= @req null) (and @config.clientFallback (not (and @config.requireSignIn (str/startsWith (object/get @req "path") @config.dispatchPrefix))) (not (array/some @config.externalPrefixes (fn x (str/startsWith (object/get @req "path") @x)))) (not (or (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.healthPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.streamPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.ticketPath)) (and (= (str/upper (object/get @req "method")) "GET") (= (object/get @req "path") @config.vapidPath)) (and (= (str/upper (object/get @req "method")) "POST") (= (object/get @req "path") @config.tickPath)))))))
-        (emit ROUTE_CLIENT { requestId: @payload.requestId, method: (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) "" (object/get @found "method"))), path: (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) "" (object/get @found "path"))), responseHeaders: (array/concat (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) [] (object/get @found "responseHeaders"))) @payload.rateHeaders) })
+        (emit ROUTE_CLIENT { requestId: @payload.requestId, method: (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) "" (object/get @found "method"))), path: (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) "" (object/get @found "path"))), ifNoneMatch: (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) "" (object/get @found "ifNoneMatch"))), responseHeaders: (array/concat (let ((found (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))))) (if (= @found null) [] (object/get @found "responseHeaders"))) @payload.rateHeaders) })
         (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @payload.requestId))))
     }
 
@@ -323,6 +323,7 @@ orbital HttpRouterOrbital {
         requestId : number!
         method : string!
         path : string!
+        ifNoneMatch : string!
         responseHeaders : [RouterHeader]!
       }
         @description "A request no route owns, handed to std-static-files when clientFallback is on."

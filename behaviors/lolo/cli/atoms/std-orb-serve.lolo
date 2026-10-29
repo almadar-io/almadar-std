@@ -14,6 +14,7 @@ type ServePage = { protocol : string }
 type ServeOrbital = { name : string!, pages : [ServePage] }
 type ServeProgram = { name : string, orbitals : [ServeOrbital] }
 type ServeApp = { program : ServeProgram!, text : string! }
+type ServeAppRead = { program : ServeProgram!, loadedResolved : boolean!, programPath : string! }
 
 orbital OrbServeOrbital {
   entity ServeRun [runtime] {
@@ -184,7 +185,7 @@ orbital OrbServeOrbital {
       SERVE_DIR_FAILED -> idle
         (emit SERVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: orb serve could not create ~/.almadar/serve: " @payload.error) })
       SERVE_DIR -> reading
-        (program/read "" { resolve: true path: @entity.path output: @entity.out } { key: "app" emit: { success: SERVE_APP_READ, failure: SERVE_REFUSED } })
+        (program/read "" { resolve: true path: @entity.path output: @entity.out text: false } { key: "app" emit: { success: SERVE_APP_READ, failure: SERVE_REFUSED } })
     }
 
     state reading {
@@ -197,14 +198,17 @@ orbital OrbServeOrbital {
         (emit SERVE_ANSWERED { status: 400, body: "", stderr: (str/concat "Error: " (object/get (object/get @payload.result "program") "name") " declares its own http endpoint, so its host, port and client folder are set in the program; drop --port, --host and --client-dir") })
       SERVE_APP_READ -> idle when (and (!= (default (object/get (object/get @payload.result "program") "name") "") "") (array/some (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))) (not @entity.flagged))
         (set @entity.appName (object/get (object/get @payload.result "program") "name"))
+        (set @entity.out @payload.result.programPath)
         (set @entity.app (object/get @payload.result "program"))
         (emit SERVE_DECLARED_READY { program: (object/get @payload.result "program"), serverOrbital: (object/get (array/find (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))) "name"), appName: @entity.appName, host: @entity.host, port: @entity.port, rel: @entity.rel, hasClient: @entity.hasClient, mock: @entity.mock, path: @entity.out })
       SERVE_APP_READ -> writing when (and (and (!= (default (object/get (object/get @payload.result "program") "name") "") "") (not (array/some (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))))) @entity.hasClient)
         (set @entity.appName (object/get (object/get @payload.result "program") "name"))
+        (set @entity.out @payload.result.programPath)
         (set @entity.app (object/get @payload.result "program"))
         (emit SERVE_WRITE_SERVER { })
       SERVE_APP_READ -> writing when (and (and (!= (default (object/get (object/get @payload.result "program") "name") "") "") (not (array/some (object/get @payload.result.program "orbitals" []) (fn o (array/some (object/get @o "pages" []) (fn pg (= (object/get @pg "protocol" "route") "http"))))))) (not @entity.hasClient))
         (set @entity.appName (object/get (object/get @payload.result "program") "name"))
+        (set @entity.out @payload.result.programPath)
         (set @entity.app (object/get @payload.result "program"))
         (set @entity.rel (str/concat ".orbital/serve/" (object/get (object/get @payload.result "program") "name") "/web-client"))
         (set @entity.hasClient true)
@@ -268,7 +272,7 @@ orbital OrbServeOrbital {
         @description "os/mkdir: the serve directory could not be created."
         @tier "internal"
       SERVE_APP_READ {
-        result : ServeApp!
+        result : ServeAppRead!
       }
         @description "program/read: the resolved app."
         @tier "internal"

@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-28T17:49:09.075Z",
+  "generated": "2026-10-29T05:37:23.726Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -9276,6 +9276,19 @@
                   "grantRequest": {
                     "kind": "object",
                     "fields": {
+                      "method": {
+                        "kind": "union",
+                        "of": [
+                          {
+                            "kind": "literal",
+                            "value": "GET"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "POST"
+                          }
+                        ]
+                      },
                       "headers": {
                         "kind": "map",
                         "key": "string",
@@ -10077,6 +10090,19 @@
       "description": "Apply puts and deletes to one store all-or-nothing (grant kv: write). Success payload: { applied }.",
       "module": "kv",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "applied": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "kv",
@@ -10169,6 +10195,19 @@
       "description": "Delete one key (grant kv: write). Success payload: { existed }; deleting a miss succeeds with existed: false.",
       "module": "kv",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "existed": "boolean",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "kv",
@@ -10291,6 +10330,19 @@
       "description": "Write one key, replacing any value (grant kv: write). The value must be JSON. Success payload: { storedKey }.",
       "module": "kv",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "storedKey": "string",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "kv",
@@ -10360,6 +10412,31 @@
       "description": "Every key starting with prefix, ascending in UTF-8 byte order, at most limit (grant kv: read). Success payload: { entries: [{ key, value }] }.",
       "module": "kv",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "entries": {
+              "kind": "array",
+              "of": {
+                "kind": "object",
+                "fields": {
+                  "key": "string",
+                  "value": {
+                    "kind": "var",
+                    "name": "T"
+                  }
+                }
+              }
+            },
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "kv",
@@ -13012,6 +13089,19 @@
       "description": "Check access to a path (grant fs: meta). Success payload: { ok }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "ok": "boolean",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -13104,6 +13194,19 @@
       "description": "Append to a file (grant fs: write). Success payload: { bytes }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "bytes": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -13350,6 +13453,18 @@
       "description": "Change the working directory (grant fs: meta). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -13436,6 +13551,18 @@
       "description": "Change permission bits (grant fs: meta). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -13527,6 +13654,18 @@
       "description": "Change owner (grant fs: meta). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -13623,6 +13762,19 @@
       "description": "Read the monotonic clock (no grant; journaled, so a replay sees the same value). Success payload: { nanos }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "nanos": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -13668,6 +13820,18 @@
       "description": "Close a file descriptor or a socket handle (grant fs for a descriptor, net for a socket). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -13718,6 +13882,18 @@
       "description": "Copy a file (grant fs: read on from, write and create on to). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -13894,6 +14070,19 @@
       "description": "Read the absolute path of the running host binary, so a program can locate the binaries installed beside it (no grant: a fact of the process itself, like os/pid). Success payload: { path }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "path": "string",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -13939,6 +14128,19 @@
       "description": "Read the working directory (grant fs: meta). Success payload: { path }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "path": "string",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -14169,6 +14371,22 @@
       "description": "Resolve a host name (grant net). Success payload: { addresses }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "addresses": {
+              "kind": "array",
+              "of": "string"
+            },
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "net",
@@ -14246,6 +14464,22 @@
       "description": "List environment variable names, never values (grant env). Success payload: { names }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "names": {
+              "kind": "array",
+              "of": "string"
+            },
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -14286,11 +14520,24 @@
     "os/exists": {
       "category": "std-os",
       "minArity": 1,
-      "maxArity": 3,
+      "maxArity": 2,
       "returnType": "void",
-      "description": "Check that a path exists (grant fs: meta). Success payload: { ok }.",
+      "description": "Check that a path exists (grant fs: read). Success payload: { ok }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "ok": "boolean",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -14337,12 +14584,6 @@
           "description": "Path"
         },
         {
-          "name": "mode",
-          "type": "string",
-          "description": "Access to test",
-          "optional": true
-        },
-        {
           "name": "options",
           "type": {
             "kind": "object",
@@ -14383,6 +14624,18 @@
       "description": "Flush a descriptor to storage (grant fs). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -14433,6 +14686,20 @@
       "description": "Read an environment variable (grant env). Success payload: { value? }; value is absent when the variable is unset.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "value": "string",
+            "key": "string"
+          },
+          "optional": [
+            "value",
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "env",
@@ -14488,6 +14755,19 @@
       "description": "Read the group id of the host process (grant sys: identity). Success payload: { gid }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "gid": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "sys",
@@ -14538,6 +14818,22 @@
       "description": "Expand a glob pattern (grant fs: read). The pattern may be anchored ({ anchor, path }); a computed anchored pattern passes under a narrow anchored grant, and the host drops every match the grants do not cover. Success payload: { paths }: absolute for a plain pattern, relative to the anchor for an anchored one.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "paths": {
+              "kind": "array",
+              "of": "string"
+            },
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs-glob",
@@ -14623,6 +14919,23 @@
       "description": "Look up a group by name (grant sys: identity). Success payload: { gid, members }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "gid": "number",
+            "members": {
+              "kind": "array",
+              "of": "string"
+            },
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "sys",
@@ -14778,6 +15091,18 @@
       "description": "Acknowledge the interrupt last delivered on an irq line so the next one can arrive (grant dev: { \"irq:<line>\": [ack] }). Success payload: {}. A host with no devices answers unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "irq",
@@ -14834,6 +15159,19 @@
       "description": "Wait for the next interrupt on an irq line (grant dev: { \"irq:<line>\": [wait] }). A keyed call completes later through its success route, once per call. Success payload: { irq }. A host with no devices answers unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "irq": "int",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "irq",
@@ -14890,6 +15228,19 @@
       "description": "Whether a descriptor is a terminal (grant stdio). Success payload: { ok }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "ok": "boolean",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -14940,6 +15291,18 @@
       "description": "Send a signal to a child process (grant exec). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -15035,6 +15398,18 @@
       "description": "Create a hard link (grant fs: create). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -15161,6 +15536,28 @@
       "description": "List a directory (grant fs: read). Success payload: { entries: [{ name, kind }] }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "entries": {
+              "kind": "array",
+              "of": {
+                "kind": "object",
+                "fields": {
+                  "name": "string",
+                  "kind": "string"
+                }
+              }
+            },
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -15297,6 +15694,26 @@
       "description": "Stat a path without following links (grant fs: meta). Success payload: { kind, size, mode, uid, gid, atime, mtime, ctime }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "kind": "string",
+            "size": "number",
+            "mode": "number",
+            "uid": "number",
+            "gid": "number",
+            "atime": "number",
+            "mtime": "number",
+            "ctime": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -15433,6 +15850,18 @@
       "description": "Create a directory (grant fs: create). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -15531,6 +15960,19 @@
       "description": "Create a unique temporary file (grant fs: create). Success payload: { path }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "path": "string",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -15623,6 +16065,19 @@
       "description": "Read a device register: width bytes at offset into the register window based at base (grant dev: { \"mmio:<base>+<length>\": [read] }; the window must hold offset + width). Success payload: { value }. A host with no devices answers unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "value": "int",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "mmio",
@@ -15691,6 +16146,18 @@
       "description": "Write a device register: value as width bytes at offset into the register window based at base (grant dev: { \"mmio:<base>+<length>\": [write] }). Success payload: {}. A host with no devices answers unsupported.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "mmio",
@@ -16046,6 +16513,19 @@
       "description": "Open a file and get a descriptor (grant fs). Success payload: { fd }. The host owns the descriptor and closes it at teardown.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "fd": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs-open",
@@ -16491,6 +16971,19 @@
       "description": "Read the host process id (grant exec). Success payload: { pid }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "pid": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -16536,6 +17029,19 @@
       "description": "Read the parent process id (grant exec). Success payload: { pid }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "pid": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -16581,6 +17087,20 @@
       "description": "Read up to count bytes from a descriptor (grant fs). Success payload: { data: bytes, eof }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "data": "bytes",
+            "eof": "boolean",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -16636,6 +17156,19 @@
       "description": "Read a whole file (grant fs: read). Success payload: { data: bytes }. Always bytes; decode text with bytes/to-string.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "data": "bytes",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -16722,6 +17255,19 @@
       "description": "Read a symbolic link target (grant fs: read). Success payload: { target }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "target": "string",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -16808,6 +17354,19 @@
       "description": "Resolve a path to its canonical form (grant fs: meta). Success payload: { path }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "path": "string",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -16894,6 +17453,20 @@
       "description": "Receive from a connected socket (grant net). Success payload: { data: bytes, eof }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "data": "bytes",
+            "eof": "boolean",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -16949,6 +17522,20 @@
       "description": "Receive a UDP datagram (grant net: udp). Success payload: { data: bytes, peer }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "data": "bytes",
+            "peer": "string",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -17004,6 +17591,18 @@
       "description": "Remove a file (grant fs: remove). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -17090,6 +17689,18 @@
       "description": "Rename or move a file (grant fs: write, remove). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -17216,6 +17827,18 @@
       "description": "Remove a directory (grant fs: remove). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -17308,6 +17931,19 @@
       "description": "Move a descriptor position (grant fs). Success payload: { offset }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "offset": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -17384,6 +18020,19 @@
       "description": "Send on a connected socket (grant net). Success payload: { bytes }. Sends on one socket are written in call order and never interleave. A keyed send under a declared route writes in the background and answers its route when the write ends (success { bytes }, or a failure such as timeout after the 5 s socket bound or closed), so a peer that stops reading does not hold the dispatch; an unkeyed send answers in place.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "bytes": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -17439,6 +18088,19 @@
       "description": "Send a UDP datagram (grant net: udp). Success payload: { bytes }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "bytes": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "net",
@@ -17545,6 +18207,18 @@
       "description": "Set an environment variable (grant env). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "env",
@@ -17605,6 +18279,18 @@
       "description": "Shut down a socket (grant net). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -17655,6 +18341,25 @@
       "description": "Start a child process (grant exec; the command is matched against the grant by exact string and never run through a shell). Success payload: { pid, stdin?, stdout?, stderr? }; a piped stream is an fd read or written with os/read and os/write. A detached child runs in its own session and process group and outlives the program that started it; it takes no piped stream.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "pid": "number",
+            "stdin": "number",
+            "stdout": "number",
+            "stderr": "number",
+            "key": "string"
+          },
+          "optional": [
+            "stdin",
+            "stdout",
+            "stderr",
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "exec",
@@ -17930,6 +18635,26 @@
       "description": "Stat a path, following links (grant fs: meta). Success payload: { kind, size, mode, uid, gid, atime, mtime, ctime }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "kind": "string",
+            "size": "number",
+            "mode": "number",
+            "uid": "number",
+            "gid": "number",
+            "atime": "number",
+            "mtime": "number",
+            "ctime": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -18016,6 +18741,19 @@
       "description": "Write to standard error (grant stdio: err). Success payload: { bytes }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "bytes": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "stdio",
@@ -18071,6 +18809,40 @@
       "description": "Read standard input (grant stdio: in), at most count bytes per chunk. Keyed with an onMessage route, each chunk is an event { data: bytes } and the final answer is { eof: true }; otherwise one read answers { data, eof } with at most count bytes. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "eof": "boolean",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        },
+        "events": {
+          "kind": "object",
+          "fields": {
+            "data": "bytes",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        },
+        "unrouted": {
+          "kind": "object",
+          "fields": {
+            "data": "bytes",
+            "eof": "boolean",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "stdio",
@@ -18130,6 +18902,19 @@
       "description": "Write to standard output (grant stdio: out). Success payload: { bytes }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "bytes": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "stdio",
@@ -18235,6 +19020,18 @@
       "description": "Create a symbolic link (grant fs: create). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -18356,6 +19153,19 @@
       "description": "Open a TCP connection (grant net: tcp). Success payload: { sock }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "sock": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "net",
@@ -18452,6 +19262,32 @@
       "description": "Listen for TCP connections (grant net: listen). The first answer is { sock, address, port }, with the actual bound address and port (including an assigned ephemeral port); each connection arrives on the onMessage route as { sock, peer }. An accepted sock takes any number of os/send and os/recv until os/close (keep-alive, streamed replies); a keyed os/recv armed on it reports a client abort as { eof: true } or a closed failure, and os/close with that read pending ends the connection at once. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "sock": "number",
+            "address": "string",
+            "port": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        },
+        "events": {
+          "kind": "object",
+          "fields": {
+            "sock": "number",
+            "peer": "string",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "net",
@@ -18601,6 +19437,18 @@
       "description": "Truncate a file given by path or descriptor to size bytes (grant fs: write). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -18698,6 +19546,20 @@
       "description": "Terminal size of a descriptor (grant stdio). Success payload: { rows, cols }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "rows": "number",
+            "cols": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -18748,6 +19610,19 @@
       "description": "Bind a UDP socket (grant net: udp). Success payload: { sock }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "sock": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "net",
@@ -18844,6 +19719,19 @@
       "description": "Read the user id of the host process (grant sys: identity). Success payload: { uid }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "uid": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "sys",
@@ -18944,6 +19832,18 @@
       "description": "Remove an environment variable (grant env). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "env",
@@ -19049,6 +19949,19 @@
       "description": "Read the user name of the host process (grant sys: identity). Success payload: { username }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "username": "string",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "sys",
@@ -19099,6 +20012,18 @@
       "description": "Set access and modification times (grant fs: meta). Success payload: {}.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -19355,6 +20280,22 @@
       "description": "Wait for a child process to end (grant exec). Success payload: { code?, signal? }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "code": "number",
+            "signal": "number",
+            "key": "string"
+          },
+          "optional": [
+            "code",
+            "signal",
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -19405,6 +20346,28 @@
       "description": "Fire on a cron schedule (no grant). Events are { scheduledAt }. The options object also takes debounceMs. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        },
+        "events": {
+          "kind": "object",
+          "fields": {
+            "scheduledAt": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -19459,6 +20422,29 @@
       "description": "Watch an environment variable (grant env). Events are { name, value? }. The options object also takes debounceMs. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        },
+        "events": {
+          "kind": "object",
+          "fields": {
+            "name": "string",
+            "value": "string",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "env",
@@ -19518,6 +20504,32 @@
       "description": "Watch files matching a glob (grant fs: read). Events are { path, name, dir, timestamp, kind } for modified, created and deleted files. The options object also takes recursive, ignoreInitial and debounceMs. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        },
+        "events": {
+          "kind": "object",
+          "fields": {
+            "path": "string",
+            "name": "string",
+            "dir": "string",
+            "timestamp": "string",
+            "kind": "string",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -19578,6 +20590,29 @@
       "description": "Watch a local port (grant net). Events are { port, open }. The options object also takes debounceMs. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        },
+        "events": {
+          "kind": "object",
+          "fields": {
+            "port": "number",
+            "open": "boolean",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -19665,6 +20700,36 @@
       "description": "Watch a process by name (grant exec). Events are { pid, name, exitCode, signal, args, duration } as processes start and exit. The options object also takes debounceMs. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        },
+        "events": {
+          "kind": "object",
+          "fields": {
+            "pid": "number",
+            "name": "string",
+            "exitCode": "number",
+            "signal": "string",
+            "args": {
+              "kind": "array",
+              "of": "string"
+            },
+            "duration": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -19727,6 +20792,28 @@
       "description": "Receive an OS signal (grant exec). Events are { signal }. Stream: events are routed to the call site as they arrive, then one final answer; cancel with cancel-call on the key.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        },
+        "events": {
+          "kind": "object",
+          "fields": {
+            "signal": "string",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -19821,6 +20908,19 @@
       "description": "Write to a descriptor (grant fs: write). Success payload: { bytes }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "bytes": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [],
       "runsOn": "server",
       "host": "os",
@@ -19876,6 +20976,19 @@
       "description": "Write a whole file (grant fs: write, create). Success payload: { bytes }.",
       "module": "os",
       "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "bytes": "number",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
       "grant": [
         {
           "kind": "fs",
@@ -21121,14 +22234,22 @@
                   }
                 ]
               },
-              "theme": "string"
+              "theme": "string",
+              "overrides": {
+                "kind": "map",
+                "key": "string",
+                "value": {
+                  "kind": "sexpr"
+                }
+              }
             },
             "optional": [
               "layout",
-              "theme"
+              "theme",
+              "overrides"
             ]
           },
-          "description": "The app name, an optional layout strategy and theme (empty = none)"
+          "description": "The app name, an optional layout strategy and theme (empty = none), and the caller's overrides: \"<Trait>.<knob>\" sets that composed trait's knob default, \"grants\" adds to the app's OS grants"
         },
         {
           "name": "options",
@@ -21847,8 +22968,30 @@
       "category": "std-program",
       "minArity": 1,
       "maxArity": 3,
-      "returnType": "sexpr",
-      "description": "Parse `.lolo` source text into a quoted program. With inspect:true and an absolute path, return the resolved program, original-source anchors and imported source provenance; version identifies the editor document. With embeds:true, the text's inline behavior embeds `[{ orbital, trait, behavior, line, column }]` (what `orb embeds` prints). With resolve:true and the absolute path, the file resolved as `orb resolve` prints it, `{ program, text }`; with output, also written there with its catalogs and lazy behaviors (without it, a program with lazy behaviors or locales is refused). With stamp:true and the absolute path of a `.orb`, the program stamped with V4 identity as `orb stamp` prints it, `{ program, text }`; `prior` (a `.orb` path) keeps ids stable, `imports` (a directory) resolves cross-file `uses` id edges, `output` also writes the text to that file. With references:true and the absolute path, `{ program, references }`: the program as it reads before resolution, and every trait or orbital reference its resolution resolves (those inside the imports included, in resolution order) as `{ kind: \"trait\" | \"orbital\", alias, name, path, callSite, declaration }` — the reference as written, and the upstream declaration it resolved to, loaded as an import with `@config.X` still deferred; `path` is the call-site path in the file that holds the reference.",
+      "returnType": {
+        "kind": "union",
+        "of": [
+          {
+            "kind": "sexpr"
+          },
+          {
+            "kind": "object",
+            "fields": {
+              "program": {
+                "kind": "sexpr"
+              },
+              "text": "string",
+              "loadedResolved": "boolean",
+              "programPath": "string"
+            },
+            "optional": [
+              "loadedResolved",
+              "programPath"
+            ]
+          }
+        ]
+      },
+      "description": "Parse `.lolo` source text into a quoted program. With inspect:true and an absolute path, return the resolved program, original-source anchors and imported source provenance; version identifies the editor document. With embeds:true, the text's inline behavior embeds `[{ orbital, trait, behavior, line, column }]` (what `orb embeds` prints). With resolve:true and the absolute path, the file resolved as `orb resolve` prints it, `{ program, text, loadedResolved, programPath? }` (`loadedResolved` is true when the file already carried the `resolved` stamp and was loaded as it is, false when it was authored: a `.lolo` or an unresolved `.orb`; `programPath` is where the resolved program lives: the source when it was already resolved, `output` when it was resolved and written, absent when it was resolved in memory only). An already resolved source is answered as it was read and never written out again, even with output, and never refused for locales or lazy behaviors: its catalogs and lazy behaviors sit beside it from resolve time (EXEC-LOAD-1). With `text: false` and no output, `{ program, lazy: [{ orbital, program }] }` is answered and nothing is written (a program with lazy behaviors or locales is not refused); with `text: false` and output, the same read as above is answered without `text`, so the program text is never held in the answer. An authored source with output is written there with its catalogs and lazy behaviors; without output, a program with lazy behaviors or locales is refused. With stamp:true and the absolute path of a `.orb`, the program stamped with V4 identity as `orb stamp` prints it, `{ program, text }`; `prior` (a `.orb` path) keeps ids stable, `imports` (a directory) resolves cross-file `uses` id edges, `output` also writes the text to that file. With references:true and the absolute path, `{ program, references }`: the program as it reads before resolution, and every trait or orbital reference its resolution resolves (those inside the imports included, in resolution order) as `{ kind: \"trait\" | \"orbital\", alias, name, path, callSite, declaration }` — the reference as written, and the upstream declaration it resolved to, loaded as an import with `@config.X` still deferred; `path` is the call-site path in the file that holds the reference.",
       "module": "program",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -25524,54 +26667,6 @@
       ],
       "examples": [
         "(trace/emit \"cache-hit\")"
-      ],
-      "docsSource": "generated"
-    },
-    "trace/log": {
-      "category": "std-trace",
-      "minArity": 2,
-      "maxArity": 2,
-      "returnType": "void",
-      "description": "Log a message at the given level.",
-      "module": "trace",
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "host": "substrate",
-      "title": "Log",
-      "params": [
-        {
-          "name": "level",
-          "type": {
-            "kind": "union",
-            "of": [
-              {
-                "kind": "literal",
-                "value": "info"
-              },
-              {
-                "kind": "literal",
-                "value": "warn"
-              },
-              {
-                "kind": "literal",
-                "value": "error"
-              },
-              {
-                "kind": "literal",
-                "value": "debug"
-              }
-            ]
-          },
-          "description": "Log level"
-        },
-        {
-          "name": "message",
-          "type": "string",
-          "description": "Log message"
-        }
-      ],
-      "examples": [
-        "(trace/log \"info\" \"Processing started\")"
       ],
       "docsSource": "generated"
     },

@@ -1,0 +1,288 @@
+{
+ "atom": "net/atoms/std-static-files.lolo",
+ "trait": "StaticFiles",
+ "note": "Design contract spec/net/static-files.lolo. Each case seeds the job at the head of the queue; the host's os/stat and os/read-file answers are played as steps. A step that reaches os/read-file reads the real working directory, where the fixture paths do not exist, so a case that goes on to read answers 404 rather than 304.",
+ "cases": [
+  {
+   "id": "a file under the content-hashed folder is served immutable for a year with its etag",
+   "entity": {
+    "jobs": [
+     {
+      "requestId": 5,
+      "headers": [
+       {
+        "name": "vary",
+        "value": "origin"
+       }
+      ],
+      "candidates": [
+       "dist/client/assets/index-abc.js"
+      ],
+      "cursor": 0,
+      "ifNoneMatch": "",
+      "etag": "W/\"10-1700000000\""
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "serving",
+     "event": "STATIC_GOT",
+     "payload": {
+      "data": "Y29uc29sZQ=="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 5,
+         "status": 200,
+         "headers": [
+          {
+           "name": "vary",
+           "value": "origin"
+          },
+          {
+           "name": "content-type",
+           "value": "text/javascript; charset=utf-8"
+          },
+          {
+           "name": "etag",
+           "value": "W/\"10-1700000000\""
+          },
+          {
+           "name": "cache-control",
+           "value": "public, max-age=31536000, immutable"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a file outside the content-hashed folder is no-cache with its etag",
+   "entity": {
+    "jobs": [
+     {
+      "requestId": 5,
+      "headers": [
+       {
+        "name": "vary",
+        "value": "origin"
+       }
+      ],
+      "candidates": [
+       "dist/client/program.client.orb"
+      ],
+      "cursor": 0,
+      "ifNoneMatch": "",
+      "etag": "W/\"10-1700000000\""
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "serving",
+     "event": "STATIC_GOT",
+     "payload": {
+      "data": "e30="
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 5,
+         "status": 200,
+         "headers": [
+          {
+           "name": "vary",
+           "value": "origin"
+          },
+          {
+           "name": "content-type",
+           "value": "application/octet-stream"
+          },
+          {
+           "name": "etag",
+           "value": "W/\"10-1700000000\""
+          },
+          {
+           "name": "cache-control",
+           "value": "no-cache"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a request whose if-none-match equals the file's etag answers 304 with no body and no read",
+   "entity": {
+    "jobs": [
+     {
+      "requestId": 5,
+      "headers": [
+       {
+        "name": "vary",
+        "value": "origin"
+       }
+      ],
+      "candidates": [
+       "dist/client/program.client.orb"
+      ],
+      "cursor": 0,
+      "ifNoneMatch": "W/\"10-1700000000\"",
+      "etag": ""
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "serving",
+     "event": "STATIC_STAT",
+     "payload": {
+      "kind": "file",
+      "size": 10,
+      "mtime": 1700000000
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 5,
+         "status": 304,
+         "headers": [
+          {
+           "name": "vary",
+           "value": "origin"
+          },
+          {
+           "name": "etag",
+           "value": "W/\"10-1700000000\""
+          },
+          {
+           "name": "cache-control",
+           "value": "no-cache"
+          }
+         ],
+         "body": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "STATIC_GOT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a stale if-none-match goes on to read the file instead of answering 304",
+   "entity": {
+    "jobs": [
+     {
+      "requestId": 5,
+      "headers": [
+       {
+        "name": "vary",
+        "value": "origin"
+       }
+      ],
+      "candidates": [
+       "dist/client/program.client.orb"
+      ],
+      "cursor": 0,
+      "ifNoneMatch": "W/\"9-1600000000\"",
+      "etag": ""
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "serving",
+     "event": "STATIC_STAT",
+     "payload": {
+      "kind": "file",
+      "size": 10,
+      "mtime": 1700000000
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 5,
+         "status": 404
+        }
+       }
+      ],
+      "emitCounts": {
+       "RESPOND": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: no if-none-match goes on to read the file instead of answering 304",
+   "entity": {
+    "jobs": [
+     {
+      "requestId": 5,
+      "headers": [
+       {
+        "name": "vary",
+        "value": "origin"
+       }
+      ],
+      "candidates": [
+       "dist/client/assets/index-abc.js"
+      ],
+      "cursor": 0,
+      "ifNoneMatch": "",
+      "etag": ""
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "serving",
+     "event": "STATIC_STAT",
+     "payload": {
+      "kind": "file",
+      "size": 10,
+      "mtime": 1700000000
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 5,
+         "status": 404
+        }
+       }
+      ],
+      "emitCounts": {
+       "RESPOND": 1
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

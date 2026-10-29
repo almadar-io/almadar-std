@@ -104,6 +104,7 @@ const HTTP_RETRY: OperatorTypeRef = shape({
 });
 
 const HTTP_GRANT_REQUEST: OperatorTypeRef = shape({
+  method: union(lit('GET'), lit('POST')),
   headers: mapOf(STRING, STRING),
   timeoutMs: nullable(NUMBER),
   retry: HTTP_RETRY,
