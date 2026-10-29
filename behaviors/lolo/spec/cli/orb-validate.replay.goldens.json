@@ -1,960 +1,1011 @@
 {
-  "atom": "cli/atoms/std-orb-validate.lolo",
-  "trait": "OrbValidate",
-  "cases": [
+ "atom": "cli/atoms/std-orb-validate.lolo",
+ "trait": "OrbValidate",
+ "cases": [
+  {
+   "id": "json report passes through pretty (clean, Rust: success/valid/stats)",
+   "entity": {
+    "cwd": "/w",
+    "file": "errors.lolo",
+    "json": true,
+    "denyWarnings": false
+   },
+   "steps": [
     {
-      "id": "json report passes through pretty (clean, Rust: success/valid/stats)",
-      "entity": {
-        "cwd": "/w",
-        "file": "errors.lolo",
-        "json": true,
-        "denyWarnings": false,
-        "lintUnread": false
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "validating",
-          "event": "VALIDATE_CHECKED",
-          "payload": {
-            "result": {
-              "success": true,
-              "valid": true,
-              "stats": {
-                "orbitals": 1,
-                "entities": 1,
-                "traits": 2,
-                "pages": 1
-              }
-            }
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_RENDER",
-                "payload": {}
-              }
-            ],
-            "state": "rendering"
-          }
-        },
-        {
-          "trait": "ValidateEngine",
-          "from": "rendering",
-          "event": "VALIDATE_RENDER",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "{\n  \"success\": true,\n  \"valid\": true,\n  \"stats\": {\n    \"orbitals\": 1,\n    \"entities\": 1,\n    \"traits\": 2,\n    \"pages\": 1\n  }\n}"
-                }
-              }
-            ],
-            "state": "idle"
-          }
-        }
-      ]
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": true,
+       "valid": true,
+       "stats": {
+        "orbitals": 1,
+        "entities": 1,
+        "traits": 2,
+        "pages": 1
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
     },
     {
-      "id": "json report with an error keeps every host field (Rust exit 0, status 200)",
-      "entity": {
-        "cwd": "/w",
-        "file": "errors.lolo",
-        "json": true,
-        "denyWarnings": false,
-        "lintUnread": false
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "validating",
-          "event": "VALIDATE_CHECKED",
-          "payload": {
-            "result": {
-              "success": true,
-              "valid": false,
-              "errors": [
-                {
-                  "code": "ORB_T_INVALID_TRANSITION",
-                  "path": "orbitals[0 (X)].traits[0 (T)].stateMachine.transitions[1].to",
-                  "message": "Target state 'zz' does not exist",
-                  "fixGuidance": "Location is approximate (nearest tracked source line). If the shown line only references a config knob or another trait, the failing expression lives where that value is DECLARED (e.g. the trait's config block default) — search the file for the expression named in the message.",
-                  "validValues": [
-                    "a"
-                  ],
-                  "line": 10,
-                  "column": 7,
-                  "endLine": 10,
-                  "endColumn": 9,
-                  "approximate": true
-                }
-              ],
-              "stats": {
-                "orbitals": 1,
-                "entities": 1,
-                "traits": 1,
-                "pages": 0
-              }
-            }
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_RENDER",
-                "payload": {}
-              }
-            ],
-            "state": "rendering"
-          }
-        },
-        {
-          "trait": "ValidateEngine",
-          "from": "rendering",
-          "event": "VALIDATE_RENDER",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "{\n  \"success\": true,\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"code\": \"ORB_T_INVALID_TRANSITION\",\n      \"path\": \"orbitals[0 (X)].traits[0 (T)].stateMachine.transitions[1].to\",\n      \"message\": \"Target state 'zz' does not exist\",\n      \"fixGuidance\": \"Location is approximate (nearest tracked source line). If the shown line only references a config knob or another trait, the failing expression lives where that value is DECLARED (e.g. the trait's config block default) — search the file for the expression named in the message.\",\n      \"validValues\": [\n        \"a\"\n      ],\n      \"line\": 10,\n      \"column\": 7,\n      \"endLine\": 10,\n      \"endColumn\": 9,\n      \"approximate\": true\n    }\n  ],\n  \"stats\": {\n    \"orbitals\": 1,\n    \"entities\": 1,\n    \"traits\": 1,\n    \"pages\": 0\n  }\n}"
-                }
-              }
-            ],
-            "state": "idle"
-          }
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"success\": true,\n  \"valid\": true,\n  \"stats\": {\n    \"orbitals\": 1,\n    \"entities\": 1,\n    \"traits\": 2,\n    \"pages\": 1\n  }\n}"
         }
-      ]
-    },
-    {
-      "id": "text clean prints only the header (Rust: stdout header, exit 0)",
-      "entity": {
-        "cwd": "/w",
-        "file": "errors.lolo",
-        "json": false,
-        "denyWarnings": false,
-        "lintUnread": false
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "validating",
-          "event": "VALIDATE_CHECKED",
-          "payload": {
-            "result": {
-              "success": true,
-              "valid": true,
-              "stats": {
-                "orbitals": 1,
-                "entities": 1,
-                "traits": 2,
-                "pages": 1
-              }
-            }
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_RENDER",
-                "payload": {}
-              }
-            ],
-            "state": "rendering"
-          }
-        },
-        {
-          "trait": "ValidateEngine",
-          "from": "rendering",
-          "event": "VALIDATE_RENDER",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "Validating schema: errors.lolo"
-                }
-              }
-            ],
-            "state": "idle"
-          }
-        }
-      ]
-    },
-    {
-      "id": "text with an error: stderr list and failure line (Rust status 1)",
-      "entity": {
-        "cwd": "/w",
-        "file": "errors.lolo",
-        "json": false,
-        "denyWarnings": false,
-        "lintUnread": false
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "validating",
-          "event": "VALIDATE_CHECKED",
-          "payload": {
-            "result": {
-              "success": true,
-              "valid": false,
-              "errors": [
-                {
-                  "code": "ORB_T_INVALID_TRANSITION",
-                  "path": "orbitals[0 (X)].traits[0 (T)].stateMachine.transitions[1].to",
-                  "message": "Target state 'zz' does not exist",
-                  "fixGuidance": "Location is approximate (nearest tracked source line). If the shown line only references a config knob or another trait, the failing expression lives where that value is DECLARED (e.g. the trait's config block default) — search the file for the expression named in the message.",
-                  "validValues": [
-                    "a"
-                  ],
-                  "line": 10,
-                  "column": 7,
-                  "endLine": 10,
-                  "endColumn": 9,
-                  "approximate": true
-                }
-              ],
-              "stats": {
-                "orbitals": 1,
-                "entities": 1,
-                "traits": 1,
-                "pages": 0
-              }
-            }
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_RENDER",
-                "payload": {}
-              }
-            ],
-            "state": "rendering"
-          }
-        },
-        {
-          "trait": "ValidateEngine",
-          "from": "rendering",
-          "event": "VALIDATE_RENDER",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "Validating schema: errors.lolo",
-                  "stderr": "Schema validation errors:\n  ❌ [ORB_T_INVALID_TRANSITION] orbitals[0 (X)].traits[0 (T)].stateMachine.transitions[1].to: Target state 'zz' does not exist @ 10:7\nError: Schema validation failed with 1 error(s)"
-                }
-              }
-            ],
-            "state": "idle"
-          }
-        }
-      ]
-    },
-    {
-      "id": "a missing file prints Error: <reason> on stderr (Rust status 1)",
-      "entity": {
-        "cwd": "/w",
-        "file": "errors.lolo",
-        "json": false,
-        "denyWarnings": false,
-        "lintUnread": false
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "validating",
-          "event": "VALIDATE_CHECKED",
-          "payload": {
-            "result": {
-              "success": true,
-              "valid": false,
-              "errors": [
-                {
-                  "code": "FILE_READ_ERROR",
-                  "path": "",
-                  "message": "Failed to read schema file: No such file or directory (os error 2)"
-                }
-              ]
-            }
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_RENDER",
-                "payload": {}
-              }
-            ],
-            "state": "rendering"
-          }
-        },
-        {
-          "trait": "ValidateEngine",
-          "from": "rendering",
-          "event": "VALIDATE_RENDER",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "Validating schema: errors.lolo",
-                  "stderr": "Error: No such file or directory (os error 2)"
-                }
-              }
-            ],
-            "state": "idle"
-          }
-        }
-      ]
-    },
-    {
-      "id": "warnings alone print on stdout and pass (control: no --deny-warnings)",
-      "entity": {
-        "cwd": "/w",
-        "file": "errors.lolo",
-        "json": false,
-        "denyWarnings": false,
-        "lintUnread": false
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "validating",
-          "event": "VALIDATE_CHECKED",
-          "payload": {
-            "result": {
-              "success": true,
-              "valid": true,
-              "warnings": [
-                {
-                  "code": "W_X",
-                  "path": "orbitals[0]",
-                  "message": "careful",
-                  "suggestion": "fix it",
-                  "line": 3,
-                  "column": 2
-                }
-              ],
-              "stats": {
-                "orbitals": 1,
-                "entities": 1,
-                "traits": 1,
-                "pages": 0
-              }
-            }
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_RENDER",
-                "payload": {}
-              }
-            ],
-            "state": "rendering"
-          }
-        },
-        {
-          "trait": "ValidateEngine",
-          "from": "rendering",
-          "event": "VALIDATE_RENDER",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "Validating schema: errors.lolo\nSchema validation warnings:\n  ⚠️  [W_X] orbitals[0]: careful @ 3:2 💡 fix it",
-                  "stderr": ""
-                }
-              }
-            ],
-            "state": "idle"
-          }
-        }
-      ]
-    },
-    {
-      "id": "warnings under --deny-warnings fail",
-      "entity": {
-        "cwd": "/w",
-        "file": "errors.lolo",
-        "json": false,
-        "denyWarnings": true,
-        "lintUnread": false
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "validating",
-          "event": "VALIDATE_CHECKED",
-          "payload": {
-            "result": {
-              "success": true,
-              "valid": true,
-              "warnings": [
-                {
-                  "code": "W_X",
-                  "path": "orbitals[0]",
-                  "message": "careful",
-                  "suggestion": "fix it",
-                  "line": 3,
-                  "column": 2
-                }
-              ],
-              "stats": {
-                "orbitals": 1,
-                "entities": 1,
-                "traits": 1,
-                "pages": 0
-              }
-            }
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_RENDER",
-                "payload": {}
-              }
-            ],
-            "state": "rendering"
-          }
-        },
-        {
-          "trait": "ValidateEngine",
-          "from": "rendering",
-          "event": "VALIDATE_RENDER",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "Validating schema: errors.lolo\nSchema validation warnings:\n  ⚠️  [W_X] orbitals[0]: careful @ 3:2 💡 fix it",
-                  "stderr": "Error: Schema validation failed: 1 warning(s) under --deny-warnings"
-                }
-              }
-            ],
-            "state": "idle"
-          }
-        }
-      ]
-    },
-    {
-      "id": "a lint error joins errors and flips valid (json)",
-      "entity": {
-        "cwd": "/w",
-        "file": "errors.lolo",
-        "json": true,
-        "denyWarnings": false,
-        "lintUnread": false
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "validating",
-          "event": "VALIDATE_CHECKED",
-          "payload": {
-            "result": {
-              "success": true,
-              "valid": false,
-              "errors": [
-                {
-                  "code": "ORB_LINT_E",
-                  "path": "p",
-                  "message": "m",
-                  "suggestion": "",
-                  "line": 4,
-                  "column": 2
-                }
-              ],
-              "stats": {
-                "orbitals": 1,
-                "entities": 1,
-                "traits": 1,
-                "pages": 0
-              }
-            }
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_RENDER",
-                "payload": {}
-              }
-            ],
-            "state": "rendering"
-          }
-        },
-        {
-          "trait": "ValidateEngine",
-          "from": "rendering",
-          "event": "VALIDATE_RENDER",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "{\n  \"success\": true,\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"code\": \"ORB_LINT_E\",\n      \"path\": \"p\",\n      \"message\": \"m\",\n      \"suggestion\": \"\",\n      \"line\": 4,\n      \"column\": 2\n    }\n  ],\n  \"stats\": {\n    \"orbitals\": 1,\n    \"entities\": 1,\n    \"traits\": 1,\n    \"pages\": 0\n  }\n}"
-                }
-              }
-            ],
-            "state": "idle"
-          }
-        }
-      ]
-    },
-    {
-      "id": "a relative file is joined to the cwd",
-      "entity": {
-        "cwd": "/w"
-      },
-      "steps": [
-        {
-          "trait": "OrbValidate",
-          "from": "parsing",
-          "event": "VALIDATE_ARGS_DONE",
-          "payload": {
-            "stage": "validate",
-            "flags": {},
-            "positionals": [
-              "a.lolo"
-            ],
-            "errors": [],
-            "words": []
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_START",
-                "payload": {
-                  "file": "a.lolo",
-                  "path": "/w/a.lolo",
-                  "cwd": "/w",
-                  "json": false,
-                  "denyWarnings": false,
-                  "finalProgram": false,
-                  "hasPatterns": false,
-                  "patterns": "",
-                  "hasServices": false,
-                  "services": ""
-                }
-              }
-            ],
-            "state": "working"
-          }
-        }
-      ]
-    },
-    {
-      "id": "starting a run lints first: the options are stored and LINT_RUN asks the lint engine",
-      "entity": {
-        "cwd": "",
-        "file": "",
-        "json": false,
-        "denyWarnings": false
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "idle",
-          "event": "VALIDATE_START",
-          "payload": {
-            "file": "a.lolo",
-            "path": "/w/a.lolo",
-            "cwd": "/w",
-            "json": true,
-            "denyWarnings": true,
-            "finalProgram": false,
-            "hasPatterns": false,
-            "patterns": "",
-            "hasServices": false,
-            "services": ""
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "LINT_RUN",
-                "payload": {
-                  "file": "a.lolo"
-                }
-              }
-            ],
-            "state": "linting"
-          }
-        }
-      ]
-    },
-    {
-      "id": "the collected findings go to the host validate op in the same call",
-      "entity": {
-        "cwd": "/w",
-        "file": "a.lolo",
-        "json": true,
-        "denyWarnings": false,
-        "options": {
-          "report": true,
-          "path": "/w/a.lolo",
-          "final": false,
-          "denyWarnings": false
-        }
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "linting",
-          "event": "LINT_COLLECTED",
-          "payload": {
-            "findings": [
-              {
-                "code": "L_W",
-                "path": "p",
-                "message": "m",
-                "suggestion": "",
-                "severity": "warning"
-              }
-            ],
-            "found": []
-          },
-          "expect": {
-            "effects": [
-              {
-                "type": "program/validate"
-              }
-            ],
-            "state": "validating"
-          }
-        }
-      ]
-    },
-    {
-      "id": "an unreadable lint input still runs the core validation (no findings passed)",
-      "entity": {
-        "cwd": "/w",
-        "file": "a.lolo",
-        "json": true,
-        "denyWarnings": false,
-        "options": {
-          "report": true,
-          "path": "/w/a.lolo",
-          "final": false,
-          "denyWarnings": false
-        }
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "linting",
-          "event": "LINT_INPUT_UNREAD",
-          "payload": {
-            "file": "a.lolo",
-            "error": ""
-          },
-          "expect": {
-            "effects": [
-              {
-                "type": "program/validate"
-              }
-            ],
-            "state": "validating"
-          }
-        }
-      ]
-    },
-    {
-      "id": "an unreadable lint input with a clean core report fails the run",
-      "entity": {
-        "cwd": "/w",
-        "file": "a.lolo",
-        "json": true,
-        "denyWarnings": false,
-        "lintUnread": true
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "validating",
-          "event": "VALIDATE_CHECKED",
-          "payload": {
-            "result": {
-              "success": true,
-              "valid": true,
-              "stats": {
-                "orbitals": 1,
-                "entities": 1,
-                "traits": 1,
-                "pages": 0
-              }
-            }
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "",
-                  "stderr": "Error: the file could not be read or lowered for the lint rules: a.lolo"
-                }
-              }
-            ],
-            "state": "idle"
-          }
-        }
-      ]
-    },
-    {
-      "id": "control: an unreadable lint input with core errors still renders the report",
-      "entity": {
-        "cwd": "/w",
-        "file": "a.lolo",
-        "json": true,
-        "denyWarnings": false,
-        "lintUnread": true
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "validating",
-          "event": "VALIDATE_CHECKED",
-          "payload": {
-            "result": {
-              "success": true,
-              "valid": false,
-              "errors": [
-                {
-                  "code": "E_CORE",
-                  "path": "p",
-                  "message": "m",
-                  "line": 2,
-                  "column": 1
-                }
-              ],
-              "stats": {
-                "orbitals": 1,
-                "entities": 1,
-                "traits": 1,
-                "pages": 0
-              }
-            }
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_RENDER",
-                "payload": {}
-              }
-            ],
-            "state": "rendering"
-          }
-        },
-        {
-          "trait": "ValidateEngine",
-          "from": "rendering",
-          "event": "VALIDATE_RENDER",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "{\n  \"success\": true,\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"code\": \"E_CORE\",\n      \"path\": \"p\",\n      \"message\": \"m\",\n      \"line\": 2,\n      \"column\": 1\n    }\n  ],\n  \"stats\": {\n    \"orbitals\": 1,\n    \"entities\": 1,\n    \"traits\": 1,\n    \"pages\": 0\n  }\n}"
-                }
-              }
-            ],
-            "state": "idle"
-          }
-        }
-      ]
-    },
-    {
-      "id": "a refused host validation answers 500 with its reason",
-      "entity": {
-        "cwd": "/w",
-        "file": "a.lolo",
-        "json": true,
-        "denyWarnings": false,
-        "lintUnread": false
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "validating",
-          "event": "VALIDATE_REFUSED",
-          "payload": {
-            "error": "boom"
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "",
-                  "stderr": "Error: boom"
-                }
-              }
-            ],
-            "state": "idle"
-          }
-        }
-      ]
-    },
-    {
-      "id": "a positioned lint warning keeps valid true (control for the deny-warnings case)",
-      "entity": {
-        "cwd": "/w",
-        "file": "a.lolo",
-        "json": true,
-        "denyWarnings": false,
-        "lintUnread": false
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "validating",
-          "event": "VALIDATE_CHECKED",
-          "payload": {
-            "result": {
-              "success": true,
-              "valid": true,
-              "warnings": [
-                {
-                  "code": "L_W",
-                  "path": "p",
-                  "message": "m",
-                  "suggestion": "s",
-                  "line": 5,
-                  "column": 3
-                }
-              ],
-              "stats": {
-                "orbitals": 1,
-                "entities": 1,
-                "traits": 1,
-                "pages": 0
-              }
-            }
-          },
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_RENDER",
-                "payload": {}
-              }
-            ],
-            "state": "rendering"
-          }
-        },
-        {
-          "trait": "ValidateEngine",
-          "from": "rendering",
-          "event": "VALIDATE_RENDER",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "{\n  \"success\": true,\n  \"valid\": true,\n  \"warnings\": [\n    {\n      \"code\": \"L_W\",\n      \"path\": \"p\",\n      \"message\": \"m\",\n      \"suggestion\": \"s\",\n      \"line\": 5,\n      \"column\": 3\n    }\n  ],\n  \"stats\": {\n    \"orbitals\": 1,\n    \"entities\": 1,\n    \"traits\": 1,\n    \"pages\": 0\n  }\n}"
-                }
-              }
-            ],
-            "state": "idle"
-          }
-        }
-      ]
-    },
-    {
-      "id": "a lint warning under --deny-warnings makes valid false (json render)",
-      "entity": {
-        "cwd": "/w",
-        "file": "a.lolo",
-        "json": true,
-        "denyWarnings": true,
-        "report": {
-          "success": true,
-          "valid": true,
-          "stats": {
-            "orbitals": 1,
-            "entities": 1,
-            "traits": 1,
-            "pages": 0
-          }
-        },
-        "errors": [],
-        "warnings": [
-          {
-            "code": "L_W",
-            "path": "p",
-            "message": "m",
-            "suggestion": "s"
-          }
-        ],
-        "valid": false
-      },
-      "steps": [
-        {
-          "trait": "ValidateEngine",
-          "from": "rendering",
-          "event": "VALIDATE_RENDER",
-          "payload": {},
-          "expect": {
-            "emits": [
-              {
-                "event": "VALIDATE_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "{\n  \"success\": true,\n  \"valid\": false,\n  \"warnings\": [\n    {\n      \"code\": \"L_W\",\n      \"path\": \"p\",\n      \"message\": \"m\",\n      \"suggestion\": \"s\"\n    }\n  ],\n  \"stats\": {\n    \"orbitals\": 1,\n    \"entities\": 1,\n    \"traits\": 1,\n    \"pages\": 0\n  }\n}"
-                }
-              }
-            ],
-            "state": "idle"
-          }
-        }
-      ]
-    },
-    {
-      "id": "an unreadable command body answers 500",
-      "steps": [
-        {
-          "trait": "OrbValidate",
-          "from": "ready",
-          "event": "VALIDATE_CALLED",
-          "payload": {
-            "headers": {},
-            "rawBody": "not json"
-          },
-          "expect": {
-            "state": "ready",
-            "emits": [
-              {
-                "event": "VALIDATE_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "",
-                  "stderr": "Error: orb validate: the command arguments could not be read"
-                }
-              }
-            ]
-          }
-        }
-      ]
+       }
+      ],
+      "state": "idle"
+     }
     }
-  ]
+   ]
+  },
+  {
+   "id": "json report with an error keeps every host field (Rust exit 0, status 200)",
+   "entity": {
+    "cwd": "/w",
+    "file": "errors.lolo",
+    "json": true,
+    "denyWarnings": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": true,
+       "valid": false,
+       "errors": [
+        {
+         "code": "ORB_T_INVALID_TRANSITION",
+         "path": "orbitals[0 (X)].traits[0 (T)].stateMachine.transitions[1].to",
+         "message": "Target state 'zz' does not exist",
+         "fixGuidance": "Location is approximate (nearest tracked source line). If the shown line only references a config knob or another trait, the failing expression lives where that value is DECLARED (e.g. the trait's config block default) — search the file for the expression named in the message.",
+         "validValues": [
+          "a"
+         ],
+         "line": 10,
+         "column": 7,
+         "endLine": 10,
+         "endColumn": 9,
+         "approximate": true
+        }
+       ],
+       "stats": {
+        "orbitals": 1,
+        "entities": 1,
+        "traits": 1,
+        "pages": 0
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"success\": true,\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"code\": \"ORB_T_INVALID_TRANSITION\",\n      \"path\": \"orbitals[0 (X)].traits[0 (T)].stateMachine.transitions[1].to\",\n      \"message\": \"Target state 'zz' does not exist\",\n      \"fixGuidance\": \"Location is approximate (nearest tracked source line). If the shown line only references a config knob or another trait, the failing expression lives where that value is DECLARED (e.g. the trait's config block default) — search the file for the expression named in the message.\",\n      \"validValues\": [\n        \"a\"\n      ],\n      \"line\": 10,\n      \"column\": 7,\n      \"endLine\": 10,\n      \"endColumn\": 9,\n      \"approximate\": true\n    }\n  ],\n  \"stats\": {\n    \"orbitals\": 1,\n    \"entities\": 1,\n    \"traits\": 1,\n    \"pages\": 0\n  }\n}"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "text clean prints only the header (Rust: stdout header, exit 0)",
+   "entity": {
+    "cwd": "/w",
+    "file": "errors.lolo",
+    "json": false,
+    "denyWarnings": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": true,
+       "valid": true,
+       "stats": {
+        "orbitals": 1,
+        "entities": 1,
+        "traits": 2,
+        "pages": 1
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "Validating schema: errors.lolo"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "text with an error: stderr list and failure line (Rust status 1)",
+   "entity": {
+    "cwd": "/w",
+    "file": "errors.lolo",
+    "json": false,
+    "denyWarnings": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": true,
+       "valid": false,
+       "errors": [
+        {
+         "code": "ORB_T_INVALID_TRANSITION",
+         "path": "orbitals[0 (X)].traits[0 (T)].stateMachine.transitions[1].to",
+         "message": "Target state 'zz' does not exist",
+         "fixGuidance": "Location is approximate (nearest tracked source line). If the shown line only references a config knob or another trait, the failing expression lives where that value is DECLARED (e.g. the trait's config block default) — search the file for the expression named in the message.",
+         "validValues": [
+          "a"
+         ],
+         "line": 10,
+         "column": 7,
+         "endLine": 10,
+         "endColumn": 9,
+         "approximate": true
+        }
+       ],
+       "stats": {
+        "orbitals": 1,
+        "entities": 1,
+        "traits": 1,
+        "pages": 0
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "Validating schema: errors.lolo",
+         "stderr": "Schema validation errors:\n  ❌ [ORB_T_INVALID_TRANSITION] orbitals[0 (X)].traits[0 (T)].stateMachine.transitions[1].to: Target state 'zz' does not exist @ 10:7\nError: Schema validation failed with 1 error(s)"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a missing file prints Error: <reason> on stderr (Rust status 1)",
+   "entity": {
+    "cwd": "/w",
+    "file": "errors.lolo",
+    "json": false,
+    "denyWarnings": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": true,
+       "valid": false,
+       "errors": [
+        {
+         "code": "FILE_READ_ERROR",
+         "path": "",
+         "message": "Failed to read schema file: No such file or directory (os error 2)"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "Validating schema: errors.lolo",
+         "stderr": "Error: No such file or directory (os error 2)"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "warnings alone print on stdout and pass (control: no --deny-warnings)",
+   "entity": {
+    "cwd": "/w",
+    "file": "errors.lolo",
+    "json": false,
+    "denyWarnings": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": true,
+       "valid": true,
+       "warnings": [
+        {
+         "code": "W_X",
+         "path": "orbitals[0]",
+         "message": "careful",
+         "suggestion": "fix it",
+         "line": 3,
+         "column": 2
+        }
+       ],
+       "stats": {
+        "orbitals": 1,
+        "entities": 1,
+        "traits": 1,
+        "pages": 0
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "Validating schema: errors.lolo\nSchema validation warnings:\n  ⚠️  [W_X] orbitals[0]: careful @ 3:2 💡 fix it",
+         "stderr": ""
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "warnings under --deny-warnings fail",
+   "entity": {
+    "cwd": "/w",
+    "file": "errors.lolo",
+    "json": false,
+    "denyWarnings": true
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": true,
+       "valid": true,
+       "warnings": [
+        {
+         "code": "W_X",
+         "path": "orbitals[0]",
+         "message": "careful",
+         "suggestion": "fix it",
+         "line": 3,
+         "column": 2
+        }
+       ],
+       "stats": {
+        "orbitals": 1,
+        "entities": 1,
+        "traits": 1,
+        "pages": 0
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "Validating schema: errors.lolo\nSchema validation warnings:\n  ⚠️  [W_X] orbitals[0]: careful @ 3:2 💡 fix it",
+         "stderr": "Error: Schema validation failed: 1 warning(s) under --deny-warnings"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a lint error joins errors and flips valid (json)",
+   "entity": {
+    "cwd": "/w",
+    "file": "errors.lolo",
+    "json": true,
+    "denyWarnings": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": true,
+       "valid": false,
+       "errors": [
+        {
+         "code": "ORB_LINT_E",
+         "path": "p",
+         "message": "m",
+         "suggestion": "",
+         "line": 4,
+         "column": 2
+        }
+       ],
+       "stats": {
+        "orbitals": 1,
+        "entities": 1,
+        "traits": 1,
+        "pages": 0
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"success\": true,\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"code\": \"ORB_LINT_E\",\n      \"path\": \"p\",\n      \"message\": \"m\",\n      \"suggestion\": \"\",\n      \"line\": 4,\n      \"column\": 2\n    }\n  ],\n  \"stats\": {\n    \"orbitals\": 1,\n    \"entities\": 1,\n    \"traits\": 1,\n    \"pages\": 0\n  }\n}"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a relative file is joined to the cwd",
+   "entity": {
+    "cwd": "/w"
+   },
+   "steps": [
+    {
+     "trait": "OrbValidate",
+     "from": "parsing",
+     "event": "VALIDATE_ARGS_DONE",
+     "payload": {
+      "stage": "validate",
+      "flags": {},
+      "positionals": [
+       "a.lolo"
+      ],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_START",
+        "payload": {
+         "file": "a.lolo",
+         "path": "/w/a.lolo",
+         "cwd": "/w",
+         "json": false,
+         "denyWarnings": false,
+         "finalProgram": false,
+         "hasPatterns": false,
+         "patterns": "",
+         "hasServices": false,
+         "services": ""
+        }
+       }
+      ],
+      "state": "working"
+     }
+    }
+   ]
+  },
+  {
+   "id": "starting a run lints first: the options are stored and LINT_RUN asks the lint engine",
+   "entity": {
+    "cwd": "",
+    "file": "",
+    "json": false,
+    "denyWarnings": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "idle",
+     "event": "VALIDATE_START",
+     "payload": {
+      "file": "a.lolo",
+      "path": "/w/a.lolo",
+      "cwd": "/w",
+      "json": true,
+      "denyWarnings": true,
+      "finalProgram": false,
+      "hasPatterns": false,
+      "patterns": "",
+      "hasServices": false,
+      "services": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_RUN",
+        "payload": {
+         "file": "a.lolo"
+        }
+       }
+      ],
+      "state": "linting"
+     }
+    }
+   ]
+  },
+  {
+   "id": "the collected findings go to the host validate op in the same call",
+   "entity": {
+    "cwd": "/w",
+    "file": "a.lolo",
+    "json": true,
+    "denyWarnings": false,
+    "options": {
+     "report": true,
+     "path": "/w/a.lolo",
+     "final": false,
+     "denyWarnings": false
+    }
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "linting",
+     "event": "LINT_COLLECTED",
+     "payload": {
+      "findings": [
+       {
+        "code": "L_W",
+        "path": "p",
+        "message": "m",
+        "suggestion": "",
+        "severity": "warning"
+       }
+      ],
+      "found": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "program/validate"
+       }
+      ],
+      "state": "validating"
+     }
+    }
+   ]
+  },
+  {
+   "id": "an unreadable lint input still runs the core validation, with an error finding naming the file and the read error",
+   "entity": {
+    "cwd": "/w",
+    "file": "a.lolo",
+    "json": true,
+    "denyWarnings": false,
+    "options": {
+     "report": true,
+     "path": "/w/a.lolo",
+     "final": false,
+     "denyWarnings": false
+    }
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "linting",
+     "event": "LINT_INPUT_UNREAD",
+     "payload": {
+      "file": "a.lolo",
+      "error": "ENOENT: no such file"
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "program/validate",
+        "arg1": [
+         "object/merge",
+         [
+          "default",
+          "@entity.options",
+          {}
+         ],
+         {
+          "findings": [
+           {
+            "code": "ORB_LINT_INPUT_UNREAD",
+            "path": "",
+            "message": [
+             "str/concat",
+             "the lint rules did not run: ",
+             "@payload.file",
+             " could not be read or lowered",
+             [
+              "if",
+              [
+               "=",
+               "@payload.error",
+               ""
+              ],
+              "",
+              [
+               "str/concat",
+               ": ",
+               "@payload.error"
+              ]
+             ]
+            ],
+            "suggestion": "Fix the read error; the std lint rules need the file read and lowered before they run.",
+            "severity": "error",
+            "validValues": []
+           }
+          ]
+         }
+        ],
+        "key": "validate"
+       }
+      ],
+      "state": "validating"
+     }
+    }
+   ]
+  },
+  {
+   "id": "an unreadable lint input is an error finding in the report, never a clean run",
+   "entity": {
+    "cwd": "/w",
+    "file": "a.lolo",
+    "json": true,
+    "denyWarnings": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": true,
+       "valid": false,
+       "errors": [
+        {
+         "code": "ORB_LINT_INPUT_UNREAD",
+         "path": "",
+         "message": "the lint rules did not run: a.lolo could not be read or lowered: ENOENT",
+         "suggestion": "x",
+         "severity": "error"
+        }
+       ],
+       "stats": {
+        "orbitals": 1,
+        "entities": 1,
+        "traits": 1,
+        "pages": 0
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"success\": true,\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"code\": \"ORB_LINT_INPUT_UNREAD\",\n      \"path\": \"\",\n      \"message\": \"the lint rules did not run: a.lolo could not be read or lowered: ENOENT\",\n      \"suggestion\": \"x\",\n      \"severity\": \"error\"\n    }\n  ],\n  \"stats\": {\n    \"orbitals\": 1,\n    \"entities\": 1,\n    \"traits\": 1,\n    \"pages\": 0\n  }\n}"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an unreadable lint input with core errors still renders the report",
+   "entity": {
+    "cwd": "/w",
+    "file": "a.lolo",
+    "json": true,
+    "denyWarnings": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": true,
+       "valid": false,
+       "errors": [
+        {
+         "code": "E_CORE",
+         "path": "p",
+         "message": "m",
+         "line": 2,
+         "column": 1
+        }
+       ],
+       "stats": {
+        "orbitals": 1,
+        "entities": 1,
+        "traits": 1,
+        "pages": 0
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"success\": true,\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"code\": \"E_CORE\",\n      \"path\": \"p\",\n      \"message\": \"m\",\n      \"line\": 2,\n      \"column\": 1\n    }\n  ],\n  \"stats\": {\n    \"orbitals\": 1,\n    \"entities\": 1,\n    \"traits\": 1,\n    \"pages\": 0\n  }\n}"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a refused host validation answers 500 with its reason",
+   "entity": {
+    "cwd": "/w",
+    "file": "a.lolo",
+    "json": true,
+    "denyWarnings": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_REFUSED",
+     "payload": {
+      "error": "boom"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: boom"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a positioned lint warning keeps valid true (control for the deny-warnings case)",
+   "entity": {
+    "cwd": "/w",
+    "file": "a.lolo",
+    "json": true,
+    "denyWarnings": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": true,
+       "valid": true,
+       "warnings": [
+        {
+         "code": "L_W",
+         "path": "p",
+         "message": "m",
+         "suggestion": "s",
+         "line": 5,
+         "column": 3
+        }
+       ],
+       "stats": {
+        "orbitals": 1,
+        "entities": 1,
+        "traits": 1,
+        "pages": 0
+       }
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"success\": true,\n  \"valid\": true,\n  \"warnings\": [\n    {\n      \"code\": \"L_W\",\n      \"path\": \"p\",\n      \"message\": \"m\",\n      \"suggestion\": \"s\",\n      \"line\": 5,\n      \"column\": 3\n    }\n  ],\n  \"stats\": {\n    \"orbitals\": 1,\n    \"entities\": 1,\n    \"traits\": 1,\n    \"pages\": 0\n  }\n}"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a lint warning under --deny-warnings makes valid false (json render)",
+   "entity": {
+    "cwd": "/w",
+    "file": "a.lolo",
+    "json": true,
+    "denyWarnings": true,
+    "report": {
+     "success": true,
+     "valid": true,
+     "stats": {
+      "orbitals": 1,
+      "entities": 1,
+      "traits": 1,
+      "pages": 0
+     }
+    },
+    "errors": [],
+    "warnings": [
+     {
+      "code": "L_W",
+      "path": "p",
+      "message": "m",
+      "suggestion": "s"
+     }
+    ],
+    "valid": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"success\": true,\n  \"valid\": false,\n  \"warnings\": [\n    {\n      \"code\": \"L_W\",\n      \"path\": \"p\",\n      \"message\": \"m\",\n      \"suggestion\": \"s\"\n    }\n  ],\n  \"stats\": {\n    \"orbitals\": 1,\n    \"entities\": 1,\n    \"traits\": 1,\n    \"pages\": 0\n  }\n}"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "an unreadable command body answers 500",
+   "steps": [
+    {
+     "trait": "OrbValidate",
+     "from": "ready",
+     "event": "VALIDATE_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "not json"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: orb validate: the command arguments could not be read"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
 }

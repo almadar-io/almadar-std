@@ -36,8 +36,6 @@ orbital OrbValidateOrbital {
     warnings : [ReportFinding] = []
     valid : boolean = false
     options : ValidateOptions
-    lintUnread : boolean = false
-    lintError : string = ""
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -136,7 +134,6 @@ orbital OrbValidateOrbital {
         (set @entity.file @payload.file)
         (set @entity.json @payload.json)
         (set @entity.denyWarnings @payload.denyWarnings)
-        (set @entity.lintUnread false)
         (set @entity.options (object/merge (object/merge { report: true path: @payload.path final: @payload.finalProgram denyWarnings: @payload.denyWarnings } (if @payload.hasPatterns { patterns: @payload.patterns } {})) (if @payload.hasServices { services: @payload.services } {})))
         (emit LINT_RUN { file: @payload.file })
     }
@@ -146,18 +143,14 @@ orbital OrbValidateOrbital {
       LINT_COLLECTED -> validating
         (program/validate null (object/merge @entity.options { findings: @payload.findings }) { key: "validate" emit: { success: VALIDATE_CHECKED, failure: VALIDATE_REFUSED } })
       LINT_INPUT_UNREAD -> validating
-        (set @entity.lintUnread true)
-        (set @entity.lintError @payload.error)
-        (program/validate null @entity.options { key: "validate" emit: { success: VALIDATE_CHECKED, failure: VALIDATE_REFUSED } })
+        (program/validate null (object/merge (default @entity.options {}) { findings: [{ code: "ORB_LINT_INPUT_UNREAD", path: "", message: (str/concat "the lint rules did not run: " @payload.file " could not be read or lowered" (if (= @payload.error "") "" (str/concat ": " @payload.error))), suggestion: "Fix the read error; the std lint rules need the file read and lowered before they run.", severity: "error", validValues: [] }] }) { key: "validate" emit: { success: VALIDATE_CHECKED, failure: VALIDATE_REFUSED } })
     }
 
     state validating {
       INIT -> validating
       VALIDATE_REFUSED -> idle
         (emit VALIDATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @payload.error) })
-      VALIDATE_CHECKED -> idle when (and @entity.lintUnread (= (array/len (object/get @payload.result "errors" [])) 0))
-        (emit VALIDATE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: the file could not be read or lowered for the lint rules: " @entity.file (if (= @entity.lintError "") "" (str/concat ": " @entity.lintError))) })
-      VALIDATE_CHECKED -> rendering when (or (not @entity.lintUnread) (> (array/len (object/get @payload.result "errors" [])) 0))
+      VALIDATE_CHECKED -> rendering
         (set @entity.report @payload.result)
         (set @entity.errors (object/get @payload.result "errors" []))
         (set @entity.warnings (object/get @payload.result "warnings" []))

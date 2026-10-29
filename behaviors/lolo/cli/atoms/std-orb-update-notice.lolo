@@ -3,6 +3,7 @@ app std-orb-update-notice [
   inbound: ["cli-notice"],
   env: ["ORB_NO_UPDATE_CHECK", "CI"],
   fs: { "~/.orb/**": [read, write, create], "~/.orb": [create] },
+  stdio: [err],
   egress: ["https://registry.npmjs.org"],
   description: "std-orb-update-notice — the daily updates-available notice (spec/cli/orb-update-notice.lolo; golden: orbital-cli update_notice.rs). The call's first argv word `record` (after orb update) stamps ~/.orb/.update-check.json as checked now with nothing available and prints nothing. Any other call stays silent when ORB_NO_UPDATE_CHECK or CI is set or stderr is not a terminal; otherwise it reads the cache { checkedAt (seconds), available [[name, installed, newest]] }: a cache under a day old answers its list, an older, absent or garbled one rescans. The scan reads each @almadar/ dependency of ~/.orb/package.json with its range and its installed version (~/.orb/node_modules/<name>/package.json), asks std-npm-lookup for the versions, walks the stable ones (no prerelease) from the newest down until std-semver says one satisfies the range, and keeps the package when that version compares above the installed one. A package that is not installed, whose lookup is refused, whose range std-semver refuses, or that no stable version satisfies is skipped. The cache is written (a failed write is ignored) and the answer carries the one stderr line `orb: updates available (<name> <from> → <to>, …); run `orb update --global`` or nothing."
 ]
@@ -10,7 +11,7 @@ uses Spec from "almadar-std/orb-update-notice"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type NoticeCache = { checkedAt : number!, available : [[string]]! }
 type NoticeManifest = { dependencies : Map string string! }
-type NoticeInstalled = { version : string? }
+type NoticeInstalled = { version : string! }
 type NoticeDep = { name : string!, range : string! }
 
 orbital OrbUpdateNoticeOrbital {
@@ -49,16 +50,16 @@ orbital OrbUpdateNoticeOrbital {
 
     state ready {
       INIT -> ready
-      UPDATE_NOTICE_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
+      UPDATE_NOTICE_CALLED -> ready when (or (not (validate/required @payload.rawBody)) (= (json/parse @payload.rawBody OrbCommandArgs) null))
         (emit UPDATE_NOTICE_ANSWERED { status: 500, body: "", stderr: "Error: orb update-notice: the command arguments could not be read" })
-      UPDATE_NOTICE_CALLED -> writing when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "record"))
+      UPDATE_NOTICE_CALLED -> writing when (and (validate/required @payload.rawBody) (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "record")))
         (set @entity.mode "record")
-        (set @entity.nowSec (math/floor (/ (time/now) 1000)))
+        (set @entity.nowSec (math/floor (time/diff (time/now) @config.epoch "s")))
         (set @entity.found [])
         (emit UN_WRITE { })
-      UPDATE_NOTICE_CALLED -> gating when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "record"))
+      UPDATE_NOTICE_CALLED -> gating when (and (validate/required @payload.rawBody) (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") "record")))
         (set @entity.mode "check")
-        (set @entity.nowSec (math/floor (/ (time/now) 1000)))
+        (set @entity.nowSec (math/floor (time/diff (time/now) @config.epoch "s")))
         (set @entity.found [])
         (emit UN_GATE { })
     }
@@ -98,7 +99,7 @@ orbital OrbUpdateNoticeOrbital {
         (set @entity.cached [])
         (emit UN_DUE { })
       UN_DUE -> ready when (< (- @entity.nowSec @entity.checkedAt) 86400)
-        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: (if (= (array/len @entity.cached) 0) "" (str/concat "orb: updates available (" (str/join (array/map @entity.cached (fn t (str/concat (array/nth @t 0) " " (array/nth @t 1) " → " (array/nth @t 2)))) ", ") "); run `orb update --global`")) })
+        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: (let ((lines (array/flatten (array/map @entity.cached (fn t (let ((a (array/nth @t 0)) (b (array/nth @t 1)) (c (array/nth @t 2))) (if (and (validate/required @a) (and (validate/required @b) (validate/required @c))) [(str/concat @a " " @b " → " @c)] []))))))) (if (= (array/len @lines) 0) "" (str/concat "orb: updates available (" (str/join @lines ", ") "); run `orb update --global`"))) })
       UN_DUE -> scanning when (>= (- @entity.nowSec @entity.checkedAt) 86400)
         (os/read-file "~/.orb/package.json" { key: "manifest" emit: { success: UN_MANIFEST_READ, failure: UN_MANIFEST_ABSENT } })
     }
@@ -115,15 +116,20 @@ orbital OrbUpdateNoticeOrbital {
         (emit UN_WRITE { })
       UN_NEXT -> writing when (>= @entity.cursor (array/len @entity.deps))
         (emit UN_WRITE { })
-      UN_NEXT -> scanning when (< @entity.cursor (array/len @entity.deps))
+      UN_NEXT -> scanning when (and (< @entity.cursor (array/len @entity.deps)) (validate/required (array/nth @entity.deps @entity.cursor)))
         (os/read-file (str/concat "~/.orb/node_modules/" (object/get (array/nth @entity.deps @entity.cursor) "name") "/package.json") { key: "installed" emit: { success: UN_PKG_READ, failure: UN_PKG_ABSENT } })
+      UN_NEXT -> writing when (and (< @entity.cursor (array/len @entity.deps)) (not (validate/required (array/nth @entity.deps @entity.cursor))))
+        (emit UN_WRITE { })
       UN_PKG_ABSENT -> scanning
         (set @entity.cursor (+ @entity.cursor 1))
         (emit UN_NEXT { })
-      UN_PKG_READ -> scanning when (= (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeInstalled) "version") null)
+      UN_PKG_READ -> scanning when (not (validate/required (json/parse (default (bytes/to-string @payload.data) "") NoticeInstalled)))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit UN_NEXT { })
-      UN_PKG_READ -> looking when (!= (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeInstalled) "version") null)
+      UN_PKG_READ -> scanning when (and (validate/required (json/parse (default (bytes/to-string @payload.data) "") NoticeInstalled)) (not (validate/required (array/nth @entity.deps @entity.cursor))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit UN_NEXT { })
+      UN_PKG_READ -> looking when (and (validate/required (json/parse (default (bytes/to-string @payload.data) "") NoticeInstalled)) (validate/required (array/nth @entity.deps @entity.cursor)))
         (set @entity.installed (object/get (json/parse (default (bytes/to-string @payload.data) "") NoticeInstalled) "version"))
         (emit UN_ASK { requestId: (str/concat @entity.cursor), name: (object/get (array/nth @entity.deps @entity.cursor) "name"), tag: "latest" })
     }
@@ -140,17 +146,26 @@ orbital OrbUpdateNoticeOrbital {
       UN_TRY -> scanning when (>= @entity.cc (array/len @entity.cands))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit UN_NEXT { })
-      UN_TRY -> looking when (< @entity.cc (array/len @entity.cands))
+      UN_TRY -> scanning when (and (< @entity.cc (array/len @entity.cands)) (not (and (validate/required (array/nth @entity.cands @entity.cc)) (validate/required (array/nth @entity.deps @entity.cursor)))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit UN_NEXT { })
+      UN_TRY -> looking when (and (< @entity.cc (array/len @entity.cands)) (and (validate/required (array/nth @entity.cands @entity.cc)) (validate/required (array/nth @entity.deps @entity.cursor))))
         (emit UN_SAT { requestId: (str/concat @entity.cursor "." @entity.cc), version: (array/nth @entity.cands @entity.cc), range: (object/get (array/nth @entity.deps @entity.cursor) "range") })
       UN_SATISFIED -> looking when (not @payload.value)
         (set @entity.cc (+ @entity.cc 1))
         (emit UN_TRY { })
-      UN_SATISFIED -> looking when @payload.value
+      UN_SATISFIED -> scanning when (and @payload.value (not (validate/required (array/nth @entity.cands @entity.cc))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit UN_NEXT { })
+      UN_SATISFIED -> looking when (and @payload.value (validate/required (array/nth @entity.cands @entity.cc)))
         (emit UN_CMP { requestId: @payload.requestId, a: (array/nth @entity.cands @entity.cc), b: @entity.installed })
       UN_SEMVER_REFUSED -> scanning
         (set @entity.cursor (+ @entity.cursor 1))
         (emit UN_NEXT { })
-      UN_COMPARED -> scanning when (= @payload.value 1)
+      UN_COMPARED -> scanning when (and (= @payload.value 1) (not (and (validate/required (array/nth @entity.deps @entity.cursor)) (validate/required (array/nth @entity.cands @entity.cc)))))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit UN_NEXT { })
+      UN_COMPARED -> scanning when (and (= @payload.value 1) (and (validate/required (array/nth @entity.deps @entity.cursor)) (validate/required (array/nth @entity.cands @entity.cc))))
         (set @entity.found (array/append @entity.found [(object/get (array/nth @entity.deps @entity.cursor) "name"), @entity.installed, (array/nth @entity.cands @entity.cc)]))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit UN_NEXT { })
@@ -168,7 +183,7 @@ orbital OrbUpdateNoticeOrbital {
       UN_WRITTEN -> ready when (or (= @entity.mode "record") (= (array/len @entity.found) 0))
         (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: "" })
       UN_WRITTEN -> ready when (and (!= @entity.mode "record") (> (array/len @entity.found) 0))
-        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: (str/concat "orb: updates available (" (str/join (array/map @entity.found (fn t (str/concat (array/nth @t 0) " " (array/nth @t 1) " → " (array/nth @t 2)))) ", ") "); run `orb update --global`") })
+        (emit UPDATE_NOTICE_ANSWERED { status: 200, body: "", stderr: (let ((lines (array/flatten (array/map @entity.found (fn t (let ((a (array/nth @t 0)) (b (array/nth @t 1)) (c (array/nth @t 2))) (if (and (validate/required @a) (and (validate/required @b) (validate/required @c))) [(str/concat @a " " @b " → " @c)] []))))))) (str/concat "orb: updates available (" (str/join @lines ", ") "); run `orb update --global`")) })
     }
 
     emits {
@@ -199,10 +214,10 @@ orbital OrbUpdateNoticeOrbital {
       UN_CMP { requestId : string!  a : string!  b : string! }
         @description "Internal: ask std-semver to order the candidate against the installed version."
         @tier "internal"
-      UN_ENV_NOUPD { value : string }
+      UN_ENV_NOUPD { value : string? }
         @description "Internal: ORB_NO_UPDATE_CHECK."
         @tier "internal"
-      UN_ENV_CI { value : string }
+      UN_ENV_CI { value : string? }
         @description "Internal: CI."
         @tier "internal"
       UN_ENV_FAILED { error : string  kind : string }
@@ -235,6 +250,12 @@ orbital OrbUpdateNoticeOrbital {
       UN_WRITTEN { }
         @description "Internal: the cache write finished or failed (ignored)."
         @tier "internal"
+    }
+
+    config {
+      epoch : instant = "1970-01-01T00:00:00.000Z"
+        @description "The Unix epoch the cache's checkedAt seconds are counted from."
+        @tier "infra"
     }
 
     listens {
