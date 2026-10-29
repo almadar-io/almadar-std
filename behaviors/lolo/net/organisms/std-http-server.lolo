@@ -37,7 +37,7 @@ orbital HttpServerOrbital {
   entity StreamTicket [persistent: stream_tickets] {
     id : string! @description "The ticket: 32 CSPRNG bytes, base64url."
     viewer : Viewer! @description "The viewer the ticket was minted for."
-    expiresAt : number @description "When the ticket stops working, in epoch milliseconds." = 0
+    expiresAt : instant @description "When the ticket stops working."
   }
 
   entity ApiKeyRecord [persistent: api_keys] {
@@ -46,7 +46,7 @@ orbital HttpServerOrbital {
     label : string @description "A name the owner gave the key." = ""
     owner : string @description "Who the key acts as." = ""
     revoked : boolean @description "Whether the key has been revoked and no longer works." = false
-    expiresAt : number @description "When the key stops working, in epoch milliseconds; 0 means never." = 0
+    expiresAt : instant @description "When the key stops working; absent means never."
   }
 
   config {

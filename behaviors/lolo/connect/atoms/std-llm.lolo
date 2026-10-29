@@ -46,12 +46,12 @@ type LlmSchema = { type : string, additionalProperties : boolean, properties : M
 type LlmToolDef = { name : string!, description : string!, parameters : LlmSchema! }
 type ToolsUsage = { promptTokens : number!, completionTokens : number!, totalTokens : number!, modelCalls : number! }
 type LlmCallInfo = { service : string!, provider : string!, model : string!, systemPrompt : string!, userPrompt : string!, toolCallsJson : string, durationMs : number!, promptTokens : number, completionTokens : number }
-type LlmResponseStep = { type : "llm_response"!, content : string!, llm : LlmCallInfo!, timestamp : number! }
-type LlmToolCallStep = { type : "tool_call"!, tool : string!, kind : "input" | "read" | "invalid", argsText : string!, timestamp : number! }
-type LlmToolResultStep = { type : "tool_result"!, tool : string!, kind : "input" | "read" | "invalid", success : boolean!, detail : string, rows : number, resultText : string!, timestamp : number! }
+type LlmResponseStep = { type : "llm_response"!, content : string!, llm : LlmCallInfo!, timestamp : instant! }
+type LlmToolCallStep = { type : "tool_call"!, tool : string!, kind : "input" | "read" | "invalid", argsText : string!, timestamp : instant! }
+type LlmToolResultStep = { type : "tool_result"!, tool : string!, kind : "input" | "read" | "invalid", success : boolean!, detail : string, rows : number, resultText : string!, timestamp : instant! }
 type LlmStep = LlmToolCallStep | LlmToolResultStep | LlmResponseStep
-type LlmToolOutcome = { id : string!, tool : string!, kind : "input" | "read" | "invalid"!, success : boolean!, detail : string, rows : number, content : string!, startedAt : number!, endedAt : number! }
-type ToolsSession = { key : string, model : string!, system : string, userPrompt : string!, maxSteps : number!, startedAt : number!, tools : [LlmToolDef]!, messages : [ToolMessage]!, steps : [LlmStep]!, usage : ToolsUsage! }
+type LlmToolOutcome = { id : string!, tool : string!, kind : "input" | "read" | "invalid"!, success : boolean!, detail : string, rows : number, content : string!, startedAt : instant!, endedAt : instant! }
+type ToolsSession = { key : string, model : string!, system : string, userPrompt : string!, maxSteps : number!, startedAt : instant, tools : [LlmToolDef]!, messages : [ToolMessage]!, steps : [LlmStep]!, usage : ToolsUsage! }
 type ToolsChoice = { index : number, finish_reason : string, message : ToolMessage }
 type ToolsReplyUsage = { prompt_tokens : number, completion_tokens : number, total_tokens : number }
 type ToolsReply = { choices : [ToolsChoice], usage : ToolsReplyUsage }
@@ -383,8 +383,8 @@ orbital LlmOrbital {
           provider: @config.provider,
           model: (object/get (default (json/parse @payload.job LlmJob) {}) model ""),
           action: "generate",
-          inputTokens: @payload.inputTokens,
-          outputTokens: @payload.outputTokens
+          inputTokens: (default @payload.inputTokens 0),
+          outputTokens: (default @payload.outputTokens 0)
         })
       LLM_CHAT_CONTENT -> idle when (!= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "generate")
         (emit LLM_CHAT_STRIPPED {
@@ -399,8 +399,8 @@ orbital LlmOrbital {
           provider: @config.provider,
           model: (object/get (default (json/parse @payload.job LlmJob) {}) model ""),
           action: (object/get (default (json/parse @payload.job LlmJob) {}) action ""),
-          inputTokens: @payload.inputTokens,
-          outputTokens: @payload.outputTokens
+          inputTokens: (default @payload.inputTokens 0),
+          outputTokens: (default @payload.outputTokens 0)
         })
 
       LLM_CHAT_STRIPPED -> idle
@@ -504,7 +504,7 @@ orbital LlmOrbital {
               (let ((missing (array/filter @ids (fn itemId (not (array/includes @verdictIds (str/concat (+ @index 1) "")))))))
                 (emit LLM_CHAT_VERDICTS {
                   job: @payload.job, json: @payload.json,
-                  problem: (if (> (array/count @errs (fn e (!= @e ""))) 0) (array/find @errs (fn e (!= @e "")))
+                  problem: (if (> (array/count @errs (fn e (!= @e ""))) 0) (default (array/find @errs (fn e (!= @e ""))) "")
                     (if (> (array/len @missing) 0) (str/concat "The model gave no verdict for " (str/join @missing ", ")) ""))
                 })))))
       LLM_CHAT_VERDICTS -> idle when (!= @payload.problem "")
@@ -598,7 +598,6 @@ orbital LlmOrbital {
             system: @payload.instructions,
             userPrompt: (let ((us (array/filter @payload.messages (fn m (= @m.role "user"))))) (if (> (array/len @us) 0) (object/get (array/last @us) content "") "")),
             maxSteps: (if (!= @payload.maxSteps null) @payload.maxSteps 8),
-            startedAt: 0,
             tools: @payload.tools,
             messages: (array/concat
               (if (validate/required @payload.instructions) [{ role: "system", content: @payload.instructions }] [])
@@ -682,7 +681,7 @@ orbital LlmOrbital {
                               systemPrompt: (if (= (object/get @s system null) null) "" (object/get @s system "")), userPrompt: @s.userPrompt
                             }
                             (if (> (array/len @calls) 0) { toolCallsJson: (json/stringify @calls) } {}))
-                          { durationMs: (- @ended @s.startedAt) })
+                          { durationMs: (time/diff @ended (default @s.startedAt @ended) "ms") })
                         (if (!= @u null) {
                           promptTokens: (object/get (object/get @r usage {}) prompt_tokens 0),
                           completionTokens: (object/get (object/get @r usage {}) completion_tokens 0)
@@ -701,18 +700,18 @@ orbital LlmOrbital {
           provider: @config.provider,
           model: (object/get (default (json/parse @payload.key ToolsSession) {}) model ""),
           action: "call-tools",
-          inputTokens: (object/get (object/get (default (json/parse @payload.body ToolsReply) {}) usage {}) prompt_tokens null),
-          outputTokens: (object/get (object/get (default (json/parse @payload.body ToolsReply) {}) usage {}) completion_tokens null)
+          inputTokens: (object/get (object/get (default (json/parse @payload.body ToolsReply) {}) usage {}) prompt_tokens 0),
+          outputTokens: (object/get (object/get (default (json/parse @payload.body ToolsReply) {}) usage {}) completion_tokens 0)
         })
 
-      LLM_TOOLS_TURN -> idle when (= (array/len (object/get (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}) tool_calls [])) 0)
+      LLM_TOOLS_TURN -> idle when (and (= (array/len (object/get (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}) tool_calls [])) 0) (> (array/len (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) 0))
         (emit LLM_TOOLS_STEP { activity: (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) })
         (emit LLM_CALL_TOOLS_RESULT {
           reply: (let ((lm (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}))) (if (= (object/get @lm content null) null) "" (object/get @lm content ""))),
           steps: (object/get (default (json/parse @payload.session ToolsSession) {}) steps []),
           usage: (object/get (default (json/parse @payload.session ToolsSession) {}) usage { promptTokens: 0, completionTokens: 0, totalTokens: 0, modelCalls: 0 })
         })
-      LLM_TOOLS_TURN -> idle when (> (array/len (object/get (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}) tool_calls [])) 0)
+      LLM_TOOLS_TURN -> idle when (and (> (array/len (object/get (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}) tool_calls [])) 0) (> (array/len (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) 0))
         (emit LLM_TOOLS_STEP { activity: (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) })
         (emit LLM_TOOLS_REQUESTED {
           session: @payload.session,
@@ -751,8 +750,8 @@ orbital LlmOrbital {
               }))
             })))
 
-      LLM_TOOLS_REPORT -> idle when (let ((s (json/parse @payload.session ToolsSession))) (< @payload.index (array/len @s.steps)))
-        (emit LLM_TOOLS_STEP { activity: (array/nth (object/get (default (json/parse @payload.session ToolsSession) {}) steps []) @payload.index) })
+      LLM_TOOLS_REPORT -> idle when (and (let ((s (json/parse @payload.session ToolsSession))) (< @payload.index (array/len @s.steps))) (> (array/len (array/drop (object/get (default (json/parse @payload.session ToolsSession) {}) steps []) @payload.index)) 0))
+        (emit LLM_TOOLS_STEP { activity: (array/first (array/drop (object/get (default (json/parse @payload.session ToolsSession) {}) steps []) @payload.index)) })
         (emit LLM_TOOLS_REPORT { session: @payload.session, index: (+ @payload.index 1) })
       LLM_TOOLS_REPORT -> idle when (let ((s (json/parse @payload.session ToolsSession))) (>= @payload.index (array/len @s.steps)))
         (emit LLM_TOOLS_SEND { session: @payload.session })
@@ -838,7 +837,7 @@ orbital LlmOrbital {
           provider: @config.embedProvider,
           model: (object/get (default (json/parse @payload.key EmbedJob) {}) model ""),
           action: "embed",
-          inputTokens: (object/get (object/get (default (json/parse @payload.body EmbedReply) {}) usage {}) prompt_tokens null)
+          inputTokens: (object/get (object/get (default (json/parse @payload.body EmbedReply) {}) usage {}) prompt_tokens 0)
         })
       LLM_EMBED_ERROR -> idle when (or (str/includes (str/lower @payload.message) "context length") (str/includes (str/lower @payload.message) "maximum input length") (str/includes (str/lower @payload.message) "reduce the length of the input") (str/includes (str/lower @payload.message) "input_tokens"))
         (emit LLM_FAILED { code: "", message: @payload.message, key: (object/get (default (json/parse @payload.job EmbedJob) {}) callKey "") })

@@ -7,15 +7,15 @@ def rint(s,a,b): return f'(+ (math/floor (* {uu(s)} {b-a+1})) {a})'
 def numok(x): return f'(and (!= (str/trim {x}) "") (= (str/replace-pattern (str/trim {x}) "{RX}" "") ""))'
 def numv(x): return f'(str/to-number (str/trim {x}))'
 def modlen(n,xs): return f'(default (math/mod {n} (array/len {xs})) 0)'
-def iso_of(ms): return f'(let ((isd (time/format {ms} "YYYY-MM-DD")) (ist (time/format {ms} "HH:mm:ss"))) (if (or (= @isd null) (= @ist null)) null (str/concat @isd "T" @ist "." (str/padStart (str/concat "" (math/mod (math/floor {ms}) 1000)) 3 "0") "Z")))'
+def iso_of(at): return f'(str/concat {at} "")'
 def cells_bad(cells): return f'(array/some {cells} (fn bc (= (object/get @bc "kind") "clock")))'
 CLOCK_FAILED='mock-seed: clock is not a date'
 def pad(x,n): return f'(str/padStart (str/concat "" {x}) {n} "0")'
 def slug(x): return f'(let ((sg (str/lower (str/replace-pattern {x} "[^A-Za-z0-9]" "")))) (if (= @sg "") "value" @sg))'
 def titlecase(x): return f'(str/join (array/map (array/filter (str/split (str/replaceAll (str/replaceAll (str/join (array/map (str/split {x} "") (fn c (if (and (!= @c (str/lower @c)) (= @c (str/upper @c))) (str/concat " " @c) @c))) "") "_" " ") "-" " ") " ") (fn w (!= @w ""))) (fn w (str/concat (str/upper (str/slice @w 0 1)) (str/slice @w 1 (str/len @w))))) " ")'
-def isoparts(ms):
-    d=f'(time/format {ms} "YYYY-MM-DD")'
-    dt=iso_of(ms)
+def isoparts(at):
+    d=f'(time/format {at} "YYYY-MM-DD")'
+    dt=iso_of(at)
     return d,dt
 def draws(n,s0): return f'(array/reduce (array/range {n}) [{s0}] (fn da dj (array/append @da {nxt("(default (array/last @da) 0)")})))'
 def cell(path,kind,text='""',num='0',extra=''): return f'{{ path: {path}, kind: {kind}, text: {text}, num: {num}{extra} }}'
@@ -54,9 +54,9 @@ def sampler_step(P):
     ncs='(array/len @cs)'
     pick=f'(default (array/nth @cs {modlen("(- @o 1)","@cs")}) "")'
     def resolve(lit):
-        base=f'(if {SD} {NOW} 1781481600000)'
-        ms=f'(+ {base} (* (if (= @sg2 "-") -1 1) (default (str/to-number @dg) 0) (if (= @un "m") 60000 (if (= @un "h") 3600000 (if (= @un "d") 86400000 604800000)))))'
-        d,dt=isoparts(ms)
+        off=f'(* (if (= @sg2 "-") -1 1) (default (str/to-number @dg) 0) (if (= @un "m") 60000 (if (= @un "h") 3600000 (if (= @un "d") 86400000 604800000))))'
+        at=f'(if {SD} (time/add {NOW} {off} "ms") (time/add @config.base {off} "ms"))'
+        d,dt=isoparts(at)
         return (f'(let ((tt (str/trim {lit}))) (let ((sg2 (str/slice @tt 0 1)) (un (str/slice @tt (- (str/len @tt) 1) (str/len @tt))) (dg (str/slice @tt 1 (- (str/len @tt) 1)))) '
                 f'(if (and (or (= @sg2 "-") (= @sg2 "+")) (array/includes ["m", "h", "d", "w"] @un) (!= @dg "") (= (str/replace-pattern @dg "[0-9]" "") "")) (if (= @ty "date") {d} {dt}) {lit})))')
     mock_member=C(qs('string'),pick)
@@ -119,7 +119,7 @@ def sampler_step(P):
     str_words=withdraw(2,res(C(qs('string'),f'(str/titleCase (str/join {ws} " "))'),'[]',last))
     str_idx=res(C(qs('string'),f'(str/concat {titlecase("@nm")} " " @ix)'))
     string=f'(if {imgname} {img} (if {SD} {str_words} {str_idx}))'
-    ms_s=f'(+ {NOW} (- (math/floor (* {uu("@s1")} (* 120 86400000 2))) (* 120 86400000)))'
+    ms_s=f'(time/add {NOW} (- (math/floor (* {uu("@s1")} (* 120 86400000 2))) (* 120 86400000)) "ms")'
     d_s,dt_s=isoparts('@dms')
     date_seed=f'(let ((s1 {nxt("@s0")})) (let ((dms {ms_s})) {res(dcell("@ty",f"(if (= @ty {qs(chr(100)+chr(97)+chr(116)+chr(101))}) {d_s} {dt_s})"),"[]","@s1")}))'
     mon='(str/padStart (str/concat "" (+ (math/mod @ix 12) 1)) 2 "0")'

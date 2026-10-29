@@ -37,7 +37,7 @@ orbital StaticFilesOrbital {
     state serving {
       INIT -> serving
       ROUTE_CLIENT -> serving
-        (emit STATIC_PLAN { requestId: @payload.requestId, headers: @payload.responseHeaders, decodedOk: (str/uri-component-valid @payload.path), decoded: (if (str/uri-component-valid @payload.path) (str/decode-uri-component @payload.path) "") })
+        (emit STATIC_PLAN { requestId: @payload.requestId, headers: @payload.responseHeaders, decodedOk: (str/uri-component-valid @payload.path), decoded: (if (str/uri-component-valid @payload.path) (default (str/decode-uri-component @payload.path) "") "") })
       STATIC_PLAN -> serving when (or (not @payload.decodedOk) (str/includes @payload.decoded "\u{0}") (str/includes @payload.decoded "\\") (not (str/startsWith @payload.decoded "/")) (str/startsWith @payload.decoded "//") (array/includes (str/split @payload.decoded "/") ".."))
         (emit RESPOND { requestId: @payload.requestId, status: 404, headers: @payload.headers, body: (bytes/from-string "") })
         (emit REQUEST_ANSWERED { requestId: @payload.requestId, status: 404, headers: @payload.headers, body: "" })

@@ -309,6 +309,67 @@
      }
     }
    ]
+  },
+  {
+   "id": "status-retention-aged-row-is-deleted-not-transitioned",
+   "steps": [
+    {
+     "trait": "DeleteInStatus",
+     "event": "ScanRecordsLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "status": "closed",
+        "createdAt": 1
+       },
+       {
+        "id": "j2",
+        "status": "closed",
+        "createdAt": 2
+       }
+      ],
+      "totalCount": 2
+     },
+     "from": "idle",
+     "expect": {
+      "state": "scanning",
+      "emits": [
+       {
+        "event": "LifecycleDeleted",
+        "payload": {
+         "entityId": "j1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LifecycleTransitioned"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-status-retention-empty-scan-deletes-nothing",
+   "steps": [
+    {
+     "trait": "DeleteInStatus",
+     "event": "ScanRecordsLoaded",
+     "payload": {
+      "data": [],
+      "totalCount": 0
+     },
+     "from": "idle",
+     "expect": {
+      "state": "idle",
+      "emits": [],
+      "neverEmits": [
+       "LifecycleDeleted",
+       "LifecycleTransitioned"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

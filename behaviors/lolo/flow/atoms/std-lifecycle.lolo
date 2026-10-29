@@ -1,6 +1,6 @@
 app std-lifecycle [
-  version: "1.2.0",
-  description: "std-lifecycle — age-based status lifecycle for a target entity. A periodic tick scans the target for records in `fromStatus` whose `dateField` is older than `ageDays`, and transitions each one to `toStatus` — every matching record, via a self-driving scan loop (process the head of a filtered fetch, persist the status, re-fetch until the set drains). With `action: delete` the same scan removes each aged record instead of changing its status (retention): `fromStatus` then narrows by `statusField` when set, and a record whose `dateField` is 0 is never aged. Compose onto any orbital and bind `targetEntity` + the status/date knobs."
+  version: "2.0.0",
+  description: "std-lifecycle — age-based lifecycle for a target entity, as two traits. LifecycleScheduler: a periodic tick scans the target for records in `fromStatus` whose `dateField` is older than `ageDays` and moves each one to `toStatus`, via a self-driving scan loop (process the head of a filtered fetch, persist the status, re-fetch until the set drains); its target needs a `status` field. LifecycleRetention: the same scan removes each aged record instead (retention); a record with no `dateField` value is never aged, `ageDays` 0 turns it off, and its target needs no status field. LifecycleStatusRetention: retention narrowed to aged records whose `statusField` holds `fromStatus`. Compose the one that matches the target onto any orbital and bind `targetEntity` + the knobs."
 ]
 uses Spec from "almadar-std/lifecycle"
 
@@ -19,7 +19,7 @@ orbital LifecycleOrbital {
     id : string!
     targetEntity : string @description "The entity to which lifecycle rules apply." @synonyms "subject, reference, target" = ""
     recordCount : number @description "The number of records processed." @synonyms "count, size, quantity" = 0
-    ranAt : number @description "Timestamp indicating when the lifecycle run occurred." @synonyms "timestamp, execution time, run time" = 0
+    ranAt : instant @description "Timestamp indicating when the lifecycle run occurred." @synonyms "timestamp, execution time, run time"
     errors : string @description "A textual description of any errors encountered." @synonyms "error message, problem, issue, fault" = ""
     status : string @description "Lifecycle status (also lets the standalone default target validate)." @synonyms "state, stage" = ""
     headId : string @description "Scratch: id of the record the scan loop is currently transitioning." @synonyms "current id, cursor" = ""
@@ -31,22 +31,14 @@ orbital LifecycleOrbital {
 
     state idle {
       INIT -> idle
-      ScanRecordsLoaded -> idle when (and @config.enabled @config.dryRun (= @config.action "status") (> (array/len ?data) 0))
+      ScanRecordsLoaded -> idle when (and @config.enabled @config.dryRun (> (array/len ?data) 0))
         (notify info (str/concat "Dry run — " ?totalCount " record(s) would transition, nothing was written."))
-      ScanRecordsLoaded -> scanning when (and @config.enabled (not @config.dryRun) (= @config.action "status") (> (array/len ?data) 0))
+      ScanRecordsLoaded -> scanning when (and @config.enabled (not @config.dryRun) (> (array/len ?data) 0))
         @ensures (= @entity.headStatus @config.toStatus)
         (set @entity.headId (object/get (array/first ?data) id))
         (set @entity.headStatus @config.toStatus)
         (emit LifecycleTransitioned { entityId: @entity.headId, status: @entity.headStatus })
         (persist update @config.targetEntity { id: @entity.headId, status: @entity.headStatus } {
-          emit: { failure: ScanFailed, success: LifecycleStepped }
-        })
-      ScanRecordsLoaded -> idle when (and @config.enabled @config.dryRun (= @config.action "delete") (> @config.ageDays 0) (> (array/len ?data) 0))
-        (notify info (str/concat "Dry run — " ?totalCount " record(s) would be deleted, nothing was deleted."))
-      ScanRecordsLoaded -> scanning when (and @config.enabled (not @config.dryRun) (= @config.action "delete") (> @config.ageDays 0) (> (array/len ?data) 0))
-        (set @entity.headId (object/get (array/first ?data) id))
-        (emit LifecycleDeleted { entityId: @entity.headId })
-        (persist delete @config.targetEntity @entity.headId {
           emit: { failure: ScanFailed, success: LifecycleStepped }
         })
       ScanRecordsLoaded -> idle when (= (array/len ?data) 0)
@@ -57,29 +49,17 @@ orbital LifecycleOrbital {
     state scanning {
       INIT -> scanning
       LifecycleStepped -> scanning
-        (if (= @config.action "delete")
-          (fetch @config.targetEntity {
-            emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-            filter: (and (or (= @config.fromStatus "") (= (object/get @entity @config.statusField) @config.fromStatus)) (> (object/get @entity @config.dateField) 0) (< (object/get @entity @config.dateField) (- @now (* @config.ageDays 86400000))))
-            limit: 1
-          })
-          (fetch @config.targetEntity {
-            emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-            filter: (and (= (object/get @entity status) @config.fromStatus) (< (object/get @entity @config.dateField) (- @now (* @config.ageDays 86400000))))
-            limit: 1
-          }))
-      ScanRecordsLoaded -> scanning when (and (= @config.action "status") (> (array/len ?data) 0))
+        (fetch @config.targetEntity {
+          emit: { failure: ScanFailed, success: ScanRecordsLoaded }
+          filter: (and (= (object/get @entity status) @config.fromStatus) (object/has @entity @config.dateField) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
+          limit: 1
+        })
+      ScanRecordsLoaded -> scanning when (> (array/len ?data) 0)
         @ensures (= @entity.headStatus @config.toStatus)
         (set @entity.headId (object/get (array/first ?data) id))
         (set @entity.headStatus @config.toStatus)
         (emit LifecycleTransitioned { entityId: @entity.headId, status: @entity.headStatus })
         (persist update @config.targetEntity { id: @entity.headId, status: @entity.headStatus } {
-          emit: { failure: ScanFailed, success: LifecycleStepped }
-        })
-      ScanRecordsLoaded -> scanning when (and (= @config.action "delete") (> (array/len ?data) 0))
-        (set @entity.headId (object/get (array/first ?data) id))
-        (emit LifecycleDeleted { entityId: @entity.headId })
-        (persist delete @config.targetEntity @entity.headId {
           emit: { failure: ScanFailed, success: LifecycleStepped }
         })
       ScanRecordsLoaded -> idle when (= (array/len ?data) 0)
@@ -92,6 +72,117 @@ orbital LifecycleOrbital {
         entityId : string
         status : string
       }
+      ScanRecordsLoaded {
+        data : [@entity @config.targetEntity]!
+        totalCount : number!
+      }
+      ScanFailed {
+        error : string
+        code : string
+      }
+      LifecycleStepped {
+        id : string
+      }
+    }
+
+    listens {
+      ScanRecordsLoaded {
+        data : [@entity @config.targetEntity]!
+        totalCount : number!
+      }
+      ScanFailed {
+        error : string
+        code : string
+      }
+      LifecycleStepped {
+        id : string
+      }
+    }
+
+    ticks {
+      scanCycle every "0 * * * *" [background]
+        (fetch @config.targetEntity {
+          emit: { failure: ScanFailed, success: ScanRecordsLoaded }
+          filter: (and (= (object/get @entity status) @config.fromStatus) (object/has @entity @config.dateField) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
+          limit: 1
+        })
+    }
+
+    config {
+      enabled : boolean = false
+        @label "Auto-archive old records"
+        @description "Automatically change the status of records once they age past a threshold. Off by default."
+        @synonyms "enable, turn on, enforce, require, activate, apply, switch on, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive"
+        @tier "infra"
+      targetEntity : entity = LifecycleRunLog
+        @label "Target entity"
+        @description "Entity name to scan and transition (e.g. 'Task'); it needs a `status` field. Defaults to the atom's own log so the standalone validates; rebind per composition. Typed `entity`, so a rename of the bound entity threads through to this value automatically."
+        @tier "internal"
+      fromStatus : string = ""
+        @label "Which status triggers the age-out?"
+        @description "Only records currently in this status are candidates for automatic transition."
+        @synonyms "source status, current status, eligible status, starting status"
+        @tier "infra"
+      toStatus : string = ""
+        @label "What status should old records move to?"
+        @description "Status assigned once a record ages past the threshold (e.g. 'archived', 'expired')."
+        @synonyms "target status, end status, destination status, archive status"
+        @tier "infra"
+      dateField : string = ranAt
+        @label "Which date field measures the record's age?"
+        @description "Instant entity field compared against the age threshold (e.g. 'createdAt')."
+        @tier "internal"
+      ageDays : number = 30
+        @label "How old (in days) before a record is transitioned?"
+        @description "Records older than this many days move from the source status to the destination status."
+        @synonyms "age threshold, days until archive, expiry days, max age"
+        @tier "infra"
+      dryRun : boolean = false
+        @label "Run in dry-run mode (no changes written)?"
+        @description "When true, the scan runs but no status transitions are persisted."
+        @synonyms "test mode, preview, simulate, dry run, no write"
+        @tier "infra"
+    }
+  }
+
+  trait LifecycleRetention -> @rebindable LifecycleRunLog {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      ScanRecordsLoaded -> idle when (and @config.enabled @config.dryRun (> @config.ageDays 0) (> (array/len ?data) 0))
+        (notify info (str/concat "Dry run — " ?totalCount " record(s) would be deleted, nothing was deleted."))
+      ScanRecordsLoaded -> scanning when (and @config.enabled (not @config.dryRun) (> @config.ageDays 0) (> (array/len ?data) 0))
+        (set @entity.headId (object/get (array/first ?data) id))
+        (emit LifecycleDeleted { entityId: @entity.headId })
+        (persist delete @config.targetEntity @entity.headId {
+          emit: { failure: ScanFailed, success: LifecycleStepped }
+        })
+      ScanRecordsLoaded -> idle when (= (array/len ?data) 0)
+      ScanFailed -> idle
+        (notify error (str/concat "Couldn't scan for records to delete — " ?error))
+    }
+
+    state scanning {
+      INIT -> scanning
+      LifecycleStepped -> scanning
+        (fetch @config.targetEntity {
+          emit: { failure: ScanFailed, success: ScanRecordsLoaded }
+          filter: (and (object/has @entity @config.dateField) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
+          limit: 1
+        })
+      ScanRecordsLoaded -> scanning when (> (array/len ?data) 0)
+        (set @entity.headId (object/get (array/first ?data) id))
+        (emit LifecycleDeleted { entityId: @entity.headId })
+        (persist delete @config.targetEntity @entity.headId {
+          emit: { failure: ScanFailed, success: LifecycleStepped }
+        })
+      ScanRecordsLoaded -> idle when (= (array/len ?data) 0)
+      ScanFailed -> idle
+        (notify error (str/concat "Couldn't scan for records to delete — " ?error))
+    }
+
+    emits {
       LifecycleDeleted -> external {
         entityId : string
       }
@@ -124,65 +215,153 @@ orbital LifecycleOrbital {
 
     ticks {
       scanCycle every "0 * * * *" [background]
-        (if (= @config.action "delete")
-          (fetch @config.targetEntity {
-            emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-            filter: (and (or (= @config.fromStatus "") (= (object/get @entity @config.statusField) @config.fromStatus)) (> (object/get @entity @config.dateField) 0) (< (object/get @entity @config.dateField) (- @now (* @config.ageDays 86400000))))
-            limit: 1
-          })
-          (fetch @config.targetEntity {
-            emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-            filter: (and (= (object/get @entity status) @config.fromStatus) (< (object/get @entity @config.dateField) (- @now (* @config.ageDays 86400000))))
-            limit: 1
-          }))
+        (fetch @config.targetEntity {
+          emit: { failure: ScanFailed, success: ScanRecordsLoaded }
+          filter: (and (object/has @entity @config.dateField) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
+          limit: 1
+        })
     }
 
     config {
       enabled : boolean = false
-        @label "Auto-archive old records"
-        @description "Automatically change the status of records once they age past a threshold. Off by default."
-        @synonyms "enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive"
+        @label "Delete old records"
+        @description "Automatically delete records once they age past a threshold (retention). Off by default."
+        @synonyms "enable, turn on, retention, ttl, purge, delete after, remove old records, prune, clean up, keep for, data retention"
         @tier "infra"
       targetEntity : entity = LifecycleRunLog
         @label "Target entity"
-        @description "Entity name to scan and transition (e.g. 'Task'). Defaults to the atom's own log so the standalone validates; rebind per composition. Typed `entity`, so a rename of the bound entity threads through to this value automatically."
+        @description "Entity name to scan and delete from (e.g. 'AuditEntry'); it needs no status field. Defaults to the atom's own log so the standalone validates; rebind per composition. Typed `entity`, so a rename of the bound entity threads through to this value automatically."
         @tier "internal"
-      fromStatus : string = ""
-        @label "Which status triggers the age-out?"
-        @description "Only records currently in this status are candidates for automatic transition."
-        @synonyms "source status, current status, eligible status, starting status"
-        @tier "infra"
-      toStatus : string = ""
-        @label "What status should old records move to?"
-        @description "Status assigned once a record ages past the threshold (e.g. 'archived', 'expired')."
-        @synonyms "target status, end status, destination status, archive status"
-        @tier "infra"
       dateField : string = ranAt
         @label "Which date field measures the record's age?"
-        @description "Numeric (ms-epoch) entity field compared against the age threshold (e.g. 'createdAt')."
+        @description "Instant entity field compared against the age threshold (e.g. 'createdAt'). A record with no value here is never aged."
         @tier "internal"
       ageDays : number = 30
-        @label "How old (in days) before a record is transitioned?"
-        @description "Records older than this many days move from the source status to the destination status. With the delete action, 0 turns the sweep off rather than deleting everything."
-        @synonyms "age threshold, days until archive, expiry days, max age, retention days"
+        @label "How old (in days) before a record is deleted?"
+        @description "Records older than this many days are deleted. 0 turns the sweep off rather than deleting everything."
+        @synonyms "retention days, keep for, max age, ttl days"
         @tier "infra"
-      action : "status" | "delete" = status
-        @label "What happens to records past the age threshold?"
-        @description "status moves each aged record from the source status to the destination status. delete removes each aged record (retention); the destination status is ignored, the source status narrows the sweep only when set, and a record whose date field is 0 is never aged."
-        @synonyms "retention, ttl, purge, expire, delete after, remove old records, prune, clean up, keep for, data retention"
-        @tier "infra"
-      statusField : string = status
-        @label "Which field holds the status the sweep matches?"
-        @description "Used by the delete action when a source status is set: the field compared with it (e.g. 'state'). The status action always reads and writes `status`."
-        @synonyms "status column, state field, match field"
-        @tier "internal"
       dryRun : boolean = false
-        @label "Run in dry-run mode (no changes written)?"
-        @description "When true, the scan runs but no status transitions are persisted and no records are deleted."
-        @synonyms "test mode, preview, simulate, dry run, no write"
+        @label "Run in dry-run mode (nothing deleted)?"
+        @description "When true, the scan runs but no records are deleted."
+        @synonyms "test mode, preview, simulate, dry run, no delete"
         @tier "infra"
     }
   }
 
-  page "/lifecycle/scheduler" as LifecycleSchedulerPage -> LifecycleScheduler
+  trait LifecycleStatusRetention -> @rebindable LifecycleRunLog {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      ScanRecordsLoaded -> idle when (and @config.enabled @config.dryRun (> @config.ageDays 0) (> (array/len ?data) 0))
+        (notify info (str/concat "Dry run — " ?totalCount " record(s) would be deleted, nothing was deleted."))
+      ScanRecordsLoaded -> scanning when (and @config.enabled (not @config.dryRun) (> @config.ageDays 0) (> (array/len ?data) 0))
+        (set @entity.headId (object/get (array/first ?data) id))
+        (emit LifecycleDeleted { entityId: @entity.headId })
+        (persist delete @config.targetEntity @entity.headId {
+          emit: { failure: ScanFailed, success: LifecycleStepped }
+        })
+      ScanRecordsLoaded -> idle when (= (array/len ?data) 0)
+      ScanFailed -> idle
+        (notify error (str/concat "Couldn't scan for records to delete — " ?error))
+    }
+
+    state scanning {
+      INIT -> scanning
+      LifecycleStepped -> scanning
+        (fetch @config.targetEntity {
+          emit: { failure: ScanFailed, success: ScanRecordsLoaded }
+          filter: (and (= (object/get @entity @config.statusField) @config.fromStatus) (object/has @entity @config.dateField) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
+          limit: 1
+        })
+      ScanRecordsLoaded -> scanning when (> (array/len ?data) 0)
+        (set @entity.headId (object/get (array/first ?data) id))
+        (emit LifecycleDeleted { entityId: @entity.headId })
+        (persist delete @config.targetEntity @entity.headId {
+          emit: { failure: ScanFailed, success: LifecycleStepped }
+        })
+      ScanRecordsLoaded -> idle when (= (array/len ?data) 0)
+      ScanFailed -> idle
+        (notify error (str/concat "Couldn't scan for records to delete — " ?error))
+    }
+
+    emits {
+      LifecycleDeleted -> external {
+        entityId : string
+      }
+      ScanRecordsLoaded {
+        data : [@entity @config.targetEntity]!
+        totalCount : number!
+      }
+      ScanFailed {
+        error : string
+        code : string
+      }
+      LifecycleStepped {
+        id : string
+      }
+    }
+
+    listens {
+      ScanRecordsLoaded {
+        data : [@entity @config.targetEntity]!
+        totalCount : number!
+      }
+      ScanFailed {
+        error : string
+        code : string
+      }
+      LifecycleStepped {
+        id : string
+      }
+    }
+
+    ticks {
+      scanCycle every "0 * * * *" [background]
+        (fetch @config.targetEntity {
+          emit: { failure: ScanFailed, success: ScanRecordsLoaded }
+          filter: (and (= (object/get @entity @config.statusField) @config.fromStatus) (object/has @entity @config.dateField) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
+          limit: 1
+        })
+    }
+
+    config {
+      enabled : boolean = false
+        @label "Delete old records in a status"
+        @description "Automatically delete records once they age past a threshold (retention). Off by default."
+        @synonyms "enable, turn on, retention, ttl, purge, delete after, remove old records, prune, clean up, keep for, data retention"
+        @tier "infra"
+      targetEntity : entity = LifecycleRunLog
+        @label "Target entity"
+        @description "Entity name to scan and delete from (e.g. 'AuditEntry'); it needs the status field named by statusField. Defaults to the atom's own log so the standalone validates; rebind per composition. Typed `entity`, so a rename of the bound entity threads through to this value automatically."
+        @tier "internal"
+      fromStatus : string = ""
+        @label "Delete aged records in which status?"
+        @description "Only aged records whose status field holds this value are deleted (e.g. 'exported')."
+        @synonyms "source status, eligible status"
+        @tier "infra"
+      statusField : string = status
+        @label "Which field holds the status the sweep matches?"
+        @description "The field compared with the source status (e.g. 'state')."
+        @synonyms "status column, state field, match field"
+        @tier "internal"
+      dateField : string = ranAt
+        @label "Which date field measures the record's age?"
+        @description "Instant entity field compared against the age threshold (e.g. 'createdAt'). A record with no value here is never aged."
+        @tier "internal"
+      ageDays : number = 30
+        @label "How old (in days) before a record is deleted?"
+        @description "Records older than this many days are deleted. 0 turns the sweep off rather than deleting everything."
+        @synonyms "retention days, keep for, max age, ttl days"
+        @tier "infra"
+      dryRun : boolean = false
+        @label "Run in dry-run mode (nothing deleted)?"
+        @description "When true, the scan runs but no records are deleted."
+        @synonyms "test mode, preview, simulate, dry run, no delete"
+        @tier "infra"
+    }
+  }
+
+  page "/lifecycle/scheduler" as LifecycleSchedulerPage -> LifecycleScheduler, LifecycleRetention, LifecycleStatusRetention
 }

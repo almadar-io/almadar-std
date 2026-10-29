@@ -11,7 +11,7 @@ orbital StreamTicketOrbital {
   entity StreamTicket [persistent: stream_tickets] {
     id : string! @description "The ticket: 32 CSPRNG bytes, base64url."
     viewer : Viewer! @description "The viewer the ticket was minted for."
-    expiresAt : number @description "When the ticket stops working, in epoch milliseconds." = 0
+    expiresAt : instant @description "When the ticket stops working."
   }
 
   entity StreamTicketRun [runtime] {
@@ -19,7 +19,7 @@ orbital StreamTicketOrbital {
     viewer : Viewer @description "The viewer a mint in flight is for."
     ticket : string @description "The ticket being minted or spent." = ""
     mintRequest : number @description "The caller's request id of the mint in flight, echoed on its answer; 0 when none." = 0
-    expiresAt : number @description "The expiry of the ticket being minted." = 0
+    expiresAt : instant @description "The expiry of the ticket being minted."
     expired : boolean @description "Whether the ticket being spent had already expired." = false
     holder : Viewer @description "The viewer read off the ticket being spent."
     queue : [StreamTicketJob] @description "Requests that arrived while one was in flight, oldest first; each is started when the one before it is answered." = []
@@ -32,12 +32,12 @@ orbital StreamTicketOrbital {
       INIT -> idle
       TICKET_PUMP -> idle when (= (array/len @entity.queue) 0)
       TICKET_PUMP -> drawing when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "kind") "mint"))
-        (set @entity.viewer (object/get (array/first @entity.queue) "viewer"))
-        (set @entity.mintRequest (object/get (array/first @entity.queue) "requestId"))
+        (set @entity.viewer (object/get (array/first @entity.queue) "viewer" { id: "", claims: [] }))
+        (set @entity.mintRequest (object/get (array/first @entity.queue) "requestId" 0))
         (set @entity.queue (array/slice @entity.queue 1))
         (random-bytes 32 { emit: { success: SEED_DRAWN, failure: SEED_FAILED } })
       TICKET_PUMP -> taking when (and (> (array/len @entity.queue) 0) (= (object/get (array/first @entity.queue) "kind") "take"))
-        (set @entity.ticket (object/get (array/first @entity.queue) "ticket"))
+        (set @entity.ticket (object/get (array/first @entity.queue) "ticket" ""))
         (fetch StreamTicket { id: (object/get (array/first @entity.queue) "ticket"), emit: { success: TICKET_LOADED, failure: TICKET_ABSENT } })
         (set @entity.queue (array/slice @entity.queue 1))
       MINT_TICKET -> idle when (< (array/len @entity.queue) @config.maxQueue)
@@ -65,8 +65,8 @@ orbital StreamTicketOrbital {
 
       SEED_DRAWN -> saving
         (set @entity.ticket @payload.value)
-        (set @entity.expiresAt (+ @now @config.ttlMs))
-        (persist create StreamTicket { id: @payload.value, viewer: @entity.viewer, expiresAt: (+ @now @config.ttlMs) } {
+        (set @entity.expiresAt (time/add @now @config.ttlMs "ms"))
+        (persist create StreamTicket { id: @payload.value, viewer: @entity.viewer, expiresAt: (time/add @now @config.ttlMs "ms") } {
           emit: { success: TICKET_SAVED, failure: TICKET_NOT_SAVED }
         })
       SEED_FAILED -> idle
@@ -112,7 +112,7 @@ orbital StreamTicketOrbital {
         (emit TICKET_PUMP {})
       TICKET_LOADED -> spending
         (set @entity.holder @payload.data.viewer)
-        (set @entity.expired (<= @payload.data.expiresAt @now))
+        (set @entity.expired (>= (time/diff @now @payload.data.expiresAt "ms") 0))
         (persist delete StreamTicket @entity.ticket {
           emit: { success: TICKET_SPENT, failure: TICKET_NOT_SPENT }
         })
@@ -143,7 +143,7 @@ orbital StreamTicketOrbital {
     emits {
       TICKET_MINTED -> external {
         ticket : string!
-        expiresAt : number!
+        expiresAt : instant!
         requestId : number
       }
         @description "A ticket was minted and stored; hand it to the stream client once."

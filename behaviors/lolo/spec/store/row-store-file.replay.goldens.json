@@ -316,6 +316,266 @@
      }
     }
    ]
+  },
+  {
+   "id": "good-read-with-a-collection-addresses-that-file-not-the-entity-type",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "bad type!",
+      "id": "a",
+      "collection": "billing"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "os/read-file: no os host configured"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "EXEC-STORE-4: the file is named by the collection. Replay answers the file read with 'no os host configured' (effect args are not evaluated), so the proof is that the ask passes the file-name guard on the collection, where the same entity type without a collection is refused (control)"
+  },
+  {
+   "id": "control-read-without-a-collection-keys-by-entity-type",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "bad type!",
+      "id": "a"
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the entity type or declared collection must be letters, digits, _ and -"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "control: with no collection the entity type is the file name, and it is refused"
+  },
+  {
+   "id": "bad-read-with-an-unsafe-collection-is-refused",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Invoice",
+      "id": "a",
+      "collection": "../x"
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the entity type or declared collection must be letters, digits, _ and -"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-list-with-a-collection-addresses-that-file-not-the-entity-type",
+   "steps": [
+    {
+     "event": "ROW_LIST",
+     "payload": {
+      "key": "k",
+      "entityType": "bad type!",
+      "collection": "billing"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "os/read-file: no os host configured"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "EXEC-STORE-4: the file is named by the collection. Replay answers the file read with 'no os host configured' (effect args are not evaluated), so the proof is that the ask passes the file-name guard on the collection, where the same entity type without a collection is refused (control)"
+  },
+  {
+   "id": "control-list-without-a-collection-keys-by-entity-type",
+   "steps": [
+    {
+     "event": "ROW_LIST",
+     "payload": {
+      "key": "k",
+      "entityType": "bad type!"
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the entity type or declared collection must be letters, digits, _ and -"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-query-with-a-collection-addresses-that-file-not-the-entity-type",
+   "steps": [
+    {
+     "event": "ROWS_QUERY",
+     "payload": {
+      "key": "k",
+      "entityType": "bad type!",
+      "query": {},
+      "collection": "billing"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "os/read-file: no os host configured"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "EXEC-STORE-4: the file is named by the collection. Replay answers the file read with 'no os host configured' (effect args are not evaluated), so the proof is that the ask passes the file-name guard on the collection, where the same entity type without a collection is refused (control)"
+  },
+  {
+   "id": "control-query-without-a-collection-keys-by-entity-type",
+   "steps": [
+    {
+     "event": "ROWS_QUERY",
+     "payload": {
+      "key": "k",
+      "entityType": "bad type!",
+      "query": {}
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the entity type or declared collection must be letters, digits, _ and -"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-write-collections-address-the-batch-file-not-the-entity-type",
+   "steps": [
+    {
+     "event": "ROWS_WRITE",
+     "payload": {
+      "key": "k",
+      "batch": {
+       "ops": [
+        {
+         "kind": "create",
+         "entityType": "bad type!",
+         "data": {
+          "id": "a"
+         }
+        }
+       ],
+       "onFailure": "stop"
+      },
+      "collections": {
+       "bad type!": "billing"
+      }
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "os/read-file: no os host configured"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "EXEC-STORE-4: as the read case; the batch file is named by collections[entityType]"
+  },
+  {
+   "id": "control-write-without-collections-keys-by-entity-type",
+   "steps": [
+    {
+     "event": "ROWS_WRITE",
+     "payload": {
+      "key": "k",
+      "batch": {
+       "ops": [
+        {
+         "kind": "create",
+         "entityType": "bad type!",
+         "data": {
+          "id": "a"
+         }
+        }
+       ],
+       "onFailure": "stop"
+      }
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "the entity type or declared collection must be letters, digits, _ and -"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

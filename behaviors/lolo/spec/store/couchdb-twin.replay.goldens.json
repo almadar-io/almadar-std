@@ -3778,6 +3778,267 @@
    ]
   },
   {
+   "id": "typed-row-read-with-a-collection-addresses-that-database",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "TimeEntry",
+      "id": "a",
+      "collection": "timesheet"
+     },
+     "from": "idle",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "COUCH_GET",
+        "payload": {
+         "db": "timesheet",
+         "id": "a"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "c"
+     }
+    }
+   ],
+   "note": "EXEC-STORE-4: the verb's collection is the database as written"
+  },
+  {
+   "id": "typed-row-read-without-a-collection-keys-by-entity-type",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "TimeEntry",
+      "id": "a"
+     },
+     "from": "idle",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "COUCH_GET",
+        "payload": {
+         "db": "time_entries",
+         "id": "a"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "c"
+     }
+    }
+   ],
+   "note": "control of the collection case"
+  },
+  {
+   "id": "typed-row-list-with-a-collection-addresses-that-database",
+   "steps": [
+    {
+     "event": "ROW_LIST",
+     "payload": {
+      "key": "k",
+      "entityType": "Stock",
+      "collection": "inventory"
+     },
+     "from": "idle",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "COUCH_LIST",
+        "payload": {
+         "db": "inventory"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "c"
+     }
+    }
+   ]
+  },
+  {
+   "id": "typed-row-list-without-a-collection-keys-by-entity-type",
+   "steps": [
+    {
+     "event": "ROW_LIST",
+     "payload": {
+      "key": "k",
+      "entityType": "Stock"
+     },
+     "from": "idle",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "COUCH_LIST",
+        "payload": {
+         "db": "stocks"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "c"
+     }
+    }
+   ]
+  },
+  {
+   "id": "typed-write-collections-address-each-op-by-its-entity-type",
+   "steps": [
+    {
+     "event": "ROWS_WRITE",
+     "payload": {
+      "key": "k",
+      "batch": {
+       "ops": [
+        {
+         "kind": "create",
+         "entityType": "Stock",
+         "data": {
+          "id": "s1"
+         }
+        }
+       ],
+       "onFailure": "stop"
+      },
+      "collections": {
+       "Stock": "inventory"
+      }
+     },
+     "from": "idle",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "COUCH_STEP",
+        "payload": {}
+       }
+      ]
+     },
+     "entity": {
+      "id": "c"
+     }
+    },
+    {
+     "event": "COUCH_STEP",
+     "payload": {},
+     "from": "idle",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "COUCH_DISPATCH",
+        "payload": {}
+       }
+      ]
+     },
+     "entity": {
+      "id": "c",
+      "key": "k",
+      "mode": "write",
+      "ops": [
+       {
+        "kind": "create",
+        "entityType": "Stock",
+        "data": {
+         "id": "s1"
+        }
+       }
+      ],
+      "at": 0,
+      "writeCollections": {
+       "Stock": "inventory"
+      }
+     }
+    },
+    {
+     "event": "COUCH_DISPATCH",
+     "payload": {},
+     "from": "idle",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "COUCH_CREATE",
+        "payload": {
+         "db": "inventory",
+         "id": "s1",
+         "row": {
+          "id": "s1"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "typed-write-without-collections-keys-each-op-by-entity-type",
+   "steps": [
+    {
+     "event": "COUCH_STEP",
+     "payload": {},
+     "from": "idle",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "COUCH_DISPATCH",
+        "payload": {}
+       }
+      ]
+     },
+     "entity": {
+      "id": "c",
+      "key": "k",
+      "mode": "write",
+      "ops": [
+       {
+        "kind": "create",
+        "entityType": "Stock",
+        "data": {
+         "id": "s1"
+        }
+       }
+      ],
+      "at": 0
+     }
+    },
+    {
+     "event": "COUCH_DISPATCH",
+     "payload": {},
+     "from": "idle",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "COUCH_CREATE",
+        "payload": {
+         "db": "stocks",
+         "id": "s1",
+         "row": {
+          "id": "s1"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
    "id": "typed-query-filter-and-desc-order-is-an-id-anchored-selector",
    "steps": [
     {

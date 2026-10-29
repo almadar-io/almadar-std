@@ -32,7 +32,7 @@ type AgentTool = AgentToolScope | AgentToolInput | AgentToolRead
 type AgentMemoryRow = {
   id : string!
   content : string!
-  createdAt : number
+  createdAt : instant
 }
 
 uses Llm from "std/behaviors/std-llm"
@@ -48,7 +48,7 @@ orbital AgentMemoryOrbital {
     ownerId : string! @description "Whose memory this is (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
     content : string! @description "What is remembered." @synonyms "memory, note, fact"
     embedding : [number] @description "The content's embedding, for similarity recall." = []
-    createdAt : number @description "When it was remembered (ms)." @synonyms "time, timestamp" = 0
+    createdAt : instant @description "When it was remembered." @synonyms "time, timestamp"
     pendingMessages : [AgentChatMessage] @intrinsic @description "The conversation a recall is running for." = []
     pendingQuery : string @intrinsic @description "The turn a recall is running for." = ""
     pendingContent : string @intrinsic @description "The exchange being remembered." = ""
@@ -122,7 +122,7 @@ orbital AgentMemoryOrbital {
       INIT -> ready
         (set @entity.pendingQuery "")
       MemoryEmbedded -> recalling
-        (set @entity.queryVector (if (= (array/len ?embeddings) 0) [] (array/first ?embeddings)))
+        (set @entity.queryVector (default (array/first ?embeddings) []))
         (fetch AgentMemory {
           emit: { failure: AgentMemoriesLoadFailed, success: MemoriesForRecall }
           limit: @config.maxRows
@@ -157,7 +157,7 @@ orbital AgentMemoryOrbital {
         (persist create AgentMemory {
           ownerId: @user.id
           content: @entity.pendingContent
-          embedding: (array/first ?embeddings)
+          embedding: (default (array/first ?embeddings) [])
           createdAt: @now
         } {
           emit: { success: MEMORY_STORED }

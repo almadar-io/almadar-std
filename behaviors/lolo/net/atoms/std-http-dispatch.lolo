@@ -155,7 +155,7 @@ orbital HttpDispatchOrbital {
               })))))))
 
       DISPATCH_PREPARED -> serving when (not @payload.options.input)
-        (emit DISPATCH_REQUESTED { requestId: @payload.requestId, orbital: @payload.options.orbital, traitName: @payload.options.targetTrait, entityId: @payload.options.entityId, event: @payload.options.event, clientId: @payload.options.clientId, locale: @payload.options.locale, stream: (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "stream"), viewer: @payload.options.viewer })
+        (emit DISPATCH_REQUESTED { requestId: @payload.requestId, orbital: @payload.options.orbital, traitName: @payload.options.targetTrait, entityId: @payload.options.entityId, event: @payload.options.event, clientId: (default @payload.options.clientId ""), locale: (default @payload.options.locale ""), stream: (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "stream"), viewer: @payload.options.viewer })
         (program/dispatch @payload.address @payload.arguments @payload.options { key: (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "dispatchKey"), emit: { success: DISPATCH_ANSWERED, failure: DISPATCH_FAILED } })
       DISPATCH_PREPARED -> serving when @payload.options.input
         (emit INPUT_REQUESTED { requestId: @payload.requestId, orbital: @payload.options.orbital, traitName: @payload.options.targetTrait, entityId: @payload.options.entityId, event: @payload.options.event, stream: (object/get (default (array/find @entity.pending (fn p (= @p.requestId @payload.requestId))) { requestId: -1, kind: "", orbital: "", traitName: "", entityId: "", stream: false, authorization: "", body: (bytes/from-string ""), hookName: "", responseHeaders: [] }) "stream"), viewer: @payload.options.viewer })
@@ -219,7 +219,7 @@ orbital HttpDispatchOrbital {
           (emit DISPATCH_FAILED { key: @payload.key, error: "Streamed dispatch response is missing items" }))
 
       FRAME_NEXT -> serving when (let ((f (array/find @entity.frames (fn q (= @q.requestId @payload.requestId))))) (and (!= @f null) (> (array/len (object/get @f "frames")) 0)))
-        (emit SSE_SEND { requestId: @payload.requestId, data: (array/first (object/get (default (array/find @entity.frames (fn q (= @q.requestId @payload.requestId))) { requestId: -1, frames: [] }) "frames")) })
+        (emit SSE_SEND { requestId: @payload.requestId, data: (default (array/first (object/get (default (array/find @entity.frames (fn q (= @q.requestId @payload.requestId))) { requestId: -1, frames: [] }) "frames")) "") })
         (set @entity.frames (array/map @entity.frames (fn q (if (= @q.requestId @payload.requestId) { requestId: @q.requestId, frames: (array/drop @q.frames 1) } @q))))
         (emit FRAME_NEXT { requestId: @payload.requestId })
       FRAME_NEXT -> serving when (let ((f (array/find @entity.frames (fn q (= @q.requestId @payload.requestId))))) (and (!= @f null) (= (array/len (object/get @f "frames")) 0)))

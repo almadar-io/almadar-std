@@ -218,9 +218,9 @@ def col_for(f, v):
 
 B64 = lambda b: '(bytes/to-base64 ' + b + ')'
 
-TABLE_OF = lambda et, v: T(
-    '(let ((§v§chars (str/split §et§ ""))) (let ((§v§snake (str/join (array/map (array/range 0 (array/len @§v§chars)) (fn §v§i (let ((§v§c (array/nth @§v§chars @§v§i))) (if (and (> @§v§i 0) (validate/pattern @§v§c "^[A-Z]$") (validate/pattern (array/nth @§v§chars (- @§v§i 1)) "^[a-z0-9]$")) (str/concat "_" (str/lower @§v§c)) (str/lower @§v§c))))) ""))) (let ((§v§decl (object/get @entity.collections §et§ ""))) (if (!= @§v§decl "") @§v§decl (if (str/endsWith @§v§snake "y") (str/concat (str/slice @§v§snake 0 (- (str/len @§v§snake) 1)) "ies") (if (str/endsWith @§v§snake "s") (str/concat @§v§snake "es") (str/concat @§v§snake "s")))))))',
-    et=et, v=v)
+TABLE_OF = lambda et, v, decl: T(
+    '(let ((§v§chars (str/split §et§ ""))) (let ((§v§snake (str/join (array/map (array/range 0 (array/len @§v§chars)) (fn §v§i (let ((§v§c (array/nth @§v§chars @§v§i))) (if (and (> @§v§i 0) (validate/pattern @§v§c "^[A-Z]$") (validate/pattern (array/nth @§v§chars (- @§v§i 1)) "^[a-z0-9]$")) (str/concat "_" (str/lower @§v§c)) (str/lower @§v§c))))) ""))) (let ((§v§decl §decl§)) (if (!= @§v§decl "") @§v§decl (if (str/endsWith @§v§snake "y") (str/concat (str/slice @§v§snake 0 (- (str/len @§v§snake) 1)) "ies") (if (str/endsWith @§v§snake "s") (str/concat @§v§snake "es") (str/concat @§v§snake "s")))))))',
+    et=et, v=v, decl=decl)
 
 NUMBERED = T(
     '(let ((np (str/split @entity.sql §m§))) (str/join (array/map (array/range 0 (array/len @np)) (fn ni (str/concat (array/nth @np @ni) (if (< @ni (- (array/len @np) 1)) (str/concat "$" (+ @entity.bindBase @ni 1)) "")))) ""))',
@@ -675,7 +675,7 @@ ID_OK = '(validate/string (object/get (object/get @entity.cur "data" {}) "id" nu
 NEEDS_ID = AND(OR(EQ(CUR_KIND, '"create"'), EQ(CUR_KIND, '"upsert"')), NOT(ID_OK))
 P(tr('PG_OPPED', 'running', NEEDS_ID, [EMIT('PG_RECORD', '{ outcome: { kind: "failed", message: (str/concat ' + CUR_KIND + ' " needs a string id") } }')]))
 P(tr('PG_OPPED', 'running', NOT(NEEDS_ID), [
-    SET('table', TABLE_OF('@entity.cur.entityType', 'tb')),
+    SET('table', TABLE_OF('@entity.cur.entityType', 'tb', '(object/get @entity.writeCollections @entity.cur.entityType "")')),
     SET('fresh', 'false'),
     SET('preds', '(array/filter [(object/get @entity.cur "guard" null)] (fn og (!= @og null)))'),
     SET('extra', '[]'),
@@ -723,7 +723,7 @@ WANT_OF = lambda need, covered: '(and ' + need + ' (not ' + covered + '))'
 # ---- ask-level (payload) views
 Q_PREDS = '(array/filter [(object/get @payload.query "policy" null), (object/get @payload.query "filter" null)] (fn pq (!= @pq null)))'
 Q_EXTRA = '["id", (object/get (object/get @payload.query "order" { field: "createdAt", direction: "asc" }) "field" "createdAt")]'
-Q_TABLE_P = TABLE_OF('@payload.entityType', 'qa')
+Q_TABLE_P = TABLE_OF('@payload.entityType', 'qa', '(default @payload.collection "")')
 Q_WANT = WANT_OF('true', COVERED_OF(Q_TABLE_P, ALL_FIELDS(Q_PREDS, Q_EXTRA, '[]')))
 
 OPV0 = '(array/nth @payload.batch.ops 0)'
@@ -731,7 +731,7 @@ K0 = '(object/get ' + OPV0 + ' "kind" "")'
 OP0_GUARDED = NE('(object/get ' + OPV0 + ' "guard" null)', 'null')
 OP0_PREDS = '(array/filter [(object/get ' + OPV0 + ' "guard" null)] (fn og (!= @og null)))'
 OP0_WRITTEN = lambda kind: '[]' if kind == 'delete' else '(object/keys (object/get ' + OPV0 + ' "data" {}))'
-OP0_TABLE = TABLE_OF('(object/get ' + OPV0 + ' "entityType" "")', 'o0')
+OP0_TABLE = TABLE_OF('(object/get ' + OPV0 + ' "entityType" "")', 'o0', '(object/get (default @payload.collections {}) (object/get ' + OPV0 + ' "entityType" "") "")')
 OP0_ID_OK = '(validate/string (object/get (object/get ' + OPV0 + ' "data" {}) "id" null))'
 
 
@@ -764,7 +764,7 @@ DISCOVER_NOW = send_now('discover', S(DISCOVERY_SQL), '[' + TEXT_BIND('@entity.t
 RESET_ASK = [SET('stage', '"start"'), SET('opAt', '0'), SET('outcomes', '[]'), SET('fresh', 'false'), SET('halt', '{ kind: "", message: "" }'),
              SET('rows', '[]'), SET('raw', '[]'), SET('cols', '[]'), SET('err', '{ present: false, code: "", message: "" }'),
              SET('sql', '""'), SET('params', '[]'), SET('binds', '[]'), SET('inbox', EMPTY_BYTES), SET('ddl', '[]')]
-TABLE_SET = SET('table', TABLE_OF('@entity.entityType', 'ta'))
+TABLE_SET = SET('table', TABLE_OF('@entity.entityType', 'ta', '@entity.declared'))
 
 QUERY_PREP = [SET('preds', '(array/filter [(object/get @entity.query "policy" null), (object/get @entity.query "filter" null)] (fn pq (!= @pq null)))'),
               SET('extra', '["id", (object/get (object/get @entity.query "order" { field: "createdAt", direction: "asc" }) "field" "createdAt")]'),
@@ -773,7 +773,7 @@ KINDS_SETS = [SET('fields', ALL_FIELDS('@entity.preds', '@entity.extra', '@entit
 BUILD_SETS = [SET('kinds', KINDS_NOW), SET('where', WHERE_OF_PREDS)]
 COMPOSE_SETS = lambda built: [SET('built', built), SET('sql', '@entity.built.sql'), SET('binds', '@entity.built.binds'), SET('bindBase', '@entity.built.bindBase'),
                               SET('countSql', '@entity.built.countSql'), SET('countBinds', '@entity.built.countBinds'), SET('stage', '"statement"')]
-OP_PREP = [SET('table', TABLE_OF('@entity.cur.entityType', 'tb')), SET('fresh', 'false'),
+OP_PREP = [SET('table', TABLE_OF('@entity.cur.entityType', 'tb', '(object/get @entity.writeCollections @entity.cur.entityType "")')), SET('fresh', 'false'),
            SET('preds', '(array/filter [(object/get @entity.cur "guard" null)] (fn og (!= @og null)))'),
            SET('extra', '[]'),
            SET('written', '(if (= ' + CUR_KIND + ' "delete") [] (object/keys (object/get @entity.cur "data" {})))'),
@@ -852,11 +852,11 @@ QUERY_COPY = '{ ' + ', '.join(f + ': @payload.query.' + f for f in ['policy', 'f
 BATCH_COPY = '{ ops: @payload.batch.ops, onFailure: @payload.batch.onFailure }'
 # ================================================================ ready
 ASK = {
-    'read': [SET('key', '@payload.key'), SET('entityType', '@payload.entityType'), SET('rowId', '@payload.id'), SET('op', '"read"')],
-    'list': [SET('key', '@payload.key'), SET('entityType', '@payload.entityType'), SET('op', '"list"')],
-    'query': [SET('key', '@payload.key'), SET('entityType', '@payload.entityType'), SET('query', QUERY_COPY), SET('project', '@payload.project'), SET('op', '"query"')],
-    'write': [SET('key', '@payload.key'), SET('batch', BATCH_COPY), SET('entityType', '""'), SET('op', '"write"')],
-    'ensure': [SET('key', '@payload.key'), SET('entityType', '@payload.entityType'), SET('paths', '@payload.indexes'), SET('op', '"ensure"')],
+    'read': [SET('key', '@payload.key'), SET('entityType', '@payload.entityType'), SET('rowId', '@payload.id'), SET('declared', '(default @payload.collection "")'), SET('op', '"read"')],
+    'list': [SET('key', '@payload.key'), SET('entityType', '@payload.entityType'), SET('declared', '(default @payload.collection "")'), SET('op', '"list"')],
+    'query': [SET('key', '@payload.key'), SET('entityType', '@payload.entityType'), SET('query', QUERY_COPY), SET('project', '@payload.project'), SET('declared', '(default @payload.collection "")'), SET('op', '"query"')],
+    'write': [SET('key', '@payload.key'), SET('batch', BATCH_COPY), SET('entityType', '""'), SET('writeCollections', '(default @payload.collections {})'), SET('op', '"write"')],
+    'ensure': [SET('key', '@payload.key'), SET('entityType', '@payload.entityType'), SET('paths', '@payload.indexes'), SET('declared', '""'), SET('op', '"ensure"')],
 }
 VERB = {'read': 'ROW_READ', 'list': 'ROW_LIST', 'query': 'ROWS_QUERY', 'write': 'ROWS_WRITE', 'ensure': 'ROWS_ENSURE_INDEXES'}
 
@@ -868,7 +868,6 @@ def pre(verb):
 ready = ['    state ready {', '      INIT -> ready', '']
 RD = ready.append
 RD(tr('PG_CLOSED', 'ready', None, []))
-RD(tr('ROW_COLLECTION', 'ready', None, [SET('collections', '(object/set @entity.collections @payload.entityType @payload.collection)')]))
 NEARBY = NE('(object/get @payload.query "nearest" null)', 'null')
 NEAR_OK = '(object/get @config.queryCapabilities "nearest" false)'
 HAS_REKEY = '(array/some @payload.batch.ops (fn ro (= (object/get @ro "kind" "") "rekey")))'
@@ -1150,7 +1149,8 @@ ENTITY = '''  entity RowStoreFlight [runtime] {
     nonce : string @description "The SCRAM client nonce" = ""
     scram : string @description "The server signature the SCRAM server-final must carry" = ""
     schema : SchemaCache @description "Column kinds per table, read from information_schema" = {}
-    collections : Map string string @description "Declared collection per entity type" = {}
+    declared : string @description "The declared collection the read, list or query in flight names; empty when the entity declares none" = ""
+    writeCollections : Map string string @description "The declared collection per entity type the write batch in flight names" = {}
     stage : string @description "What the statement in flight is for: ssl-request, startup, password, scram-first, scram-final, discover, begin, statement, count, commit or rollback" = ""
     bindBase : number @description "How many binds the SQL text already numbers itself" = 0
     frame : bytes @description "The exact bytes of the send in flight" = ""
@@ -1283,12 +1283,14 @@ LISTENS = '''    listens {
         key : string!
         entityType : string!
         id : string!
+        collection : string
       }
         @description "Read one row of an entity type by id."
         @tier "internal"
       ROW_LIST -> input {
         key : string!
         entityType : string!
+        collection : string
       }
         @description "List every row of an entity type."
         @tier "internal"
@@ -1297,12 +1299,14 @@ LISTENS = '''    listens {
         entityType : string!
         query : RowQuery!
         project : "rows" | "ids"
+        collection : string
       }
         @description "A query ask, pushed down as one parameterised SELECT."
         @tier "internal"
       ROWS_WRITE -> input {
         key : string!
         batch : RowWriteBatch!
+        collections : Map string string
       }
         @description "Apply a batch of create, upsert, update and delete ops, atomic in BEGIN and COMMIT or stop at the first op that is not applied."
         @tier "internal"
@@ -1312,12 +1316,6 @@ LISTENS = '''    listens {
         indexes : [IndexPath]!
       }
         @description "Declare the index paths of an entity type: one CREATE INDEX IF NOT EXISTS per path, after the column kinds are read. The kernel sends it once before the first ask for the entity."
-        @tier "internal"
-      ROW_COLLECTION -> input {
-        entityType : string!
-        collection : string!
-      }
-        @description "Declare the table an entity type's rows live in, as written; an undeclared entity type uses its snake_case plural."
         @tier "internal"
     }
 '''

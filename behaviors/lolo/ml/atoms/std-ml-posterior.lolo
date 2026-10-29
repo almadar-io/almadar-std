@@ -30,13 +30,13 @@ orbital MlPosteriorOrbital {
         (set @entity.alpha (if ?outcome (+ @entity.alpha 1) @entity.alpha))
         (set @entity.beta (if ?outcome @entity.beta (+ @entity.beta 1)))
         (set @entity.observations (+ @entity.observations 1))
-        (set @entity.mean (/ @entity.alpha (+ @entity.alpha @entity.beta)))
+        (set @entity.mean (default (/ @entity.alpha (+ @entity.alpha @entity.beta)) 0))
         (emit POSTERIOR_DECIDE {})
       OBSERVE_COUNTS -> idle
         (set @entity.alpha (+ @config.priorAlpha ?successes))
         (set @entity.beta (+ @config.priorBeta ?failures))
         (set @entity.observations (+ ?successes ?failures))
-        (set @entity.mean (/ @entity.alpha (+ @entity.alpha @entity.beta)))
+        (set @entity.mean (default (/ @entity.alpha (+ @entity.alpha @entity.beta)) 0))
         (emit POSTERIOR_DECIDE {})
       POSTERIOR_DECIDE -> idle
         (let ((samples (prob/sample @config.sampleCount (prob/beta @entity.alpha @entity.beta)))
@@ -47,8 +47,8 @@ orbital MlPosteriorOrbital {
                 (set @entity.intervalHigh null)
                 (set @entity.status insufficient)
                 (emit EVIDENCE_INSUFFICIENT { mean: @entity.mean, intervalLow: null, intervalHigh: null }))
-              (let ((low (array/nth @interval 0))
-                    (high (array/nth @interval 1))
+              (let ((low (default (array/nth @interval 0) 0))
+                    (high (default (array/nth @interval 1) 0))
                     (width (- @high @low)))
                 (do
                   (set @entity.intervalLow @low)

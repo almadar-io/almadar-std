@@ -2710,14 +2710,23 @@
      "event": "ROW_LIST",
      "payload": {
       "key": "k",
-      "entityType": "TimeEntry"
+      "entityType": "TimeEntry",
+      "collection": "timesheet"
      },
      "from": "ready",
      "entity": {
       "id": "f",
       "sock": 3,
-      "collections": {
-       "TimeEntry": "timesheet"
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
       }
      },
      "expect": {
@@ -2744,16 +2753,18 @@
      }
     }
    ],
-   "note": "bind_collection: [persistent: tbl] as written; control below is the pluralised snake_case name"
+   "note": "EXEC-STORE-4: the verb's collection is the table as written; control below is the pluralised snake_case name"
   },
   {
-   "id": "good-undeclared-entity-table-is-snake-case-pluralised",
+   "id": "good-declared-collection-addresses-a-read",
    "steps": [
     {
-     "event": "ROW_LIST",
+     "event": "ROW_READ",
      "payload": {
       "key": "k",
-      "entityType": "TimeEntry"
+      "entityType": "Ticket",
+      "id": "t1",
+      "collection": "support_tickets"
      },
      "from": "ready",
      "entity": {
@@ -2778,9 +2789,71 @@
         "event": "PG_WIRE_SENT",
         "payload": {
          "stage": "statement",
-         "sql": "SELECT * FROM \"time_entries\"",
-         "params": [],
-         "frame": "UAAAACQAU0VMRUNUICogRlJPTSAidGltZV9lbnRyaWVzIgAAAEIAAAAMAAAAAAAAAABEAAAABlAARQAAAAkAAAAAAFMAAAAE"
+         "sql": "SELECT * FROM \"support_tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAADcAU0VMRUNUICogRlJPTSAic3VwcG9ydF90aWNrZXRzIiBXSEVSRSAiaWQiID0gJDEAAABCAAAAEgAAAAAAAQAAAAJ0MQAARAAAAAZQAEUAAAAJAAAAAABTAAAABA=="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    }
+   ],
+   "note": "the read names the declared collection; control below keys by entityType"
+  },
+  {
+   "id": "good-read-without-a-collection-keys-by-entity-type",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Ticket",
+      "id": "t1"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "SELECT * FROM \"tickets\" WHERE \"id\" = $1",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAC8AU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxAAAAQgAAABIAAAAAAAEAAAACdDEAAEQAAAAGUABFAAAACQAAAAAAUwAAAAQ="
         }
        }
       ],
@@ -5083,6 +5156,140 @@
   },
   {
    "id": "good-update-with-empty-data-sets-id-to-itself",
+   "steps": [
+    {
+     "event": "ROWS_WRITE",
+     "payload": {
+      "key": "k",
+      "batch": {
+       "ops": [
+        {
+         "kind": "update",
+         "entityType": "Ticket",
+         "id": "t1",
+         "data": {}
+        }
+       ],
+       "onFailure": "stop"
+      }
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "WITH \"pre\" AS (SELECT * FROM \"tickets\" WHERE \"id\" = $1 FOR UPDATE), \"post\" AS (UPDATE \"tickets\" SET \"id\" = \"id\" WHERE \"id\" = $1 RETURNING *) SELECT 'before' AS \"__part\", \"pre\".* FROM \"pre\" UNION ALL SELECT 'after' AS \"__part\", \"post\".* FROM \"post\"",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAP8AV0lUSCAicHJlIiBBUyAoU0VMRUNUICogRlJPTSAidGlja2V0cyIgV0hFUkUgImlkIiA9ICQxIEZPUiBVUERBVEUpLCAicG9zdCIgQVMgKFVQREFURSAidGlja2V0cyIgU0VUICJpZCIgPSAiaWQiIFdIRVJFICJpZCIgPSAkMSBSRVRVUk5JTkcgKikgU0VMRUNUICdiZWZvcmUnIEFTICJfX3BhcnQiLCAicHJlIi4qIEZST00gInByZSIgVU5JT04gQUxMIFNFTEVDVCAnYWZ0ZXInIEFTICJfX3BhcnQiLCAicG9zdCIuKiBGUk9NICJwb3N0IgAAAEIAAAASAAAAAAABAAAAAnQxAABEAAAABlAARQAAAAkAAAAAAFMAAAAE"
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-declared-collection-addresses-a-write",
+   "steps": [
+    {
+     "event": "ROWS_WRITE",
+     "payload": {
+      "key": "k",
+      "batch": {
+       "ops": [
+        {
+         "kind": "update",
+         "entityType": "Ticket",
+         "id": "t1",
+         "data": {}
+        }
+       ],
+       "onFailure": "stop"
+      },
+      "collections": {
+       "Ticket": "support_tickets"
+      }
+     },
+     "from": "ready",
+     "entity": {
+      "id": "f",
+      "sock": 3,
+      "schema": {
+       "tickets": {
+        "id": "text",
+        "created_at": "other",
+        "updated_at": "other",
+        "title": "text",
+        "status": "text",
+        "priority": "other",
+        "tags": "jsonb"
+       }
+      }
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "PG_WIRE_SENT",
+        "payload": {
+         "stage": "statement",
+         "sql": "WITH \"pre\" AS (SELECT * FROM \"support_tickets\" WHERE \"id\" = $1 FOR UPDATE), \"post\" AS (UPDATE \"support_tickets\" SET \"id\" = \"id\" WHERE \"id\" = $1 RETURNING *) SELECT 'before' AS \"__part\", \"pre\".* FROM \"pre\" UNION ALL SELECT 'after' AS \"__part\", \"post\".* FROM \"post\"",
+         "params": [
+          {
+           "kind": "text",
+           "text": "t1"
+          }
+         ],
+         "frame": "UAAAAQ8AV0lUSCAicHJlIiBBUyAoU0VMRUNUICogRlJPTSAic3VwcG9ydF90aWNrZXRzIiBXSEVSRSAiaWQiID0gJDEgRk9SIFVQREFURSksICJwb3N0IiBBUyAoVVBEQVRFICJzdXBwb3J0X3RpY2tldHMiIFNFVCAiaWQiID0gImlkIiBXSEVSRSAiaWQiID0gJDEgUkVUVVJOSU5HICopIFNFTEVDVCAnYmVmb3JlJyBBUyAiX19wYXJ0IiwgInByZSIuKiBGUk9NICJwcmUiIFVOSU9OIEFMTCBTRUxFQ1QgJ2FmdGVyJyBBUyAiX19wYXJ0IiwgInBvc3QiLiogRlJPTSAicG9zdCIAAABCAAAAEgAAAAAAAQAAAAJ0MQAARAAAAAZQAEUAAAAJAAAAAABTAAAABA=="
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "STORE_FAILED"
+      ]
+     }
+    }
+   ],
+   "note": "a write batch names the collection per entity type; control below keys by entityType"
+  },
+  {
+   "id": "good-write-without-collections-keys-by-entity-type",
    "steps": [
     {
      "event": "ROWS_WRITE",

@@ -24,7 +24,7 @@ try:
                     {'name': 'ownerRef', 'type': 'relation',
                      'relation': {'entity': 'FixtureViewer', 'cardinality': 'one'}}]}}]}
             step = {'trait': 'MockSeed', 'event': 'DATASET_INPUT', 'payload': {
-                'program': program, 'count': 1, 'seed': 1, 'nowMs': 0,
+                'program': program, 'count': 1, 'seed': 1, 'nowMs': '1970-01-01T00:00:00.000Z',
                 'viewerId': 'viewer', 'ownerPairs': [{'entity': 'Task', 'column': 'ownerRef'}]}}
             played = subprocess.run([orb, 'execute', str(path), '--steps', json.dumps([step])],
                                     capture_output=True, text=True)
@@ -32,9 +32,12 @@ try:
             report = json.loads(played.stdout)
             assert report.get('success') is True, report
             result = report['steps'][0]
-            links = result['entityAfter']['dsLinks']
-            assert len(links) == 1 and links[0]['target'] == collection, {
-                'collection': collection, 'authored': authored, 'links': links}
+            stores = result['entityAfter']['dsStores']
+            rows = stores.get(collection, [])
+            assert len(rows) == 1 and (rows[0]['id'] == 'authored') == authored, {
+                'collection': collection, 'authored': authored, 'stores': list(stores)}
+            assert sorted(stores) == sorted({collection, 'tasks'}), {
+                'collection': collection, 'authored': authored, 'stores': list(stores)}
             print('pass: declared collection=' + collection + ' authored=' + str(authored), flush=True)
     for target in ['FixtureViewer', 'Unregistered']:
         schema = {'name': 'relation-target-control', 'version': '1.0.0', 'orbitals': [{

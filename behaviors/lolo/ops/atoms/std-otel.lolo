@@ -697,20 +697,18 @@ orbital OtelOrbital {
     }
   }
 
-  trait OtelMetricRetention = Lifecycle.traits.LifecycleScheduler -> OtelMetricRetentionLog {
+  trait OtelMetricRetention = Lifecycle.traits.LifecycleRetention -> OtelMetricRetentionLog {
     config {
       enabled: true
-      action: delete
       targetEntity: OtelMetric
       dateField: timestamp
       ageDays: @config.keepDays
     }
   }
 
-  trait OtelSpanRetention = Lifecycle.traits.LifecycleScheduler -> OtelSpanRetentionLog {
+  trait OtelSpanRetention = Lifecycle.traits.LifecycleStatusRetention -> OtelSpanRetentionLog {
     config {
       enabled: true
-      action: delete
       targetEntity: OtelSpan
       statusField: "state"
       fromStatus: "exported"
@@ -719,10 +717,9 @@ orbital OtelOrbital {
     }
   }
 
-  trait OtelSpanEventRetention = Lifecycle.traits.LifecycleScheduler -> OtelSpanEventRetentionLog {
+  trait OtelSpanEventRetention = Lifecycle.traits.LifecycleRetention -> OtelSpanEventRetentionLog {
     config {
       enabled: true
-      action: delete
       targetEntity: OtelSpanEvent
       dateField: timestamp
       ageDays: @config.keepDays

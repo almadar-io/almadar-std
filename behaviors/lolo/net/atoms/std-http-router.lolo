@@ -244,7 +244,7 @@ orbital HttpRouterOrbital {
       BEARER_VERIFIED -> routing when (and (array/includes @entity.ticks (default @payload.requestId 0)) (= (default (object/get @payload.viewer "email") "") @entity.tickInvoker) (= (object/get (default (array/find (default @payload.viewer.claims []) (fn c (= @c.name "email_verified"))) { value: false }) "value") true))
         (program/tick { key: (str/concat "tick-" @payload.requestId), emit: { success: TICK_ANSWERED, failure: TICK_FAILED } })
       TICK_ANSWERED -> routing when (array/some @entity.ticks (fn id (= (str/concat "tick-" @id) @payload.key)))
-        (let ((id (array/find @entity.ticks (fn id (= (str/concat "tick-" @id) @payload.key)))))
+        (let ((id (default (array/find @entity.ticks (fn id (= (str/concat "tick-" @id) @payload.key))) 0)))
           (do
             (set @entity.status 200)
             (emit RESPOND { requestId: @id, status: 200, headers: (array/append (default (let ((found (array/find @entity.pending (fn p (= @p.requestId @id))))) (if (= @found null) null (object/get @found "responseHeaders"))) []) { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify @payload.result)) })
@@ -252,7 +252,7 @@ orbital HttpRouterOrbital {
             (set @entity.pending (array/filter @entity.pending (fn p (!= @p.requestId @id))))
             (set @entity.ticks (array/filter @entity.ticks (fn t (!= @t @id))))))
       TICK_FAILED -> routing when (array/some @entity.ticks (fn id (= (str/concat "tick-" @id) @payload.key)))
-        (let ((id (array/find @entity.ticks (fn id (= (str/concat "tick-" @id) @payload.key)))))
+        (let ((id (default (array/find @entity.ticks (fn id (= (str/concat "tick-" @id) @payload.key))) 0)))
           (do
             (set @entity.status 500)
             (emit RESPOND { requestId: @id, status: 500, headers: (array/append (default (let ((found (array/find @entity.pending (fn p (= @p.requestId @id))))) (if (= @found null) null (object/get @found "responseHeaders"))) []) { name: "content-type", value: "application/json" }), body: (bytes/from-string (json/stringify { error: @payload.error, code: "TICK_ERROR" })) })
@@ -463,7 +463,7 @@ orbital HttpRouterOrbital {
       }
       TICKET_MINTED {
         ticket : string!
-        expiresAt : number!
+        expiresAt : instant!
         requestId : number
       }
       STREAM_CLOSED {

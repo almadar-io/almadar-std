@@ -54,13 +54,13 @@ type SuggestionRow = {
   subject : string
   signature : string
   status : "pending" | "accepted" | "dismissed"
-  createdAt : number
-  resolvedAt : number
+  createdAt : instant
+  resolvedAt : instant
 }
 type RunRow = {
   id : string!
   ownerId : string!
-  ranAt : number
+  ranAt : instant!
 }
 
 type AgentToolKind = "input" | "read" | "invalid"
@@ -69,7 +69,7 @@ type AgentToolCallActivity = {
   tool : string!
   kind : AgentToolKind
   argsText : string!
-  timestamp : number!
+  timestamp : instant!
   isExecuting : boolean
 }
 type AgentToolResultActivity = {
@@ -80,7 +80,7 @@ type AgentToolResultActivity = {
   detail : string
   rows : number
   resultText : string!
-  timestamp : number!
+  timestamp : instant!
 }
 type AgentLlmCall = {
   service : string!
@@ -100,7 +100,7 @@ type AgentLlmResponseActivity = {
   type : "llm_response"!
   content : string!
   llm : AgentLlmCall
-  timestamp : number!
+  timestamp : instant!
 }
 type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
 type AgentUsage = {
@@ -260,20 +260,20 @@ orbital AgentSuggestionsOrbital {
       SuggestionsForPropose -> ready when (> ?totalCount (array/len ?data))
         (emit SuggestionCheckFailed { error: (str/concat "AgentSuggestion has " ?totalCount " rows for one person, over the maxRows cap of " @config.maxRows), code: "SUGGESTIONS_OVER_CAP" })
       SuggestionsForPropose -> ready when (array/some ?data (fn item (= @item.signature @entity.pendingProposal.signature)))
-        (emit SUGGESTION_DUPLICATE { signature: @entity.pendingProposal.signature })
+        (emit SUGGESTION_DUPLICATE { signature: (default @entity.pendingProposal.signature "") })
       SuggestionsForPropose -> ready when (and (not (array/some ?data (fn item (= @item.signature @entity.pendingProposal.signature)))) (>= (array/count ?data (fn item (= @item.status "pending"))) @config.pendingLimit))
         (emit SUGGESTION_LIMIT_REACHED { maxPending: @config.pendingLimit })
       SuggestionsForPropose -> ready when (and (not (array/some ?data (fn item (= @item.signature @entity.pendingProposal.signature)))) (< (array/count ?data (fn item (= @item.status "pending"))) @config.pendingLimit))
         (persist create AgentSuggestion {
           ownerId: @user.id
-          kind: @entity.pendingProposal.kind
-          title: @entity.pendingProposal.title
-          body: @entity.pendingProposal.body
-          action: @entity.pendingProposal.action
-          href: @entity.pendingProposal.href
-          payload: @entity.pendingProposal.payload
-          subject: @entity.pendingProposal.subject
-          signature: @entity.pendingProposal.signature
+          kind: (default @entity.pendingProposal.kind "")
+          title: (default @entity.pendingProposal.title "")
+          body: (default @entity.pendingProposal.body "")
+          action: (default @entity.pendingProposal.action "")
+          href: (default @entity.pendingProposal.href "")
+          payload: (default @entity.pendingProposal.payload {})
+          subject: (default @entity.pendingProposal.subject "")
+          signature: (default @entity.pendingProposal.signature "")
           status: pending
           createdAt: @now
         } {
@@ -308,8 +308,8 @@ orbital AgentSuggestionsOrbital {
         subject : string
         signature : string
         status : "pending" | "accepted" | "dismissed"
-        createdAt : number
-        resolvedAt : number
+        createdAt : instant
+        resolvedAt : instant
       }
         @description "A suggestion was stored for the person — payload is the created AgentSuggestion row itself."
         @synonyms "proposed, suggested, new suggestion"
@@ -587,16 +587,15 @@ orbital AgentSuggestionsOrbital {
         (persist update AgentSuggestion {
           id: (object/get (array/first ?data) id)
           ownerId: (object/get (array/first ?data) ownerId)
-          kind: (object/get (array/first ?data) kind)
-          title: (object/get (array/first ?data) title)
-          body: (object/get (array/first ?data) body)
-          action: (object/get (array/first ?data) action)
-          href: (object/get (array/first ?data) href)
-          payload: (object/get (array/first ?data) payload)
-          subject: (object/get (array/first ?data) subject)
-          signature: (object/get (array/first ?data) signature)
+          kind: (default (object/get (array/first ?data) kind) "")
+          title: (default (object/get (array/first ?data) title) "")
+          body: (default (object/get (array/first ?data) body) "")
+          action: (default (object/get (array/first ?data) action) "")
+          href: (default (object/get (array/first ?data) href) "")
+          payload: (default (object/get (array/first ?data) payload) {})
+          subject: (default (object/get (array/first ?data) subject) "")
+          signature: (default (object/get (array/first ?data) signature) "")
           status: accepted
-          createdAt: (object/get (array/first ?data) createdAt)
           resolvedAt: @now
         } {
           emit: { failure: SuggestionResolveFailed, success: SuggestionAccepted }
@@ -634,16 +633,15 @@ orbital AgentSuggestionsOrbital {
         (persist update AgentSuggestion {
           id: (object/get (array/first ?data) id)
           ownerId: (object/get (array/first ?data) ownerId)
-          kind: (object/get (array/first ?data) kind)
-          title: (object/get (array/first ?data) title)
-          body: (object/get (array/first ?data) body)
-          action: (object/get (array/first ?data) action)
-          href: (object/get (array/first ?data) href)
-          payload: (object/get (array/first ?data) payload)
-          subject: (object/get (array/first ?data) subject)
-          signature: (object/get (array/first ?data) signature)
+          kind: (default (object/get (array/first ?data) kind) "")
+          title: (default (object/get (array/first ?data) title) "")
+          body: (default (object/get (array/first ?data) body) "")
+          action: (default (object/get (array/first ?data) action) "")
+          href: (default (object/get (array/first ?data) href) "")
+          payload: (default (object/get (array/first ?data) payload) {})
+          subject: (default (object/get (array/first ?data) subject) "")
+          signature: (default (object/get (array/first ?data) signature) "")
           status: dismissed
-          createdAt: (object/get (array/first ?data) createdAt)
           resolvedAt: @now
         } {
           emit: { failure: SuggestionResolveFailed, success: SuggestionDismissed }
@@ -779,9 +777,9 @@ orbital AgentSuggestionsOrbital {
           orderBy: "ranAt:desc"
           emit: { failure: RunsLoadFailed, success: RunsForTrigger }
         })
-      RunsForTrigger -> ready when (>= (- @now (if (= (array/len ?data) 0) 0 (array/max ?data ranAt))) (* @config.gapMinutes 60000))
+      RunsForTrigger -> ready when (let ((latest (array/first ?data))) (if (= @latest null) true (>= (time/diff @now @latest.ranAt "ms") (* @config.gapMinutes 60000))))
         (emit SUGGESTION_RUN_ALLOWED {})
-      RunsForTrigger -> ready when (< (- @now (if (= (array/len ?data) 0) 0 (array/max ?data ranAt))) (* @config.gapMinutes 60000))
+      RunsForTrigger -> ready when (let ((latest (array/first ?data))) (if (= @latest null) false (< (time/diff @now @latest.ranAt "ms") (* @config.gapMinutes 60000))))
       RunsLoadFailed -> ready
         (render-ui toast {
           message: ?error
@@ -980,8 +978,8 @@ orbital AgentSuggestionRecordsOrbital {
     subject : string @description "What the suggestion is about (an id or slug)." @synonyms "target, topic" = ""
     signature : string @description "kind:action:subject. One signature is proposed to a person at most once, whatever became of it." @synonyms "dedup key, fingerprint" = ""
     status : "pending" | "accepted" | "dismissed" @description "Where the suggestion stands." = pending
-    createdAt : number @description "When it was proposed (ms)." @synonyms "time, timestamp" = 0
-    resolvedAt : number @description "When it was accepted or dismissed (ms)." = 0
+    createdAt : instant @description "When it was proposed." @synonyms "time, timestamp"
+    resolvedAt : instant @description "When it was accepted or dismissed."
     pendingProposal : SuggestionProposal @intrinsic @description "The proposal being checked for a duplicate." = { kind: "", title: "", body: "", action: "", href: "", subject: "", signature: "", payload: {} }
     page : number @intrinsic @description "The page the list shows." = 1
   }
@@ -989,21 +987,21 @@ orbital AgentSuggestionRecordsOrbital {
   entity AgentSuggestionRun [persistent: agentSuggestionRuns] {
     id : string!
     ownerId : string! @description "Whose run this was (the real @user). The binding organism scopes @read/@create to it." @synonyms "user, owner, account"
-    ranAt : number @description "When the agent was last asked to look (ms)." @synonyms "time, started" = 0
+    ranAt : instant @description "When the agent was last asked to look." @synonyms "time, started"
   }
   entity AgentSuggestionRetentionLog [runtime] {
     id : string!
     headId : string = ""
     headStatus : string = ""
     status : string = ""
-    createdAt : number = 0
+    createdAt : instant
   }
   entity AgentSuggestionRunRetentionLog [runtime] {
     id : string!
     headId : string = ""
     headStatus : string = ""
     status : string = ""
-    ranAt : number = 0
+    ranAt : instant
   }
 
   trait AgentSuggestionHistory -> @rebindable AgentSuggestion {
@@ -1096,20 +1094,18 @@ orbital AgentSuggestionRecordsOrbital {
     }
   }
 
-  trait AgentSuggestionRetention = Lifecycle.traits.LifecycleScheduler -> AgentSuggestionRetentionLog {
+  trait AgentSuggestionRetention = Lifecycle.traits.LifecycleRetention -> AgentSuggestionRetentionLog {
     config {
       enabled: true
-      action: delete
       targetEntity: AgentSuggestion
       dateField: createdAt
       ageDays: @config.keepDays
     }
   }
 
-  trait AgentSuggestionRunRetention = Lifecycle.traits.LifecycleScheduler -> AgentSuggestionRunRetentionLog {
+  trait AgentSuggestionRunRetention = Lifecycle.traits.LifecycleRetention -> AgentSuggestionRunRetentionLog {
     config {
       enabled: true
-      action: delete
       targetEntity: AgentSuggestionRun
       dateField: ranAt
       ageDays: @config.keepDays

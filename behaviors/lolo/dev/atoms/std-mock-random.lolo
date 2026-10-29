@@ -9,11 +9,11 @@ orbital MockRandomOrbital {
     id : string!
     seed : number @description "The seed the stream was last reset to." = 42
     state : number @description "The generator state, an integer in [0, 2^32)." = 42
-    nowMs : number @description "Epoch milliseconds every relative date is drawn against." = 0
+    nowMs : instant @description "The instant every relative date is drawn against."
     draws : [number] @description "The generator states of the last event's draws, the starting state first." = []
     int : number @description "Last integer or boolean (1 or 0) drawn." = 0
     text : string @description "Last text drawn (words, email, url, phone, uuid)." = ""
-    ms : number @description "Last date drawn, epoch milliseconds." = 0
+    ms : instant @description "Last date drawn."
   }
 
   trait MockRandom -> @rebindable MockStream [client] {
@@ -29,49 +29,49 @@ orbital MockRandomOrbital {
         (set @entity.state @entity.seed)
         (set @entity.nowMs ?nowMs)
       DRAW_INT -> ready
-        (set @entity.draws (array/reduce (array/range 1) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (array/last @acc) 1664525) 1013904223) 4294967296)))))
-        (set @entity.state (array/last @entity.draws))
+        (set @entity.draws (array/reduce (array/range 1) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (default (array/last @acc) 0) 1664525) 1013904223) 4294967296)))))
+        (set @entity.state (default (array/last @entity.draws) @entity.state))
         (set @entity.int (+ (math/floor (* (/ @entity.state 4294967296) (+ (- ?max ?min) 1))) ?min))
         (emit MOCK_DRAWN { text: @entity.text, int: @entity.int, ms: @entity.ms })
       DRAW_BOOL -> ready
-        (set @entity.draws (array/reduce (array/range 1) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (array/last @acc) 1664525) 1013904223) 4294967296)))))
-        (set @entity.state (array/last @entity.draws))
+        (set @entity.draws (array/reduce (array/range 1) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (default (array/last @acc) 0) 1664525) 1013904223) 4294967296)))))
+        (set @entity.state (default (array/last @entity.draws) @entity.state))
         (set @entity.int (if (< (/ @entity.state 4294967296) 0.5) 1 0))
         (emit MOCK_DRAWN { text: @entity.text, int: @entity.int, ms: @entity.ms })
       DRAW_WORDS -> ready
-        (set @entity.draws (array/reduce (array/range ?count) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (array/last @acc) 1664525) 1013904223) 4294967296)))))
-        (set @entity.state (array/last @entity.draws))
-        (set @entity.text (str/join (array/map (array/drop @entity.draws 1) (fn f (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))))) " "))
+        (set @entity.draws (array/reduce (array/range ?count) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (default (array/last @acc) 0) 1664525) 1013904223) 4294967296)))))
+        (set @entity.state (default (array/last @entity.draws) @entity.state))
+        (set @entity.text (str/join (array/map (array/drop @entity.draws 1) (fn f (default (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))) ""))) " "))
         (emit MOCK_DRAWN { text: @entity.text, int: @entity.int, ms: @entity.ms })
       DRAW_EMAIL -> ready
-        (set @entity.draws (array/reduce (array/range 2) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (array/last @acc) 1664525) 1013904223) 4294967296)))))
-        (set @entity.state (array/last @entity.draws))
-        (set @entity.text (str/concat (str/lower (array/nth (array/map (array/drop @entity.draws 1) (fn f (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))))) 0)) (str/slice "x@y" 1 2) (str/lower (array/nth (array/map (array/drop @entity.draws 1) (fn f (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))))) 1)) ".com"))
+        (set @entity.draws (array/reduce (array/range 2) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (default (array/last @acc) 0) 1664525) 1013904223) 4294967296)))))
+        (set @entity.state (default (array/last @entity.draws) @entity.state))
+        (set @entity.text (str/concat (str/lower (default (array/nth (array/map (array/drop @entity.draws 1) (fn f (default (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))) ""))) 0) "")) (str/slice "x@y" 1 2) (str/lower (default (array/nth (array/map (array/drop @entity.draws 1) (fn f (default (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))) ""))) 1) "")) ".com"))
         (emit MOCK_DRAWN { text: @entity.text, int: @entity.int, ms: @entity.ms })
       DRAW_URL -> ready
-        (set @entity.draws (array/reduce (array/range 2) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (array/last @acc) 1664525) 1013904223) 4294967296)))))
-        (set @entity.state (array/last @entity.draws))
-        (set @entity.text (str/concat "https://example.com/" (str/lower (array/nth (array/map (array/drop @entity.draws 1) (fn f (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))))) 0)) "-" (str/lower (array/nth (array/map (array/drop @entity.draws 1) (fn f (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))))) 1))))
+        (set @entity.draws (array/reduce (array/range 2) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (default (array/last @acc) 0) 1664525) 1013904223) 4294967296)))))
+        (set @entity.state (default (array/last @entity.draws) @entity.state))
+        (set @entity.text (str/concat "https://example.com/" (str/lower (default (array/nth (array/map (array/drop @entity.draws 1) (fn f (default (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))) ""))) 0) "")) "-" (str/lower (default (array/nth (array/map (array/drop @entity.draws 1) (fn f (default (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))) ""))) 1) ""))))
         (emit MOCK_DRAWN { text: @entity.text, int: @entity.int, ms: @entity.ms })
       DRAW_PHONE -> ready
-        (set @entity.draws (array/reduce (array/range 3) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (array/last @acc) 1664525) 1013904223) 4294967296)))))
-        (set @entity.state (array/last @entity.draws))
-        (set @entity.text (str/concat "+1 (" (+ (math/floor (* (/ (array/nth @entity.draws 1) 4294967296) 800)) 200) ") " (+ (math/floor (* (/ (array/nth @entity.draws 2) 4294967296) 800)) 200) "-" (str/padStart (str/concat "" (math/floor (* (/ (array/nth @entity.draws 3) 4294967296) 10000))) 4 "0")))
+        (set @entity.draws (array/reduce (array/range 3) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (default (array/last @acc) 0) 1664525) 1013904223) 4294967296)))))
+        (set @entity.state (default (array/last @entity.draws) @entity.state))
+        (set @entity.text (str/concat "+1 (" (+ (math/floor (* (/ (default (array/nth @entity.draws 1) 0) 4294967296) 800)) 200) ") " (+ (math/floor (* (/ (default (array/nth @entity.draws 2) 0) 4294967296) 800)) 200) "-" (str/padStart (str/concat "" (math/floor (* (/ (default (array/nth @entity.draws 3) 0) 4294967296) 10000))) 4 "0")))
         (emit MOCK_DRAWN { text: @entity.text, int: @entity.int, ms: @entity.ms })
       DRAW_UUID -> ready
-        (set @entity.draws (array/reduce (array/range 31) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (array/last @acc) 1664525) 1013904223) 4294967296)))))
-        (set @entity.state (array/last @entity.draws))
+        (set @entity.draws (array/reduce (array/range 31) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (default (array/last @acc) 0) 1664525) 1013904223) 4294967296)))))
+        (set @entity.state (default (array/last @entity.draws) @entity.state))
         (set @entity.text (str/concat (str/slice (str/join (array/map (array/drop @entity.draws 1) (fn f (str/slice "0123456789abcdef" (math/floor (* (/ @f 4294967296) 16)) (+ (math/floor (* (/ @f 4294967296) 16)) 1)))) "") 0 8) "-" (str/slice (str/join (array/map (array/drop @entity.draws 1) (fn f (str/slice "0123456789abcdef" (math/floor (* (/ @f 4294967296) 16)) (+ (math/floor (* (/ @f 4294967296) 16)) 1)))) "") 8 12) "-4" (str/slice (str/join (array/map (array/drop @entity.draws 1) (fn f (str/slice "0123456789abcdef" (math/floor (* (/ @f 4294967296) 16)) (+ (math/floor (* (/ @f 4294967296) 16)) 1)))) "") 12 15) "-" (str/slice (str/join (array/map (array/drop @entity.draws 1) (fn f (str/slice "0123456789abcdef" (math/floor (* (/ @f 4294967296) 16)) (+ (math/floor (* (/ @f 4294967296) 16)) 1)))) "") 15 19) "-" (str/slice (str/join (array/map (array/drop @entity.draws 1) (fn f (str/slice "0123456789abcdef" (math/floor (* (/ @f 4294967296) 16)) (+ (math/floor (* (/ @f 4294967296) 16)) 1)))) "") 19 31)))
         (emit MOCK_DRAWN { text: @entity.text, int: @entity.int, ms: @entity.ms })
       DRAW_PAST_DATE -> ready
-        (set @entity.draws (array/reduce (array/range 1) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (array/last @acc) 1664525) 1013904223) 4294967296)))))
-        (set @entity.state (array/last @entity.draws))
-        (set @entity.ms (- @entity.nowMs (math/floor (* (/ @entity.state 4294967296) (* ?years 31536000000)))))
+        (set @entity.draws (array/reduce (array/range 1) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (default (array/last @acc) 0) 1664525) 1013904223) 4294967296)))))
+        (set @entity.state (default (array/last @entity.draws) @entity.state))
+        (set @entity.ms (time/add (default @entity.nowMs (time/add @config.epoch 0 "ms")) (* -1 (math/floor (* (/ @entity.state 4294967296) (* ?years 31536000000)))) "ms"))
         (emit MOCK_DRAWN { text: @entity.text, int: @entity.int, ms: @entity.ms })
       DRAW_STRADDLING_DATE -> ready
-        (set @entity.draws (array/reduce (array/range 1) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (array/last @acc) 1664525) 1013904223) 4294967296)))))
-        (set @entity.state (array/last @entity.draws))
-        (set @entity.ms (+ @entity.nowMs (- (math/floor (* (/ @entity.state 4294967296) (* ?days 86400000 2))) (* ?days 86400000))))
+        (set @entity.draws (array/reduce (array/range 1) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (default (array/last @acc) 0) 1664525) 1013904223) 4294967296)))))
+        (set @entity.state (default (array/last @entity.draws) @entity.state))
+        (set @entity.ms (time/add (default @entity.nowMs (time/add @config.epoch 0 "ms")) (- (math/floor (* (/ @entity.state 4294967296) (* ?days 86400000 2))) (* ?days 86400000)) "ms"))
         (emit MOCK_DRAWN { text: @entity.text, int: @entity.int, ms: @entity.ms })
     }
     emits {
@@ -83,7 +83,7 @@ orbital MockRandomOrbital {
       MOCK_DRAWN -> external {
         text : string
         int : number
-        ms : number
+        ms : instant
       }
         @description "A value was drawn from the stream."
         @synonyms "drawn, random value"
@@ -94,7 +94,7 @@ orbital MockRandomOrbital {
       CORPUS_ASK { }
         @description "Ask for the word corpus."
         @synonyms "corpus"
-      SEED { seed : number!  nowMs : number! }
+      SEED { seed : number!  nowMs : instant! }
         @description "Reset the stream to a seed, with the clock relative dates are drawn against."
         @synonyms "reseed, reset"
       DRAW_INT { min : number!  max : number! }
@@ -119,14 +119,18 @@ orbital MockRandomOrbital {
         @description "Draw a version-4-shaped uuid."
         @synonyms "guid, id"
       DRAW_PAST_DATE { years : number! }
-        @description "Draw epoch milliseconds up to years in the past."
+        @description "Draw an instant up to years in the past."
         @synonyms "past timestamp"
       DRAW_STRADDLING_DATE { days : number! }
-        @description "Draw epoch milliseconds within days either side of now."
+        @description "Draw an instant within days either side of now."
         @synonyms "nearby timestamp"
     }
 
     config {
+      epoch : instant = "1970-01-01T00:00:00.000Z"
+        @label "Clock default"
+        @description "The instant relative dates are drawn against when SEED has not named a clock."
+        @tier "domain"
       words : [string] = ["harbor", "summit", "meridian", "atlas", "beacon", "cedar", "delta", "ember", "falcon", "garnet", "horizon", "indigo", "juniper", "keystone", "lantern", "meadow", "nimbus", "orchard", "pioneer", "quarry", "redwood", "sierra", "timber", "umber", "vista", "willow", "zenith", "anchor", "basalt", "canyon", "drift", "estuary", "fjord", "grove", "heath", "inlet", "jade", "knoll", "lagoon", "mesa", "north", "onyx", "prairie", "quartz", "ridge", "slate", "terrace", "upland", "valley", "wharf", "yonder", "aspen", "brook", "cove", "dune", "elm", "fern", "glen", "haven", "isle"]
         @label "Word corpus"
         @description "The words text draws pick from; its length is the index range."

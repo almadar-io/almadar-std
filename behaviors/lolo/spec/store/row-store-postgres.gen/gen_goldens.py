@@ -272,10 +272,13 @@ case("good-list-of-an-empty-table-answers-no-rows",
      [ask("ROW_LIST", {"key": "k", "entityType": "Ticket"}, warm(), "running", [stmt("statement", LIST_SQL, [])]),
       recv(result(TICKET_COLS, [], "SELECT 0"), expect={"emits": [emit("ROWS_LISTED", key="k", rows=[])]})])
 case("good-declared-collection-is-the-table-as-written",
-     [ask("ROW_LIST", {"key": "k", "entityType": "TimeEntry"}, {"id": "f", "sock": 3, "collections": {"TimeEntry": "timesheet"}}, "running", [stmt("statement", 'SELECT * FROM "timesheet"', [])])],
-     note="bind_collection: [persistent: tbl] as written; control below is the pluralised snake_case name")
-case("good-undeclared-entity-table-is-snake-case-pluralised",
-     [ask("ROW_LIST", {"key": "k", "entityType": "TimeEntry"}, warm(), "running", [stmt("statement", 'SELECT * FROM "time_entries"', [])])])
+     [ask("ROW_LIST", {"key": "k", "entityType": "TimeEntry", "collection": "timesheet"}, warm(), "running", [stmt("statement", 'SELECT * FROM "timesheet"', [])])],
+     note="EXEC-STORE-4: the verb's collection is the table as written; control below is the pluralised snake_case name")
+case("good-declared-collection-addresses-a-read",
+     [ask("ROW_READ", {"key": "k", "entityType": "Ticket", "id": "t1", "collection": "support_tickets"}, warm(), "running", [stmt("statement", READ_SQL.replace('"tickets"', '"support_tickets"'), ["t1"])])],
+     note="the read names the declared collection; control below keys by entityType")
+case("good-read-without-a-collection-keys-by-entity-type",
+     [ask("ROW_READ", {"key": "k", "entityType": "Ticket", "id": "t1"}, warm(), "running", [stmt("statement", READ_SQL, ["t1"])])])
 
 # ================= query / push-down =================
 FILTER = {"kind": "all", "of": [
@@ -403,6 +406,12 @@ case("good-unguarded-update-reports-no-before",
 case("good-update-with-empty-data-sets-id-to-itself",
      [ask("ROWS_WRITE", wr([{"kind": "update", "entityType": "Ticket", "id": "t1", "data": {}}]), warm(), "running",
           [stmt("statement", 'WITH "pre" AS (SELECT * FROM "tickets" WHERE "id" = $1 FOR UPDATE), "post" AS (UPDATE "tickets" SET "id" = "id" WHERE "id" = $1 RETURNING *) SELECT \'before\' AS "__part", "pre".* FROM "pre" UNION ALL SELECT \'after\' AS "__part", "post".* FROM "post"', ["t1"])])])
+UPD_EMPTY = lambda tb: 'WITH "pre" AS (SELECT * FROM "%s" WHERE "id" = $1 FOR UPDATE), "post" AS (UPDATE "%s" SET "id" = "id" WHERE "id" = $1 RETURNING *) SELECT \'before\' AS "__part", "pre".* FROM "pre" UNION ALL SELECT \'after\' AS "__part", "post".* FROM "post"' % (tb, tb)
+case("good-declared-collection-addresses-a-write",
+     [ask("ROWS_WRITE", dict(wr([{"kind": "update", "entityType": "Ticket", "id": "t1", "data": {}}]), collections={"Ticket": "support_tickets"}), warm(), "running", [stmt("statement", UPD_EMPTY("support_tickets"), ["t1"])])],
+     note="a write batch names the collection per entity type; control below keys by entityType")
+case("good-write-without-collections-keys-by-entity-type",
+     [ask("ROWS_WRITE", wr([{"kind": "update", "entityType": "Ticket", "id": "t1", "data": {}}]), warm(), "running", [stmt("statement", UPD_EMPTY("tickets"), ["t1"])])])
 DEL = {"kind": "delete", "entityType": "Ticket", "id": "t1", "guard": UPD_GUARD}
 DEL_SQL = 'WITH "pre" AS (SELECT * FROM "tickets" WHERE "id" = $1 FOR UPDATE), "post" AS (DELETE FROM "tickets" WHERE "id" = $1 AND COALESCE("priority" > $2, FALSE) RETURNING *) SELECT \'before\' AS "__part", "pre".* FROM "pre" UNION ALL SELECT \'after\' AS "__part", "post".* FROM "post"'
 case("good-atomic-take-is-a-guarded-delete-in-a-one-op-batch-answering-the-before-row",

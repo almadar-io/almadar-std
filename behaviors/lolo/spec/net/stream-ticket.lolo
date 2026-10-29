@@ -8,8 +8,7 @@ orbital StreamTicketSpec {
   expects entity StreamTicket [persistent] {
     id : string!
     viewer : Viewer!
-    expiresAt : number
-    @invariant (>= @entity.expiresAt 0)
+    expiresAt : instant
   }
   expects entity StreamTicketRun [runtime] {
     id : string!
@@ -25,7 +24,7 @@ orbital StreamTicketSpec {
     state drawing {
       MINT_TICKET -> drawing
       TAKE_TICKET -> drawing
-      SEED_DRAWN -> saving @ensures (= @entity.expiresAt (+ @now 60000))
+      SEED_DRAWN -> saving @ensures (= @entity.expiresAt (time/add @now 60000 "ms"))
     }
     state saving {
       MINT_TICKET -> saving
@@ -42,7 +41,7 @@ orbital StreamTicketSpec {
       TICKET_NOT_SPENT -> idle
     }
     emits {
-      TICKET_MINTED { ticket : string!  expiresAt : number!  requestId : number }
+      TICKET_MINTED { ticket : string!  expiresAt : instant!  requestId : number }
       TICKET_TAKEN { ticket : string!  viewer : Viewer! }
       TICKET_REFUSED { code : "seed" | "store" | "unknown" | "expired" | "used" | "busy"  message : string!  ticket : string  requestId : number }
     }

@@ -1,11 +1,21 @@
 app lifecycle-spec [
   version: "1.0.0",
-  description: "Design contract for the age-based status lifecycle: a dry run never reaches the state that writes."
+  description: "Design contract for the age-based lifecycle: a dry run never reaches the state that writes, and retention at 0 days never deletes."
 ]
 
 orbital LifecycleSpec {
   expects trait LifecycleScheduler {
     state idle
     state scanning @holds (and @config.enabled (not @config.dryRun))
+  }
+
+  expects trait LifecycleRetention {
+    state idle
+    state scanning @holds (and @config.enabled (not @config.dryRun) (> @config.ageDays 0))
+  }
+
+  expects trait LifecycleStatusRetention {
+    state idle
+    state scanning @holds (and @config.enabled (not @config.dryRun) (> @config.ageDays 0))
   }
 }

@@ -1,6 +1,6 @@
 app std-api-key-verifier [
   version: "1.0.0",
-  description: "std-api-key-verifier — decides whether a presented bearer is a live API key. VERIFY_KEY { requestId, token } (answers echo requestId; concurrent bearers queue FIFO) refuses a bearer without the key prefix (not-a-key), hashes the rest with scrypt (N 16384, r 8, p 1, 32 bytes, hex) over the salt credential exactly as std-api-keys minted it, and looks the row up by that hash: no row is unknown, a revoked row revoked, a row whose expiresAt is positive and not after now expired. A salt that is missing or not non-empty hex refuses salt. A live key answers API_KEY_VERIFIED { owner, claims }: the row's owner acts, and claims is the row's remaining fields (everything but id, owner, revoked, expiresAt) as name/value pairs. A row that names no owner refuses lookup. The key itself is never stored or emitted. The app binds its own key entity through composition (linkedEntity); there is no ALMADAR_API_KEY_ENTITY env."
+  description: "std-api-key-verifier — decides whether a presented bearer is a live API key. VERIFY_KEY { requestId, token } (answers echo requestId; concurrent bearers queue FIFO) refuses a bearer without the key prefix (not-a-key), hashes the rest with scrypt (N 16384, r 8, p 1, 32 bytes, hex) over the salt credential exactly as std-api-keys minted it, and looks the row up by that hash: no row is unknown, a revoked row revoked, a row with an expiresAt that is not after now expired. A salt that is missing or not non-empty hex refuses salt. A live key answers API_KEY_VERIFIED { owner, claims }: the row's owner acts, and claims is the row's remaining fields (everything but id, owner, revoked, expiresAt) as name/value pairs. A row that names no owner refuses lookup. The key itself is never stored or emitted. The app binds its own key entity through composition (linkedEntity); there is no ALMADAR_API_KEY_ENTITY env."
 ]
 uses Spec from "almadar-std/api-key-verifier"
 type KeyClaim = { name : string!, value : string! }
@@ -14,7 +14,7 @@ orbital ApiKeyVerifierOrbital {
     label : string @description "A name the owner gave the key." = ""
     owner : string @description "Who the key acts as." = ""
     revoked : boolean @description "Whether the key has been revoked and no longer works." = false
-    expiresAt : number @description "When the key stops working, in epoch milliseconds; 0 means never." = 0
+    expiresAt : instant @description "When the key stops working; absent means never."
   }
 
   entity ApiKeyCheck [runtime] {
@@ -77,10 +77,10 @@ orbital ApiKeyVerifierOrbital {
       KEY_FOUND -> idle when (and (!= (default @payload.data.owner "") "") (= @payload.data.revoked true))
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "revoked", message: "revoked API key" })
         (emit KEY_PUMP {})
-      KEY_FOUND -> idle when (and (!= (default @payload.data.owner "") "") (!= @payload.data.revoked true) (> (default @payload.data.expiresAt 0) 0) (<= (default @payload.data.expiresAt 0) @now))
+      KEY_FOUND -> idle when (and (!= (default @payload.data.owner "") "") (!= @payload.data.revoked true) (object/has @payload.data "expiresAt") (>= (time/diff @now @payload.data.expiresAt "ms") 0))
         (emit API_KEY_REFUSED { requestId: @entity.requestId, reason: "expired", message: "expired API key" })
         (emit KEY_PUMP {})
-      KEY_FOUND -> idle when (and (!= (default @payload.data.owner "") "") (!= @payload.data.revoked true) (not (and (> (default @payload.data.expiresAt 0) 0) (<= (default @payload.data.expiresAt 0) @now))))
+      KEY_FOUND -> idle when (and (!= (default @payload.data.owner "") "") (!= @payload.data.revoked true) (not (and (object/has @payload.data "expiresAt") (>= (time/diff @now @payload.data.expiresAt "ms") 0))))
         (emit API_KEY_VERIFIED { requestId: @entity.requestId, owner: @payload.data.owner, claims: (array/map (object/entries (object/omit @payload.data ["id", "owner", "revoked", "expiresAt"])) (fn e { name: (array/nth @e 0), value: (str/concat (array/nth @e 1)) })) })
         (emit KEY_PUMP {})
     }

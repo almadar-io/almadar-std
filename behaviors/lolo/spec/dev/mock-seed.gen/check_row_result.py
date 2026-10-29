@@ -22,7 +22,7 @@ orbital RowResultProbe {
     initial: ready
     state ready {
       ASSEMBLE -> ready
-        (emit ROW_DONE { row: (object/set EXPR "id" "row") })
+        (let ((built EXPR)) (emit ROW_DONE { row: (default (object/set @built "id" "row") @built) }))
     }
     listens { ASSEMBLE -> input { cells : [ProbeCell]! } }
     emits { ROW_DONE -> external { row : Map string MockValue? } }
@@ -63,7 +63,7 @@ try:
     steps = [
         {'trait': 'MockSeed', 'event': 'WALK_START', 'payload': {
             'spec': {'type': 'string', 'default': '007'}, 'name': 'title', 'entityName': 'Note',
-            'index': 1, 'seeded': False, 'runtime': False, 'nowMs': 0}},
+            'index': 1, 'seeded': False, 'runtime': False, 'nowMs': '1970-01-01T00:00:00.000Z'}},
         {'trait': 'MockSeed', 'event': 'SAMPLE_ROWS', 'payload': {
             'fields': [{'name': 'title', 'type': 'string', 'mock': 'A,B'},
                        {'name': 'nested', 'type': 'object',

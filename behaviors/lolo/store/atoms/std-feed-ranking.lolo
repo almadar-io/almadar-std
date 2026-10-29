@@ -3,14 +3,14 @@ app std-feed-ranking [
   description: "std-feed-ranking — pages a ranked feed from candidates the caller supplies. FEED_RANK sorts the due items (most overdue first), the frontier (unlearned, every prerequisite learned enough, by tier then sequence then name) and the explore items into three buckets, lifts the neighbours of liked items, skips hidden and already-served items, interleaves the buckets by the mix and answers one page with a cursor for the next."
 ]
 type FeedStrings = [string]
-type FeedCandidate = { key : string, name : string, tier : number, sequence : number, level : number, dueAt : number?, prerequisites : [string], neighbours : [string], liked : boolean, hidden : boolean, lastSeen : number? }
+type FeedCandidate = { key : string, name : string, tier : number, sequence : number, level : number, dueAt : instant?, prerequisites : [string], neighbours : [string], liked : boolean, hidden : boolean, lastSeen : instant? }
 type FeedCandidates = [FeedCandidate]
 type FeedExploreItem = { key : string, name : string }
 type FeedExploreItems = [FeedExploreItem]
 type FeedMix = { review : number, frontier : number, explore : number }
 type FeedPick = { key : string, source : string }
 type FeedPicks = [FeedPick]
-type FeedCursor = { seen : [string], asOf : number }
+type FeedCursor = { seen : [string], asOf : instant! }
 type FeedRound = { picks : [FeedPick], r : number, f : number, e : number }
 orbital FeedRankingOrbital {
   entity FeedRun [runtime] {
@@ -37,7 +37,7 @@ orbital FeedRankingOrbital {
                   limit: @limit
                   mix: @mix
                   seen: (if (= @decoded null) [] (object/get @decoded seen []))
-                  asOf: (if (= @decoded null) @now (object/get @decoded asOf 0))
+                  asOf: (if (= @decoded null) @now (object/get @decoded asOf @now))
                 }))))))
       FeedPrepared -> idle when (!= ?reason "")
         (emit FEED_REJECTED { reason: ?reason })
@@ -50,7 +50,7 @@ orbital FeedRankingOrbital {
                         (not (object/get @c hidden false))
                         (not (array/includes ?seen (object/get @c key "")))
                         (!= (object/get @c dueAt null) null)
-                        (>= ?asOf (object/get @c dueAt 0)))))
+                        (not (time/isBefore ?asOf (default (object/get @c dueAt null) ?asOf))))))
                       dueAt asc)))
                     (array/concat
                       (array/filter @due (fn c (array/includes @liftedKeys (object/get @c key ""))))
@@ -59,7 +59,7 @@ orbital FeedRankingOrbital {
                       (array/map (array/filter ?candidates (fn c (and
                         (not (object/get @c hidden false))
                         (not (array/includes ?seen (object/get @c key "")))
-                        (not (and (!= (object/get @c lastSeen null) null) (< (- ?asOf (object/get @c lastSeen 0)) @cooldownMs)))
+                        (not (and (!= (object/get @c lastSeen null) null) (< (time/diff ?asOf (default (object/get @c lastSeen null) ?asOf) "ms") @cooldownMs)))
                         (= (object/get @c level 0) @config.frontierLevel)
                         (array/every (object/get @c prerequisites @noStrs)
                           (fn p (>= (object/get (default (array/find ?candidates (fn x (= (object/get @x key "") @p))) {}) level 0) @config.prerequisiteLevel))))))
@@ -88,7 +88,7 @@ orbital FeedRankingOrbital {
                 (emit FEED_RANKED {
                   picks: (object/get @run picks @noPicks)
                   nextCursor: (if (or (< (object/get @run r 0) (array/len @revList)) (< (object/get @run f 0) (array/len @frList)) (< (object/get @run e 0) (array/len @offered)))
-                    (str/replaceAll (str/replaceAll (str/replaceAll (base64/encode (str/concat "{\"seen\":" (json/stringify (array/concat ?seen (array/map (object/get @run picks @noPicks) (fn p (object/get @p key ""))))) ",\"asOf\":" ?asOf "}")) "+" "-") "/" "_") "=" "")
+                    (str/replaceAll (str/replaceAll (str/replaceAll (base64/encode (str/concat "{\"seen\":" (json/stringify (array/concat ?seen (array/map (object/get @run picks @noPicks) (fn p (object/get @p key ""))))) ",\"asOf\":\"" ?asOf "\"}")) "+" "-") "/" "_") "=" "")
                     null)
                 }))))))
 
@@ -113,7 +113,7 @@ orbital FeedRankingOrbital {
         limit : number!
         mix : FeedMix!
         seen : [string]!
-        asOf : number!
+        asOf : instant!
       }
         @tier "internal"
     }
@@ -136,7 +136,7 @@ orbital FeedRankingOrbital {
         limit : number!
         mix : FeedMix!
         seen : [string]!
-        asOf : number!
+        asOf : instant!
       }
     }
 

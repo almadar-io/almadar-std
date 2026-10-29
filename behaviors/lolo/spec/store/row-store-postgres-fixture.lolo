@@ -59,10 +59,10 @@ orbital RowStorePostgresFixtureOrbital {
   type RolledBackOutcome = { kind : "rolled-back" }
   type RowWriteOutcome = CreatedOutcome | UpdatedOutcome | DeletedOutcome | NotFoundOutcome | DuplicateIdOutcome | RefusedOutcome | FailedOutcome | RolledBackOutcome
 
-  type RowReadVerb = { key : string!, entityType : string!, id : string! }
-  type RowListVerb = { key : string!, entityType : string! }
-  type RowsQueryVerb = { key : string!, entityType : string!, query : RowQuery!, project : "rows" | "ids" }
-  type RowsWriteVerb = { key : string!, batch : RowWriteBatch! }
+  type RowReadVerb = { key : string!, entityType : string!, id : string!, collection : string }
+  type RowListVerb = { key : string!, entityType : string!, collection : string }
+  type RowsQueryVerb = { key : string!, entityType : string!, query : RowQuery!, project : "rows" | "ids", collection : string }
+  type RowsWriteVerb = { key : string!, batch : RowWriteBatch!, collections : Map string string }
   type IndexPath = { fields : [string]!, orderBy : string? }
   type RowsEnsureIndexesVerb = { key : string!, entityType : string!, indexes : [IndexPath]! }
 
@@ -111,7 +111,8 @@ orbital RowStorePostgresFixtureOrbital {
     nonce : string @description "The SCRAM client nonce" = ""
     scram : string @description "The server signature the SCRAM server-final must carry" = ""
     schema : SchemaCache @description "Column kinds per table, read from information_schema" = {}
-    collections : Map string string @description "Declared collection per entity type" = {}
+    declared : string @description "The declared collection the read, list or query in flight names; empty when the entity declares none" = ""
+    writeCollections : Map string string @description "The declared collection per entity type the write batch in flight names" = {}
     stage : string @description "What the statement in flight is for: ssl-request, startup, password, scram-first, scram-final, discover, begin, statement, count, commit or rollback" = ""
     bindBase : number @description "How many binds the SQL text already numbers itself" = 0
     frame : bytes @description "The exact bytes of the send in flight" = ""

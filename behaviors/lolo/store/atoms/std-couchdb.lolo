@@ -1,6 +1,6 @@
 app std-couchdb [
   version: "1.0.0",
-  description: "std-couchdb — a row-store driver over the CouchDB REST API, the std twin of the kernel's CouchDB backend (one typed verb contract: ROW_READ, ROW_LIST, ROWS_QUERY, ROWS_WRITE; replies ROW_FOUND, ROWS_LISTED, ROWS_PAGE, ROWS_IDS, ROWS_WRITTEN, STORE_UNSUPPORTED, STORE_FAILED). An entity type is one database, named by the declared collections or like its Postgres table (TimeEntry is time_entries); a row is the document whose _id is the id, and every answer hands the row back without _id and _rev. ROWS_QUERY translates the typed row query to a Mango selector sorted on _id and answers STORE_UNSUPPORTED with the reason for a query Mango cannot carry with the shared semantics (a contains leaf, an ordering comparison on a string, a nearest ask, an order other than by id); a total of none skips the count request and an ids query asks for _id only. ROWS_WRITE runs the ops in order, each its own _rev-guarded write; a guard is tested in process on the row read and a guard that fails is refused; a failure stops the run, an atomic batch is STORE_UNSUPPORTED and a rekey op fails the batch (rekey is unsupported by this store). The internal COUCH_* events are the per-document steps. COUCH_GET answers COUCH_ROW or COUCH_ROW_ABSENT (404). COUCH_CREATE makes the database once (PUT /db, 201 or 202 made, 409 or 412 already there) then PUTs the document; a 409 is COUCH_DUPLICATE_ID. COUCH_UPDATE merges changes over the stored document, COUCH_UPSERT replaces it keeping its createdAt, COUCH_DELETE removes it: each reads the document for its _rev and writes conditioned on it, and a 409 re-reads and tries again up to maxAttempts times before COUCH_FAILED (changed concurrently). COUCH_LIST reads /db/_all_docs; COUCH_FIND POSTs a Mango selector to /db/_find (404 is an empty answer), reads every page through the bookmark when no limit is given and counts the total when a full window cannot say it. Requests carry a Basic Authorization header from the user and password credentials. A non-2xx reply answers COUCH_FAILED with CouchDB's reason; an unreachable server answers status 0. One request is in flight per frame: the store seam asks the driver in a frame keyed by the ask (EXEC-STORE-4), and orb validate refuses a trait outside the driver that emits a row verb (ORB_STORE_VERB_OUTSIDE_SEAM).",
+  description: "std-couchdb — a row-store driver over the CouchDB REST API, the std twin of the kernel's CouchDB backend (one typed verb contract: ROW_READ, ROW_LIST, ROWS_QUERY, ROWS_WRITE; replies ROW_FOUND, ROWS_LISTED, ROWS_PAGE, ROWS_IDS, ROWS_WRITTEN, STORE_UNSUPPORTED, STORE_FAILED). An entity type is one database, named by the verb's declared collection or like its Postgres table (TimeEntry is time_entries); a row is the document whose _id is the id, and every answer hands the row back without _id and _rev. ROWS_QUERY translates the typed row query to a Mango selector sorted on _id and answers STORE_UNSUPPORTED with the reason for a query Mango cannot carry with the shared semantics (a contains leaf, an ordering comparison on a string, a nearest ask, an order other than by id); a total of none skips the count request and an ids query asks for _id only. ROWS_WRITE runs the ops in order, each its own _rev-guarded write; a guard is tested in process on the row read and a guard that fails is refused; a failure stops the run, an atomic batch is STORE_UNSUPPORTED and a rekey op fails the batch (rekey is unsupported by this store). The internal COUCH_* events are the per-document steps. COUCH_GET answers COUCH_ROW or COUCH_ROW_ABSENT (404). COUCH_CREATE makes the database once (PUT /db, 201 or 202 made, 409 or 412 already there) then PUTs the document; a 409 is COUCH_DUPLICATE_ID. COUCH_UPDATE merges changes over the stored document, COUCH_UPSERT replaces it keeping its createdAt, COUCH_DELETE removes it: each reads the document for its _rev and writes conditioned on it, and a 409 re-reads and tries again up to maxAttempts times before COUCH_FAILED (changed concurrently). COUCH_LIST reads /db/_all_docs; COUCH_FIND POSTs a Mango selector to /db/_find (404 is an empty answer), reads every page through the bookmark when no limit is given and counts the total when a full window cannot say it. Requests carry a Basic Authorization header from the user and password credentials. A non-2xx reply answers COUCH_FAILED with CouchDB's reason; an unreachable server answers status 0. One request is in flight per frame: the store seam asks the driver in a frame keyed by the ask (EXEC-STORE-4), and orb validate refuses a trait outside the driver that emits a row verb (ORB_STORE_VERB_OUTSIDE_SEAM).",
   egress: ["http://couchdb.example.test:5984"]
 ]
 uses Spec from "almadar-std/couchdb"
@@ -54,7 +54,6 @@ type FailedOutcome = { kind : "failed", message : string! }
 type RolledBackOutcome = { kind : "rolled-back" }
 type RowWriteOutcome = CreatedOutcome | UpdatedOutcome | DeletedOutcome | NotFoundOutcome | DuplicateIdOutcome | RefusedOutcome | FailedOutcome | RolledBackOutcome
 
-type CollectionBinding = { entityType : string!, collection : string! }
 type MangoStep = { p : string!, n : string!, pj : string!, contains : boolean!, strOrder : boolean! }
 type CouchRev = { _rev : string }
 type CouchError = { error : string, reason : string }
@@ -77,6 +76,7 @@ orbital CouchdbOrbital {
     fields : string @description "The Mango fields clause the query in flight sends, empty or the ids-only projection" = ""
     op : string @description "The verb in flight: get, create, upsert, update, delete, list or find; empty while idle." = ""
     db : string = ""
+    writeCollections : Map string string @description "The declared collection per entity type the write batch in flight names" = {}
     docId : string = ""
     attempt : number @description "The write attempt in flight, from 1; 0 while idle." = 0
     row : CouchDoc @description "The document body the next write sends." = {}
@@ -106,14 +106,14 @@ orbital CouchdbOrbital {
         (set @entity.key @payload.key)
         (set @entity.entityType @payload.entityType)
         (set @entity.mode "read")
-        (set @entity.db (let ((et @payload.entityType) (b (array/find (array/reverse @config.collections) (fn x (= (object/get @x "entityType" "") @et))))) (if (!= @b null) (object/get @b "collection" "") (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+        (set @entity.db (let ((et @payload.entityType) (dc (default @payload.collection ""))) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
         (emit COUCH_GET { db: @entity.db, id: @payload.id })
 
       ROW_LIST -> idle
         (set @entity.key @payload.key)
         (set @entity.entityType @payload.entityType)
         (set @entity.mode "list")
-        (set @entity.db (let ((et @payload.entityType) (b (array/find (array/reverse @config.collections) (fn x (= (object/get @x "entityType" "") @et))))) (if (!= @b null) (object/get @b "collection" "") (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+        (set @entity.db (let ((et @payload.entityType) (dc (default @payload.collection ""))) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
         (emit COUCH_LIST { db: @entity.db })
 
       ROWS_ENSURE_INDEXES -> idle when (= (array/len @payload.indexes) 0)
@@ -125,7 +125,7 @@ orbital CouchdbOrbital {
         (set @entity.op "ensure")
         (set @entity.paths @payload.indexes)
         (set @entity.at 0)
-        (set @entity.db (let ((et @payload.entityType) (b (array/find (array/reverse @config.collections) (fn x (= (object/get @x "entityType" "") @et))))) (if (!= @b null) (object/get @b "collection" "") (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+        (set @entity.db (let ((et @payload.entityType) (dc "")) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
         (http PUT @config.origin (str/concat "/" (str/encode-uri-component @entity.db)) {
           headers: { Accept: "application/json" },
           auth: { scheme: basic, user: @config.userCredential, credential: @config.passwordCredential },
@@ -137,7 +137,7 @@ orbital CouchdbOrbital {
         (set @entity.entityType @payload.entityType)
         (set @entity.mode "query")
         (set @entity.project (if (= @payload.project "ids") "ids" "rows"))
-        (set @entity.db (let ((et @payload.entityType) (b (array/find (array/reverse @config.collections) (fn x (= (object/get @x "entityType" "") @et))))) (if (!= @b null) (object/get @b "collection" "") (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+        (set @entity.db (let ((et @payload.entityType) (dc (default @payload.collection ""))) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
         (let ((r (tree/fold { kind: "all", of: (array/concat (if (!= (object/get @payload.query "policy" null) null) [(object/get @payload.query "policy" null)] []) (if (!= (object/get @payload.query "filter" null) null) [(object/get @payload.query "filter" null)] [])) } (fn (n k)
           (let ((kind (object/get @n "kind" "")) (f (object/get @n "field" "")) (v (object/get @n "value" null)) (op (object/get @n "op" "")))
             (let ((sc (or (validate/string @v) (validate/number @v) (validate/boolean @v)))
@@ -201,6 +201,7 @@ orbital CouchdbOrbital {
       ROWS_WRITE -> idle when (and (not (array/some @payload.batch.ops (fn o (= (object/get @o "kind" "") "rekey")))) (not (and (= @payload.batch.onFailure "atomic") (not @config.writeCapabilities.atomicBatch))) (> (array/len @payload.batch.ops) 0))
         (set @entity.key @payload.key)
         (set @entity.mode "write")
+        (set @entity.writeCollections (default @payload.collections {}))
         (set @entity.ops @payload.batch.ops)
         (set @entity.at 0)
         (set @entity.outcomes [])
@@ -208,7 +209,7 @@ orbital CouchdbOrbital {
 
       COUCH_STEP -> idle
         (set @entity.entityType (object/get (array/nth @entity.ops @entity.at) "entityType" ""))
-        (set @entity.db (let ((et @entity.entityType) (b (array/find (array/reverse @config.collections) (fn x (= (object/get @x "entityType" "") @et))))) (if (!= @b null) (object/get @b "collection" "") (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+        (set @entity.db (let ((et @entity.entityType) (dc (object/get @entity.writeCollections @et ""))) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (array/nth @cs @i))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (array/nth @cs (- @i 1)) "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
         (emit COUCH_DISPATCH { })
       COUCH_DISPATCH -> idle when (= (object/get (array/nth @entity.ops @entity.at) "kind" "") "create")
         (emit COUCH_CREATE { db: @entity.db, id: (let ((i (object/get (object/get (array/nth @entity.ops @entity.at) "data" {}) "id" null))) (if (validate/string @i) @i "")), row: (object/get (array/nth @entity.ops @entity.at) "data" {}) })
@@ -797,12 +798,14 @@ orbital CouchdbOrbital {
         key : string!
         entityType : string!
         id : string!
+        collection : string
       }
         @description "Read one row of an entity type by id."
         @tier "internal"
       ROW_LIST -> input {
         key : string!
         entityType : string!
+        collection : string
       }
         @description "List every row of an entity type."
         @tier "internal"
@@ -811,6 +814,7 @@ orbital CouchdbOrbital {
         entityType : string!
         query : RowQuery!
         project : "rows" | "ids"
+        collection : string
       }
         @description "A query ask; the order, filter and window are translated to a Mango selector, or the ask is STORE_UNSUPPORTED."
         @tier "internal"
@@ -824,6 +828,7 @@ orbital CouchdbOrbital {
       ROWS_WRITE -> input {
         key : string!
         batch : RowWriteBatch!
+        collections : Map string string
       }
         @description "Apply a batch of create, upsert, update and delete ops in order, each conditioned on the _rev it read."
         @tier "internal"
@@ -840,11 +845,6 @@ orbital CouchdbOrbital {
     }
 
     config {
-      collections : [CollectionBinding] = []
-        @label "Declared collections"
-        @description "The database an entity type is bound to (the last binding of an entity type wins); an entity type not listed here is stored in the database named like its Postgres table (TimeEntry is time_entries)."
-        @synonyms "database names, collection map"
-        @tier "infra"
       queryCapabilities : QueryCapabilities = { leaves: ["compare", "member", "hasElement", "isNull"], combinators: ["all", "any", "not"], compareOps: ["==", "!=", "<", "<=", ">", ">="], operatorValueKinds: [{ operator: "<", valueKinds: ["number", "boolean", "null"] }, { operator: "<=", valueKinds: ["number", "boolean", "null"] }, { operator: ">", valueKinds: ["number", "boolean", "null"] }, { operator: ">=", valueKinds: ["number", "boolean", "null"] }], orderableFields: { kind: "listed", fields: ["id"] }, window: true, exactTotal: true, idsOnly: true, indexes: "runtime" }
         @description "What query the store pushes down as a Mango selector sorted on _id: no contains leaf, ordering comparisons only on numbers, booleans and null, order only by id."
         @tier "infra"

@@ -55,10 +55,10 @@ orbital RowStorePostgresSpec {
   type RolledBackOutcome = { kind : "rolled-back" }
   type RowWriteOutcome = CreatedOutcome | UpdatedOutcome | DeletedOutcome | NotFoundOutcome | DuplicateIdOutcome | RefusedOutcome | FailedOutcome | RolledBackOutcome
 
-  type RowReadVerb = { key : string!, entityType : string!, id : string! }
-  type RowListVerb = { key : string!, entityType : string! }
-  type RowsQueryVerb = { key : string!, entityType : string!, query : RowQuery!, project : "rows" | "ids" }
-  type RowsWriteVerb = { key : string!, batch : RowWriteBatch! }
+  type RowReadVerb = { key : string!, entityType : string!, id : string!, collection : string }
+  type RowListVerb = { key : string!, entityType : string!, collection : string }
+  type RowsQueryVerb = { key : string!, entityType : string!, query : RowQuery!, project : "rows" | "ids", collection : string }
+  type RowsWriteVerb = { key : string!, batch : RowWriteBatch!, collections : Map string string }
   type IndexPath = { fields : [string]!, orderBy : string? }
   type RowsEnsureIndexesVerb = { key : string!, entityType : string!, indexes : [IndexPath]! }
 
@@ -87,7 +87,8 @@ orbital RowStorePostgresSpec {
     nonce : string
     scram : string
     schema : SchemaCache
-    collections : Map string string
+    declared : string
+    writeCollections : Map string string
   }
 
   expects trait RowStoreDriver {

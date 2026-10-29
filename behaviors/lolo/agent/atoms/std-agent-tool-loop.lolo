@@ -41,7 +41,7 @@ type AgentToolCallActivity = {
   tool : string!
   kind : AgentToolKind
   argsText : string!
-  timestamp : number!
+  timestamp : instant!
   isExecuting : boolean
 }
 type AgentToolResultActivity = {
@@ -52,7 +52,7 @@ type AgentToolResultActivity = {
   detail : string
   rows : number
   resultText : string!
-  timestamp : number!
+  timestamp : instant!
 }
 type AgentLlmCall = {
   service : string!
@@ -72,7 +72,7 @@ type AgentLlmResponseActivity = {
   type : "llm_response"!
   content : string!
   llm : AgentLlmCall
-  timestamp : number!
+  timestamp : instant!
 }
 type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
 type AgentUsage = {
@@ -83,7 +83,7 @@ type AgentUsage = {
 }
 type LlmSchema = { type : string, additionalProperties : boolean, properties : Map string LlmSchema, required : [string], enum : [string], items : LlmSchema }
 type LlmToolDef = { name : string!, description : string!, parameters : LlmSchema! }
-type LlmToolOutcome = { id : string!, tool : string!, kind : "input" | "read" | "invalid"!, success : boolean!, detail : string, rows : number, content : string!, startedAt : number!, endedAt : number! }
+type LlmToolOutcome = { id : string!, tool : string!, kind : "input" | "read" | "invalid"!, success : boolean!, detail : string, rows : number, content : string!, startedAt : instant!, endedAt : instant! }
 type AgentToolBinding = {
   name : string!
   description : string!
@@ -151,7 +151,7 @@ orbital AgentToolLoopOrbital {
     results : [LlmToolOutcome] @description "What the calls answered so far." = []
     current : ToolCall @description "The call being executed."
     binding : AgentToolBinding @description "The tool the call being executed names."
-    callStartedAt : number @description "When the call being executed began." = 0
+    callStartedAt : instant @description "When the call being executed began."
   }
 
   trait LoopLlm = Llm.traits.LlmClient {
@@ -291,7 +291,7 @@ orbital AgentToolLoopOrbital {
       RUN_NEXT -> thinking when (>= @entity.cursor (array/len @entity.calls))
         (emit LLM_TOOLS_ANSWERED { session: @entity.session, results: @entity.results })
       RUN_NEXT -> running when (< @entity.cursor (array/len @entity.calls))
-        (set @entity.current (array/nth @entity.calls @entity.cursor))
+        (set @entity.current (default (array/nth @entity.calls @entity.cursor) { id: "", name: "" }))
         (set @entity.callStartedAt (time/now))
         (emit CALL_BEGIN {})
       CALL_BEGIN -> running when (= (array/count @entity.table (fn x (= @x.name @entity.current.name))) 0)

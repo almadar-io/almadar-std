@@ -34,10 +34,10 @@ def play(label, steps):
 def walk(label, spec, seeded):
     return play(label, [
         {'trait': 'MockSeed', 'event': 'CORPUS_IS', 'payload': {'words': ['oak', 'pine', 'elm']}},
-        {'trait': 'MockSeed', 'event': 'SEED_STREAM', 'payload': {'seed': 42, 'nowMs': 0}},
+        {'trait': 'MockSeed', 'event': 'SEED_STREAM', 'payload': {'seed': 42, 'nowMs': '1970-01-01T00:00:00.000Z'}},
         {'trait': 'MockSeed', 'event': 'WALK_START', 'payload': {
             'spec': spec, 'name': 'alias', 'entityName': 'Note', 'index': 1,
-            'seeded': seeded, 'runtime': False, 'nowMs': 0}},
+            'seeded': seeded, 'runtime': False, 'nowMs': '1970-01-01T00:00:00.000Z'}},
     ])
 
 
@@ -86,10 +86,10 @@ for label, event, extra in [('row-optional-even', 'WALK_ROW', {'index': 2}),
                 field['projectedFrom']['field'] = 'id'
         result = play(label + '-' + kind, [
             {'trait': 'MockSeed', 'event': 'CORPUS_IS', 'payload': {'words': ['oak', 'pine', 'elm']}},
-            {'trait': 'MockSeed', 'event': 'SEED_STREAM', 'payload': {'seed': 42, 'nowMs': 0}},
+            {'trait': 'MockSeed', 'event': 'SEED_STREAM', 'payload': {'seed': 42, 'nowMs': '1970-01-01T00:00:00.000Z'}},
             {'trait': 'MockSeed', 'event': event, 'payload': {'fields': [field],
                 'index': extra['index'], 'seeded': True, 'runtime': False,
-                'identity': False, 'entityName': 'Note', 'nowMs': 0}},
+                'identity': False, 'entityName': 'Note', 'nowMs': '1970-01-01T00:00:00.000Z'}},
         ])
         variants[kind] = [e['payload']['row'] for e in result if e['event'] == 'ROW_WALKED']
     passed = variants['plain'] == variants['named'] and variants['field'] == [{'alias': ''}]
@@ -116,7 +116,7 @@ for at_item in (False, True):
                         'fields': [field]}},
         ]}
         events = play(label + '-' + kind, [{'trait': 'MockSeed', 'event': 'DATASET_INPUT',
-            'payload': {'program': program, 'count': 2, 'seed': 42, 'nowMs': 0,
+            'payload': {'program': program, 'count': 2, 'seed': 42, 'nowMs': '1970-01-01T00:00:00.000Z',
                         'viewerId': '', 'ownerPairs': []}}])
         variants[kind] = [e['payload'] for e in events if e['event'] == 'DATASET_DONE']
     expected = ['source-id'] if at_item else 'source-id'

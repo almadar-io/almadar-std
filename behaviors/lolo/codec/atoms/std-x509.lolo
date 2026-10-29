@@ -61,7 +61,7 @@ orbital X509Orbital {
                   (cl (if (< @b 128) @b (if (= @b 129) (default (bytes/at @entity.der (+ @entity.pos 2)) -1) (default (bytes/read-uint @entity.der (+ @entity.pos 2) 2 "be") -1)))))
               (if (and (>= @cl 0) (<= (+ @entity.pos @hl @cl) (bytes/length @entity.der)))
                 (do
-                  (set @entity.tag (bytes/at @entity.der @entity.pos))
+                  (set @entity.tag (default (bytes/at @entity.der @entity.pos) 0))
                   (set @entity.hl @hl)
                   (set @entity.cl @cl)
                   (emit X509_ACT { at: @entity.pos }))

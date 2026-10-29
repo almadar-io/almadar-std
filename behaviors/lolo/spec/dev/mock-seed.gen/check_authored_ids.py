@@ -67,7 +67,7 @@ with tempfile.TemporaryDirectory(prefix='seed-authored-ids-') as temporary:
         program = {'orbitals': [{'entity': {'name': 'FixtureViewer', 'identity': True,
             'collection': 'accounts', 'fields': [{'name': 'id', 'type': 'string'}],
             'instances': [row]}}]}
-        payload = {'program': program, 'count': 1, 'seed': 1, 'nowMs': 0,
+        payload = {'program': program, 'count': 1, 'seed': 1, 'nowMs': '1970-01-01T00:00:00.000Z',
                    'viewerId': 'viewer', 'ownerPairs': []}
         result = execute(fixture, [{'trait': 'MockSeed', 'event': 'DATASET_INPUT',
                                     'payload': payload}])[0]
@@ -84,7 +84,7 @@ with tempfile.TemporaryDirectory(prefix='seed-authored-ids-') as temporary:
             'instances': [{'id': value}]}}, {'entity': {'name': 'Task', 'collection': 'tasks',
             'fields': [{'name': 'id', 'type': 'string'}, {'name': 'ownerRef', 'type': 'relation',
                 'relation': {'entity': 'FixtureViewer', 'cardinality': 'one'}}]}}]}
-        payload = {'program': program, 'count': 1, 'seed': 1, 'nowMs': 0, 'viewerId': 'viewer',
+        payload = {'program': program, 'count': 1, 'seed': 1, 'nowMs': '1970-01-01T00:00:00.000Z', 'viewerId': 'viewer',
                    'ownerPairs': [{'entity': 'Task', 'column': 'ownerRef'}]}
         result = execute(fixture, [{'trait': 'MockSeed', 'event': 'DATASET_INPUT',
                                     'payload': payload}])[0]

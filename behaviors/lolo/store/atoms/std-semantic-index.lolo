@@ -126,7 +126,7 @@ orbital SemanticIndexOrbital {
         (set @entity.semKey ?key)
         (set @entity.semPhase "prepare")
         (set @entity.semItems ?items)
-        (set @entity.semGraphIds (if (= ?otherGraphIds null) (json/parse "[]" SemanticStrings) ?otherGraphIds))
+        (set @entity.semGraphIds (default ?otherGraphIds []))
         (set @entity.semNodeTypes @config.canonicalTypes)
         (set @entity.semAnyGraph false)
         (set @entity.semAnyType (= (array/len @config.canonicalTypes) 0))
@@ -143,8 +143,8 @@ orbital SemanticIndexOrbital {
         (set @entity.semQuery ?query)
         (set @entity.semFloor (if (= ?floor null) @config.searchFloor ?floor))
         (set @entity.semK (math/clamp (if (= ?k null) @config.searchK ?k) 1 @config.maxK))
-        (set @entity.semGraphIds (if (= ?graphIds null) (json/parse "[]" SemanticStrings) ?graphIds))
-        (set @entity.semNodeTypes (if (= ?nodeTypes null) (json/parse "[]" SemanticStrings) ?nodeTypes))
+        (set @entity.semGraphIds (default ?graphIds []))
+        (set @entity.semNodeTypes (default ?nodeTypes []))
         (set @entity.semAnyGraph (or (= ?graphIds null) (= (array/len ?graphIds) 0)))
         (set @entity.semAnyType (or (= ?nodeTypes null) (= (array/len ?nodeTypes) 0)))
         (set @entity.semTexts [{ id: "query", text: ?query }])
@@ -190,7 +190,7 @@ orbital SemanticIndexOrbital {
         (set @entity.semNodeTypes (let ((noSemanticStrings : SemanticStrings [])) (object/get (array/first ?data) nodeTypes @noSemanticStrings)))
         (set @entity.semAnyGraph (object/get (array/first ?data) anyGraph true))
         (set @entity.semAnyType (object/get (array/first ?data) anyType true))
-        (set @entity.semResolutions (json/parse "[]" SemanticResolutions))
+        (set @entity.semResolutions [])
         (set @entity.semCursor 0)
         (set @entity.semPendingId (object/get (array/first ?data) id ""))
         (persist delete SemanticPending @entity.semPendingId { emit: { success: SemanticPendingDeleted, failure: SemanticStoreFailed } })
@@ -252,11 +252,11 @@ orbital SemanticIndexOrbital {
         (set @entity.semPhase "write")
         (set @entity.semModel (default ?model ""))
         (set @entity.semVectors ?embeddings)
-        (persist batch (array/map (array/range 0 (array/len @entity.semItems)) (fn i ["update" "SemanticRow" (object/get (default (array/nth @entity.semItems @i) {}) id "") { embedding: (array/nth ?embeddings @i), embeddedText: (object/get (default (array/nth @entity.semTexts @i) {}) text ""), embeddingModel: @entity.semModel }])) { emit: { success: SemanticWritten, failure: SemanticStoreFailed } })
+        (persist batch (array/map (array/range 0 (array/len @entity.semItems)) (fn i ["update" "SemanticRow" (object/get (default (array/nth @entity.semItems @i) {}) id "") { embedding: (default (array/nth ?embeddings @i) []), embeddedText: (object/get (default (array/nth @entity.semTexts @i) {}) text ""), embeddingModel: @entity.semModel }])) { emit: { success: SemanticWritten, failure: SemanticStoreFailed } })
 
       SemanticResume -> working when (and (= @entity.semPhase "embed") (= @entity.semOp "search") (> (array/len ?embeddings) 0))
         (set @entity.semPhase "search")
-        (set @entity.semQueryVector (array/first ?embeddings))
+        (set @entity.semQueryVector (default (array/first ?embeddings) []))
         (fetch SemanticRow {
           filter: (and (or @entity.semAnyGraph (array/includes (default @entity.semGraphIds []) (object/get @entity graphId))) (or @entity.semAnyType (array/includes (default @entity.semNodeTypes []) (object/get @entity nodeType)))),
           nearest: { field: "embedding", vector: (default (array/first ?embeddings) []), k: @entity.semK },

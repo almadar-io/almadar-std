@@ -57,7 +57,7 @@ type AgentToolCallActivity = {
   tool : string!
   kind : AgentToolKind
   argsText : string!
-  timestamp : number!
+  timestamp : instant!
   isExecuting : boolean
 }
 type AgentToolResultActivity = {
@@ -68,7 +68,7 @@ type AgentToolResultActivity = {
   detail : string
   rows : number
   resultText : string!
-  timestamp : number!
+  timestamp : instant!
 }
 type AgentLlmCall = {
   service : string!
@@ -88,7 +88,7 @@ type AgentLlmResponseActivity = {
   type : "llm_response"!
   content : string!
   llm : AgentLlmCall
-  timestamp : number!
+  timestamp : instant!
 }
 type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
 type AgentUsage = {
@@ -271,7 +271,7 @@ orbital LearnGenerateOrbital {
         (set @entity.roster (json/stringify ?roster))
       ASSISTANT_REPLIED -> done when (!= @entity.roster "")
         (set @entity.status done)
-        (emit GENERATED { behavior: @entity.chosen, mode: (array/last (str/split @entity.chosen "/")), roster: @entity.roster })
+        (emit GENERATED { behavior: @entity.chosen, mode: (default (array/last (str/split @entity.chosen "/")) ""), roster: @entity.roster })
       ASSISTANT_REPLIED -> failed when (= @entity.roster "")
         (set @entity.error "The model wrote no roster that matches the instrument")
         (set @entity.status failed)

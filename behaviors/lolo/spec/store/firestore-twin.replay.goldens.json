@@ -6334,6 +6334,69 @@
     }
    ],
    "note": "pair of control-query-order-on-a-field-the-filter-requires-runs: a result is the same with or without a declared path"
+  },
+  {
+   "id": "good-read-addresses-the-declared-collection-the-kernel-names",
+   "note": "G-ORB-556: a row verb naming the entity's declared [persistent: tbl] collection reads the document from that collection, not from the entity type name.",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "GraphGraphNode",
+      "id": "n1",
+      "collection": "graph_nodes"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "read",
+         "path": ":batchGet",
+         "body": {
+          "documents": [
+           "projects/demo-almadar/databases/(default)/documents/graph_nodes/n1"
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL read-without-a-declared-collection-keys-by-the-entity-type",
+   "note": "A verb without collection (the entity declares none) keeps keying by the entity type.",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "GraphGraphNode",
+      "id": "n1"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "read",
+         "path": ":batchGet",
+         "body": {
+          "documents": [
+           "projects/demo-almadar/databases/(default)/documents/GraphGraphNode/n1"
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

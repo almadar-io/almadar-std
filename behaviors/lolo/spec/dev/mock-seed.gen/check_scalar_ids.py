@@ -35,7 +35,7 @@ def entity(mode, value):
 def reset(mode):
     if mode == 'seed':
         return {'event': 'DATASET_INPUT', 'payload': {'program': program, 'count': 0,
-            'seed': 1, 'nowMs': 0, 'viewerId': '', 'ownerPairs': []}}
+            'seed': 1, 'nowMs': '1970-01-01T00:00:00.000Z', 'viewerId': '', 'ownerPairs': []}}
     return {'event': 'RESTAMP_INPUT', 'payload': {'program': program, 'stores': {},
         'journal': empty_journal, 'viewer': {'id': ''}, 'firstOwner': True}}
 

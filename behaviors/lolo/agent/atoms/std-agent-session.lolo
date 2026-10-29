@@ -15,17 +15,17 @@ type AgentLink = {
 type AgentChatRow = {
   id : string!
   title : string
-  lastActiveAt : number
+  lastActiveAt : instant
 }
 type AgentMemoryRow = {
   id : string!
   content : string!
-  createdAt : number
+  createdAt : instant
 }
 type AgentThreadRow = {
   role : "user" | "assistant"!
   content : string!
-  createdAt : number!
+  createdAt : instant!
 }
 type AgentToolScope = {
   scope : "declared"!
@@ -59,19 +59,19 @@ type AgentMessageEntry = {
   type : "message"!
   role : "user" | "assistant"!
   content : string!
-  timestamp : number!
+  timestamp : instant!
 }
 type AgentErrorEntry = {
   type : "error"!
   message : string!
-  timestamp : number!
+  timestamp : instant!
 }
 type AgentToolCallActivity = {
   type : "tool_call"!
   tool : string!
   kind : AgentToolKind
   argsText : string!
-  timestamp : number!
+  timestamp : instant!
   isExecuting : boolean
 }
 type AgentToolResultActivity = {
@@ -82,7 +82,7 @@ type AgentToolResultActivity = {
   detail : string
   rows : number
   resultText : string!
-  timestamp : number!
+  timestamp : instant!
 }
 type AgentLlmCall = {
   service : string!
@@ -102,7 +102,7 @@ type AgentLlmResponseActivity = {
   type : "llm_response"!
   content : string!
   llm : AgentLlmCall
-  timestamp : number!
+  timestamp : instant!
 }
 type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
 type AgentFeedEntry = AgentMessageEntry | AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity | AgentErrorEntry
@@ -126,7 +126,7 @@ orbital AgentSessionOrbital {
     ownerId : string! @description "Whose conversation this message belongs to (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
     role : "user" | "assistant" @description "Who said it." @synonyms "speaker, author" = user
     content : string! @description "What was said." @synonyms "text, message, body"
-    createdAt : number! @description "When it was said (ms)." @synonyms "time, timestamp" = 0
+    createdAt : instant! @description "When it was said." @synonyms "time, timestamp"
     chatId : string @description "The conversation this message belongs to (an AgentChat id)." @synonyms "conversation, thread, session" = ""
   }
   entity AgentMessageRetentionLog [runtime] {
@@ -134,7 +134,7 @@ orbital AgentSessionOrbital {
     headId : string = ""
     headStatus : string = ""
     status : string = ""
-    createdAt : number = 0
+    createdAt : instant
   }
 
   entity AgentConversationView [runtime] {
@@ -1415,10 +1415,9 @@ orbital AgentSessionOrbital {
     }
   }
 
-  trait AgentMessageRetention = Lifecycle.traits.LifecycleScheduler -> AgentMessageRetentionLog {
+  trait AgentMessageRetention = Lifecycle.traits.LifecycleRetention -> AgentMessageRetentionLog {
     config {
       enabled: true
-      action: delete
       targetEntity: AgentMessage
       dateField: createdAt
       ageDays: @config.keepDays
@@ -1447,8 +1446,8 @@ orbital AgentChatsOrbital {
     id : string!
     ownerId : string! @description "Whose conversation this is (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
     title : string @description "The conversation's first request, shown in the conversation list; empty until the first message." @synonyms "name, subject, topic" = ""
-    startedAt : number @description "When the conversation started (ms)." @synonyms "created, opened" = 0
-    lastActiveAt : number @description "When the conversation was last used (ms). The most recent one is the current conversation." @synonyms "last used, updated, recent" = 0
+    startedAt : instant @description "When the conversation started." @synonyms "created, opened"
+    lastActiveAt : instant @description "When the conversation was last used. The most recent one is the current conversation." @synonyms "last used, updated, recent"
     pendingMessage : string @intrinsic = ""
     pendingReply : string @intrinsic = ""
     page : number @intrinsic @description "The page the list shows." = 1
@@ -1458,7 +1457,7 @@ orbital AgentChatsOrbital {
     headId : string = ""
     headStatus : string = ""
     status : string = ""
-    lastActiveAt : number = 0
+    lastActiveAt : instant
   }
 
   ;; Which conversation is current: each person's most recently used AgentChat.
@@ -1893,10 +1892,9 @@ orbital AgentChatsOrbital {
     }
   }
 
-  trait AgentChatRetention = Lifecycle.traits.LifecycleScheduler -> AgentChatRetentionLog {
+  trait AgentChatRetention = Lifecycle.traits.LifecycleRetention -> AgentChatRetentionLog {
     config {
       enabled: true
-      action: delete
       targetEntity: AgentChat
       dateField: lastActiveAt
       ageDays: @config.keepDays

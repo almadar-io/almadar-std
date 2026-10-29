@@ -10,14 +10,14 @@ type SocialMemberStats = [SocialMemberStat]
 type SocialPeer = { peerRef : string, handle : string, conceptsCompleted : number, convergencePct : number, activeNow : boolean }
 type SocialPeers = [SocialPeer]
 type SocialViewBadge = { id : string, label : string, kind : string, active : boolean }
-type SocialViewMessage = { id : string, fromViewer : boolean, content : string, createdAt : number, flagged : boolean, moderationReason : string }
-type SocialConnectionRow = { id : string!, callerId : string, peerId : string, participants : [string], originKind : string, originId : string, badges : [SocialBadge], activeBadgeId : string, status : "active" | "archived", lastActivityAt : number, archivedAt : number }
+type SocialViewMessage = { id : string, fromViewer : boolean, content : string, createdAt : instant, flagged : boolean, moderationReason : string }
+type SocialConnectionRow = { id : string!, callerId : string, peerId : string, participants : [string], originKind : string, originId : string, badges : [SocialBadge], activeBadgeId : string, status : "active" | "archived", lastActivityAt : instant, archivedAt : instant }
 orbital SocialGraphOrbital {
   entity NodePresence [persistent: node_presence] {
     id : string!
     nodeKey : string @description "The node the member was on, as kind:id." @synonyms "topic key, node" = ""
     memberId : string @description "The member who was there." @synonyms "learner, user" = ""
-    lastSeenOnNode : number @description "Epoch milliseconds of the last visit." @synonyms "last seen, presence" = 0
+    lastSeenOnNode : instant @description "When the member last visited." @synonyms "last seen, presence"
     reqMember : string @intrinsic = ""
     reqKey : string @intrinsic = ""
     reqStats : [SocialMemberStat] @intrinsic
@@ -30,7 +30,7 @@ orbital SocialGraphOrbital {
     peerId : string @description "The member the token stands for." @synonyms "peer, target" = ""
     issuedTo : string @description "The member the token was issued to." @synonyms "holder, caller" = ""
     nodeKey : string @description "The node the token was issued on." @synonyms "topic key" = ""
-    expiresAt : number @description "Epoch milliseconds the token stops working." @synonyms "expiry" = 0
+    expiresAt : instant @description "When the token stops working." @synonyms "expiry"
   }
 
   entity SocialConnection [persistent: social_connections] {
@@ -43,8 +43,8 @@ orbital SocialGraphOrbital {
     badges : [SocialBadge] @description "The conversation topics on offer." @synonyms "topics, subtopics"
     activeBadgeId : string @description "The badge currently chosen." @synonyms "current badge, current topic" = ""
     status : "active" | "archived" = active
-    lastActivityAt : number @description "Epoch milliseconds of the last message or the opening." @synonyms "last activity" = 0
-    archivedAt : number @description "Epoch milliseconds the connection archived; 0 while active." @synonyms "archived time" = 0
+    lastActivityAt : instant @description "When the last message was sent or the connection opened." @synonyms "last activity"
+    archivedAt : instant @description "When the connection archived; absent while active." @synonyms "archived time"
     reqOp : string @intrinsic = ""
     reqMember : string @intrinsic = ""
     reqConnection : string @intrinsic = ""
@@ -80,7 +80,7 @@ orbital SocialGraphOrbital {
     connectionId : string @description "The connection the message belongs to." @synonyms "conversation" = ""
     senderId : string @description "The member who sent it." @synonyms "from, author" = ""
     content : string @description "The text." @synonyms "body, text" = ""
-    sentAt : number @description "Epoch milliseconds it was sent." @synonyms "sent time" = 0
+    sentAt : instant @description "When it was sent." @synonyms "sent time"
     badgeId : string @description "The badge active when it was sent." @synonyms "topic" = ""
     flagged : boolean @description "True when moderation scored it as off topic." @synonyms "off topic, moderated" = false
     moderationScore : number @description "Relevance from 0 to 1; 1 until scored." @synonyms "relevance" = 1
@@ -101,8 +101,8 @@ orbital SocialGraphOrbital {
       SOCIAL_PEERS -> loadingMembers when (array/some @config.nodeKinds (fn k (and (str/startsWith ?nodeKey (str/concat @k ":")) (> (str/len ?nodeKey) (+ (str/len @k) 1)))))
         (set @entity.reqMember ?memberId)
         (set @entity.reqKey ?nodeKey)
-        (set @entity.reqStats (if (= ?memberStats null) (json/parse "[]" SocialMemberStats) ?memberStats))
-        (fetch NodePresence { filter: (and (= (object/get @entity nodeKey) ?nodeKey) (>= (object/get @entity lastSeenOnNode) (- @now (* @config.peerWindowDays 86400000)))), limit: @config.maxPeerRows, emit: { success: PresenceLoaded, failure: PeerFailed } })
+        (set @entity.reqStats (default ?memberStats []))
+        (fetch NodePresence { filter: (and (= (object/get @entity nodeKey) ?nodeKey) (not (time/isBefore (object/get @entity lastSeenOnNode) (time/subtract @now @config.peerWindowDays "d")))), limit: @config.maxPeerRows, emit: { success: PresenceLoaded, failure: PeerFailed } })
       SOCIAL_PEERS -> idle when (not (array/some @config.nodeKinds (fn k (and (str/startsWith ?nodeKey (str/concat @k ":")) (> (str/len ?nodeKey) (+ (str/len @k) 1))))))
         (emit SOCIAL_REJECTED { reason: "bad-node-key" })
     }
@@ -132,7 +132,7 @@ orbital SocialGraphOrbital {
       INIT -> idle
       TokensDrawn -> issuing
         (set @entity.reqRandom ?value)
-        (persist batch (let ((mems (let ((noMems : [NodePresence] [])) (default @entity.reqMembers @noMems)))) (array/map (array/range 0 (array/len @mems)) (fn i ["create" "PeerToken" { id: (str/slice ?value (* @i (* @config.tokenBytes 4 (/ 1 3))) (* (+ @i 1) (* @config.tokenBytes 4 (/ 1 3)))), peerId: (object/get (default (array/nth @mems @i) {}) memberId ""), issuedTo: @entity.reqMember, nodeKey: @entity.reqKey, expiresAt: (+ @now @config.tokenTtlMs) }]))) { emit: { success: TokensStored, failure: PeerFailed } })
+        (persist batch (let ((mems (let ((noMems : [NodePresence] [])) (default @entity.reqMembers @noMems)))) (array/map (array/range 0 (array/len @mems)) (fn i ["create" "PeerToken" { id: (str/slice ?value (* @i (* @config.tokenBytes 4 (/ 1 3))) (* (+ @i 1) (* @config.tokenBytes 4 (/ 1 3)))), peerId: (object/get (default (array/nth @mems @i) {}) memberId ""), issuedTo: @entity.reqMember, nodeKey: @entity.reqKey, expiresAt: (time/add @now @config.tokenTtlMs "ms") }]))) { emit: { success: TokensStored, failure: PeerFailed } })
       PeerFailed -> idle
         (emit SOCIAL_FAILED { error: ?error })
     }
@@ -151,8 +151,8 @@ orbital SocialGraphOrbital {
                     handle: (str/concat "peer-" (str/slice (default (hash/sha256 (object/get @vm memberId "") "hex") "") 0 6))
                     conceptsCompleted: (object/get @vstat completed 0)
                     convergencePct: @vpct
-                    activeNow: (<= (- @now (object/get @vm lastSeenOnNode 0)) (* @config.activeNowMinutes 60000))
-                    rank: (+ (* 2 @vpct) (if (<= (- @now (object/get @vm lastSeenOnNode 0)) (* @config.activeNowMinutes 60000)) 1 0))
+                    activeNow: (<= (time/diff @now (object/get @vm lastSeenOnNode @config.epoch) "ms") (* @config.activeNowMinutes 60000))
+                    rank: (+ (* 2 @vpct) (if (<= (time/diff @now (object/get @vm lastSeenOnNode @config.epoch) "ms") (* @config.activeNowMinutes 60000)) 1 0))
                   }))))
             rank desc) (fn p { peerRef: (object/get @p peerRef ""), handle: (object/get @p handle ""), conceptsCompleted: (object/get @p conceptsCompleted 0), convergencePct: (object/get @p convergencePct 0), activeNow: (object/get @p activeNow false) })))
         })
@@ -239,6 +239,9 @@ orbital SocialGraphOrbital {
         @description "The kinds a node key may start with; a key is kind:id."
         @synonyms "key prefixes, node types"
         @tier "domain"
+      epoch : instant = "1970-01-01T00:00:00.000Z"
+        @description "Stands in for a stored time that is absent, so it reads as long ago."
+        @tier "infra"
       peerWindowDays : number = 7
         @label "Peer window in days"
         @description "A member last seen on a node longer ago than this is not offered as a peer."
@@ -308,11 +311,11 @@ orbital SocialGraphOrbital {
 
       SOCIAL_BADGES_PROVIDED -> loadingPending
         (set @entity.reqOp "badges")
-        (set @entity.reqLabels ?labels)
+        (set @entity.reqLabels (default ?labels []))
         (fetch SocialPending { filter: (= (object/get @entity id) ?key), limit: 1, emit: { success: PendingLoaded, failure: ConnFailed } })
       SOCIAL_BADGES_FAILED -> loadingPending
         (set @entity.reqOp "badges")
-        (set @entity.reqLabels (json/parse "[]" SocialStrings))
+        (set @entity.reqLabels [])
         (fetch SocialPending { filter: (= (object/get @entity id) ?key), limit: 1, emit: { success: PendingLoaded, failure: ConnFailed } })
       SOCIAL_MODERATION_SCORED -> loadingPending
         (set @entity.reqOp "scored")
@@ -336,16 +339,16 @@ orbital SocialGraphOrbital {
       INIT -> idle
       TokenLoaded -> idle when (= (array/len ?data) 0)
         (emit SOCIAL_CONNECTION_REJECTED { reason: "invalid-peer-ref" })
-      TokenLoaded -> idle when (and (> (array/len ?data) 0) (< (object/get (array/first ?data) expiresAt 0) @now))
+      TokenLoaded -> idle when (and (> (array/len ?data) 0) (time/isBefore (object/get (array/first ?data) expiresAt @config.epoch) @now))
         (persist delete PeerToken @entity.reqPeerRef { emit: { success: TokenDeleted, failure: ConnFailed } })
         (emit SOCIAL_CONNECTION_REJECTED { reason: "invalid-peer-ref" })
-      TokenLoaded -> idle when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (!= (object/get (array/first ?data) issuedTo "") @entity.reqMember))
+      TokenLoaded -> idle when (and (> (array/len ?data) 0) (not (time/isBefore (object/get (array/first ?data) expiresAt @config.epoch) @now)) (!= (object/get (array/first ?data) issuedTo "") @entity.reqMember))
         (emit SOCIAL_CONNECTION_REJECTED { reason: "invalid-peer-ref" })
-      TokenLoaded -> idle when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (= (object/get (array/first ?data) issuedTo "") @entity.reqMember) (= (object/get (array/first ?data) peerId "") @entity.reqMember))
+      TokenLoaded -> idle when (and (> (array/len ?data) 0) (not (time/isBefore (object/get (array/first ?data) expiresAt @config.epoch) @now)) (= (object/get (array/first ?data) issuedTo "") @entity.reqMember) (= (object/get (array/first ?data) peerId "") @entity.reqMember))
         (emit SOCIAL_CONNECTION_REJECTED { reason: "self-connection" })
-      TokenLoaded -> idle when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (= (object/get (array/first ?data) issuedTo "") @entity.reqMember) (!= (object/get (array/first ?data) peerId "") @entity.reqMember) @config.badgesFromLlm)
+      TokenLoaded -> idle when (and (> (array/len ?data) 0) (not (time/isBefore (object/get (array/first ?data) expiresAt @config.epoch) @now)) (= (object/get (array/first ?data) issuedTo "") @entity.reqMember) (!= (object/get (array/first ?data) peerId "") @entity.reqMember) @config.badgesFromLlm)
         (persist create SocialPending { id: (str/concat "social-badges:" @entity.reqPeerRef), kind: "badges", memberId: @entity.reqMember, peerId: (object/get (array/first ?data) peerId ""), originKind: @entity.reqOriginKind, originId: @entity.reqOriginId } { emit: { success: PendingStored, failure: ConnFailed } })
-      TokenLoaded -> opening when (and (> (array/len ?data) 0) (>= (object/get (array/first ?data) expiresAt 0) @now) (= (object/get (array/first ?data) issuedTo "") @entity.reqMember) (!= (object/get (array/first ?data) peerId "") @entity.reqMember) (not @config.badgesFromLlm))
+      TokenLoaded -> opening when (and (> (array/len ?data) 0) (not (time/isBefore (object/get (array/first ?data) expiresAt @config.epoch) @now)) (= (object/get (array/first ?data) issuedTo "") @entity.reqMember) (!= (object/get (array/first ?data) peerId "") @entity.reqMember) (not @config.badgesFromLlm))
         (set @entity.reqPeerId (object/get (array/first ?data) peerId ""))
         (set @entity.pendingId "")
         (emit BadgesReady { labels: [@entity.reqOriginId] })
@@ -362,11 +365,10 @@ orbital SocialGraphOrbital {
           participants: [@entity.reqMember @entity.reqPeerId]
           originKind: @entity.reqOriginKind
           originId: @entity.reqOriginId
-          badges: (array/map (array/range 0 (array/len ?labels)) (fn i { id: (str/concat "b" @i), label: (array/nth ?labels @i), kind: "subtopic" }))
+          badges: (array/map (array/range 0 (array/len ?labels)) (fn i { id: (str/concat "b" @i), label: (default (array/nth ?labels @i) ""), kind: "subtopic" }))
           activeBadgeId: "b0"
           status: "active"
           lastActivityAt: @now
-          archivedAt: 0
         } { emit: { success: ConnCreated, failure: ConnFailed } })
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
@@ -405,11 +407,11 @@ orbital SocialGraphOrbital {
       INIT -> idle
       ConnLoaded -> idle when (not (and (> (array/len ?data) 0) (array/includes (let ((noSocialStrings : SocialStrings [])) (object/get (array/first ?data) participants @noSocialStrings)) @entity.reqMember)))
         (emit SOCIAL_CONNECTION_REJECTED { reason: "not-found" })
-      ConnLoaded -> archiving when (and (and (> (array/len ?data) 0) (array/includes (let ((noSocialStrings : SocialStrings [])) (object/get (array/first ?data) participants @noSocialStrings)) @entity.reqMember)) (and (= (object/get (array/first ?data) status "") "active") (>= (- @now (object/get (array/first ?data) lastActivityAt 0)) (* @config.dormantDays 86400000))))
+      ConnLoaded -> archiving when (and (and (> (array/len ?data) 0) (array/includes (let ((noSocialStrings : SocialStrings [])) (object/get (array/first ?data) participants @noSocialStrings)) @entity.reqMember)) (and (= (object/get (array/first ?data) status "") "active") (>= (time/diff @now (object/get (array/first ?data) lastActivityAt @config.epoch) "ms") (* @config.dormantDays 86400000))))
         (set @entity.scratchConn ?data)
         (set @entity.scratchStatus "archived")
         (persist update SocialConnection { id: @entity.reqConnection, status: "archived", archivedAt: @now } { emit: { success: ConnArchived, failure: ConnFailed } })
-      ConnLoaded -> routing when (and (and (> (array/len ?data) 0) (array/includes (let ((noSocialStrings : SocialStrings [])) (object/get (array/first ?data) participants @noSocialStrings)) @entity.reqMember)) (not (and (= (object/get (array/first ?data) status "") "active") (>= (- @now (object/get (array/first ?data) lastActivityAt 0)) (* @config.dormantDays 86400000)))))
+      ConnLoaded -> routing when (and (and (> (array/len ?data) 0) (array/includes (let ((noSocialStrings : SocialStrings [])) (object/get (array/first ?data) participants @noSocialStrings)) @entity.reqMember)) (not (and (= (object/get (array/first ?data) status "") "active") (>= (time/diff @now (object/get (array/first ?data) lastActivityAt @config.epoch) "ms") (* @config.dormantDays 86400000)))))
         (set @entity.scratchConn ?data)
         (set @entity.scratchStatus (object/get (array/first ?data) status ""))
         (emit ConnReady)
@@ -466,7 +468,7 @@ orbital SocialGraphOrbital {
             originLabel: (object/get @vconn originId "")
             badges: (array/map (let ((noSocialBadges : SocialBadges [])) (object/get @vconn badges @noSocialBadges)) (fn b { id: (object/get @b id ""), label: (object/get @b label ""), kind: (object/get @b kind ""), active: (= (object/get @b id "") (object/get @vconn activeBadgeId "")) }))
             totalCount: ?totalCount
-            messages: (array/map (array/sort ?data "sentAt" "asc") (fn m { id: (object/get @m id ""), fromViewer: (= (object/get @m senderId "") @entity.reqMember), content: (object/get @m content ""), createdAt: (object/get @m sentAt 0), flagged: (object/get @m flagged false), moderationReason: (object/get @m moderationReason "") }))
+            messages: (array/map (array/sort ?data "sentAt" "asc") (fn m { id: (object/get @m id ""), fromViewer: (= (object/get @m senderId "") @entity.reqMember), content: (object/get @m content ""), createdAt: (object/get @m sentAt @config.epoch), flagged: (object/get @m flagged false), moderationReason: (object/get @m moderationReason "") }))
           })))
       ConnFailed -> idle
         (emit SOCIAL_CONNECTION_FAILED { error: ?error })
@@ -725,6 +727,9 @@ orbital SocialGraphOrbital {
         @description "Newest messages one SOCIAL_VIEW returns (shown oldest first); totalCount in SOCIAL_VIEWED says how many are stored, and a composed std-pagination reads later pages through REFETCH_PAGE."
         @synonyms "fetch limit, records per page, batch size, page limit"
         @tier "presentation"
+      epoch : instant = "1970-01-01T00:00:00.000Z"
+        @description "Stands in for a stored time that is absent, so it reads as long ago."
+        @tier "infra"
       dormantDays : number = 7
         @label "Dormant days"
         @description "A connection with no activity for this many days archives the next time it is read."

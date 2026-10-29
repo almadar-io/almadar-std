@@ -3,7 +3,7 @@ app rate-limiter-ip-spec [
   description: "Design contract for the per-client fixed-window rate limiter: each client address has its own window, a counted request adds exactly one to its client's window, and the answer is ADMITTED { requestId, remaining, resetIn, limit, window, counted } or THROTTLED { requestId, resetIn, limit, window }. A request with no address, or a disabled limiter, is admitted uncounted with counted false, so the server sends no ratelimit headers."
 ]
 
-type RateKey = { ip : string!, count : number!, windowStart : number! }
+type RateKey = { ip : string!, count : number!, windowStart : instant! }
 
 orbital RateLimiterIpSpec {
   expects entity RateClient [runtime] {
