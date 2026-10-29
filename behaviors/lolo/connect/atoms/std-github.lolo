@@ -48,7 +48,7 @@ orbital GithubOrbital {
           timeoutMs: @config.timeoutMs
         } { emit: { success: GITHUB_CREATE_PR_REPLIED, failure: GITHUB_CREATE_PR_UNREACHABLE } })
       GITHUB_CREATE_PR -> idle when (or (= @config.owner "") (= @config.repo ""))
-        (emit GITHUB_CREATE_PR_FAILED { code: null, message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
+        (emit GITHUB_CREATE_PR_FAILED { message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
       GITHUB_CREATE_PR_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (let ((pr (json/parse @payload.body GithubPull)))
           (emit GITHUB_PR_CREATED { number: @pr.number, url: @pr.url, html_url: @pr.html_url, title: @pr.title, state: @pr.state, draft: @pr.draft, head: @pr.head, base: @pr.base }))
@@ -67,7 +67,7 @@ orbital GithubOrbital {
           timeoutMs: @config.timeoutMs
         } { emit: { success: GITHUB_GET_PR_COMMENTS_REPLIED, failure: GITHUB_GET_PR_COMMENTS_UNREACHABLE } })
       GITHUB_GET_PR_COMMENTS -> idle when (or (= @config.owner "") (= @config.repo ""))
-        (emit GITHUB_GET_PR_COMMENTS_FAILED { code: null, message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
+        (emit GITHUB_GET_PR_COMMENTS_FAILED { message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
       GITHUB_GET_PR_COMMENTS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (emit GITHUB_PR_COMMENTS { comments: (json/parse @payload.body [GithubComment]) })
       GITHUB_GET_PR_COMMENTS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
@@ -85,7 +85,7 @@ orbital GithubOrbital {
           timeoutMs: @config.timeoutMs
         } { emit: { success: GITHUB_LIST_ISSUES_REPLIED, failure: GITHUB_LIST_ISSUES_UNREACHABLE } })
       GITHUB_LIST_ISSUES -> idle when (or (= @config.owner "") (= @config.repo ""))
-        (emit GITHUB_LIST_ISSUES_FAILED { code: null, message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
+        (emit GITHUB_LIST_ISSUES_FAILED { message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
       GITHUB_LIST_ISSUES_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (emit GITHUB_ISSUES { issues: (json/parse @payload.body [GithubIssue]) })
       GITHUB_LIST_ISSUES_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
@@ -103,7 +103,7 @@ orbital GithubOrbital {
           timeoutMs: @config.timeoutMs
         } { key: (str/concat @payload.issueNumber), emit: { success: GITHUB_GET_ISSUE_REPLIED, failure: GITHUB_GET_ISSUE_UNREACHABLE } })
       GITHUB_GET_ISSUE -> idle when (or (= @config.owner "") (= @config.repo ""))
-        (emit GITHUB_GET_ISSUE_FAILED { code: null, message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
+        (emit GITHUB_GET_ISSUE_FAILED { message: "GitHub owner and repo must be configured. Either set GITHUB_OWNER/GITHUB_REPO or clone a repository first." })
       GITHUB_GET_ISSUE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (http GET @config.origin (str/concat "/repos/" @config.owner "/" @config.repo "/issues/" @payload.key "/comments") {
           headers: { Accept: "application/vnd.github+json", X-GitHub-Api-Version: @config.apiVersion },

@@ -6,9 +6,9 @@ app std-otel [
 type OtelAttrValue = string | number | boolean
 type OtelSpanDraw = { name : string!, traceId : string, parentSpanId : string, kind : number, attributes : Map string OtelAttrValue }
 type OtelMetricDraw = { name : string!, metricType : string, value : number, unit : string, labels : Map string OtelAttrValue }
-type OtelSpanRow = { id : string!, traceId : string, parentSpanId : string, name : string, kind : number, startTime : number, endTime : number, status : string, statusMessage : string, attributes : Map string OtelAttrValue }
-type OtelEventView = { name : string!, timestamp : number!, attributes : Map string OtelAttrValue }
-type OtelSpanView = { spanId : string!, traceId : string!, name : string!, startTime : number!, endTime : number, status : string, attributes : Map string OtelAttrValue, events : [OtelEventView] }
+type OtelSpanRow = { id : string!, traceId : string, parentSpanId : string, name : string, kind : number, startTime : instant, endTime : instant?, status : string, statusMessage : string, attributes : Map string OtelAttrValue }
+type OtelEventView = { name : string!, timestamp : instant!, attributes : Map string OtelAttrValue }
+type OtelSpanView = { spanId : string!, traceId : string!, name : string!, startTime : instant!, endTime : instant?, status : string, attributes : Map string OtelAttrValue, events : [OtelEventView] }
 type OtelMetricView = { name : string!, metricType : string!, value : number!, values : [number], labels : Map string OtelAttrValue }
 type OtelSendKey = { signal : string, spanIds : [string], eventIds : [string], metricId : string }
 uses Lifecycle from "std/behaviors/std-lifecycle"
@@ -27,20 +27,20 @@ orbital OtelOrbital {
     parentSpanId : string = ""
     name : string!
     kind : number = 1
-    startTime : number!
-    endTime : number = 0
+    startTime : instant!
+    endTime : instant = "1970-01-01T00:00:00.000Z"
     state : "open" | "ending" | "exported" = open
     status : string = ""
     statusMessage : string = ""
     attributes : Map string OtelAttrValue = {}
-    lastEventTime : number = 0
+    lastEventTime : instant?
   }
 
   entity OtelSpanEvent [persistent: otel_span_events] {
     id : string!
     spanId : string!
     name : string!
-    timestamp : number!
+    timestamp : instant!
     attributes : Map string OtelAttrValue = {}
     shipped : boolean = false
   }
@@ -52,7 +52,7 @@ orbital OtelOrbital {
     value : number = 0
     unit : string = ""
     labels : Map string OtelAttrValue = {}
-    timestamp : number!
+    timestamp : instant!
     exported : boolean = false
   }
 
@@ -96,7 +96,7 @@ orbital OtelOrbital {
         (let ((spanHash (hash/sha256 (str/concat @payload.value "span") "hex")) (traceHash (hash/sha256 (str/concat @payload.value "trace") "hex")))
           (if (or (== @spanHash null) (== @traceHash null))
             (emit OTEL_EXPORT_FAILED { signal: "traces", kind: "random", error: "the drawn random bytes could not be hashed" })
-            (let ((d (json/parse @payload.key OtelSpanDraw)) (spanId (str/slice @spanHash 0 16)) (traceId (if (!= (object/get (json/parse @payload.key OtelSpanDraw) traceId "") "") (object/get (json/parse @payload.key OtelSpanDraw) traceId "") (str/slice @traceHash 0 32))))
+            (let ((d (default (json/parse @payload.key OtelSpanDraw) {})) (spanId (str/slice @spanHash 0 16)) (traceId (if (!= (object/get (default (json/parse @payload.key OtelSpanDraw) {}) traceId "") "") (object/get (default (json/parse @payload.key OtelSpanDraw) {}) traceId "") (str/slice @traceHash 0 32))))
           (do (persist create OtelSpan {
             id: @spanId,
             traceId: @traceId,
@@ -163,11 +163,11 @@ orbital OtelOrbital {
                     spanId: @s.id,
                     name: @s.name,
                     kind: @s.kind,
-                    startTimeUnixNano: (str/concat @s.startTime "000000"),
-                    endTimeUnixNano: (str/concat @s.endTime "000000"),
+                    startTimeUnixNano: (str/concat (time/diff @s.startTime @config.epoch "ms") "000000"),
+                    endTimeUnixNano: (str/concat (time/diff @s.endTime @config.epoch "ms") "000000"),
                     attributes: (let ((m (object/mapValues @s.attributes (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) }))),
                     events: (array/map (array/filter @evs (fn ev (= @ev.spanId @s.id))) (fn ev {
-                      timeUnixNano: (str/concat @ev.timestamp "000000"),
+                      timeUnixNano: (str/concat (time/diff @ev.timestamp @config.epoch "ms") "000000"),
                       name: @ev.name,
                       attributes: (let ((m (object/mapValues @ev.attributes (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) })))
                     })),
@@ -187,7 +187,7 @@ orbital OtelOrbital {
         (let ((idHash (hash/sha256 (str/concat @payload.value "metric") "hex")))
           (if (== @idHash null)
             (emit OTEL_EXPORT_FAILED { signal: "metrics", kind: "random", error: "the drawn random bytes could not be hashed" })
-            (let ((d (json/parse @payload.key OtelMetricDraw)) (id (str/slice @idHash 0 32)) (now (time/now)))
+            (let ((d (default (json/parse @payload.key OtelMetricDraw) {})) (id (str/slice @idHash 0 32)) (now (time/now)))
           (do (persist create OtelMetric {
             id: @id,
             name: (object/get @d name ""),
@@ -209,10 +209,10 @@ orbital OtelOrbital {
                 metrics: [(object/merge
                   { name: (object/get @d name ""), unit: (object/get @d unit "") }
                   (if (= (object/get @d metricType "counter") "gauge")
-                    { gauge: { dataPoints: [{ attributes: (let ((m (object/mapValues (object/get @d labels {}) (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) }))), timeUnixNano: (str/concat @now "000000"), asDouble: (object/get @d value 0) }] } }
+                    { gauge: { dataPoints: [{ attributes: (let ((m (object/mapValues (object/get @d labels {}) (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) }))), timeUnixNano: (str/concat (time/diff @now @config.epoch "ms") "000000"), asDouble: (object/get @d value 0) }] } }
                     (if (= (object/get @d metricType "counter") "histogram")
-                      { histogram: { aggregationTemporality: 1, dataPoints: [{ attributes: (let ((m (object/mapValues (object/get @d labels {}) (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) }))), startTimeUnixNano: (str/concat @now "000000"), timeUnixNano: (str/concat @now "000000"), count: "1", sum: (object/get @d value 0), min: (object/get @d value 0), max: (object/get @d value 0), bucketCounts: ["1"], explicitBounds: [] }] } }
-                      { sum: { aggregationTemporality: 1, isMonotonic: true, dataPoints: [{ attributes: (let ((m (object/mapValues (object/get @d labels {}) (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) }))), startTimeUnixNano: (str/concat @now "000000"), timeUnixNano: (str/concat @now "000000"), asDouble: (object/get @d value 0) }] } })))]
+                      { histogram: { aggregationTemporality: 1, dataPoints: [{ attributes: (let ((m (object/mapValues (object/get @d labels {}) (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) }))), startTimeUnixNano: (str/concat (time/diff @now @config.epoch "ms") "000000"), timeUnixNano: (str/concat (time/diff @now @config.epoch "ms") "000000"), count: "1", sum: (object/get @d value 0), min: (object/get @d value 0), max: (object/get @d value 0), bucketCounts: ["1"], explicitBounds: [] }] } }
+                      { sum: { aggregationTemporality: 1, isMonotonic: true, dataPoints: [{ attributes: (let ((m (object/mapValues (object/get @d labels {}) (fn v (if (validate/string @v) { stringValue: @v } (if (validate/boolean @v) { boolValue: @v } (if (not (str/includes (json/stringify @v) ".")) { intValue: (json/stringify @v) } { doubleValue: @v }))))))) (array/map (array/range (array/len (object/keys @m))) (fn i { key: (array/nth (object/keys @m) @i), value: (array/nth (object/values @m) @i) }))), startTimeUnixNano: (str/concat (time/diff @now @config.epoch "ms") "000000"), timeUnixNano: (str/concat (time/diff @now @config.epoch "ms") "000000"), asDouble: (object/get @d value 0) }] } })))]
               }]
             }] })
           })))))
@@ -235,17 +235,17 @@ orbital OtelOrbital {
           timeoutMs: @config.timeoutMs
         } { key: @payload.key, emit: { success: OTEL_REPLIED, failure: OTEL_SEND_FAILED } })
       OTEL_SEND_FAILED -> idle
-        (emit OTEL_EXPORT_FAILED { signal: (object/get (json/parse @payload.key OtelSendKey) signal ""), kind: @payload.kind, error: @payload.error })
+        (emit OTEL_EXPORT_FAILED { signal: (object/get (default (json/parse (default @payload.key "") OtelSendKey) {}) signal ""), kind: @payload.kind, error: @payload.error })
       OTEL_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
-        (emit OTEL_EXPORT_FAILED { signal: (object/get (json/parse @payload.key OtelSendKey) signal ""), kind: "rejected", status: @payload.status, error: @payload.body })
-      OTEL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (json/parse @payload.key OtelSendKey) signal "") "traces") (= (array/count (object/get (json/parse @payload.key OtelSendKey) eventIds [])) 0))
-        (persist batch (array/map (object/get (json/parse @payload.key OtelSendKey) spanIds []) (fn id ["update", "OtelSpan", @id, { state: "exported" }])) { emit: { success: OTEL_TRACES_MARKED, failure: OTEL_MARK_FAILED } })
-        (emit OTEL_EXPORTED { signal: "traces", count: (array/count (object/get (json/parse @payload.key OtelSendKey) spanIds [])) })
-      OTEL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (json/parse @payload.key OtelSendKey) signal "") "traces") (> (array/count (object/get (json/parse @payload.key OtelSendKey) eventIds [])) 0))
-        (persist batch (array/concat (array/map (object/get (json/parse @payload.key OtelSendKey) spanIds []) (fn id ["update", "OtelSpan", @id, { state: "exported" }])) (array/map (object/get (json/parse @payload.key OtelSendKey) eventIds []) (fn id ["update", "OtelSpanEvent", @id, { shipped: true }]))) { emit: { success: OTEL_TRACES_MARKED, failure: OTEL_MARK_FAILED } })
-        (emit OTEL_EXPORTED { signal: "traces", count: (array/count (object/get (json/parse @payload.key OtelSendKey) spanIds [])) })
-      OTEL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (json/parse @payload.key OtelSendKey) signal "") "metrics"))
-        (persist update OtelMetric { id: (object/get (json/parse @payload.key OtelSendKey) metricId ""), exported: true } { emit: { success: OTEL_METRIC_MARKED, failure: OTEL_MARK_FAILED } })
+        (emit OTEL_EXPORT_FAILED { signal: (object/get (default (json/parse (default @payload.key "") OtelSendKey) {}) signal ""), kind: "rejected", status: @payload.status, error: @payload.body })
+      OTEL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (default (json/parse (default @payload.key "") OtelSendKey) {}) signal "") "traces") (= (array/count (object/get (default (json/parse (default @payload.key "") OtelSendKey) {}) eventIds [])) 0))
+        (persist batch (array/map (object/get (default (json/parse (default @payload.key "") OtelSendKey) {}) spanIds []) (fn id ["update", "OtelSpan", @id, { state: "exported" }])) { emit: { success: OTEL_TRACES_MARKED, failure: OTEL_MARK_FAILED } })
+        (emit OTEL_EXPORTED { signal: "traces", count: (array/count (object/get (default (json/parse (default @payload.key "") OtelSendKey) {}) spanIds [])) })
+      OTEL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (default (json/parse (default @payload.key "") OtelSendKey) {}) signal "") "traces") (> (array/count (object/get (default (json/parse (default @payload.key "") OtelSendKey) {}) eventIds [])) 0))
+        (persist batch (array/concat (array/map (object/get (default (json/parse (default @payload.key "") OtelSendKey) {}) spanIds []) (fn id ["update", "OtelSpan", @id, { state: "exported" }])) (array/map (object/get (default (json/parse (default @payload.key "") OtelSendKey) {}) eventIds []) (fn id ["update", "OtelSpanEvent", @id, { shipped: true }]))) { emit: { success: OTEL_TRACES_MARKED, failure: OTEL_MARK_FAILED } })
+        (emit OTEL_EXPORTED { signal: "traces", count: (array/count (object/get (default (json/parse (default @payload.key "") OtelSendKey) {}) spanIds [])) })
+      OTEL_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (default (json/parse (default @payload.key "") OtelSendKey) {}) signal "") "metrics"))
+        (persist update OtelMetric { id: (object/get (default (json/parse (default @payload.key "") OtelSendKey) {}) metricId ""), exported: true } { emit: { success: OTEL_METRIC_MARKED, failure: OTEL_MARK_FAILED } })
         (emit OTEL_EXPORTED { signal: "metrics", count: 1 })
       OTEL_TRACES_MARKED -> idle when @entity.moreSpans
         (set @entity.moreSpans false)
@@ -268,7 +268,7 @@ orbital OtelOrbital {
       OTEL_SPAN_EVENTS_LOADED -> idle
         (let ((s (array/first @entity.spans))
               (evs (array/map @payload.data (fn ev { name: @ev.name, timestamp: @ev.timestamp, attributes: @ev.attributes }))))
-          (if (!= @s.endTime 0)
+          (if (!= @s.endTime @config.epoch)
             (if (!= @s.status "")
               (emit GET_SPAN_RESULT { found: true, span: { spanId: @s.id, traceId: @s.traceId, name: @s.name, startTime: @s.startTime, attributes: @s.attributes, events: @evs, endTime: @s.endTime, status: @s.status } })
               (emit GET_SPAN_RESULT { found: true, span: { spanId: @s.id, traceId: @s.traceId, name: @s.name, startTime: @s.startTime, attributes: @s.attributes, events: @evs, endTime: @s.endTime } }))
@@ -287,7 +287,7 @@ orbital OtelOrbital {
               (if (= (object/get @m metricType "counter") "counter") { value: (+ (object/get @acc value 0) (object/get @m value 0)), values: (object/get @acc values []) }
                 (if (= (object/get @m metricType "counter") "gauge") { value: (object/get @m value 0), values: (object/get @acc values []) }
                   { value: (object/get @acc value 0), values: (array/append (object/get @acc values []) (object/get @m value 0)) }))))))
-              { name: @n, metricType: (object/get (array/first @rows) metricType "counter"), value: (object/get @acc value 0), values: (object/get @acc values []), labels: (object/get (array/last @rows) labels {}) })))) })
+              { name: @n, metricType: (object/get (default (array/first @rows) {}) metricType "counter"), value: (object/get @acc value 0), values: (object/get @acc values []), labels: (object/get (default (array/last @rows) {}) labels {}) })))) })
       OTEL_READ_FAILED -> idle
         (emit OTEL_EXPORT_FAILED { signal: "store", kind: "store", error: @payload.error })
     }
@@ -664,6 +664,10 @@ orbital OtelOrbital {
         @description "The service.name resource attribute stamped on every exported span and metric."
         @synonyms "otel service name, resource name"
         @tier "domain"
+      epoch : instant = "1970-01-01T00:00:00.000Z"
+        @label "Epoch"
+        @description "The Unix epoch; OTLP timestamps are milliseconds counted from it."
+        @tier "infra"
       scopeName : string = "almadar.std-otel"
         @label "Instrumentation scope"
         @description "The instrumentation scope name on every exported span and metric."

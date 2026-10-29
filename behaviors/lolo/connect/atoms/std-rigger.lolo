@@ -44,7 +44,7 @@ orbital RiggerOrbital {
       RIGGER_HEALTH_REPLIED -> idle
         (emit RIGGER_HEALTH_CHECKED { ok: (and (>= @payload.status 200) (< @payload.status 300)) })
       RIGGER_HEALTH_UNREACHABLE -> idle
-        (emit RIGGER_HEALTH_FAILED { code: null, message: @payload.error })
+        (emit RIGGER_HEALTH_FAILED { message: @payload.error })
 
       RIGGER_BUILD_MESH -> idle
         (http POST @config.origin "/mesh/build" {
@@ -61,11 +61,10 @@ orbital RiggerOrbital {
             (detailJson (json/stringify (object/get @errBody detail "")))
             (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_BUILD_MESH_FAILED {
-              code: null,
               message: (str/concat "Rigger /mesh/build returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
       RIGGER_BUILD_MESH_UNREACHABLE -> idle
-        (emit RIGGER_BUILD_MESH_FAILED { code: null, message: @payload.error })
+        (emit RIGGER_BUILD_MESH_FAILED { message: @payload.error })
 
       RIGGER_RENDER -> idle
         (http POST @config.origin "/render" {
@@ -82,11 +81,10 @@ orbital RiggerOrbital {
             (detailJson (json/stringify (object/get @errBody detail "")))
             (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_RENDER_FAILED {
-              code: null,
               message: (str/concat "Rigger /render returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
       RIGGER_RENDER_UNREACHABLE -> idle
-        (emit RIGGER_RENDER_FAILED { code: null, message: @payload.error })
+        (emit RIGGER_RENDER_FAILED { message: @payload.error })
 
       RIGGER_LIST_PRESETS -> idle
         (http GET @config.origin "/presets" {
@@ -102,11 +100,10 @@ orbital RiggerOrbital {
             (detailJson (json/stringify (object/get @errBody detail "")))
             (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_LIST_PRESETS_FAILED {
-              code: null,
               message: (str/concat "Rigger /presets returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
       RIGGER_LIST_PRESETS_UNREACHABLE -> idle
-        (emit RIGGER_LIST_PRESETS_FAILED { code: null, message: @payload.error })
+        (emit RIGGER_LIST_PRESETS_FAILED { message: @payload.error })
 
       RIGGER_LOAD_RIG -> idle
         (http POST @config.origin "/rig/load" {
@@ -123,11 +120,10 @@ orbital RiggerOrbital {
             (detailJson (json/stringify (object/get @errBody detail "")))
             (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_LOAD_RIG_FAILED {
-              code: null,
               message: (str/concat "Rigger /rig/load returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
       RIGGER_LOAD_RIG_UNREACHABLE -> idle
-        (emit RIGGER_LOAD_RIG_FAILED { code: null, message: @payload.error })
+        (emit RIGGER_LOAD_RIG_FAILED { message: @payload.error })
 
       RIGGER_SAVE_RIG -> idle
         (http POST @config.origin "/rig/save" {
@@ -144,11 +140,10 @@ orbital RiggerOrbital {
             (detailJson (json/stringify (object/get @errBody detail "")))
             (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_SAVE_RIG_FAILED {
-              code: null,
               message: (str/concat "Rigger /rig/save returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
       RIGGER_SAVE_RIG_UNREACHABLE -> idle
-        (emit RIGGER_SAVE_RIG_FAILED { code: null, message: @payload.error })
+        (emit RIGGER_SAVE_RIG_FAILED { message: @payload.error })
 
       RIGGER_OWNERSHIP -> idle
         (http POST @config.origin "/ownership" {
@@ -165,11 +160,10 @@ orbital RiggerOrbital {
             (detailJson (json/stringify (object/get @errBody detail "")))
             (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_OWNERSHIP_FAILED {
-              code: null,
               message: (str/concat "Rigger /ownership returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
       RIGGER_OWNERSHIP_UNREACHABLE -> idle
-        (emit RIGGER_OWNERSHIP_FAILED { code: null, message: @payload.error })
+        (emit RIGGER_OWNERSHIP_FAILED { message: @payload.error })
 
       RIGGER_BUILD_LAYERS -> idle
         (http POST @config.origin "/layers" {
@@ -186,11 +180,10 @@ orbital RiggerOrbital {
             (detailJson (json/stringify (object/get @errBody detail "")))
             (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_BUILD_LAYERS_FAILED {
-              code: null,
               message: (str/concat "Rigger /layers returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
       RIGGER_BUILD_LAYERS_UNREACHABLE -> idle
-        (emit RIGGER_BUILD_LAYERS_FAILED { code: null, message: @payload.error })
+        (emit RIGGER_BUILD_LAYERS_FAILED { message: @payload.error })
 
       RIGGER_POSE -> idle
         (http POST @config.origin "/pose" {
@@ -207,11 +200,10 @@ orbital RiggerOrbital {
             (detailJson (json/stringify (object/get @errBody detail "")))
             (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_POSE_FAILED {
-              code: null,
               message: (str/concat "Rigger /pose returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
       RIGGER_POSE_UNREACHABLE -> idle
-        (emit RIGGER_POSE_FAILED { code: null, message: @payload.error })
+        (emit RIGGER_POSE_FAILED { message: @payload.error })
 
       RIGGER_GENERATE -> idle when (and (or (= @payload.model "z-image-turbo") (= @payload.model "kontext")) (or (!= @payload.model "kontext") (!= (default @payload.sourcePath "") "")))
         (http POST @config.origin "/generate" {
@@ -232,11 +224,10 @@ orbital RiggerOrbital {
             (detailJson (json/stringify (object/get @errBody detail "")))
             (detailText (if (== @errBody null) "" (if (object/has @errBody detail) (if (str/startsWith @detailJson "\"") (object/get (json/parse @payload.body RiggerDetailString) detail "") @detailJson) ""))))
             (emit RIGGER_GENERATE_FAILED {
-              code: null,
               message: (str/concat "Rigger /generate returned " @payload.status (if (!= @detailText "") (str/concat ": " @detailText) ""))
             }))
       RIGGER_GENERATE_UNREACHABLE -> idle
-        (emit RIGGER_GENERATE_FAILED { code: null, message: @payload.error })
+        (emit RIGGER_GENERATE_FAILED { message: @payload.error })
     }
 
     emits {

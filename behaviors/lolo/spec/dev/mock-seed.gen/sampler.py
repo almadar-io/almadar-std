@@ -8,8 +8,6 @@ def numok(x): return f'(and (!= (str/trim {x}) "") (= (str/replace-pattern (str/
 def numv(x): return f'(str/to-number (str/trim {x}))'
 def modlen(n,xs): return f'(default (math/mod {n} (array/len {xs})) 0)'
 def iso_of(at): return f'(str/concat {at} "")'
-def cells_bad(cells): return f'(array/some {cells} (fn bc (= (object/get @bc "kind") "clock")))'
-CLOCK_FAILED='mock-seed: clock is not a date'
 def pad(x,n): return f'(str/padStart (str/concat "" {x}) {n} "0")'
 def slug(x): return f'(let ((sg (str/lower (str/replace-pattern {x} "[^A-Za-z0-9]" "")))) (if (= @sg "") "value" @sg))'
 def titlecase(x): return f'(str/join (array/map (array/filter (str/split (str/replaceAll (str/replaceAll (str/join (array/map (str/split {x} "") (fn c (if (and (!= @c (str/lower @c)) (= @c (str/upper @c))) (str/concat " " @c) @c))) "") "_" " ") "-" " ") " ") (fn w (!= @w ""))) (fn w (str/concat (str/upper (str/slice @w 0 1)) (str/slice @w 1 (str/len @w))))) " ")'
@@ -19,7 +17,7 @@ def isoparts(at):
     return d,dt
 def draws(n,s0): return f'(array/reduce (array/range {n}) [{s0}] (fn da dj (array/append @da {nxt("(default (array/last @da) 0)")})))'
 def cell(path,kind,text='""',num='0',extra=''): return f'{{ path: {path}, kind: {kind}, text: {text}, num: {num}{extra} }}'
-def dcell(kind,x): return f'(let ((dv {x})) {{ path: @pa, kind: (if (= @dv null) "clock" {kind}), text: (default @dv ""), num: 0 }})'
+def dcell(kind,x): return f'(let ((dv {x})) {{ path: @pa, kind: {kind}, text: (default @dv ""), num: 0 }})'
 def res(cellx,push='[]',s='@s0'):
     cells = '[]' if cellx is None else f'[{cellx}]'
     return f'{{ cells: {cells}, push: {push}, s: {s} }}'

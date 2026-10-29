@@ -49,7 +49,7 @@ orbital WebhookOrbital {
         (set @entity.attempts 0)
         (emit WEBHOOK_RETRY_START { key: (as (str/concat "webhook:" (+ @entity.seq 1)) CallKey) })
       WEBHOOK_SEND -> idle when (not (and (or (str/startsWith @payload.url "https://") (str/startsWith @payload.url "http://")) (!= @payload.event "")))
-        (emit WEBHOOK_FAILED { code: null, message: "Invalid URL", attempts: 0 })
+        (emit WEBHOOK_FAILED { message: "Invalid URL", attempts: 0 })
     }
 
     state sending {
@@ -94,7 +94,7 @@ orbital WebhookOrbital {
         (set @entity.lastError @payload.error)
         (emit WEBHOOK_RETRY_FAILED { key: @entity.key, error: @payload.error })
       WEBHOOK_GAVE_UP -> idle
-        (emit WEBHOOK_FAILED { code: null, message: @entity.lastError, attempts: @entity.attempts })
+        (emit WEBHOOK_FAILED { message: @entity.lastError, attempts: @entity.attempts })
     }
 
     emits {

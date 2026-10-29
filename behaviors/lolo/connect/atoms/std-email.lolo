@@ -48,7 +48,7 @@ orbital EmailOrbital {
             timeoutMs: @config.timeoutMs
           } { emit: { success: EMAIL_SENDGRID_REPLIED, failure: EMAIL_SENDGRID_FAILED } }))
       EMAIL_SEND -> idle when (and (= @config.vendor resend) (validate/required @payload.templateId))
-        (emit EMAIL_SEND_FAILED { code: null, message: "templateId is not supported by the resend provider — use sendgrid or drop templateId" })
+        (emit EMAIL_SEND_FAILED { message: "templateId is not supported by the resend provider — use sendgrid or drop templateId" })
       EMAIL_SEND -> idle when (and (= @config.vendor resend) (not (validate/required @payload.templateId)))
         (http POST @config.resendOrigin "/emails" {
           headers: { Accept: "*/*" },
@@ -70,26 +70,26 @@ orbital EmailOrbital {
       EMAIL_SENDGRID_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get @payload.headers "x-message-id" "") ""))
         (emit EMAIL_SENT { status: "sent" })
       EMAIL_SENDGRID_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
-        (emit EMAIL_SEND_FAILED { code: null, message: (object/get @config.statusText (str/concat @payload.status) "") })
+        (emit EMAIL_SEND_FAILED { message: (object/get @config.statusText (str/concat @payload.status) "") })
       EMAIL_SENDGRID_FAILED -> idle
-        (emit EMAIL_SEND_FAILED { code: null, message: @payload.error })
+        (emit EMAIL_SEND_FAILED { message: @payload.error })
 
       EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ResendReply) null) (!= (object/get (json/parse @payload.body ResendReply) id "") ""))
         (emit EMAIL_SENT { id: (object/get (json/parse @payload.body ResendReply) id ""), status: "sent" })
       EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ResendReply) null) (= (object/get (json/parse @payload.body ResendReply) id "") ""))
         (emit EMAIL_SENT { status: "sent" })
       EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body ResendReply) null) (= (str/trim @payload.body) "null"))
-        (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: no message id returned" })
+        (emit EMAIL_SEND_FAILED { message: "Resend rejected the email: no message id returned" })
       EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body ResendReply) null) (!= (str/trim @payload.body) "null"))
-        (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: Unable to fetch data. The request could not be resolved." })
+        (emit EMAIL_SEND_FAILED { message: "Resend rejected the email: Unable to fetch data. The request could not be resolved." })
       EMAIL_RESEND_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (!= (json/parse @payload.body ResendReply) null))
-        (emit EMAIL_SEND_FAILED { code: null, message: (str/concat "Resend rejected the email: " (if (validate/required (object/get (json/parse @payload.body ResendReply) message "")) (object/get (json/parse @payload.body ResendReply) message "") "no message id returned")) })
+        (emit EMAIL_SEND_FAILED { message: (str/concat "Resend rejected the email: " (if (validate/required (object/get (json/parse @payload.body ResendReply) message "")) (object/get (json/parse @payload.body ResendReply) message "") "no message id returned")) })
       EMAIL_RESEND_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (= (json/parse @payload.body ResendReply) null) (= (str/trim @payload.body) "null"))
-        (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: no message id returned" })
+        (emit EMAIL_SEND_FAILED { message: "Resend rejected the email: no message id returned" })
       EMAIL_RESEND_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (= (json/parse @payload.body ResendReply) null) (!= (str/trim @payload.body) "null"))
-        (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: Internal server error. We are unable to process your request right now, please try again later." })
+        (emit EMAIL_SEND_FAILED { message: "Resend rejected the email: Internal server error. We are unable to process your request right now, please try again later." })
       EMAIL_RESEND_FAILED -> idle
-        (emit EMAIL_SEND_FAILED { code: null, message: "Resend rejected the email: Unable to fetch data. The request could not be resolved." })
+        (emit EMAIL_SEND_FAILED { message: "Resend rejected the email: Unable to fetch data. The request could not be resolved." })
     }
 
     emits {

@@ -7,7 +7,7 @@ uses Spec from "almadar-std/analytics-collector"
 uses Lifecycle from "std/behaviors/std-lifecycle"
 type AnalyticsProps = Map string (string | number | boolean)
 type AnalyticsBeacon = { n : string!, d : string!, u : string!, r : string, w : number, p : AnalyticsProps }
-type AnalyticsDraft = { ts : number!, name : string!, domain : string!, path : string!, referrer : string?, screenWidth : number?, props : AnalyticsProps?, ip : string!, ua : string! }
+type AnalyticsDraft = { ts : instant!, name : string!, domain : string!, path : string!, referrer : string?, screenWidth : number?, props : AnalyticsProps?, ip : string!, ua : string! }
 type AnalyticsCount = { key : string!, count : number! }
 orbital AnalyticsCollectorOrbital {
   config {
@@ -20,20 +20,20 @@ orbital AnalyticsCollectorOrbital {
 
   entity AnalyticsEvent [persistent: analyticsEvents] {
     id : string!
-    ts : number! @description "When the beacon arrived, in epoch milliseconds."
+    ts : instant! @description "When the beacon arrived."
     name : string! @description "The event name; pageview for a page visit."
     domain : string! @description "The site the beacon was reported under."
     path : string! @description "The page path."
-    referrer : string @description "The page's referrer as the browser reported it."
-    screenWidth : number @description "The screen width in CSS pixels."
+    referrer : string? @description "The page's referrer as the browser reported it."
+    screenWidth : number? @description "The screen width in CSS pixels."
     visitorId : string! @description "SHA-256 of the day's salt, the client IP, the user agent and the site."
-    props : AnalyticsProps @description "The event's properties."
+    props : AnalyticsProps? @description "The event's properties."
   }
 
   entity AnalyticsSalt [persistent: analyticsSalt] {
     id : string! @description "The UTC day, YYYY-MM-DD."
     salt : string! @description "The day's random salt."
-    createdAt : number @description "When the salt was drawn, in epoch milliseconds."
+    createdAt : instant? @description "When the salt was drawn."
   }
 
   entity AnalyticsRetentionLog [runtime] {
@@ -69,12 +69,12 @@ orbital AnalyticsCollectorOrbital {
     state ready {
       INIT -> ready
 
-      BEACON_RECEIVED -> ready when (not (and (!= (json/parse @payload.rawBody AnalyticsBeacon) null) (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody AnalyticsBeacon) "n")) "\"") (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody AnalyticsBeacon) "d")) "\"") (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody AnalyticsBeacon) "u")) "\"") (!= (object/get (json/parse @payload.rawBody AnalyticsBeacon) "n") "") (!= (object/get (json/parse @payload.rawBody AnalyticsBeacon) "d") "") (!= (object/get (json/parse @payload.rawBody AnalyticsBeacon) "u") "")))
+      BEACON_RECEIVED -> ready when (not (and (!= (json/parse (default @payload.rawBody "") AnalyticsBeacon) null) (str/startsWith (json/stringify (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "n")) "\"") (str/startsWith (json/stringify (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "d")) "\"") (str/startsWith (json/stringify (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "u")) "\"") (!= (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "n") "") (!= (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "d") "") (!= (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "u") "")))
         (emit BEACON_ANSWERED { status: 400, body: "{\"error\":\"invalid beacon\"}" })
-      BEACON_RECEIVED -> ready when (and (!= (json/parse @payload.rawBody AnalyticsBeacon) null) (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody AnalyticsBeacon) "n")) "\"") (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody AnalyticsBeacon) "d")) "\"") (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody AnalyticsBeacon) "u")) "\"") (!= (object/get (json/parse @payload.rawBody AnalyticsBeacon) "n") "") (!= (object/get (json/parse @payload.rawBody AnalyticsBeacon) "d") "") (!= (object/get (json/parse @payload.rawBody AnalyticsBeacon) "u") "") (> (array/len @config.domains) 0) (not (array/includes @config.domains (object/get (json/parse @payload.rawBody AnalyticsBeacon) "d"))))
+      BEACON_RECEIVED -> ready when (and (!= (json/parse (default @payload.rawBody "") AnalyticsBeacon) null) (str/startsWith (json/stringify (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "n")) "\"") (str/startsWith (json/stringify (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "d")) "\"") (str/startsWith (json/stringify (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "u")) "\"") (!= (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "n") "") (!= (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "d") "") (!= (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "u") "") (> (array/len @config.domains) 0) (not (array/includes @config.domains (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "d"))))
         (emit BEACON_ANSWERED { status: 400, body: "{\"error\":\"site not accepted\"}" })
-      BEACON_RECEIVED -> ready when (and (!= (json/parse @payload.rawBody AnalyticsBeacon) null) (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody AnalyticsBeacon) "n")) "\"") (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody AnalyticsBeacon) "d")) "\"") (str/startsWith (json/stringify (object/get (json/parse @payload.rawBody AnalyticsBeacon) "u")) "\"") (!= (object/get (json/parse @payload.rawBody AnalyticsBeacon) "n") "") (!= (object/get (json/parse @payload.rawBody AnalyticsBeacon) "d") "") (!= (object/get (json/parse @payload.rawBody AnalyticsBeacon) "u") "") (or (= (array/len @config.domains) 0) (array/includes @config.domains (object/get (json/parse @payload.rawBody AnalyticsBeacon) "d"))))
-        (let ((b (json/parse @payload.rawBody AnalyticsBeacon)))
+      BEACON_RECEIVED -> ready when (and (!= (json/parse (default @payload.rawBody "") AnalyticsBeacon) null) (str/startsWith (json/stringify (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "n")) "\"") (str/startsWith (json/stringify (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "d")) "\"") (str/startsWith (json/stringify (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "u")) "\"") (!= (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "n") "") (!= (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "d") "") (!= (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "u") "") (or (= (array/len @config.domains) 0) (array/includes @config.domains (object/get (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {}) "d"))))
+        (let ((b (default (json/parse (default @payload.rawBody "") AnalyticsBeacon) {})))
           (emit BEACON_ACCEPTED { draft: {
             ts: @now,
             name: @b.n,
@@ -83,12 +83,12 @@ orbital AnalyticsCollectorOrbital {
             referrer: (if (str/startsWith (json/stringify @b.r) "\"") @b.r null),
             screenWidth: (if (validate/pattern (json/stringify @b.w) "^-?[0-9]") @b.w null),
             props: (if (str/startsWith (json/stringify @b.p) "{") @b.p null),
-            ip: (str/trim (array/first (str/split (object/get @payload.headers "x-forwarded-for" "") ","))),
-            ua: (object/get @payload.headers "user-agent" "")
+            ip: (str/trim (default (array/first (str/split (object/get (default @payload.headers {}) "x-forwarded-for" "") ",")) "")),
+            ua: (object/get (default @payload.headers {}) "user-agent" "")
           } }))
 
       BEACON_ACCEPTED -> ready when (= @entity.saltDay (time/format @payload.draft.ts "YYYY-MM-DD"))
-        (persist create AnalyticsEvent { ts: @payload.draft.ts, name: @payload.draft.name, domain: @payload.draft.domain, path: @payload.draft.path, referrer: @payload.draft.referrer, screenWidth: @payload.draft.screenWidth, props: @payload.draft.props, visitorId: (hash/sha256 (str/concat @entity.salt ":" @payload.draft.ip ":" @payload.draft.ua ":" @payload.draft.domain) "hex") } { emit: { success: EVENT_RECORDED, failure: EVENT_UNRECORDED } })
+        (persist create AnalyticsEvent { ts: @payload.draft.ts, name: @payload.draft.name, domain: @payload.draft.domain, path: @payload.draft.path, referrer: @payload.draft.referrer, screenWidth: @payload.draft.screenWidth, props: @payload.draft.props, visitorId: (default (hash/sha256 (str/concat @entity.salt ":" @payload.draft.ip ":" @payload.draft.ua ":" @payload.draft.domain) "hex") "") } { emit: { success: EVENT_RECORDED, failure: EVENT_UNRECORDED } })
       BEACON_ACCEPTED -> ready when (!= @entity.saltDay (time/format @payload.draft.ts "YYYY-MM-DD"))
         (set @entity.pending @payload.draft)
         (fetch AnalyticsSalt { id: (time/format @payload.draft.ts "YYYY-MM-DD"), emit: { success: SALT_LOADED, failure: SALT_ABSENT } })
@@ -104,13 +104,13 @@ orbital AnalyticsCollectorOrbital {
         (emit BEACON_ANSWERED { status: 500, body: (json/stringify { error: @payload.error }) })
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Beacon not stored: " @payload.error) })
       SALT_DRAWN -> ready
-        (persist create AnalyticsSalt { id: (time/format @entity.pending.ts "YYYY-MM-DD"), salt: @payload.value, createdAt: @entity.pending.ts } { emit: { success: SALT_CREATED, failure: SALT_TAKEN } })
+        (persist create AnalyticsSalt { id: (time/format (default @entity.pending.ts @now) "YYYY-MM-DD"), salt: @payload.value, createdAt: (default @entity.pending.ts @now) } { emit: { success: SALT_CREATED, failure: SALT_TAKEN } })
       SALT_CREATED -> ready
         (set @entity.saltDay @payload.id)
         (set @entity.salt @payload.salt)
         (emit SALT_READY { })
       SALT_TAKEN -> ready when (= @payload.code "duplicate-id")
-        (fetch AnalyticsSalt { id: (time/format @entity.pending.ts "YYYY-MM-DD"), emit: { success: SALT_LOADED, failure: SALT_UNREADABLE } })
+        (fetch AnalyticsSalt { id: (time/format (default @entity.pending.ts @now) "YYYY-MM-DD"), emit: { success: SALT_LOADED, failure: SALT_UNREADABLE } })
       SALT_TAKEN -> ready when (!= @payload.code "duplicate-id")
         (set @entity.pending null)
         (emit BEACON_ANSWERED { status: 500, body: (json/stringify { error: @payload.error }) })
@@ -125,7 +125,7 @@ orbital AnalyticsCollectorOrbital {
         (render-ui @config.statusSlot { type: typography, variant: caption, role: status, content: (str/concat "Beacon not stored: " @payload.error) })
 
       SALT_READY -> ready
-        (persist create AnalyticsEvent { ts: @entity.pending.ts, name: @entity.pending.name, domain: @entity.pending.domain, path: @entity.pending.path, referrer: @entity.pending.referrer, screenWidth: @entity.pending.screenWidth, props: @entity.pending.props, visitorId: (hash/sha256 (str/concat @entity.salt ":" @entity.pending.ip ":" @entity.pending.ua ":" @entity.pending.domain) "hex") } { emit: { success: EVENT_RECORDED, failure: EVENT_UNRECORDED } })
+        (persist create AnalyticsEvent { ts: (default @entity.pending.ts @now), name: @entity.pending.name, domain: @entity.pending.domain, path: @entity.pending.path, referrer: @entity.pending.referrer, screenWidth: @entity.pending.screenWidth, props: @entity.pending.props, visitorId: (default (hash/sha256 (str/concat @entity.salt ":" (default @entity.pending.ip "") ":" (default @entity.pending.ua "") ":" (default @entity.pending.domain "")) "hex") "") } { emit: { success: EVENT_RECORDED, failure: EVENT_UNRECORDED } })
         (set @entity.pending null)
 
       EVENT_RECORDED -> ready
@@ -220,11 +220,11 @@ orbital AnalyticsCollectorOrbital {
       STATS_LOADED -> ready
         (let ((views (array/filter @payload.data (fn e (= @e.name "pageview"))))
               (pageKeys (array/map (array/filter @payload.data (fn e (= @e.name "pageview"))) (fn e (str/concat @e.path " (" @e.domain ")"))))
-              (refKeys (array/map (array/filter (array/filter @payload.data (fn e (= @e.name "pageview"))) (fn e (and (!= @e.referrer null) (!= @e.referrer "")))) (fn e (let ((rest (str/replace-pattern @e.referrer "^[A-Za-z][A-Za-z0-9+.\\-]*://([^/?#@]*@)?" "")))
-                (if (validate/pattern @e.referrer "^[A-Za-z][A-Za-z0-9+.\\-]*://")
+              (refKeys (array/map (array/filter (array/filter @payload.data (fn e (= @e.name "pageview"))) (fn e (and (!= @e.referrer null) (!= @e.referrer "")))) (fn e (let ((ref (default @e.referrer "")) (rest (str/replace-pattern (default @e.referrer "") "^[A-Za-z][A-Za-z0-9+.\\-]*://([^/?#@]*@)?" "")))
+                (if (validate/pattern @ref "^[A-Za-z][A-Za-z0-9+.\\-]*://")
                   (let ((h (str/lower (if (str/startsWith @rest "[") (str/concat (str/replace-pattern @rest "\\].*$" "") "]") (str/replace-pattern @rest "[:/?#].*$" "")))))
-                    (if (= @h "") @e.referrer @h))
-                  @e.referrer))))))
+                    (if (= @h "") @ref @h))
+                  @ref))))))
           (let ((pagesTop (array/take (array/sort (array/map (array/unique @pageKeys) (fn k { key: @k, count: (array/count @pageKeys (fn x (= @x @k))) })) "count" "desc") @entity.statsLimit))
                 (refsTop (array/take (array/sort (array/map (array/unique @refKeys) (fn k { key: @k, count: (array/count @refKeys (fn x (= @x @k))) })) "count" "desc") @entity.statsLimit)))
             (let ((pageRows (array/map @pagesTop (fn r { id: @r.key, page: @r.key, views: @r.count })))
@@ -269,8 +269,8 @@ orbital AnalyticsCollectorOrbital {
         @tier "primary"
       ANALYTICS_STATS -> internal {
         domain : string
-        from : number
-        to : number
+        from : instant
+        to : instant
         limit : number
       }
         @description "Internal: the stats a page opening with loadOnInit asks for."
@@ -290,11 +290,11 @@ orbital AnalyticsCollectorOrbital {
     listens {
       ANALYTICS_STATS -> input {
         domain : string
-        from : number
-        to : number
+        from : instant
+        to : instant
         limit : number
       }
-        @description "Ask for the stats of a site (empty or absent: every site) between from and to (epoch milliseconds, inclusive; absent: unbounded), with at most limit rows per breakdown (default 100)."
+        @description "Ask for the stats of a site (empty or absent: every site) between from and to (instants, inclusive; absent: unbounded), with at most limit rows per breakdown (default 100)."
         @synonyms "analytics stats, traffic report, visitor count"
     }
 

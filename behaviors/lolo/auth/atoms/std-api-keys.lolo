@@ -44,7 +44,7 @@ orbital ApiKeysOrbital {
       SEED_DRAWN -> saving
         (let ((digest (hash/sha256 ?value "hex")))
           (if (= @digest null)
-            (emit API_KEY_FAILED { code: null, message: "The drawn seed could not be hashed" })
+            (emit API_KEY_FAILED { message: "The drawn seed could not be hashed" })
             (let (
                 (plaintext (str/concat @config.prefix @digest))
                 (keyHash (hash/scrypt (str/concat @config.prefix @digest) @config.salt)))
@@ -58,14 +58,14 @@ orbital ApiKeysOrbital {
                     emit: { success: KEY_SAVED, failure: KEY_NOT_SAVED }
                   }))))))
       SEED_FAILED -> idle
-        (emit API_KEY_FAILED { code: null, message: ?error })
+        (emit API_KEY_FAILED { message: ?error })
     }
 
     state saving {
       INIT -> idle
 
       SALT_UNUSABLE -> idle
-        (emit API_KEY_FAILED { code: null, message: "The API key salt credential is missing or is not non-empty hex" })
+        (emit API_KEY_FAILED { message: "The API key salt credential is missing or is not non-empty hex" })
       KEY_SAVED -> idle
         (emit API_KEY_MINTED { plaintext: @entity.plaintext, keyHash: @entity.keyHash, lastFour: @entity.lastFour })
         (set @entity.plaintext "")

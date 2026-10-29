@@ -23,7 +23,7 @@ orbital MetaAdsOrbital {
       INIT -> idle
 
       META_ADS_GET_SPEND -> idle when (= (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
-        (emit META_ADS_FAILED { code: null, message: "No ad account: pass `accountId` or set META_AD_ACCOUNT_ID" })
+        (emit META_ADS_FAILED { message: "No ad account: pass `accountId` or set META_AD_ACCOUNT_ID" })
       META_ADS_GET_SPEND -> idle when (!= (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
         (http GET @config.origin
           (str/concat "/" @config.apiVersion "/"
@@ -41,9 +41,9 @@ orbital MetaAdsOrbital {
             timeoutMs: @config.timeoutMs
           } { emit: { success: META_ADS_SPEND_REPLIED, failure: META_ADS_SPEND_FAILED } })
       META_ADS_SPEND_REPLIED -> idle when (>= @payload.status 500)
-        (emit META_ADS_FAILED { code: null, message: (str/concat "Meta Graph API returned " (format/number @payload.status)) })
+        (emit META_ADS_FAILED { message: (str/concat "Meta Graph API returned " (format/number @payload.status)) })
       META_ADS_SPEND_REPLIED -> idle when (and (< @payload.status 500) (or (< @payload.status 200) (>= @payload.status 300)))
-        (emit META_ADS_FAILED { code: null, message: (str/concat "Meta Graph API error: " (or (object/get (json/parse @payload.body MetaErrorReply) "error.message" null) (format/number @payload.status))) })
+        (emit META_ADS_FAILED { message: (str/concat "Meta Graph API error: " (or (object/get (json/parse @payload.body MetaErrorReply) "error.message" null) (format/number @payload.status))) })
       META_ADS_SPEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (let ((row (array/first (default (object/get (json/parse @payload.body MetaInsightsReply) data []) []))))
           (emit META_ADS_SPEND_RESULT {
@@ -53,14 +53,14 @@ orbital MetaAdsOrbital {
             clicks: (if (= (str/trim (object/get @row clicks "")) "") 0 (object/get (json/parse (str/concat "{\"v\":" (object/get @row clicks "") "}") MetaCount) v null))
           }))
       META_ADS_SPEND_FAILED -> idle when (str/startsWith @payload.error "credential missing: ")
-        (emit META_ADS_FAILED { code: null, message: (str/concat (str/replace @payload.error "credential missing: " "") " not configured") })
+        (emit META_ADS_FAILED { message: (str/concat (str/replace @payload.error "credential missing: " "") " not configured") })
       META_ADS_SPEND_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (= @payload.kind "timeout"))
-        (emit META_ADS_FAILED { code: null, message: "The operation was aborted due to timeout" })
+        (emit META_ADS_FAILED { message: "The operation was aborted due to timeout" })
       META_ADS_SPEND_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (!= @payload.kind "timeout"))
-        (emit META_ADS_FAILED { code: null, message: "fetch failed" })
+        (emit META_ADS_FAILED { message: "fetch failed" })
 
       META_ADS_LIST_CAMPAIGNS -> idle when (= (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
-        (emit META_ADS_FAILED { code: null, message: "No ad account: pass `accountId` or set META_AD_ACCOUNT_ID" })
+        (emit META_ADS_FAILED { message: "No ad account: pass `accountId` or set META_AD_ACCOUNT_ID" })
       META_ADS_LIST_CAMPAIGNS -> idle when (!= (if (!= (default @payload.accountId "") "") @payload.accountId @config.defaultAccountId) "")
         (http GET @config.origin
           (str/concat "/" @config.apiVersion "/"
@@ -77,9 +77,9 @@ orbital MetaAdsOrbital {
             timeoutMs: @config.timeoutMs
           } { emit: { success: META_ADS_CAMPAIGNS_REPLIED, failure: META_ADS_CAMPAIGNS_FAILED } })
       META_ADS_CAMPAIGNS_REPLIED -> idle when (>= @payload.status 500)
-        (emit META_ADS_FAILED { code: null, message: (str/concat "Meta Graph API returned " (format/number @payload.status)) })
+        (emit META_ADS_FAILED { message: (str/concat "Meta Graph API returned " (format/number @payload.status)) })
       META_ADS_CAMPAIGNS_REPLIED -> idle when (and (< @payload.status 500) (or (< @payload.status 200) (>= @payload.status 300)))
-        (emit META_ADS_FAILED { code: null, message: (str/concat "Meta Graph API error: " (or (object/get (json/parse @payload.body MetaErrorReply) "error.message" null) (format/number @payload.status))) })
+        (emit META_ADS_FAILED { message: (str/concat "Meta Graph API error: " (or (object/get (json/parse @payload.body MetaErrorReply) "error.message" null) (format/number @payload.status))) })
       META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (not (json/valid @payload.body)))
         (emit META_ADS_FAILED { code: "MALFORMED_REPLY", message: "Meta Graph API replied with a body that is not valid JSON" })
       META_ADS_CAMPAIGNS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (json/valid @payload.body) (not (validate/array (default (object/get (json/parse @payload.body MetaCampaignsReply) data []) []))))
@@ -94,11 +94,11 @@ orbital MetaAdsOrbital {
           }))
         })
       META_ADS_CAMPAIGNS_FAILED -> idle when (str/startsWith @payload.error "credential missing: ")
-        (emit META_ADS_FAILED { code: null, message: (str/concat (str/replace @payload.error "credential missing: " "") " not configured") })
+        (emit META_ADS_FAILED { message: (str/concat (str/replace @payload.error "credential missing: " "") " not configured") })
       META_ADS_CAMPAIGNS_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (= @payload.kind "timeout"))
-        (emit META_ADS_FAILED { code: null, message: "The operation was aborted due to timeout" })
+        (emit META_ADS_FAILED { message: "The operation was aborted due to timeout" })
       META_ADS_CAMPAIGNS_FAILED -> idle when (and (not (str/startsWith @payload.error "credential missing: ")) (!= @payload.kind "timeout"))
-        (emit META_ADS_FAILED { code: null, message: "fetch failed" })
+        (emit META_ADS_FAILED { message: "fetch failed" })
     }
 
     emits {

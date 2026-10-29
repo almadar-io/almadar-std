@@ -34,7 +34,7 @@ orbital DataImportOrbital {
     batchId : string @description "ImportBatch id this staged row belongs to." @synonyms "batch, import run, parent batch" = ""
     rowJson : string @description "The raw parsed CSV row as a JSON string (source shape, pre-mapping). The consumer maps it into its own entity shape after confirm." @synonyms "row, raw row, staged row, record json" = "{}"
     status : "staged" | "imported" | "failed" @description "staged = awaiting confirm; imported = the consumer persisted it into the target entity; failed = rejected." = staged
-    createdAt : number @description "When the row was staged, in epoch milliseconds; 0 for rows staged before this field existed, which the retention sweep never ages." @synonyms "staged at, staged time" = 0
+    createdAt : instant @description "When the row was staged; a row with no value is never aged out." @synonyms "staged at, staged time"
   }
 
   entity ImportRetentionLog [runtime] {
@@ -85,13 +85,13 @@ orbital DataImportOrbital {
         })
       UPLOAD_CSV -> uploaded
         (set @entity.id ?batchId)
-        (set @entity.pendingCsv (default (object/get (array/first ?files) content) ""))
-        (set @entity.sourceName (or ?sourceName @config.sourceName))
+        (set @entity.pendingCsv (default (object/get (default (array/first ?files) {}) content) ""))
+        (set @entity.sourceName (default ?sourceName @config.sourceName))
         (set @entity.status uploaded)
         (set @entity.mappingJson @config.fieldMappingJson)
         (set @entity.rowCount 0)
         (set @entity.errorCount 0)
-        (set @entity.createdAt (time/now))
+        (set @entity.createdAt (time/diff (time/now) @config.epoch "ms"))
         (persist create ImportBatch {
           createdAt: @entity.createdAt
           errorCount: 0
@@ -482,6 +482,10 @@ orbital DataImportOrbital {
         @description "Most staged rows one confirmed batch may hand to IMPORT_ROWS_PARSED. The consumer receives the batch's mapped rows in one event, so a partial read would import part of the file; a batch with more staged rows is refused through IMPORT_FAILED and marked failed instead."
         @synonyms "import row limit, batch cap, csv row cap"
         @tier "policy"
+      epoch : instant = "1970-01-01T00:00:00.000Z"
+        @label "Epoch"
+        @description "The Unix epoch; a batch records its start as milliseconds counted from it."
+        @tier "infra"
       sourceName : string = ""
         @label "Source name"
         @description "Free-form name of the upstream source this import pulls from — whatever tool or file export the user names. Recorded on the batch row for provenance and echoed on IMPORT_CONFIRMED."

@@ -17,11 +17,11 @@ orbital TwilioOrbital {
       INIT -> idle
 
       TWILIO_SEND_SMS -> idle when (= @config.accountSid "")
-        (emit TWILIO_SMS_FAILED { code: null, message: "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" })
+        (emit TWILIO_SMS_FAILED { message: "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" })
       TWILIO_SEND_SMS -> idle when (and (!= @config.accountSid "") (not (str/startsWith @config.accountSid "AC")) (str/startsWith @config.accountSid "SK"))
-        (emit TWILIO_SMS_FAILED { code: null, message: "accountSid must start with AC. The given SID indicates an API Key which requires the accountSid to be passed as an additional option" })
+        (emit TWILIO_SMS_FAILED { message: "accountSid must start with AC. The given SID indicates an API Key which requires the accountSid to be passed as an additional option" })
       TWILIO_SEND_SMS -> idle when (and (!= @config.accountSid "") (not (str/startsWith @config.accountSid "AC")) (not (str/startsWith @config.accountSid "SK")))
-        (emit TWILIO_SMS_FAILED { code: null, message: "accountSid must start with AC" })
+        (emit TWILIO_SMS_FAILED { message: "accountSid must start with AC" })
       TWILIO_SEND_SMS -> idle when (str/startsWith @config.accountSid "AC")
         (http POST @config.origin (str/concat "/2010-04-01/Accounts/" @config.accountSid "/Messages.json") {
           text: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/concat "To=" (str/encode-uri-component @payload.to) "&From=" (str/encode-uri-component (if (or (= @payload.from null) (= @payload.from "")) @config.phoneNumber @payload.from)) "&Body=" (str/encode-uri-component @payload.body)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A"),
@@ -34,18 +34,18 @@ orbital TwilioOrbital {
       TWILIO_SMS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.body TwilioMessage) status null) null))
         (emit TWILIO_SMS_RESULT { sid: (object/get (json/parse @payload.body TwilioMessage) sid "") })
       TWILIO_SMS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
-        (emit TWILIO_SMS_FAILED { code: null, message: (if (and (!= (object/get (json/parse @payload.body TwilioError) type null) null) (!= (object/get (json/parse @payload.body TwilioError) title null) null) (!= (object/get (json/parse @payload.body TwilioError) status null) null) (!= (object/get (json/parse @payload.body TwilioError) code null) null))
+        (emit TWILIO_SMS_FAILED { message: (if (and (!= (object/get (json/parse @payload.body TwilioError) type null) null) (!= (object/get (json/parse @payload.body TwilioError) title null) null) (!= (object/get (json/parse @payload.body TwilioError) status null) null) (!= (object/get (json/parse @payload.body TwilioError) code null) null))
           (str/concat "[HTTP " (if (!= (object/get (json/parse @payload.body TwilioError) status 0) 0) (object/get (json/parse @payload.body TwilioError) status 0) @payload.status) "] " (if (!= (object/get (json/parse @payload.body TwilioError) title "") "") (object/get (json/parse @payload.body TwilioError) title "") "Failed to execute request"))
           (if (= (json/parse @payload.body TwilioError) null) (str/concat "[HTTP " @payload.status "] Failed to execute request") (object/get (json/parse @payload.body TwilioError) message ""))) })
       TWILIO_SMS_HTTP_FAILED -> idle
-        (emit TWILIO_SMS_FAILED { code: null, message: (if (= @payload.kind "unconfigured") "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" (if (= @payload.kind "timeout") (str/concat "timeout of " @config.timeoutMs "ms exceeded") @payload.error)) })
+        (emit TWILIO_SMS_FAILED { message: (if (= @payload.kind "unconfigured") "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" (if (= @payload.kind "timeout") (str/concat "timeout of " @config.timeoutMs "ms exceeded") @payload.error)) })
 
       TWILIO_SEND_WHATSAPP -> idle when (= @config.accountSid "")
-        (emit TWILIO_WHATSAPP_FAILED { code: null, message: "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" })
+        (emit TWILIO_WHATSAPP_FAILED { message: "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" })
       TWILIO_SEND_WHATSAPP -> idle when (and (!= @config.accountSid "") (not (str/startsWith @config.accountSid "AC")) (str/startsWith @config.accountSid "SK"))
-        (emit TWILIO_WHATSAPP_FAILED { code: null, message: "accountSid must start with AC. The given SID indicates an API Key which requires the accountSid to be passed as an additional option" })
+        (emit TWILIO_WHATSAPP_FAILED { message: "accountSid must start with AC. The given SID indicates an API Key which requires the accountSid to be passed as an additional option" })
       TWILIO_SEND_WHATSAPP -> idle when (and (!= @config.accountSid "") (not (str/startsWith @config.accountSid "AC")) (not (str/startsWith @config.accountSid "SK")))
-        (emit TWILIO_WHATSAPP_FAILED { code: null, message: "accountSid must start with AC" })
+        (emit TWILIO_WHATSAPP_FAILED { message: "accountSid must start with AC" })
       TWILIO_SEND_WHATSAPP -> idle when (str/startsWith @config.accountSid "AC")
         (http POST @config.origin (str/concat "/2010-04-01/Accounts/" @config.accountSid "/Messages.json") {
           text: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/concat "To=" (str/encode-uri-component (str/concat "whatsapp:" @payload.to)) "&From=" (str/encode-uri-component (str/concat "whatsapp:" @config.phoneNumber)) "&Body=" (str/encode-uri-component @payload.body)) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A"),
@@ -58,11 +58,11 @@ orbital TwilioOrbital {
       TWILIO_WHATSAPP_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= (object/get (json/parse @payload.body TwilioMessage) status null) null))
         (emit TWILIO_WHATSAPP_RESULT { sid: (object/get (json/parse @payload.body TwilioMessage) sid "") })
       TWILIO_WHATSAPP_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
-        (emit TWILIO_WHATSAPP_FAILED { code: null, message: (if (and (!= (object/get (json/parse @payload.body TwilioError) type null) null) (!= (object/get (json/parse @payload.body TwilioError) title null) null) (!= (object/get (json/parse @payload.body TwilioError) status null) null) (!= (object/get (json/parse @payload.body TwilioError) code null) null))
+        (emit TWILIO_WHATSAPP_FAILED { message: (if (and (!= (object/get (json/parse @payload.body TwilioError) type null) null) (!= (object/get (json/parse @payload.body TwilioError) title null) null) (!= (object/get (json/parse @payload.body TwilioError) status null) null) (!= (object/get (json/parse @payload.body TwilioError) code null) null))
           (str/concat "[HTTP " (if (!= (object/get (json/parse @payload.body TwilioError) status 0) 0) (object/get (json/parse @payload.body TwilioError) status 0) @payload.status) "] " (if (!= (object/get (json/parse @payload.body TwilioError) title "") "") (object/get (json/parse @payload.body TwilioError) title "") "Failed to execute request"))
           (if (= (json/parse @payload.body TwilioError) null) (str/concat "[HTTP " @payload.status "] Failed to execute request") (object/get (json/parse @payload.body TwilioError) message ""))) })
       TWILIO_WHATSAPP_HTTP_FAILED -> idle
-        (emit TWILIO_WHATSAPP_FAILED { code: null, message: (if (= @payload.kind "unconfigured") "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" (if (= @payload.kind "timeout") (str/concat "timeout of " @config.timeoutMs "ms exceeded") @payload.error)) })
+        (emit TWILIO_WHATSAPP_FAILED { message: (if (= @payload.kind "unconfigured") "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured" (if (= @payload.kind "timeout") (str/concat "timeout of " @config.timeoutMs "ms exceeded") @payload.error)) })
     }
 
     emits {

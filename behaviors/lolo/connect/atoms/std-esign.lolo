@@ -35,11 +35,11 @@ orbital EsignOrbital {
       ESIGN_SEND_ENVELOPE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (emit ESIGN_ENVELOPE_SENT { envelopeId: (object/get (json/parse @payload.body DocusignEnvelopeReply) envelopeId ""), status: (object/get (json/parse @payload.body DocusignEnvelopeReply) status "sent") })
       ESIGN_SEND_ENVELOPE_REPLIED -> idle when (>= @payload.status 500)
-        (emit ESIGN_SEND_ENVELOPE_FAILED { code: null, message: (str/concat "DocuSign returned " @payload.status) })
+        (emit ESIGN_SEND_ENVELOPE_FAILED { message: (str/concat "DocuSign returned " @payload.status) })
       ESIGN_SEND_ENVELOPE_REPLIED -> idle when (or (< @payload.status 200) (and (>= @payload.status 300) (< @payload.status 500)))
-        (emit ESIGN_SEND_ENVELOPE_FAILED { code: null, message: (str/concat "DocuSign error " @payload.status ": " (str/slice @payload.body 0 300)) })
+        (emit ESIGN_SEND_ENVELOPE_FAILED { message: (str/concat "DocuSign error " @payload.status ": " (str/slice @payload.body 0 300)) })
       ESIGN_SEND_ENVELOPE_UNREACHED -> idle
-        (emit ESIGN_SEND_ENVELOPE_FAILED { code: null, message: @payload.error })
+        (emit ESIGN_SEND_ENVELOPE_FAILED { message: @payload.error })
 
       ESIGN_GET_ENVELOPE_STATUS -> idle
         (http GET @config.origin (str/concat (if (str/endsWith @config.basePath "/") (str/slice @config.basePath 0 (- (str/len @config.basePath) 1)) @config.basePath) "/envelopes/" @payload.envelopeId) {
@@ -50,11 +50,11 @@ orbital EsignOrbital {
       ESIGN_GET_ENVELOPE_STATUS_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (emit ESIGN_ENVELOPE_STATUS { status: (object/get (json/parse @payload.body DocusignEnvelopeReply) status ""), completedAt: (object/get (json/parse @payload.body DocusignEnvelopeReply) completedDateTime "") })
       ESIGN_GET_ENVELOPE_STATUS_REPLIED -> idle when (>= @payload.status 500)
-        (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { code: null, message: (str/concat "DocuSign returned " @payload.status) })
+        (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { message: (str/concat "DocuSign returned " @payload.status) })
       ESIGN_GET_ENVELOPE_STATUS_REPLIED -> idle when (or (< @payload.status 200) (and (>= @payload.status 300) (< @payload.status 500)))
-        (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { code: null, message: (str/concat "DocuSign error " @payload.status ": " (str/slice @payload.body 0 300)) })
+        (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { message: (str/concat "DocuSign error " @payload.status ": " (str/slice @payload.body 0 300)) })
       ESIGN_GET_ENVELOPE_STATUS_UNREACHED -> idle
-        (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { code: null, message: @payload.error })
+        (emit ESIGN_GET_ENVELOPE_STATUS_FAILED { message: @payload.error })
 
       ESIGN_DOWNLOAD_DOCUMENT -> idle
         (http GET @config.origin (str/concat (if (str/endsWith @config.basePath "/") (str/slice @config.basePath 0 (- (str/len @config.basePath) 1)) @config.basePath) "/envelopes/" @payload.envelopeId "/documents/combined") {
@@ -66,11 +66,11 @@ orbital EsignOrbital {
       ESIGN_DOWNLOAD_DOCUMENT_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300))
         (emit ESIGN_DOCUMENT_DOWNLOADED { content: @payload.body, documentName: (str/concat "envelope-" @payload.key ".pdf") })
       ESIGN_DOWNLOAD_DOCUMENT_REPLIED -> idle when (>= @payload.status 500)
-        (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { code: null, message: (str/concat "DocuSign returned " @payload.status) })
+        (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { message: (str/concat "DocuSign returned " @payload.status) })
       ESIGN_DOWNLOAD_DOCUMENT_REPLIED -> idle when (or (< @payload.status 200) (and (>= @payload.status 300) (< @payload.status 500)))
-        (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { code: null, message: (str/concat "DocuSign error " @payload.status ": " (str/slice (base64/decode @payload.body) 0 300)) })
+        (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { message: (str/concat "DocuSign error " @payload.status ": " (str/slice (base64/decode @payload.body) 0 300)) })
       ESIGN_DOWNLOAD_DOCUMENT_UNREACHED -> idle
-        (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { code: null, message: @payload.error })
+        (emit ESIGN_DOWNLOAD_DOCUMENT_FAILED { message: @payload.error })
     }
 
     emits {

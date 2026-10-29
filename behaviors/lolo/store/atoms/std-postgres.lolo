@@ -22,7 +22,7 @@ orbital PostgresOrbital {
           (postgres @config.origin @payload.sql (default @payload.params []) { auth: @config.password, user: @config.user, database: (if (!= @config.database "") @config.database null), tls: @config.tls, timeoutMs: @config.statementTimeoutMs } { key: "query", emit: { success: PG_QUERIED, failure: PG_CALL_FAILED } })
           (postgres @config.origin @payload.sql (default @payload.params []) { user: @config.user, database: (if (!= @config.database "") @config.database null), tls: @config.tls, timeoutMs: @config.statementTimeoutMs } { key: "query", emit: { success: PG_QUERIED, failure: PG_CALL_FAILED } }))
       PG_QUERY -> idle when (= @payload.sql "")
-        (emit PG_FAILED { kind: "refused", code: null, message: "sql is required" })
+        (emit PG_FAILED { kind: "refused", message: "sql is required" })
       PG_QUERIED -> idle
         (emit PG_RESULT { rows: @payload.rows, rowCount: @payload.rowCount, columns: @payload.columns })
       PG_CALL_FAILED -> idle

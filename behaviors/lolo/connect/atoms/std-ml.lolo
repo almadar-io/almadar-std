@@ -23,7 +23,7 @@ orbital MlOrbital {
       INIT -> idle
 
       ML_INFER -> idle when (= @config.traitName "")
-        (emit ML_INFER_FAILED { code: null, message: "ML integration requires MASAR_URL (serving orbital host) and MASAR_ML_TRAIT (kebab-case trait name of its /events route) to be configured" })
+        (emit ML_INFER_FAILED { message: "ML integration requires MASAR_URL (serving orbital host) and MASAR_ML_TRAIT (kebab-case trait name of its /events route) to be configured" })
       ML_INFER -> idle when (!= @config.traitName "")
         (http POST @config.origin (str/concat "/api/" @config.traitName "/events") {
           headers: { Accept: "*/*" },
