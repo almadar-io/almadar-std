@@ -12,6 +12,9 @@ type MissingNameOrbital = { name : string }
 type MissingNameProgram = { orbitals : [MissingNameOrbital] }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintMissingOrbitalNameCodes = { xMissingOrbitalName : LintCodeDecl }
+
 orbital OrbLintMissingOrbitalNameOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -31,7 +34,7 @@ orbital OrbLintMissingOrbitalNameOrbital {
         (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (if (= (object/get (array/nth @orbitals @oi) "name" "") "")
-              [{ code: "ORB_X_MISSING_ORBITAL_NAME", path: (str/concat "orbitals[" @oi "].name"), message: "Orbital name is required", suggestion: "Add a descriptive name for the orbital", severity: "error" }]
+              [{ code: @config.codes.xMissingOrbitalName.code, path: (str/concat "orbitals[" @oi "].name"), message: "Orbital name is required", suggestion: "Add a descriptive name for the orbital", severity: "error" }]
               []))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -52,6 +55,12 @@ orbital OrbLintMissingOrbitalNameOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintMissingOrbitalNameCodes = { xMissingOrbitalName: { code: "ORB_X_MISSING_ORBITAL_NAME", category: "cross", description: "An orbital does not declare a name" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintMissingOrbitalNameCli -> OrbLintMissingOrbitalNameRun [client] {

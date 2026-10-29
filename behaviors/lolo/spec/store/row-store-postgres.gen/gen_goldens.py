@@ -10,9 +10,12 @@ def cstr(s): return s.encode() + b"\0"
 USER, PASSWORD, DB, HOST, PORT = "app", "secret", "app", "postgres.example.test", 5432
 SSL_REQUEST = bytes([0, 0, 0, 8, 0x04, 0xd2, 0x16, 0x2f])
 
-def startup():
+def startup(timeout_ms=10000):
     body = struct.pack(">I", 196608)
-    for n, v in (("user", USER), ("database", DB), ("client_encoding", "UTF8")):
+    pairs = [("user", USER), ("database", DB), ("client_encoding", "UTF8")]
+    if timeout_ms:
+        pairs.append(("options", f"-c statement_timeout={timeout_ms}"))
+    for n, v in pairs:
         body += cstr(n) + cstr(v)
     body += b"\0"
     return struct.pack(">I", len(body) + 4) + body
@@ -120,7 +123,7 @@ case("good-server-answers-n-and-startup-follows",
      [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}},
       connect(),
       recv(b"N", expect={"state": "startup", "emits": [wire("startup", "", [], startup())], "neverEmits": ["STORE_FAILED"]})],
-     note="user, database, client_encoding only: no statement_timeout option, unlike the postgres effect")
+     note="user, database, client_encoding and the options pair `-c statement_timeout=10000` the fixture sets through the statementTimeoutMs knob (the atom default 0 sends none)")
 case("bad-tls-answer-s-is-refused-because-no-tls-over-os-sockets",
      [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}},
       connect(),
@@ -560,6 +563,51 @@ case("good-rows-are-unchanged-by-an-ensure-the-read-after-it-answers-the-same-ro
       recv(result(TICKET_COLS, [r1], "SELECT 1"), expect={"state": "ready", "emits": [emit("ROW_FOUND", key="k2", row=ticket_row("t1", "Fix login", "open", 3, ["a", "b"]))]})],
      note="pair of the read case: same SQL, same row; an index changes cost, never a result")
 
+# ---- recorded against a real Postgres 16 (record_real.py: docker postgres:16, role app / secret, table tickets seeded with t1)
+REAL = json.load(open(pathlib.Path(__file__).resolve().parent / "real-pg16.json"))
+rb = lambda k: base64.b64decode(REAL[k])
+case("good-real-postgres-16-scram-login-and-read-recorded-from-the-server",
+     [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}},
+      connect(),
+      recv(rb("sslAnswer"), expect={"state": "startup", "emits": [wire("startup", "", [], rb("startup"))], "neverEmits": ["STORE_FAILED"]}),
+      recv(rb("list"), expect={"state": "drawing", "effects": [{"type": "let"}]}),
+      {"event": "PG_NONCE_DRAWN", "payload": {"value": NONCE}, "from": "drawing",
+       "expect": {"state": "startup", "emits": [wire("scram-first", "", [], rb("scramFirst"))]}},
+      recv(rb("serverFirst"), expect={"state": "startup", "emits": [wire("scram-final", "", [], rb("scramFinal"))]}),
+      recv(rb("login"), expect={"state": "running", "emits": [wire("statement", READ_SQL, ["t1"], rb("stageFrame"))], "neverEmits": ["STORE_FAILED"]}),
+      ],
+     note="every server byte here was produced by a real Postgres 16 (SCRAM-SHA-256 server-first with its own salt and nonce, the login tail with its parameter statuses, the statement reply); the atom's startup (with the options pair), SCRAM proof and statement frames were sent to that server and accepted")
+case("good-real-postgres-16-row-decode-recorded-from-the-server",
+     [{"event": "ROW_READ", "payload": {"key": "k", "entityType": "Ticket", "id": "t1"}, "from": "ready", "entity": {"id": "f"}},
+      connect(),
+      recv(rb("sslAnswer")), recv(rb("list")),
+      {"event": "PG_NONCE_DRAWN", "payload": {"value": NONCE}, "from": "drawing"},
+      recv(rb("serverFirst")), recv(rb("login")),
+      recv(rb("stageReply"), expect={"emits": [emit("ROW_FOUND", key="k", row=ticket_row("t1", "Fix login", "open", 3, ["a", "b"]))], "neverEmits": ["STORE_FAILED"]})],
+     note="the statement reply a real Postgres 16 sent for the seeded ticket")
+
+# ---- ROWS_SQL on a real Postgres 16 (record_real_sql.py): one held session, five statements
+SQLREC = json.load(open(pathlib.Path(__file__).resolve().parent / "real-sql-pg16.json"))
+sb = lambda k: base64.b64decode(SQLREC[k])
+def sql_wire(st): return {"event": "PG_WIRE_SENT", "payload": {"stage": "statement", "sql": st["wireSql"], "params": st["wireParams"], "frame": st["frame"]}}
+def sql_ask(i, st): return {"event": "ROWS_SQL", "payload": {"key": "k%d" % i, "sql": st["sql"], "params": st["params"]}}
+sql_steps = []
+for i, st in enumerate(SQLREC["statements"]):
+    reply = {"event": "PG_RECEIVED", "payload": {"data": st["reply"], "eof": False}, "expect": {"state": "ready", "emits": [{"event": st["emit"], "payload": st["payload"]}]}}
+    if i == 0:
+        sql_steps += [dict(sql_ask(i, st), **{"from": "ready", "entity": {"id": "f"}}),
+                      connect(),
+                      recv(sb("sslAnswer"), expect={"state": "startup", "emits": [wire("startup", "", [], sb("startup"))], "neverEmits": ["STORE_FAILED"]}),
+                      recv(sb("list"), expect={"state": "drawing", "effects": [{"type": "let"}]}),
+                      {"event": "PG_NONCE_DRAWN", "payload": {"value": NONCE}, "from": "drawing", "expect": {"state": "startup", "emits": [wire("scram-first", "", [], sb("scramFirst"))]}},
+                      recv(sb("serverFirst"), expect={"state": "startup", "emits": [wire("scram-final", "", [], sb("scramFinal"))]}),
+                      recv(sb("login"), expect={"state": "running", "emits": [sql_wire(st)], "neverEmits": ["STORE_FAILED"]}),
+                      reply]
+    else:
+        sql_steps += [dict(sql_ask(i, st), **{"from": "ready", "expect": {"state": "running", "emits": [sql_wire(st)], "neverEmits": ["STORE_FAILED"]}}), reply]
+case("good-real-postgres-16-rows-sql-answers-rows-count-columns-and-the-server-error",
+     sql_steps,
+     note="ROWS_SQL on one held session against a real Postgres 16: a parameterised read (jsonb stays text, timestamptz is UTC ISO), the scalar types (null, bool, float, int8 past 2^53 as text, jsonb as text, int[], bytea as base64, numeric as text), an empty result with its column, a text[] bind sent as an array literal, and a server error with its SQLSTATE")
 doc = {"atom": "spec/store/row-store-postgres-fixture.lolo", "trait": "RowStoreDriver",
        "spec": "spec/store/row-store-postgres.lolo",
        "source": "orbital-rust/crates/orbital-core/crates/runtime/src/stores/pg_rows.rs over drivers/postgres.rs (behavior and tests)",

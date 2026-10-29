@@ -287,9 +287,9 @@ def scram_proof():
 
 # ---------------------------------------------------------------- scan
 def rec(**o):
-    d = dict(pos='@acc.pos', cols='@acc.cols', raw='@acc.raw', err='@acc.err', auth='@acc.auth', done='@acc.done', stop='@acc.stop', bad='@acc.bad')
+    d = dict(pos='@acc.pos', cols='@acc.cols', raw='@acc.raw', err='@acc.err', auth='@acc.auth', done='@acc.done', stop='@acc.stop', bad='@acc.bad', tag='@acc.tag')
     d.update(o)
-    return '{ ' + ', '.join(k + ': ' + d[k] for k in ['pos', 'cols', 'raw', 'err', 'auth', 'done', 'stop', 'bad']) + ' }'
+    return '{ ' + ', '.join(k + ': ' + d[k] for k in ['pos', 'cols', 'raw', 'err', 'auth', 'done', 'stop', 'bad', 'tag']) + ' }'
 
 
 BAD_REC = rec(stop='true', bad='true')
@@ -314,12 +314,13 @@ SCAN_ERR = T(
     em='(let ((eg (array/find @ep (fn er (str/startsWith @er "M"))))) (if (= @eg null) "" (str/slice @eg 1)))')
 
 SCAN = T(
-    '(let ((total (bytes/length @entity.inbox)) (nul ' + Z + ')) (let ((sr (array/reduce (array/range 0 (+ 1 (math/floor (/ @total 5)))) { pos: 0, cols: @entity.cols, raw: @entity.raw, err: @entity.err, auth: [], done: false, stop: false, bad: false } (fn acc i (if (or @acc.done @acc.stop) @acc (if (< (- @total @acc.pos) 5) §stop§ (let ((len (bytes/read-uint @entity.inbox (+ @acc.pos 1) 4 "be"))) (if (= @len null) §bad§ (if (< (- @total @acc.pos) (+ 1 @len)) §stop§ (let ((kind (bytes/at @entity.inbox @acc.pos)) (body (bytes/slice @entity.inbox (+ @acc.pos 5) (+ @acc.pos 1 @len))) (next (+ @acc.pos 1 @len))) (if (= @kind 84) §t§ (if (= @kind 68) §d§ (if (= @kind 69) §e§ (if (= @kind 82) §r§ (if (= @kind 90) §z§ §o§))))))))))))))) (if @sr.bad null @sr)))',
+    '(let ((total (bytes/length @entity.inbox)) (nul ' + Z + ')) (let ((sr (array/reduce (array/range 0 (+ 1 (math/floor (/ @total 5)))) { pos: 0, cols: @entity.cols, raw: @entity.raw, err: @entity.err, auth: [], done: false, stop: false, bad: false, tag: @entity.tag } (fn acc i (if (or @acc.done @acc.stop) @acc (if (< (- @total @acc.pos) 5) §stop§ (let ((len (bytes/read-uint @entity.inbox (+ @acc.pos 1) 4 "be"))) (if (= @len null) §bad§ (if (< (- @total @acc.pos) (+ 1 @len)) §stop§ (let ((kind (bytes/at @entity.inbox @acc.pos)) (body (bytes/slice @entity.inbox (+ @acc.pos 5) (+ @acc.pos 1 @len))) (next (+ @acc.pos 1 @len))) (if (= @kind 84) §t§ (if (= @kind 68) §d§ (if (= @kind 69) §e§ (if (= @kind 82) §r§ (if (= @kind 90) §z§ (if (= @kind 67) §c§ §o§)))))))))))))))) (if @sr.bad null @sr)))',
     stop=rec(stop='true'), bad=BAD_REC,
     t=chain([('tc', SCAN_COLS)], rec(pos='@next', cols='@tc'), none=BAD_REC),
     d=chain([('dc', SCAN_CELLS)], rec(pos='@next', raw='(array/append @acc.raw { cells: @dc })'), none=BAD_REC),
     e=chain([('etext', '(bytes/to-string @body)')], rec(pos='@next', err=SCAN_ERR), none=BAD_REC),
     r=chain([('ac', '(bytes/read-uint @body 0 4 "be")')], rec(pos='@next', auth='(array/append @acc.auth { code: @ac, body: @body })'), none=BAD_REC),
+    c=chain([('ctag', '(bytes/to-string (bytes/slice @body 0 (- (bytes/length @body) 1)))')], rec(pos='@next', tag='@ctag'), none=BAD_REC),
     z=rec(pos='@next', done='true'), o=rec(pos='@next'))
 
 # ---------------------------------------------------------------- cell -> JSON entries
@@ -328,7 +329,7 @@ TS_CONVERT = '(if (str/endsWith @tx "infinity") @tx (let ((td (array/nth (str/sp
      ('tm', '(let ((tm1 (array/nth @thms 1))) (if (= @tm1 null) 0 (str/to-number @tm1)))'),
      ('tsc', '(let ((ts1 (array/nth @thms 2))) (if (= @ts1 null) 0 (str/to-number @ts1)))'),
      ('tp', '(time/parse (str/concat @td "T" @tclock "Z"))'),
-     ('tf', '(time/format (- @tp (* @tsign (+ (* 3600 @th) (* 60 @tm) @tsc) 1000)) "YYYY-MM-DDTHH:mm:ss")')],
+     ('tf', '(time/format (time/add @tp (* -1 @tsign (+ (* 3600 @th) (* 60 @tm) @tsc) 1000) "ms") "YYYY-MM-DDTHH:mm:ss")')],
     '(str/concat @tf (if (!= @tfrac "") (str/concat "." @tfrac) "") "Z")') + '))))'
 
 
@@ -395,9 +396,32 @@ ROW_OF = nmap('(array/range 0 (array/len @entity.cols))', 'rj',
 ROWS_FAILED = 'the server sent a value this driver cannot decode'
 DECODE_ROWS = [G('rw', nmap('@entity.raw', 'rawrow', ROW_OF, lambda rg: rg), ROWS_FAILED), SET('rows', '@rw')]
 
+
 # ---------------------------------------------------------------- scalar text of a RowCell-like value
 SCALAR_TEXT = lambda v: T('(let ((stx §v§)) (if (validate/string @stx) @stx (json/stringify @stx)))', v=v)
 BIND_OF = lambda v: T('(if (= §v§ null) { isNull: true, text: "" } (if (or (validate/array §v§) (validate/object §v§)) { isNull: false, text: (json/stringify §v§) } { isNull: false, text: §st§ }))', v=v, st=SCALAR_TEXT(v))
+
+# ---------------------------------------------------------------- ROWS_SQL: a row as a map of column name to value (json and jsonb stay text), and the binds of the ask
+CELL_ENTRY_SQL = T(
+    '(let ((oid @rc.oid) (tx @rcell.text)) (let ((sv §sv§)) (if (= @sv null) null (let ((isArr (>= (array/indexOf §arrs§ @oid) 0))) (let ((cj (if @rcell.isNull "null" (if @isArr §arr§ §conv§)))) (if (= @cj null) null { n: @rc.name, j: @cj }))))))',
+    arrs=ARR_OIDS, sv=SV_CELL, arr=ARRAY_JSON, conv=conv_json('@oid', '@tx', '@sv', False))
+SQL_ROW_OF = nmap('(array/range 0 (array/len @entity.cols))', 'rj',
+                  '(let ((rc (array/nth @entity.cols @rj)) (rcell (array/nth @rawrow.cells @rj))) ' + CELL_ENTRY_SQL + ')',
+                  lambda es: '(json/parse (str/concat "{" (str/join (array/map ' + es + ' (fn ej (str/concat (json/stringify @ej.n) ":" @ej.j))) ",") "}") Row)')
+SQL_DECODE = [G('rw', nmap('@entity.raw', 'rawrow', SQL_ROW_OF, lambda rg: rg), ROWS_FAILED), SET('rows', '@rw')]
+
+ESC_Q = lambda x: '(str/replaceAll (str/replaceAll ' + x + ' "\\\\" "\\\\\\\\") "\\"" "\\\\\\"")'
+
+
+def PG_ARRAY_LITERAL(v, depth):
+    scalar = '(str/concat "\\"" ' + ESC_Q(SCALAR_TEXT('@pe')) + ' "\\"")'
+    body = ('(if (validate/array @pe) ' + PG_ARRAY_LITERAL('@pe', depth - 1) + ' ' + scalar + ')') if depth > 0 else scalar
+    return '(str/concat "{" (str/join (array/map ' + v + ' (fn pe (if (= @pe null) "NULL" ' + body + '))) ",") "}")'
+
+
+SQL_BIND_OF = lambda v: ('(if (= ' + v + ' null) { isNull: true, text: "" } (if (validate/array ' + v + ') { isNull: false, text: ' + PG_ARRAY_LITERAL(v, 2) + ' } '
+                         '(if (validate/object ' + v + ') { isNull: false, text: (json/stringify ' + v + ') } { isNull: false, text: ' + SCALAR_TEXT(v) + ' })))')
+SQL_BINDS = '(array/map @entity.userParams (fn sp ' + SQL_BIND_OF('@sp') + '))'
 
 # ============================== g2b
 
@@ -480,7 +504,7 @@ SENT = lambda: [EMIT('PG_WIRE_SENT', '{ stage: @entity.stage, sql: @entity.sql, 
 
 # ---- frames sent inline (login)
 SSL_FRAME = chain([('sslc', '(bytes/write-uint 80877103 4 "be")')], '(bytes/concat [' + u32c(8) + ', @sslc])')
-STARTUP_FRAME = T('(let ((sb (bytes/concat [§v§, (bytes/from-string (str/concat "user" §n§ @entity.userName §n§ "database" §n§ @entity.dbName §n§ "client_encoding" §n§ "UTF8" §n§ §n§))]))) §len§)',
+STARTUP_FRAME = T('(let ((sb (bytes/concat [§v§, (bytes/from-string (str/concat "user" §n§ @entity.userName §n§ "database" §n§ @entity.dbName §n§ "client_encoding" §n§ "UTF8" §n§ (if (> @config.statementTimeoutMs 0) (str/concat "options" §n§ "-c statement_timeout=" @config.statementTimeoutMs §n§) "") §n§))]))) §len§)',
                   v=u32c(196608), n=NUL,
                   len=chain([('sl', '(bytes/write-uint (+ (bytes/length @sb) 4) 4 "be")')], '(bytes/concat [@sl, @sb])'))
 SCRAM_FIRST_FRAME = T('(let ((first (bytes/from-string (str/concat "n,,n=" §esc§ ",r=" @entity.nonce)))) §m§)', esc=ESC_USER,
@@ -523,7 +547,7 @@ def send_stmt(stage, sql, binds='[]', base='0'):
 
 
 QUERY_COMPOSE = T(
-    '(let ((qt §qt§) (qo (object/get @entity.query "order" { field: "createdAt", direction: "asc" })) (ql (object/get @entity.query "limit" null)) (qf (object/get @entity.query "offset" null)) (qw @entity.where)) (let ((oc §oc§)) (let ((ok §ok§) (idk §idk§)) (let ((tie (str/concat "\\"id\\"" (if (= @idk "text") " COLLATE \\"C\\"" "") " ASC")) (wsql (if (= (array/len @qw.sqls) 0) "" (str/concat " WHERE " (str/join @qw.sqls " AND "))))) { sql: (str/concat "SELECT " (if (= @entity.project "ids") "\\"id\\"" "*") (if (= (object/get @entity.query "total" "exact") "none") "" ", (COUNT(*) OVER ())::int AS \\"__total\\"") " FROM " @qt @wsql (if (!= @ok "absent") (str/concat " ORDER BY " §qoc§ (if (= @ok "text") " COLLATE \\"C\\"" "") " " (if (= (object/get @qo "direction" "asc") "desc") "DESC" "ASC") " NULLS LAST, " @tie) (str/concat " ORDER BY " @tie)) (if (!= @ql null) (str/concat " LIMIT " §m§) "") (if (!= @qf null) (str/concat " OFFSET " §m§) "")), binds: (array/concat (array/concat @qw.binds (if (!= @ql null) [{ isNull: false, text: (str/concat @ql) }] [])) (if (!= @qf null) [{ isNull: false, text: (str/concat @qf) }] [])), bindBase: 0, countSql: (str/concat "SELECT COUNT(*)::int AS total FROM " @qt @wsql), countBinds: @qw.binds }))))',
+    '(let ((qt §qt§) (qo (let ((qo0 (object/get @entity.query "order" null))) (if (= @qo0 null) { field: "createdAt", direction: "asc" } @qo0))) (ql (object/get @entity.query "limit" null)) (qf (object/get @entity.query "offset" null)) (qw @entity.where)) (let ((oc §oc§)) (let ((ok §ok§) (idk §idk§)) (let ((tie (str/concat "\\"id\\"" (if (= @idk "text") " COLLATE \\"C\\"" "") " ASC")) (wsql (if (= (array/len @qw.sqls) 0) "" (str/concat " WHERE " (str/join @qw.sqls " AND "))))) { sql: (str/concat "SELECT " (if (= @entity.project "ids") "\\"id\\"" "*") (if (= (object/get @entity.query "total" "exact") "none") "" ", (COUNT(*) OVER ())::int AS \\"__total\\"") " FROM " @qt @wsql (if (!= @ok "absent") (str/concat " ORDER BY " §qoc§ (if (= @ok "text") " COLLATE \\"C\\"" "") " " (if (= (object/get @qo "direction" "asc") "desc") "DESC" "ASC") " NULLS LAST, " @tie) (str/concat " ORDER BY " @tie)) (if (!= @ql null) (str/concat " LIMIT " §m§) "") (if (!= @qf null) (str/concat " OFFSET " §m§) "")), binds: (array/concat (array/concat @qw.binds (if (!= @ql null) [{ isNull: false, text: (str/concat @ql) }] [])) (if (!= @qf null) [{ isNull: false, text: (str/concat @qf) }] [])), bindBase: 0, countSql: (str/concat "SELECT COUNT(*)::int AS total FROM " @qt @wsql), countBinds: @qw.binds }))))',
     qt=Q_TABLE, oc=col_for('(object/get @qo "field" "createdAt")', 'qo1'),
     ok=kind_of('@oc'), idk=kind_of('"id"'), qoc=quote_ident('@oc'), m=MARK)
 
@@ -577,7 +601,7 @@ P(tr('PG_PROOFED', 'startup', EQ('@entity.proof.error', '""'), [G('psg', '@entit
 
 # ---- reading a chunk
 P(tr('PG_SCAN', 'running', None, [
-    G('sc', SCAN, SCAN_FAILED), SET('scan', '@sc'), SET('cols', '@entity.scan.cols'), SET('raw', '@entity.scan.raw'), SET('err', '@entity.scan.err'),
+    G('sc', SCAN, SCAN_FAILED), SET('scan', '@sc'), SET('cols', '@entity.scan.cols'), SET('raw', '@entity.scan.raw'), SET('err', '@entity.scan.err'), SET('tag', '@entity.scan.tag'),
     SET('inbox', '(bytes/slice @entity.inbox @entity.scan.pos)'),
     SET('act', '(let ((cands (array/filter @entity.scan.auth (fn aa (and (!= @aa.code 0) (!= @aa.code 12)))))) (if (> (array/len @cands) 0) (array/nth @cands 0) { code: 0, body: ' + EMPTY_BYTES + ' }))'),
     SET('badSig', '(array/some @entity.scan.auth (fn ab (and (= @ab.code 12) (!= (bytes/to-string (bytes/slice @ab.body 4)) (str/concat "v=" @entity.scram)))))'),
@@ -611,9 +635,10 @@ ROWS_N = '(array/len @entity.rows)'
 P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"read"')),
      send_stmt('statement', cat(S('SELECT * FROM '), Q_TABLE, S(' WHERE "id" = '), MARK), '[' + TEXT_BIND('@entity.rowId') + ']')))
 P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"list"')), send_stmt('statement', cat(S('SELECT * FROM '), Q_TABLE))))
+P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"sql"')), send_stmt('statement', '@entity.userSql', SQL_BINDS)))
 P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"query"')), [
     SET('preds', '(array/filter [(object/get @entity.query "policy" null), (object/get @entity.query "filter" null)] (fn pq (!= @pq null)))'),
-    SET('extra', '["id", (object/get (object/get @entity.query "order" { field: "createdAt", direction: "asc" }) "field" "createdAt")]'),
+    SET('extra', '["id", (object/get (let ((qo0 (object/get @entity.query "order" null))) (if (= @qo0 null) { field: "createdAt", direction: "asc" } @qo0)) "field" "createdAt")]'),
     SET('written', '[]'), SET('needKinds', 'true'), EMIT('PG_KINDS')]))
 PATH_FIELDS = '(array/filter (array/unique (array/concat ["id", "createdAt"] (array/flatten (array/map @entity.paths (fn xp (array/concat (object/get @xp "fields" []) [(array/nth (str/split (object/get @xp "orderBy" "") ":") 0)])))))) (fn xf (!= @xf "")))'
 P(tr('PG_PLAN', 'running', AND(START, EQ('@entity.op', '"ensure"')), [SET('preds', '[]'), SET('extra', PATH_FIELDS), SET('written', '[]'), SET('needKinds', 'true'), EMIT('PG_KINDS')]))
@@ -722,7 +747,7 @@ WANT_OF = lambda need, covered: '(and ' + need + ' (not ' + covered + '))'
 
 # ---- ask-level (payload) views
 Q_PREDS = '(array/filter [(object/get @payload.query "policy" null), (object/get @payload.query "filter" null)] (fn pq (!= @pq null)))'
-Q_EXTRA = '["id", (object/get (object/get @payload.query "order" { field: "createdAt", direction: "asc" }) "field" "createdAt")]'
+Q_EXTRA = '["id", (object/get (let ((qo0 (object/get @payload.query "order" null))) (if (= @qo0 null) { field: "createdAt", direction: "asc" } @qo0)) "field" "createdAt")]'
 Q_TABLE_P = TABLE_OF('@payload.entityType', 'qa', '(default @payload.collection "")')
 Q_WANT = WANT_OF('true', COVERED_OF(Q_TABLE_P, ALL_FIELDS(Q_PREDS, Q_EXTRA, '[]')))
 
@@ -752,7 +777,7 @@ def op0_want(kind):
 
 # ---------------------------------------------------------------- inline statement
 FRAME_EFFECTS = [SET('sql', NUMBERED), SET('params', PARAMS_OF('@entity.binds')), frame_sets(QUERY_FRAME),
-                 SET('err', '{ present: false, code: "", message: "" }'), SET('cols', '[]'), SET('raw', '[]'), SET('rows', '[]')]
+                 SET('err', '{ present: false, code: "", message: "" }'), SET('cols', '[]'), SET('raw', '[]'), SET('rows', '[]'), SET('tag', '""')]
 
 
 def send_now(stage, sql, binds='[]', base='0'):
@@ -767,7 +792,7 @@ RESET_ASK = [SET('stage', '"start"'), SET('opAt', '0'), SET('outcomes', '[]'), S
 TABLE_SET = SET('table', TABLE_OF('@entity.entityType', 'ta', '@entity.declared'))
 
 QUERY_PREP = [SET('preds', '(array/filter [(object/get @entity.query "policy" null), (object/get @entity.query "filter" null)] (fn pq (!= @pq null)))'),
-              SET('extra', '["id", (object/get (object/get @entity.query "order" { field: "createdAt", direction: "asc" }) "field" "createdAt")]'),
+              SET('extra', '["id", (object/get (let ((qo0 (object/get @entity.query "order" null))) (if (= @qo0 null) { field: "createdAt", direction: "asc" } @qo0)) "field" "createdAt")]'),
               SET('written', '[]'), SET('needKinds', 'true'), SET('fresh', 'false')]
 KINDS_SETS = [SET('fields', ALL_FIELDS('@entity.preds', '@entity.extra', '@entity.written')), SET('covered', COVERED_OF('@entity.table', '@entity.fields'))]
 BUILD_SETS = [SET('kinds', KINDS_NOW), SET('where', WHERE_OF_PREDS)]
@@ -843,7 +868,7 @@ CONNECT = '(os/tcp-connect @config.host @config.port { key: "connect" emit: { su
 # ---------------------------------------------------------------- scan sets (the V2 PG_SCAN body, no emit)
 SCAN_SETS = [
     SET('inbox', AFTER_INBOX),
-    G('sc', SCAN, SCAN_FAILED), SET('scan', '@sc'), SET('cols', '@entity.scan.cols'), SET('raw', '@entity.scan.raw'), SET('err', '@entity.scan.err'),
+    G('sc', SCAN, SCAN_FAILED), SET('scan', '@sc'), SET('cols', '@entity.scan.cols'), SET('raw', '@entity.scan.raw'), SET('err', '@entity.scan.err'), SET('tag', '@entity.scan.tag'),
     SET('inbox', '(bytes/slice @entity.inbox @entity.scan.pos)'),
     SET('act', '(let ((cands (array/filter @entity.scan.auth (fn aa (and (!= @aa.code 0) (!= @aa.code 12)))))) (if (> (array/len @cands) 0) (array/nth @cands 0) { code: 0, body: ' + EMPTY_BYTES + ' }))'),
     SET('badSig', '(array/some @entity.scan.auth (fn ab (and (= @ab.code 12) (!= (bytes/to-string (bytes/slice @ab.body 4)) (str/concat "v=" @entity.scram)))))')]
@@ -857,12 +882,13 @@ ASK = {
     'query': [SET('key', '@payload.key'), SET('entityType', '@payload.entityType'), SET('query', QUERY_COPY), SET('project', '@payload.project'), SET('declared', '(default @payload.collection "")'), SET('op', '"query"')],
     'write': [SET('key', '@payload.key'), SET('batch', BATCH_COPY), SET('entityType', '""'), SET('writeCollections', '(default @payload.collections {})'), SET('op', '"write"')],
     'ensure': [SET('key', '@payload.key'), SET('entityType', '@payload.entityType'), SET('paths', '@payload.indexes'), SET('declared', '""'), SET('op', '"ensure"')],
+    'sql': [SET('key', '@payload.key'), SET('entityType', '""'), SET('userSql', '@payload.sql'), SET('userParams', '(default @payload.params [])'), SET('declared', '""'), SET('op', '"sql"')],
 }
-VERB = {'read': 'ROW_READ', 'list': 'ROW_LIST', 'query': 'ROWS_QUERY', 'write': 'ROWS_WRITE', 'ensure': 'ROWS_ENSURE_INDEXES'}
+VERB = {'read': 'ROW_READ', 'list': 'ROW_LIST', 'query': 'ROWS_QUERY', 'write': 'ROWS_WRITE', 'ensure': 'ROWS_ENSURE_INDEXES', 'sql': 'ROWS_SQL'}
 
 
 def pre(verb):
-    return ASK[verb] + RESET_ASK + ([] if verb == 'write' else [TABLE_SET])
+    return ASK[verb] + RESET_ASK + ([] if verb in ('write', 'sql') else [TABLE_SET])
 
 
 ready = ['    state ready {', '      INIT -> ready', '']
@@ -884,8 +910,8 @@ QUERY_OK_P = OR(NOT(NEARBY), NEAR_OK)
 ENS_OK = '(> (array/len @payload.indexes) 0)'
 RD(tr('ROWS_ENSURE_INDEXES', 'ready', EQ('(array/len @payload.indexes)', '0'), [EMIT('ROWS_INDEXES_ENSURED', '{ key: @payload.key }')]))
 # ---- cold: refuse a bad url / sslmode, otherwise open the socket
-for verb in ['read', 'list', 'query', 'write', 'ensure']:
-    ok = {'read': 'true', 'list': 'true', 'query': QUERY_OK_P, 'write': WRITE_OK, 'ensure': ENS_OK}[verb]
+for verb in ['read', 'list', 'query', 'write', 'ensure', 'sql']:
+    ok = {'read': 'true', 'list': 'true', 'query': QUERY_OK_P, 'write': WRITE_OK, 'ensure': ENS_OK, 'sql': 'true'}[verb]
     RD(tr(VERB[verb], 'ready', AND(ok, COLD_BAD), [EMIT('STORE_FAILED', '{ key: @payload.key, message: ' + BAD_MSG + ' }')]))
     RD(tr(VERB[verb], 'connecting', AND(ok, COLD_OK), pre(verb) + URL_SETS + [CONNECT]))
 # ---- warm
@@ -897,6 +923,7 @@ RD(tr('ROWS_QUERY', 'running', AND(WARM, QUERY_OK_P, NOT(Q_WANT)),
       pre('query') + QUERY_PREP + KINDS_SETS + BUILD_SETS + COMPOSE_SETS(QUERY_COMPOSE) + FRAME_EFFECTS + SENT()))
 RD(tr('ROWS_WRITE', 'beginning', AND(WARM, WRITE_OK, ATOMIC_P), pre('write') + send_now('begin', S('BEGIN'))))
 RD(tr('ROWS_ENSURE_INDEXES', 'running', AND(WARM, ENS_OK), pre('ensure') + [EMIT('PG_PLAN')]))
+RD(tr('ROWS_SQL', 'running', WARM, pre('sql') + send_now('statement', '@entity.userSql', SQL_BINDS)))
 OP0_SET = SET('cur', OPVIEW_OF('(array/nth @entity.batch.ops 0)'))
 STOP_P = NOT(ATOMIC_P)
 for kind in ['create', 'upsert', 'update', 'delete']:
@@ -918,6 +945,9 @@ RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"read"'), NOT(IS_ERR), EQ(
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"read"'), NOT(IS_ERR), '(> (array/len @entity.rows) 0)'), [EMIT('ROW_FOUND', '{ key: @entity.key, row: (array/nth @entity.rows 0) }')]))
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"ensure"'), IS_ERR), FAIL_KEEP(ERR_MSG)))
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"ensure"'), NOT(IS_ERR)), [EMIT('ROWS_INDEXES_ENSURED', '{ key: @entity.key }')]))
+RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"sql"'), IS_ERR), [EMIT('SQL_FAILED', '{ key: @entity.key, kind: (if (= @entity.err.code "57014") "timeout" "postgres"), code: @entity.err.code, message: ' + ERR_MSG + ' }')]))
+SQL_COUNT = '(let ((tn (str/to-int (array/last (str/split @entity.tag " "))))) (if (= @tn null) (array/len @entity.rows) @tn))'
+RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"sql"'), NOT(IS_ERR)), [EMIT('SQL_ROWS', '{ key: @entity.key, rows: @entity.rows, rowCount: ' + SQL_COUNT + ', columns: (array/map @entity.cols (fn sc { name: @sc.name, typeOid: @sc.oid })) }')]))
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"list"'), IS_ERR), FAIL_KEEP(ERR_MSG)))
 RD(tr('PG_FINISH', 'ready', AND(ST, EQ('@entity.op', '"list"'), NOT(IS_ERR)), [EMIT('ROWS_LISTED', '{ key: @entity.key, rows: @entity.rows }')]))
 RD(tr('PG_FINISH', 'ready', AND(OR(ST, stg('count')), EQ('@entity.op', '"query"'), IS_ERR, MISMATCH), DECLINE('"a compared value does not fit its column type"')))
@@ -1073,11 +1103,13 @@ MORE_E = '(< (+ @entity.opAt 1) (array/len @entity.ddl))'
 FINISH_PLAIN = '(or ' + stg('count') + ' (and ' + STMT + ' (or ' + OPQ('read') + ' ' + OPQ('list') + ' (and ' + OPQ('query') + ' ' + QUERY_FIN + ') (and ' + OPQ('ensure') + ' (or @sm.err (not ' + MORE_E + '))))))'
 FINISH_WRITE = AND(STMT, OPQ('write'), NOT(ATOM), '(or (not ' + APPLIED_S + ') (not ' + MORE_S + '))')
 DONE = lambda c: SMR(AND('@sm.done', c))
+FINISH_SQL = AND(STMT, OPQ('sql'))
 
 P(tr('PG_IO_FAILED', 'ready', None, FAIL_CLOSE('@payload.error')))
 P(tr('PG_RECEIVED', 'ready', '@payload.eof', FAIL_CLOSE('"the server closed the connection"')))
 P(tr('PG_RECEIVED', 'running', AND(NE_EOF, SMR(NOT('@sm.done'))), [SET('inbox', AFTER_INBOX), RECV]))
 P(tr('PG_RECEIVED', 'ready', AND(NE_EOF, DONE(FINISH_PLAIN)), SCAN_SETS + [DECODE_ROWS, EMIT('PG_FINISH')]))
+P(tr('PG_RECEIVED', 'ready', AND(NE_EOF, DONE(FINISH_SQL)), SCAN_SETS + SQL_DECODE + [EMIT('PG_FINISH')]))
 P(tr('PG_RECEIVED', 'ready', AND(NE_EOF, DONE(FINISH_WRITE)), SCAN_SETS + [DECODE_ROWS] + WRITE_RECORD + [RECORD_APPEND, EMIT('PG_FINISH')]))
 P(tr('PG_RECEIVED', 'committing', AND(NE_EOF, DONE(COMMIT_C)), SCAN_SETS + [DECODE_ROWS] + WRITE_RECORD + [RECORD_APPEND] + send_now('commit', S('COMMIT'))))
 P(tr('PG_RECEIVED', 'rolling-back', AND(NE_EOF, DONE(ROLLBACK_C)), SCAN_SETS + [DECODE_ROWS] + WRITE_RECORD + [ROLLED_PRIOR] + send_now('rollback', S('ROLLBACK'))))
@@ -1113,7 +1145,7 @@ LOCAL_TYPES = '''  type PgNullParam = { kind : "null" }
   type PgRaw = { cells : [PgBind]! }
   type PgErr = { present : boolean!, code : string!, message : string! }
   type PgAuth = { code : number!, body : bytes! }
-  type PgScan = { pos : number!, cols : [PgCol]!, raw : [PgRaw]!, err : PgErr!, auth : [PgAuth]!, done : boolean!, stop : boolean!, bad : boolean! }
+  type PgScan = { pos : number!, cols : [PgCol]!, raw : [PgRaw]!, err : PgErr!, auth : [PgAuth]!, done : boolean!, stop : boolean!, bad : boolean!, tag : string! }
   type PgProof = { frame : bytes?, sig : bytes?, error : string! }
   type PgWrapped = { sql : string!, binds : [PgBind]! }
   type PgWhere = { sqls : [string]!, binds : [PgBind]! }
@@ -1128,7 +1160,7 @@ ENTITY = '''  entity RowStoreFlight [runtime] {
     id : string!
     key : string @description "The kernel's key for the ask in flight; every reply carries it" = ""
     entityType : string @description "The entity type a read, list or query asks about" = ""
-    op : string @description "The ask in flight: read, list, query, write or ensure" = ""
+    op : string @description "The ask in flight: read, list, query, write, ensure or sql" = ""
     rowId : string @description "The id a read asks for" = ""
     table : string @description "The table the statement in flight targets" = ""
     project : string @description "What a query answers: rows or ids" = ""
@@ -1158,7 +1190,10 @@ ENTITY = '''  entity RowStoreFlight [runtime] {
     raw : [PgRaw] @description "The data rows of the reply being read, cells undecoded" = []
     rows : [Row] @description "The decoded data rows of the finished reply" = []
     err : PgErr @description "The server error of the reply being read" = { present: false, code: "", message: "" }
-    scan : PgScan @description "The result of reading one chunk" = { pos: 0, cols: [], raw: [], err: { present: false, code: "", message: "" }, auth: [], done: false, stop: false, bad: false }
+    scan : PgScan @description "The result of reading one chunk" = { pos: 0, cols: [], raw: [], err: { present: false, code: "", message: "" }, auth: [], done: false, stop: false, bad: false, tag: "" }
+    tag : string @description "The command tag of the reply being read (SELECT 3): its last word is the row count a ROWS_SQL answers" = ""
+    userSql : string @description "The statement a ROWS_SQL ask carries, sent as given" = ""
+    userParams : [RowCell?] @description "The bind values a ROWS_SQL ask carries" = []
     act : PgAuth @description "The authentication request this chunk asks the driver to answer; code 0 when there is none" = { code: 0, body: "" }
     badSig : boolean @description "The server-final signature did not match" = false
     proof : PgProof @description "The SCRAM client-final frame and the signature expected back; absent when the exchange failed" = { error: "" }
@@ -1197,6 +1232,10 @@ CONFIG = '''    config {
       sslmode : string!
         @label "SSL mode"
         @description "Required: disable, allow, prefer, require, verify-ca or verify-full, declared by every call site (no default, so nothing downgrades silently). disable and allow send no SSLRequest; the rest send one, and N is accepted under prefer only. An S answer is STORE_FAILED until the kernel's os/tls-upgrade lands (EXEC-HTTP-7)."
+        @tier "infra"
+      statementTimeoutMs : number = 0
+        @label "Statement timeout (ms)"
+        @description "Milliseconds the server lets one statement of the held session run before it cancels it (SQLSTATE 57014), sent as the session's statement_timeout in the startup message so it bounds every statement alike; 0 sends none."
         @tier "infra"
       recvBytes : number = 16384
         @label "Read size"
@@ -1253,6 +1292,20 @@ EMITS = '''    emits {
         message : string!
       }
         @tier "internal"
+      SQL_ROWS -> external {
+        key : string!
+        rows : [Row]!
+        rowCount : number!
+        columns : [SqlColumn]!
+      }
+        @tier "internal"
+      SQL_FAILED -> external {
+        key : string!
+        kind : string!
+        code : string!
+        message : string!
+      }
+        @tier "internal"
       PG_WIRE_SENT -> external {
         stage : string!
         sql : string!
@@ -1293,6 +1346,13 @@ LISTENS = '''    listens {
         collection : string
       }
         @description "List every row of an entity type."
+        @tier "internal"
+      ROWS_SQL -> input {
+        key : string!
+        sql : string!
+        params : [RowCell?]
+      }
+        @description "Run one statement as given on the held session, binds $1, $2, ... sent as text: the answer is SQL_ROWS with the rows as maps of column name to value, the command's row count and the result columns with their type OIDs. The statement is not checked here: the caller owns the read-only guard."
         @tier "internal"
       ROWS_QUERY -> input {
         key : string!
@@ -1345,7 +1405,148 @@ fixture = ('app row-store-postgres-fixture [\n  version: "1.0.0",\n  net: { "pos
            '  description: "Replay fixture for std-row-store-postgres: composes the driver with sslmode prefer, the mode the twin goldens were recorded under. sslmode is a required knob, so the atom alone has no value for it."\n]\n'
            ';; Generated by spec/store/row-store-postgres.gen/gen_atom.py; regenerate, never hand-edit.\n\n'
            'orbital RowStorePostgresFixtureOrbital {\n  uses Pg from "std/behaviors/std-row-store-postgres"\n\n' + types_block + LOCAL_TYPES + '\n' + ENTITY + '\n'
-           '  trait RowStoreDriver = Pg.traits.RowStoreDriver -> RowStoreFlight {\n    config {\n      sslmode: "prefer"\n    }\n  }\n\n'
+           '  trait RowStoreDriver = Pg.traits.RowStoreDriver -> RowStoreFlight {\n    config {\n      sslmode: "prefer"\n      statementTimeoutMs: 10000\n    }\n  }\n\n'
            '  page boot as RowStorePostgresFixtureStart -> RowStoreDriver\n}\n')
 open(FIX_OUT, 'w').write(fixture)
 print(len(fixture), 'fixture bytes written')
+
+# ---------------------------------------------------------------- std-postgres: the query client over the held session (ROWS_SQL) behind std-sql-select-guard
+PG_OUT = os.path.join(HERE, '..', '..', '..', 'store', 'atoms', 'std-postgres.lolo')
+PG_DESC = ('std-postgres — one read-only SQL query on a real Postgres server, over the held session of std-row-store-postgres (the v3 wire protocol is .lolo over os/tcp-connect, os/send and os/recv). '
+           'PG_QUERY carries one SELECT (or WITH ... SELECT) and its bind values for $1, $2, ...; std-sql-select-guard refuses anything that writes before the session is touched. '
+           'PG_RESULT answers the rows (maps of column name to value), the row count the server\'s CommandComplete reported and the columns with their type OIDs. '
+           'A statement that is refused, a server error (with its SQLSTATE), an unreachable server or a rejected login answers PG_FAILED. '
+           'Values: booleans, numbers, null, text and lists of those; an int8 past 2^53, numeric, json, jsonb, uuid, date, time, timestamp and every other type arrive as the text Postgres prints, timestamptz as UTC ISO text and bytea as base64. '
+           'The connection is the DATABASE_URL form (postgres://user:password@host:port/database) with an sslmode; the host and port knobs are the net grant the app declares.')
+PG_CLIENT = '''  trait PostgresSession = Pg.traits.RowStoreDriver -> RowStoreFlight {
+    config {
+      host: "postgres.example.test"
+      port: 5432
+      url: "postgres://app:secret@postgres.example.test:5432/app"
+      sslmode: "prefer"
+      statementTimeoutMs: 10000
+    }
+    listens {
+      PostgresClient.ROWS_SQL -> ROWS_SQL
+      ROWS_SQL {
+        key : string!
+        sql : string!
+        params : [RowCell?]
+      }
+    }
+  }
+
+  trait PostgresGuard = Guard.traits.SqlSelectGuard {
+    listens {
+      PostgresClient.SQL_GUARD_CHECK -> SQL_GUARD_CHECK
+      SQL_GUARD_CHECK {
+        requestId : string!
+        statements : [string]!
+      }
+    }
+  }
+
+  trait PostgresClient -> PostgresCall [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      PG_QUERY -> guarding when (!= @payload.sql "")
+        (set @entity.pendingSql @payload.sql)
+        (set @entity.pendingParams (default @payload.params []))
+        (emit SQL_GUARD_CHECK { requestId: "pg", statements: [@payload.sql] })
+      PG_QUERY -> idle when (= @payload.sql "")
+        (emit PG_FAILED { kind: "refused", message: "sql is required" })
+    }
+
+    state guarding {
+      INIT -> idle
+      SQL_GUARD_CHECKED -> running when (array/every @payload.results (fn r @r.ok))
+        (emit ROWS_SQL { key: "pg", sql: @entity.pendingSql, params: @entity.pendingParams })
+      SQL_GUARD_CHECKED -> idle when (not (array/every @payload.results (fn r @r.ok)))
+        (emit PG_FAILED { kind: "refused", message: (str/concat "Read-only violation: " (str/join (array/map @payload.results (fn r @r.reason)) "; ")) })
+    }
+
+    state running {
+      INIT -> idle
+      SQL_ROWS -> idle
+        (emit PG_RESULT { rows: @payload.rows, rowCount: @payload.rowCount, columns: @payload.columns })
+      SQL_FAILED -> idle
+        (emit PG_FAILED { kind: @payload.kind, code: @payload.code, message: @payload.message })
+      STORE_FAILED -> idle
+        (emit PG_FAILED { kind: "failed", message: @payload.message })
+    }
+
+    emits {
+      PG_RESULT -> external {
+        rows : [Row]!
+        rowCount : number!
+        columns : [SqlColumn]!
+      }
+        @description "The statement ran: the rows as maps of column name to value, how many rows the command counted and the result columns in order with their Postgres type OIDs."
+        @synonyms "query result, rows returned, select result"
+        @tier "primary"
+      PG_FAILED -> external {
+        kind : string!
+        code : string
+        message : string!
+      }
+        @description "The query did not complete: the kind (refused for an empty or non-read-only statement, timeout, failed, postgres), the SQLSTATE when the server answered an error and the message."
+        @synonyms "query failed, database error, read-only violation, statement timeout"
+        @tier "primary"
+      SQL_GUARD_CHECK -> internal {
+        requestId : string!
+        statements : [string]!
+      }
+        @tier "secondary"
+      ROWS_SQL -> internal {
+        key : string!
+        sql : string!
+        params : [RowCell?]
+      }
+        @tier "secondary"
+    }
+
+    listens {
+      PG_QUERY -> input {
+        sql : string!
+        params : [RowCell?]
+      }
+        @description "Run one read-only SELECT; params bind $1, $2, ... in order."
+        @synonyms "run query, select rows, read from database"
+      PostgresGuard.SQL_GUARD_CHECKED -> SQL_GUARD_CHECKED
+      SQL_GUARD_CHECKED {
+        requestId : string!
+        results : [SqlGuardVerdict]!
+      }
+      PostgresSession.SQL_ROWS -> SQL_ROWS
+      SQL_ROWS {
+        key : string!
+        rows : [Row]!
+        rowCount : number!
+        columns : [SqlColumn]!
+      }
+      PostgresSession.SQL_FAILED -> SQL_FAILED
+      SQL_FAILED {
+        key : string!
+        kind : string!
+        code : string!
+        message : string!
+      }
+      PostgresSession.STORE_FAILED -> STORE_FAILED
+      STORE_FAILED {
+        key : string!
+        message : string!
+      }
+    }
+  }
+'''
+pg_text = ('app std-postgres [\n  version: "1.0.0",\n  net: { "postgres.example.test:5432": [tcp] },\n  description: ' + S(PG_DESC) + '\n]\n'
+           ';; Generated by spec/store/row-store-postgres.gen/gen_atom.py; regenerate, never hand-edit.\n\n'
+           'uses Pg from "std/behaviors/std-row-store-postgres"\nuses Guard from "std/behaviors/std-sql-select-guard"\n\n'
+           'orbital PostgresOrbital {\n' + types_block + LOCAL_TYPES + '  type SqlGuardVerdict = { ok : boolean!, reason : string! }\n\n' + ENTITY + '\n'
+           '  entity PostgresCall [runtime] {\n    id : string!\n    pendingSql : string = ""\n    pendingParams : [RowCell?] = []\n  }\n\n'
+           + PG_CLIENT + '\n  page boot as PostgresPage -> PostgresClient, PostgresSession, PostgresGuard\n}\n')
+open(PG_OUT, 'w').write(pg_text)
+print(len(pg_text), 'std-postgres bytes written')

@@ -1,0 +1,735 @@
+{
+ "source": "The provider selection and the user-store directory are those of the retired behaviors_vectors.rs (ProviderEmbedder::from_vars, user_vectors_dir) as std-orb-vectors' goldens pin them. The os/getenv and os/read-file answers are fed as events.",
+ "atom": "ml/atoms/std-vector-sources.lolo",
+ "trait": "VectorSources",
+ "cases": [
+  {
+   "id": "no provider variable and no key: the default provider needs a key, so none is configured",
+   "entity": {
+    "vars": {
+     "HOME": "/h"
+    },
+    "idx": 7,
+    "paths": []
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "envs",
+     "event": "SRC_ENV",
+     "payload": {
+      "key": "LMSTUDIO_EMBEDDING_MODEL",
+      "value": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "snapshots",
+      "emits": [
+       {
+        "event": "SRC_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SOURCES_READY",
+        "payload": {
+         "snapshots": [],
+         "snapshotPaths": [],
+         "userDir": "/h/.almadar/vectors",
+         "userAnchor": "home",
+         "providerModel": "",
+         "providerKind": "",
+         "embedModel": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ALMADAR_VECTORS_DIR replaces the home store",
+   "entity": {
+    "vars": {
+     "ALMADAR_VECTORS_DIR": "/v",
+     "HOME": "/h"
+    },
+    "idx": 7,
+    "paths": []
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "envs",
+     "event": "SRC_ENV",
+     "payload": {
+      "key": "LMSTUDIO_EMBEDDING_MODEL",
+      "value": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "snapshots",
+      "emits": [
+       {
+        "event": "SRC_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SOURCES_READY",
+        "payload": {
+         "snapshots": [],
+         "snapshotPaths": [],
+         "userDir": "/v",
+         "userAnchor": "env",
+         "providerModel": "",
+         "providerKind": "",
+         "embedModel": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "openrouter with a shared key",
+   "entity": {
+    "vars": {
+     "HOME": "/h",
+     "EMBEDDING_API_KEY": "k"
+    },
+    "idx": 7,
+    "paths": []
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "envs",
+     "event": "SRC_ENV",
+     "payload": {
+      "key": "LMSTUDIO_EMBEDDING_MODEL",
+      "value": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "snapshots",
+      "emits": [
+       {
+        "event": "SRC_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SOURCES_READY",
+        "payload": {
+         "snapshots": [],
+         "snapshotPaths": [],
+         "userDir": "/h/.almadar/vectors",
+         "userAnchor": "home",
+         "providerModel": "baai/bge-base-en-v1.5",
+         "providerKind": "openrouter-shared",
+         "embedModel": "baai/bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "openrouter with its own key",
+   "entity": {
+    "vars": {
+     "HOME": "/h",
+     "OPEN_ROUTER_API_KEY": "k"
+    },
+    "idx": 7,
+    "paths": []
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "envs",
+     "event": "SRC_ENV",
+     "payload": {
+      "key": "LMSTUDIO_EMBEDDING_MODEL",
+      "value": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "snapshots",
+      "emits": [
+       {
+        "event": "SRC_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SOURCES_READY",
+        "payload": {
+         "snapshots": [],
+         "snapshotPaths": [],
+         "userDir": "/h/.almadar/vectors",
+         "userAnchor": "home",
+         "providerModel": "baai/bge-base-en-v1.5",
+         "providerKind": "openrouter-own",
+         "embedModel": "baai/bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "openai with a shared key uses EMBEDDING_MODEL",
+   "entity": {
+    "vars": {
+     "HOME": "/h",
+     "EMBEDDING_PROVIDER": "openai",
+     "EMBEDDING_API_KEY": "k",
+     "EMBEDDING_MODEL": "text-embedding-3-small"
+    },
+    "idx": 7,
+    "paths": []
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "envs",
+     "event": "SRC_ENV",
+     "payload": {
+      "key": "LMSTUDIO_EMBEDDING_MODEL",
+      "value": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "snapshots",
+      "emits": [
+       {
+        "event": "SRC_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SOURCES_READY",
+        "payload": {
+         "snapshots": [],
+         "snapshotPaths": [],
+         "userDir": "/h/.almadar/vectors",
+         "userAnchor": "home",
+         "providerModel": "text-embedding-3-small",
+         "providerKind": "openai-shared",
+         "embedModel": "text-embedding-3-small"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "openai with its own key and no model uses the canonical one",
+   "entity": {
+    "vars": {
+     "HOME": "/h",
+     "EMBEDDING_PROVIDER": "openai",
+     "OPENAI_API_KEY": "k"
+    },
+    "idx": 7,
+    "paths": []
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "envs",
+     "event": "SRC_ENV",
+     "payload": {
+      "key": "LMSTUDIO_EMBEDDING_MODEL",
+      "value": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "snapshots",
+      "emits": [
+       {
+        "event": "SRC_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SOURCES_READY",
+        "payload": {
+         "snapshots": [],
+         "snapshotPaths": [],
+         "userDir": "/h/.almadar/vectors",
+         "userAnchor": "home",
+         "providerModel": "baai/bge-base-en-v1.5",
+         "providerKind": "openai-own",
+         "embedModel": "baai/bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "openai with only the openrouter key has no provider",
+   "entity": {
+    "vars": {
+     "HOME": "/h",
+     "EMBEDDING_PROVIDER": "openai",
+     "OPEN_ROUTER_API_KEY": "k"
+    },
+    "idx": 7,
+    "paths": []
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "envs",
+     "event": "SRC_ENV",
+     "payload": {
+      "key": "LMSTUDIO_EMBEDDING_MODEL",
+      "value": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "snapshots",
+      "emits": [
+       {
+        "event": "SRC_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SOURCES_READY",
+        "payload": {
+         "snapshots": [],
+         "snapshotPaths": [],
+         "userDir": "/h/.almadar/vectors",
+         "userAnchor": "home",
+         "providerModel": "",
+         "providerKind": "",
+         "embedModel": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lmstudio needs no key, embeds as the canonical model and is asked for its own model name",
+   "entity": {
+    "vars": {
+     "HOME": "/h",
+     "EMBEDDING_PROVIDER": "lmstudio"
+    },
+    "idx": 7,
+    "paths": []
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "envs",
+     "event": "SRC_ENV",
+     "payload": {
+      "key": "LMSTUDIO_EMBEDDING_MODEL",
+      "value": "local-bge"
+     },
+     "expect": {
+      "fired": true,
+      "state": "snapshots",
+      "emits": [
+       {
+        "event": "SRC_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SOURCES_READY",
+        "payload": {
+         "snapshots": [],
+         "snapshotPaths": [],
+         "userDir": "/h/.almadar/vectors",
+         "userAnchor": "home",
+         "providerModel": "baai/bge-base-en-v1.5",
+         "providerKind": "lmstudio",
+         "embedModel": "local-bge"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lmstudio without a model name is asked for the default one",
+   "entity": {
+    "vars": {
+     "HOME": "/h",
+     "EMBEDDING_PROVIDER": "lmstudio"
+    },
+    "idx": 7,
+    "paths": []
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "envs",
+     "event": "SRC_ENV",
+     "payload": {
+      "key": "LMSTUDIO_EMBEDDING_MODEL",
+      "value": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "snapshots",
+      "emits": [
+       {
+        "event": "SRC_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SOURCES_READY",
+        "payload": {
+         "snapshots": [],
+         "snapshotPaths": [],
+         "userDir": "/h/.almadar/vectors",
+         "userAnchor": "home",
+         "providerModel": "baai/bge-base-en-v1.5",
+         "providerKind": "lmstudio",
+         "embedModel": "text-embedding-bge-base-en-v1.5"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a snapshot that is read is kept in path order, one that does not exist is empty bytes",
+   "entity": {
+    "vars": {},
+    "idx": 7,
+    "paths": [
+     "/a.vec",
+     "/b.vec"
+    ],
+    "pos": 0,
+    "snapshots": [],
+    "userDir": "/u",
+    "userAnchor": "home"
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_SNAPSHOT_READ",
+     "payload": {
+      "data": "QUJD",
+      "key": "/a.vec"
+     },
+     "expect": {
+      "fired": true,
+      "state": "snapshots",
+      "emits": [
+       {
+        "event": "SRC_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_SNAPSHOT_ABSENT",
+     "payload": {
+      "error": "gone",
+      "kind": "not-found",
+      "key": "/b.vec"
+     },
+     "expect": {
+      "fired": true,
+      "state": "snapshots",
+      "emits": [
+       {
+        "event": "SRC_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SOURCES_READY",
+        "payload": {
+         "snapshots": [
+          "QUJD",
+          ""
+         ],
+         "snapshotPaths": [
+          "/a.vec",
+          "/b.vec"
+         ],
+         "userDir": "/u",
+         "userAnchor": "home",
+         "providerModel": "",
+         "providerKind": "",
+         "embedModel": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a snapshot that cannot be read for another reason is refused",
+   "entity": {
+    "vars": {},
+    "paths": [
+     "/a.vec"
+    ]
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "snapshots",
+     "event": "SRC_SNAPSHOT_ABSENT",
+     "payload": {
+      "error": "denied",
+      "kind": "denied",
+      "key": "/a.vec"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SOURCES_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_IO",
+         "detail": "/a.vec: denied"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the user store that exists is answered as read, one that does not exist as empty bytes, any other failure is refused",
+   "entity": {
+    "envDir": ""
+   },
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "idle",
+     "event": "SRC_USER_READ",
+     "payload": {
+      "data": "QUJD",
+      "key": "/u/m.vec"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "USER_STORE_READ",
+        "payload": {
+         "data": "QUJD"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "VectorSources",
+     "from": "idle",
+     "event": "SRC_USER_ABSENT",
+     "payload": {
+      "error": "gone",
+      "kind": "not-found",
+      "key": "/u/m.vec"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "USER_STORE_READ",
+        "payload": {
+         "data": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "VectorSources",
+     "from": "idle",
+     "event": "SRC_USER_ABSENT",
+     "payload": {
+      "error": "denied",
+      "kind": "denied",
+      "key": "/u/m.vec"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SOURCES_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_IO",
+         "detail": "/u/m.vec: denied"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an environment read that fails is refused",
+   "entity": {},
+   "steps": [
+    {
+     "trait": "VectorSources",
+     "from": "envs",
+     "event": "SRC_FAILED",
+     "payload": {
+      "error": "denied"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SOURCES_REFUSED",
+        "payload": {
+         "code": "ORB_VECTOR_ENV",
+         "detail": "cannot read the environment: denied"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

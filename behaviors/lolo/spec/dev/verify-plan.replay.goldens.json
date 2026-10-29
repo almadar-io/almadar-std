@@ -33,6 +33,12 @@
               "event": "GO",
               "effects": []
              }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
             ]
            }
           }
@@ -176,6 +182,12 @@
               "event": "GO",
               "effects": []
              }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
             ]
            }
           }
@@ -311,6 +323,12 @@
               "to": "b",
               "event": "GO",
               "effects": []
+             }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
              }
             ]
            }
@@ -456,6 +474,12 @@
                ]
               ]
              }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
             ]
            }
           }
@@ -591,6 +615,12 @@
                ]
               ]
              }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
             ]
            }
           }
@@ -699,6 +729,12 @@
               "event": "GO",
               "effects": []
              }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
             ]
            }
           }
@@ -803,6 +839,12 @@
               ],
               "effects": []
              }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
             ]
            }
           }
@@ -905,6 +947,12 @@
                "@payload.qty"
               ],
               "effects": []
+             }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
              }
             ]
            }
@@ -3008,6 +3056,12 @@
               "event": "GO",
               "effects": []
              }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
             ]
            }
           }
@@ -3179,6 +3233,12 @@
               "event": "GO",
               "effects": []
              }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
             ]
            }
           }
@@ -3324,6 +3384,12 @@
               "to": "b",
               "event": "GO",
               "effects": []
+             }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
              }
             ]
            }
@@ -3485,6 +3551,12 @@
                ]
               ]
              }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
             ]
            }
           }
@@ -3608,6 +3680,448 @@
         "event": "PLAN_ANSWERED",
         "payload": {
          "steps": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-bytes-slot-is-planned-as-padded-base64",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": [
+         {
+          "name": "data",
+          "type": "bytes",
+          "required": true
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "payload": {
+            "data": "dmVyaWZ5"
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-trait-with-no-initial-state-is-refused",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_REFUSED",
+        "payload": {
+         "error": "verify-plan: no initial state declared for trait O.T"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-trait-whose-states-mark-none-initial-is-refused",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ],
+            "states": [
+             {
+              "name": "a"
+             },
+             {
+              "name": "b"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_REFUSED",
+        "payload": {
+         "error": "verify-plan: no initial state declared for trait O.T"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "only-the-trait-without-an-initial-state-is-named",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ],
+            "states": [
+             {
+              "name": "a",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ]
+           }
+          },
+          {
+           "name": "U",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "U",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_REFUSED",
+        "payload": {
+         "error": "verify-plan: no initial state declared for trait O.U"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-trait-with-an-initial-state-is-planned-not-refused",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ],
+            "states": [
+             {
+              "name": "a",
+              "isInitial": true
+             },
+             {
+              "name": "b"
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "auto-init",
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "payload": {}
+          }
+         ]
         }
        }
       ]

@@ -62,6 +62,7 @@ orbital RowStorePostgresSpec {
   type IndexPath = { fields : [string]!, orderBy : string? }
   type RowsEnsureIndexesVerb = { key : string!, entityType : string!, indexes : [IndexPath]! }
 
+  type SqlColumn = { name : string!, typeOid : number! }
   type PgNullParam = { kind : "null" }
   type PgTextParam = { kind : "text", text : string! }
   type PgParam = PgNullParam | PgTextParam
@@ -98,6 +99,7 @@ orbital RowStorePostgresSpec {
       ROWS_QUERY -> running
       ROWS_WRITE -> running
       ROWS_ENSURE_INDEXES -> running
+      ROWS_SQL -> running
     }
     state connecting { PG_CONNECTED -> negotiating }
     state negotiating { PG_RECEIVED -> startup }
@@ -117,6 +119,8 @@ orbital RowStorePostgresSpec {
       ROWS_INDEXES_ENSURED { key : string! }
       STORE_UNSUPPORTED { key : string!  reason : string! }
       STORE_FAILED { key : string!  message : string! }
+      SQL_ROWS { key : string!  rows : [Row]!  rowCount : number!  columns : [SqlColumn]! }
+      SQL_FAILED { key : string!  kind : string!  code : string!  message : string! }
       PG_WIRE_SENT { stage : string!  sql : string!  params : [PgParam]!  frame : bytes! }
     }
   }

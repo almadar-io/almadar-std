@@ -16,6 +16,9 @@ type ListenOrbital = { name : string, traits : [ListenTrait] }
 type ListenProgram = { orbitals : [ListenOrbital] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintListenTriggerCodes = { xListenTriggerUnmatched : LintCodeDecl }
+
 orbital OrbLintListenTriggerOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -40,7 +43,7 @@ orbital OrbLintListenTriggerOrbital {
                   (let ((handled (array/map (object/get (object/get @t "stateMachine") "transitions" []) (fn x (object/get @x "event"))))
                         (lsn (object/get @t "listens" [])))
                     (array/map (array/filter @lsn (fn l (not (array/includes @handled (object/get @l "triggers" (object/get @l "event"))))))
-                      (fn l { code: "ORB_X_LISTEN_TRIGGER_UNMATCHED", path: (str/concat "orbitals." (object/get @o "name") ".traits." (object/get @t "name") ".listens"), message: (str/concat "Listen entry in '" (object/get @o "name") "." (object/get @t "name") "' triggers '" (object/get @l "triggers" (object/get @l "event")) "' but no transition in the same trait reacts to it."), suggestion: "Add a transition whose event matches the listen trigger, or fix the `-> TRIGGER` to name an event the trait's state machine handles.", severity: "error" })))))))))))))
+                      (fn l { code: @config.codes.xListenTriggerUnmatched.code, path: (str/concat "orbitals." (object/get @o "name") ".traits." (object/get @t "name") ".listens"), message: (str/concat "Listen entry in '" (object/get @o "name") "." (object/get @t "name") "' triggers '" (object/get @l "triggers" (object/get @l "event")) "' but no transition in the same trait reacts to it."), suggestion: "Add a transition whose event matches the listen trigger, or fix the `-> TRIGGER` to name an event the trait's state machine handles.", severity: "error" })))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "listen-trigger", scope: @entity.scope, findings: @entity.findings })
@@ -60,6 +63,12 @@ orbital OrbLintListenTriggerOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintListenTriggerCodes = { xListenTriggerUnmatched: { code: "ORB_X_LISTEN_TRIGGER_UNMATCHED", category: "cross", description: "A listens entry triggers an event that no transition in the same trait reacts to" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintListenTriggerCli -> OrbLintListenTriggerRun [client] {

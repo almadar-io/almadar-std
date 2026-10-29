@@ -296,6 +296,8 @@ export const STD_MODULES = [
   'base64',
   'hash',
   'hmac',
+  'rsa',
+  'ecdsa',
   'gzip',
   'brotli',
   'xml',

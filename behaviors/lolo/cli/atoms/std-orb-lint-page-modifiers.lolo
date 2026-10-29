@@ -15,6 +15,9 @@ type PageModsOrbital = { pages : [PageModsPage] }
 type PageModsSite = { signIn : string }
 type PageModsProgram = { site : PageModsSite, locales : [string], orbitals : [PageModsOrbital]! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintPageModifiersCodes = { pIndexRequiresPublic : LintCodeDecl , pIndexParamRoute : LintCodeDecl , pAuthNoSignIn : LintCodeDecl , pTranslationDuplicateLocale : LintCodeDecl }
+
 orbital OrbLintPageModifiersOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -46,13 +49,13 @@ orbital OrbLintPageModifiersOrbital {
                           (if (object/has @pg "description") [] ["`description:`"])])))
                         (array/flatten [
                           (if (and (= (object/get @pg "indexing" "") "index") (> (array/len @lacks) 0))
-                            [{ code: "ORB_P_INDEX_REQUIRES_PUBLIC", path: @where, message: (str/concat "page '" @pname "' (" @rt ") declares `indexing: index` but lacks " (str/join @lacks ", ")), suggestion: "an indexed page is public, titled and described; otherwise declare `indexing: noindex`", severity: "error" }]
+                            [{ code: @config.codes.pIndexRequiresPublic.code, path: @where, message: (str/concat "page '" @pname "' (" @rt ") declares `indexing: index` but lacks " (str/join @lacks ", ")), suggestion: "an indexed page is public, titled and described; otherwise declare `indexing: noindex`", severity: "error" }]
                             [])
                           (if (and (= (object/get @pg "indexing" "") "index") (array/some (str/split @rt "/") (fn seg (str/startsWith @seg ":"))))
-                            [{ code: "ORB_P_INDEX_PARAM_ROUTE", path: @where, message: (str/concat "page '" @pname "' (" @rt ") is a parameter route; it cannot be `indexing: index` because its concrete URLs are not declared"), suggestion: "declare `indexing: noindex` on parameter routes", severity: "error" }]
+                            [{ code: @config.codes.pIndexParamRoute.code, path: @where, message: (str/concat "page '" @pname "' (" @rt ") is a parameter route; it cannot be `indexing: index` because its concrete URLs are not declared"), suggestion: "declare `indexing: noindex` on parameter routes", severity: "error" }]
                             [])
                           (if (and (= @pacc "authenticated") (= @sgi ""))
-                            [{ code: "ORB_P_AUTH_NO_SIGN_IN", path: @where, message: (str/concat "page '" @pname "' (" @rt ") is `access: authenticated` but the app declares no `signIn:` route"), suggestion: (str/concat "add `signIn: " "\"" "/<route>" "\"" "` to the app bracket — the page a non-admitted viewer is sent to"), severity: "error" }]
+                            [{ code: @config.codes.pAuthNoSignIn.code, path: @where, message: (str/concat "page '" @pname "' (" @rt ") is `access: authenticated` but the app declares no `signIn:` route"), suggestion: (str/concat "add `signIn: " "\"" "/<route>" "\"" "` to the app bracket — the page a non-admitted viewer is sent to"), severity: "error" }]
                             [])]))))))))))))
           (let ((ents (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
                   (let ((pgs (object/get (array/nth @orbitals @oi) "pages" [])))
@@ -66,7 +69,7 @@ orbital OrbLintPageModifiersOrbital {
               (let ((en (array/nth @ents @ei)))
                 (let ((same (array/filter (array/range 0 (array/len @ents)) (fn k (and (= (object/get (array/nth @ents @k) "g") (object/get @en "g")) (= (object/get (array/nth @ents @k) "l") (object/get @en "l")))))))
                   (if (and (> (array/len @same) 1) (= (array/first @same) @ei))
-                    [{ code: "ORB_P_TRANSLATION_DUPLICATE_LOCALE", path: (object/get (array/nth @ents (array/nth @same 1)) "p"), message: (str/concat "translation group '" (object/get @en "g") "' holds " (array/len @same) " pages in locale '" (object/get @en "l") "' (" (str/join (array/map @same (fn k (object/get (array/nth @ents @k) "p"))) ", ") "); each locale may hold one"), suggestion: "give each page its own locale prefix, or a different `translationOf:`", severity: "error" }]
+                    [{ code: @config.codes.pTranslationDuplicateLocale.code, path: (object/get (array/nth @ents (array/nth @same 1)) "p"), message: (str/concat "translation group '" (object/get @en "g") "' holds " (array/len @same) " pages in locale '" (object/get @en "l") "' (" (str/join (array/map @same (fn k (object/get (array/nth @ents @k) "p"))) ", ") "); each locale may hold one"), suggestion: "give each page its own locale prefix, or a different `translationOf:`", severity: "error" }]
                     []))))))) ])))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -87,6 +90,12 @@ orbital OrbLintPageModifiersOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintPageModifiersCodes = { pIndexRequiresPublic: { code: "ORB_P_INDEX_REQUIRES_PUBLIC", category: "page", description: "A page declares indexing: index but lacks the public access it requires" }, pIndexParamRoute: { code: "ORB_P_INDEX_PARAM_ROUTE", category: "page", description: "A parameter-route page is marked indexing index although its concrete URLs are not declared" }, pAuthNoSignIn: { code: "ORB_P_AUTH_NO_SIGN_IN", category: "page", description: "A page requires authenticated access but the app declares no signIn route" }, pTranslationDuplicateLocale: { code: "ORB_P_TRANSLATION_DUPLICATE_LOCALE", category: "page", description: "A translation group holds more than one page in the same locale" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintPageModifiersCli -> OrbLintPageModifiersRun [client] {

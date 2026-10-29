@@ -26,6 +26,9 @@ type BrTrait = { name : string, stateMachine : BrMachine }
 type BrOrbital = { traits : [BrTrait] }
 type BrProgram = { orbitals : [BrOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEmbedBridgeCodes = { embedBridgeListensUnsent : LintCodeDecl , embedBridgeEmitsUnheard : LintCodeDecl }
+
 orbital OrbLintEmbedBridgeOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses Fired from "std/behaviors/std-orb-fired-events"
@@ -86,9 +89,9 @@ orbital OrbLintEmbedBridgeOrbital {
                 (array/flatten (array/map (object/get @r "bridges") (fn br
                   (array/concat
                     (array/map (array/filter (object/get @br "listens") (fn ev (not (array/includes @fired @ev))))
-                      (fn ev { code: "ORB_EMBED_BRIDGE_LISTENS_UNSENT", path: (object/get @r "path"), message: (str/concat "the embed's bridge delivers '" @ev "' into it, but nothing in this program sends '" @ev "'"), suggestion: (str/concat "Send '" @ev "' from the host (an emit effect or a control), or remove it from the bridge's `listens`"), severity: "error" }))
+                      (fn ev { code: @config.codes.embedBridgeListensUnsent.code, path: (object/get @r "path"), message: (str/concat "the embed's bridge delivers '" @ev "' into it, but nothing in this program sends '" @ev "'"), suggestion: (str/concat "Send '" @ev "' from the host (an emit effect or a control), or remove it from the bridge's `listens`"), severity: "error" }))
                     (array/map (array/filter (object/get @br "emits") (fn ev (not (array/includes @consumed @ev))))
-                      (fn ev { code: "ORB_EMBED_BRIDGE_EMITS_UNHEARD", path: (object/get @r "path"), message: (str/concat "the embed's bridge re-emits '" @ev "' on the host, but nothing in this program handles '" @ev "'"), suggestion: (str/concat "Handle '" @ev "' on the host (a transition or a pattern that listens for it), or remove it from the bridge's `emits`"), severity: "error" })))))))))))))
+                      (fn ev { code: @config.codes.embedBridgeEmitsUnheard.code, path: (object/get @r "path"), message: (str/concat "the embed's bridge re-emits '" @ev "' on the host, but nothing in this program handles '" @ev "'"), suggestion: (str/concat "Handle '" @ev "' on the host (a transition or a pattern that listens for it), or remove it from the bridge's `emits`"), severity: "error" })))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "embed-bridge", scope: @entity.scope, findings: @entity.findings })
@@ -114,6 +117,12 @@ orbital OrbLintEmbedBridgeOrbital {
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
     }
+    config {
+      codes : LintEmbedBridgeCodes = { embedBridgeListensUnsent: { code: "ORB_EMBED_BRIDGE_LISTENS_UNSENT", category: "embed", description: "An embed bridge delivers an event into the program that nothing in the program sends" }, embedBridgeEmitsUnheard: { code: "ORB_EMBED_BRIDGE_EMITS_UNHEARD", category: "embed", description: "An embed bridge re-emits an event on the host that nothing in the program handles" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintEmbedBridgeCli -> OrbLintEmbedBridgeRun [client] {

@@ -17,6 +17,9 @@ type StUnreachTrait = { stateMachine : StUnreachMachine }
 type StUnreachOrbital = { traits : [StUnreachTrait] }
 type StUnreachProgram = { orbitals : [StUnreachOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintStateUnreachableCodes = { tStateUnreachable : LintCodeDecl }
+
 orbital OrbLintStateUnreachableOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -55,7 +58,7 @@ orbital OrbLintStateUnreachableOrbital {
                                           []
                                           (array/map (array/filter @froms (fn f (!= @f "*"))) (fn f { from: @f, to: (object/get @tr "to" "") }))))))))))
                                   (let ((reached (array/reduce (array/range 0 (array/len @sts)) [@initial] (fn (cur i) (array/unique (array/concat @cur (array/map (array/filter @edges (fn e (array/includes @cur (object/get @e "from")))) (fn e (object/get @e "to")))))))))
-                                    (array/map (array/filter @sts (fn s (not (array/includes @reached (object/get @s "name" ""))))) (fn s { code: "ORB_T_STATE_UNREACHABLE", path: (str/concat @where ".states"), message: (str/concat "State '" (object/get @s "name" "") "' is unreachable from the initial state '" @initial "' via any transition path"), suggestion: "Add a transition that reaches this state, or remove the dead state", severity: "error" })))))))))))))))))))))
+                                    (array/map (array/filter @sts (fn s (not (array/includes @reached (object/get @s "name" ""))))) (fn s { code: @config.codes.tStateUnreachable.code, path: (str/concat @where ".states"), message: (str/concat "State '" (object/get @s "name" "") "' is unreachable from the initial state '" @initial "' via any transition path"), suggestion: "Add a transition that reaches this state, or remove the dead state", severity: "error" })))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "state-unreachable", scope: @entity.scope, findings: @entity.findings })
@@ -75,6 +78,12 @@ orbital OrbLintStateUnreachableOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintStateUnreachableCodes = { tStateUnreachable: { code: "ORB_T_STATE_UNREACHABLE", category: "trait", description: "A state is unreachable from the initial state through any transition path" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintStateUnreachableCli -> OrbLintStateUnreachableRun [client] {

@@ -1,0 +1,379 @@
+{
+ "atom": "cli/atoms/std-orb-lint-not-found.lolo",
+ "trait": "OrbLintNotFound",
+ "note": "Cases for the `[notFound]` page lint: route pages with none declared (warning), exactly one (control), two (error), protocol-only and page-less programs (controls). Pages carry `isNotFound` as the resolver stamps it.",
+ "cases": [
+  {
+   "id": "routes-without-a-not-found-page-warn",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "nf",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [],
+         "pages": [
+          {
+           "name": "Home",
+           "path": "/"
+          },
+          {
+           "name": "About",
+           "path": "/about"
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "not-found",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_PAGE_NOT_FOUND_MISSING",
+           "path": "orbitals",
+           "message": "The program declares route pages but no `[notFound]` page, so a path no page matches has nothing to show",
+           "suggestion": "Declare one page with the `[notFound]` modifier",
+           "severity": "warning"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-one-not-found-page-is-clean",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "nf",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [],
+         "pages": [
+          {
+           "name": "Home",
+           "path": "/"
+          },
+          {
+           "name": "Gone",
+           "path": "/404",
+           "isNotFound": true
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "not-found",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-not-found-pages-are-an-error",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "nf",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [],
+         "pages": [
+          {
+           "name": "Home",
+           "path": "/"
+          },
+          {
+           "name": "A",
+           "path": "/a",
+           "isNotFound": true
+          },
+          {
+           "name": "B",
+           "path": "/b",
+           "isNotFound": true
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "not-found",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_PAGE_NOT_FOUND_DUPLICATE",
+           "path": "orbitals",
+           "message": "The program declares 2 `[notFound]` pages; a path no page matches can show only one",
+           "suggestion": "Keep one page with the `[notFound]` modifier",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-protocol-pages-are-not-routes",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "nf",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [],
+         "pages": [
+          {
+           "name": "Hook",
+           "protocol": "http"
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "not-found",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-pages-is-clean",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "nf",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "not-found",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "duplicate-and-no-route-still-counts-marked-pages",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "nf",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [],
+         "pages": [
+          {
+           "name": "A",
+           "isNotFound": true
+          },
+          {
+           "name": "B",
+           "isNotFound": true
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "not-found",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_PAGE_NOT_FOUND_DUPLICATE",
+           "path": "orbitals",
+           "message": "The program declares 2 `[notFound]` pages; a path no page matches can show only one",
+           "suggestion": "Keep one page with the `[notFound]` modifier",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

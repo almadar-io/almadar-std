@@ -11,6 +11,9 @@ type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type HttpEgressProgram = { egress : [string] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintHttpEgressEntryCodes = { httpEgressEntryInvalid : LintCodeDecl }
+
 orbital OrbLintHttpEgressEntryOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -32,7 +35,7 @@ orbital OrbLintHttpEgressEntryOrbital {
             (let ((en (array/nth @entries @i)))
               (if (validate/pattern @en "^([Hh][Tt][Tt][Pp][Ss]?|[Rr][Ee][Dd][Ii][Ss][Ss]?|[Pp][Oo][Ss][Tt][Gg][Rr][Ee][Ss]([Qq][Ll])?)://(\\[[^\\]/?#\\\\@ ]+\\]|[^:/?#\\\\@ \\[][^:/?#\\\\@ ]*)(:\\+?0*([0-5]?[0-9]{1,4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?$")
                 []
-                [{ code: "ORB_HTTP_EGRESS_ENTRY_INVALID", path: (str/concat "egress[" @i "]"), message: (str/concat "egress entry '" @en "' is not scheme://host[:port]"), suggestion: "Write an origin only: no path, query, credentials or trailing slash", severity: "error" }])))))))
+                [{ code: @config.codes.httpEgressEntryInvalid.code, path: (str/concat "egress[" @i "]"), message: (str/concat "egress entry '" @en "' is not scheme://host[:port]"), suggestion: "Write an origin only: no path, query, credentials or trailing slash", severity: "error" }])))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "http-egress-entry", scope: @entity.scope, findings: @entity.findings })
@@ -52,6 +55,12 @@ orbital OrbLintHttpEgressEntryOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintHttpEgressEntryCodes = { httpEgressEntryInvalid: { code: "ORB_HTTP_EGRESS_ENTRY_INVALID", category: "http", description: "An egress allowlist entry is not of the form scheme://host[:port]" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintHttpEgressEntryCli -> OrbLintHttpEgressEntryRun [client] {

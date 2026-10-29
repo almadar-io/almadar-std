@@ -25,6 +25,9 @@ type UidOrbital = { name : string, expects : [UidExpect], entity : UidEntityRef,
 type UidProgram = { orbitals : [UidOrbital] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintUserIdentityCodes = { sRoleLiteralNotMember : LintCodeDecl , userIntoRequiredSlot : LintCodeDecl }
+
 orbital OrbLintUserIdentityOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -102,7 +105,7 @@ orbital OrbLintUserIdentityOrbital {
               (if (validate/array @hs)
                (array/flatten (array/map @hs (fn h (let ((kind (let ((s27 (object/get @h "kind" ""))) (if (validate/string @s27) @s27 ""))) (a (let ((s28 (object/get @h "a" ""))) (if (validate/string @s28) @s28 ""))) (b (let ((s29 (object/get @h "b" ""))) (if (validate/string @s29) @s29 ""))) (vv (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov))))
  (if (= @kind "role")
-  [{ code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", path: (str/concat @tp (let ((s26 (object/get @h "rel" ""))) (if (validate/string @s26) @s26 ""))), message: (str/concat "\"" @a "\" is not a declared value of `@user." @b "` on the [identity] entity `" @idNm "`. This comparison can never be true — the branch is dead."), suggestion: (str/concat "Use one of: " (str/join @vv ", ") ", or add \"" @a "\" to `" @idNm "." @b "`."), severity: "error", validValues: @vv }]
+  [{ code: @config.codes.sRoleLiteralNotMember.code, path: (str/concat @tp (let ((s26 (object/get @h "rel" ""))) (if (validate/string @s26) @s26 ""))), message: (str/concat "\"" @a "\" is not a declared value of `@user." @b "` on the [identity] entity `" @idNm "`. This comparison can never be true — the branch is dead."), suggestion: (str/concat "Use one of: " (str/join @vv ", ") ", or add \"" @a "\" to `" @idNm "." @b "`."), severity: "error", validValues: @vv }]
   [])))))
                @nof))
              @nof)))))))))))))))))))  (if (not @hasDecl) @nof
@@ -120,7 +123,7 @@ orbital OrbLintUserIdentityOrbital {
         (let ((pg (array/nth @pgs @k)))
          (if (validate/object @pg)
           (array/flatten (array/map (array/filter (object/get @pg "roles" []) (fn role (not (array/some @rf (fn r (array/includes (object/get @r "vocab") @role)))))) (fn role
-           [{ code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", path: (str/concat "orbitals[" @oi "].pages[" @k "].roles"), message: (str/concat "Page \"" (object/get @pg "path" "") "\" lists role \"" @role "\" for its nav entry, but no role field of the [identity] entity `" @idnm "` declares it, so no viewer ever sees the entry."), suggestion: (str/concat "Use one of: " (str/join (object/get @first0 "vocab") ", ") ", or add \"" @role "\" to `" @idnm "." (object/get @first0 "name" "") "`."), severity: "error", validValues: (object/get @first0 "vocab") }])))
+           [{ code: @config.codes.sRoleLiteralNotMember.code, path: (str/concat "orbitals[" @oi "].pages[" @k "].roles"), message: (str/concat "Page \"" (object/get @pg "path" "") "\" lists role \"" @role "\" for its nav entry, but no role field of the [identity] entity `" @idnm "` declares it, so no viewer ever sees the entry."), suggestion: (str/concat "Use one of: " (str/join (object/get @first0 "vocab") ", ") ", or add \"" @role "\" to `" @idnm "." (object/get @first0 "name" "") "`."), severity: "error", validValues: (object/get @first0 "vocab") }])))
           @nof)))))))))))))) ) (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
  (let ((orb (array/nth @orbs @oi)))
   (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
@@ -179,7 +182,7 @@ orbital OrbLintUserIdentityOrbital {
    (array/flatten (array/map (object/keys @k) (fn key (let ((r (object/get @k @key))) (if (validate/array @r) @r @nos)))))
    @nos))) UidShape)))
             (if (validate/array @hs)
-             (array/map @hs (fn h { code: "ORB_USER_INTO_REQUIRED_SLOT", path: @path, message: (str/concat (let ((s23 (object/get @h "a" ""))) (if (validate/string @s23) @s23 "")) " is required but is filled with the whole `@user`, which is null when no viewer is signed in"), suggestion: "Guard the transition on `(!= @user null)`, or build the viewer explicitly (e.g. `(or @user { id: \"anonymous\", role: \"anonymous\", permissions: [] })`)", severity: "error" }))
+             (array/map @hs (fn h { code: @config.codes.userIntoRequiredSlot.code, path: @path, message: (str/concat (let ((s23 (object/get @h "a" ""))) (if (validate/string @s23) @s23 "")) " is required but is filled with the whole `@user`, which is null when no viewer is signed in"), suggestion: "Guard the transition on `(!= @user null)`, or build the viewer explicitly (e.g. `(or @user { id: \"anonymous\", role: \"anonymous\", permissions: [] })`)", severity: "error" }))
              @nof)))))))))))))
      @nof))))))))) ))))))
         (emit LINT_FINISH { })
@@ -204,6 +207,12 @@ orbital OrbLintUserIdentityOrbital {
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       OrbLintInput.LINT_INDEX -> INDEX_HEARD
     }
+    config {
+      codes : LintUserIdentityCodes = { sRoleLiteralNotMember: { code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", category: "schema", description: "A literal compared against an @user field with a closed vocabulary is not a member of that vocabulary, so the branch can never be taken" }, userIntoRequiredSlot: { code: "ORB_USER_INTO_REQUIRED_SLOT", category: "user", description: "A user-identity value is bound into a slot that requires a value the viewer may not have" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintUserIdentityCli -> OrbLintUserIdentityRun [client] {

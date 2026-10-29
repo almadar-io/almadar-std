@@ -14,6 +14,9 @@ type PageUniquenessPage = { path : string, protocol : string, address : PageUniq
 type PageUniquenessOrbital = { pages : [PageUniquenessPage] }
 type PageUniquenessProgram = { orbitals : [PageUniquenessOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintPagePathUniquenessCodes = { pDuplicatePath : LintCodeDecl }
+
 orbital OrbLintPagePathUniquenessOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -55,7 +58,7 @@ orbital OrbLintPagePathUniquenessOrbital {
                   (let ((at (array/filter (array/range 0 (array/len @keys)) (fn j (= (array/nth @keys @j) @key)))))
                     (if (or (< (array/len @at) 2) (!= (array/first @at) @ki))
                       []
-                      [{ code: "ORB_P_DUPLICATE_PATH", path: (object/get (array/nth @entries @ki) "loc"), message: (str/concat "Duplicate page path (normalized to '" @key "'): [" (str/join (array/map @at (fn j (json/stringify (object/get (array/nth @entries @j) "path")))) ", ") "] found at: [" (str/join (array/map @at (fn j (json/stringify (object/get (array/nth @entries @j) "loc")))) ", ") "]"), suggestion: "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch", severity: "error" }]))))))))))
+                      [{ code: @config.codes.pDuplicatePath.code, path: (object/get (array/nth @entries @ki) "loc"), message: (str/concat "Duplicate page path (normalized to '" @key "'): [" (str/join (array/map @at (fn j (json/stringify (object/get (array/nth @entries @j) "path")))) ", ") "] found at: [" (str/join (array/map @at (fn j (json/stringify (object/get (array/nth @entries @j) "loc")))) ", ") "]"), suggestion: "Each page must have a unique path — two routes that only differ by a param NAME still collide at dispatch", severity: "error" }]))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "page-path-uniqueness", scope: @entity.scope, findings: @entity.findings })
@@ -75,6 +78,12 @@ orbital OrbLintPagePathUniquenessOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintPagePathUniquenessCodes = { pDuplicatePath: { code: "ORB_P_DUPLICATE_PATH", category: "page", description: "Two pages declare the same path after normalization" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintPagePathUniquenessCli -> OrbLintPagePathUniquenessRun [client] {

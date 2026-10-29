@@ -1,0 +1,98 @@
+app std-behavior-texts [
+  version: "1.0.0",
+  description: "std-behavior-texts — the strings an installed behavior embeds, one { key, text, hash } per vector, as `orb behaviors texts` printed them (port of @almadar/calibrate's document-text.ts). BUILD_ENTRY_TEXTS { rows } takes catalog rows asked for with `texts: true` and answers ENTRY_TEXTS_BUILT { organism, capability }: the organism text is the behavior name, its description, `Capabilities (organism): <phrases>`, `Entity: <name>` and `Events: <names>` joined by newlines, each part only when present, keyed by the name; the capability text is the `Capabilities (organism): <phrases>` line alone, keyed `<name>#capabilities`, only for a behavior that declares capabilities. BUILD_KNOB_TEXTS { name, described, written } takes a whole-behavior description (behavior/describe) and the program as written (behavior/source) and answers KNOB_TEXTS_BUILT { texts }: per described orbital, one text for every trait knob (none when the orbital imports another behavior's orbital, whose knobs it does not own), keyed `<name>/<orbital>/<trait>/<knob>`, then one for every knob the orbital declares itself, keyed `<name>/<orbital>/$orbital/<knob>`. A knob text is its `<name> <orbital> <trait>.<knob>` head, its label, its description, `Subject: the <Trait words> (a <composed trait words>) for <Entity> records — <Entity> fields: <first ten non-reserved field names>`, `values: …` and `synonyms: …`, each only when present. The hash is the lower-case hex SHA-256 of the text. KNOB_TEXTS_REFUSED { error } answers a described orbital the program does not declare."
+]
+uses Spec from "almadar-std/behavior-texts"
+
+type TextRow = { key : string!, text : string!, hash : string! }
+type WantedText = { key : string!, text : string! }
+type EntryFacts = {
+  name : string!
+  behavior : string
+  description : string
+  capabilitiesText : string
+  defaultEntityName : string
+  connectableEvents : [string]
+}
+type DescribedKnob = {
+  name : string!
+  label : string
+  description : string
+  synonyms : string
+  values : [string]
+}
+type DescribedTrait = {
+  trait : string!
+  ref : string
+  knobs : [DescribedKnob]
+}
+type DescribedField = { name : string }
+type DescribedEntity = { name : string!, fields : [DescribedField] }
+type DescribedValue = { behavior : string!, orbital : string! }
+type WrittenKnob = { type : string! }
+type WrittenRef = { ref : string! }
+type WrittenOrbital = { name : string!, reference : WrittenRef, config : Map string WrittenKnob }
+type WrittenProgram = { orbitals : [WrittenOrbital] }
+type DescribedOrbital = {
+  value : DescribedValue!
+  entity : DescribedEntity
+  traits : [DescribedTrait]
+  knobs : [DescribedKnob]
+}
+type DescribedBehavior = { behavior : string!, orbitals : [DescribedOrbital]! }
+
+orbital BehaviorTextsOrbital {
+  entity TextsRun [runtime] {
+    id : string!
+  }
+
+  trait BehaviorTexts -> TextsRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      BUILD_ENTRY_TEXTS -> idle
+        (emit ENTRY_TEXTS_BUILT { organism: (array/map @payload.rows (fn r { key: @r.name, text: (str/join (array/filter [@r.name (default @r.description "") (if (!= (default @r.capabilitiesText "") "") (str/concat "Capabilities (organism): " (default @r.capabilitiesText "")) "") (if (!= (default @r.defaultEntityName "") "") (str/concat "Entity: " (default @r.defaultEntityName "")) "") (if (> (array/len (default @r.connectableEvents [])) 0) (str/concat "Events: " (str/join (default @r.connectableEvents []) " ")) "")] (fn p (!= @p ""))) "\n"), hash: (default (hash/sha256 (str/join (array/filter [@r.name (default @r.description "") (if (!= (default @r.capabilitiesText "") "") (str/concat "Capabilities (organism): " (default @r.capabilitiesText "")) "") (if (!= (default @r.defaultEntityName "") "") (str/concat "Entity: " (default @r.defaultEntityName "")) "") (if (> (array/len (default @r.connectableEvents [])) 0) (str/concat "Events: " (str/join (default @r.connectableEvents []) " ")) "")] (fn p (!= @p ""))) "\n") "hex") "") })), capability: (array/map (array/filter @payload.rows (fn r (!= (default @r.capabilitiesText "") ""))) (fn r { key: (str/concat @r.name "#capabilities"), text: (if (!= (default @r.capabilitiesText "") "") (str/concat "Capabilities (organism): " (default @r.capabilitiesText "")) ""), hash: (default (hash/sha256 (if (!= (default @r.capabilitiesText "") "") (str/concat "Capabilities (organism): " (default @r.capabilitiesText "")) "") "hex") "") })), wanted: (array/concat (array/map @payload.rows (fn r { key: (default @r.behavior @r.name), text: (str/join (array/filter [@r.name (default @r.description "") (if (!= (default @r.capabilitiesText "") "") (str/concat "Capabilities (organism): " (default @r.capabilitiesText "")) "") (if (!= (default @r.defaultEntityName "") "") (str/concat "Entity: " (default @r.defaultEntityName "")) "") (if (> (array/len (default @r.connectableEvents [])) 0) (str/concat "Events: " (str/join (default @r.connectableEvents []) " ")) "")] (fn p (!= @p ""))) "\n") })) (array/map (array/filter @payload.rows (fn r (!= (default @r.capabilitiesText "") ""))) (fn r { key: (str/concat (default @r.behavior @r.name) "#capabilities"), text: (if (!= (default @r.capabilitiesText "") "") (str/concat "Capabilities (organism): " (default @r.capabilitiesText "")) "") }))) })
+      BUILD_KNOB_TEXTS -> idle when (array/some @payload.described.orbitals (fn o (not (array/some (default @payload.written.orbitals []) (fn w (== (object/get @w "name") (default @o.value.orbital "")))))))
+        (emit KNOB_TEXTS_REFUSED { error: (str/concat @payload.name ": orb described an orbital the program does not declare") })
+      BUILD_KNOB_TEXTS -> idle when (not (array/some @payload.described.orbitals (fn o (not (array/some (default @payload.written.orbitals []) (fn w (== (object/get @w "name") (default @o.value.orbital ""))))))))
+        (emit KNOB_TEXTS_BUILT { texts: (array/map (array/flatten (array/map @payload.described.orbitals (fn o (array/concat (array/flatten (array/map (default @o.traits []) (fn t (array/map (if (array/some (default @payload.written.orbitals []) (fn w (and (== @w.name (default @o.value.orbital "")) (!= @w.reference null)))) [] (default @t.knobs [])) (fn k { key: (str/concat @payload.name "/" (default @o.value.orbital "") "/" @t.trait "/" @k.name), text: (str/join (array/filter [(str/concat @payload.name " " (default @o.value.orbital "") " " @t.trait "." @k.name) (default @k.label "") (default @k.description "") (str/concat "Subject: " (str/join (array/filter [(str/concat "the " (let ((ac (str/split @t.trait ""))) (let ((ap (array/flatten (array/map (array/range 0 (array/len @ac)) (fn ai (let ((ach (default (array/nth @ac @ai) "")) (apv (if (> @ai 0) (default (array/nth @ac (- @ai 1)) "") ""))) (if (and (> @ai 0) (!= @apv "") (str/includes "ABCDEFGHIJKLMNOPQRSTUVWXYZ" @ach) (str/includes "abcdefghijklmnopqrstuvwxyz0123456789" @apv)) [" " @ach] [@ach]))))))) (str/join (array/flatten (array/map (array/range 0 (array/len @ap)) (fn aj (let ((ad (default (array/nth @ap @aj) "")) (aq (if (> @aj 0) (default (array/nth @ap (- @aj 1)) "") "")) (an (default (array/nth @ap (+ @aj 1)) ""))) (if (and (> @aj 0) (!= @aq "") (!= @an "") (str/includes "ABCDEFGHIJKLMNOPQRSTUVWXYZ" @aq) (str/includes "ABCDEFGHIJKLMNOPQRSTUVWXYZ" @ad) (str/includes "abcdefghijklmnopqrstuvwxyz" @an)) [" " @ad] [@ad]))))) "")))) (if (!= (default @t.ref "") "") (let ((rl (default (array/last (str/split (default @t.ref "") ".")) ""))) (if (== @rl "") "" (str/concat "(a " (str/lower (let ((bc (str/split @rl ""))) (let ((bp (array/flatten (array/map (array/range 0 (array/len @bc)) (fn bi (let ((bch (default (array/nth @bc @bi) "")) (bpv (if (> @bi 0) (default (array/nth @bc (- @bi 1)) "") ""))) (if (and (> @bi 0) (!= @bpv "") (str/includes "ABCDEFGHIJKLMNOPQRSTUVWXYZ" @bch) (str/includes "abcdefghijklmnopqrstuvwxyz0123456789" @bpv)) [" " @bch] [@bch]))))))) (str/join (array/flatten (array/map (array/range 0 (array/len @bp)) (fn bj (let ((bd (default (array/nth @bp @bj) "")) (bq (if (> @bj 0) (default (array/nth @bp (- @bj 1)) "") "")) (bn (default (array/nth @bp (+ @bj 1)) ""))) (if (and (> @bj 0) (!= @bq "") (!= @bn "") (str/includes "ABCDEFGHIJKLMNOPQRSTUVWXYZ" @bq) (str/includes "ABCDEFGHIJKLMNOPQRSTUVWXYZ" @bd) (str/includes "abcdefghijklmnopqrstuvwxyz" @bn)) [" " @bd] [@bd]))))) "")))) ")"))) "") (if (= @o.entity null) "" (let ((en (default @o.entity.name "")) (fl (str/join (array/take (array/filter (array/map (default @o.entity.fields []) (fn f (default @f.name ""))) (fn n (and (!= @n "") (not (array/includes ["id", "createdAt", "updatedAt"] @n))))) 10) ", "))) (if (== @fl "") (str/concat "for " @en " records") (str/concat "for " @en " records — " @en " fields: " @fl))))] (fn p (!= @p ""))) " ")) (if (> (array/len (default @k.values [])) 0) (str/concat "values: " (str/join (default @k.values []) ", ")) "") (if (!= (default @k.synonyms "") "") (str/concat "synonyms: " (default @k.synonyms "")) "")] (fn p (!= @p ""))) "\n") }))))) (array/map (array/filter (default @o.knobs []) (fn k (array/includes (array/flatten (array/map (array/filter (default @payload.written.orbitals []) (fn w (== @w.name (default @o.value.orbital "")))) (fn w (object/keys (default @w.config {}))))) @k.name))) (fn k { key: (str/concat @payload.name "/" (default @o.value.orbital "") "/$orbital/" @k.name), text: (str/join (array/filter [(str/concat @payload.name " " (default @o.value.orbital "") " $orbital." @k.name) (default @k.label "") (default @k.description "") (str/concat "Subject: " (str/join (array/filter [(str/concat "the " (let ((cc (str/split (default @o.value.orbital "") ""))) (let ((cp (array/flatten (array/map (array/range 0 (array/len @cc)) (fn ci (let ((cch (default (array/nth @cc @ci) "")) (cpv (if (> @ci 0) (default (array/nth @cc (- @ci 1)) "") ""))) (if (and (> @ci 0) (!= @cpv "") (str/includes "ABCDEFGHIJKLMNOPQRSTUVWXYZ" @cch) (str/includes "abcdefghijklmnopqrstuvwxyz0123456789" @cpv)) [" " @cch] [@cch]))))))) (str/join (array/flatten (array/map (array/range 0 (array/len @cp)) (fn cj (let ((cd (default (array/nth @cp @cj) "")) (cq (if (> @cj 0) (default (array/nth @cp (- @cj 1)) "") "")) (cn (default (array/nth @cp (+ @cj 1)) ""))) (if (and (> @cj 0) (!= @cq "") (!= @cn "") (str/includes "ABCDEFGHIJKLMNOPQRSTUVWXYZ" @cq) (str/includes "ABCDEFGHIJKLMNOPQRSTUVWXYZ" @cd) (str/includes "abcdefghijklmnopqrstuvwxyz" @cn)) [" " @cd] [@cd]))))) ""))) " orbital") (if (= @o.entity null) "" (let ((en (default @o.entity.name "")) (fl (str/join (array/take (array/filter (array/map (default @o.entity.fields []) (fn f (default @f.name ""))) (fn n (and (!= @n "") (not (array/includes ["id", "createdAt", "updatedAt"] @n))))) 10) ", "))) (if (== @fl "") (str/concat "for " @en " records") (str/concat "for " @en " records — " @en " fields: " @fl))))] (fn p (!= @p ""))) " ")) (if (> (array/len (default @k.values [])) 0) (str/concat "values: " (str/join (default @k.values []) ", ")) "") (if (!= (default @k.synonyms "") "") (str/concat "synonyms: " (default @k.synonyms "")) "")] (fn p (!= @p ""))) "\n") })))))) (fn kr { key: @kr.key, text: @kr.text, hash: (default (hash/sha256 @kr.text "hex") "") })) })
+    }
+
+    emits {
+      ENTRY_TEXTS_BUILT -> external {
+        organism : [TextRow]!
+        capability : [TextRow]!
+        wanted : [WantedText]!
+      }
+        @description "The organism and capability texts of the rows; wanted keys each text by its row's behavior key (the name when a row carries none)."
+        @tier "primary"
+      KNOB_TEXTS_BUILT -> external {
+        texts : [TextRow]!
+      }
+        @description "Every knob text of the behavior, trait knobs then the orbital's own."
+        @tier "primary"
+      KNOB_TEXTS_REFUSED -> external {
+        error : string!
+      }
+        @description "A described orbital the program as written does not declare."
+        @tier "primary"
+    }
+
+    listens {
+      BUILD_ENTRY_TEXTS -> input {
+        rows : [EntryFacts]!
+      }
+        @description "Build the organism and capability texts of these catalog rows."
+        @synonyms "embedding texts, behavior texts"
+      BUILD_KNOB_TEXTS -> input {
+        name : string!
+        described : DescribedBehavior!
+        written : WrittenProgram!
+      }
+        @description "Build the knob texts of a described behavior."
+    }
+  }
+
+  page boot as BehaviorTextsPage -> BehaviorTexts
+}

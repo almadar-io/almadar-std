@@ -1,3246 +1,4175 @@
 {
-  "atom": "cli/atoms/std-orb-behaviors.lolo",
-  "trait": "OrbBehaviors",
-  "note": "Reflection results are fed as the operators' success and failure events; the operators themselves run in the host.",
-  "cases": [
-    {
-      "id": "catalog: no scope is the usage (Rust: clap exit 2)",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "CATALOG_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "no-vectors",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "no-traits",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "topics",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "exposure",
-                      "aliases": [],
-                      "takesValue": true,
-                      "repeatable": true
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [],
-            "errors": [],
-            "words": []
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "catalog: only flags and no scope is the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "CATALOG_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"--json\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "--json"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "no-vectors",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "no-traits",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "topics",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "exposure",
-                      "aliases": [],
-                      "takesValue": true,
-                      "repeatable": true
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {
-              "json": [
-                "true"
-              ]
-            },
-            "positionals": [],
-            "errors": [],
-            "words": [
-              "--json"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "catalog: an unknown flag is the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "CATALOG_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"--bogus\",\"almadar-std/cli\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "--bogus",
-                    "almadar-std/cli"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "no-vectors",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "no-traits",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "topics",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "exposure",
-                      "aliases": [],
-                      "takesValue": true,
-                      "repeatable": true
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "almadar-std/cli"
-            ],
-            "errors": [
-              "unknown flag: --bogus"
-            ],
-            "words": [
-              "--bogus",
-              "almadar-std/cli"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "catalog: control, a scope starts the listing",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "CATALOG_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"almadar-std/cli\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "almadar-std/cli"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "no-vectors",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "no-traits",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "topics",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "exposure",
-                      "aliases": [],
-                      "takesValue": true,
-                      "repeatable": true
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "almadar-std/cli"
-            ],
-            "errors": [],
-            "words": [
-              "almadar-std/cli"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "emits": [
-              {
-                "event": "BEHAVIORS_CATALOG",
-                "payload": {}
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "catalog: control, flags and two scopes start the listing",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "CATALOG_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"a/b\",\"--json\",\"--no-vectors\",\"--exposure\",\"app\",\"--exposure\",\"both\",\"c/d\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "a/b",
-                    "--json",
-                    "--no-vectors",
-                    "--exposure",
-                    "app",
-                    "--exposure",
-                    "both",
-                    "c/d"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "no-vectors",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "no-traits",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "topics",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "exposure",
-                      "aliases": [],
-                      "takesValue": true,
-                      "repeatable": true
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {
-              "json": [
-                "true"
-              ],
-              "no-vectors": [
-                "true"
-              ],
-              "exposure": [
-                "app",
-                "both"
-              ]
-            },
-            "positionals": [
-              "a/b",
-              "c/d"
-            ],
-            "errors": [],
-            "words": [
-              "a/b",
-              "c/d"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "emits": [
-              {
-                "event": "BEHAVIORS_CATALOG",
-                "payload": {}
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "catalog: text rows are padded columns (Rust: {:<48} {:<9} {:<10} {})",
-      "entity": {
-        "sub": "catalog",
-        "json": false
-      },
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "CATALOG_LISTED",
-          "payload": {
-            "result": [
-              {
-                "behavior": "std-orb-test",
-                "package": "almadar-std",
-                "topic": "cli",
-                "level": "atom",
-                "exposure": "internal",
-                "description": "the test command",
-                "traits": [],
-                "value": {}
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "std-orb-test                                     atom      internal   the test command"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "catalog: a missing exposure prints a dash",
-      "entity": {
-        "sub": "catalog",
-        "json": false
-      },
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "CATALOG_LISTED",
-          "payload": {
-            "result": [
-              {
-                "behavior": "std-orb-test",
-                "package": "almadar-std",
-                "topic": "cli",
-                "level": "atom",
-                "description": "the test command",
-                "traits": [],
-                "value": {}
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "std-orb-test                                     atom      -          the test command"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "catalog: two behaviors are two lines",
-      "entity": {
-        "sub": "catalog",
-        "json": false
-      },
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "CATALOG_LISTED",
-          "payload": {
-            "result": [
-              {
-                "behavior": "std-orb-test",
-                "package": "almadar-std",
-                "topic": "cli",
-                "level": "atom",
-                "exposure": "internal",
-                "description": "the test command",
-                "traits": [],
-                "value": {}
-              },
-              {
-                "behavior": "std-b",
-                "package": "almadar-std",
-                "topic": "cli",
-                "level": "organism",
-                "exposure": "app",
-                "description": "b",
-                "traits": [],
-                "value": {}
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "std-orb-test                                     atom      internal   the test command\nstd-b                                            organism  app        b"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "catalog: an empty listing prints nothing",
-      "entity": {
-        "sub": "catalog",
-        "json": false
-      },
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "CATALOG_LISTED",
-          "payload": {
-            "result": []
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": ""
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "catalog: control, --json prints the entries as pretty JSON",
-      "entity": {
-        "sub": "catalog",
-        "json": true
-      },
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "CATALOG_LISTED",
-          "payload": {
-            "result": [
-              {
-                "behavior": "std-b",
-                "package": "almadar-std",
-                "topic": "cli",
-                "level": "organism",
-                "exposure": "app",
-                "description": "b",
-                "traits": [],
-                "value": {}
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "[\n  {\n    \"behavior\": \"std-b\",\n    \"package\": \"almadar-std\",\n    \"topic\": \"cli\",\n    \"level\": \"organism\",\n    \"exposure\": \"app\",\n    \"description\": \"b\",\n    \"traits\": [],\n    \"value\": {}\n  }\n]"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "catalog: an unreadable behavior answers its error (500)",
-      "entity": {
-        "sub": "catalog"
-      },
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_FAILED",
-          "payload": {
-            "error": "cannot load `almadar-std/std-x`: Failed to lower"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "",
-                  "stderr": "cannot load `almadar-std/std-x`: Failed to lower"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "describe: no operand is the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "DESCRIBE_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "knob-vectors",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [],
-            "errors": [],
-            "words": []
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors describe <behavior>.traits.<Trait>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "describe: two operands are the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "DESCRIBE_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"a\",\"b\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "a",
-                    "b"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "knob-vectors",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "a",
-              "b"
-            ],
-            "errors": [],
-            "words": [
-              "a",
-              "b"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors describe <behavior>.traits.<Trait>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "describe: an unknown flag is the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "DESCRIBE_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"--bogus\",\"a.traits.T\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "--bogus",
-                    "a.traits.T"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "knob-vectors",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "a.traits.T"
-            ],
-            "errors": [
-              "unknown flag: --bogus"
-            ],
-            "words": [
-              "a.traits.T"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors describe <behavior>.traits.<Trait>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "describe: control, a trait operand starts the description",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "DESCRIBE_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"std-x.traits.T\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "std-x.traits.T"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "knob-vectors",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "std-x.traits.T"
-            ],
-            "errors": [],
-            "words": [
-              "std-x.traits.T"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "emits": [
-              {
-                "event": "BEHAVIORS_DESCRIBE",
-                "payload": {}
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "describe: control, a behavior operand starts the description",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "DESCRIBE_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"std-x\",\"--json\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "std-x",
-                    "--json"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "knob-vectors",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {
-              "json": [
-                "true"
-              ]
-            },
-            "positionals": [
-              "std-x"
-            ],
-            "errors": [],
-            "words": [
-              "std-x"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "emits": [
-              {
-                "event": "BEHAVIORS_DESCRIBE",
-                "payload": {}
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "describe: control, - reads the value from stdin",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "DESCRIBE_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"-\",\"--knob-vectors\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "-",
-                    "--knob-vectors"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "knob-vectors",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {
-              "knob-vectors": [
-                "true"
-              ]
-            },
-            "positionals": [
-              "-"
-            ],
-            "errors": [],
-            "words": [
-              "-"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "emits": [
-              {
-                "event": "BEHAVIORS_STDIN",
-                "payload": {}
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "describe: a trait description is pretty JSON",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "TRAIT_DESCRIBED",
-          "payload": {
-            "result": {
-              "value": {},
-              "knobs": [
-                {
-                  "key": "k",
-                  "type": "string"
-                }
-              ],
-              "events": {
-                "emits": [],
-                "listens": [],
-                "transitions": []
-              }
-            }
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "{\n  \"value\": {},\n  \"knobs\": [\n    {\n      \"key\": \"k\",\n      \"type\": \"string\"\n    }\n  ],\n  \"events\": {\n    \"emits\": [],\n    \"listens\": [],\n    \"transitions\": []\n  }\n}"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "describe: a behavior description is pretty JSON",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIOR_DESCRIBED",
-          "payload": {
-            "result": {
-              "behavior": "std-x",
-              "knobs": [
-                {
-                  "key": "k",
-                  "type": "string"
-                }
-              ]
-            }
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "{\n  \"behavior\": \"std-x\",\n  \"knobs\": [\n    {\n      \"key\": \"k\",\n      \"type\": \"string\"\n    }\n  ]\n}"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "describe: an unknown behavior answers its error (500)",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_FAILED",
-          "payload": {
-            "error": "Behavior package with prefix 'nope' is not installed."
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "",
-                  "stderr": "Behavior package with prefix 'nope' is not installed."
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "describe: unreadable stdin answers its error (500)",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "STDIN_FAILED",
-          "payload": {
-            "error": "no such device"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "",
-                  "stderr": "stdin is not readable: no such device"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "source: no operand is the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "SOURCE_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [],
-            "errors": [],
-            "words": []
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors source <behavior>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "source: two operands are the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "SOURCE_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"a\",\"b\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "a",
-                    "b"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "a",
-              "b"
-            ],
-            "errors": [],
-            "words": [
-              "a",
-              "b"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors source <behavior>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "source: control, one operand starts the read",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "SOURCE_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"std/behaviors/std-orb-test\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "std/behaviors/std-orb-test"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "std/behaviors/std-orb-test"
-            ],
-            "errors": [],
-            "words": [
-              "std/behaviors/std-orb-test"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "emits": [
-              {
-                "event": "BEHAVIORS_SOURCE",
-                "payload": {}
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "source: control, --json is accepted",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "SOURCE_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"std-x\",\"--json\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "std-x",
-                    "--json"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {
-              "json": [
-                "true"
-              ]
-            },
-            "positionals": [
-              "std-x"
-            ],
-            "errors": [],
-            "words": [
-              "std-x"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "emits": [
-              {
-                "event": "BEHAVIORS_SOURCE",
-                "payload": {}
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "source: the program is pretty JSON",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "SOURCED",
-          "payload": {
-            "result": {
-              "name": "std-x",
-              "orbitals": []
-            }
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "{\n  \"name\": \"std-x\",\n  \"orbitals\": []\n}"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "source: an unknown behavior answers its error (500)",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_FAILED",
-          "payload": {
-            "error": "Behavior 'nope' not found"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "",
-                  "stderr": "Behavior 'nope' not found"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "which: no specifier is the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "WHICH_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [],
-                  "flags": []
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [],
-            "errors": [],
-            "words": []
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors which <spec>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "which: two specifiers are the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "WHICH_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"a\",\"b\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "a",
-                    "b"
-                  ],
-                  "flags": []
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "a",
-              "b"
-            ],
-            "errors": [],
-            "words": [
-              "a",
-              "b"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors which <spec>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "which: a flag is the usage (Rust: clap exit 2)",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "WHICH_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"--json\",\"a\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "--json",
-                    "a"
-                  ],
-                  "flags": []
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "a"
-            ],
-            "errors": [
-              "unknown flag: --json"
-            ],
-            "words": [
-              "a"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors which <spec>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "which: control, one specifier starts the resolve",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "WHICH_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"std/behaviors/std-orb-test\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "std/behaviors/std-orb-test"
-                  ],
-                  "flags": []
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "std/behaviors/std-orb-test"
-            ],
-            "errors": [],
-            "words": [
-              "std/behaviors/std-orb-test"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "emits": [
-              {
-                "event": "BEHAVIORS_WHICH",
-                "payload": {}
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "which: the answer is `<path> (<owner>)`",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "WHICH_RESOLVED",
-          "payload": {
-            "result": {
-              "path": "/p/std-orb-test.lolo",
-              "owner": "@almadar/std@16.256.0"
-            }
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "/p/std-orb-test.lolo (@almadar/std@16.256.0)"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "which: a refused specifier answers the loader's error (500; Rust prints it bare on stderr, exit 1)",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_FAILED",
-          "payload": {
-            "error": "Behavior package with prefix 'nope' is not installed. Run `orb add <package>` for the package that declares orb.prefix = \"nope\"."
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "",
-                  "stderr": "Behavior package with prefix 'nope' is not installed. Run `orb add <package>` for the package that declares orb.prefix = \"nope\"."
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "texts: no scope is the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "TEXTS_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "kind",
-                      "aliases": [],
-                      "takesValue": true,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [],
-            "errors": [],
-            "words": []
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors texts <scope…> [--kind organism|capability|knob] [--json]"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "texts: --kind with no scope is the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "TEXTS_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"--kind\",\"knob\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "--kind",
-                    "knob"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "kind",
-                      "aliases": [],
-                      "takesValue": true,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {
-              "kind": [
-                "knob"
-              ]
-            },
-            "positionals": [],
-            "errors": [],
-            "words": [
-              "--kind",
-              "knob"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors texts <scope…> [--kind organism|capability|knob] [--json]"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "texts: a --kind with no value is the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "TEXTS_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"a/b\",\"--kind\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "a/b",
-                    "--kind"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "kind",
-                      "aliases": [],
-                      "takesValue": true,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "a/b"
-            ],
-            "errors": [
-              "--kind needs a value"
-            ],
-            "words": [
-              "a/b"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors texts <scope…> [--kind organism|capability|knob] [--json]"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "texts: an unknown flag is the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "TEXTS_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"a/b\",\"--bogus\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "a/b",
-                    "--bogus"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "kind",
-                      "aliases": [],
-                      "takesValue": true,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "a/b"
-            ],
-            "errors": [
-              "unknown flag: --bogus"
-            ],
-            "words": [
-              "a/b"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors texts <scope…> [--kind organism|capability|knob] [--json]"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "texts: control, a scope starts the listing",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "TEXTS_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"almadar-std/cli\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "almadar-std/cli"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "kind",
-                      "aliases": [],
-                      "takesValue": true,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "almadar-std/cli"
-            ],
-            "errors": [],
-            "words": [
-              "almadar-std/cli"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "emits": [
-              {
-                "event": "BEHAVIORS_TEXTS",
-                "payload": {}
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "texts: control, scopes with --kind and --json start the listing",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "TEXTS_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"a/b\",\"--kind\",\"knob\",\"--json\",\"c/d\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "a/b",
-                    "--kind",
-                    "knob",
-                    "--json",
-                    "c/d"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    },
-                    {
-                      "name": "kind",
-                      "aliases": [],
-                      "takesValue": true,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {
-              "kind": [
-                "knob"
-              ],
-              "json": [
-                "true"
-              ]
-            },
-            "positionals": [
-              "a/b",
-              "c/d"
-            ],
-            "errors": [],
-            "words": [
-              "a/b",
-              "c/d"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "emits": [
-              {
-                "event": "BEHAVIORS_TEXTS",
-                "payload": {}
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "texts: the texts are one compact JSON line",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "TEXTS_LISTED",
-          "payload": {
-            "result": [
-              {
-                "key": "std-a",
-                "text": "A. Does a.",
-                "hash": "ab12"
-              },
-              {
-                "key": "std-a#capabilities",
-                "text": "x, y",
-                "hash": "cd34"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "[{\"key\":\"std-a\",\"text\":\"A. Does a.\",\"hash\":\"ab12\"},{\"key\":\"std-a#capabilities\",\"text\":\"x, y\",\"hash\":\"cd34\"}]"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "texts: no texts is an empty array",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "TEXTS_LISTED",
-          "payload": {
-            "result": []
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "[]"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "texts: an unknown --kind answers its error (500; Rust: `Error: unknown --kind`, exit 1)",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_FAILED",
-          "payload": {
-            "error": "unknown --kind `zzz` (one of organism, capability, knob)"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "",
-                  "stderr": "unknown --kind `zzz` (one of organism, capability, knob)"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "texts: an uninstalled scope answers its error (500)",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_FAILED",
-          "payload": {
-            "error": "scope `nope/zzz` names no installed behavior package prefix (installed: almadar-behaviors, almadar-std)"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "",
-                  "stderr": "scope `nope/zzz` names no installed behavior package prefix (installed: almadar-behaviors, almadar-std)"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "operator step: BEHAVIORS_WHICH",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_WHICH",
-          "payload": {},
-          "expect": {
-            "fired": true,
-            "state": "working"
-          }
-        }
-      ]
-    },
-    {
-      "id": "operator step: BEHAVIORS_TEXTS",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_TEXTS",
-          "payload": {},
-          "expect": {
-            "fired": true,
-            "state": "working"
-          }
-        }
-      ]
-    },
-    {
-      "id": "operator step: BEHAVIORS_TEXTS with a kind",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_TEXTS",
-          "payload": {},
-          "expect": {
-            "fired": true,
-            "state": "working"
-          }
-        }
-      ]
-    },
-    {
-      "id": "operator step: BEHAVIORS_CATALOG",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_CATALOG",
-          "payload": {},
-          "expect": {
-            "fired": true,
-            "state": "working"
-          }
-        }
-      ]
-    },
-    {
-      "id": "operator step: BEHAVIORS_SOURCE",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_SOURCE",
-          "payload": {},
-          "expect": {
-            "fired": true,
-            "state": "working"
-          }
-        }
-      ]
-    },
-    {
-      "id": "operator step: BEHAVIORS_DESCRIBE",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_DESCRIBE",
-          "payload": {},
-          "expect": {
-            "fired": true,
-            "state": "working"
-          }
-        }
-      ]
-    },
-    {
-      "id": "expects: no operand is the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "EXPECTS_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [],
-            "errors": [],
-            "words": []
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors expects <spec>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "expects: two operands are the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "EXPECTS_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"a\",\"b\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "a",
-                    "b"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "a",
-              "b"
-            ],
-            "errors": [],
-            "words": [
-              "a",
-              "b"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors expects <spec>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "expects: an unknown flag is the usage",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "EXPECTS_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"--bogus\",\"a\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "--bogus",
-                    "a"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "a"
-            ],
-            "errors": [
-              "unknown flag: --bogus"
-            ],
-            "words": [
-              "a"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors expects <spec>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "expects: control, a spec starts the lookup of a file",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "EXPECTS_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"std/behaviors/std-orb-test\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "std/behaviors/std-orb-test"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {},
-            "positionals": [
-              "std/behaviors/std-orb-test"
-            ],
-            "errors": [],
-            "words": [
-              "std/behaviors/std-orb-test"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "emits": [
-              {
-                "event": "BEHAVIORS_EXPECTS",
-                "payload": {}
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "expects: control, --json is accepted",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "EXPECTS_CALLED",
-          "payload": {
-            "rawBody": "{\"argv\":[\"x.orb\",\"--json\"],\"cwd\":\"/work\"}"
-          },
-          "expect": {
-            "fired": true,
-            "state": "parsing",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ARGS_PARSE",
-                "payload": {
-                  "stage": "behaviors",
-                  "argv": [
-                    "x.orb",
-                    "--json"
-                  ],
-                  "flags": [
-                    {
-                      "name": "json",
-                      "aliases": [],
-                      "takesValue": false,
-                      "repeatable": false
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "trait": "OrbBehaviors",
-          "from": "parsing",
-          "event": "BEHAVIORS_ARGS_DONE",
-          "payload": {
-            "stage": "behaviors",
-            "flags": {
-              "json": [
-                "true"
-              ]
-            },
-            "positionals": [
-              "x.orb"
-            ],
-            "errors": [],
-            "words": [
-              "x.orb"
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "emits": [
-              {
-                "event": "BEHAVIORS_EXPECTS",
-                "payload": {}
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "expects: a relative operand is looked up under the working directory",
-      "entity": {
-        "sub": "expects",
-        "spec": "a.orb",
-        "cwd": "/work"
-      },
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_EXPECTS",
-          "payload": {},
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "effects": [
-              {
-                "type": "os/exists",
-                "key": "expects",
-                "optionsAt": 1
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "expects: control, an absolute operand is resolved without the lookup",
-      "entity": {
-        "sub": "expects",
-        "spec": "/abs/a.orb",
-        "cwd": "/work"
-      },
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_EXPECTS",
-          "payload": {},
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "effects": [
-              {
-                "type": "behavior/resolve"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "expects: an existing relative file resolves as an absolute path under the cwd",
-      "entity": {
-        "sub": "expects",
-        "spec": "a.orb",
-        "cwd": "/work"
-      },
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "EXPECTS_EXISTS",
-          "payload": {
-            "ok": true
-          },
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "effects": [
-              {
-                "type": "behavior/resolve",
-                "arg0": {
-                  "behavior": [
-                    "str/concat",
-                    "@entity.cwd",
-                    "/",
-                    "@entity.spec"
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "expects: control, a spec that is no file resolves as written",
-      "entity": {
-        "sub": "expects",
-        "spec": "std/behaviors/std-orb-test",
-        "cwd": "/work"
-      },
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "EXPECTS_EXISTS",
-          "payload": {
-            "ok": false
-          },
-          "expect": {
-            "fired": true,
-            "state": "working",
-            "effects": [
-              {
-                "type": "behavior/resolve",
-                "arg0": {
-                  "behavior": "@entity.spec"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "expects: the derived expectations are one compact JSON line",
-      "entity": {
-        "sub": "expects",
-        "spec": "std/behaviors/std-orb-test",
-        "cwd": "/work"
-      },
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "EXPECTS_DERIVED",
-          "payload": {
-            "result": {
-              "OrbTestOrbital": {
-                "expectations": [],
-                "diagnostics": []
-              }
-            }
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "{\"OrbTestOrbital\":{\"expectations\":[],\"diagnostics\":[]}}"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "expects: no orbital is an empty object",
-      "entity": {
-        "sub": "expects",
-        "spec": "package.json",
-        "cwd": "/work"
-      },
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "EXPECTS_DERIVED",
-          "payload": {
-            "result": {}
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 200,
-                  "body": "{}"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "expects: an unresolvable spec answers its error (500)",
-      "entity": {
-        "sub": "expects",
-        "spec": "nope/zzz",
-        "cwd": "/work"
-      },
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "BEHAVIORS_FAILED",
-          "payload": {
-            "error": "cannot resolve `nope/zzz`: Behavior package with prefix 'nope' is not installed."
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "",
-                  "stderr": "cannot resolve `nope/zzz`: Behavior package with prefix 'nope' is not installed."
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "expects: a failed lookup answers its error (500)",
-      "entity": {
-        "sub": "expects",
-        "spec": "a.orb",
-        "cwd": "/work"
-      },
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "working",
-          "event": "EXPECTS_EXISTS_FAILED",
-          "payload": {
-            "error": "is not a path relative to cwd"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 500,
-                  "body": "",
-                  "stderr": "is not a path relative to cwd"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "catalog: an args body that does not parse is the usage error",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "CATALOG_CALLED",
-          "payload": {
-            "rawBody": "not json"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "describe: an args body that does not parse is the usage error",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "DESCRIBE_CALLED",
-          "payload": {
-            "rawBody": "not json"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors describe <behavior>.traits.<Trait>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "source: an args body that does not parse is the usage error",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "SOURCE_CALLED",
-          "payload": {
-            "rawBody": "not json"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors source <behavior>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "which: an args body that does not parse is the usage error",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "WHICH_CALLED",
-          "payload": {
-            "rawBody": "not json"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors which <spec>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "expects: an args body that does not parse is the usage error",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "EXPECTS_CALLED",
-          "payload": {
-            "rawBody": "not json"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors expects <spec>"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "texts: an args body that does not parse is the usage error",
-      "steps": [
-        {
-          "trait": "OrbBehaviors",
-          "from": "ready",
-          "event": "TEXTS_CALLED",
-          "payload": {
-            "rawBody": "not json"
-          },
-          "expect": {
-            "fired": true,
-            "state": "ready",
-            "emits": [
-              {
-                "event": "BEHAVIORS_ANSWERED",
-                "payload": {
-                  "status": 400,
-                  "body": "",
-                  "stderr": "usage: orb behaviors texts <scope…> [--kind organism|capability|knob] [--json]"
-                }
-              }
-            ]
-          }
-        }
-      ]
+ "atom": "cli/atoms/std-orb-behaviors.lolo",
+ "trait": "OrbBehaviors",
+ "note": "Reflection results are fed as the operators' success and failure events; the operators themselves run in the host.",
+ "cases": [
+  {
+   "id": "catalog: no scope is the usage (Rust: clap exit 2)",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "CATALOG_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "no-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "no-traits",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "topics",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "exposure",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]"
+        }
+       }
+      ]
+     }
     }
-  ]
+   ]
+  },
+  {
+   "id": "catalog: only flags and no scope is the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "CATALOG_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--json\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "--json"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "no-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "no-traits",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "topics",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "exposure",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {
+       "json": [
+        "true"
+       ]
+      },
+      "positionals": [],
+      "errors": [],
+      "words": [
+       "--json"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "catalog: an unknown flag is the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "CATALOG_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--bogus\",\"almadar-std/cli\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "--bogus",
+          "almadar-std/cli"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "no-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "no-traits",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "topics",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "exposure",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "almadar-std/cli"
+      ],
+      "errors": [
+       "unknown flag: --bogus"
+      ],
+      "words": [
+       "--bogus",
+       "almadar-std/cli"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "catalog: control, a scope starts the listing",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "CATALOG_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"almadar-std/cli\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "almadar-std/cli"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "no-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "no-traits",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "topics",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "exposure",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "almadar-std/cli"
+      ],
+      "errors": [],
+      "words": [
+       "almadar-std/cli"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_CATALOG",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "catalog: control, flags and two scopes start the listing",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "CATALOG_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"a/b\",\"--json\",\"--no-vectors\",\"--exposure\",\"app\",\"--exposure\",\"both\",\"c/d\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "a/b",
+          "--json",
+          "--no-vectors",
+          "--exposure",
+          "app",
+          "--exposure",
+          "both",
+          "c/d"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "no-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "no-traits",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "topics",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "exposure",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {
+       "json": [
+        "true"
+       ],
+       "no-vectors": [
+        "true"
+       ],
+       "exposure": [
+        "app",
+        "both"
+       ]
+      },
+      "positionals": [
+       "a/b",
+       "c/d"
+      ],
+      "errors": [],
+      "words": [
+       "a/b",
+       "c/d"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_CATALOG",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "catalog: text rows are padded columns (Rust: {:<48} {:<9} {:<10} {})",
+   "entity": {
+    "sub": "catalog",
+    "json": false
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "CATALOG_LISTED",
+     "payload": {
+      "result": [
+       {
+        "behavior": "std-orb-test",
+        "package": "almadar-std",
+        "topic": "cli",
+        "level": "atom",
+        "exposure": "internal",
+        "description": "the test command",
+        "traits": [],
+        "value": {}
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "std-orb-test                                     atom      internal   the test command"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "catalog: a missing exposure prints a dash",
+   "entity": {
+    "sub": "catalog",
+    "json": false
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "CATALOG_LISTED",
+     "payload": {
+      "result": [
+       {
+        "behavior": "std-orb-test",
+        "package": "almadar-std",
+        "topic": "cli",
+        "level": "atom",
+        "description": "the test command",
+        "traits": [],
+        "value": {}
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "std-orb-test                                     atom      -          the test command"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "catalog: two behaviors are two lines",
+   "entity": {
+    "sub": "catalog",
+    "json": false
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "CATALOG_LISTED",
+     "payload": {
+      "result": [
+       {
+        "behavior": "std-orb-test",
+        "package": "almadar-std",
+        "topic": "cli",
+        "level": "atom",
+        "exposure": "internal",
+        "description": "the test command",
+        "traits": [],
+        "value": {}
+       },
+       {
+        "behavior": "std-b",
+        "package": "almadar-std",
+        "topic": "cli",
+        "level": "organism",
+        "exposure": "app",
+        "description": "b",
+        "traits": [],
+        "value": {}
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "std-orb-test                                     atom      internal   the test command\nstd-b                                            organism  app        b"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "catalog: an empty listing prints nothing",
+   "entity": {
+    "sub": "catalog",
+    "json": false
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "CATALOG_LISTED",
+     "payload": {
+      "result": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "catalog: control, --json prints the entries as pretty JSON",
+   "entity": {
+    "sub": "catalog",
+    "json": true
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "CATALOG_LISTED",
+     "payload": {
+      "result": [
+       {
+        "behavior": "std-b",
+        "package": "almadar-std",
+        "topic": "cli",
+        "level": "organism",
+        "exposure": "app",
+        "description": "b",
+        "traits": [],
+        "value": {}
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "[\n  {\n    \"behavior\": \"std-b\",\n    \"package\": \"almadar-std\",\n    \"topic\": \"cli\",\n    \"level\": \"organism\",\n    \"exposure\": \"app\",\n    \"description\": \"b\",\n    \"traits\": [],\n    \"value\": {}\n  }\n]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "catalog: an unreadable behavior answers its error (500)",
+   "entity": {
+    "sub": "catalog"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_FAILED",
+     "payload": {
+      "error": "cannot load `almadar-std/std-x`: Failed to lower"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "cannot load `almadar-std/std-x`: Failed to lower"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: no operand is the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "DESCRIBE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "knob-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors describe <behavior>.traits.<Trait>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: two operands are the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "DESCRIBE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"a\",\"b\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "a",
+          "b"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "knob-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "a",
+       "b"
+      ],
+      "errors": [],
+      "words": [
+       "a",
+       "b"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors describe <behavior>.traits.<Trait>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: an unknown flag is the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "DESCRIBE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--bogus\",\"a.traits.T\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "--bogus",
+          "a.traits.T"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "knob-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "a.traits.T"
+      ],
+      "errors": [
+       "unknown flag: --bogus"
+      ],
+      "words": [
+       "a.traits.T"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors describe <behavior>.traits.<Trait>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: control, a trait operand starts the description",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "DESCRIBE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"std-x.traits.T\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "std-x.traits.T"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "knob-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "std-x.traits.T"
+      ],
+      "errors": [],
+      "words": [
+       "std-x.traits.T"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_DESCRIBE",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: control, a behavior operand starts the description",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "DESCRIBE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"std-x\",\"--json\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "std-x",
+          "--json"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "knob-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {
+       "json": [
+        "true"
+       ]
+      },
+      "positionals": [
+       "std-x"
+      ],
+      "errors": [],
+      "words": [
+       "std-x"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_DESCRIBE",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: control, - reads the value from stdin",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "DESCRIBE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"-\",\"--knob-vectors\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "-",
+          "--knob-vectors"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "knob-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {
+       "knob-vectors": [
+        "true"
+       ]
+      },
+      "positionals": [
+       "-"
+      ],
+      "errors": [],
+      "words": [
+       "-"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_STDIN",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: a trait description is pretty JSON",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "TRAIT_DESCRIBED",
+     "payload": {
+      "result": {
+       "value": {},
+       "knobs": [
+        {
+         "key": "k",
+         "type": "string"
+        }
+       ],
+       "events": {
+        "emits": [],
+        "listens": [],
+        "transitions": []
+       }
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"value\": {},\n  \"knobs\": [\n    {\n      \"key\": \"k\",\n      \"type\": \"string\"\n    }\n  ],\n  \"events\": {\n    \"emits\": [],\n    \"listens\": [],\n    \"transitions\": []\n  }\n}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: an unknown behavior answers its error (500)",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_FAILED",
+     "payload": {
+      "error": "Behavior package with prefix 'nope' is not installed."
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Behavior package with prefix 'nope' is not installed."
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: unreadable stdin answers its error (500)",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "STDIN_FAILED",
+     "payload": {
+      "error": "no such device"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "stdin is not readable: no such device"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "source: no operand is the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "SOURCE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors source <behavior>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "source: two operands are the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "SOURCE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"a\",\"b\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "a",
+          "b"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "a",
+       "b"
+      ],
+      "errors": [],
+      "words": [
+       "a",
+       "b"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors source <behavior>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "source: control, one operand starts the read",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "SOURCE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"std/behaviors/std-orb-test\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "std/behaviors/std-orb-test"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "std/behaviors/std-orb-test"
+      ],
+      "errors": [],
+      "words": [
+       "std/behaviors/std-orb-test"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_SOURCE",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "source: control, --json is accepted",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "SOURCE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"std-x\",\"--json\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "std-x",
+          "--json"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {
+       "json": [
+        "true"
+       ]
+      },
+      "positionals": [
+       "std-x"
+      ],
+      "errors": [],
+      "words": [
+       "std-x"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_SOURCE",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "source: the program is pretty JSON",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "SOURCED",
+     "payload": {
+      "result": {
+       "name": "std-x",
+       "orbitals": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"name\": \"std-x\",\n  \"orbitals\": []\n}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "source: an unknown behavior answers its error (500)",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_FAILED",
+     "payload": {
+      "error": "Behavior 'nope' not found"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Behavior 'nope' not found"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "which: no specifier is the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "WHICH_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [],
+         "flags": []
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors which <spec>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "which: two specifiers are the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "WHICH_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"a\",\"b\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "a",
+          "b"
+         ],
+         "flags": []
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "a",
+       "b"
+      ],
+      "errors": [],
+      "words": [
+       "a",
+       "b"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors which <spec>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "which: a flag is the usage (Rust: clap exit 2)",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "WHICH_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--json\",\"a\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "--json",
+          "a"
+         ],
+         "flags": []
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "a"
+      ],
+      "errors": [
+       "unknown flag: --json"
+      ],
+      "words": [
+       "a"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors which <spec>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "which: control, one specifier starts the resolve",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "WHICH_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"std/behaviors/std-orb-test\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "std/behaviors/std-orb-test"
+         ],
+         "flags": []
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "std/behaviors/std-orb-test"
+      ],
+      "errors": [],
+      "words": [
+       "std/behaviors/std-orb-test"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_WHICH",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "which: the answer is `<path> (<owner>)`",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "WHICH_RESOLVED",
+     "payload": {
+      "result": {
+       "path": "/p/std-orb-test.lolo",
+       "owner": "@almadar/std@16.256.0"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "/p/std-orb-test.lolo (@almadar/std@16.256.0)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "which: a refused specifier answers the loader's error (500; Rust prints it bare on stderr, exit 1)",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_FAILED",
+     "payload": {
+      "error": "Behavior package with prefix 'nope' is not installed. Run `orb add <package>` for the package that declares orb.prefix = \"nope\"."
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Behavior package with prefix 'nope' is not installed. Run `orb add <package>` for the package that declares orb.prefix = \"nope\"."
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: no scope is the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "TEXTS_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "kind",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors texts <scope…> [--kind organism|capability|knob] [--json]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: --kind with no scope is the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "TEXTS_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--kind\",\"knob\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "--kind",
+          "knob"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "kind",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {
+       "kind": [
+        "knob"
+       ]
+      },
+      "positionals": [],
+      "errors": [],
+      "words": [
+       "--kind",
+       "knob"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors texts <scope…> [--kind organism|capability|knob] [--json]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: a --kind with no value is the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "TEXTS_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"a/b\",\"--kind\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "a/b",
+          "--kind"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "kind",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "a/b"
+      ],
+      "errors": [
+       "--kind needs a value"
+      ],
+      "words": [
+       "a/b"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors texts <scope…> [--kind organism|capability|knob] [--json]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: an unknown flag is the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "TEXTS_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"a/b\",\"--bogus\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "a/b",
+          "--bogus"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "kind",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "a/b"
+      ],
+      "errors": [
+       "unknown flag: --bogus"
+      ],
+      "words": [
+       "a/b"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors texts <scope…> [--kind organism|capability|knob] [--json]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: control, a scope starts the listing",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "TEXTS_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"almadar-std/cli\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "almadar-std/cli"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "kind",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "almadar-std/cli"
+      ],
+      "errors": [],
+      "words": [
+       "almadar-std/cli"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_TEXTS",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: control, scopes with --kind and --json start the listing",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "TEXTS_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"a/b\",\"--kind\",\"knob\",\"--json\",\"c/d\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "a/b",
+          "--kind",
+          "knob",
+          "--json",
+          "c/d"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "kind",
+           "aliases": [],
+           "takesValue": true,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {
+       "kind": [
+        "knob"
+       ],
+       "json": [
+        "true"
+       ]
+      },
+      "positionals": [
+       "a/b",
+       "c/d"
+      ],
+      "errors": [],
+      "words": [
+       "a/b",
+       "c/d"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_TEXTS",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: an unknown --kind answers its error (500; Rust: `Error: unknown --kind`, exit 1)",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_FAILED",
+     "payload": {
+      "error": "unknown --kind `zzz` (one of organism, capability, knob)"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "unknown --kind `zzz` (one of organism, capability, knob)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: an uninstalled scope answers its error (500)",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_FAILED",
+     "payload": {
+      "error": "scope `nope/zzz` names no installed behavior package prefix (installed: almadar-behaviors, almadar-std)"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "scope `nope/zzz` names no installed behavior package prefix (installed: almadar-behaviors, almadar-std)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "operator step: BEHAVIORS_WHICH",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_WHICH",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "working"
+     }
+    }
+   ]
+  },
+  {
+   "id": "operator step: BEHAVIORS_TEXTS",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_TEXTS",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "working"
+     }
+    }
+   ]
+  },
+  {
+   "id": "operator step: BEHAVIORS_TEXTS with a kind",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_TEXTS",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "working"
+     }
+    }
+   ]
+  },
+  {
+   "id": "operator step: BEHAVIORS_CATALOG",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_CATALOG",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "working"
+     }
+    }
+   ]
+  },
+  {
+   "id": "operator step: BEHAVIORS_SOURCE",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_SOURCE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "working"
+     }
+    }
+   ]
+  },
+  {
+   "id": "operator step: BEHAVIORS_DESCRIBE",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_DESCRIBE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "working"
+     }
+    }
+   ]
+  },
+  {
+   "id": "expects: no operand is the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "EXPECTS_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [],
+      "errors": [],
+      "words": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors expects <spec>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expects: two operands are the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "EXPECTS_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"a\",\"b\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "a",
+          "b"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "a",
+       "b"
+      ],
+      "errors": [],
+      "words": [
+       "a",
+       "b"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors expects <spec>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expects: an unknown flag is the usage",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "EXPECTS_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"--bogus\",\"a\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "--bogus",
+          "a"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "a"
+      ],
+      "errors": [
+       "unknown flag: --bogus"
+      ],
+      "words": [
+       "a"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors expects <spec>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expects: control, a spec starts the lookup of a file",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "EXPECTS_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"std/behaviors/std-orb-test\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "std/behaviors/std-orb-test"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {},
+      "positionals": [
+       "std/behaviors/std-orb-test"
+      ],
+      "errors": [],
+      "words": [
+       "std/behaviors/std-orb-test"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_EXPECTS",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expects: control, --json is accepted",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "EXPECTS_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"x.orb\",\"--json\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "x.orb",
+          "--json"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {
+       "json": [
+        "true"
+       ]
+      },
+      "positionals": [
+       "x.orb"
+      ],
+      "errors": [],
+      "words": [
+       "x.orb"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_EXPECTS",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expects: a relative operand is looked up under the working directory",
+   "entity": {
+    "sub": "expects",
+    "spec": "a.orb",
+    "cwd": "/work"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_EXPECTS",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "os/exists",
+        "key": "expects",
+        "optionsAt": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expects: control, an absolute operand is resolved without the lookup",
+   "entity": {
+    "sub": "expects",
+    "spec": "/abs/a.orb",
+    "cwd": "/work"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_EXPECTS",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/resolve"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expects: an existing relative file resolves as an absolute path under the cwd",
+   "entity": {
+    "sub": "expects",
+    "spec": "a.orb",
+    "cwd": "/work"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "EXPECTS_EXISTS",
+     "payload": {
+      "ok": true
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/resolve",
+        "arg0": {
+         "behavior": [
+          "str/concat",
+          "@entity.cwd",
+          "/",
+          "@entity.spec"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expects: control, a spec that is no file resolves as written",
+   "entity": {
+    "sub": "expects",
+    "spec": "std/behaviors/std-orb-test",
+    "cwd": "/work"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "EXPECTS_EXISTS",
+     "payload": {
+      "ok": false
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/resolve",
+        "arg0": {
+         "behavior": "@entity.spec"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expects: the derived expectations are one compact JSON line",
+   "entity": {
+    "sub": "expects",
+    "spec": "std/behaviors/std-orb-test",
+    "cwd": "/work"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "EXPECTS_DERIVED",
+     "payload": {
+      "result": {
+       "OrbTestOrbital": {
+        "expectations": [],
+        "diagnostics": []
+       }
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\"OrbTestOrbital\":{\"expectations\":[],\"diagnostics\":[]}}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expects: no orbital is an empty object",
+   "entity": {
+    "sub": "expects",
+    "spec": "package.json",
+    "cwd": "/work"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "EXPECTS_DERIVED",
+     "payload": {
+      "result": {}
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expects: an unresolvable spec answers its error (500)",
+   "entity": {
+    "sub": "expects",
+    "spec": "nope/zzz",
+    "cwd": "/work"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_FAILED",
+     "payload": {
+      "error": "cannot resolve `nope/zzz`: Behavior package with prefix 'nope' is not installed."
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "cannot resolve `nope/zzz`: Behavior package with prefix 'nope' is not installed."
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expects: a failed lookup answers its error (500)",
+   "entity": {
+    "sub": "expects",
+    "spec": "a.orb",
+    "cwd": "/work"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "EXPECTS_EXISTS_FAILED",
+     "payload": {
+      "error": "is not a path relative to cwd"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "is not a path relative to cwd"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "catalog: an args body that does not parse is the usage error",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "CATALOG_CALLED",
+     "payload": {
+      "rawBody": "not json"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: an args body that does not parse is the usage error",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "DESCRIBE_CALLED",
+     "payload": {
+      "rawBody": "not json"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors describe <behavior>.traits.<Trait>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "source: an args body that does not parse is the usage error",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "SOURCE_CALLED",
+     "payload": {
+      "rawBody": "not json"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors source <behavior>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "which: an args body that does not parse is the usage error",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "WHICH_CALLED",
+     "payload": {
+      "rawBody": "not json"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors which <spec>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expects: an args body that does not parse is the usage error",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "EXPECTS_CALLED",
+     "payload": {
+      "rawBody": "not json"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors expects <spec>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: an args body that does not parse is the usage error",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "TEXTS_CALLED",
+     "payload": {
+      "rawBody": "not json"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "",
+         "stderr": "usage: orb behaviors texts <scope…> [--kind organism|capability|knob] [--json]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: a behavior description carries each orbital's forwarded controls, the unhandled controls its embedder must route",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "DESCRIBE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"std-x\",\"--json\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "std-x",
+          "--json"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "knob-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {
+       "json": [
+        "true"
+       ]
+      },
+      "positionals": [
+       "std-x"
+      ],
+      "errors": [],
+      "words": [
+       "std-x"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_DESCRIBE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_DESCRIBE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "working"
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIOR_DESCRIBED",
+     "payload": {
+      "result": {
+       "behavior": "std-x",
+       "knobs": [
+        {
+         "key": "k",
+         "type": "string"
+        }
+       ],
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "XOrbital"
+         },
+         "entity": {
+          "name": "X",
+          "fields": []
+         },
+         "traits": [],
+         "knobs": []
+        },
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "YOrbital"
+         },
+         "traits": [],
+         "knobs": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/source",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "FORWARDS_PATH_RESOLVED",
+     "payload": {
+      "result": {
+       "path": "/p/std-x.lolo",
+       "source": "app std-x [ version: \"1.0.0\" ]"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BV_LINT_REQUEST",
+        "payload": {
+         "file": "/p/std-x.lolo"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "FORWARDS_HEARD",
+     "payload": {
+      "scope": "",
+      "forwards": [
+       {
+        "orbital": "XOrbital",
+        "trait": "XView",
+        "event": "SAVE",
+        "via": [
+         "button.action"
+        ]
+       },
+       {
+        "orbital": "YOrbital",
+        "trait": "YView",
+        "event": "OPEN",
+        "via": [
+         "card.onClick",
+         "menu.onSelect"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"behavior\": \"std-x\",\n  \"knobs\": [\n    {\n      \"key\": \"k\",\n      \"type\": \"string\"\n    }\n  ],\n  \"orbitals\": [\n    {\n      \"value\": {\n        \"behavior\": \"std-x\",\n        \"orbital\": \"XOrbital\"\n      },\n      \"entity\": {\n        \"name\": \"X\",\n        \"fields\": []\n      },\n      \"traits\": [],\n      \"knobs\": [],\n      \"forwards\": [\n        {\n          \"trait\": \"XView\",\n          \"event\": \"SAVE\",\n          \"via\": [\n            \"button.action\"\n          ]\n        }\n      ]\n    },\n    {\n      \"value\": {\n        \"behavior\": \"std-x\",\n        \"orbital\": \"YOrbital\"\n      },\n      \"traits\": [],\n      \"knobs\": [],\n      \"forwards\": [\n        {\n          \"trait\": \"YView\",\n          \"event\": \"OPEN\",\n          \"via\": [\n            \"card.onClick\",\n            \"menu.onSelect\"\n          ]\n        }\n      ]\n    }\n  ]\n}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: control, no forwarded control leaves each orbital's forwards empty",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "DESCRIBE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"std-x\",\"--json\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "std-x",
+          "--json"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "knob-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {
+       "json": [
+        "true"
+       ]
+      },
+      "positionals": [
+       "std-x"
+      ],
+      "errors": [],
+      "words": [
+       "std-x"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_DESCRIBE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_DESCRIBE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "working"
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIOR_DESCRIBED",
+     "payload": {
+      "result": {
+       "behavior": "std-x",
+       "knobs": [
+        {
+         "key": "k",
+         "type": "string"
+        }
+       ],
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "XOrbital"
+         },
+         "entity": {
+          "name": "X",
+          "fields": []
+         },
+         "traits": [],
+         "knobs": []
+        },
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "YOrbital"
+         },
+         "traits": [],
+         "knobs": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/source",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "FORWARDS_PATH_RESOLVED",
+     "payload": {
+      "result": {
+       "path": "/p/std-x.lolo",
+       "source": "app std-x [ version: \"1.0.0\" ]"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BV_LINT_REQUEST",
+        "payload": {
+         "file": "/p/std-x.lolo"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "FORWARDS_HEARD",
+     "payload": {
+      "scope": "",
+      "forwards": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"behavior\": \"std-x\",\n  \"knobs\": [\n    {\n      \"key\": \"k\",\n      \"type\": \"string\"\n    }\n  ],\n  \"orbitals\": [\n    {\n      \"value\": {\n        \"behavior\": \"std-x\",\n        \"orbital\": \"XOrbital\"\n      },\n      \"entity\": {\n        \"name\": \"X\",\n        \"fields\": []\n      },\n      \"traits\": [],\n      \"knobs\": [],\n      \"forwards\": []\n    },\n    {\n      \"value\": {\n        \"behavior\": \"std-x\",\n        \"orbital\": \"YOrbital\"\n      },\n      \"traits\": [],\n      \"knobs\": [],\n      \"forwards\": []\n    }\n  ]\n}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: a forwarded control of an orbital the description does not list is dropped",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "DESCRIBE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"std-x\",\"--json\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "std-x",
+          "--json"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "knob-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {
+       "json": [
+        "true"
+       ]
+      },
+      "positionals": [
+       "std-x"
+      ],
+      "errors": [],
+      "words": [
+       "std-x"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_DESCRIBE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_DESCRIBE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "working"
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIOR_DESCRIBED",
+     "payload": {
+      "result": {
+       "behavior": "std-x",
+       "knobs": [
+        {
+         "key": "k",
+         "type": "string"
+        }
+       ],
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "XOrbital"
+         },
+         "entity": {
+          "name": "X",
+          "fields": []
+         },
+         "traits": [],
+         "knobs": []
+        },
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "YOrbital"
+         },
+         "traits": [],
+         "knobs": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/source",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "FORWARDS_PATH_RESOLVED",
+     "payload": {
+      "result": {
+       "path": "/p/std-x.lolo",
+       "source": "app std-x [ version: \"1.0.0\" ]"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BV_LINT_REQUEST",
+        "payload": {
+         "file": "/p/std-x.lolo"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "FORWARDS_HEARD",
+     "payload": {
+      "scope": "",
+      "forwards": [
+       {
+        "orbital": "ZOrbital",
+        "trait": "ZView",
+        "event": "GO",
+        "via": [
+         "button.action"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"behavior\": \"std-x\",\n  \"knobs\": [\n    {\n      \"key\": \"k\",\n      \"type\": \"string\"\n    }\n  ],\n  \"orbitals\": [\n    {\n      \"value\": {\n        \"behavior\": \"std-x\",\n        \"orbital\": \"XOrbital\"\n      },\n      \"entity\": {\n        \"name\": \"X\",\n        \"fields\": []\n      },\n      \"traits\": [],\n      \"knobs\": [],\n      \"forwards\": []\n    },\n    {\n      \"value\": {\n        \"behavior\": \"std-x\",\n        \"orbital\": \"YOrbital\"\n      },\n      \"traits\": [],\n      \"knobs\": [],\n      \"forwards\": []\n    }\n  ]\n}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: control, a pass for a lazy child's scope does not answer",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "DESCRIBE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"std-x\",\"--json\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "std-x",
+          "--json"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "knob-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {
+       "json": [
+        "true"
+       ]
+      },
+      "positionals": [
+       "std-x"
+      ],
+      "errors": [],
+      "words": [
+       "std-x"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_DESCRIBE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_DESCRIBE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "working"
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIOR_DESCRIBED",
+     "payload": {
+      "result": {
+       "behavior": "std-x",
+       "knobs": [
+        {
+         "key": "k",
+         "type": "string"
+        }
+       ],
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "XOrbital"
+         },
+         "entity": {
+          "name": "X",
+          "fields": []
+         },
+         "traits": [],
+         "knobs": []
+        },
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "YOrbital"
+         },
+         "traits": [],
+         "knobs": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/source",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "FORWARDS_PATH_RESOLVED",
+     "payload": {
+      "result": {
+       "path": "/p/std-x.lolo",
+       "source": "app std-x [ version: \"1.0.0\" ]"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BV_LINT_REQUEST",
+        "payload": {
+         "file": "/p/std-x.lolo"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "FORWARDS_HEARD",
+     "payload": {
+      "scope": "XOrbital",
+      "forwards": [
+       {
+        "orbital": "XOrbital",
+        "trait": "XView",
+        "event": "SAVE",
+        "via": [
+         "button.action"
+        ]
+       },
+       {
+        "orbital": "YOrbital",
+        "trait": "YView",
+        "event": "OPEN",
+        "via": [
+         "card.onClick",
+         "menu.onSelect"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe: an unreadable file answers its error (500)",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "ready",
+     "event": "DESCRIBE_CALLED",
+     "payload": {
+      "rawBody": "{\"argv\":[\"std-x\",\"--json\"],\"cwd\":\"/work\"}"
+     },
+     "expect": {
+      "fired": true,
+      "state": "parsing",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ARGS_PARSE",
+        "payload": {
+         "stage": "behaviors",
+         "argv": [
+          "std-x",
+          "--json"
+         ],
+         "flags": [
+          {
+           "name": "json",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          },
+          {
+           "name": "knob-vectors",
+           "aliases": [],
+           "takesValue": false,
+           "repeatable": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "parsing",
+     "event": "BEHAVIORS_ARGS_DONE",
+     "payload": {
+      "stage": "behaviors",
+      "flags": {
+       "json": [
+        "true"
+       ]
+      },
+      "positionals": [
+       "std-x"
+      ],
+      "errors": [],
+      "words": [
+       "std-x"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BEHAVIORS_DESCRIBE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIORS_DESCRIBE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "working"
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "BEHAVIOR_DESCRIBED",
+     "payload": {
+      "result": {
+       "behavior": "std-x",
+       "knobs": [
+        {
+         "key": "k",
+         "type": "string"
+        }
+       ],
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "XOrbital"
+         },
+         "entity": {
+          "name": "X",
+          "fields": []
+         },
+         "traits": [],
+         "knobs": []
+        },
+        {
+         "value": {
+          "behavior": "std-x",
+          "orbital": "YOrbital"
+         },
+         "traits": [],
+         "knobs": []
+        }
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "effects": [
+       {
+        "type": "behavior/source",
+        "optionsAt": 1
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "FORWARDS_PATH_RESOLVED",
+     "payload": {
+      "result": {
+       "path": "/p/std-x.lolo",
+       "source": "app std-x [ version: \"1.0.0\" ]"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BV_LINT_REQUEST",
+        "payload": {
+         "file": "/p/std-x.lolo"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "FORWARDS_UNREAD",
+     "payload": {
+      "file": "/p/std-x.lolo",
+      "error": "the file is not valid text"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "behavior/describe: the forwarded controls of /p/std-x.lolo cannot be read: the file is not valid text"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "catalog: --topics counts each package and topic once, in first-appearance order",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "CATALOG_TOPIC_ROWS",
+     "payload": {
+      "result": [
+       {
+        "package": "std",
+        "behavior": "p/a",
+        "topic": "ui/core",
+        "level": "atom",
+        "description": "d",
+        "value": {
+         "behavior": "p/a"
+        }
+       },
+       {
+        "package": "std",
+        "behavior": "p/b",
+        "topic": "ui/core",
+        "level": "atom",
+        "description": "d",
+        "value": {
+         "behavior": "p/b"
+        }
+       },
+       {
+        "package": "std",
+        "behavior": "p/c",
+        "topic": "net",
+        "level": "atom",
+        "description": "d",
+        "value": {
+         "behavior": "p/c"
+        }
+       },
+       {
+        "package": "app",
+        "behavior": "q/d",
+        "topic": "ui/core",
+        "level": "atom",
+        "description": "d",
+        "value": {
+         "behavior": "q/d"
+        }
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "CATALOG_TOPICS_LISTED",
+        "payload": {
+         "result": [
+          {
+           "package": "std",
+           "prefix": "p",
+           "topic": "ui/core",
+           "count": 2
+          },
+          {
+           "package": "std",
+           "prefix": "p",
+           "topic": "net",
+           "count": 1
+          },
+          {
+           "package": "app",
+           "prefix": "q",
+           "topic": "ui/core",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "catalog: control, an empty listing has no topics",
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "CATALOG_TOPIC_ROWS",
+     "payload": {
+      "result": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "CATALOG_TOPICS_LISTED",
+        "payload": {
+         "result": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
 }

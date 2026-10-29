@@ -322,7 +322,7 @@ orbital OrbMcpOrbital {
       MCP_RUN -> working when (= @entity.tool "read_behavior")
         (behavior/source { behavior: (array/first (str/split (object/get @entity.args "spec") ".traits.")) } { file: true emit: { success: MCP_TOOL_DONE, failure: MCP_TOOL_FAILED } })
       MCP_RUN -> working when (and (= @entity.tool "behaviors") (> (array/len (default (object/get @entity.args "scopes") [])) 0))
-        (behavior/catalog { paths: (object/get @entity.args "scopes"), exposure: (default (object/get @entity.args "exposure") []) } { vectors: false } { emit: { success: MCP_CATALOGED, failure: MCP_TOOL_FAILED } })
+        (behavior/catalog { paths: (object/get @entity.args "scopes"), exposure: (default (object/get @entity.args "exposure") []) } { emit: { success: MCP_CATALOGED, failure: MCP_TOOL_FAILED } })
       MCP_CATALOGED -> working
         (emit MCP_TOOL_DONE { result: { behaviors: @payload.result } })
       MCP_RUN -> working when (and (= @entity.tool "behaviors") (= (array/len (default (object/get @entity.args "scopes") [])) 0))
@@ -334,7 +334,7 @@ orbital OrbMcpOrbital {
         (set @entity.skipped [])
         (emit MCP_PKG_NEXT { })
       MCP_PKG_NEXT -> working when (< @entity.pkgCursor (array/len @entity.pkgs))
-        (behavior/catalog { paths: [(array/nth @entity.pkgs @entity.pkgCursor)], exposure: (default (object/get @entity.args "exposure") []) } { vectors: false } { emit: { success: MCP_PKG_CATALOGED, failure: MCP_PKG_FAILED } })
+        (behavior/catalog { paths: [(array/nth @entity.pkgs @entity.pkgCursor)], exposure: (default (object/get @entity.args "exposure") []) } { emit: { success: MCP_PKG_CATALOGED, failure: MCP_PKG_FAILED } })
       MCP_PKG_NEXT -> working when (>= @entity.pkgCursor (array/len @entity.pkgs))
         (emit MCP_TOOL_DONE { result: { behaviors: @entity.found, skipped: @entity.skipped } })
       MCP_PKG_CATALOGED -> working

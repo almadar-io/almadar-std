@@ -21,6 +21,9 @@ type CgRu = { s : string!, p : boolean!, ej : number! }
 type CgTr = { f : [string]!, e : string!, to : string!, fs : string!, cls : [string]!, hm : boolean!, ru : [CgRu]! }
 type CgRl = { s : string!, p : boolean!, to : string!, path : string! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintCircuitGraphCodes = { circuitUnreachableState : LintCodeDecl , circuitNoOverlayExit : LintCodeDecl , circuitModalExitIncomplete : LintCodeDecl , circuitDeadEndState : LintCodeDecl }
+
 orbital OrbLintCircuitGraphOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -84,7 +87,7 @@ orbital OrbLintCircuitGraphOrbital {
                                   (array/concat
                                     (array/flatten (array/map (array/sort @names) (fn n
                                       (if (or (= @n @initName) (array/some @tl (fn x (= (object/get @x "to") @n)))) @nof
-                                        [{ code: "CIRCUIT_UNREACHABLE_STATE", path: (str/concat @tp ".stateMachine.states"), message: (str/concat "State '" @n "' has no incoming transitions and cannot be reached"), suggestion: "Add a transition to this state or remove it", severity: "error" }]))))
+                                        [{ code: @config.codes.circuitUnreachableState.code, path: (str/concat @tp ".stateMachine.states"), message: (str/concat "State '" @n "' has no incoming transitions and cannot be reached"), suggestion: "Add a transition to this state or remove it", severity: "error" }]))))
                                     (array/map (array/filter @ovPaint (fn r
                                         (not (let ((tg (object/get @r "to")) (sl (object/get @r "s")))
                                           (and (array/includes @names @tg)
@@ -94,12 +97,12 @@ orbital OrbLintCircuitGraphOrbital {
                                                     (and (!= (object/get @x "to") @tg)
                                                          (let ((sa (array/unique (array/map (array/filter @rl (fn q (and (object/get @q "p") (= (object/get @q "to") (object/get @x "to"))))) (fn q (object/get @q "s"))))))
                                                            (or (= (array/len @sa) 0) (not (array/includes @sa @sl)))))))))))))
-                                      (fn r { code: "CIRCUIT_NO_OVERLAY_EXIT", path: (object/get @r "path"), message: (str/concat "State '" (object/get @r "to") "' renders to '" (object/get @r "s") "' slot but has no exit transition. Users will be stuck in this overlay."), suggestion: (str/concat "Add a transition from '" (object/get @r "to") "' that goes to a state not rendering to '" (object/get @r "s") "' slot. Common exit events: " (str/join @config.exitEvents ", ")), severity: "error" })))
+                                      (fn r { code: @config.codes.circuitNoOverlayExit.code, path: (object/get @r "path"), message: (str/concat "State '" (object/get @r "to") "' renders to '" (object/get @r "s") "' slot but has no exit transition. Users will be stuck in this overlay."), suggestion: (str/concat "Add a transition from '" (object/get @r "to") "' that goes to a state not rendering to '" (object/get @r "s") "' slot. Common exit events: " (str/join @config.exitEvents ", ")), severity: "error" })))
                                   (if (= (array/len @ovStates) 0) @nof
                                     (array/flatten (array/map (array/range 0 (array/len @tl)) (fn tj
                                       (let ((x (array/nth @tl @tj)))
                                         (if (and (array/some @ovStates (fn s (array/includes (object/get @x "f") @s))) (array/includes @inlStates (object/get @x "to")) (array/some (object/get @x "cls") (fn c (object/has @ovSet @c))) (not (object/get @x "hm")))
-                                          [{ code: "CIRCUIT_MODAL_EXIT_INCOMPLETE", path: (str/concat @tp ".transitions[" (object/get @x "fs") "->" (object/get @x "e") "->" (object/get @x "to") "]"), message: (str/concat "Transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " closes modal but doesn't re-render main slot. Main view will show stale content."), suggestion: "Add render-ui(\"main\", {...}) alongside render-ui(\"modal\", null) to refresh the main view after closing the modal", severity: "error" }]
+                                          [{ code: @config.codes.circuitModalExitIncomplete.code, path: (str/concat @tp ".transitions[" (object/get @x "fs") "->" (object/get @x "e") "->" (object/get @x "to") "]"), message: (str/concat "Transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " closes modal but doesn't re-render main slot. Main view will show stale content."), suggestion: "Add render-ui(\"main\", {...}) alongside render-ui(\"modal\", null) to refresh the main view after closing the modal", severity: "error" }]
                                           @nof)))))))
                                 (array/concat
                                   (if (= (array/len @ovStates) 0) @nof
@@ -109,10 +112,10 @@ orbital OrbLintCircuitGraphOrbital {
                                           (if (or (= (array/len @mounted) 0) (= @from (object/get @x "to"))) @nof
                                             (let ((dest (array/map (array/filter @ovPaint (fn r (= (object/get @r "to") (object/get @x "to")))) (fn r (object/get @r "s")))))
                                               (array/flatten (array/map (array/filter @mounted (fn ovl (and (not (array/includes @dest @ovl)) (not (array/includes (object/get @x "cls") @ovl))))) (fn ovl
-                                                [{ code: "CIRCUIT_MODAL_EXIT_INCOMPLETE", path: (str/concat @tp ".transitions[" (object/get @x "fs") "->" (object/get @x "e") "->" (object/get @x "to") "]"), message: (str/concat "Transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " leaves a state mounting '" @ovl "' but doesn't include `(render-ui " @ovl " null)` to close it. The overlay will stay mounted across the transition."), suggestion: (str/concat "Add `(render-ui " @ovl " null)` to the transition's effects to explicitly close the overlay before the new state renders."), severity: "error" }])))))))))))))
+                                                [{ code: @config.codes.circuitModalExitIncomplete.code, path: (str/concat @tp ".transitions[" (object/get @x "fs") "->" (object/get @x "e") "->" (object/get @x "to") "]"), message: (str/concat "Transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " leaves a state mounting '" @ovl "' but doesn't include `(render-ui " @ovl " null)` to close it. The overlay will stay mounted across the transition."), suggestion: (str/concat "Add `(render-ui " @ovl " null)` to the transition's effects to explicitly close the overlay before the new state renders."), severity: "error" }])))))))))))))
                                   (array/flatten (array/map (array/sort @names) (fn n
                                     (if (or (array/includes @termNames @n) (array/some @tl (fn x (array/includes (object/get @x "f") @n)))) @nof
-                                      [{ code: "CIRCUIT_DEAD_END_STATE", path: (str/concat @tp ".stateMachine.states"), message: (str/concat "State '" @n "' has no outgoing transitions - it may be a dead end"), suggestion: "Add outgoing transitions or mark as terminal state with isTerminal: true", severity: "error" }])))))))))))))))))))))
+                                      [{ code: @config.codes.circuitDeadEndState.code, path: (str/concat @tp ".stateMachine.states"), message: (str/concat "State '" @n "' has no outgoing transitions - it may be a dead end"), suggestion: "Add outgoing transitions or mark as terminal state with isTerminal: true", severity: "error" }])))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "circuit-graph", scope: @entity.scope, findings: @entity.findings })
@@ -136,6 +139,9 @@ orbital OrbLintCircuitGraphOrbital {
     }
 
     config {
+      codes : LintCircuitGraphCodes = { circuitUnreachableState: { code: "CIRCUIT_UNREACHABLE_STATE", category: "circuit", description: "A state has no incoming transitions and cannot be reached" }, circuitNoOverlayExit: { code: "CIRCUIT_NO_OVERLAY_EXIT", category: "circuit", description: "A state renders into an overlay slot but has no exit transition, leaving users stuck" }, circuitModalExitIncomplete: { code: "CIRCUIT_MODAL_EXIT_INCOMPLETE", category: "circuit", description: "A transition leaving a modal state does not close the modal overlay it opened" }, circuitDeadEndState: { code: "CIRCUIT_DEAD_END_STATE", category: "circuit", description: "A state has no outgoing transitions, so it is a dead end" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
       overlaySlots : [string] = ["modal", "drawer", "dock", "overlay"]
         @label "Overlay slots"
         @description "The slots the portal shell wraps; a state painting one needs a way out."

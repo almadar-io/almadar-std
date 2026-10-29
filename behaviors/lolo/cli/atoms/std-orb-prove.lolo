@@ -1,0 +1,65 @@
+app std-orb-prove [
+  version: "1.0.0",
+  inbound: ["cli-prove"],
+  fs: { cwd: "**": [read], "/**": [read] },
+  description: "std-orb-prove — the `orb prove <file>` command: the kernel's answer to `program/prove` for the file, resolved, printed as 2-space pretty JSON `{ findings }` (status 200, as `orb validate --json` prints an invalid program's report). Each finding is `{ verdict, reason, counterexample?, site, proposition }`: `violated` when the evaluator confirms a counterexample, `unproved` when the prover cannot decide, and a proposition the program is shown to keep is no finding. The node host answers its own `program/prove` through this command. A file the host cannot read or resolve prints `Error: <reason>` on stderr (status 500). Anything but one file argument is the usage (status 400, exit 2)."
+]
+uses Spec from "almadar-std/orb-prove"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type ProveNode = string | number | boolean | [ProveNode?] | Map string ProveNode?
+type ProveProposition = { kind : string!, entity : string, trait : string, state : string, from : string, event : string, to : string, expr : ProveNode! }
+type ProveFinding = { verdict : string!, reason : string!, counterexample : ProveNode?, site : string!, proposition : ProveProposition! }
+type ProveAnswer = { findings : [ProveFinding]! }
+
+orbital OrbProveOrbital {
+  entity ProveRun [runtime] {
+    id : string!
+    cwd : string = ""
+  }
+
+  trait OrbProve -> ProveRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      PROVE_CALLED -> ready when (or (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (emit PROVE_ANSWERED { status: 400, body: "", stderr: "usage: orb prove <FILE>" })
+      PROVE_CALLED -> proving when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
+        (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
+        (program/prove null { path: (let ((f (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""))) (if (os/path-is-absolute @f) @f (os/path-join (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd") @f))) } { key: "prove" emit: { success: PROVE_DONE, failure: PROVE_REFUSED } })
+    }
+
+    state proving {
+      INIT -> proving
+      PROVE_DONE -> ready
+        (emit PROVE_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }), stderr: "" })
+      PROVE_REFUSED -> ready
+        (emit PROVE_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " (default @payload.error "program/prove was refused")) })
+    }
+
+    emits {
+      PROVE_ANSWERED -> internal {
+        status : number!
+        body : string!
+        stderr : string
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+    }
+
+    listens {
+      PROVE_CALLED -> inbound "cli-prove" answers PROVE_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb prove`."
+        @synonyms "orb prove, prove the invariants of a program, check holds and ensures"
+      PROVE_DONE { result : ProveAnswer! }
+        @description "Internal: the kernel's findings for the file."
+      PROVE_REFUSED { error : string }
+        @description "Internal: the host could not read, resolve or prove the file."
+    }
+  }
+
+  page boot as OrbProvePage -> OrbProve
+}

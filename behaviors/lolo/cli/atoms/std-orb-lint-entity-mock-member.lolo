@@ -14,6 +14,9 @@ type MockMemberEntity = { fields : [MockMemberField] }
 type MockMemberOrbital = { entity : MockMemberEntity, auxiliaryEntities : [MockMemberEntity], spec : boolean }
 type MockMemberProgram = { orbitals : [MockMemberOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEntityMockMemberCodes = { eMockNotInEnum : LintCodeDecl }
+
 orbital OrbLintEntityMockMemberOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -46,7 +49,7 @@ orbital OrbLintEntityMockMemberOrbital {
                               (if (and (> (array/len @values) 0) (!= (object/get @f "type" "") "union"))
                                 (let ((outside (array/filter @cands (fn c (not (array/includes @values @c))))))
                                   (if (> (array/len @outside) 0)
-                                    [{ code: "ORB_E_MOCK_NOT_IN_ENUM", path: (str/concat @base ".fields[" @fi "].mock"), message: (str/concat (quote "@") "mock candidate(s) " (str/join @outside ", ") " are not values of this field"), suggestion: "Use only the field's declared values as @mock candidates", severity: "error", validValues: @values }]
+                                    [{ code: @config.codes.eMockNotInEnum.code, path: (str/concat @base ".fields[" @fi "].mock"), message: (str/concat (quote "@") "mock candidate(s) " (str/join @outside ", ") " are not values of this field"), suggestion: "Use only the field's declared values as @mock candidates", severity: "error", validValues: @values }]
                                     []))
                                 [])))))))
                       [])))))))))))
@@ -69,6 +72,12 @@ orbital OrbLintEntityMockMemberOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintEntityMockMemberCodes = { eMockNotInEnum: { code: "ORB_E_MOCK_NOT_IN_ENUM", category: "entity", description: "Mock candidate values are not values of the enum field they belong to" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintEntityMockMemberCli -> OrbLintEntityMockMemberRun [client] {

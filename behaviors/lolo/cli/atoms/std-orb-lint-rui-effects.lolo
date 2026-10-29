@@ -24,6 +24,9 @@ type EfPropShapeRE = { types : [string] }
 type EfPatternShapeRE = { props : Map string EfPropShapeRE? }
 type EfHit = { p : string!, s : string!, open : boolean!, m : string!, g : string! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintRuiEffectsCodes = { lintUiVocabUnread : LintCodeDecl , ruiInvalidSlot : LintCodeDecl , bindingTraitInvalidPosition : LintCodeDecl , effMissingFetchForEntity : LintCodeDecl }
+
 orbital OrbLintRuiEffectsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -50,7 +53,7 @@ orbital OrbLintRuiEffectsOrbital {
         (set @entity.vocabUnread true)
       LINT_INPUT -> ready when @entity.vocabUnread
         (set @entity.scope @payload.scope)
-        (set @entity.findings [{ code: "ORB_LINT_UI_VOCAB_UNREAD", path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the valid slots are unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
+        (set @entity.findings [{ code: @config.codes.lintUiVocabUnread.code, path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the valid slots are unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
         (emit LINT_FINISH { })
       LINT_INPUT -> ready when (not @entity.vocabUnread)
         (set @entity.scope @payload.scope)
@@ -80,7 +83,7 @@ orbital OrbLintRuiEffectsOrbital {
                                                             (let ((en (object/get @patO "entity" null)))
                                                               (let ((ent (if (and @aRui (validate/string @en) (not (str/startsWith @en (quote "@")))) @en ""))
                                                                     (slotF (if (and (validate/string @sres) (not (array/includes @validSlots @sres)) (not (str/startsWith @sres (quote "@config."))))
-                                                                      [{ code: "ORB_RUI_INVALID_SLOT", path: @ep, message: (str/concat "Invalid slot: '" @sres "'"), suggestion: "", severity: "error" }]
+                                                                      [{ code: @config.codes.ruiInvalidSlot.code, path: @ep, message: (str/concat "Invalid slot: '" @sres "'"), suggestion: "", severity: "error" }]
                                                                       []))
                                                                     (posF (if (and @aRui (!= @pat null))
                                                                       (let ((hits (let ((h0 (tree/fold @pat (fn (n k)
@@ -99,7 +102,7 @@ orbital OrbLintRuiEffectsOrbital {
                                                                                              g: (str/concat "Move the @trait reference into a `children:` array — e.g. delete the `" @kk ":` prop and add `" (object/get @h "s") "` as an element of the enclosing `children: [ …, " (object/get @h "s") " ]` (custom props like `" @kk "` are not slots) — or use a pattern prop that accepts a node (e.g. `front`, `back`)") }])
                                                                                         [{ p: (str/concat "." @kk (object/get @h "p")), s: (object/get @h "s"), open: false, m: (object/get @h "m"), g: (object/get @h "g") }]))))))))
                                                                                 [])))) EfVal))) (if (validate/array @h0) @h0 []))))
-                                                                        (array/map @hits (fn h { code: "ORB_BINDING_TRAIT_INVALID_POSITION", path: (str/concat @ppath (object/get @h "p")),
+                                                                        (array/map @hits (fn h { code: @config.codes.bindingTraitInvalidPosition.code, path: (str/concat @ppath (object/get @h "p")),
                                                                             message: (if (object/get @h "open") (str/concat (quote "@trait binding '") (object/get @h "s") "' appears in prop '" "<root>" "' of pattern '" "<unknown>" "'; allowed positions are `children: [...]` and `node`-typed props") (object/get @h "m")),
                                                                             suggestion: (if (object/get @h "open") (str/concat "Move the @trait reference into a `children:` array — e.g. delete the `" "<root>" ":` prop and add `" (object/get @h "s") "` as an element of the enclosing `children: [ …, " (object/get @h "s") " ]` (custom props like `" "<root>" "` are not slots) — or use a pattern prop that accepts a node (e.g. `front`, `back`)") (object/get @h "g")), severity: "error" })))
                                                                       [])))
@@ -120,7 +123,7 @@ orbital OrbLintRuiEffectsOrbital {
                                         (let ((x (array/nth @info @ti)))
                                           (let ((have (object/get @avail (object/get @x "to") [])) (fe (object/get @x "fetched")))
                                             (array/map (array/filter (object/get @x "rendered") (fn r (and (not (array/includes @fe (object/get @r "re"))) (not (array/includes @have (object/get @r "re"))))))
-                                              (fn r { code: "ORB_EFF_MISSING_FETCH_FOR_ENTITY", path: (str/concat @tpath ".stateMachine.transitions[" @ti "].effects[" (object/get @r "j") "]"),
+                                              (fn r { code: @config.codes.effMissingFetchForEntity.code, path: (str/concat @tpath ".stateMachine.transitions[" @ti "].effects[" (object/get @r "j") "]"),
                                                       message: (str/concat "render-ui references entity '" (object/get @r "re") "' but no [\"fetch\", \"" (object/get @r "re") "\"] effect exists in this or any predecessor transition"),
                                                       suggestion: (str/concat "Add [\"fetch\", \"" (object/get @r "re") "\"] before the render-ui effect so the pattern has data to display"), severity: "error" })))))))))))
                                 (array/flatten (array/map (array/range 0 (array/len @info)) (fn ti
@@ -153,6 +156,12 @@ orbital OrbLintRuiEffectsOrbital {
       OrbLintInput.LINT_UI_VOCAB -> UI_VOCAB_HEARD
       OrbLintInput.LINT_UI_VOCAB_UNREAD -> UI_VOCAB_UNREAD
     }
+    config {
+      codes : LintRuiEffectsCodes = { lintUiVocabUnread: { code: "ORB_LINT_UI_VOCAB_UNREAD", category: "lint", description: "The installed @almadar/core declares no readable UI vocabulary, so a UI lint check cannot run" }, ruiInvalidSlot: { code: "ORB_RUI_INVALID_SLOT", category: "render_ui", description: "A render-ui effect targets an invalid slot" }, bindingTraitInvalidPosition: { code: "ORB_BINDING_TRAIT_INVALID_POSITION", category: "binding", description: "A @trait binding appears in a position other than a children array or a node-typed prop" }, effMissingFetchForEntity: { code: "ORB_EFF_MISSING_FETCH_FOR_ENTITY", category: "effect", description: "A render-ui references an entity but no fetch effect for it exists in this or any predecessor transition" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintRuiEffectsCli -> OrbLintRuiEffectsRun [client] {

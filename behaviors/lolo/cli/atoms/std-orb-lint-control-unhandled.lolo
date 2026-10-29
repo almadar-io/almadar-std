@@ -1,0 +1,221 @@
+app std-orb-lint-control-unhandled [
+  version: "1.0.0",
+  inbound: ["cli-lint-control-unhandled"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-control-unhandled - the `orb lint control-unhandled <file>` command, the port of validate_controls_handled (final_program.rs, G-ORB-187), the `orb validate --final` rule: a control event that a trait's rendered patterns fire (std-orb-fired-events' byControl, which already drops provably false branches and bus-excluded names) reaches the rendering trait and every trait that embeds it, directly or transitively through any referrer (std-orb-embed-chain's embedders) plus every `listens` route out of them. A control none of those handle, by a transition of the trait or a host, or by a listens route (an `any` source, or a trait or orbital source naming one of them, on the orbital or on any trait), does nothing when operated: ORB_EMIT_CONTROL_UNHANDLED at orbitals.<O>.traits.<T>. An event named by an emits entry carrying a definerKnob is the atom offering an affordance and is exempt. The finding reads its code from the rule's `codes` knob. Clean answers `lint control-unhandled: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-control-unhandled"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
+type FiredField = { default : FiredNode? }
+type FiredTransition = { event : string, guard : FiredNode?, effects : [FiredNode?] }
+type FiredTick = { guard : FiredNode?, effects : [FiredNode?] }
+type FiredMachine = { transitions : [FiredTransition] }
+type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
+type FiredOrbital = { traits : [FiredTrait] }
+type FiredProgram = { orbitals : [FiredOrbital] }
+type EmbedMap = Map string [string]
+type FiredControl = { event : string!, sites : [string]! }
+type CuSource = { kind : string, trait : string, orbital : string }
+type CuListen = { event : string, source : CuSource }
+type CuEmit = { event : string, definerKnob : string, scope : string, scopeOverridden : boolean }
+type CuTransition = { event : string }
+type CuMachine = { transitions : [CuTransition] }
+type CuTrait = { name : string, emits : [CuEmit], listens : [CuListen], stateMachine : CuMachine }
+type CuOrbital = { name : string, traits : [CuTrait], listens : [CuListen] }
+type CuProgram = { orbitals : [CuOrbital] }
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type ControlUnhandledCodes = { controlUnhandled : LintCodeDecl }
+type CuUnhandled = { orbital : string!, trait : string!, event : string!, sites : [string]!, forwarded : boolean! }
+type CuForward = { orbital : string!, trait : string!, event : string!, via : [string]! }
+
+orbital OrbLintControlUnhandledOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+  uses Fired from "std/behaviors/std-orb-fired-events"
+  uses Chain from "std/behaviors/std-orb-embed-chain"
+
+  entity OrbLintControlUnhandledRun [runtime] {
+    id : string!
+    scope : string = ""
+    program : CuProgram! = {}
+    controls : Map string [FiredControl] = {}
+    bridged : Map string [string] = {}
+    chains : [EmbedMap] = []
+    haveFired : boolean = false
+    haveChains : boolean = false
+    unhandled : [CuUnhandled] = []
+    findings : [OrbFinding] = []
+    forwards : [CuForward] = []
+  }
+
+  trait OrbLintControlUnhandled -> OrbLintControlUnhandledRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.program @payload.program)
+      FIRED_HEARD -> ready when @entity.haveChains
+        (set @entity.scope @payload.scope)
+        (set @entity.controls @payload.controls)
+        (set @entity.bridged @payload.bridged)
+        (set @entity.haveFired true)
+        (emit LINT_COMPUTE { })
+      FIRED_HEARD -> ready when (not @entity.haveChains)
+        (set @entity.scope @payload.scope)
+        (set @entity.controls @payload.controls)
+        (set @entity.bridged @payload.bridged)
+        (set @entity.haveFired true)
+      CHAINS_HEARD -> ready when @entity.haveFired
+        (set @entity.chains @payload.embedders)
+        (set @entity.haveChains true)
+        (emit LINT_COMPUTE { })
+      CHAINS_HEARD -> ready when (not @entity.haveFired)
+        (set @entity.chains @payload.embedders)
+        (set @entity.haveChains true)
+      LINT_COMPUTE -> ready
+        (set @entity.unhandled (let ((orbitals (object/get @entity.program "orbitals" [])) (bc @entity.controls) (br @entity.bridged) (chains @entity.chains)) (let ((allListens (array/flatten (array/map @orbitals (fn o (array/concat (object/get @o "listens" []) (array/flatten (array/map (object/get @o "traits" []) (fn t (object/get @t "listens" [])))))))))) (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((o (default (array/nth @orbitals @oi) {}))) (let ((ts (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine")))) (bridgedAll (array/flatten (array/map (object/get @o "traits" []) (fn t (object/get @br (object/get @t "name" "") []))))) (chain (default (array/nth @chains @oi) {}))) (array/flatten (array/map @ts (fn t (let ((tn (object/get @t "name" ""))) (let ((scope (array/concat [@tn] (object/get @chain @tn []))) (knobs (array/map (array/filter (object/get @t "emits" []) (fn e (!= (object/get @e "definerKnob" "") ""))) (fn e (object/get @e "event" ""))))) (array/flatten (array/map (object/get @bc @tn []) (fn cc (let ((ev (object/get @cc "event" ""))) (if (or (= @ev "") (array/includes @bridgedAll @ev) (str/startsWith @ev (quote "@")) (array/includes @knobs @ev) (array/some @ts (fn x (and (array/includes @scope (object/get @x "name" "")) (array/some (object/get (object/get @x "stateMachine" {}) "transitions" []) (fn tr (= (object/get @tr "event" "") @ev)))))) (array/some @allListens (fn l (and (= (object/get @l "event" "") @ev) (let ((src (object/get @l "source" {}))) (let ((k (object/get @src "kind" ""))) (or (= @k "any") (and (array/includes ["trait" "orbital"] @k) (array/includes @scope (object/get @src "trait" "")))))))))) [] [{ orbital: (object/get @o "name" ""), trait: @tn, event: @ev, sites: (object/get @cc "sites"), forwarded: (array/some (object/get @t "emits" []) (fn e (and (= (object/get @e "event" "") @ev) (= (object/get @e "scope" "") "external") (= (object/get @e "scopeOverridden" false) true)))) }]))))))))))))))))))
+        (set @entity.findings (array/map @entity.unhandled (fn u { code: @config.codes.controlUnhandled.code, path: (str/concat "orbitals." (object/get @u "orbital") ".traits." (object/get @u "trait")), message: (str/concat "A control rendered by '" (object/get @u "trait") "' (" (str/join (object/get @u "sites") ", ") ") fires '" (object/get @u "event") "', which no transition of '" (object/get @u "trait") "' or an embedder of it handles and no `listens` routes"), suggestion: (str/concat "Handle '" (object/get @u "event") "' in '" (object/get @u "trait") "' (or the trait that embeds it), route it with `listens`, or remove the control"), severity: "error" })))
+        (set @entity.forwards (array/map (array/filter @entity.unhandled (fn u (object/get @u "forwarded"))) (fn u { orbital: (object/get @u "orbital"), trait: (object/get @u "trait"), event: (object/get @u "event"), via: (object/get @u "sites") })))
+        (set @entity.haveFired false)
+        (set @entity.haveChains false)
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "control-unhandled", scope: @entity.scope, findings: @entity.findings })
+        (emit CONTROLS_FORWARDED { scope: @entity.scope, forwards: @entity.forwards })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      CONTROLS_FORWARDED -> external { scope : string!  forwards : [CuForward]! }
+        @description "The unhandled controls a trait leaves on purpose: its composer declared `emitsScope external` for the event, so an embedding organism handles it. Offered to a describe of the behavior."
+        @tier "internal"
+      LINT_COMPUTE { }
+        @description "Internal: both the fired events and the embed chains are in, compute the findings."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    config {
+      codes : ControlUnhandledCodes = { controlUnhandled: { code: "ORB_EMIT_CONTROL_UNHANDLED", category: "emit", description: "A rendered control fires an event nothing handles or routes." } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CuProgram!  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      FIRED_HEARD { scope : string!  controls : Map string [FiredControl]!  bridged : Map string [string]! }
+        @description "std-orb-fired-events' FIRED_EVENTS: the events each trait fires by a control or by an effect."
+      CHAINS_HEARD { scope : string!  chains : [EmbedMap]!  embedders : [EmbedMap]! }
+        @description "std-orb-embed-chain's EMBED_CHAINS: per orbital, each trait's host names."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+      OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
+      OrbEmbedChain.EMBED_CHAINS -> CHAINS_HEARD
+    }
+  }
+
+  trait OrbLintControlUnhandledCli -> OrbLintControlUnhandledRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint control-unhandled <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "control-unhandled") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint control-unhandled: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "control-unhandled") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint control-unhandled: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-control-unhandled" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string!
+      }
+        @description "Run `orb lint control-unhandled` with its arguments and working directory."
+        @synonyms "orb lint control-unhandled"
+      OrbLintControlUnhandled.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait OrbFiredEvents = Fired.traits.OrbFiredEvents {
+    listens {
+      FIRED_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      FIRED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD
+      OrbLintInput.LINT_INPUT -> FIRED_INPUT_HEARD
+    }
+  }
+  trait OrbEmbedChain = Chain.traits.OrbEmbedChain {
+    listens {
+      EMBED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_INPUT -> EMBED_INPUT_HEARD
+      EMBED_INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait uses."
+      OrbLintInput.LINT_INDEX -> EMBED_INDEX_HEARD
+    }
+  }
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintControlUnhandledCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintControlUnhandledOrbitalStart -> OrbLintControlUnhandled, OrbLintControlUnhandledCli, OrbLintInput, OrbFiredEvents, OrbEmbedChain, Packs, Versions
+}

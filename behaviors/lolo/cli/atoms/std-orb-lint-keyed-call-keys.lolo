@@ -24,6 +24,9 @@ type KkOp = { emit : [number]!, keyOnly : [number]! }
 type KkRec = { rtype : string!, head : string!, hasKey : boolean!, key : KkVal?, cancelled : boolean!, text : string!, path : string!, place : string! }
 type KkRecs = [KkRec]
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintKeyedCallKeysCodes = { lintOperatorShapesUnread : LintCodeDecl , callServiceKeyType : LintCodeDecl , callServiceCancelledWithoutKey : LintCodeDecl , callKeyUnused : LintCodeDecl }
+
 orbital OrbLintKeyedCallKeysOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -56,7 +59,7 @@ orbital OrbLintKeyedCallKeysOrbital {
         (set @entity.shapesUnread true)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (if @entity.shapesUnread [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the keyed operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
+        (set @entity.findings (if @entity.shapesUnread [{ code: @config.codes.lintOperatorShapesUnread.code, path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the keyed operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
           (let ((keyed @entity.keyed) (orbitals (object/get @payload.program "orbitals" [])))
             (let ((sites (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
                     (let ((o (array/nth @orbitals @oi)))
@@ -122,7 +125,7 @@ orbital OrbLintKeyedCallKeysOrbital {
                         (let ((k (object/get @r "key" null)) (h (object/get @r "head")) (hk (object/get @r "hasKey")) (p (object/get @r "path")))
                           (array/concat
                             (if (and @hk (or (= @k null) (and (validate/string @k) (= @k ""))))
-                              [{ code: "ORB_CALL_SERVICE_KEY_TYPE", path: @p, message: (str/concat @h " `key` must be a non-empty string"), suggestion: "", severity: "error" }]
+                              [{ code: @config.codes.callServiceKeyType.code, path: @p, message: (str/concat @h " `key` must be a non-empty string"), suggestion: "", severity: "error" }]
                               [])
                             (let ((lk (if (validate/string @k)
                                             (if (or (str/startsWith @k (quote "@")) (str/startsWith @k "?") (str/startsWith @k "$")) null "string")
@@ -131,15 +134,15 @@ orbital OrbLintKeyedCallKeysOrbital {
                                                 (if (validate/object @k) "object"
                                                   (if (validate/array @k) (if (validate/string (array/first @k)) null "array") null)))))))
                               (if (and @hk (!= @lk null) (!= @lk "string"))
-                                [{ code: "ORB_CALL_SERVICE_KEY_TYPE", path: @p, message: (str/concat @h " `key` must be a string, got a " @lk " literal"), suggestion: "Use a string literal or a string-typed expression such as @entity.batchId", severity: "error" }]
+                                [{ code: @config.codes.callServiceKeyType.code, path: @p, message: (str/concat @h " `key` must be a string, got a " @lk " literal"), suggestion: "Use a string literal or a string-typed expression such as @entity.batchId", severity: "error" }]
                                 []))
                             (if (and (object/get @r "cancelled") (or (not @hk) (= @k null)))
-                              [{ code: "ORB_CALL_SERVICE_CANCELLED_WITHOUT_KEY", path: @p, message: "emit.cancelled is declared but the call has no `key` — nothing can cancel an unkeyed call", suggestion: (str/concat "Add `key: <string expression>` to the " @h " options, and cancel it with (cancel-call <key>)"), severity: "error" }]
+                              [{ code: @config.codes.callServiceCancelledWithoutKey.code, path: @p, message: "emit.cancelled is declared but the call has no `key` — nothing can cancel an unkeyed call", suggestion: (str/concat "Add `key: <string expression>` to the " @h " options, and cancel it with (cancel-call <key>)"), severity: "error" }]
                               []))))))
                       (if (array/some @texts (fn x (= @x null)))
                         []
                         (array/map (array/filter (array/filter @recs (fn r (= (object/get @r "rtype") "cast"))) (fn c (not (array/includes @texts (object/get @c "text"))))) (fn c
-                          { code: "ORB_CALL_KEY_UNUSED", path: (object/get @c "path"), message: (str/concat "`(as \"" (object/get @c "text") "\" CallKey)` names a key, but no call in this program runs under \"" (object/get @c "text") "\""), suggestion: (str/concat "Key the call it should reach with `key: (as \"" (object/get @c "text") "\" CallKey)`, or use the key the call declares"), severity: "error" })))))))))))
+                          { code: @config.codes.callKeyUnused.code, path: (object/get @c "path"), message: (str/concat "`(as \"" (object/get @c "text") "\" CallKey)` names a key, but no call in this program runs under \"" (object/get @c "text") "\""), suggestion: (str/concat "Key the call it should reach with `key: (as \"" (object/get @c "text") "\" CallKey)`, or use the key the call declares"), severity: "error" })))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "keyed-call-keys", scope: @entity.scope, findings: @entity.findings })
@@ -165,6 +168,12 @@ orbital OrbLintKeyedCallKeysOrbital {
       OrbLintInput.LINT_OPERATOR_SHAPES -> SHAPES_HEARD
       OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> SHAPES_UNREAD
     }
+    config {
+      codes : LintKeyedCallKeysCodes = { lintOperatorShapesUnread: { code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", category: "lint", description: "The installed operator table could not be read or does not match the operator shape type, so a lint cannot run" }, callServiceKeyType: { code: "ORB_CALL_SERVICE_KEY_TYPE", category: "call_service", description: "A keyed call-service effect has a key that is not a non-empty string" }, callServiceCancelledWithoutKey: { code: "ORB_CALL_SERVICE_CANCELLED_WITHOUT_KEY", category: "call_service", description: "A call-service declares emit.cancelled but has no key, so nothing can cancel an unkeyed call" }, callKeyUnused: { code: "ORB_CALL_KEY_UNUSED", category: "effect", description: "A literal (as 'k' CallKey) names a key that no keyed call in the program runs under" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintKeyedCallKeysCli -> OrbLintKeyedCallKeysRun [client] {

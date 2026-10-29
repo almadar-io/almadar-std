@@ -20,6 +20,9 @@ type TdNamed = { name : string }
 type TdOrbital = { name : string, theme : string | TdNamed, traits : [TdTrait] }
 type TdProgram = { theme : string | TdNamed, themes : [string], orbitals : [TdOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintThemeUndeclaredCodes = { themeUndeclared : LintCodeDecl }
+
 orbital OrbLintThemeUndeclaredOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -67,7 +70,7 @@ orbital OrbLintThemeUndeclaredOrbital {
                                                 { t: @sub }))
                                             @nr)))) TdVal))) (if (= @fr null) [] (object/get @fr "t"))))))))))
                               (array/map (array/filter @found (fn t (not (array/includes @declared (if (str/endsWith @t "-dark") (str/slice @t 0 (- (str/len @t) 5)) (if (str/endsWith @t "-light") (str/slice @t 0 (- (str/len @t) 6)) @t)))))) (fn t
-                                { code: "ORB_THEME_UNDECLARED", path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" @tname ")]"), message: (str/concat "'" @tname "' shows a frame in theme " @dq @t @dq ", which the program does not declare"), suggestion: (str/concat "add " @dq @t @dq " to the app's `themes: [...]` (the themes a program switches to inside a page)"), severity: "error" })))))))))))))))))
+                                { code: @config.codes.themeUndeclared.code, path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" @tname ")]"), message: (str/concat "'" @tname "' shows a frame in theme " @dq @t @dq ", which the program does not declare"), suggestion: (str/concat "add " @dq @t @dq " to the app's `themes: [...]` (the themes a program switches to inside a page)"), severity: "error" })))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "theme-undeclared", scope: @entity.scope, findings: @entity.findings })
@@ -87,6 +90,12 @@ orbital OrbLintThemeUndeclaredOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintThemeUndeclaredCodes = { themeUndeclared: { code: "ORB_THEME_UNDECLARED", category: "theme", description: "A frame is shown in a literal theme that the program does not declare, so no stylesheet ships for it" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintThemeUndeclaredCli -> OrbLintThemeUndeclaredRun [client] {

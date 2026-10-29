@@ -1,8 +1,8 @@
 app std-vector-snapshot [
   version: "1.0.0",
-  description: "std-vector-snapshot — write a package's vector snapshot (dist/vectors.vec) the way `orb behaviors vectors snapshot` does. SNAPSHOT { wanted, userDir, providerModel, out, locked } reads the existing snapshot at out and the package's locked snapshot (each only when the file exists, the locked one only when it is not out), resolves every wanted text through std-vector-resolve (snapshots first, then the user store, embedding and persisting misses through the provider), then re-reads the user store and takes the stored quantized record of each distinct text from std-vector-store, so the written bytes are the stored ones, never re-quantized. The records, one per distinct text, are sorted strictly ascending by key (the key as 64 lower-case hex digits through array/sort, which orders bytewise), written in the ORBVEC layout to out.tmp and renamed over out. An empty wanted list refuses ORB_VECTOR_EMPTY. SNAPSHOT_DONE { model, records, out } on success; SNAPSHOT_REFUSED { code, detail } otherwise, with the resolve and store refusals passed through. Same inputs, same bytes."
+  description: "std-vector-snapshot — write a package's vector snapshot (dist/vectors.vec) the way `orb behaviors vectors snapshot` does. SNAPSHOT { wanted, userDir, userAnchor, providerModel, out, locked } reads the existing snapshot at out and the package's locked snapshot (each only when the file exists, the locked one only when it is not out), resolves every wanted text through std-vector-resolve (snapshots first, then the user store, embedding and persisting misses through the provider), then re-reads the user store and takes the stored quantized record of each distinct text from std-vector-store, so the written bytes are the stored ones, never re-quantized. The records, one per distinct text, are sorted strictly ascending by key (the key as 64 lower-case hex digits through array/sort, which orders bytewise), written in the ORBVEC layout to out.tmp and renamed over out. An empty wanted list refuses ORB_VECTOR_EMPTY. SNAPSHOT_DONE { model, records, out } on success; SNAPSHOT_REFUSED { code, detail } otherwise, with the resolve and store refusals passed through. Same inputs, same bytes."
   egress: ["https://api.openai.com", "https://openrouter.ai", "http://127.0.0.1:1234"],
-  fs: { cwd: "**": [read, write, remove, create] },
+  fs: { cwd: "**": [read, write, remove, create], "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   exec: ["kill"]
 ]
 uses Spec from "almadar-std/vector-snapshot"
@@ -25,6 +25,7 @@ orbital VectorSnapshotOrbital {
     id : string!
     wanted : [WantedText] = []
     userDir : string = ""
+    userAnchor : string = ""
     providerModel : string = ""
     providerKind : string = ""
     embedModel : string = ""
@@ -206,6 +207,7 @@ orbital VectorSnapshotOrbital {
         snapshots : [bytes]!
         snapshotPaths : [string]
         userDir : string!
+        userAnchor : string!
         providerModel : string!
         providerKind : string
         embedModel : string
@@ -248,6 +250,7 @@ orbital VectorSnapshotOrbital {
       SNAPSHOT -> outReading when (> (array/len @payload.wanted) 0)
         (set @entity.wanted @payload.wanted)
         (set @entity.userDir @payload.userDir)
+        (set @entity.userAnchor @payload.userAnchor)
         (set @entity.providerModel @payload.providerModel)
         (set @entity.providerKind (default @payload.providerKind ""))
         (set @entity.embedModel (default @payload.embedModel ""))
@@ -274,16 +277,16 @@ orbital VectorSnapshotOrbital {
       SN_NEXT -> lockedReading when (and (!= @entity.locked "") (!= @entity.locked @entity.out))
         (os/read-file { anchor: "cwd" path: @entity.locked } { emit: { success: SN_LOCKED_READ, failure: SN_LOCKED_ABSENT } })
       SN_NEXT -> resolving when (or (== @entity.locked "") (== @entity.locked @entity.out))
-        (emit RESOLVE { wanted: @entity.wanted, snapshots: @entity.snapshots, snapshotPaths: @entity.snapPaths, userDir: @entity.userDir, providerModel: @entity.providerModel, providerKind: @entity.providerKind, embedModel: @entity.embedModel })
+        (emit RESOLVE { wanted: @entity.wanted, snapshots: @entity.snapshots, snapshotPaths: @entity.snapPaths, userDir: @entity.userDir, userAnchor: @entity.userAnchor, providerModel: @entity.providerModel, providerKind: @entity.providerKind, embedModel: @entity.embedModel })
     }
 
     state lockedReading {
       SN_LOCKED_READ -> resolving
         (set @entity.snapshots (array/append @entity.snapshots @payload.data))
         (set @entity.snapPaths (array/append @entity.snapPaths @entity.locked))
-        (emit RESOLVE { wanted: @entity.wanted, snapshots: @entity.snapshots, snapshotPaths: @entity.snapPaths, userDir: @entity.userDir, providerModel: @entity.providerModel, providerKind: @entity.providerKind, embedModel: @entity.embedModel })
+        (emit RESOLVE { wanted: @entity.wanted, snapshots: @entity.snapshots, snapshotPaths: @entity.snapPaths, userDir: @entity.userDir, userAnchor: @entity.userAnchor, providerModel: @entity.providerModel, providerKind: @entity.providerKind, embedModel: @entity.embedModel })
       SN_LOCKED_ABSENT -> resolving when (== @payload.kind "not-found")
-        (emit RESOLVE { wanted: @entity.wanted, snapshots: @entity.snapshots, snapshotPaths: @entity.snapPaths, userDir: @entity.userDir, providerModel: @entity.providerModel, providerKind: @entity.providerKind, embedModel: @entity.embedModel })
+        (emit RESOLVE { wanted: @entity.wanted, snapshots: @entity.snapshots, snapshotPaths: @entity.snapPaths, userDir: @entity.userDir, userAnchor: @entity.userAnchor, providerModel: @entity.providerModel, providerKind: @entity.providerKind, embedModel: @entity.embedModel })
       SN_LOCKED_ABSENT -> idle when (!= @payload.kind "not-found")
         (emit SNAPSHOT_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat @entity.locked ": " @payload.error) })
     }
@@ -358,6 +361,7 @@ orbital VectorSnapshotOrbital {
         snapshots : [bytes]!
         snapshotPaths : [string]
         userDir : string!
+        userAnchor : string!
         providerModel : string!
         providerKind : string
         embedModel : string
@@ -457,6 +461,7 @@ orbital VectorSnapshotOrbital {
       SNAPSHOT -> input {
         wanted : [WantedText]!
         userDir : string!
+        userAnchor : string!
         providerModel : string!
         providerKind : string
         embedModel : string

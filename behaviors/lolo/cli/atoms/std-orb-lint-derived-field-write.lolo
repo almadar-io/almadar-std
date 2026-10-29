@@ -23,6 +23,9 @@ type IxTrait = { name : string, linkedEntity : string, stateMachine : IxMachine 
 type IxOrbital = { name : string, entity : IxEntity, auxiliaryEntities : [IxEntity], traits : [IxTrait] }
 type IxProgram = { orbitals : [IxOrbital]! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintDerivedFieldWriteCodes = { derivedFieldWritten : LintCodeDecl }
+
 orbital OrbLintDerivedFieldWriteOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -68,7 +71,7 @@ orbital OrbLintDerivedFieldWriteOrbital {
                       [])
                      (array/flatten (array/filter @k (fn c (!= @c null)))))))
                   [])) IxVal) []) IxHits) [])))
-           (array/map @hits (fn x { code: "ORB_DERIVED_FIELD_WRITTEN", path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" @ni "].effects"), message: (str/concat "`" (object/get @x "f" "") "` of entity " (object/get @x "e" "") " is `@derived`: the kernel computes it on every write, so a " (if (= (object/get @x "k" "") "set") "`set`" "`persist`") " may not write it"), suggestion: "Remove the write; change the fields it is derived from", severity: "error" })))))))))))))))))))))
+           (array/map @hits (fn x { code: @config.codes.derivedFieldWritten.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" @ni "].effects"), message: (str/concat "`" (object/get @x "f" "") "` of entity " (object/get @x "e" "") " is `@derived`: the kernel computes it on every write, so a " (if (= (object/get @x "k" "") "set") "`set`" "`persist`") " may not write it"), suggestion: "Remove the write; change the fields it is derived from", severity: "error" })))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "derived-field-write", scope: @entity.scope, findings: @entity.findings })
@@ -88,6 +91,12 @@ orbital OrbLintDerivedFieldWriteOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintDerivedFieldWriteCodes = { derivedFieldWritten: { code: "ORB_DERIVED_FIELD_WRITTEN", category: "entity_mutation", description: "A set or persist writes an @derived field that the kernel computes on every write" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintDerivedFieldWriteCli -> OrbLintDerivedFieldWriteRun [client] {

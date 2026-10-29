@@ -13,6 +13,9 @@ type BrowserOrbital = { spec : boolean, entity : BrowserEntity, auxiliaryEntitie
 type BrowserProgram = { orbitals : [BrowserOrbital] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEntityBrowserStorageCodes = { eLocalRequiresPersistent : LintCodeDecl , eIdentityLocal : LintCodeDecl }
+
 orbital OrbLintEntityBrowserStorageOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -39,8 +42,8 @@ orbital OrbLintEntityBrowserStorageOrbital {
             (let ((ent (object/get @eb "ent")))
               (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (let ((nm (object/get @ent "name" "")) (lc (object/get @ent "browser" false)) (idn (object/get @ent "identity" false)) (rt (= (object/get @ent "persistence" "") "runtime")))
                 (array/concat
-                  (if (and @lc @rt) [{ code: "ORB_E_LOCAL_REQUIRES_PERSISTENT", path: (str/concat (object/get @eb "base") ".browser"), message: (str/concat "Entity '" @nm "' is [runtime, browser] — a runtime entity's frame already lives in the client; `browser` declares where PERSISTED rows live"), suggestion: "Use `[persistent: <collection>, browser]` for rows stored in the browser, or drop `browser`.", severity: "error" }] [])
-                  (if (and @idn @lc) [{ code: "ORB_E_IDENTITY_LOCAL", path: (str/concat (object/get @eb "base") ".browser"), message: (str/concat "Entity '" @nm "' is [identity] and `browser` — the viewer directory is never browser-resident"), suggestion: "Drop `browser` from the identity entity.", severity: "error" }] []))) [])))))))))))
+                  (if (and @lc @rt) [{ code: @config.codes.eLocalRequiresPersistent.code, path: (str/concat (object/get @eb "base") ".browser"), message: (str/concat "Entity '" @nm "' is [runtime, browser] — a runtime entity's frame already lives in the client; `browser` declares where PERSISTED rows live"), suggestion: "Use `[persistent: <collection>, browser]` for rows stored in the browser, or drop `browser`.", severity: "error" }] [])
+                  (if (and @idn @lc) [{ code: @config.codes.eIdentityLocal.code, path: (str/concat (object/get @eb "base") ".browser"), message: (str/concat "Entity '" @nm "' is [identity] and `browser` — the viewer directory is never browser-resident"), suggestion: "Drop `browser` from the identity entity.", severity: "error" }] []))) [])))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "entity-browser-storage", scope: @entity.scope, findings: @entity.findings })
@@ -60,6 +63,12 @@ orbital OrbLintEntityBrowserStorageOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintEntityBrowserStorageCodes = { eLocalRequiresPersistent: { code: "ORB_E_LOCAL_REQUIRES_PERSISTENT", category: "entity", description: "A runtime entity declares a browser storage location, which only applies to persistent entities" }, eIdentityLocal: { code: "ORB_E_IDENTITY_LOCAL", category: "entity", description: "An identity entity is declared as browser-stored, but the viewer directory is never browser-resident" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintEntityBrowserStorageCli -> OrbLintEntityBrowserStorageRun [client] {

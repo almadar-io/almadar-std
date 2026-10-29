@@ -20,6 +20,9 @@ type CkTraitView = { name : string, emits : [CkEmit], listens : [CkListen] }
 type CkOrbital = { name : string, traits : [CkVal] }
 type CkProgram = { orbitals : [CkOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintListenWildcardUnkeyedCodes = { listenWildcardUnkeyed : LintCodeDecl }
+
 orbital OrbLintListenWildcardUnkeyedOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -59,7 +62,7 @@ orbital OrbLintListenWildcardUnkeyedOrbital {
                                          (if (validate/array @n)
                                            (array/some @k (fn r (= @r true)))
                                            (if (validate/object @n) (array/some (object/values @k) (fn r (= @r true))) false)))) CkVal) true))
-                          [{ code: "ORB_LISTEN_WILDCARD_UNKEYED", path: (str/concat "orbitals." (object/get @orb "name" "") ".traits." (object/get @td "name" "") ".listens"), message: (str/concat "listens route `*." @ev " -> " @triggered "` in `" (object/get @orb "name" "") "." (object/get @td "name" "") "` hears every caller's `" @ev "`, whose payload carries the call's `key`, and its guard never reads it"), suggestion: (str/concat "guard the route on the call's own key: `*." @ev " -> " @triggered " when (= ?key <the key this trait sent>)`"), severity: "warning" }]
+                          [{ code: @config.codes.listenWildcardUnkeyed.code, path: (str/concat "orbitals." (object/get @orb "name" "") ".traits." (object/get @td "name" "") ".listens"), message: (str/concat "listens route `*." @ev " -> " @triggered "` in `" (object/get @orb "name" "") "." (object/get @td "name" "") "` hears every caller's `" @ev "`, whose payload carries the call's `key`, and its guard never reads it"), suggestion: (str/concat "guard the route on the call's own key: `*." @ev " -> " @triggered " when (= ?key <the key this trait sent>)`"), severity: "warning" }]
                           []))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -80,6 +83,12 @@ orbital OrbLintListenWildcardUnkeyedOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintListenWildcardUnkeyedCodes = { listenWildcardUnkeyed: { code: "ORB_LISTEN_WILDCARD_UNKEYED", category: "trait_event", description: "A wildcard listens route hears every caller's event but its guard never reads the call key in the payload" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintListenWildcardUnkeyedCli -> OrbLintListenWildcardUnkeyedRun [client] {

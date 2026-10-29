@@ -31,6 +31,9 @@ type AdTransition = { from : AdFrom, to : string, event : string, effects : [FbV
 type AdMachine = { transitions : [AdTransition] }
 type AdTrait = { name : string, stateMachine : AdMachine }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintAsyncResultDeafTargetCodes = { circuitAsyncResultDeafTarget : LintCodeDecl }
+
 orbital OrbLintAsyncResultDeafTargetOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -78,7 +81,7 @@ orbital OrbLintAsyncResultDeafTargetOrbital {
                                       (if (= (array/len @deaf) 0)
                                         []
                                         (let ((dbg (str/concat "[" (str/join (array/map @deaf (fn r (str/concat "\"" @r "\""))) ", ") "]")))
-                                          [{ code: "ORB_CIRCUIT_ASYNC_RESULT_DEAF_TARGET", path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" @i "].effects"), message: (str/concat "transition " (if (= (array/len @froms) 1) (array/first @froms) (str/concat "[" (str/join @froms ", ") "]")) "--[" (object/get @tr "event" "") "]-->" @to " declares async result event(s) " @dbg " but state '" @to "' has no arm handling " (if (= (array/len @deaf) 1) "it" "them") " — the requester departs before it can hear its own operation's result"), suggestion: (str/concat "Add a transition `from: '" @to "'` handling each of " @dbg " in state '" @to "' (or route the result to a state that already does)."), severity: "error" }]))))))))))))))))))))))))
+                                          [{ code: @config.codes.circuitAsyncResultDeafTarget.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" @i "].effects"), message: (str/concat "transition " (if (= (array/len @froms) 1) (array/first @froms) (str/concat "[" (str/join @froms ", ") "]")) "--[" (object/get @tr "event" "") "]-->" @to " declares async result event(s) " @dbg " but state '" @to "' has no arm handling " (if (= (array/len @deaf) 1) "it" "them") " — the requester departs before it can hear its own operation's result"), suggestion: (str/concat "Add a transition `from: '" @to "'` handling each of " @dbg " in state '" @to "' (or route the result to a state that already does)."), severity: "error" }]))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "async-result-deaf-target", scope: @entity.scope, findings: @entity.findings })
@@ -98,6 +101,12 @@ orbital OrbLintAsyncResultDeafTargetOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintAsyncResultDeafTargetCodes = { circuitAsyncResultDeafTarget: { code: "ORB_CIRCUIT_ASYNC_RESULT_DEAF_TARGET", category: "circuit", description: "A transition declares async result events but its target state has no arm handling them, so the requester cannot hear its own result" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintAsyncResultDeafTargetCli -> OrbLintAsyncResultDeafTargetRun [client] {

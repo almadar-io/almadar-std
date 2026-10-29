@@ -31,6 +31,9 @@ type EwR = { s : [string]!, o : [string]!, a : [string]!, oa : [string]!, b : bo
 type EwP = { p : [string]! }
 type PatternEventProp = { pattern : string!, prop : string!, field : string! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEventWiringCodes = { xOrphanListener : LintCodeDecl , xUnusedEmission : LintCodeDecl , emitUnroutedToHandler : LintCodeDecl }
+
 orbital OrbLintEventWiringOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses Fired from "std/behaviors/std-orb-fired-events"
@@ -216,7 +219,7 @@ orbital OrbLintEventWiringOrbital {
                         (byOrb : EwRecMap (array/groupBy @recs "o")))
                     (array/concat
                       (array/concat
-                        (array/map @orphanPairs (fn p { code: "ORB_X_ORPHAN_LISTENER", path: (str/concat "traits." (object/get @p "t")), message: (str/concat "Trait '" (object/get @p "t") "' listens for event '" (object/get @p "ev") "' but no trait emits it"), suggestion: "Ensure the event is emitted by another trait or remove the listener", severity: "error" }))
+                        (array/map @orphanPairs (fn p { code: @config.codes.xOrphanListener.code, path: (str/concat "traits." (object/get @p "t")), message: (str/concat "Trait '" (object/get @p "t") "' listens for event '" (object/get @p "ev") "' but no trait emits it"), suggestion: "Ensure the event is emitted by another trait or remove the listener", severity: "error" }))
                         (array/flatten (array/map (array/filter @emU (fn p (and (!= (object/get @p "ev") "INIT") (not (object/has @lisSet (str/replaceAll (str/replaceAll (object/get @p "ev") "~" "~t") "." "~d"))) (not (object/has @trigSet (str/replaceAll (str/replaceAll (object/get @p "ev") "~" "~t") "." "~d")))))) (fn p
                           (let ((e (object/get @p "t")) (ev (object/get @p "ev")))
                             (let ((key (str/replaceAll (str/replaceAll (str/concat @e "|" @ev) "~" "~t") "." "~d"))
@@ -226,7 +229,7 @@ orbital OrbLintEventWiringOrbital {
                                   (undec (object/has @dynSet @e)))
                               (if (or (and (not (and @imported @byCtl)) (object/has @expSet @key)) (object/has @csSet @key) (object/has @offSet @key)) []
                                 (if (and @imported (or (and @produced (not @byCtl)) @undec (and (not @produced) (not (array/includes @psAll @ev))))) []
-                                  [{ code: "ORB_X_UNUSED_EMISSION", path: (str/concat "traits." @e), message: (str/concat "Trait '" @e "' emits event '" @ev "' but no trait listens for it" (if @undec " (the event name is bound at runtime, so reachability cannot be decided statically)" (if @byCtl " — and a RENDERED control here fires it, so the affordance is dead and the value it carries is discarded" (if @produced " — this composition broadcasts it programmatically, and the collector for it was not composed here" " (nothing in this composition fires it, so this is a stale declaration rather than a dead control)")))), suggestion: (if @imported (str/concat "This trait is composed from an imported behavior, so THIS file is the consumer its `-> external` emit was declared for. Wire it at the call site: rename the event onto one you handle (`events { " @ev ": <YOUR_EVENT> }`) and add a matching transition arm, or add `listens { " @e "." @ev " -> <TRIGGER> }`. Re-declaring it `-> external` no longer suppresses this — that only defers an emit whose trait is DECLARED here.") (str/concat "Consume it where it fires: add a transition arm `" @ev " -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config")), severity: "error" }]))))))))
+                                  [{ code: @config.codes.xUnusedEmission.code, path: (str/concat "traits." @e), message: (str/concat "Trait '" @e "' emits event '" @ev "' but no trait listens for it" (if @undec " (the event name is bound at runtime, so reachability cannot be decided statically)" (if @byCtl " — and a RENDERED control here fires it, so the affordance is dead and the value it carries is discarded" (if @produced " — this composition broadcasts it programmatically, and the collector for it was not composed here" " (nothing in this composition fires it, so this is a stale declaration rather than a dead control)")))), suggestion: (if @imported (str/concat "This trait is composed from an imported behavior, so THIS file is the consumer its `-> external` emit was declared for. Wire it at the call site: rename the event onto one you handle (`events { " @ev ": <YOUR_EVENT> }`) and add a matching transition arm, or add `listens { " @e "." @ev " -> <TRIGGER> }`. Re-declaring it `-> external` no longer suppresses this — that only defers an emit whose trait is DECLARED here.") (str/concat "Consume it where it fires: add a transition arm `" @ev " -> <state>` in the emitting trait (the usual pattern for persist/fetch success|failure events), declare the event `-> external` if a SIBLING orbital consumes it, or remove it from the emit config")), severity: "error" }]))))))))
                       (array/flatten (array/map @orbitals (fn o
                         (let ((on (object/get @o "name" "")))
                           (let ((gs : [EwRec] (object/get @byOrb @on @norec)))
@@ -245,7 +248,7 @@ orbital OrbLintEventWiringOrbital {
                                                         (and (or @aud @selfFed)
                                                              (array/some @gs (fn t2 (and (!= (object/get @t2 "n") @en) (array/includes (object/get @t2 "te") @ev)
                                                                (array/some (object/get @t2 "ls") (fn l (and (= (object/get @l "event") @ev) (or (= (object/get @l "kind") "") (= (object/get @l "kind") "any") (and (= (object/get @l "kind") "trait") (= (object/get @l "st") @en)) (and (= (object/get @l "kind") "orbital") (= (object/get @l "so") @on) (= (object/get @l "st") @en))))))))))) []
-                                                  [{ code: "ORB_EMIT_UNROUTED_TO_HANDLER", path: (str/concat "orbitals." @on ".traits." @en), message: (str/concat "Trait '" @en "' emits '" @ev "' and trait '" @hn "' has an arm for it, but no declared route delivers it — events reach another trait only through `listens`"), suggestion: (str/concat "Add `listens { " @en "." @ev " -> " @ev " }` on '" @hn "'"), severity: "error" }])))))))))))))))))))))))))))))
+                                                  [{ code: @config.codes.emitUnroutedToHandler.code, path: (str/concat "orbitals." @on ".traits." @en), message: (str/concat "Trait '" @en "' emits '" @ev "' and trait '" @hn "' has an arm for it, but no declared route delivers it — events reach another trait only through `listens`"), suggestion: (str/concat "Add `listens { " @en "." @ev " -> " @ev " }` on '" @hn "'"), severity: "error" }])))))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_TRY -> ready when (not (and (= @entity.progScope @entity.firedScope) (= @entity.firedScope @entity.producedScope) @entity.haveNames @entity.haveBus))
       LINT_FINISH -> ready
@@ -282,6 +285,12 @@ orbital OrbLintEventWiringOrbital {
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> SEMANTICS_HEARD
 
     }
+    config {
+      codes : LintEventWiringCodes = { xOrphanListener: { code: "ORB_X_ORPHAN_LISTENER", category: "cross", description: "A trait listens for an event that no trait emits" }, xUnusedEmission: { code: "ORB_X_UNUSED_EMISSION", category: "cross", description: "A trait emits an event that no trait listens for" }, emitUnroutedToHandler: { code: "ORB_EMIT_UNROUTED_TO_HANDLER", category: "trait_event", description: "A trait emits an event another trait has an arm for, but no declared listens route delivers it" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintEventWiringCli -> OrbLintEventWiringRun [client] {

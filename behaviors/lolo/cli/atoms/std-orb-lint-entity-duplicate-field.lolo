@@ -14,6 +14,9 @@ type DuplicateFieldEntity = { fields : [DuplicateFieldField] }
 type DuplicateFieldOrbital = { entity : DuplicateFieldEntity, auxiliaryEntities : [DuplicateFieldEntity], spec : boolean }
 type DuplicateFieldProgram = { orbitals : [DuplicateFieldOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEntityDuplicateFieldCodes = { eDuplicateField : LintCodeDecl }
+
 orbital OrbLintEntityDuplicateFieldOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -45,7 +48,7 @@ orbital OrbLintEntityDuplicateFieldOrbital {
                             (let ((nm (array/nth @names @fi)))
                               (if (or (= @nm "") (= (array/len (array/filter (array/range 0 @fi) (fn k (= (array/nth @names @k) @nm)))) 0))
                                 []
-                                [{ code: "ORB_E_DUPLICATE_FIELD", path: (str/concat @base ".fields[" @fi "].name"), message: (str/concat "Duplicate field name: '" @nm "'"), suggestion: "Each field must have a unique name within the entity", severity: "error" }])))))))
+                                [{ code: @config.codes.eDuplicateField.code, path: (str/concat @base ".fields[" @fi "].name"), message: (str/concat "Duplicate field name: '" @nm "'"), suggestion: "Each field must have a unique name within the entity", severity: "error" }])))))))
                       [])))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -66,6 +69,12 @@ orbital OrbLintEntityDuplicateFieldOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintEntityDuplicateFieldCodes = { eDuplicateField: { code: "ORB_E_DUPLICATE_FIELD", category: "entity", description: "An entity declares the same field name more than once" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintEntityDuplicateFieldCli -> OrbLintEntityDuplicateFieldRun [client] {

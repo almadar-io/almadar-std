@@ -1,0 +1,158 @@
+app std-orb-lint-invariants [
+  version: "1.0.0",
+  inbound: ["cli-lint-invariants"],
+  fs: { cwd: "**": [read], "/**": [read] },
+  description: "std-orb-lint-invariants — the `orb lint invariants <file>` command, the port of validate_propositions (validation/composition/expectations.rs). It asks the kernel to prove the spec propositions of the file's resolved program (`program/prove`: every `@invariant` of an entity, `@holds` of a state and `@ensures` of a transition, each strict in a spec orbital or written on a real declaration), and reports each one the program cannot be shown to keep: ORB_S_INVARIANT_VIOLATED for a counterexample the evaluator confirms, ORB_S_INVARIANT_UNPROVED for one the prover cannot decide, with the reason and the possible counterexample, at the first `orbitals[<i>].expects[<j>]` that carries the proposition, else at the declaration that states it, else at `orbitals` (status 500, exit 1). The proposition is printed as its JSON s-expression. Clean answers `lint invariants: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500. A file the compiler cannot resolve is skipped here: validate reports that failure itself."
+]
+uses Spec from "almadar-std/lint-invariants"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type InvNode = string | number | boolean | [InvNode?] | Map string InvNode?
+type InvHolds = { name : string, holds : InvNode?, ensures : [InvNode], invariants : [InvNode] }
+type InvTransition = { event : string, to : string, from : string | [string], ensures : [InvNode] }
+type InvMachine = { states : [InvHolds], transitions : [InvTransition] }
+type InvTrait = { name : string, stateMachine : InvMachine? }
+type InvEntity = { name : string, invariants : [InvNode] }
+type InvExpect = { kind : string, name : string, traitName : string, state : string, from : string, event : string, to : string, holds : InvNode?, ensures : [InvNode], invariants : [InvNode] }
+type InvOrbital = { entity : InvEntity!, auxiliaryEntities : [InvEntity], traits : [InvTrait], expects : [InvExpect] }
+type InvProgram = { orbitals : [InvOrbital]! }
+type InvProp = { kind : string!, entity : string, trait : string, state : string, from : string, event : string, to : string, expr : InvNode! }
+type InvFinding = { verdict : string!, reason : string!, counterexample : InvNode?, site : string!, proposition : InvProp! }
+type InvAnswer = { findings : [InvFinding]! }
+type RcRefRow = { kind : string!, path : string!, callSite : InvNode!, declaration : InvNode! }
+type RcKept = { orbital : number!, traits : [string]! }
+
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintInvariantsCodes = { sInvariantViolated : LintCodeDecl , sInvariantUnproved : LintCodeDecl }
+
+orbital OrbLintInvariantsOrbital {
+  uses CsInput from "std/behaviors/std-orb-lint-call-site-input"
+
+  entity OrbLintInvariantsRun [runtime] {
+    id : string!
+    file : string = ""
+    program : InvProgram = { orbitals: [] }
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintInvariants -> OrbLintInvariantsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALL_SITES -> reading
+        (set @entity.file @payload.file)
+        (set @entity.program @payload.program)
+        (os/realpath { anchor: "cwd" path: "." } { key: "invariants-cwd" emit: { success: LINT_CWD, failure: LINT_PROVE_FAILED } })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "invariants", scope: "", findings: @entity.findings })
+    }
+
+    state reading {
+      INIT -> reading
+      LINT_CWD -> proving
+        (program/prove null { path: (if (os/path-is-absolute @entity.file) @entity.file (os/path-join @payload.path @entity.file)) } { key: "invariants-prove" emit: { success: LINT_PROVED, failure: LINT_PROVE_FAILED } })
+      LINT_PROVE_FAILED -> ready
+        (set @entity.findings [])
+        (emit LINT_FINISH { })
+    }
+
+    state proving {
+      INIT -> proving
+      LINT_PROVED -> ready
+        (set @entity.findings (let ((orbs (object/get @entity.program "orbitals" []))) (array/map (object/get @payload.result "findings") (fn f (let ((pp (object/get @f "proposition"))) (let ((ps (let ((ex (object/get @pp "expr"))) (let ((kind (object/get @pp "kind" ""))) (if (= @kind "row") (array/concat (array/flatten (array/map @orbs (fn o (let ((i (array/indexOf @orbs @o)) (xs (object/get @o "expects" []))) (array/map (array/filter @xs (fn e (and (= (object/get @e "kind" "") "entity") (= (object/get @e "name" "") (object/get @pp "entity" "")) (array/includes (object/get @e "invariants" []) @ex)))) (fn e (str/concat "orbitals[" @i "].expects[" (array/indexOf @xs @e) "]"))))))) (array/flatten (array/map @orbs (fn o (let ((i (array/indexOf @orbs @o)) (en (object/get @o "entity")) (aux (object/get @o "auxiliaryEntities" []))) (array/concat (if (and (= (object/get @en "name" "") (object/get @pp "entity" "")) (array/includes (object/get @en "invariants" []) @ex)) [(str/concat "orbitals[" @i "].entity")] []) (array/map (array/filter @aux (fn a (and (= (object/get @a "name" "") (object/get @pp "entity" "")) (array/includes (object/get @a "invariants" []) @ex)))) (fn a (str/concat "orbitals[" @i "].auxiliaryEntities[" (array/indexOf @aux @a) "]"))))))))) (if (= @kind "state") (array/concat (array/flatten (array/map @orbs (fn o (let ((i (array/indexOf @orbs @o)) (xs (object/get @o "expects" []))) (array/map (array/filter @xs (fn e (and (= (object/get @e "kind" "") "state") (= (object/get @e "traitName" "") (object/get @pp "trait" "")) (= (object/get @e "state" "") (object/get @pp "state" "")) (= (object/get @e "holds" null) @ex)))) (fn e (str/concat "orbitals[" @i "].expects[" (array/indexOf @xs @e) "]"))))))) (array/flatten (array/map @orbs (fn o (let ((i (array/indexOf @orbs @o))) (array/flatten (array/map (object/get @o "traits" []) (fn t (let ((j (array/indexOf (object/get @o "traits" []) @t)) (sts (object/get (object/get @t "stateMachine" { states: [], transitions: [] }) "states" []))) (if (= (object/get @t "name" "") (object/get @pp "trait" "")) (array/map (array/filter @sts (fn s (and (= (object/get @s "name" "") (object/get @pp "state" "")) (= (object/get @s "holds" null) @ex)))) (fn s (str/concat "orbitals[" @i "].traits[" @j "].stateMachine.states[" (array/indexOf @sts @s) "]"))) [])))))))))) (array/concat (array/flatten (array/map @orbs (fn o (let ((i (array/indexOf @orbs @o)) (xs (object/get @o "expects" []))) (array/map (array/filter @xs (fn e (and (= (object/get @e "kind" "") "transition") (= (object/get @e "traitName" "") (object/get @pp "trait" "")) (= (object/get @e "from" "") (object/get @pp "from" "")) (= (object/get @e "event" "") (object/get @pp "event" "")) (= (object/get @e "to" "") (object/get @pp "to" "")) (array/includes (object/get @e "ensures" []) @ex)))) (fn e (str/concat "orbitals[" @i "].expects[" (array/indexOf @xs @e) "]"))))))) (array/flatten (array/map @orbs (fn o (let ((i (array/indexOf @orbs @o))) (array/flatten (array/map (object/get @o "traits" []) (fn t (let ((j (array/indexOf (object/get @o "traits" []) @t)) (trs (object/get (object/get @t "stateMachine" { states: [], transitions: [] }) "transitions" []))) (if (= (object/get @t "name" "") (object/get @pp "trait" "")) (array/map (array/filter @trs (fn x (and (= (object/get @x "event" "") (object/get @pp "event" "")) (= (object/get @x "to" "") (object/get @pp "to" "")) (let ((fr (object/get @x "from" ""))) (if (validate/string @fr) (= @fr (object/get @pp "from" "")) (array/includes @fr (object/get @pp "from" "")))) (array/includes (object/get @x "ensures" []) @ex)))) (fn x (str/concat "orbitals[" @i "].traits[" @j "].stateMachine.transitions[" (array/indexOf @trs @x) "]"))) [])))))))))))))))) { code: (if (= (object/get @f "verdict" "") "violated") @config.codes.sInvariantViolated.code @config.codes.sInvariantUnproved.code), path: (default (array/first @ps) "orbitals"), message: (str/concat (let ((kind (object/get @pp "kind" ""))) (if (= @kind "row") (str/concat "`@invariant " (json/stringify (object/get @pp "expr")) "` of entity `" (object/get @pp "entity" "") "`") (if (= @kind "state") (str/concat "`state " (object/get @pp "state" "") " @holds " (json/stringify (object/get @pp "expr")) "` of trait `" (object/get @pp "trait" "") "`") (str/concat "`" (object/get @pp "from" "") " --" (object/get @pp "event" "") "--> " (object/get @pp "to" "") " @ensures " (json/stringify (object/get @pp "expr")) "` of trait `" (object/get @pp "trait" "") "`")))) " " (if (= (object/get @f "verdict" "") "violated") (str/concat "is broken by " (object/get @f "site" "") " — counterexample, confirmed by the evaluator: " (json/stringify (object/get @f "counterexample" null))) (str/concat "cannot be proved at " (object/get @f "site" "") ": " (object/get @f "reason" "") (let ((cx (object/get @f "counterexample" null))) (if (= @cx null) "" (str/concat " (possible counterexample: " (json/stringify @cx) ")"))))) "."), suggestion: (if (= (object/get @f "verdict" "") "violated") "Guard the transition so the write keeps the proposition, or change what it writes." "State the proposition and the guards it needs with comparisons, and/or/not and arithmetic by constants over number, string, boolean and enum fields; write values the prover can follow (a literal record, not a whole-record binding)."), severity: "error" }))))))
+        (emit LINT_FINISH { })
+      LINT_PROVE_FAILED -> ready
+        (set @entity.findings [])
+        (emit LINT_FINISH { })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALL_SITES { file : string!  program : InvProgram!  kept : [RcKept]!  references : [RcRefRow]!  stamped : InvNode? }
+        @description "The call sites input: the file lowered unresolved and each aliased import resolved and lowered."
+      CallSiteInput.LINT_CALL_SITES -> LINT_CALL_SITES
+      LINT_CWD { path : string! }
+        @description "Internal: the working directory."
+      LINT_PROVED { result : InvAnswer! }
+        @description "Internal: the prover's findings for the file."
+      LINT_PROVE_FAILED { error : string }
+        @description "Internal: the file could not be resolved or proved."
+    }
+    config {
+      codes : LintInvariantsCodes = { sInvariantViolated: { code: "ORB_S_INVARIANT_VIOLATED", category: "spec", description: "A spec proposition (invariant, holds, ensures) is broken by a write, with a counterexample the evaluator confirms" }, sInvariantUnproved: { code: "ORB_S_INVARIANT_UNPROVED", category: "spec", description: "A spec proposition the prover cannot decide, so the program is not shown to keep it" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
+  }
+
+  trait OrbLintInvariantsCli -> OrbLintInvariantsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint invariants <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_CALL_SITES_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")), stamp: false, references: true })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "invariants") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint invariants: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "invariants") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_CALL_SITES_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint invariants: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_CALL_SITES_REQUEST -> external { file : string!  stamp : boolean!  references : boolean! }
+        @description "Ask the call sites input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_CALL_SITES_UNREAD -> external { file : string!  error : string! }
+        @description "The call sites input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-invariants" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb lint invariants` with its arguments and working directory."
+        @synonyms "orb lint invariants"
+      OrbLintInvariants.LINT_FOUND -> LINT_FOUND
+      LINT_CALL_SITES_UNREAD { file : string!  error : string! }
+        @description "The call sites input could not read or lower the file."
+      CallSiteInput.LINT_CALL_SITES_UNREAD -> LINT_CALL_SITES_UNREAD
+    }
+  }
+
+  trait CallSiteInput = CsInput.traits.CallSiteInput {
+    listens {
+      OrbLintInvariantsCli.LINT_CALL_SITES_REQUEST -> LINT_CALL_SITES_REQUEST
+    }
+  }
+
+  page boot as OrbLintInvariantsOrbitalStart -> OrbLintInvariants, OrbLintInvariantsCli, CallSiteInput
+}

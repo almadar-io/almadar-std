@@ -1,0 +1,398 @@
+app std-resp-client [
+  version: "1.0.0",
+  net: { "redis.example.test:6379": [tcp] },
+  description: "std-resp-client — RESP2 over os/tcp-connect, os/send, os/recv and os/close, bytes/* and str/*: the wire of the retired runtime drivers/redis. RESP_RUN { key, argv } is one command; calls with different keys run concurrently over ONE connection: the first call connects, later calls are written at once (or after the handshake when one is configured), the keys in flight are an ordered table because RESP replies come back in the order the commands were written, and each reply frame answers the oldest key. The connection closes when the table empties. A configured SELECT db (db above 0) is one pipelined write whose reply is checked to be +OK before any command goes out. A command is a RESP array of bulk strings (the length counts UTF-8 bytes); a reply split across reads asks for more until the frame is whole. Replies map: +OK is text, an integer is a number, $-1 and *-1 are null, a bulk is UTF-8 text (invalid UTF-8 answers kind unsupported), -ERR word ... answers that key with kind redis and the first word as code while the other keys go on; a frame with an unknown type byte, a non-integer or too small length or a bulk not CRLF-terminated, a close inside a reply, a read timeout, a refused or failed transport or a reply past the largest reply fails EVERY key in flight with the same kind (protocol, failed, timeout, refused) and closes. A read or failure that belongs to an earlier socket (its ask key names the socket) is ignored. Not carried yet: array replies (kind unsupported), integers beyond 2^53, TLS (rediss), and the AUTH password in the sent bytes, which waits for the secret knob that lets a declared secret feed an os/send argument."
+]
+
+type RespScalar = string | number
+
+orbital RespClientOrbital {
+  entity RespCall [runtime] {
+    id : string!
+    flight : [string] @description "The keys of the commands sent and not yet answered, oldest first: RESP replies arrive in the order the commands were written, so the head key owns the next reply." = []
+    sock : number @description "The open socket, -1 when none." = -1
+    stage : string @description "connect, handshake or ready." = "connect"
+    pending : number @description "Handshake replies still to read." = 0
+    hello : bytes @description "The AUTH and SELECT pipeline." = ""
+    outbox : bytes @description "Commands accepted while the connection is not ready, written once the handshake is done." = ""
+    armed : boolean @description "A read is outstanding or its reply chain is running; one read per connection at a time." = false
+    buf : bytes @description "Bytes read and not yet consumed." = ""
+    failKind : string @description "The failure every in-flight call is answered with while the connection is torn down." = ""
+    failCode : string @description "The server's error word of that failure, empty when none." = ""
+    failMessage : string @description "The message of that failure." = ""
+    @invariant (>= @entity.pending 0)
+  }
+
+  trait RespClient -> RespCall [optimistic] {
+    initial: idle
+
+    config {
+      host : string = "redis.example.test"
+        @label "Host"
+        @description "The server os/tcp-connect opens; a literal knob because the net grant is checked against it."
+        @tier "infra"
+      port : number = 6379
+        @label "Port"
+        @description "The server port os/tcp-connect opens; a literal knob because the net grant is checked against it."
+        @tier "infra"
+      authenticated : boolean = false
+        @label "Authenticate"
+        @description "Send AUTH before the command."
+        @tier "infra"
+      db : number = 0
+        @label "Database"
+        @description "The logical database to SELECT; 0 sends no SELECT."
+        @tier "infra"
+      recvBytes : number = 16384
+        @label "Read size"
+        @description "The most bytes one os/recv takes."
+        @tier "infra"
+      maxReply : number = 67108864
+        @label "Largest reply"
+        @description "A reply with more bytes than this fails as protocol."
+        @tier "infra"
+    }
+
+    state idle {
+      INIT -> idle
+      RESP_CLOSED -> idle
+      RESP_SENT -> idle
+      RESP_READ -> idle
+      RESP_IO_FAILED -> idle
+
+      RESP_RUN -> idle when (or (or (= (array/len @payload.argv) 0) (array/some @payload.argv (fn a (= @a "")))) (and @config.authenticated true))
+        (emit RESP_FAILED { key: @payload.key, kind: (if (or (= (array/len @payload.argv) 0) (array/some @payload.argv (fn a (= @a "")))) "refused" "unconfigured"), code: null, message: (if (or (= (array/len @payload.argv) 0) (array/some @payload.argv (fn a (= @a "")))) "the command must be a non-empty list of non-empty text items" "AUTH needs the password in the sent bytes, which waits for the secret knob that lets a declared secret feed an os/send argument") })
+
+      RESP_RUN -> connecting when (and (and (> (array/len @payload.argv) 0) (not (array/some @payload.argv (fn a (= @a ""))))) (not @config.authenticated))
+        (set @entity.flight [@payload.key])
+        (set @entity.stage "connect")
+        (set @entity.armed false)
+        (set @entity.buf (bytes/from-string ""))
+        (set @entity.pending (if (> @config.db 0) 1 0))
+        (set @entity.hello (bytes/from-string (if (> @config.db 0) (str/concat "*2\r\n$6\r\nSELECT\r\n$" (bytes/length (bytes/from-string (str/concat @config.db))) "\r\n" @config.db "\r\n") "")))
+        (set @entity.outbox (bytes/from-string (str/concat "*" (array/len @payload.argv) "\r\n" (str/join (array/map @payload.argv (fn a (str/concat "$" (bytes/length (bytes/from-string @a)) "\r\n" @a "\r\n"))) ""))))
+        (os/tcp-connect @config.host @config.port { key: "connect", emit: { success: RESP_CONNECTED, failure: RESP_IO_FAILED } })
+    }
+
+    state connecting {
+      INIT -> connecting
+      RESP_CLOSED -> connecting
+      RESP_SENT -> connecting
+      RESP_READ -> connecting
+      RESP_RUN -> connecting when (or (= (array/len @payload.argv) 0) (array/some @payload.argv (fn a (= @a ""))))
+        (emit RESP_FAILED { key: @payload.key, kind: "refused", code: null, message: "the command must be a non-empty list of non-empty text items" })
+      RESP_RUN -> connecting when (and (> (array/len @payload.argv) 0) (not (array/some @payload.argv (fn a (= @a "")))))
+        (set @entity.flight (array/append @entity.flight @payload.key))
+        (set @entity.outbox (bytes/concat [@entity.outbox, (bytes/from-string (str/concat "*" (array/len @payload.argv) "\r\n" (str/join (array/map @payload.argv (fn a (str/concat "$" (bytes/length (bytes/from-string @a)) "\r\n" @a "\r\n"))) "")))]))
+      RESP_CONNECTED -> open when (> @entity.pending 0)
+        (set @entity.sock @payload.sock)
+        (set @entity.stage "handshake")
+        (os/send @payload.sock @entity.hello { key: (str/concat "send" @payload.sock), emit: { success: RESP_SENT, failure: RESP_IO_FAILED } })
+        (emit RESP_WIRE_SENT { key: (default (array/first @entity.flight) ""), stage: "handshake", bytes: @entity.hello })
+      RESP_CONNECTED -> open when (= @entity.pending 0)
+        (set @entity.sock @payload.sock)
+        (set @entity.stage "ready")
+        (os/send @payload.sock @entity.outbox { key: (str/concat "send" @payload.sock), emit: { success: RESP_SENT, failure: RESP_IO_FAILED } })
+        (emit RESP_WIRE_SENT { key: (default (array/first @entity.flight) ""), stage: "command", bytes: @entity.outbox })
+        (set @entity.outbox (bytes/from-string ""))
+      RESP_IO_FAILED -> aborting when (= @payload.key "connect")
+        (set @entity.failKind (if (= @payload.kind "denied") "refused" (if (= @payload.kind "timeout") "timeout" "failed")))
+        (set @entity.failCode "")
+        (set @entity.failMessage @payload.error)
+        (emit RESP_ABORT { left: (array/len @entity.flight) })
+      RESP_IO_FAILED -> connecting when (!= @payload.key "connect")
+    }
+
+    state open {
+      INIT -> open
+      RESP_CLOSED -> open
+
+      RESP_RUN -> open when (or (= (array/len @payload.argv) 0) (array/some @payload.argv (fn a (= @a ""))))
+        (emit RESP_FAILED { key: @payload.key, kind: "refused", code: null, message: "the command must be a non-empty list of non-empty text items" })
+      RESP_RUN -> open when (and (and (> (array/len @payload.argv) 0) (not (array/some @payload.argv (fn a (= @a ""))))) (= @entity.stage "handshake"))
+        (set @entity.flight (array/append @entity.flight @payload.key))
+        (set @entity.outbox (bytes/concat [@entity.outbox, (bytes/from-string (str/concat "*" (array/len @payload.argv) "\r\n" (str/join (array/map @payload.argv (fn a (str/concat "$" (bytes/length (bytes/from-string @a)) "\r\n" @a "\r\n"))) "")))]))
+      RESP_RUN -> open when (and (and (> (array/len @payload.argv) 0) (not (array/some @payload.argv (fn a (= @a ""))))) (= @entity.stage "ready"))
+        (set @entity.flight (array/append @entity.flight @payload.key))
+        (os/send @entity.sock (bytes/from-string (str/concat "*" (array/len @payload.argv) "\r\n" (str/join (array/map @payload.argv (fn a (str/concat "$" (bytes/length (bytes/from-string @a)) "\r\n" @a "\r\n"))) ""))) { key: (str/concat "send" @entity.sock), emit: { success: RESP_SENT, failure: RESP_IO_FAILED } })
+        (emit RESP_WIRE_SENT { key: @payload.key, stage: "command", bytes: (bytes/from-string (str/concat "*" (array/len @payload.argv) "\r\n" (str/join (array/map @payload.argv (fn a (str/concat "$" (bytes/length (bytes/from-string @a)) "\r\n" @a "\r\n"))) ""))) })
+
+      RESP_SENT -> open when (not @entity.armed)
+        (set @entity.armed true)
+        (os/recv @entity.sock @config.recvBytes { key: (str/concat "read" @entity.sock), emit: { success: RESP_READ, failure: RESP_IO_FAILED } })
+      RESP_SENT -> open when @entity.armed
+
+      RESP_IO_FAILED -> aborting when (array/includes [(str/concat "send" @entity.sock), (str/concat "read" @entity.sock)] @payload.key)
+        (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
+        (set @entity.sock -1)
+        (set @entity.failKind (if (= @payload.kind "denied") "refused" (if (= @payload.kind "timeout") "timeout" "failed")))
+        (set @entity.failCode "")
+        (set @entity.failMessage @payload.error)
+        (emit RESP_ABORT { left: (array/len @entity.flight) })
+      RESP_IO_FAILED -> open when (not (array/includes [(str/concat "send" @entity.sock), (str/concat "read" @entity.sock)] @payload.key))
+
+      RESP_READ -> open when (not (= @payload.key (str/concat "read" @entity.sock)))
+      RESP_READ -> aborting when (and (= @payload.key (str/concat "read" @entity.sock)) @payload.eof (= (bytes/length @payload.data) 0) (= (bytes/length @entity.buf) 0))
+        (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
+        (set @entity.sock -1)
+        (set @entity.failKind "failed")
+        (set @entity.failCode "")
+        (set @entity.failMessage "the server closed the connection before it replied")
+        (emit RESP_ABORT { left: (array/len @entity.flight) })
+      RESP_READ -> open when (and (= @payload.key (str/concat "read" @entity.sock)) (not (and @payload.eof (= (bytes/length @payload.data) 0) (= (bytes/length @entity.buf) 0))))
+        (set @entity.buf (bytes/concat [@entity.buf, @payload.data]))
+        (emit RESP_STEP { eof: @payload.eof, n: (bytes/length @entity.buf) })
+
+      RESP_WANT -> open when (not @payload.eof)
+        (os/recv @entity.sock @config.recvBytes { key: (str/concat "read" @entity.sock), emit: { success: RESP_READ, failure: RESP_IO_FAILED } })
+      RESP_WANT -> aborting when @payload.eof
+        (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
+        (set @entity.sock -1)
+        (set @entity.failKind "failed")
+        (set @entity.failCode "")
+        (set @entity.failMessage "the server closed the connection inside a reply")
+        (emit RESP_ABORT { left: (array/len @entity.flight) })
+
+      RESP_STEP -> aborting when (> (bytes/length @entity.buf) @config.maxReply)
+        (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
+        (set @entity.sock -1)
+        (set @entity.failKind "protocol")
+        (set @entity.failCode "")
+        (set @entity.failMessage "the reply is past the largest reply")
+        (emit RESP_ABORT { left: (array/len @entity.flight) })
+      RESP_STEP -> open when (and (<= (bytes/length @entity.buf) @config.maxReply) (< (bytes/index-of @entity.buf (bytes/from-string "\r\n") 0) 0))
+        (emit RESP_WANT { eof: @payload.eof })
+      RESP_STEP -> open when (and (<= (bytes/length @entity.buf) @config.maxReply) (>= (bytes/index-of @entity.buf (bytes/from-string "\r\n") 0) 0))
+        (emit RESP_LINE { eof: @payload.eof, end: (bytes/index-of @entity.buf (bytes/from-string "\r\n") 0), lead: (default (bytes/at @entity.buf 0) 0) })
+
+      RESP_LINE -> open when (array/includes [43, 45, 58] @payload.lead)
+        (emit RESP_FRAME { kind: (if (= @payload.lead 43) "simple" (if (= @payload.lead 45) "error" "int")), text: (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) ""), used: (+ @payload.end 2) })
+      RESP_LINE -> open when (and (= @payload.lead 42) (= (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "") "-1"))
+        (emit RESP_FRAME { kind: "null", text: "", used: (+ @payload.end 2) })
+      RESP_LINE -> aborting when (and (= @payload.lead 42) (!= (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "") "-1"))
+        (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
+        (set @entity.sock -1)
+        (set @entity.failKind "unsupported")
+        (set @entity.failCode "")
+        (set @entity.failMessage "array replies are not read by this driver")
+        (emit RESP_ABORT { left: (array/len @entity.flight) })
+      RESP_LINE -> aborting when (not (array/includes [43, 45, 58, 36, 42] @payload.lead))
+        (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
+        (set @entity.sock -1)
+        (set @entity.failKind "protocol")
+        (set @entity.failCode "")
+        (set @entity.failMessage "the reply starts with an unknown type byte")
+        (emit RESP_ABORT { left: (array/len @entity.flight) })
+      RESP_LINE -> aborting when (and (= @payload.lead 36) (== (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) null))
+        (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
+        (set @entity.sock -1)
+        (set @entity.failKind "protocol")
+        (set @entity.failCode "")
+        (set @entity.failMessage "a bulk length is not an integer")
+        (emit RESP_ABORT { left: (array/len @entity.flight) })
+      RESP_LINE -> aborting when (and (= @payload.lead 36) (!= (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) null) (< (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0) -1))
+        (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
+        (set @entity.sock -1)
+        (set @entity.failKind "protocol")
+        (set @entity.failCode "")
+        (set @entity.failMessage "a bulk length is below -1")
+        (emit RESP_ABORT { left: (array/len @entity.flight) })
+      RESP_LINE -> open when (and (= @payload.lead 36) (= (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) -1))
+        (emit RESP_FRAME { kind: "null", text: "", used: (+ @payload.end 2) })
+      RESP_LINE -> open when (and (= @payload.lead 36) (>= (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) -1) 0) (< (bytes/length @entity.buf) (+ @payload.end 4 (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0))))
+        (emit RESP_WANT { eof: @payload.eof })
+      RESP_LINE -> aborting when (and (= @payload.lead 36) (>= (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) -1) 0) (>= (bytes/length @entity.buf) (+ @payload.end 4 (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0))) (not (bytes/equals (bytes/slice @entity.buf (+ @payload.end 2 (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0)) (+ @payload.end 4 (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0))) (bytes/from-string "\r\n"))))
+        (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
+        (set @entity.sock -1)
+        (set @entity.failKind "protocol")
+        (set @entity.failCode "")
+        (set @entity.failMessage "a bulk string is not CRLF-terminated")
+        (emit RESP_ABORT { left: (array/len @entity.flight) })
+      RESP_LINE -> aborting when (and (= @payload.lead 36) (>= (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) -1) 0) (>= (bytes/length @entity.buf) (+ @payload.end 4 (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0))) (bytes/equals (bytes/slice @entity.buf (+ @payload.end 2 (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0)) (+ @payload.end 4 (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0))) (bytes/from-string "\r\n")) (== (bytes/to-string (bytes/slice @entity.buf (+ @payload.end 2) (+ @payload.end 2 (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0)))) null))
+        (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
+        (set @entity.sock -1)
+        (set @entity.failKind "unsupported")
+        (set @entity.failCode "")
+        (set @entity.failMessage "a bulk string is not valid UTF-8")
+        (emit RESP_ABORT { left: (array/len @entity.flight) })
+      RESP_LINE -> open when (and (= @payload.lead 36) (>= (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) -1) 0) (>= (bytes/length @entity.buf) (+ @payload.end 4 (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0))) (bytes/equals (bytes/slice @entity.buf (+ @payload.end 2 (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0)) (+ @payload.end 4 (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0))) (bytes/from-string "\r\n")) (!= (bytes/to-string (bytes/slice @entity.buf (+ @payload.end 2) (+ @payload.end 2 (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0)))) null))
+        (emit RESP_FRAME { kind: "bulk", text: (default (bytes/to-string (bytes/slice @entity.buf (+ @payload.end 2) (+ @payload.end 2 (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0)))) ""), used: (+ @payload.end 4 (default (str/to-int (default (bytes/to-string (bytes/slice @entity.buf 1 @payload.end)) "x")) 0)) })
+
+
+      RESP_FRAME -> aborting when (and (= @payload.kind "error") (= @entity.stage "handshake"))
+        (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
+        (set @entity.sock -1)
+        (set @entity.failKind "redis")
+        (set @entity.failCode (default (array/first (str/split @payload.text " ")) ""))
+        (set @entity.failMessage @payload.text)
+        (emit RESP_ABORT { left: (array/len @entity.flight) })
+      RESP_FRAME -> open when (and (= @payload.kind "error") (= @entity.stage "ready") (> (array/len @entity.flight) 1))
+        (emit RESP_FAILED { key: (default (array/first @entity.flight) ""), kind: "redis", code: (default (array/first (str/split @payload.text " ")) ""), message: @payload.text })
+        (set @entity.flight (array/drop @entity.flight 1))
+        (set @entity.buf (bytes/slice @entity.buf @payload.used))
+        (emit RESP_STEP { eof: false, n: (bytes/length @entity.buf) })
+      RESP_FRAME -> idle when (and (= @payload.kind "error") (= @entity.stage "ready") (= (array/len @entity.flight) 1))
+        (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
+        (set @entity.sock -1)
+        (emit RESP_FAILED { key: (default (array/first @entity.flight) ""), kind: "redis", code: (default (array/first (str/split @payload.text " ")) ""), message: @payload.text })
+        (set @entity.flight [])
+      RESP_FRAME -> aborting when (and (!= @payload.kind "error") (= @entity.stage "handshake") (not (and (= @payload.kind "simple") (= @payload.text "OK"))))
+        (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
+        (set @entity.sock -1)
+        (set @entity.failKind "protocol")
+        (set @entity.failCode "")
+        (set @entity.failMessage "a handshake reply is not +OK")
+        (emit RESP_ABORT { left: (array/len @entity.flight) })
+      RESP_FRAME -> open when (and (= @entity.stage "handshake") (= @payload.kind "simple") (= @payload.text "OK") (> @entity.pending 1))
+        (set @entity.pending (- @entity.pending 1))
+        (set @entity.buf (bytes/slice @entity.buf @payload.used))
+        (emit RESP_STEP { eof: false, n: (bytes/length @entity.buf) })
+      RESP_FRAME -> open when (and (= @entity.stage "handshake") (= @payload.kind "simple") (= @payload.text "OK") (= @entity.pending 1))
+        (set @entity.pending 0)
+        (set @entity.stage "ready")
+        (set @entity.buf (bytes/slice @entity.buf @payload.used))
+        (os/send @entity.sock @entity.outbox { key: (str/concat "send" @entity.sock), emit: { success: RESP_SENT, failure: RESP_IO_FAILED } })
+        (emit RESP_WIRE_SENT { key: (default (array/first @entity.flight) ""), stage: "command", bytes: @entity.outbox })
+        (set @entity.outbox (bytes/from-string ""))
+        (emit RESP_STEP { eof: false, n: (bytes/length @entity.buf) })
+      RESP_FRAME -> open when (and (= @entity.stage "ready") (!= @payload.kind "error") (> (array/len @entity.flight) 1))
+        (emit RESP_REPLIED { key: (default (array/first @entity.flight) ""), kind: @payload.kind, text: @payload.text })
+        (set @entity.flight (array/drop @entity.flight 1))
+        (set @entity.buf (bytes/slice @entity.buf @payload.used))
+        (emit RESP_STEP { eof: false, n: (bytes/length @entity.buf) })
+      RESP_FRAME -> idle when (and (= @entity.stage "ready") (!= @payload.kind "error") (= (array/len @entity.flight) 1))
+        (os/close @entity.sock { key: "close" emit: { success: RESP_CLOSED, failure: RESP_CLOSED } })
+        (set @entity.sock -1)
+        (emit RESP_REPLIED { key: (default (array/first @entity.flight) ""), kind: @payload.kind, text: @payload.text })
+        (set @entity.flight [])
+    }
+
+    state aborting {
+      INIT -> aborting
+      RESP_CLOSED -> aborting
+      RESP_SENT -> aborting
+      RESP_READ -> aborting
+      RESP_IO_FAILED -> aborting
+      RESP_RUN -> aborting
+        (emit RESP_FAILED { key: @payload.key, kind: "refused", code: null, message: "the connection is closing after a failure" })
+      RESP_ABORT -> aborting when (> (array/len @entity.flight) 1)
+        (emit RESP_FAILED { key: (default (array/first @entity.flight) ""), kind: @entity.failKind, code: (if (= @entity.failCode "") null @entity.failCode), message: @entity.failMessage })
+        (set @entity.flight (array/drop @entity.flight 1))
+        (emit RESP_ABORT { left: (- (array/len @entity.flight) 1) })
+      RESP_ABORT -> idle when (= (array/len @entity.flight) 1)
+        (emit RESP_FAILED { key: (default (array/first @entity.flight) ""), kind: @entity.failKind, code: (if (= @entity.failCode "") null @entity.failCode), message: @entity.failMessage })
+        (set @entity.flight [])
+      RESP_ABORT -> idle when (= (array/len @entity.flight) 0)
+    }
+
+    emits {
+      RESP_REPLIED -> external {
+        key : string!
+        kind : string!
+        text : string!
+      }
+        @description "The reply: kind simple, int (text is the integer), bulk or null (text empty)."
+        @tier "primary"
+      RESP_FAILED -> external {
+        key : string!
+        kind : string!
+        code : string?
+        message : string!
+      }
+        @description "The call did not complete: kind refused, unconfigured, timeout, failed, protocol, unsupported or redis (code the first word of the server's error)."
+        @tier "primary"
+      RESP_WIRE_SENT -> external {
+        key : string!
+        stage : string!
+        bytes : bytes!
+      }
+        @description "The exact frame written, a diagnostic: the stage (handshake or command) and the bytes."
+        @tier "secondary"
+      RESP_ABORT -> internal {
+        left : number!
+      }
+        @description "Internal: answer the oldest in-flight call with the failure and go on until none is left."
+        @tier "internal"
+      RESP_STEP -> internal {
+        eof : boolean!
+        n : number!
+      }
+        @description "Internal: read one reply frame from the bytes held."
+        @tier "internal"
+      RESP_WANT -> internal {
+        eof : boolean!
+      }
+        @description "Internal: the frame is not whole; read more."
+        @tier "internal"
+      RESP_LINE -> internal {
+        eof : boolean!
+        end : number!
+        lead : number!
+      }
+        @description "Internal: a line of the reply is complete; its type byte."
+        @tier "internal"
+      RESP_FRAME -> internal {
+        kind : string!
+        text : string!
+        used : number!
+      }
+        @description "Internal: one whole reply frame and the bytes it took."
+        @tier "internal"
+      RESP_CONNECTED {
+        sock : number!
+      }
+        @description "Internal: the os/tcp-connect answer."
+        @tier "internal"
+      RESP_SENT {
+        bytes : number!
+      }
+        @description "Internal: a send ended."
+        @tier "internal"
+      RESP_READ {
+        data : bytes!
+        eof : boolean!
+        key : string!
+      }
+        @description "Internal: one os/recv answer."
+        @tier "internal"
+      RESP_IO_FAILED {
+        error : string
+        kind : string
+        key : string!
+      }
+        @description "Internal: a socket operation failed; the key names the ask (connect, send or read plus the socket)."
+        @tier "internal"
+      RESP_CLOSED {
+      }
+        @description "Internal: the socket was closed."
+        @tier "internal"
+    }
+
+    listens {
+      RESP_RUN {
+        key : string!
+        argv : [string]!
+      }
+      RESP_CONNECTED {
+        sock : number!
+      }
+      RESP_SENT {
+        bytes : number!
+      }
+      RESP_READ {
+        data : bytes!
+        eof : boolean!
+        key : string!
+      }
+      RESP_IO_FAILED {
+        error : string
+        kind : string
+        key : string!
+      }
+      RESP_CLOSED {
+      }
+    }
+  }
+
+  page boot as RespClientPage -> RespClient
+}

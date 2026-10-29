@@ -19,6 +19,9 @@ type IcTrait = { name : string, stateMachine : IcMachine }
 type IcOrbital = { name : string, traits : [IcTrait] }
 type IcProgram = { orbitals : [IcOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintIconFormatCodes = { uiIconInvalidFormat : LintCodeDecl , uiIconEmpty : LintCodeDecl }
+
 orbital OrbLintIconFormatOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -60,12 +63,12 @@ orbital OrbLintIconFormatOrbital {
                                                   (array/flatten (array/map @cs (fn c
                                                     (let ((v (object/get @c "v")))
                                                       (if (not (validate/string @v))
-                                                        [{ p: (object/get @c "p"), code: "ORB_UI_ICON_INVALID_FORMAT", msg: "Icon value must be a string" }]
+                                                        [{ p: (object/get @c "p"), code: @config.codes.uiIconInvalidFormat.code, msg: "Icon value must be a string" }]
                                                         (if (str/startsWith @v (quote "@")) []
                                                           (if (= (str/trim @v) "")
-                                                            [{ p: (object/get @c "p"), code: "ORB_UI_ICON_EMPTY", msg: "Icon name cannot be empty" }]
+                                                            [{ p: (object/get @c "p"), code: @config.codes.uiIconEmpty.code, msg: "Icon name cannot be empty" }]
                                                             (if (or (validate/pattern @v "^[a-z][a-z0-9]*(-[a-z0-9]+)*$") (validate/pattern @v "^[A-Z][a-zA-Z0-9]*$")) []
-                                                              [{ p: (object/get @c "p"), code: "ORB_UI_ICON_INVALID_FORMAT", msg: (str/concat "Icon '" @v "' has invalid format. Use kebab-case (e.g., 'plus', 'trash-2') or PascalCase (e.g., 'Plus', 'Trash2')") }]))))))))
+                                                              [{ p: (object/get @c "p"), code: @config.codes.uiIconInvalidFormat.code, msg: (str/concat "Icon '" @v "' has invalid format. Use kebab-case (e.g., 'plus', 'trash-2') or PascalCase (e.g., 'Plus', 'Trash2')") }]))))))))
                                                   (array/flatten (array/map (object/keys @n) (fn key
                                                     (let ((child (object/get @n @key null)) (r (let ((r0 (object/get @k @key null))) (if (= @r0 null) @nr @r0))))
                                                       (if (or (validate/object @child) (validate/array @child))
@@ -94,6 +97,12 @@ orbital OrbLintIconFormatOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintIconFormatCodes = { uiIconInvalidFormat: { code: "ORB_UI_ICON_INVALID_FORMAT", category: "icon", description: "An icon name has an invalid format" }, uiIconEmpty: { code: "ORB_UI_ICON_EMPTY", category: "icon", description: "An icon name is empty" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintIconFormatCli -> OrbLintIconFormatRun [client] {

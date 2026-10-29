@@ -15,6 +15,9 @@ type SharedTypesMember = { name : string }
 type SharedTypesOrbital = { types : Map string [SharedTypesMember] }
 type SharedTypesProgram = { orbitals : [SharedTypesOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintSharedTypesCodes = { sharedTypeDrift : LintCodeDecl , unread : LintCodeDecl }
+
 orbital OrbLintSharedTypesOrbital {
   entity OrbLintSharedTypesRun [runtime] {
     id : string!
@@ -53,8 +56,8 @@ orbital OrbLintSharedTypesOrbital {
                   (array/map (array/filter (object/get (array/nth @variants @i) "fields") (fn f (not (array/includes (object/get (array/first @variants) "fields") @f)))) (fn f (str/concat "  variant " (+ @i 1) " adds  " @f))))))))
               "\n")))))))
           (array/concat
-            (array/map (array/range 0 (array/len @msgs)) (fn i { code: "shared-type-drift", path: (array/nth @entity.drift @i), message: (array/nth @msgs @i), suggestion: "keep the declared copies identical in every file", severity: "error" }))
-            (array/map @entity.unread (fn u { code: "unread", path: @u, message: "the file could not be read or listed", suggestion: "", severity: "error" })))) (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+            (array/map (array/range 0 (array/len @msgs)) (fn i { code: @config.codes.sharedTypeDrift.code, path: (array/nth @entity.drift @i), message: (array/nth @msgs @i), suggestion: "keep the declared copies identical in every file", severity: "error" }))
+            (array/map @entity.unread (fn u { code: @config.codes.unread.code, path: @u, message: "the file could not be read or listed", suggestion: "", severity: "error" })))) (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
     }
 
     state walking {
@@ -148,6 +151,12 @@ orbital OrbLintSharedTypesOrbital {
         @description "Run `orb lint shared-types` with its arguments and working directory."
         @synonyms "orb lint shared-types, shared type copies guard"
     }
+    config {
+      codes : LintSharedTypesCodes = { sharedTypeDrift: { code: "shared-type-drift", category: "lint", description: "A type shared between behaviors has drifted from its canonical declaration" }, unread: { code: "unread", category: "lint", description: "The file the rule reads could not be read or listed" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   page boot as OrbLintSharedTypesOrbitalStart -> OrbLintSharedTypes

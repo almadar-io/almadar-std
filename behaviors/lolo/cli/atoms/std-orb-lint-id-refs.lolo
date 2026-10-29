@@ -34,6 +34,9 @@ type IdRefsLedgerEntry = { id : string, kind : string, curName : string, parent 
 type IdRefsLedger = { entries : Map string IdRefsLedgerEntry }
 type IdRefsProgram = { orbitals : [IdRefsOrbital]!, ledger : IdRefsLedger }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintIdRefsCodes = { idKindMismatch : LintCodeDecl , idUnknownRef : LintCodeDecl , idNameMismatch : LintCodeDecl , idLedgerOrphan : LintCodeDecl , lintNodeUnchecked : LintCodeDecl }
+
 orbital OrbLintIdRefsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -153,18 +156,18 @@ orbital OrbLintIdRefsOrbital {
                             (let ((got (if (> (array/len @kinds) 0) (array/first @kinds) "<unknown>")) (entry (object/get @ledgerEntries @id null)))
                              (let ((cur (if (validate/object @entry) (object/get @entry "curName" "") "")) (parent (if (validate/object @entry) (object/get @entry "parent" "") "")))
                               (array/flatten [
-                                (if (= @got @exp) [] [{ code: "ORB_ID_KIND_MISMATCH", path: (object/get @p "path" ""), message: (str/concat "id `" @id "` has kind `" @got "` but this position requires a `" @exp "` id."), suggestion: "", severity: "error" }])
-                                (if (or (array/includes @declared @id) (object/has @ledgerEntries @id)) [] [{ code: "ORB_ID_UNKNOWN_REF", path: (object/get @p "path" ""), message: (str/concat "id `" @id "` matches no arena node nor ledger entry."), suggestion: "", severity: "error" }])
+                                (if (= @got @exp) [] [{ code: @config.codes.idKindMismatch.code, path: (object/get @p "path" ""), message: (str/concat "id `" @id "` has kind `" @got "` but this position requires a `" @exp "` id."), suggestion: "", severity: "error" }])
+                                (if (or (array/includes @declared @id) (object/has @ledgerEntries @id)) [] [{ code: @config.codes.idUnknownRef.code, path: (object/get @p "path" ""), message: (str/concat "id `" @id "` matches no arena node nor ledger entry."), suggestion: "", severity: "error" }])
                                 (if (and (object/get @p "hasName") (not (str/includes @nm ".")) (object/has @ledgerEntries @id) (!= @cur @nm) (not (and (str/startsWith @cur (quote "@config.")) (let ((holder (array/last (array/filter @configHolders (fn s (= (object/get (object/get @s "t") "id" "") @parent)))))) (and (validate/object @holder) (= (object/get (object/get (object/get (object/get @holder "t") "config" {}) (str/slice @cur 8 (str/len @cur)) {}) "default" null) @nm))))))
-                                  [{ code: "ORB_ID_NAME_MISMATCH", path: (object/get @p "path" ""), message: (str/concat "name `" @nm "` disagrees with ledger curName `" @cur "` for id `" @id "`."), suggestion: "", severity: "error" }]
+                                  [{ code: @config.codes.idNameMismatch.code, path: (object/get @p "path" ""), message: (str/concat "name `" @nm "` disagrees with ledger curName `" @cur "` for id `" @id "`."), suggestion: "", severity: "error" }]
                                   [])]))))))))
                       (array/flatten (array/map @sortedKeys (fn key
                         (let ((e (object/get @ledgerEntries @key)))
                           (let ((eid (object/get @e "id" "")) (ekind (object/get @e "kind" "")) (eparent (object/get @e "parent" "")))
                             (if (or (array/includes @seen @eid) (and (= @ekind "event") (!= @eparent "") (array/includes @declTraitIds @eparent)))
                               []
-                              [{ code: "ORB_ID_LEDGER_ORPHAN", path: (str/concat "ledger.entries[" @eid "]"), message: (str/concat "ledger row `" @eid "` (kind `" (object/get { orbital: "orb", entity: "ent", trait: "trt", event: "evt", page: "pag", service: "svc", theme: "thm", palette: "pal" } @ekind "") "`, curName `" (object/get @e "curName" "") "`) is carried by no node in the schema — stale."), suggestion: "", severity: "error" }]))))))
-                      (array/flatten (array/map @fieldFolds (fn r (let ((res (object/get @r "res"))) (if (= @res null) [{ code: "LINT_NODE_UNCHECKED", path: (str/concat (object/get (object/get @r "eb") "base") ".fields[" (object/get @r "fi") "]"), message: (str/concat @payload.file ": schema node at " (str/concat (object/get (object/get @r "eb") "base") ".fields[" (object/get @r "fi") "]") " is not a IdRefsField; this rule could not check it"), suggestion: "", severity: "error" }] [])))))))))))))
+                              [{ code: @config.codes.idLedgerOrphan.code, path: (str/concat "ledger.entries[" @eid "]"), message: (str/concat "ledger row `" @eid "` (kind `" (object/get { orbital: "orb", entity: "ent", trait: "trt", event: "evt", page: "pag", service: "svc", theme: "thm", palette: "pal" } @ekind "") "`, curName `" (object/get @e "curName" "") "`) is carried by no node in the schema — stale."), suggestion: "", severity: "error" }]))))))
+                      (array/flatten (array/map @fieldFolds (fn r (let ((res (object/get @r "res"))) (if (= @res null) [{ code: @config.codes.lintNodeUnchecked.code, path: (str/concat (object/get (object/get @r "eb") "base") ".fields[" (object/get @r "fi") "]"), message: (str/concat @payload.file ": schema node at " (str/concat (object/get (object/get @r "eb") "base") ".fields[" (object/get @r "fi") "]") " is not a IdRefsField; this rule could not check it"), suggestion: "", severity: "error" }] [])))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "id-refs", scope: @entity.scope, findings: @entity.findings })
@@ -184,6 +187,12 @@ orbital OrbLintIdRefsOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintIdRefsCodes = { idKindMismatch: { code: "ORB_ID_KIND_MISMATCH", category: "id", description: "An id of one kind is used in a position that requires an id of a different kind" }, idUnknownRef: { code: "ORB_ID_UNKNOWN_REF", category: "id", description: "An id reference matches no arena node or ledger entry" }, idNameMismatch: { code: "ORB_ID_NAME_MISMATCH", category: "id", description: "A name in the source disagrees with the current name the ledger records for the same id" }, idLedgerOrphan: { code: "ORB_ID_LEDGER_ORPHAN", category: "id", description: "An id ledger row is carried by no node in the schema and is stale" }, lintNodeUnchecked: { code: "LINT_NODE_UNCHECKED", category: "lint", description: "A lint rule met a schema node of an unexpected shape and could not check it" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintIdRefsCli -> OrbLintIdRefsRun [client] {

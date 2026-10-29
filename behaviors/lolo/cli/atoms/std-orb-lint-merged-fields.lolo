@@ -34,6 +34,9 @@ type MgMd = { efn : [string], rels : [string] }
 type MgTIs = [MgTI]
 type MgTI = { lk : string, req : [string], rs : [string], its : [MgItem] }
 type MgW = { a : string, e : string, d : MgVal? }
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintMergedFieldsCodes = { eMergedFieldUnreferenced : LintCodeDecl }
+
 orbital OrbLintMergedFieldsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -102,7 +105,7 @@ orbital OrbLintMergedFieldsOrbital {
   @noi))) "MgVal") []) MgItems) [])))) }]))
  (array/slice [{ lk: "", req: (array/slice [""] 0 0), rs: (array/slice [""] 0 0), its: (array/slice [{ e: "", k: "", v: "" }] 0 0) }] 0 0))))))))) MgTIs) [])))
 (let ((usedMap (object/fromEntries (array/map @mnames (fn mn (let ((ed (object/get @defs @mn {  })) (md : MgMd { efn: (array/map (object/get @ed "fields" []) (fn f (object/get @f "name" ""))), rels: (array/map (array/filter (object/get @ed "fields" []) (fn f (= (object/get @f "type" "") "relation"))) (fn f (object/get @f "name" ""))) })) [@mn, (array/unique (array/flatten (array/map @tinfos (fn ti (let ((mine (array/filter (object/get @ti "its" []) (fn x (= (object/get @x "e" "") @mn)))) (rels (object/get @md "rels" []))) (let ((fl (array/concat (array/map (array/filter @mine (fn x (= (object/get @x "k" "") "f"))) (fn x (object/get @x "v" ""))) (array/flatten (array/map (array/filter @mine (fn x (= (object/get @x "k" "") "i"))) (fn x (let ((s (object/get @x "v" ""))) (let ((hit (array/filter @rels (fn rn (= @rn @s))))) (if (!= (array/len @hit) 0) [(array/nth @hit 0)] (let ((hb (array/filter @rels (fn rn (= (if (str/endsWith @rn "Id") (str/slice @rn 0 (- (str/len @rn) 2)) @rn) @s))))) (if (!= (array/len @hb) 0) [(array/nth @hb 0)] (array/slice [""] 0 0)))))))))))) (if (= (object/get @ti "lk" "") @mn) (array/concat (object/get @ti "rs" []) @fl (object/get @ti "req" [])) (if (and (!= (array/len (array/filter @mine (fn x (= (object/get @x "k" "") "m")))) 0) (= (array/len @fl) 0)) (object/get @md "efn" []) @fl))))))))]))))))
-(array/flatten (array/map @orbitals (fn o (let ((oi @index)) (array/flatten (array/map (array/sort (array/unique (array/filter (array/concat (if (validate/object (object/get @o "entity" {  })) [(object/get (object/get @o "entity" {  }) "name" "")] (array/slice [""] 0 0)) (array/map (array/filter (object/get @o "auxiliaryEntities" []) (fn x (validate/object @x))) (fn x (object/get @x "name" "")))) (fn z (!= @z ""))))) (fn en (let ((ed (object/get @defs @en null))) (if (= @ed null) [] (let ((mf (array/sort (array/filter (object/get @ed "fields" []) (fn f (and (validate/string (object/get @f "mergedFrom" null)) (!= (object/get @f "name" "") ""))))))) (array/flatten (array/map @mf (fn fl (let ((fname (object/get @fl "name" ""))) (if (array/includes (object/get @usedMap @en []) @fname) [] [{ code: "ORB_E_MERGED_FIELD_UNREFERENCED", path: (str/concat "orbitals[" @oi "].entity[" @en "].fields." @fname), message: (str/concat "Entity '" @en "' field '" @fname "' was merged from '" (object/get @fl "mergedFrom" "") "' but no trait of this orbital reads, writes, fetch-includes, or persists it"), suggestion: "Compose a trait that uses it, or drop the rebind", severity: "error" }]))))))))))))))))))))))
+(array/flatten (array/map @orbitals (fn o (let ((oi @index)) (array/flatten (array/map (array/sort (array/unique (array/filter (array/concat (if (validate/object (object/get @o "entity" {  })) [(object/get (object/get @o "entity" {  }) "name" "")] (array/slice [""] 0 0)) (array/map (array/filter (object/get @o "auxiliaryEntities" []) (fn x (validate/object @x))) (fn x (object/get @x "name" "")))) (fn z (!= @z ""))))) (fn en (let ((ed (object/get @defs @en null))) (if (= @ed null) [] (let ((mf (array/sort (array/filter (object/get @ed "fields" []) (fn f (and (validate/string (object/get @f "mergedFrom" null)) (!= (object/get @f "name" "") ""))))))) (array/flatten (array/map @mf (fn fl (let ((fname (object/get @fl "name" ""))) (if (array/includes (object/get @usedMap @en []) @fname) [] [{ code: @config.codes.eMergedFieldUnreferenced.code, path: (str/concat "orbitals[" @oi "].entity[" @en "].fields." @fname), message: (str/concat "Entity '" @en "' field '" @fname "' was merged from '" (object/get @fl "mergedFrom" "") "' but no trait of this orbital reads, writes, fetch-includes, or persists it"), suggestion: "Compose a trait that uses it, or drop the rebind", severity: "error" }]))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "merged-fields", scope: @entity.scope, findings: @entity.findings })
@@ -125,6 +128,12 @@ orbital OrbLintMergedFieldsOrbital {
         @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry, each prop with the entity fields it requires."
       OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD
     }
+    config {
+      codes : LintMergedFieldsCodes = { eMergedFieldUnreferenced: { code: "ORB_E_MERGED_FIELD_UNREFERENCED", category: "entity", description: "A field merged into an entity is never read, written, fetch-included or persisted by any trait of the orbital" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintMergedFieldsCli -> OrbLintMergedFieldsRun [client] {

@@ -20,6 +20,9 @@ type SlPage = { path : string, traits : [SlTrait] }
 type SlOrbital = { pages : [SlPage], traits : [SlTrait] }
 type SlProgram = { orbitals : [SlOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintSlotTickCodes = { slotContentionTick : LintCodeDecl }
+
 orbital OrbLintSlotTickOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -95,7 +98,7 @@ orbital OrbLintSlotTickOrbital {
                             (let ((names (array/sort (array/map (array/filter @ms (fn s (array/includes (object/get @s "slots") @sl))) (fn s (object/get @s "n"))))))
                               (if (< (array/len @names) 2) @nof
                                 (let ((q (array/map @names (fn nm (str/concat "'" @nm "'")))))
-                                  [{ code: "ORB_SLOT_CONTENTION_TICK", path: (str/concat "orbitals[" @oi "].pages[" @pj "]"),
+                                  [{ code: @config.codes.slotContentionTick.code, path: (str/concat "orbitals[" @oi "].pages[" @pj "]"),
                                     message: (str/concat "page \"" @ppath "\": traits " (str/join (array/take @q (- (array/len @q) 1)) ", ") " and " (array/nth @q (- (array/len @q) 1)) " both render into slot '" @sl "' from inside a ticks block, and no tick guard switches either one off — a ticks block runs EVERY frame, so they paint slot '" @sl "' on every frame and the runtime stacks them into one growing column instead of showing either"),
                                     suggestion: (str/concat "Give exactly one trait slot '" @sl "': set config { running: false } on the others at this call site, or send them to different slots by making the slot a config knob on the atom (write (render-ui @config.surface ...) in the atom's .lolo, declare `surface` in its config, then set a different value per trait here)"), severity: "error" }]))))))))))))))))))))
         (emit LINT_FINISH { })
@@ -118,6 +121,12 @@ orbital OrbLintSlotTickOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintSlotTickCodes = { slotContentionTick: { code: "ORB_SLOT_CONTENTION_TICK", category: "slot", description: "Several traits on a page render into the same slot from ticks, so their output contends" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintSlotTickCli -> OrbLintSlotTickRun [client] {

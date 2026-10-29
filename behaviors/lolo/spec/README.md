@@ -17,11 +17,9 @@ A spec sits under the same folder path as the behavior it specs: the spec for `f
 | `store/api-key-verifier.lolo` | `std-api-key-verifier` (bound) |
 | `store/stream-ticket.lolo` | `std-stream-ticket` (bound) |
 | `store/bearer-verify.lolo` | `std-bearer-verify` (unbound until WS-0 crypto operators land; `KeyDocument` persistent, verdicts emit `BEARER_VERIFIED { viewer }` / `BEARER_REFUSED { reason }`) |
-| `store/bigint.lolo` | `std-bigint` (bound; base-2^24 limb arrays, `MODPOW`/`MODINV` run on engine registers; one dispatch is capped at 2000 cascaded events by the kernel) |
 | `codec/semver.lolo` | `std-semver` (bound; strict parse, precedence compare, bump, node-semver ranges (^ ~ comparators, x-ranges, partials, hyphen, space-joined sets, `||`), min; optional `requestId` echoed on every answer; ~790 replay goldens generated from the semver npm package in `semver-*.replay.goldens.json`, sharded because the replay runner holds ~30 MB per case; workspace:/link:/file: pins refused) |
 | `codec/toml.lolo` | `std-toml` (bound; TOML 1.0 to a Map value, date-times kept as their text, refusals by closed code with the line; 92 replay goldens from the toml.io examples checked against Python tomllib, paired refusal controls, the real `orbital-rust/Cargo.toml` in `codec/toml.replay.goldens.json`) |
-| `store/rsa.lolo` | `std-rsa` (bound; RS256 verify over `std-bigint`, about 5 s per verify) |
-| `store/jws.lolo` | `std-jws` (bound; compact RS256 JWS verify over `std-rsa`, claim policy stays in `std-bearer-verify`) |
+| `store/jws.lolo` | `std-jws` (bound; compact RS256/ES256 JWS verify through the `rsa/verify` and `ecdsa/p256-verify` operators, claim policy stays in `std-bearer-verify`) |
 | `ml/label-capture.lolo` | `std-ml-label-capture` |
 | `ml/ladder.lolo` | `std-ml-ladder` (bound; `std-escalating-decision` composes both traits) |
 | `ml/llm-provider.lolo` | `std-llm` (bound; dropping `LLM_FAILED` or the `LLM_GENERATE`/`LLM_CLASSIFY`/`LLM_EMBED` arms fails it) |

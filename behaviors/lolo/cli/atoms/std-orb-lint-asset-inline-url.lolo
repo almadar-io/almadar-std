@@ -15,6 +15,8 @@ type AssetTrait = { name : string, ref : string, config : Map string AssetKnob }
 type AssetOrbital = { name : string, traits : [AssetTrait], uses : [AssetUse], entity : AssetEntity }
 type AssetProgram = { orbitals : [AssetOrbital] }
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type AssetInlineUrlCodes = { assetInlineUrl : LintCodeDecl }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
 orbital OrbLintAssetInlineUrlOrbital {
@@ -54,10 +56,16 @@ orbital OrbLintAssetInlineUrlOrbital {
                               []))))
                       (array/flatten (array/map @units (fn u
                         (let ((v (if (= (object/get @u "ti") -1) (object/get (object/get @orb "entity") "instances" null) (let ((cf (object/get (array/nth @trs (object/get @u "ti")) "config"))) (if (validate/object (object/get @cf (object/get @u "kn") null)) (object/get (object/get @cf (object/get @u "kn")) "default" null) null)))) (p (object/get @u "path")))
-(let ((dq "\"")) (array/map (array/filter (if (= @v null) [] (json/nodes [@v])) (fn y (let ((t (json/stringify @y))) (or (str/startsWith @t (str/concat @dq "https://")) (str/startsWith @t (str/concat @dq "http://")))))) (fn y { code: "ORB_ASSET_INLINE_URL", path: @p, message: (str/concat "Orbital '" @oname "' composes std-asset-pack but carries the literal asset url '" @y "'"), suggestion: "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs", severity: "error" })))))))))))))))))
+(let ((dq "\"")) (array/map (array/filter (if (= @v null) [] (json/nodes [@v])) (fn y (let ((t (json/stringify @y))) (or (str/startsWith @t (str/concat @dq "https://")) (str/startsWith @t (str/concat @dq "http://")))))) (fn y { code: @config.codes.assetInlineUrl.code, path: @p, message: (str/concat "Orbital '" @oname "' composes std-asset-pack but carries the literal asset url '" @y "'"), suggestion: "Add the art to the pack's assets rows and look it up by key; the pack atom's origin is the only place a host belongs", severity: "error" })))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "asset-inline-url", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    config {
+      codes : AssetInlineUrlCodes = { assetInlineUrl: { code: "ORB_ASSET_INLINE_URL", category: "asset", description: "A literal http(s) url sits in the config defaults or seed rows of an orbital that composes std-asset-pack." } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits."
     }
 
     emits {

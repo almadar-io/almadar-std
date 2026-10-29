@@ -21,6 +21,9 @@ type SgProgType = { type : string }
 type SgHit = { rel : string, r : string }
 type SgRoot = { x : SgShape?, w : string!, c : string! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintSigilContextCodes = { bindingPayloadInTick : LintCodeDecl , bindingUnknownRoot : LintCodeDecl , lintOperatorShapesUnread : LintCodeDecl , lintLanguageFactsUnread : LintCodeDecl }
+
 orbital OrbLintSigilContextOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -58,8 +61,8 @@ orbital OrbLintSigilContextOrbital {
         (set @entity.findings (let ((nohits : [SgHit] []) (noroots : [SgRoot] []) (nostr : [string] [])  (nof : [OrbFinding] []) (collOps : [string] @entity.collOps) (orbitals : [SgOrbital] (object/get @payload.program "orbitals" [])))
   (if (or @entity.shapesUnread @entity.factsUnread)
     (array/concat
-      (if @entity.shapesUnread [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the collection callback operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }] @nof)
-      (if @entity.factsUnread [{ code: "ORB_LINT_LANGUAGE_FACTS_UNREAD", path: "bindingRules", message: "the installed @almadar/core language facts could not be read, so the sigils allowed in a guard, an effect and a tick are unknown", suggestion: "Reinstall @almadar/core so its orbLanguage declares bindingRules", severity: "error" }] @nof))
+      (if @entity.shapesUnread [{ code: @config.codes.lintOperatorShapesUnread.code, path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the collection callback operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }] @nof)
+      (if @entity.factsUnread [{ code: @config.codes.lintLanguageFactsUnread.code, path: "bindingRules", message: "the installed @almadar/core language facts could not be read, so the sigils allowed in a guard, an effect and a tick are unknown", suggestion: "Reinstall @almadar/core so its orbLanguage declares bindingRules", severity: "error" }] @nof))
     (let ((roots : [SgRoot] (array/flatten
   (array/map (array/range 0 (array/len @orbitals))
     (fn oi
@@ -141,18 +144,18 @@ orbital OrbLintSigilContextOrbital {
   (array/map (array/filter @hs (fn h (or (= (object/get @h "r" "") "item") (= (object/get @h "r" "") "index") (not (array/includes @allowed (object/get @h "r" ""))))))
     (fn h
       (let ((root (object/get @h "r" "")))
-        { code: (if (and (= "guard" "tick") (= @root "payload")) "ORB_BINDING_PAYLOAD_IN_TICK" "ORB_BINDING_UNKNOWN_ROOT"), path: (str/concat (object/get @x "w" "") (object/get @h "rel" "")), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in guard context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" }))))
+        { code: (if (and (= "guard" "tick") (= @root "payload")) @config.codes.bindingPayloadInTick.code @config.codes.bindingUnknownRoot.code), path: (str/concat (object/get @x "w" "") (object/get @h "rel" "")), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in guard context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" }))))
                 (if (= (object/get @x "c" "") "effect")
                   (let ((allowed : [string] @entity.effectAllowed))
   (array/map (array/filter @hs (fn h (or (= (object/get @h "r" "") "item") (= (object/get @h "r" "") "index") (not (array/includes @allowed (object/get @h "r" ""))))))
     (fn h
       (let ((root (object/get @h "r" "")))
-        { code: (if (and (= "effect" "tick") (= @root "payload")) "ORB_BINDING_PAYLOAD_IN_TICK" "ORB_BINDING_UNKNOWN_ROOT"), path: (str/concat (object/get @x "w" "") (object/get @h "rel" "")), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in effect context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" }))))
+        { code: (if (and (= "effect" "tick") (= @root "payload")) @config.codes.bindingPayloadInTick.code @config.codes.bindingUnknownRoot.code), path: (str/concat (object/get @x "w" "") (object/get @h "rel" "")), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in effect context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" }))))
                   (let ((allowed : [string] @entity.tickAllowed))
   (array/map (array/filter @hs (fn h (or (= (object/get @h "r" "") "item") (= (object/get @h "r" "") "index") (not (array/includes @allowed (object/get @h "r" ""))))))
     (fn h
       (let ((root (object/get @h "r" "")))
-        { code: (if (and (= "tick" "tick") (= @root "payload")) "ORB_BINDING_PAYLOAD_IN_TICK" "ORB_BINDING_UNKNOWN_ROOT"), path: (str/concat (object/get @x "w" "") (object/get @h "rel" "")), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in tick context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" }))))))))))))))
+        { code: (if (and (= "tick" "tick") (= @root "payload")) @config.codes.bindingPayloadInTick.code @config.codes.bindingUnknownRoot.code), path: (str/concat (object/get @x "w" "") (object/get @h "rel" "")), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in tick context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" }))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "sigil-context", scope: @entity.scope, findings: @entity.findings })
@@ -185,6 +188,12 @@ orbital OrbLintSigilContextOrbital {
       OrbLintInput.LINT_LANGUAGE_FACTS -> FACTS_HEARD
       OrbLintInput.LINT_LANGUAGE_FACTS_UNREAD -> FACTS_UNREAD
     }
+    config {
+      codes : LintSigilContextCodes = { bindingPayloadInTick: { code: "ORB_BINDING_PAYLOAD_IN_TICK", category: "binding", description: "A binding reads @payload inside a tick, where a firing has no delivery" }, bindingUnknownRoot: { code: "ORB_BINDING_UNKNOWN_ROOT", category: "binding", description: "A binding names a root the context does not provide" }, lintOperatorShapesUnread: { code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", category: "lint", description: "The installed operator table could not be read or does not match the operator shape type, so a lint cannot run" }, lintLanguageFactsUnread: { code: "ORB_LINT_LANGUAGE_FACTS_UNREAD", category: "lint", description: "The installed language facts could not be read, so the lint rule could not check what it needs" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintSigilContextCli -> OrbLintSigilContextRun [client] {

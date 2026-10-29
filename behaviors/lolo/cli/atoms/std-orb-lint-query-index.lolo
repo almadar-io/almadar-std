@@ -30,6 +30,9 @@ type IxConfig = { queryCapabilities : IxKnob }
 type IxOrbital = { name : string, config : IxConfig, entity : IxEntity, auxiliaryEntities : [IxEntity], traits : [IxTrait] }
 type IxProgram = { store : string, orbitals : [IxOrbital]! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintQueryIndexCodes = { indexPathInvalid : LintCodeDecl , indexPathDuplicate : LintCodeDecl , fetchNeedsCompositeIndex : LintCodeDecl , fetchUnindexed : LintCodeDecl }
+
 orbital OrbLintQueryIndexOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -71,11 +74,11 @@ orbital OrbLintQueryIndexOrbital {
                      (dupOf (array/find (array/range 0 @xi) (fn xj (let ((jb (object/get (array/nth @ixs @xj) "orderBy" ""))) (= (str/concat (str/join (object/get (array/nth @ixs @xj) "fields" []) ",") "|" (if (str/endsWith @jb ":asc") (str/replace @jb ":asc" "") @jb)) (str/concat (str/join @xf ",") "|" (if (str/endsWith @ob ":asc") (str/replace @ob ":asc" "") @ob))))))))
                 (array/concat
                  (array/map (array/filter @names (fn nm (not (array/includes @declared @nm))))
-                  (fn nm { code: "ORB_INDEX_PATH_INVALID", path: @base, message: (str/concat "index path names field " @nm ", which entity " (object/get @e "name" "") " does not declare"), suggestion: "Name a declared field (or id, createdAt, updatedAt)", severity: "error" }))
+                  (fn nm { code: @config.codes.indexPathInvalid.code, path: @base, message: (str/concat "index path names field " @nm ", which entity " (object/get @e "name" "") " does not declare"), suggestion: "Name a declared field (or id, createdAt, updatedAt)", severity: "error" }))
                  (array/map (array/filter @names (fn nm (array/some @efields (fn f (and (= (object/get @f "name" "") @nm) (array/includes ["array", "object", "file"] (object/get @f "type" "")))))))
-                  (fn nm { code: "ORB_INDEX_PATH_INVALID", path: @base, message: (str/concat "index path names field " @nm ", an " (object/get (array/find @efields (fn f (= (object/get @f "name" "") @nm))) "type" "") " field; only scalar fields can be indexed"), suggestion: "Index a scalar field (string, number, boolean, date, enum)", severity: "error" }))
+                  (fn nm { code: @config.codes.indexPathInvalid.code, path: @base, message: (str/concat "index path names field " @nm ", an " (object/get (array/find @efields (fn f (= (object/get @f "name" "") @nm))) "type" "") " field; only scalar fields can be indexed"), suggestion: "Index a scalar field (string, number, boolean, date, enum)", severity: "error" }))
                  (if (= @dupOf null) []
-                  [{ code: "ORB_INDEX_PATH_DUPLICATE", path: @base, message: (str/concat "index path [" (str/join @xf ", ") "]" (if (= @ord "") "" (str/concat " ordered by " @ord)) " repeats indexes[" @dupOf "] of entity " (object/get @e "name" "")), suggestion: "Remove the repeated @index", severity: "error" }]))))))))))))))))))))
+                  [{ code: @config.codes.indexPathDuplicate.code, path: @base, message: (str/concat "index path [" (str/join @xf ", ") "]" (if (= @ord "") "" (str/concat " ordered by " @ord)) " repeats indexes[" @dupOf "] of entity " (object/get @e "name" "")), suggestion: "Remove the repeated @index", severity: "error" }]))))))))))))))))))))
     (if (not @anyDrv) []
     (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
      (let ((o (array/nth @orbs @oi)))
@@ -142,9 +145,9 @@ orbital OrbLintQueryIndexOrbital {
                                     (fpath (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" @ni "].effects")))
                                (if (= @mode "deploy")
                                 (if (or (>= @nE 2) (and (= @nE 1) (or (> @nR 0) (and (!= @of "") (!= @of @e1)))) (and (= @nE 0) (> @nR 0) (!= @of "") (!= @of @r1)))
-                                 [{ code: "ORB_FETCH_NEEDS_COMPOSITE_INDEX", path: @fpath, message: (str/concat @shown ", and its store driver " @drvName " creates no index at runtime; no `@index` of " @ename " covers it"), suggestion: @sug, severity: "error" }]
+                                 [{ code: @config.codes.fetchNeedsCompositeIndex.code, path: @fpath, message: (str/concat @shown ", and its store driver " @drvName " creates no index at runtime; no `@index` of " @ename " covers it"), suggestion: @sug, severity: "error" }]
                                  [])
-                                [{ code: "ORB_FETCH_UNINDEXED", path: @fpath, message: (str/concat @shown ", and its store driver " @drvName " cannot push it down, so the kernel scans every row; no `@index` of " @ename " covers it"), suggestion: @sug, severity: "warning" }]))))))))))))))))))))))))))))))))))))))))))
+                                [{ code: @config.codes.fetchUnindexed.code, path: @fpath, message: (str/concat @shown ", and its store driver " @drvName " cannot push it down, so the kernel scans every row; no `@index` of " @ename " covers it"), suggestion: @sug, severity: "warning" }]))))))))))))))))))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "query-index", scope: @entity.scope, findings: @entity.findings })
@@ -164,6 +167,12 @@ orbital OrbLintQueryIndexOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintQueryIndexCodes = { indexPathInvalid: { code: "ORB_INDEX_PATH_INVALID", category: "entity", description: "An index path names a field that the entity does not declare" }, indexPathDuplicate: { code: "ORB_INDEX_PATH_DUPLICATE", category: "index", description: "The same index path, with the same ordering, is declared more than once on an entity" }, fetchNeedsCompositeIndex: { code: "ORB_FETCH_NEEDS_COMPOSITE_INDEX", category: "effect", description: "A fetch query needs a composite index that the store driver does not create and no index declaration covers" }, fetchUnindexed: { code: "ORB_FETCH_UNINDEXED", category: "query", description: "A fetch filter cannot be pushed down by the store driver and no @index covers it, so the kernel scans every row" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintQueryIndexCli -> OrbLintQueryIndexRun [client] {

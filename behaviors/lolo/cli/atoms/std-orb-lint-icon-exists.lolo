@@ -19,6 +19,9 @@ type IcTrait = { name : string, stateMachine : IcMachine }
 type IcOrbital = { name : string, traits : [IcTrait] }
 type IcProgram = { orbitals : [IcOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintIconExistsCodes = { lintUiVocabUnread : LintCodeDecl , uiIconNotFound : LintCodeDecl }
+
 orbital OrbLintIconExistsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -44,7 +47,7 @@ orbital OrbLintIconExistsOrbital {
         (set @entity.vocabUnread true)
       LINT_INPUT -> ready when @entity.vocabUnread
         (set @entity.scope @payload.scope)
-        (set @entity.findings [{ code: "ORB_LINT_UI_VOCAB_UNREAD", path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the Lucide icon set is unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
+        (set @entity.findings [{ code: @config.codes.lintUiVocabUnread.code, path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the Lucide icon set is unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
         (emit LINT_FINISH { })
       LINT_INPUT -> ready when (not @entity.vocabUnread)
         (set @entity.scope @payload.scope)
@@ -78,7 +81,7 @@ orbital OrbLintIconExistsOrbital {
                                                             (if (object/has @iconSet @norm) []
                                                               (let ((na (array/unique (str/split @norm ""))))
                                                                 (let ((top (array/take (array/sort (array/filter (array/map (array/range 0 (array/len @icons)) (fn ii (let ((nm (array/nth @icons @ii))) (let ((nb (array/unique (str/split @nm "")))) { i: @ii, n: @nm, s: (/ (array/len (array/filter @na (fn ch (array/includes @nb @ch)))) (if (> (array/len @na) (array/len @nb)) (array/len @na) (array/len @nb))) })))) (fn r (> (object/get @r "s" 0) 0.3))) "s" "desc") 3)))
-                                                                  [{ p: (object/get @c "p"), code: "ORB_UI_ICON_NOT_FOUND", msg: (str/concat "Icon '" @v "' may not exist in Lucide. Check https://lucide.dev/icons for available icons"), sug: (if (= (array/len @top) 0) "" (str/concat "Did you mean: " (str/join (array/map @top (fn r (object/get @r "n"))) ", ") "?")) }]))))))))))
+                                                                  [{ p: (object/get @c "p"), code: @config.codes.uiIconNotFound.code, msg: (str/concat "Icon '" @v "' may not exist in Lucide. Check https://lucide.dev/icons for available icons"), sug: (if (= (array/len @top) 0) "" (str/concat "Did you mean: " (str/join (array/map @top (fn r (object/get @r "n"))) ", ") "?")) }]))))))))))
                                                   (array/flatten (array/map (object/keys @n) (fn key
                                                     (let ((child (object/get @n @key null)) (r (let ((r0 (object/get @k @key null))) (if (= @r0 null) @nr @r0))))
                                                       (if (or (validate/object @child) (validate/array @child))
@@ -113,6 +116,12 @@ orbital OrbLintIconExistsOrbital {
       OrbLintInput.LINT_UI_VOCAB -> UI_VOCAB_HEARD
       OrbLintInput.LINT_UI_VOCAB_UNREAD -> UI_VOCAB_UNREAD
     }
+    config {
+      codes : LintIconExistsCodes = { lintUiVocabUnread: { code: "ORB_LINT_UI_VOCAB_UNREAD", category: "lint", description: "The installed @almadar/core declares no readable UI vocabulary, so a UI lint check cannot run" }, uiIconNotFound: { code: "ORB_UI_ICON_NOT_FOUND", category: "icon", description: "An icon name does not exist in the icon set" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintIconExistsCli -> OrbLintIconExistsRun [client] {

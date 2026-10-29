@@ -27,6 +27,9 @@ type ExPage = { name : string, path : string, protocol : string, traits : [ExPag
 type UsOrbital = { name : string, spec : boolean, expects : [UsExpect], entity : UsEntity, auxiliaryEntities : [UsEntity], traits : [ExTrait], pages : [ExPage] }
 type UsProgram = { orbitals : [UsOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintExpectationUnsatisfiedCodes = { sExpectationUnsatisfied : LintCodeDecl }
+
 orbital OrbLintExpectationUnsatisfiedOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -71,18 +74,18 @@ orbital OrbLintExpectationUnsatisfiedOrbital {
         "" (if (!= @pr "") (str/concat "a `" @pr "` page") (str/concat "page `" (object/get @x "path" "") "`"))))
   (if (= @kind "config") (if (object/has @cfgset (object/get @x "name" "")) "" (str/concat "config knob `" (object/get @x "name" "") "` on a trait"))
     ""))))))))
-    (if (!= @unprov "") [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects " @unprov ", but nothing in this program provides it — " "a spec obligation is never deferred" "."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }] [])) [])
+    (if (!= @unprov "") [{ code: @config.codes.sExpectationUnsatisfied.code, path: @base, message: (str/concat "`" @on "` expects " @unprov ", but nothing in this program provides it — " "a spec obligation is never deferred" "."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }] [])) [])
   (if (= @kind "state") (let ((tr (object/get @tidx (object/get @x "traitName" "") null)))
   (if (or (= @tr null) (array/includes (object/get @tr "states" []) (object/get @x "state" ""))) []
-    [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects " (str/concat "trait `" (object/get @x "traitName" "") "` to declare state `" (object/get @x "state" "") "`") ", but nothing in this program provides it — " (str/concat "`" (object/get @x "traitName" "") "` declares no such state") "."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }]))
+    [{ code: @config.codes.sExpectationUnsatisfied.code, path: @base, message: (str/concat "`" @on "` expects " (str/concat "trait `" (object/get @x "traitName" "") "` to declare state `" (object/get @x "state" "") "`") ", but nothing in this program provides it — " (str/concat "`" (object/get @x "traitName" "") "` declares no such state") "."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }]))
     (if (= @kind "transition") (let ((tr (object/get @tidx (object/get @x "traitName" "") null)))
   (if (or (= @tr null) (array/some (object/get @tr "trans" [])
         (fn t (and (= (object/get @t "event" "") (object/get @x "event" "")) (= (object/get @t "to" "") (object/get @x "to" ""))
                    (or (= (default (as (object/get @t "from" null) LStr) "") (object/get @x "from" "")) (array/includes (default (as (object/get @t "from" null) LNodes) []) (object/get @x "from" ""))))))) []
-    [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects " (str/concat "trait `" (object/get @x "traitName" "") "` to move `" (object/get @x "from" "") "` to `" (object/get @x "to" "") "` on `" (object/get @x "event" "") "`") ", but nothing in this program provides it — " (str/concat "`" (object/get @x "traitName" "") "` has no such transition") "."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }]))
+    [{ code: @config.codes.sExpectationUnsatisfied.code, path: @base, message: (str/concat "`" @on "` expects " (str/concat "trait `" (object/get @x "traitName" "") "` to move `" (object/get @x "from" "") "` to `" (object/get @x "to" "") "` on `" (object/get @x "event" "") "`") ", but nothing in this program provides it — " (str/concat "`" (object/get @x "traitName" "") "` has no such transition") "."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }]))
       (if (= @kind "event") (let ((tr (object/get @tidx (object/get @x "traitName" "") null)))
   (if (or (= @tr null) (array/includes (object/get @tr "emits" []) (object/get @x "event" ""))) []
-    [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects `" (object/get @x "traitName" "") "." (object/get @x "event" "") "`, but trait `" (object/get @x "traitName" "") "` in `" (object/get @tr "on") "` does not emit `" (object/get @x "event" "") "`."), suggestion: (str/concat "Declare `" (object/get @x "event" "") "` in `" (object/get @x "traitName" "") "`'s `emits`, or listen to the trait that emits it."), severity: "error" }])) []))))))))))))))))))))
+    [{ code: @config.codes.sExpectationUnsatisfied.code, path: @base, message: (str/concat "`" @on "` expects `" (object/get @x "traitName" "") "." (object/get @x "event" "") "`, but trait `" (object/get @x "traitName" "") "` in `" (object/get @tr "on") "` does not emit `" (object/get @x "event" "") "`."), suggestion: (str/concat "Declare `" (object/get @x "event" "") "` in `" (object/get @x "traitName" "") "`'s `emits`, or listen to the trait that emits it."), severity: "error" }])) []))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "expectation-unsatisfied", scope: @entity.scope, findings: @entity.findings })
@@ -102,6 +105,12 @@ orbital OrbLintExpectationUnsatisfiedOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintExpectationUnsatisfiedCodes = { sExpectationUnsatisfied: { code: "ORB_S_EXPECTATION_UNSATISFIED", category: "schema", description: "An orbital expects an entity, trait, event, or config default that nothing in the program provides" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintExpectationUnsatisfiedCli -> OrbLintExpectationUnsatisfiedRun [client] {

@@ -24,6 +24,9 @@ type BrHit = { rel : string, r : string, s : string }
 type BrRoot = { x : BrShape?, w : string!, c : string! }
 type BrRH = { x : BrRoot, hs : [BrHit] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintBindingRootsCodes = { lintUiVocabUnread : LintCodeDecl , lintOperatorShapesUnread : LintCodeDecl , bindingInvalidFormat : LintCodeDecl , bindingFromEntityOutsideEnsures : LintCodeDecl , bindingDispatchRootInTick : LintCodeDecl , bindingRootNoPath : LintCodeDecl , bindingEventInvalidPath : LintCodeDecl , bindingStateNoPath : LintCodeDecl , bindingNowNoPath : LintCodeDecl , bindingUnknownEntity : LintCodeDecl }
+
 orbital OrbLintBindingRootsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -56,13 +59,13 @@ orbital OrbLintBindingRootsOrbital {
         (set @entity.vocabUnread true)
       LINT_INPUT -> ready when @entity.vocabUnread
         (set @entity.scope @payload.scope)
-        (set @entity.findings [{ code: "ORB_LINT_UI_VOCAB_UNREAD", path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the delivery roots and @event.source keys are unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
+        (set @entity.findings [{ code: @config.codes.lintUiVocabUnread.code, path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the delivery roots and @event.source keys are unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
         (emit LINT_FINISH { })
       LINT_INPUT -> ready when (not @entity.vocabUnread)
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((nohits : [BrHit] []) (noroots : [BrRoot] []) (nostr : [string] []) (nof : [OrbFinding] []) (dRoots : [string] @entity.deliveryRoots) (sKeys : [string] @entity.sourceKeys) (collOps : [string] @entity.collOps) (collIdx (default (object/fromEntries (array/map @entity.collOps (fn c [@c, true]))) {  })) (orbitals : [BrOrbitalBR] (object/get @payload.program "orbitals" [])))
   (if @entity.shapesUnread
-    [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the collection callback operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
+    [{ code: @config.codes.lintOperatorShapesUnread.code, path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the collection callback operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
     (let ((known : [string] (array/flatten (array/map @orbitals (fn o (array/concat
     (let ((e (object/get @o "entity" null))) (if (validate/object @e) [(object/get @e "name" "")] @nostr))
     (array/concat
@@ -179,23 +182,23 @@ orbital OrbLintBindingRootsOrbital {
               (let ((parts (str/split (str/slice @s 1) ".")))
                 (let ((rest (array/slice @parts 1 (array/len @parts))))
                   (if (and (not @fmtAll) (not (validate/pattern @s "^@[\\p{L}_][\\p{L}0-9_]*(\\.[\\p{L}0-9_]+|\\[\\d+\\])*$")))
-                    [{ code: "ORB_BINDING_INVALID_FORMAT", path: @p, message: (str/concat "Invalid binding format: '" @s "'"), suggestion: "Use @root.field.nested format", severity: "error" }]
+                    [{ code: @config.codes.bindingInvalidFormat.code, path: @p, message: (str/concat "Invalid binding format: '" @s "'"), suggestion: "Use @root.field.nested format", severity: "error" }]
                     (if (= @r "fromEntity")
-                      (if (!= @c "ensures") [{ code: "ORB_BINDING_FROM_ENTITY_OUTSIDE_ENSURES", path: @p, message: (str/concat (quote "@") "fromEntity is the row before a transition and exists only inside its `@ensures`"), suggestion: "Read the current row with @entity; state a before/after relation in an `@ensures` under the transition", severity: "error" }] @nof)
+                      (if (!= @c "ensures") [{ code: @config.codes.bindingFromEntityOutsideEnsures.code, path: @p, message: (str/concat (quote "@") "fromEntity is the row before a transition and exists only inside its `@ensures`"), suggestion: "Read the current row with @entity; state a before/after relation in an `@ensures` under the transition", severity: "error" }] @nof)
                       (if (array/includes @dRoots @r)
                         (if (= @c "tick")
-                          [{ code: "ORB_BINDING_DISPATCH_ROOT_IN_TICK", path: @p, message: (str/concat (quote "@") @r " is not available in a tick: a tick firing has no delivery"), suggestion: "Read the trait's own state and entity in a tick", severity: "error" }]
+                          [{ code: @config.codes.bindingDispatchRootInTick.code, path: @p, message: (str/concat (quote "@") @r " is not available in a tick: a tick firing has no delivery"), suggestion: "Read the trait's own state and entity in a tick", severity: "error" }]
                           (if (!= @r "event")
-                            (if (> (array/len @rest) 0) [{ code: "ORB_BINDING_ROOT_NO_PATH", path: @p, message: (str/concat (quote "@") @r " takes no path"), suggestion: (str/concat "Use " (quote "@") @r " and read it with an operator"), severity: "error" }] @nof)
+                            (if (> (array/len @rest) 0) [{ code: @config.codes.bindingRootNoPath.code, path: @p, message: (str/concat (quote "@") @r " takes no path"), suggestion: (str/concat "Use " (quote "@") @r " and read it with an operator"), severity: "error" }] @nof)
                             (if (or (= (array/len @rest) 0) (= @rest ["event"]) (= (array/first @rest) "payload") (= @rest ["source"]) (and (= (array/first @rest) "source") (= (array/len @rest) 2) (array/includes @sKeys (array/nth @rest 1))))
                               @nof
-                              [{ code: "ORB_BINDING_EVENT_INVALID_PATH", path: @p, message: (str/concat (quote "@") "event." (str/join @rest ".") " does not follow the delivery record"), suggestion: (str/concat (quote "@") "event has `event`, `payload.<field>` and `source.<field>`"), severity: "error" }])))
+                              [{ code: @config.codes.bindingEventInvalidPath.code, path: @p, message: (str/concat (quote "@") "event." (str/join @rest ".") " does not follow the delivery record"), suggestion: (str/concat (quote "@") "event has `event`, `payload.<field>` and `source.<field>`"), severity: "error" }])))
                         (if (and (= @r "state") (> (array/len @parts) 1))
-                          [{ code: "ORB_BINDING_STATE_NO_PATH", path: @p, message: (str/concat (quote "@") "state should not have a path - it returns the state name directly"), suggestion: "Use @state without a path", severity: "error" }]
+                          [{ code: @config.codes.bindingStateNoPath.code, path: @p, message: (str/concat (quote "@") "state should not have a path - it returns the state name directly"), suggestion: "Use @state without a path", severity: "error" }]
                           (if (and (= @r "now") (> (array/len @parts) 1))
-                            [{ code: "ORB_BINDING_NOW_NO_PATH", path: @p, message: (str/concat (quote "@") "now should not have a path - it returns the current timestamp directly"), suggestion: "Use @now without a path", severity: "error" }]
+                            [{ code: @config.codes.bindingNowNoPath.code, path: @p, message: (str/concat (quote "@") "now should not have a path - it returns the current timestamp directly"), suggestion: "Use @now without a path", severity: "error" }]
                             (if (and (validate/pattern @r "^[A-Z][a-zA-Z0-9]*$") (> (array/len @known) 0) (not (object/has @knownIdx @r)))
-                              [{ code: "ORB_BINDING_UNKNOWN_ENTITY", path: @p, message: (str/concat "Entity '" @r "' in binding may not exist"), suggestion: "Ensure the entity is defined in the schema", severity: "error" }]
+                              [{ code: @config.codes.bindingUnknownEntity.code, path: @p, message: (str/concat "Entity '" @r "' in binding may not exist"), suggestion: "Ensure the entity is defined in the schema", severity: "error" }]
                               @nof))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -229,6 +232,12 @@ orbital OrbLintBindingRootsOrbital {
       OrbLintInput.LINT_UI_VOCAB -> UI_VOCAB_HEARD
       OrbLintInput.LINT_UI_VOCAB_UNREAD -> UI_VOCAB_UNREAD
     }
+    config {
+      codes : LintBindingRootsCodes = { lintUiVocabUnread: { code: "ORB_LINT_UI_VOCAB_UNREAD", category: "lint", description: "The installed @almadar/core declares no readable UI vocabulary, so a UI lint check cannot run" }, lintOperatorShapesUnread: { code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", category: "lint", description: "The installed operator table could not be read or does not match the operator shape type, so a lint cannot run" }, bindingInvalidFormat: { code: "ORB_BINDING_INVALID_FORMAT", category: "binding", description: "A binding string is not in a valid binding format" }, bindingFromEntityOutsideEnsures: { code: "ORB_BINDING_FROM_ENTITY_OUTSIDE_ENSURES", category: "binding", description: "@fromEntity is the row before a transition and may only be used inside an @ensures" }, bindingDispatchRootInTick: { code: "ORB_BINDING_DISPATCH_ROOT_IN_TICK", category: "binding", description: "A dispatch-only binding root is read inside a tick, where a firing has no delivery" }, bindingRootNoPath: { code: "ORB_BINDING_ROOT_NO_PATH", category: "binding", description: "A binding root that takes no path is written with a path" }, bindingEventInvalidPath: { code: "ORB_BINDING_EVENT_INVALID_PATH", category: "binding", description: "An @event binding path does not follow the shape of the delivery record" }, bindingStateNoPath: { code: "ORB_BINDING_STATE_NO_PATH", category: "binding", description: "A binding root that returns a bare value, such as @state, is given a path" }, bindingNowNoPath: { code: "ORB_BINDING_NOW_NO_PATH", category: "binding", description: "The @now binding is given a path, but it returns the current timestamp directly" }, bindingUnknownEntity: { code: "ORB_BINDING_UNKNOWN_ENTITY", category: "binding", description: "A binding refers to an entity that is not declared in the program" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintBindingRootsCli -> OrbLintBindingRootsRun [client] {

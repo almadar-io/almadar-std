@@ -19,6 +19,9 @@ type IdRef = { kind : string!, path : string!, name : string! }
 type IdKept = { orbital : number!, traits : [string]! }
 type IdNode = { path : string!, before : string, after : string }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintIdLedgerCodes = { idAuthoredWithoutLedger : LintCodeDecl }
+
 orbital OrbLintIdLedgerOrbital {
   uses CsInput from "std/behaviors/std-orb-lint-call-site-input"
 
@@ -68,7 +71,7 @@ orbital OrbLintIdLedgerOrbital {
                                       [{ path: (str/concat @at ".pages[" @pi "].id"), before: (object/get @p "id" ""), after: (object/get @q "id" "") }]
                                       []))))))))))))))
                   (fn n (and (!= (object/get @n "before") "") (!= (object/get @n "before") (object/get @n "after")))))
-                (fn n { code: "ORB_ID_AUTHORED_WITHOUT_LEDGER", path: (object/get @n "path"), message: (str/concat (object/get @n "path") " \"" (object/get @n "before") "\" is replaced on load: the .orb has no ledger"), suggestion: "add a ledger, or drop the id", severity: "warning" })))))
+                (fn n { code: @config.codes.idAuthoredWithoutLedger.code, path: (object/get @n "path"), message: (str/concat (object/get @n "path") " \"" (object/get @n "before") "\" is replaced on load: the .orb has no ledger"), suggestion: "add a ledger, or drop the id", severity: "warning" })))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "id-ledger", scope: "", findings: @entity.findings })
@@ -88,6 +91,12 @@ orbital OrbLintIdLedgerOrbital {
         @description "The call sites input: the file lowered unresolved and each aliased import resolved and lowered."
       CallSiteInput.LINT_CALL_SITES -> LINT_CALL_SITES
     }
+    config {
+      codes : LintIdLedgerCodes = { idAuthoredWithoutLedger: { code: "ORB_ID_AUTHORED_WITHOUT_LEDGER", category: "id", description: "An id is authored in source without a matching ledger entry, so it is replaced on load" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintIdLedgerCli -> OrbLintIdLedgerRun [client] {

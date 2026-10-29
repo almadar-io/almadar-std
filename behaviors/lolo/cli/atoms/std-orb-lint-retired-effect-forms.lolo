@@ -17,6 +17,9 @@ type RfTrait = { name : string, stateMachine : RfMachine, ticks : [RfTick] }
 type RfOrbital = { name : string, traits : [RfTrait] }
 type RfProgram = { orbitals : [RfOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintRetiredEffectFormsCodes = { effRetiredForm : LintCodeDecl }
+
 orbital OrbLintRetiredEffectFormsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -64,7 +67,7 @@ orbital OrbLintRetiredEffectFormsOrbital {
                                                     (array/map (object/get @kr "s") (fn lf { r: (str/concat "[" @j "]" (object/get @lf "r")), o: (object/get @lf "o"), k: (object/get @lf "k") }))))))) }
                                               { s: [{ r: "", o: false, k: "" }] })))))) "RfVal")))
                                     (if (= @r null) []
-                                      (array/map (array/filter (object/get @r "s") (fn lf (object/get @lf "o"))) (fn lf { r: (object/get @lf "r"), k: (object/get @lf "k"), p: (str/concat @xp (object/get @lf "r")) }))))))))))))))))))))))))) (fn h { code: "ORB_EFF_RETIRED_FORM", path: (object/get @h "p"), message: (str/concat "Effect is written as an object keyed by '" (object/get @h "k") "'; effects are arrays"), suggestion: (str/concat "Write it as the array effect [\"" (str/replaceAll (object/get @h "k") "_" "-") "\", ...]; the object form is retired"), severity: "error" })))
+                                      (array/map (array/filter (object/get @r "s") (fn lf (object/get @lf "o"))) (fn lf { r: (object/get @lf "r"), k: (object/get @lf "k"), p: (str/concat @xp (object/get @lf "r")) }))))))))))))))))))))))))) (fn h { code: @config.codes.effRetiredForm.code, path: (object/get @h "p"), message: (str/concat "Effect is written as an object keyed by '" (object/get @h "k") "'; effects are arrays"), suggestion: (str/concat "Write it as the array effect [\"" (str/replaceAll (object/get @h "k") "_" "-") "\", ...]; the object form is retired"), severity: "error" })))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "retired-effect-forms", scope: @entity.scope, findings: @entity.findings })
@@ -84,6 +87,12 @@ orbital OrbLintRetiredEffectFormsOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintRetiredEffectFormsCodes = { effRetiredForm: { code: "ORB_EFF_RETIRED_FORM", category: "effect", description: "An effect is written in a retired object form instead of the array form" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintRetiredEffectFormsCli -> OrbLintRetiredEffectFormsRun [client] {

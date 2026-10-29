@@ -23,6 +23,9 @@ type SlotDomainContext = { category : string }
 type SlotOrbital = { domainContext : SlotDomainContext, pages : [SlotPage], traits : [SlotTrait] }
 type SlotProgram = { orbitals : [SlotOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintSlotCodes = { slotMainNotCovered : LintCodeDecl , slotContention : LintCodeDecl , slotContentionRuntime : LintCodeDecl , slotInvalidNesting : LintCodeDecl }
+
 orbital OrbLintSlotOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -103,17 +106,17 @@ orbital OrbLintSlotOrbital {
                           (let ((keys (array/sort (array/unique (array/map @runR (fn r (str/concat (object/get @r "state") "|" (object/get @r "slot"))))))))
                             (array/flatten [
                               (if (and (= (array/len @anyPaint) 0) (> (array/len @trs) 0))
-                                [{ code: "ORB_SLOT_MAIN_NOT_COVERED", path: @where, message: "No trait on this page renders anything", suggestion: "Give a trait on this page a render-ui, or move its traits to a boot/protocol page", severity: "error" }] [])
+                                [{ code: @config.codes.slotMainNotCovered.code, path: @where, message: "No trait on this page renders anything", suggestion: "Give a trait on this page a render-ui, or move its traits to a boot/protocol page", severity: "error" }] [])
                               (array/flatten (array/map @initSlots (fn sl
                                 (let ((names (array/unique (array/map (array/filter @initR (fn r (= (object/get @r "slot") @sl))) (fn r (object/get @r "tn"))))))
                                   (if (and (> (array/len @names) 1) (not (array/includes @config.sharedSlots @sl)))
-                                    [{ code: "ORB_SLOT_CONTENTION", path: @where, message: (str/concat "Slot '" @sl "' has contention: multiple traits render to it: [" (str/join (array/map @names (fn n (json/stringify @n))) ", ") "]"), suggestion: "Each slot should be owned by exactly one trait", severity: "error" }]
+                                    [{ code: @config.codes.slotContention.code, path: @where, message: (str/concat "Slot '" @sl "' has contention: multiple traits render to it: [" (str/join (array/map @names (fn n (json/stringify @n))) ", ") "]"), suggestion: "Each slot should be owned by exactly one trait", severity: "error" }]
                                     [])))))
                               (array/flatten (array/map @keys (fn k
                                 (let ((hits (array/filter @runR (fn r (= (str/concat (object/get @r "state") "|" (object/get @r "slot")) @k)))))
                                   (let ((names (array/sort (array/unique (array/map @hits (fn r (object/get @r "tn")))))))
                                     (if (and (> (array/len @names) 1) (not (array/includes @config.sharedSlots (object/get (array/nth @hits 0) "slot"))))
-                                      [{ code: "ORB_SLOT_CONTENTION_RUNTIME", path: @where, message: (str/concat "Slot '" (object/get (array/nth @hits 0) "slot") "' in state '" (object/get (array/nth @hits 0) "state") "' has contention: traits [" (str/join (array/map @names (fn n (json/stringify @n))) ", ") "] all render to it."), suggestion: "Each slot should be owned by exactly one trait per state", severity: "error" }]
+                                      [{ code: @config.codes.slotContentionRuntime.code, path: @where, message: (str/concat "Slot '" (object/get (array/nth @hits 0) "slot") "' in state '" (object/get (array/nth @hits 0) "state") "' has contention: traits [" (str/join (array/map @names (fn n (json/stringify @n))) ", ") "] all render to it."), suggestion: "Each slot should be owned by exactly one trait per state", severity: "error" }]
                                       []))))))
                               (array/map (array/unique (array/flatten (array/map @facts (fn f
                                   (let ((live (array/filter (object/get @f "arms") (fn a (not (object/get @a "dead"))))))
@@ -128,7 +131,7 @@ orbital OrbLintSlotOrbital {
                                                   (str/concat "Overlay '" @b "' opens over the open overlay '" @o "' in trait '" (object/get @f "tn") "' state '" @st "'. Consider if nesting is intended.")))
                                                 (array/map (array/filter @paints (fn o (and (!= @o @b) (= (array/nth (array/sort [@o, @b]) 0) @o)))) (fn o
                                                   (str/concat "Overlays '" @o "' and '" @b "' open together in trait '" (object/get @f "tn") "' from state '" @st "'. Consider if nesting is intended."))))))))))))))))))))
-                                (fn m { code: "ORB_SLOT_INVALID_NESTING", path: @where, message: @m, suggestion: "Avoid nesting modals within modals", severity: "error" }))
+                                (fn m { code: @config.codes.slotInvalidNesting.code, path: @where, message: @m, suggestion: "Avoid nesting modals within modals", severity: "error" }))
                             ])))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -146,6 +149,9 @@ orbital OrbLintSlotOrbital {
 
 
     config {
+      codes : LintSlotCodes = { slotMainNotCovered: { code: "ORB_SLOT_MAIN_NOT_COVERED", category: "slot", description: "No trait on a page renders anything into the main slot" }, slotContention: { code: "ORB_SLOT_CONTENTION", category: "slot", description: "Multiple traits on a page render into the same slot" }, slotContentionRuntime: { code: "ORB_SLOT_CONTENTION_RUNTIME", category: "slot", description: "Several traits render to the same slot in the same state, so they contend for it" }, slotInvalidNesting: { code: "ORB_SLOT_INVALID_NESTING", category: "slot", description: "A slot is nested in an invalid way" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
       overlaySlots : [string] = ["modal", "drawer", "overlay"]
         @label "Overlay slots"
         @description "Slots of which a page should use at most one."

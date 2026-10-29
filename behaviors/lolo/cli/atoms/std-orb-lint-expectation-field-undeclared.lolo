@@ -21,6 +21,9 @@ type PdTrait = { name : string, stateMachine : PdMachine, ticks : [PdTransition]
 type PdOrbital = { name : string, expects : [PdExpect], traits : [PdTrait] }
 type PdProgram = { orbitals : [PdOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintExpectationFieldUndeclaredCodes = { sExpectationFieldUndeclared : LintCodeDecl }
+
 orbital OrbLintExpectationFieldUndeclaredOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -73,7 +76,7 @@ orbital OrbLintExpectationFieldUndeclaredOrbital {
              (let ((names (array/map (object/get @own "shape" []) (fn f (object/get @f "name" "")))))
               (array/flatten (array/map (object/keys (object/get @tg "d")) (fn key
                (if (array/includes @names @key) []
-                [{ code: "ORB_S_EXPECTATION_FIELD_UNDECLARED", path: (object/get @s "p"), message: (str/concat "`" @on "` persists `" @key "` to `" (object/get @tg "e") "`, but its `expects entity " (object/get @tg "e") "` shape declares only: " (str/join (array/sort @names) ", ") ". The declaration is this orbital's own source of truth for the fields it touches."), suggestion: (str/concat "Add `" @key "` to the `expects entity " (object/get @tg "e") "` shape, or remove it from the persist payload."), severity: "error" }])))))))))))))))))))))))))))
+                [{ code: @config.codes.sExpectationFieldUndeclared.code, path: (object/get @s "p"), message: (str/concat "`" @on "` persists `" @key "` to `" (object/get @tg "e") "`, but its `expects entity " (object/get @tg "e") "` shape declares only: " (str/join (array/sort @names) ", ") ". The declaration is this orbital's own source of truth for the fields it touches."), suggestion: (str/concat "Add `" @key "` to the `expects entity " (object/get @tg "e") "` shape, or remove it from the persist payload."), severity: "error" }])))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "expectation-field-undeclared", scope: @entity.scope, findings: @entity.findings })
@@ -93,6 +96,12 @@ orbital OrbLintExpectationFieldUndeclaredOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintExpectationFieldUndeclaredCodes = { sExpectationFieldUndeclared: { code: "ORB_S_EXPECTATION_FIELD_UNDECLARED", category: "schema", description: "An effect persists a field that the orbital's expects entity shape does not declare" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintExpectationFieldUndeclaredCli -> OrbLintExpectationFieldUndeclaredRun [client] {

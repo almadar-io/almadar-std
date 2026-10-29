@@ -28,6 +28,9 @@ type NvpTs = { n : string, emits : [string], prod : [string] }
 type NvpO = { k : string, i : number, ts : [NvpTs] }
 type NvpOMap = Map string [NvpO]
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintListenSourceNeverProducesCodes = { xListenSourceNeverProduces : LintCodeDecl }
+
 orbital OrbLintListenSourceNeverProducesOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses Fired from "std/behaviors/std-orb-fired-events"
@@ -105,7 +108,7 @@ orbital OrbLintListenSourceNeverProducesOrbital {
                                       (if (not (array/includes (object/get @std "emits" @nos) @ev)) @nofind
                                         (if (array/includes (object/get @std "prod" @nos) @ev) @nofind
                                           (if (array/some (object/get @so "ts" @nots) (fn t2 (and (!= (object/get @t2 "n" "") @strait) (array/includes (object/get (array/nth @chains (object/get @so "i" 0)) (object/get @t2 "n" "") @nos) @strait) (array/includes (object/get @t2 "prod" @nos) @ev)))) @nofind
-                                            [{ code: "ORB_X_LISTEN_SOURCE_NEVER_PRODUCES", path: (str/concat "orbitals." @on ".traits." @tdn ".listens"), message: (str/concat "listens route " @strait "." @ev " -> " @trig ": " @strait "'s emits contract declares " @ev ", but no live effect, rendered affordance, or config item action at this call site produces it — a config override (e.g. itemActions/browseItemActions narrowed) likely removed the only producer"), suggestion: (str/concat "restore " @ev " to " @strait "'s active affordance config, or drop the " @tdn " route if the removal is intentional"), severity: "error" }]))))))))))))))))))))))))
+                                            [{ code: @config.codes.xListenSourceNeverProduces.code, path: (str/concat "orbitals." @on ".traits." @tdn ".listens"), message: (str/concat "listens route " @strait "." @ev " -> " @trig ": " @strait "'s emits contract declares " @ev ", but no live effect, rendered affordance, or config item action at this call site produces it — a config override (e.g. itemActions/browseItemActions narrowed) likely removed the only producer"), suggestion: (str/concat "restore " @ev " to " @strait "'s active affordance config, or drop the " @tdn " route if the removal is intentional"), severity: "error" }]))))))))))))))))))))))))
         (set @entity.haveFired false)
         (set @entity.haveChains false)
         (emit LINT_FINISH { })
@@ -136,6 +139,12 @@ orbital OrbLintListenSourceNeverProducesOrbital {
       OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
       OrbEmbedChain.EMBED_CHAINS -> CHAINS_HEARD
     }
+    config {
+      codes : LintListenSourceNeverProducesCodes = { xListenSourceNeverProduces: { code: "ORB_X_LISTEN_SOURCE_NEVER_PRODUCES", category: "cross", description: "A listens route names a source whose emits contract never produces the listened event" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintListenSourceNeverProducesCli -> OrbLintListenSourceNeverProducesRun [client] {

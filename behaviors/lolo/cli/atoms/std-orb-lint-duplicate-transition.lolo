@@ -17,6 +17,9 @@ type DupOrbital = { traits : [DupTrait] }
 type DupProgram = { orbitals : [DupOrbital] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintDuplicateTransitionCodes = { tDuplicateTransition : LintCodeDecl }
+
 orbital OrbLintDuplicateTransitionOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -49,9 +52,9 @@ orbital OrbLintDuplicateTransitionOrbital {
                                 (if (or (< (array/len @grp) 2) (!= (array/first @grp) @k))
                                   []
                                   (if (< (array/len (array/filter @grp (fn j (object/has (array/nth @tx @j) "guard")))) (- (array/len @grp) 1))
-                                    [{ code: "ORB_T_DUPLICATE_TRANSITION", path: @where, message: (str/concat "Duplicate transitions from '" @fr "' on event '" (object/get @tk "event" "") "' without guards"), suggestion: "Add guard conditions to distinguish transitions", severity: "error" }]
+                                    [{ code: @config.codes.tDuplicateTransition.code, path: @where, message: (str/concat "Duplicate transitions from '" @fr "' on event '" (object/get @tk "event" "") "' without guards"), suggestion: "Add guard conditions to distinguish transitions", severity: "error" }]
                                     (if (array/some @grp (fn a (and (object/has (array/nth @tx @a) "guard") (array/some @grp (fn b (and (> @b @a) (= (json/stringify (object/get (array/nth @tx @a) "guard")) (json/stringify (object/get (array/nth @tx @b) "guard")))))))))
-                                      [{ code: "ORB_T_DUPLICATE_TRANSITION", path: @where, message: (str/concat "Duplicate transitions from '" @fr "' on event '" (object/get @tk "event" "") "' with the same guard"), suggestion: "Remove the repeated arm, or give each arm its own guard", severity: "error" }]
+                                      [{ code: @config.codes.tDuplicateTransition.code, path: @where, message: (str/concat "Duplicate transitions from '" @fr "' on event '" (object/get @tk "event" "") "' with the same guard"), suggestion: "Remove the repeated arm, or give each arm its own guard", severity: "error" }]
                                       []))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -72,6 +75,12 @@ orbital OrbLintDuplicateTransitionOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintDuplicateTransitionCodes = { tDuplicateTransition: { code: "ORB_T_DUPLICATE_TRANSITION", category: "trait", description: "Two transitions share the same source state and event without guards" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintDuplicateTransitionCli -> OrbLintDuplicateTransitionRun [client] {

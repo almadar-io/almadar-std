@@ -600,7 +600,6 @@
     "options": {
      "report": true,
      "path": "/w/a.lolo",
-     "final": false,
      "denyWarnings": false
     }
    },
@@ -619,7 +618,8 @@
         "severity": "warning"
        }
       ],
-      "found": []
+      "found": [],
+      "final": []
      },
      "expect": {
       "effects": [
@@ -642,7 +642,6 @@
     "options": {
      "report": true,
      "path": "/w/a.lolo",
-     "final": false,
      "denyWarnings": false
     }
    },
@@ -1003,6 +1002,590 @@
         }
        }
       ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "--final: starting a run stores the flag and still lints first",
+   "entity": {
+    "cwd": "",
+    "file": "",
+    "json": false,
+    "denyWarnings": false,
+    "finalProgram": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "idle",
+     "event": "VALIDATE_START",
+     "payload": {
+      "file": "a.lolo",
+      "path": "/w/a.lolo",
+      "cwd": "/w",
+      "json": false,
+      "denyWarnings": false,
+      "finalProgram": true,
+      "hasPatterns": false,
+      "patterns": "",
+      "hasServices": false,
+      "services": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_RUN",
+        "payload": {
+         "file": "a.lolo"
+        }
+       }
+      ],
+      "state": "linting"
+     }
+    }
+   ]
+  },
+  {
+   "id": "--final: the final-rule findings ride the same host validate call",
+   "entity": {
+    "cwd": "/w",
+    "file": "a.lolo",
+    "json": true,
+    "denyWarnings": false,
+    "finalProgram": true,
+    "options": {
+     "report": true,
+     "path": "/w/a.lolo",
+     "denyWarnings": false
+    }
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "linting",
+     "event": "LINT_COLLECTED",
+     "payload": {
+      "findings": [
+       {
+        "code": "L_W",
+        "path": "p",
+        "message": "m",
+        "suggestion": "",
+        "severity": "warning"
+       }
+      ],
+      "found": [],
+      "final": [
+       {
+        "code": "ORB_PAGE_NOT_FOUND_MISSING",
+        "path": "orbitals",
+        "message": "m",
+        "suggestion": "s",
+        "severity": "warning"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "program/validate"
+       }
+      ],
+      "state": "validating"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: without --final the final-rule findings are dropped",
+   "entity": {
+    "cwd": "/w",
+    "file": "a.lolo",
+    "json": true,
+    "denyWarnings": false,
+    "finalProgram": false,
+    "options": {
+     "report": true,
+     "path": "/w/a.lolo",
+     "denyWarnings": false
+    }
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "linting",
+     "event": "LINT_COLLECTED",
+     "payload": {
+      "findings": [
+       {
+        "code": "L_W",
+        "path": "p",
+        "message": "m",
+        "suggestion": "",
+        "severity": "warning"
+       }
+      ],
+      "found": [],
+      "final": [
+       {
+        "code": "ORB_PAGE_NOT_FOUND_MISSING",
+        "path": "orbitals",
+        "message": "m",
+        "suggestion": "s",
+        "severity": "warning"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "program/validate"
+       }
+      ],
+      "state": "validating"
+     }
+    }
+   ]
+  },
+  {
+   "id": "cascade: the compiler findings under an orbital a closure root names are dropped and counted on the root, an unrelated orbital's survive",
+   "entity": {
+    "cwd": "/w",
+    "file": "c.orb",
+    "json": true,
+    "denyWarnings": false,
+    "finalProgram": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "linting",
+     "event": "LINT_COLLECTED",
+     "payload": {
+      "findings": [],
+      "found": [
+       {
+        "rule": "orbital-ref-closure",
+        "findings": [
+         {
+          "code": "ORB_O_ENTITY_UNMAPPED",
+          "path": "orbitals[0].entities(Other)",
+          "message": "m",
+          "suggestion": "s",
+          "severity": "error"
+         }
+        ]
+       },
+       {
+        "rule": "other",
+        "findings": [
+         {
+          "code": "ORB_X_OTHER",
+          "path": "orbitals[0].x",
+          "message": "m",
+          "suggestion": "s",
+          "severity": "error"
+         }
+        ]
+       }
+      ],
+      "final": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "program/validate"
+       }
+      ],
+      "state": "validating"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": false,
+       "valid": false,
+       "errors": [
+        {
+         "code": "ORB_O_ENTITY_UNMAPPED",
+         "path": "orbitals[0].entities(Other)",
+         "message": "root"
+        },
+        {
+         "code": "ORB_E_INVALID_RELATION",
+         "path": "orbitals[0].entity.fields[1].relation.entity",
+         "message": "m"
+        },
+        {
+         "code": "ORB_EFF_FETCH_INVALID_ENTITY",
+         "path": "orbitals[0 (Local)].traits[1 (OtherFetcher)].stateMachine.transitions[0].effects[0]",
+         "message": "m"
+        },
+        {
+         "code": "ORB_E_INVALID_RELATION",
+         "path": "orbitals[1].entity.fields[1].relation.entity",
+         "message": "m"
+        }
+       ],
+       "warnings": [
+        {
+         "code": "ORB_X_UNRESOLVED_RELATION_TARGET",
+         "path": "orbitals[0].entity.fields[1].relation.entity",
+         "message": "m"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"success\": false,\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"code\": \"ORB_O_ENTITY_UNMAPPED\",\n      \"path\": \"orbitals[0].entities(Other)\",\n      \"message\": \"root (3 downstream findings suppressed: ORB_E_INVALID_RELATION, ORB_EFF_FETCH_INVALID_ENTITY, ORB_X_UNRESOLVED_RELATION_TARGET)\"\n    },\n    {\n      \"code\": \"ORB_E_INVALID_RELATION\",\n      \"path\": \"orbitals[1].entity.fields[1].relation.entity\",\n      \"message\": \"m\"\n    }\n  ]\n}"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "cascade: control, no closure finding drops nothing",
+   "entity": {
+    "cwd": "/w",
+    "file": "c.orb",
+    "json": true,
+    "denyWarnings": false,
+    "finalProgram": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "linting",
+     "event": "LINT_COLLECTED",
+     "payload": {
+      "findings": [],
+      "found": [
+       {
+        "rule": "other",
+        "findings": [
+         {
+          "code": "ORB_X_OTHER",
+          "path": "orbitals[0].x",
+          "message": "m",
+          "suggestion": "s",
+          "severity": "error"
+         }
+        ]
+       }
+      ],
+      "final": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "program/validate"
+       }
+      ],
+      "state": "validating"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": false,
+       "valid": false,
+       "errors": [
+        {
+         "code": "ORB_O_ENTITY_UNMAPPED",
+         "path": "orbitals[0].entities(Other)",
+         "message": "root"
+        },
+        {
+         "code": "ORB_E_INVALID_RELATION",
+         "path": "orbitals[0].entity.fields[1].relation.entity",
+         "message": "m"
+        },
+        {
+         "code": "ORB_EFF_FETCH_INVALID_ENTITY",
+         "path": "orbitals[0 (Local)].traits[1 (OtherFetcher)].stateMachine.transitions[0].effects[0]",
+         "message": "m"
+        },
+        {
+         "code": "ORB_E_INVALID_RELATION",
+         "path": "orbitals[1].entity.fields[1].relation.entity",
+         "message": "m"
+        }
+       ],
+       "warnings": [
+        {
+         "code": "ORB_X_UNRESOLVED_RELATION_TARGET",
+         "path": "orbitals[0].entity.fields[1].relation.entity",
+         "message": "m"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"success\": false,\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"code\": \"ORB_O_ENTITY_UNMAPPED\",\n      \"path\": \"orbitals[0].entities(Other)\",\n      \"message\": \"root\"\n    },\n    {\n      \"code\": \"ORB_E_INVALID_RELATION\",\n      \"path\": \"orbitals[0].entity.fields[1].relation.entity\",\n      \"message\": \"m\"\n    },\n    {\n      \"code\": \"ORB_EFF_FETCH_INVALID_ENTITY\",\n      \"path\": \"orbitals[0 (Local)].traits[1 (OtherFetcher)].stateMachine.transitions[0].effects[0]\",\n      \"message\": \"m\"\n    },\n    {\n      \"code\": \"ORB_E_INVALID_RELATION\",\n      \"path\": \"orbitals[1].entity.fields[1].relation.entity\",\n      \"message\": \"m\"\n    }\n  ],\n  \"warnings\": [\n    {\n      \"code\": \"ORB_X_UNRESOLVED_RELATION_TARGET\",\n      \"path\": \"orbitals[0].entity.fields[1].relation.entity\",\n      \"message\": \"m\"\n    }\n  ]\n}"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "cascade: another ORB_O_ root of the same orbital and a finding with no orbital path survive",
+   "entity": {
+    "cwd": "/w",
+    "file": "c.orb",
+    "json": true,
+    "denyWarnings": false,
+    "finalProgram": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "linting",
+     "event": "LINT_COLLECTED",
+     "payload": {
+      "findings": [],
+      "found": [
+       {
+        "rule": "orbital-ref-closure",
+        "findings": [
+         {
+          "code": "ORB_O_ENTITY_UNMAPPED",
+          "path": "orbitals[0].entities(Other)",
+          "message": "m",
+          "suggestion": "s",
+          "severity": "error"
+         }
+        ]
+       },
+       {
+        "rule": "other",
+        "findings": [
+         {
+          "code": "ORB_X_OTHER",
+          "path": "orbitals[0].x",
+          "message": "m",
+          "suggestion": "s",
+          "severity": "error"
+         }
+        ]
+       }
+      ],
+      "final": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "program/validate"
+       }
+      ],
+      "state": "validating"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": false,
+       "valid": false,
+       "errors": [
+        {
+         "code": "ORB_O_ENTITY_UNMAPPED",
+         "path": "orbitals[0].entities(Other)",
+         "message": "root"
+        },
+        {
+         "code": "ORB_O_CONFIG_UNKNOWN_KEY",
+         "path": "orbitals[0].config(bogus)",
+         "message": "m"
+        },
+        {
+         "code": "ORB_S_OWNER_FIELD_NOT_IDENTITY_TYPED",
+         "path": "Other.@owner",
+         "message": "m"
+        },
+        {
+         "code": "ORB_E_INVALID_RELATION",
+         "path": "orbitals[0].entity.fields[1].relation.entity",
+         "message": "m"
+        }
+       ],
+       "warnings": []
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"success\": false,\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"code\": \"ORB_O_ENTITY_UNMAPPED\",\n      \"path\": \"orbitals[0].entities(Other)\",\n      \"message\": \"root (1 downstream finding suppressed: ORB_E_INVALID_RELATION)\"\n    },\n    {\n      \"code\": \"ORB_O_CONFIG_UNKNOWN_KEY\",\n      \"path\": \"orbitals[0].config(bogus)\",\n      \"message\": \"m\"\n    },\n    {\n      \"code\": \"ORB_S_OWNER_FIELD_NOT_IDENTITY_TYPED\",\n      \"path\": \"Other.@owner\",\n      \"message\": \"m\"\n    }\n  ]\n}"
+        }
+       }
+      ],
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "cascade: orbitals[10] is not orbitals[1]",
+   "entity": {
+    "cwd": "/w",
+    "file": "c.orb",
+    "json": true,
+    "denyWarnings": false,
+    "finalProgram": false
+   },
+   "steps": [
+    {
+     "trait": "ValidateEngine",
+     "from": "linting",
+     "event": "LINT_COLLECTED",
+     "payload": {
+      "findings": [],
+      "found": [
+       {
+        "rule": "orbital-ref-closure",
+        "findings": [
+         {
+          "code": "ORB_O_ENTITY_UNMAPPED",
+          "path": "orbitals[1].entities(Other)",
+          "message": "m",
+          "suggestion": "s",
+          "severity": "error"
+         }
+        ]
+       }
+      ],
+      "final": []
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "program/validate"
+       }
+      ],
+      "state": "validating"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "validating",
+     "event": "VALIDATE_CHECKED",
+     "payload": {
+      "result": {
+       "success": false,
+       "valid": false,
+       "errors": [
+        {
+         "code": "ORB_O_ENTITY_UNMAPPED",
+         "path": "orbitals[1].entities(Other)",
+         "message": "root"
+        },
+        {
+         "code": "ORB_E_INVALID_RELATION",
+         "path": "orbitals[10].entity.fields[1].relation.entity",
+         "message": "m"
+        }
+       ],
+       "warnings": []
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_RENDER",
+        "payload": {}
+       }
+      ],
+      "state": "rendering"
+     }
+    },
+    {
+     "trait": "ValidateEngine",
+     "from": "rendering",
+     "event": "VALIDATE_RENDER",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "VALIDATE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\n  \"success\": false,\n  \"valid\": false,\n  \"errors\": [\n    {\n      \"code\": \"ORB_O_ENTITY_UNMAPPED\",\n      \"path\": \"orbitals[1].entities(Other)\",\n      \"message\": \"root\"\n    },\n    {\n      \"code\": \"ORB_E_INVALID_RELATION\",\n      \"path\": \"orbitals[10].entity.fields[1].relation.entity\",\n      \"message\": \"m\"\n    }\n  ]\n}"
+        }
+       }
+      ],
+      "state": "idle"
      }
     }
    ]

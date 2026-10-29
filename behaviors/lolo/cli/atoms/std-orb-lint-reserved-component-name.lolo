@@ -13,6 +13,9 @@ type ReservedNameOrbital = { name : string, spec : boolean, entity : ReservedNam
 type ReservedNameProgram = { orbitals : [ReservedNameOrbital] }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintReservedComponentNameCodes = { eInvalidFieldName : LintCodeDecl }
+
 orbital OrbLintReservedComponentNameOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -43,7 +46,7 @@ orbital OrbLintReservedComponentNameOrbital {
                       (array/map (array/range 0 (array/len (object/get @o "auxiliaryEntities" []))) (fn ai
                         (if (validate/object (array/nth (object/get @o "auxiliaryEntities" []) @ai)) { name: (object/get (array/nth (object/get @o "auxiliaryEntities" []) @ai) "name" ""), path: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].name") } null))))
                     (fn x (and (!= @x null) (array/includes @entity.components (object/get @x "name"))))))))))
-            (fn x { code: "ORB_E_INVALID_FIELD_NAME", path: (object/get @x "path"), message: (str/concat "Entity name '" (object/get @x "name") "' collides with a UI component name. This causes duplicate identifier errors in compiled output."), suggestion: (str/concat "Rename the entity to avoid the collision (e.g., '" (object/get @x "name") "Entry', '" (object/get @x "name") "Record', '" (object/get @x "name") "Data')"), severity: "error" }))))
+            (fn x { code: @config.codes.eInvalidFieldName.code, path: (object/get @x "path"), message: (str/concat "Entity name '" (object/get @x "name") "' collides with a UI component name. This causes duplicate identifier errors in compiled output."), suggestion: (str/concat "Rename the entity to avoid the collision (e.g., '" (object/get @x "name") "Entry', '" (object/get @x "name") "Record', '" (object/get @x "name") "Data')"), severity: "error" }))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "reserved-component-name", scope: @entity.scope, findings: @entity.findings })
@@ -66,6 +69,12 @@ orbital OrbLintReservedComponentNameOrbital {
       OrbLintInput.LINT_COMPONENTS -> LINT_COMPONENTS_HEARD
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintReservedComponentNameCodes = { eInvalidFieldName: { code: "ORB_E_INVALID_FIELD_NAME", category: "entity", description: "An entity field or entity name is empty or not in the required naming form" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintReservedComponentNameCli -> OrbLintReservedComponentNameRun [client] {

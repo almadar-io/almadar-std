@@ -1,0 +1,21 @@
+app lint-not-found-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-not-found - the `orb lint not-found <file>` command, the `[notFound]` page lint of `orb validate --final` (G-ORB-COMPILER-004, owner-approved): the program is the whole app, so one that declares route pages (a page with a path and no protocol) must declare exactly one `[notFound]` page. No `[notFound]` page is a warning at the program, two or more is an error at the second. Each finding reads its code from the rule's `codes` knob (first entry: missing, second: duplicate). Clean answers `lint not-found: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintNotFoundSpec {
+  expects trait OrbLintNotFound {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintNotFoundCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintNotFound, OrbLintNotFoundCli
+}

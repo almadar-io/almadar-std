@@ -21,6 +21,9 @@ type RuEntity = { name : string, fields : [RuField] }
 type RuOrbital = { name : string, entity : RuEntity, auxiliaryEntities : [RuEntity], traits : [RuTrait] }
 type RuProgram = { orbitals : [RuOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintItemActionEventCodes = { ruiInvalidItemAction : LintCodeDecl }
+
 orbital OrbLintItemActionEventOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -75,7 +78,7 @@ orbital OrbLintItemActionEventOrbital {
             ls: (object/get @nr "nd"), la: (object/get @nr "nd"), mp: (object/get @nr "nd"), lm: (object/get @nr "nd") })
         @nr)))) RuVal)))
                                   (if (= @fr null) []
-                                    (array/map (object/get @fr "nd") (fn h { code: "ORB_RUI_INVALID_ITEM_ACTION", path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")].stateMachine.transitions[" @ti "].effects[" @ej "][2]" (object/get @h "p")), message: (object/get @h "m"), suggestion: (object/get @h "s"), severity: "error" }))))
+                                    (array/map (object/get @fr "nd") (fn h { code: @config.codes.ruiInvalidItemAction.code, path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")].stateMachine.transitions[" @ti "].effects[" @ej "][2]" (object/get @h "p")), message: (object/get @h "m"), suggestion: (object/get @h "s"), severity: "error" }))))
                                 [])))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -96,6 +99,12 @@ orbital OrbLintItemActionEventOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintItemActionEventCodes = { ruiInvalidItemAction: { code: "ORB_RUI_INVALID_ITEM_ACTION", category: "render_ui", description: "An itemAction configuration on a rendered pattern is invalid" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintItemActionEventCli -> OrbLintItemActionEventRun [client] {

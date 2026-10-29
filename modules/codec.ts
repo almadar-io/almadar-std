@@ -135,6 +135,44 @@ export const HMAC_OPERATORS: Record<string, StdOperatorMeta> = {
   },
 };
 
+export const RSA_OPERATORS: Record<string, StdOperatorMeta> = {
+  'rsa/verify': {
+    module: 'rsa',
+    category: 'std-codec',
+    minArity: 4,
+    maxArity: 4,
+    description: 'Verify an RSASSA-PKCS1-v1_5 signature with SHA-256 (RFC 8017 section 8.2.2, what JWS RS256 needs) under a public key of big-endian modulus and exponent. The message is text hashed as its UTF-8 bytes; n, e and the signature are bytes (a bytes value is a standard padded base64 string at run time). Answers a closed verdict: valid (the block is 00 01 FF..FF 00 DigestInfo hash byte for byte), mismatch (it is not), invalid (an operand is not canonical padded base64), key-size (a modulus under 256 bytes or with a leading zero byte, or an exponent empty or not shorter than the modulus), signature-length (not as long as the modulus) or signature-range (not below the modulus). Public inputs only: a private key never reaches this operator.',
+    hasSideEffects: false,
+    returnType: 'string',
+    params: [
+      { name: 'n', type: BYTES, description: 'The modulus, big-endian bytes' },
+      { name: 'e', type: BYTES, description: 'The public exponent, big-endian bytes' },
+      { name: 'message', type: STRING, description: 'The signed message, hashed as its UTF-8 bytes' },
+      { name: 'signature', type: BYTES, description: 'The signature, as long as the modulus' },
+    ],
+    example: '["rsa/verify", "<n>", "AQAB", "header.payload", "<signature>"] // => "valid"',
+  },
+};
+
+export const ECDSA_OPERATORS: Record<string, StdOperatorMeta> = {
+  'ecdsa/p256-verify': {
+    module: 'ecdsa',
+    category: 'std-codec',
+    minArity: 4,
+    maxArity: 4,
+    description: 'Verify an ECDSA P-256 / SHA-256 signature (FIPS 186-4 section 6.4.2, what JWS ES256 needs). The public key is two 32-byte big-endian coordinates, the message is text hashed as its UTF-8 bytes, the signature is 64 raw bytes r||s. Answers a closed verdict: valid, mismatch (the signature does not verify), invalid (an operand is not canonical padded base64), length (a coordinate not 32 bytes or a signature not 64), range (r or s zero or not below the group order) or point (a coordinate not below the field prime, or a point off the curve). Public inputs only: a private key never reaches this operator.',
+    hasSideEffects: false,
+    returnType: 'string',
+    params: [
+      { name: 'x', type: BYTES, description: 'The public key x coordinate, 32 big-endian bytes' },
+      { name: 'y', type: BYTES, description: 'The public key y coordinate, 32 big-endian bytes' },
+      { name: 'message', type: STRING, description: 'The signed message, hashed as its UTF-8 bytes' },
+      { name: 'signature', type: BYTES, description: 'The signature, 64 bytes r||s' },
+    ],
+    example: '["ecdsa/p256-verify", "<x>", "<y>", "header.payload", "<signature>"] // => "valid"',
+  },
+};
+
 const BYTES_LIMIT: NonNullable<StdOperatorMeta['params']>[number] = {
   name: 'maxBytes',
   type: NUMBER,

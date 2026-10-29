@@ -1,0 +1,1262 @@
+{
+ "source": "Built from the unit tests of the retired orbital-cli behaviors_texts.rs (build_entry_text, build_capability_text, build_knob_text, build_orbital_knob_text, decamel, texts_of, entry_of) and its describe-facts rules (a trait knob is owned unless the orbital imports another, an orbital knob only when the program declares its key). The describe and source answers are fed as the event payload.",
+ "atom": "cli/atoms/std-behavior-texts.lolo",
+ "trait": "BehaviorTexts",
+ "cases": [
+  {
+   "id": "the organism text joins every declared part in order",
+   "steps": [
+    {
+     "event": "BUILD_ENTRY_TEXTS",
+     "payload": {
+      "rows": [
+       {
+        "name": "std-agent-fix-loop",
+        "description": "Agent fix loop.",
+        "capabilitiesText": "program repair, evaluate a program",
+        "defaultEntityName": "FixLoop",
+        "connectableEvents": [
+         "VALIDATE_PROGRAM",
+         "RESET"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENTRY_TEXTS_BUILT",
+        "payload": {
+         "organism": [
+          {
+           "key": "std-agent-fix-loop",
+           "text": "std-agent-fix-loop\nAgent fix loop.\nCapabilities (organism): program repair, evaluate a program\nEntity: FixLoop\nEvents: VALIDATE_PROGRAM RESET",
+           "hash": "d5b6db7ae0f8d5e897ccd14198d4a96ff389a75ea6427c1cdaa400dae4a7fa25"
+          }
+         ],
+         "capability": [
+          {
+           "key": "std-agent-fix-loop#capabilities",
+           "text": "Capabilities (organism): program repair, evaluate a program",
+           "hash": "3d84d46b41e6869e50f78ebc98a792c70e595987d0d82b74a8c7f72daa48f55c"
+          }
+         ],
+         "wanted": [
+          {
+           "key": "std-agent-fix-loop",
+           "text": "std-agent-fix-loop\nAgent fix loop.\nCapabilities (organism): program repair, evaluate a program\nEntity: FixLoop\nEvents: VALIDATE_PROGRAM RESET"
+          },
+          {
+           "key": "std-agent-fix-loop#capabilities",
+           "text": "Capabilities (organism): program repair, evaluate a program"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the organism text of a bare atom is its name and it has no capability text",
+   "steps": [
+    {
+     "event": "BUILD_ENTRY_TEXTS",
+     "payload": {
+      "rows": [
+       {
+        "name": "std-x",
+        "description": ""
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENTRY_TEXTS_BUILT",
+        "payload": {
+         "organism": [
+          {
+           "key": "std-x",
+           "text": "std-x",
+           "hash": "d494945c18d0897248267e4da9a5b83cde8668a1e2acfad53b030b403f6bb7ba"
+          }
+         ],
+         "capability": [],
+         "wanted": [
+          {
+           "key": "std-x",
+           "text": "std-x"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a behavior with an empty entity name and no events carries neither line",
+   "steps": [
+    {
+     "event": "BUILD_ENTRY_TEXTS",
+     "payload": {
+      "rows": [
+       {
+        "name": "std-y",
+        "description": "Y.",
+        "defaultEntityName": "",
+        "connectableEvents": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENTRY_TEXTS_BUILT",
+        "payload": {
+         "organism": [
+          {
+           "key": "std-y",
+           "text": "std-y\nY.",
+           "hash": "2d1c26a53b18b9cae6bafda3b6511d8ac48df4f4ef34552fe9541c3758049f20"
+          }
+         ],
+         "capability": [],
+         "wanted": [
+          {
+           "key": "std-y",
+           "text": "std-y\nY."
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rows keep their order and only a row with capabilities has a capability text",
+   "steps": [
+    {
+     "event": "BUILD_ENTRY_TEXTS",
+     "payload": {
+      "rows": [
+       {
+        "name": "a",
+        "capabilitiesText": "cap"
+       },
+       {
+        "name": "b"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENTRY_TEXTS_BUILT",
+        "payload": {
+         "organism": [
+          {
+           "key": "a",
+           "text": "a\nCapabilities (organism): cap",
+           "hash": "f2a5e45f0785793aa700a2e555b5f45ed4dbd45dcf183a769eb3afa0ece7346a"
+          },
+          {
+           "key": "b",
+           "text": "b",
+           "hash": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+          }
+         ],
+         "capability": [
+          {
+           "key": "a#capabilities",
+           "text": "Capabilities (organism): cap",
+           "hash": "a9e9540c1b38c1197c5933fc398094690304eda41e769eafab7157ee3775b8fd"
+          }
+         ],
+         "wanted": [
+          {
+           "key": "a",
+           "text": "a\nCapabilities (organism): cap"
+          },
+          {
+           "key": "b",
+           "text": "b"
+          },
+          {
+           "key": "a#capabilities",
+           "text": "Capabilities (organism): cap"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the hash is the lower-case hex SHA-256 of the UTF-8 text",
+   "steps": [
+    {
+     "event": "BUILD_ENTRY_TEXTS",
+     "payload": {
+      "rows": [
+       {
+        "name": "abc"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENTRY_TEXTS_BUILT",
+        "payload": {
+         "organism": [
+          {
+           "key": "abc",
+           "text": "abc",
+           "hash": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+          }
+         ],
+         "capability": [],
+         "wanted": [
+          {
+           "key": "abc",
+           "text": "abc"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no rows answer no texts",
+   "steps": [
+    {
+     "event": "BUILD_ENTRY_TEXTS",
+     "payload": {
+      "rows": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENTRY_TEXTS_BUILT",
+        "payload": {
+         "organism": [],
+         "capability": [],
+         "wanted": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a row's behavior key keys the wanted texts while the texts stay keyed by name",
+   "steps": [
+    {
+     "event": "BUILD_ENTRY_TEXTS",
+     "payload": {
+      "rows": [
+       {
+        "name": "c",
+        "behavior": "p/c",
+        "capabilitiesText": "x"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENTRY_TEXTS_BUILT",
+        "payload": {
+         "organism": [
+          {
+           "key": "c",
+           "text": "c\nCapabilities (organism): x",
+           "hash": "b9bcf95f0f027d8e7379f20a87b513b9a4447e9048f6cb0a4a38a5fe00764c55"
+          }
+         ],
+         "capability": [
+          {
+           "key": "c#capabilities",
+           "text": "Capabilities (organism): x",
+           "hash": "284cd30cc5f3e666b8305c48e4915aa69bd3a862e8628f68650495c62eb669c8"
+          }
+         ],
+         "wanted": [
+          {
+           "key": "p/c",
+           "text": "c\nCapabilities (organism): x"
+          },
+          {
+           "key": "p/c#capabilities",
+           "text": "Capabilities (organism): x"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a trait knob with values, synonyms and a wrapped atom",
+   "steps": [
+    {
+     "event": "BUILD_KNOB_TEXTS",
+     "payload": {
+      "name": "std-approval-gate",
+      "described": {
+       "behavior": "x/std-approval-gate",
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "x/ApprovalGateOrbital",
+          "orbital": "ApprovalGateOrbital"
+         },
+         "traits": [
+          {
+           "trait": "LoadingSpinner",
+           "ref": "Spinner.traits.SpinnerRender",
+           "knobs": [
+            {
+             "name": "ariaCurrent",
+             "label": "Aria-current",
+             "description": "Marks the current item in a set: the current page, step, location, date or time.",
+             "synonyms": "aria-current",
+             "values": [
+              "page",
+              "step",
+              "location",
+              "date",
+              "time",
+              "true",
+              "false"
+             ]
+            }
+           ]
+          }
+         ],
+         "knobs": [],
+         "entity": {
+          "name": "ApprovalRequest",
+          "fields": [
+           {
+            "name": "id"
+           },
+           {
+            "name": "gatedEvent"
+           },
+           {
+            "name": "subjectLabel"
+           },
+           {
+            "name": "subjectId"
+           },
+           {
+            "name": "requestedBy"
+           },
+           {
+            "name": "requestedByName"
+           },
+           {
+            "name": "status"
+           },
+           {
+            "name": "reviewer"
+           },
+           {
+            "name": "requestedAt"
+           },
+           {
+            "name": "decidedAt"
+           },
+           {
+            "name": "escalatedAt"
+           },
+           {
+            "name": "extra"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "written": {
+       "orbitals": [
+        {
+         "name": "ApprovalGateOrbital"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KNOB_TEXTS_BUILT",
+        "payload": {
+         "texts": [
+          {
+           "key": "std-approval-gate/ApprovalGateOrbital/LoadingSpinner/ariaCurrent",
+           "text": "std-approval-gate ApprovalGateOrbital LoadingSpinner.ariaCurrent\nAria-current\nMarks the current item in a set: the current page, step, location, date or time.\nSubject: the Loading Spinner (a spinner render) for ApprovalRequest records — ApprovalRequest fields: gatedEvent, subjectLabel, subjectId, requestedBy, requestedByName, status, reviewer, requestedAt, decidedAt, escalatedAt\nvalues: page, step, location, date, time, true, false\nsynonyms: aria-current",
+           "hash": "4e91b028f0b6f996305342c45d0642ba434121c01dad933e401f61b1ddea60e3"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a trait knob without a ref or fields",
+   "steps": [
+    {
+     "event": "BUILD_KNOB_TEXTS",
+     "payload": {
+      "name": "std-agent-suggestions",
+      "described": {
+       "behavior": "x/std-agent-suggestions",
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "x/AgentSuggestionsOrbital",
+          "orbital": "AgentSuggestionsOrbital"
+         },
+         "traits": [
+          {
+           "trait": "AgentSuggestionProposer",
+           "knobs": [
+            {
+             "name": "allowedActions",
+             "label": "Which actions may a suggestion carry?",
+             "description": "When listed, any other action is refused. Empty accepts any.",
+             "synonyms": "allowed actions, commands, events"
+            }
+           ]
+          }
+         ],
+         "knobs": [],
+         "entity": {
+          "name": "AgentSuggestionsHost",
+          "fields": []
+         }
+        }
+       ]
+      },
+      "written": {
+       "orbitals": [
+        {
+         "name": "AgentSuggestionsOrbital"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KNOB_TEXTS_BUILT",
+        "payload": {
+         "texts": [
+          {
+           "key": "std-agent-suggestions/AgentSuggestionsOrbital/AgentSuggestionProposer/allowedActions",
+           "text": "std-agent-suggestions AgentSuggestionsOrbital AgentSuggestionProposer.allowedActions\nWhich actions may a suggestion carry?\nWhen listed, any other action is refused. Empty accepts any.\nSubject: the Agent Suggestion Proposer for AgentSuggestionsHost records\nsynonyms: allowed actions, commands, events",
+           "hash": "1e7a8154ad94f0911cda1ed94803cb6c9ce43e6bccafbb27b523487de810b62e"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "digits and acronyms are split into words and an entityless subject names no records",
+   "steps": [
+    {
+     "event": "BUILD_KNOB_TEXTS",
+     "payload": {
+      "name": "std-learn-sim-3d",
+      "described": {
+       "behavior": "x/std-learn-sim-3d",
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "x/LearnSim3DOrbital",
+          "orbital": "LearnSim3DOrbital"
+         },
+         "traits": [
+          {
+           "trait": "Learn3DSimTransport",
+           "knobs": [
+            {
+             "name": "dt"
+            }
+           ]
+          }
+         ],
+         "knobs": [],
+         "entity": {
+          "name": "Learn3DSimScene",
+          "fields": [
+           {
+            "name": "active"
+           },
+           {
+            "name": "title"
+           },
+           {
+            "name": "running"
+           },
+           {
+            "name": "speedMultiplier"
+           },
+           {
+            "name": "steps"
+           },
+           {
+            "name": "simTime"
+           }
+          ]
+         }
+        },
+        {
+         "value": {
+          "behavior": "x/P",
+          "orbital": "P"
+         },
+         "traits": [
+          {
+           "trait": "Learn3DSimTransport",
+           "knobs": [
+            {
+             "name": "k"
+            }
+           ]
+          }
+         ],
+         "knobs": []
+        }
+       ]
+      },
+      "written": {
+       "orbitals": [
+        {
+         "name": "LearnSim3DOrbital"
+        },
+        {
+         "name": "P"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KNOB_TEXTS_BUILT",
+        "payload": {
+         "texts": [
+          {
+           "key": "std-learn-sim-3d/LearnSim3DOrbital/Learn3DSimTransport/dt",
+           "text": "std-learn-sim-3d LearnSim3DOrbital Learn3DSimTransport.dt\nSubject: the Learn3 D Sim Transport for Learn3DSimScene records — Learn3DSimScene fields: active, title, running, speedMultiplier, steps, simTime",
+           "hash": "d5ed442a8756b478eefab337bd7b5dc4292b96eaf0f6a91985289cc69ec35bcc"
+          },
+          {
+           "key": "std-learn-sim-3d/P/Learn3DSimTransport/k",
+           "text": "std-learn-sim-3d P Learn3DSimTransport.k\nSubject: the Learn3 D Sim Transport",
+           "hash": "1dd1593d3739cee397375b6ce33fe978026ca36c87d847d638e8e30bcb83fb4d"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an acronym run is split before its last capital",
+   "steps": [
+    {
+     "event": "BUILD_KNOB_TEXTS",
+     "payload": {
+      "name": "acr",
+      "described": {
+       "behavior": "x/acr",
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "x/HTMLParser",
+          "orbital": "HTMLParser"
+         },
+         "traits": [
+          {
+           "trait": "ABCdEFg",
+           "knobs": [
+            {
+             "name": "k"
+            }
+           ]
+          },
+          {
+           "trait": "UI",
+           "knobs": [
+            {
+             "name": "u"
+            }
+           ]
+          },
+          {
+           "trait": "already spaced",
+           "knobs": [
+            {
+             "name": "s"
+            }
+           ]
+          },
+          {
+           "trait": "NoteCreate",
+           "knobs": [
+            {
+             "name": "n"
+            }
+           ]
+          }
+         ],
+         "knobs": []
+        }
+       ]
+      },
+      "written": {
+       "orbitals": [
+        {
+         "name": "HTMLParser"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KNOB_TEXTS_BUILT",
+        "payload": {
+         "texts": [
+          {
+           "key": "acr/HTMLParser/ABCdEFg/k",
+           "text": "acr HTMLParser ABCdEFg.k\nSubject: the AB Cd E Fg",
+           "hash": "d0704881c7c1c08a0f887cae28093f569034afa380c580bf3b4dee54511270a9"
+          },
+          {
+           "key": "acr/HTMLParser/UI/u",
+           "text": "acr HTMLParser UI.u\nSubject: the UI",
+           "hash": "c684feb4cca0caca5095f7448f9756784eb69adab9248f92a6b76703b97ebdc2"
+          },
+          {
+           "key": "acr/HTMLParser/already spaced/s",
+           "text": "acr HTMLParser already spaced.s\nSubject: the already spaced",
+           "hash": "bd45b8efd2296ad0de1ff5cbada7db6544de9e00da96ce427259ecb01787e0f6"
+          },
+          {
+           "key": "acr/HTMLParser/NoteCreate/n",
+           "text": "acr HTMLParser NoteCreate.n\nSubject: the Note Create",
+           "hash": "649e36d6bb4fd8c20a4df30b5f430b9728730494a86daa4629b7f2068906bfbd"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an orbital knob uses the sentinel and names the orbital",
+   "steps": [
+    {
+     "event": "BUILD_KNOB_TEXTS",
+     "payload": {
+      "name": "std-agent-proposal",
+      "described": {
+       "behavior": "x/std-agent-proposal",
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "x/AgentProposalOrbital",
+          "orbital": "AgentProposalOrbital"
+         },
+         "traits": [],
+         "knobs": [
+          {
+           "name": "tools",
+           "label": "What may the agent do?",
+           "description": "The declared inputs it may fire and the entities it may read, as the signed-in person.",
+           "synonyms": "allowlist, abilities, permissions",
+           "values": [
+            "AgentToolScope",
+            "AgentToolInput",
+            "AgentToolRead"
+           ]
+          },
+          {
+           "name": "inherited",
+           "label": "Inherited",
+           "description": "Not declared by this orbital."
+          }
+         ],
+         "entity": {
+          "name": "AgentProposalRun",
+          "fields": [
+           {
+            "name": "input"
+           },
+           {
+            "name": "context"
+           },
+           {
+            "name": "request"
+           },
+           {
+            "name": "feedback"
+           },
+           {
+            "name": "summary"
+           },
+           {
+            "name": "items"
+           },
+           {
+            "name": "error"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "written": {
+       "orbitals": [
+        {
+         "name": "AgentProposalOrbital",
+         "config": {
+          "tools": {
+           "type": "object"
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KNOB_TEXTS_BUILT",
+        "payload": {
+         "texts": [
+          {
+           "key": "std-agent-proposal/AgentProposalOrbital/$orbital/tools",
+           "text": "std-agent-proposal AgentProposalOrbital $orbital.tools\nWhat may the agent do?\nThe declared inputs it may fire and the entities it may read, as the signed-in person.\nSubject: the Agent Proposal Orbital orbital for AgentProposalRun records — AgentProposalRun fields: input, context, request, feedback, summary, items, error\nvalues: AgentToolScope, AgentToolInput, AgentToolRead\nsynonyms: allowlist, abilities, permissions",
+           "hash": "33b77b46d823c1f1574f6623babced5e67f94b34a55f809d9217434c99174583"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an orbital that imports another behavior's orbital owns none of its trait knobs but its own config keys",
+   "steps": [
+    {
+     "event": "BUILD_KNOB_TEXTS",
+     "payload": {
+      "name": "imp",
+      "described": {
+       "behavior": "x/imp",
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "x/Mine",
+          "orbital": "Mine"
+         },
+         "traits": [
+          {
+           "trait": "MineView",
+           "knobs": [
+            {
+             "name": "heading",
+             "label": "Heading"
+            }
+           ]
+          }
+         ],
+         "knobs": [
+          {
+           "name": "own",
+           "label": "Own"
+          },
+          {
+           "name": "other",
+           "label": "Other"
+          }
+         ],
+         "entity": {
+          "name": "Row",
+          "fields": [
+           {
+            "name": "id"
+           },
+           {
+            "name": "title"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "written": {
+       "orbitals": [
+        {
+         "name": "Mine",
+         "reference": {
+          "ref": "U.orbitals.Up"
+         },
+         "config": {
+          "own": {
+           "type": "string"
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KNOB_TEXTS_BUILT",
+        "payload": {
+         "texts": [
+          {
+           "key": "imp/Mine/$orbital/own",
+           "text": "imp Mine $orbital.own\nOwn\nSubject: the Mine orbital for Row records — Row fields: title",
+           "hash": "155b50b6f33c7937319702210c379d5cdd3c39203fbc9638cc8a8c45d36175f1"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a trait knob then the orbital knobs, in order, for each orbital",
+   "steps": [
+    {
+     "event": "BUILD_KNOB_TEXTS",
+     "payload": {
+      "name": "ord",
+      "described": {
+       "behavior": "x/ord",
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "x/A",
+          "orbital": "A"
+         },
+         "traits": [
+          {
+           "trait": "T",
+           "knobs": [
+            {
+             "name": "k"
+            }
+           ]
+          }
+         ],
+         "knobs": [
+          {
+           "name": "own"
+          }
+         ]
+        },
+        {
+         "value": {
+          "behavior": "x/B",
+          "orbital": "B"
+         },
+         "traits": [
+          {
+           "trait": "U",
+           "knobs": [
+            {
+             "name": "m"
+            }
+           ]
+          }
+         ],
+         "knobs": []
+        }
+       ]
+      },
+      "written": {
+       "orbitals": [
+        {
+         "name": "A",
+         "config": {
+          "own": {
+           "type": "string"
+          }
+         }
+        },
+        {
+         "name": "B"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KNOB_TEXTS_BUILT",
+        "payload": {
+         "texts": [
+          {
+           "key": "ord/A/T/k",
+           "text": "ord A T.k\nSubject: the T",
+           "hash": "396f016c3da9435cb593ef60252df465babf110c3efabe9de0e361708d09d85f"
+          },
+          {
+           "key": "ord/A/$orbital/own",
+           "text": "ord A $orbital.own\nSubject: the A orbital",
+           "hash": "50ab9124e36c6eaaea2aa19c9c6b49580014a656f66346133425ac5260e6cfec"
+          },
+          {
+           "key": "ord/B/U/m",
+           "text": "ord B U.m\nSubject: the U",
+           "hash": "02cc32c82838dc9f2b6fd5f0c3ae4dadcc24b0d73c8803d2865db8e94edd0ba3"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a described orbital the program does not declare is refused",
+   "steps": [
+    {
+     "event": "BUILD_KNOB_TEXTS",
+     "payload": {
+      "name": "bad",
+      "described": {
+       "behavior": "x/bad",
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "x/Ghost",
+          "orbital": "Ghost"
+         },
+         "traits": [],
+         "knobs": []
+        }
+       ]
+      },
+      "written": {
+       "orbitals": [
+        {
+         "name": "Real"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KNOB_TEXTS_REFUSED",
+        "payload": {
+         "error": "bad: orb described an orbital the program does not declare"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "archived Rust parity: the capability text carries only the organism phrases",
+   "steps": [
+    {
+     "event": "BUILD_ENTRY_TEXTS",
+     "payload": {
+      "rows": [
+       {
+        "name": "std-agent-fix-loop",
+        "capabilitiesText": "program repair, fix validation errors"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ENTRY_TEXTS_BUILT",
+        "payload": {
+         "organism": [
+          {
+           "key": "std-agent-fix-loop",
+           "text": "std-agent-fix-loop\nCapabilities (organism): program repair, fix validation errors",
+           "hash": "d5ec37e3f80d357271b454f2624de4ebcc5abb3862221fe30b80796f5d6ca778"
+          }
+         ],
+         "capability": [
+          {
+           "key": "std-agent-fix-loop#capabilities",
+           "text": "Capabilities (organism): program repair, fix validation errors",
+           "hash": "5ec7c473e9bd5e43098e18473fa7ec8c72786c1c9d2e4569169a32ac7237666e"
+          }
+         ],
+         "wanted": [
+          {
+           "key": "std-agent-fix-loop",
+           "text": "std-agent-fix-loop\nCapabilities (organism): program repair, fix validation errors"
+          },
+          {
+           "key": "std-agent-fix-loop#capabilities",
+           "text": "Capabilities (organism): program repair, fix validation errors"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "archived Rust parity: an orbital knob with its full description",
+   "steps": [
+    {
+     "event": "BUILD_KNOB_TEXTS",
+     "payload": {
+      "name": "std-agent-proposal",
+      "described": {
+       "behavior": "x/std-agent-proposal",
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "x/AgentProposalOrbital",
+          "orbital": "AgentProposalOrbital"
+         },
+         "traits": [],
+         "knobs": [
+          {
+           "name": "tools",
+           "label": "What may the agent do?",
+           "description": "The declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with PROPOSE addressed by its local orbital name, which the agent can never propose without.",
+           "synonyms": "allowlist, abilities, permissions",
+           "values": [
+            "AgentToolScope",
+            "AgentToolInput",
+            "AgentToolRead"
+           ]
+          }
+         ],
+         "entity": {
+          "name": "AgentProposalRun",
+          "fields": [
+           {
+            "name": "input"
+           },
+           {
+            "name": "context"
+           },
+           {
+            "name": "request"
+           },
+           {
+            "name": "feedback"
+           },
+           {
+            "name": "summary"
+           },
+           {
+            "name": "items"
+           },
+           {
+            "name": "error"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      "written": {
+       "orbitals": [
+        {
+         "name": "AgentProposalOrbital",
+         "config": {
+          "tools": {
+           "type": "object"
+          }
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KNOB_TEXTS_BUILT",
+        "payload": {
+         "texts": [
+          {
+           "key": "std-agent-proposal/AgentProposalOrbital/$orbital/tools",
+           "text": "std-agent-proposal AgentProposalOrbital $orbital.tools\nWhat may the agent do?\nThe declared inputs it may fire and the entities it may read, as the signed-in person. An importing app restates the list with PROPOSE addressed by its local orbital name, which the agent can never propose without.\nSubject: the Agent Proposal Orbital orbital for AgentProposalRun records — AgentProposalRun fields: input, context, request, feedback, summary, items, error\nvalues: AgentToolScope, AgentToolInput, AgentToolRead\nsynonyms: allowlist, abilities, permissions",
+           "hash": "ee47a4c3a69b530116dd54f2217c3397a865cd191f9d0a9c5af2deb7b8f180e0"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "archived Rust parity: trait names are split into words and an entityless orbital names no records",
+   "steps": [
+    {
+     "event": "BUILD_KNOB_TEXTS",
+     "payload": {
+      "name": "o",
+      "described": {
+       "behavior": "x/o",
+       "orbitals": [
+        {
+         "value": {
+          "behavior": "x/P",
+          "orbital": "P"
+         },
+         "traits": [
+          {
+           "trait": "NoteCreate",
+           "knobs": [
+            {
+             "name": "k"
+            }
+           ]
+          },
+          {
+           "trait": "HTMLParser",
+           "knobs": [
+            {
+             "name": "k"
+            }
+           ]
+          },
+          {
+           "trait": "ABCdEFg",
+           "knobs": [
+            {
+             "name": "k"
+            }
+           ]
+          },
+          {
+           "trait": "already spaced",
+           "knobs": [
+            {
+             "name": "k"
+            }
+           ]
+          },
+          {
+           "trait": "UI",
+           "knobs": [
+            {
+             "name": "k"
+            }
+           ]
+          },
+          {
+           "trait": "Learn3DSimTransport",
+           "knobs": [
+            {
+             "name": "k"
+            }
+           ]
+          }
+         ],
+         "knobs": []
+        }
+       ]
+      },
+      "written": {
+       "orbitals": [
+        {
+         "name": "P"
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "KNOB_TEXTS_BUILT",
+        "payload": {
+         "texts": [
+          {
+           "key": "o/P/NoteCreate/k",
+           "text": "o P NoteCreate.k\nSubject: the Note Create",
+           "hash": "7db7eac47633a4000cc29694641ab20dbef73b5f05276b04488c2d09bf30c7a5"
+          },
+          {
+           "key": "o/P/HTMLParser/k",
+           "text": "o P HTMLParser.k\nSubject: the HTML Parser",
+           "hash": "ead7012db21946b23517b0d84ac106c5a2909e99198571c9d6af751a01cc7c18"
+          },
+          {
+           "key": "o/P/ABCdEFg/k",
+           "text": "o P ABCdEFg.k\nSubject: the AB Cd E Fg",
+           "hash": "9a0690523b23872f1c4e07effeec3220fb411e61749f70dd3bafe2bff32e7462"
+          },
+          {
+           "key": "o/P/already spaced/k",
+           "text": "o P already spaced.k\nSubject: the already spaced",
+           "hash": "b903654296262f5885abf662f448a5f9628561f0574dddb50de505bdce81bbfe"
+          },
+          {
+           "key": "o/P/UI/k",
+           "text": "o P UI.k\nSubject: the UI",
+           "hash": "2a897dc2e51486495ad54124c99828064fa6d30e8aff6aa9f9f5e3199f79affb"
+          },
+          {
+           "key": "o/P/Learn3DSimTransport/k",
+           "text": "o P Learn3DSimTransport.k\nSubject: the Learn3 D Sim Transport",
+           "hash": "69cd56af20f8e487a768402113134c939ceebbe2a05c992023253e0df782d0a3"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

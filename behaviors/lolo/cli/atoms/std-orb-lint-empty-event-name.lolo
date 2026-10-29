@@ -18,6 +18,9 @@ type EmptyEventTrait = { stateMachine : EmptyEventMachine, emits : [EmptyEventEm
 type EmptyEventOrbital = { traits : [EmptyEventTrait] }
 type EmptyEventProgram = { orbitals : [EmptyEventOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEmptyEventNameCodes = { tEmptyEventName : LintCodeDecl }
+
 orbital OrbLintEmptyEventNameOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -46,9 +49,9 @@ orbital OrbLintEmptyEventNameOrbital {
                         (if (= (array/len @sts) 0)
                           []
                           (array/flatten [
-                            (array/flatten (array/map (array/range 0 (array/len (object/get @sm "events" []))) (fn k (if (= (object/get (array/nth (object/get @sm "events" []) @k) "key" "") "") [{ code: "ORB_T_EMPTY_EVENT_NAME", path: (str/concat @where ".events" "[" @k "].key"), message: "Event name is empty", suggestion: "Name the event, or remove it; an unset optional event knob declares no event", severity: "error" }] []))))
-                            (array/flatten (array/map (array/range 0 (array/len (object/get @td "emits" []))) (fn k (if (= (object/get (array/nth (object/get @td "emits" []) @k) "event" "") "") [{ code: "ORB_T_EMPTY_EVENT_NAME", path: (str/concat @tpath ".emits" "[" @k "].event"), message: "Event name is empty", suggestion: "Name the event, or remove it; an unset optional event knob declares no event", severity: "error" }] []))))
-                            (array/flatten (array/map (array/range 0 (array/len (object/get @sm "transitions" []))) (fn k (if (= (object/get (array/nth (object/get @sm "transitions" []) @k) "event" "") "") [{ code: "ORB_T_EMPTY_EVENT_NAME", path: (str/concat @where ".transitions" "[" @k "].event"), message: "Event name is empty", suggestion: "Name the event, or remove it; an unset optional event knob declares no event", severity: "error" }] []))))])))))))))))))))
+                            (array/flatten (array/map (array/range 0 (array/len (object/get @sm "events" []))) (fn k (if (= (object/get (array/nth (object/get @sm "events" []) @k) "key" "") "") [{ code: @config.codes.tEmptyEventName.code, path: (str/concat @where ".events" "[" @k "].key"), message: "Event name is empty", suggestion: "Name the event, or remove it; an unset optional event knob declares no event", severity: "error" }] []))))
+                            (array/flatten (array/map (array/range 0 (array/len (object/get @td "emits" []))) (fn k (if (= (object/get (array/nth (object/get @td "emits" []) @k) "event" "") "") [{ code: @config.codes.tEmptyEventName.code, path: (str/concat @tpath ".emits" "[" @k "].event"), message: "Event name is empty", suggestion: "Name the event, or remove it; an unset optional event knob declares no event", severity: "error" }] []))))
+                            (array/flatten (array/map (array/range 0 (array/len (object/get @sm "transitions" []))) (fn k (if (= (object/get (array/nth (object/get @sm "transitions" []) @k) "event" "") "") [{ code: @config.codes.tEmptyEventName.code, path: (str/concat @where ".transitions" "[" @k "].event"), message: "Event name is empty", suggestion: "Name the event, or remove it; an unset optional event knob declares no event", severity: "error" }] []))))])))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "empty-event-name", scope: @entity.scope, findings: @entity.findings })
@@ -68,6 +71,12 @@ orbital OrbLintEmptyEventNameOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintEmptyEventNameCodes = { tEmptyEventName: { code: "ORB_T_EMPTY_EVENT_NAME", category: "trait", description: "An event name is empty" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintEmptyEventNameCli -> OrbLintEmptyEventNameRun [client] {

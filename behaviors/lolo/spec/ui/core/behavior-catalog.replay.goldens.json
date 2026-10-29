@@ -1274,6 +1274,140 @@
      }
     }
    ]
+  },
+  {
+   "id": "per-topic-the-listing-is-counted-per-package-and-topic-in-first-appearance-order",
+   "config": {
+    "perTopic": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "loading",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "topic": ""
+     },
+     "event": "TOPIC_ROWS",
+     "payload": {
+      "result": [
+       {
+        "behavior": "std/a",
+        "package": "@almadar/std",
+        "description": "d",
+        "topic": "ui/core",
+        "level": "atom",
+        "value": {
+         "behavior": "std/a"
+        },
+        "vectors": {}
+       },
+       {
+        "behavior": "std/b",
+        "package": "@almadar/std",
+        "description": "d",
+        "topic": "ui/core",
+        "level": "atom",
+        "value": {
+         "behavior": "std/b"
+        },
+        "vectors": {}
+       },
+       {
+        "behavior": "std/c",
+        "package": "@almadar/std",
+        "description": "d",
+        "topic": "net",
+        "level": "atom",
+        "value": {
+         "behavior": "std/c"
+        },
+        "vectors": {}
+       },
+       {
+        "behavior": "app/d",
+        "package": "@app",
+        "description": "d",
+        "topic": "ui/core",
+        "level": "atom",
+        "value": {
+         "behavior": "app/d"
+        },
+        "vectors": {}
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "emits": [
+       {
+        "event": "TOPICS_LISTED",
+        "payload": {
+         "result": [
+          {
+           "package": "@almadar/std",
+           "prefix": "std",
+           "topic": "ui/core",
+           "count": 2
+          },
+          {
+           "package": "@almadar/std",
+           "prefix": "std",
+           "topic": "net",
+           "count": 1
+          },
+          {
+           "package": "@app",
+           "prefix": "app",
+           "topic": "ui/core",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "per-topic-control-an-empty-listing-has-no-topics",
+   "config": {
+    "perTopic": true
+   },
+   "steps": [
+    {
+     "trait": "BehaviorCatalog",
+     "from": "loading",
+     "entity": {
+      "id": "c",
+      "paths": [
+       "p1"
+      ],
+      "topic": ""
+     },
+     "event": "TOPIC_ROWS",
+     "payload": {
+      "result": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "emits": [
+       {
+        "event": "TOPICS_LISTED",
+        "payload": {
+         "result": []
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

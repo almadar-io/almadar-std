@@ -23,6 +23,9 @@ type BtHit = { rel : string, s : string, rd : boolean }
 type BtRoot = { x : BtShape?, w : string!, allow : boolean!, tn : string!, oi : number!, only : boolean! }
 type BtWalk = { st : [string], ix : [number], col : Map string number, done : boolean, res : [string] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintBindingTraitsCodes = { bindingTraitOutsideRenderUi : LintCodeDecl , bindingTraitInvalidFormat : LintCodeDecl , bindingTraitMissingName : LintCodeDecl , bindingTraitSelfReference : LintCodeDecl , bindingTraitUnknown : LintCodeDecl , bindingTraitCycle : LintCodeDecl }
+
 orbital OrbLintBindingTraitsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -105,20 +108,20 @@ orbital OrbLintBindingTraitsOrbital {
                   (fn h
                     (let ((s (object/get @h "s")) (p (str/concat (object/get @x "w") (object/get @h "rel"))) (tn (object/get @x "tn")) (known : [string] (array/nth @knownAll (object/get @x "oi"))))
               (if (not (or (object/get @x "allow") (object/get @h "rd")))
-                (if (object/get @x "only") @nof [{ code: "ORB_BINDING_TRAIT_OUTSIDE_RENDER_UI", path: @p, message: (str/concat (quote "@") "trait binding '" @s "' appears outside a render-ui effect; @trait references are render-only composition primitives and may only be used inside a (render-ui ...) pattern tree"), suggestion: "Move the @trait reference into a render-ui children array, or replace it with the intended data/payload binding", severity: "error" }])
+                (if (object/get @x "only") @nof [{ code: @config.codes.bindingTraitOutsideRenderUi.code, path: @p, message: (str/concat (quote "@") "trait binding '" @s "' appears outside a render-ui effect; @trait references are render-only composition primitives and may only be used inside a (render-ui ...) pattern tree"), suggestion: "Move the @trait reference into a render-ui children array, or replace it with the intended data/payload binding", severity: "error" }])
                 (let ((fnds : [OrbFinding] (if (not (validate/pattern @s "^@[\\p{L}_][\\p{L}0-9_]*(\\.[\\p{L}0-9_]+|\\[\\d+\\])*$"))
-                    [{ code: "ORB_BINDING_TRAIT_INVALID_FORMAT", path: @p, message: (str/concat "Invalid " (quote "@") "trait binding format: '" @s "'"), suggestion: (str/concat "Use " (quote "@") "trait.<PascalCaseTraitName> — a .slot suffix is not supported"), severity: "error" }]
+                    [{ code: @config.codes.bindingTraitInvalidFormat.code, path: @p, message: (str/concat "Invalid " (quote "@") "trait binding format: '" @s "'"), suggestion: (str/concat "Use " (quote "@") "trait.<PascalCaseTraitName> — a .slot suffix is not supported"), severity: "error" }]
                     (let ((parts (str/split (str/slice @s 1) ".")))
                       (if (= (array/len @parts) 1)
-                        [{ code: "ORB_BINDING_TRAIT_MISSING_NAME", path: @p, message: (str/concat (quote "@") "trait binding missing trait name"), suggestion: (str/concat "Use " (quote "@") "trait.<TraitName> to reference another trait's current frame"), severity: "error" }]
+                        [{ code: @config.codes.bindingTraitMissingName.code, path: @p, message: (str/concat (quote "@") "trait binding missing trait name"), suggestion: (str/concat "Use " (quote "@") "trait.<TraitName> to reference another trait's current frame"), severity: "error" }]
                         (let ((nm (array/nth @parts 1)))
                           (if (not (validate/pattern @nm "^[A-Z][a-zA-Z0-9]*$"))
-                            [{ code: "ORB_BINDING_TRAIT_INVALID_FORMAT", path: @p, message: (str/concat (quote "@") "trait binding trait name '" @nm "' is not PascalCase"), suggestion: (str/concat "Trait names must be PascalCase (e.g., " (quote "@") "trait.ItemSearch)"), severity: "error" }]
+                            [{ code: @config.codes.bindingTraitInvalidFormat.code, path: @p, message: (str/concat (quote "@") "trait binding trait name '" @nm "' is not PascalCase"), suggestion: (str/concat "Trait names must be PascalCase (e.g., " (quote "@") "trait.ItemSearch)"), severity: "error" }]
                             (if (= @nm @tn)
-                              [{ code: "ORB_BINDING_TRAIT_SELF_REFERENCE", path: @p, message: (str/concat "Trait '" @nm "' references itself via " (quote "@") "trait"), suggestion: "A trait's render-ui cannot embed its own frame; restructure to avoid self-reference", severity: "error" }]
+                              [{ code: @config.codes.bindingTraitSelfReference.code, path: @p, message: (str/concat "Trait '" @nm "' references itself via " (quote "@") "trait"), suggestion: "A trait's render-ui cannot embed its own frame; restructure to avoid self-reference", severity: "error" }]
                               (if (and (> (array/len @known) 0) (not (array/includes @known @nm)))
-                                [{ code: "ORB_BINDING_TRAIT_UNKNOWN", path: @p, message: (str/concat (quote "@") "trait." @nm " references a trait not declared in this orbital"), suggestion: "Declare the trait in the orbital, or check spelling", severity: "error" }]
-                                (if (> (array/len @parts) 2) [{ code: "ORB_BINDING_TRAIT_INVALID_FORMAT", path: @p, message: (str/concat (quote "@") "trait binding has too many segments: '" @s "' (expected " (quote "@") "trait.<Name>)"), suggestion: "", severity: "error" }] @nof))))))))))
+                                [{ code: @config.codes.bindingTraitUnknown.code, path: @p, message: (str/concat (quote "@") "trait." @nm " references a trait not declared in this orbital"), suggestion: "Declare the trait in the orbital, or check spelling", severity: "error" }]
+                                (if (> (array/len @parts) 2) [{ code: @config.codes.bindingTraitInvalidFormat.code, path: @p, message: (str/concat (quote "@") "trait binding has too many segments: '" @s "' (expected " (quote "@") "trait.<Name>)"), suggestion: "", severity: "error" }] @nof))))))))))
                   (if (object/get @x "only") (array/filter @fnds (fn f (= (object/get @f "code") "ORB_BINDING_TRAIT_UNKNOWN"))) @fnds)))))))))))
       (array/flatten
   (array/map (array/range 0 (array/len @orbitals))
@@ -161,7 +164,7 @@ orbital OrbLintBindingTraitsOrbital {
                                         { stack: (array/append @stack @d), idx: (array/append (array/append (array/dropLast @idx 1) (+ @i 1)) 0), vis: (array/append @vis @d), found: @nostr }))))))))))))))
                   (let ((cy : [string] (object/get @w "found")))
                     (if (> (array/len @cy) 0)
-                      [{ code: "ORB_BINDING_TRAIT_CYCLE", path: (str/concat "orbitals[" @oi "].traits[" (array/nth @inl (array/indexOf @names (array/first @cy))) " (" (array/first @cy) ")]"), message: (str/concat (quote "@") "trait reference cycle detected: " (str/join @cy " -> ")), suggestion: (str/concat "Break the cycle by removing one of the " (quote "@") "trait.X references"), severity: "error" }]
+                      [{ code: @config.codes.bindingTraitCycle.code, path: (str/concat "orbitals[" @oi "].traits[" (array/nth @inl (array/indexOf @names (array/first @cy))) " (" (array/first @cy) ")]"), message: (str/concat (quote "@") "trait reference cycle detected: " (str/join @cy " -> ")), suggestion: (str/concat "Break the cycle by removing one of the " (quote "@") "trait.X references"), severity: "error" }]
                       @nof)
                     ))))))))))))))
         (emit LINT_FINISH { })
@@ -185,6 +188,12 @@ orbital OrbLintBindingTraitsOrbital {
       OrbLintInput.LINT_INPUT -> LINT_INPUT
 
     }
+    config {
+      codes : LintBindingTraitsCodes = { bindingTraitOutsideRenderUi: { code: "ORB_BINDING_TRAIT_OUTSIDE_RENDER_UI", category: "binding", description: "An @trait binding appears outside a render-ui effect, where it is the only place trait references are allowed" }, bindingTraitInvalidFormat: { code: "ORB_BINDING_TRAIT_INVALID_FORMAT", category: "binding", description: "A trait binding or trait-typed config default is not a valid trait reference" }, bindingTraitMissingName: { code: "ORB_BINDING_TRAIT_MISSING_NAME", category: "binding", description: "A @trait binding does not name the trait it refers to" }, bindingTraitSelfReference: { code: "ORB_BINDING_TRAIT_SELF_REFERENCE", category: "binding", description: "A trait references itself through a trait binding" }, bindingTraitUnknown: { code: "ORB_BINDING_TRAIT_UNKNOWN", category: "binding", description: "A @trait binding references a trait that is not declared in this orbital" }, bindingTraitCycle: { code: "ORB_BINDING_TRAIT_CYCLE", category: "binding", description: "A cycle exists in @trait references" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintBindingTraitsCli -> OrbLintBindingTraitsRun [client] {

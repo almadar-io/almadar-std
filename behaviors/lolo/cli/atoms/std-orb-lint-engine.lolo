@@ -214,6 +214,9 @@ orbital OrbLintEngineOrbital {
   uses EntityMutation from "std/behaviors/std-orb-lint-entity-mutation"
   uses EventWiring from "std/behaviors/std-orb-lint-event-wiring"
   uses FetchDeliver from "std/behaviors/std-orb-lint-fetch-deliver"
+  uses ExpectationFinal from "std/behaviors/std-orb-lint-expectation-final"
+  uses NotFound from "std/behaviors/std-orb-lint-not-found"
+  uses ControlUnhandled from "std/behaviors/std-orb-lint-control-unhandled"
   uses GroupbyEnumColumnGap from "std/behaviors/std-orb-lint-groupby-enum-column-gap"
   uses HostEffects from "std/behaviors/std-orb-lint-host-effects"
   uses HttpRequest from "std/behaviors/std-orb-lint-http-request"
@@ -221,6 +224,8 @@ orbital OrbLintEngineOrbital {
   uses MergedFields from "std/behaviors/std-orb-lint-merged-fields"
   uses Oauth from "std/behaviors/std-orb-lint-oauth"
   uses OrbitalRefConfig from "std/behaviors/std-orb-lint-orbital-ref-config"
+  uses OrbitalRefClosure from "std/behaviors/std-orb-lint-orbital-ref-closure"
+  uses Invariants from "std/behaviors/std-orb-lint-invariants"
   uses PageContentOwner from "std/behaviors/std-orb-lint-page-content-owner"
   uses PatternProps from "std/behaviors/std-orb-lint-pattern-props"
   uses Placement from "std/behaviors/std-orb-lint-placement"
@@ -282,7 +287,7 @@ orbital OrbLintEngineOrbital {
         (set @entity.child (+ @entity.child 1))
         (emit LINT_CHILD_REQUEST { index: (- @entity.child 1) })
       LINT_SETTLE -> ready when (and (>= (array/len @entity.found) (if (= @entity.child 0) @config.ruleCount (- @config.ruleCount @config.programOnlyCount))) (>= @entity.child (array/len @entity.orbitals)))
-        (emit LINT_COLLECTED { findings: (array/flatten (array/map (array/concat @entity.done @entity.found) (fn r (object/get @r "findings")))), found: (array/concat @entity.done @entity.found) })
+        (emit LINT_COLLECTED { findings: (array/flatten (array/map (array/filter (array/concat @entity.done @entity.found) (fn r (not (array/includes @config.finalRules (object/get @r "rule"))))) (fn r (object/get @r "findings")))), found: (array/filter (array/concat @entity.done @entity.found) (fn r (not (array/includes @config.finalRules (object/get @r "rule"))))), final: (array/flatten (array/map (array/filter (array/concat @entity.done @entity.found) (fn r (array/includes @config.finalRules (object/get @r "rule")))) (fn r (object/get @r "findings")))) })
     }
 
     emits {
@@ -295,7 +300,7 @@ orbital OrbLintEngineOrbital {
       LINT_CHILD_REQUEST -> external { index : number! }
         @description "Ask the lint input to offer every rule the lazy child at this index."
         @tier "internal"
-      LINT_COLLECTED -> external { findings : [OrbFinding]!  found : [RuleFound]! }
+      LINT_COLLECTED -> external { findings : [OrbFinding]!  found : [RuleFound]!  final : [OrbFinding]! }
         @description "Every rule's findings for the file and its lazy children, flattened, and the findings by rule (one entry per rule per program): the structured answer of a run, heard by the hook and by a program that composes the engine (std-orb-validate)."
         @tier "internal"
       LINT_SETTLE { }
@@ -304,10 +309,13 @@ orbital OrbLintEngineOrbital {
     }
 
     config {
-      ruleCount : number = 138
+      ruleCount : number = 143
         @label "Rule count"
         @description "How many composed rule traits answer LINT_FOUND before the run settles."
-      programOnlyCount : number = 4
+      finalRules : [string] = ["expectation-final", "not-found", "control-unhandled"]
+        @label "Final-only rules"
+        @description "The rules whose findings belong to `orb validate --final` only: they run in every pass, and their findings leave LINT_COLLECTED.findings and .found for LINT_COLLECTED.final."
+      programOnlyCount : number = 6
         @label "Program-pass-only rules"
         @description "How many of those rules read the call sites input and answer once, for the program pass only: a lazy child's pass waits for the others."
     }
@@ -441,6 +449,9 @@ orbital OrbLintEngineOrbital {
       OrbLintEntityMutation.LINT_FOUND -> LINT_FOUND
       OrbLintEventWiring.LINT_FOUND -> LINT_FOUND
       OrbLintFetchDeliver.LINT_FOUND -> LINT_FOUND
+      OrbLintExpectationFinal.LINT_FOUND -> LINT_FOUND
+      OrbLintNotFound.LINT_FOUND -> LINT_FOUND
+      OrbLintControlUnhandled.LINT_FOUND -> LINT_FOUND
       OrbLintGroupbyEnumColumnGap.LINT_FOUND -> LINT_FOUND
       OrbLintHostEffects.LINT_FOUND -> LINT_FOUND
       OrbLintHttpRequest.LINT_FOUND -> LINT_FOUND
@@ -448,6 +459,8 @@ orbital OrbLintEngineOrbital {
       OrbLintMergedFields.LINT_FOUND -> LINT_FOUND
       OrbLintOauth.LINT_FOUND -> LINT_FOUND
       OrbLintOrbitalRefConfig.LINT_FOUND -> LINT_FOUND
+      OrbLintOrbitalRefClosure.LINT_FOUND -> LINT_FOUND
+      OrbLintInvariants.LINT_FOUND -> LINT_FOUND
       OrbLintPageContentOwner.LINT_FOUND -> LINT_FOUND
       OrbLintPatternProps.LINT_FOUND -> LINT_FOUND
       OrbLintPlacement.LINT_FOUND -> LINT_FOUND
@@ -465,6 +478,12 @@ orbital OrbLintEngineOrbital {
     }
   }
 
+  trait OrbLintExpectationFinal = ExpectationFinal.traits.OrbLintExpectationFinal {
+  }
+  trait OrbLintNotFound = NotFound.traits.OrbLintNotFound {
+  }
+  trait OrbLintControlUnhandled = ControlUnhandled.traits.OrbLintControlUnhandled {
+  }
   trait Versions = Input.traits.Versions {
   }
   trait Packs = Input.traits.Packs {
@@ -875,6 +894,10 @@ orbital OrbLintEngineOrbital {
   }
   trait OrbLintOrbitalRefConfig = OrbitalRefConfig.traits.OrbLintOrbitalRefConfig {
   }
+  trait OrbLintOrbitalRefClosure = OrbitalRefClosure.traits.OrbLintOrbitalRefClosure {
+  }
+  trait OrbLintInvariants = Invariants.traits.OrbLintInvariants {
+  }
   trait OrbLintPageContentOwner = PageContentOwner.traits.OrbLintPageContentOwner {
   }
   trait OrbLintPatternProps = PatternProps.traits.OrbLintPatternProps {
@@ -989,5 +1012,5 @@ orbital OrbLintEngineOrbital {
     }
   }
 
-  page boot as OrbLintEngineOrbitalStart -> OrbLintEngine, OrbLintInput, Packs, Versions, CallSiteInput, OrbProducedEvents, OrbLintTraitRefConfig, OrbLintOrbitalRefExtend, OrbLintIdLedger, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintRetiredEffectForms, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintTickRequiresRuntime, OrbLintLoopInvariantParse, OrbLintReservedComponentName, OrbLintAssetInlineUrl, Versions, Packs, OrbLintClientTickLocality, OrbLintEntityNameShadowsTraitUnion, OrbLintListenWildcardUnkeyed, OrbLintFetchByIdPayload, OrbLintAsyncResultDeafTarget, OrbLintOrbitalConfigDeadKnob, OrbLintListenRedundantEmbedRoute, OrbLintEmbedBridge, OrbFiredEvents, OrbEmbedChain, OrbProducedProgram, OrbEmitConfig, SqlSelectGuard, OrbEmitConfigRedis, OrbLintKeyedCall, OrbLintPageUnreachable, OrbLintNavigate, OrbLintEmit, OrbLintProgramEval, OrbLintInboundAnswerForeign, OrbLintExternalEmitPayload, OrbLintListenRouteStarvesRequiredField, OrbLintCircularDependencies, OrbLintListenSourceUnresolved, OrbLintListenSourceNeverProduces, OrbLintTypeParamSweep, OrbLintEntityAccess, OrbLintUserIdentity, OrbLintFilterFieldNeverWritten, OrbLintExpectationFieldUndeclared, OrbLintExpectationUnsatisfied, OrbLintExpectationProviderMismatch, OrbLintExpectedFieldNotProvided, OrbLintExpectationConfigKnob, OrbLintExpectationEventUnfired, OrbLintExpectationPersistentUnwritten, OrbLintIconFormat, OrbLintThemeUndeclared, OrbLintItemActionEvent, OrbLintFieldPath, OrbLintRenderUiPattern, OrbLintHttpSite, OrbLintKeyedCallKeys, OrbLintPostgres, OrbLintRedis, OrbLintCrossEmitter, OrbLintCrossRegistry, OrbLintSigilContext, OrbLintTimeUnit, OrbLintUserFieldExists, OrbLintConfigRoleLists, OrbEffectLeaves, OrbLintQueryIndex, OrbLintDerivedFieldWrite, OrbLintBindingFields, OrbLintBindingRoots, OrbLintBindingSetters, OrbLintBindingTraits, OrbLintBrowserEffects, OrbLintCallService, OrbLintCircuitClientBound, OrbLintCircuitEmits, OrbLintCircuitGraph, OrbLintCircuitItemActions, OrbLintComposedWiring, OrbLintConfigDanglingRef, OrbLintConfigKnob, OrbLintDispatchContract, OrbLintEffectForms, OrbLintEmbedConfigForward, OrbLintEmitDeclaration, OrbLintEntityMutation, OrbLintEventWiring, OrbLintFetchDeliver, OrbLintGroupbyEnumColumnGap, OrbLintHostEffects, OrbLintHttpRequest, OrbLintIconExists, OrbLintMergedFields, OrbLintOauth, OrbLintOrbitalRefConfig, OrbLintPageContentOwner, OrbLintPatternProps, OrbLintPlacement, OrbLintRuiBinding, OrbLintRuiEffects, OrbLintServiceDef, OrbLintSetColumn, OrbLintSexprBinding, OrbLintSlotTick, OrbLintThemeRef, OrbLintThemeValues, OrbLintTraitEmbeds, OrbLintTraitMounts, OrbLintTraitRefs, OrbEmitConfigBrowserEffects, OrbEmitConfigCallService, OrbEmitConfigHostEffects, OrbEmitConfigHttpRequest, OrbEmitConfigOauth, HostCalls, ServiceRegistry, OrbValueLeaves
+  page boot as OrbLintEngineOrbitalStart -> OrbLintEngine, OrbLintInput, Packs, Versions, CallSiteInput, OrbProducedEvents, OrbLintTraitRefConfig, OrbLintOrbitalRefClosure, OrbLintInvariants, OrbLintOrbitalRefExtend, OrbLintIdLedger, OrbLintCollectionPolicy, OrbLintCrossDuplicateEntity, OrbLintEmitConfigRef, OrbLintEntityBrowserStorage, OrbLintEntityDuplicateField, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityLocaleInstances, OrbLintEntityMockMember, OrbLintEntityPersistence, OrbLintEntitySemanticDefault, OrbLintEntityShape, OrbLintHttpEgressEntry, OrbLintGenericTypes, OrbLintIdentityUnique, OrbLintInbound, OrbLintInitCoverage, OrbLintEventIdUniqueness, OrbLintListenTrigger, OrbLintLiteralDefault, OrbLintOrbitalDuplicateName, OrbLintPageEmptyTraits, OrbLintPageModifiers, OrbLintIdRefs, OrbLintPagePath, OrbLintPagePathUniqueness, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintSignInRoute, OrbLintStoreBinding, OrbLintTraitIdUniqueness, OrbLintUntypedArray, OrbLintSchemaHeader, OrbLintDuplicateTransition, OrbLintStateShape, OrbLintEmptyEventName, OrbLintRetiredEffectForms, OrbLintSlot, OrbLintTransitionRefs, OrbLintStateUnreachable, OrbLintMissingOrbitalName, OrbLintDuplicateUseAlias, OrbLintThemePinContradictsApp, OrbLintTickRequiresRuntime, OrbLintLoopInvariantParse, OrbLintReservedComponentName, OrbLintAssetInlineUrl, Versions, Packs, OrbLintClientTickLocality, OrbLintEntityNameShadowsTraitUnion, OrbLintListenWildcardUnkeyed, OrbLintFetchByIdPayload, OrbLintAsyncResultDeafTarget, OrbLintOrbitalConfigDeadKnob, OrbLintListenRedundantEmbedRoute, OrbLintEmbedBridge, OrbFiredEvents, OrbEmbedChain, OrbProducedProgram, OrbEmitConfig, SqlSelectGuard, OrbEmitConfigRedis, OrbLintKeyedCall, OrbLintPageUnreachable, OrbLintNavigate, OrbLintEmit, OrbLintProgramEval, OrbLintInboundAnswerForeign, OrbLintExternalEmitPayload, OrbLintListenRouteStarvesRequiredField, OrbLintCircularDependencies, OrbLintListenSourceUnresolved, OrbLintListenSourceNeverProduces, OrbLintTypeParamSweep, OrbLintEntityAccess, OrbLintUserIdentity, OrbLintFilterFieldNeverWritten, OrbLintExpectationFieldUndeclared, OrbLintExpectationUnsatisfied, OrbLintExpectationProviderMismatch, OrbLintExpectedFieldNotProvided, OrbLintExpectationConfigKnob, OrbLintExpectationEventUnfired, OrbLintExpectationPersistentUnwritten, OrbLintIconFormat, OrbLintThemeUndeclared, OrbLintItemActionEvent, OrbLintFieldPath, OrbLintRenderUiPattern, OrbLintHttpSite, OrbLintKeyedCallKeys, OrbLintPostgres, OrbLintRedis, OrbLintCrossEmitter, OrbLintCrossRegistry, OrbLintSigilContext, OrbLintTimeUnit, OrbLintUserFieldExists, OrbLintConfigRoleLists, OrbEffectLeaves, OrbLintQueryIndex, OrbLintDerivedFieldWrite, OrbLintBindingFields, OrbLintBindingRoots, OrbLintBindingSetters, OrbLintBindingTraits, OrbLintBrowserEffects, OrbLintCallService, OrbLintCircuitClientBound, OrbLintCircuitEmits, OrbLintCircuitGraph, OrbLintCircuitItemActions, OrbLintComposedWiring, OrbLintConfigDanglingRef, OrbLintConfigKnob, OrbLintDispatchContract, OrbLintEffectForms, OrbLintEmbedConfigForward, OrbLintEmitDeclaration, OrbLintEntityMutation, OrbLintEventWiring, OrbLintFetchDeliver, OrbLintGroupbyEnumColumnGap, OrbLintHostEffects, OrbLintHttpRequest, OrbLintIconExists, OrbLintMergedFields, OrbLintOauth, OrbLintOrbitalRefConfig, OrbLintPageContentOwner, OrbLintPatternProps, OrbLintPlacement, OrbLintRuiBinding, OrbLintRuiEffects, OrbLintServiceDef, OrbLintSetColumn, OrbLintSexprBinding, OrbLintSlotTick, OrbLintThemeRef, OrbLintThemeValues, OrbLintTraitEmbeds, OrbLintTraitMounts, OrbLintTraitRefs, OrbEmitConfigBrowserEffects, OrbEmitConfigCallService, OrbEmitConfigHostEffects, OrbEmitConfigHttpRequest, OrbEmitConfigOauth, HostCalls, ServiceRegistry, OrbValueLeaves, OrbLintExpectationFinal, OrbLintNotFound, OrbLintControlUnhandled
 }

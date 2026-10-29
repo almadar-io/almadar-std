@@ -40,6 +40,9 @@ type TrcProduced = { si : number!, names : [string]! }
 type TrcFiredProgram = { orbitals : [TrcFiredOrbital]! }
 type TrcFiredOrbital = { traits : [TrcTrait]! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintTraitRefConfigCodes = { tEventRenameUnknownKey : LintCodeDecl , tConfigUnknownCallSiteKey : LintCodeDecl , tConfigMissingRequiredKey : LintCodeDecl }
+
 orbital OrbLintTraitRefConfigOrbital {
   uses CsInput from "std/behaviors/std-orb-lint-call-site-input"
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -99,12 +102,12 @@ orbital OrbLintTraitRefConfigOrbital {
                   (let ((declStr (if (= (array/len @declKeys) 0) "(none)" (str/join @declKeys ", "))))
                     (array/concat
                       (array/map (array/sort (array/filter (object/keys @evs) (fn f (and (!= @f "") (not (array/includes @known @f)))))) (fn key
-                        (if (object/get @s "local" false) { code: "ORB_T_EVENT_RENAME_UNKNOWN_KEY", path: @path, message: (str/concat "events rename key '" @key "' does not name any event declared by trait '" @nm "';                          the rename silently no-ops."), suggestion: "Use an event key the referenced trait declares (an emit, a transition                      trigger, or a stateMachine.events entry).", severity: "error" } { code: "ORB_T_EVENT_RENAME_UNKNOWN_KEY", path: (str/concat @path ".events(" @key ")"), message: (str/concat "events rename source key '" @key "' does not name any event declared or produced by referenced trait '" @nm "'. The rename silently no-ops. Known events: " (if (= (array/len @known) 0) "(none)" (str/join @known ", ")) "."), suggestion: "", severity: "error", validValues: @known })))
+                        (if (object/get @s "local" false) { code: @config.codes.tEventRenameUnknownKey.code, path: @path, message: (str/concat "events rename key '" @key "' does not name any event declared by trait '" @nm "';                          the rename silently no-ops."), suggestion: "Use an event key the referenced trait declares (an emit, a transition                      trigger, or a stateMachine.events entry).", severity: "error" } { code: @config.codes.tEventRenameUnknownKey.code, path: (str/concat @path ".events(" @key ")"), message: (str/concat "events rename source key '" @key "' does not name any event declared or produced by referenced trait '" @nm "'. The rename silently no-ops. Known events: " (if (= (array/len @known) 0) "(none)" (str/join @known ", ")) "."), suggestion: "", severity: "error", validValues: @known })))
                       (array/concat
                         (array/map (array/sort (array/filter (object/keys @cfg) (fn k (not (array/includes @declKeys @k))))) (fn key
-                          { code: "ORB_T_CONFIG_UNKNOWN_CALL_SITE_KEY", path: (str/concat @path ".config(" @key ")"), message: (str/concat "Call-site config key '" @key "' does not match any declared config knob on referenced trait '" @nm "'. It silently no-ops. Declared knobs: " @declStr "."), suggestion: "", severity: "error", validValues: @declKeys }))
+                          { code: @config.codes.tConfigUnknownCallSiteKey.code, path: (str/concat @path ".config(" @key ")"), message: (str/concat "Call-site config key '" @key "' does not match any declared config knob on referenced trait '" @nm "'. It silently no-ops. Declared knobs: " @declStr "."), suggestion: "", severity: "error", validValues: @declKeys }))
                         (array/map (array/sort (array/filter (object/keys @declared) (fn k (and (= (object/get (object/get @declared @k) "required" false) true) (not (array/includes (object/keys @cfg) @k)))))) (fn key
-                          { code: "ORB_T_CONFIG_MISSING_REQUIRED_KEY", path: @path, message: (str/concat "Referenced trait '" @nm "' declares config knob '" @key "' as required (`!`), but this call site's config block does not supply it. Declared knobs: " @declStr "."), suggestion: (str/concat "Supply `" @key "` in this trait reference's config block (a literal, an `" (quote "@") "config." @key "` forward, or another binding)."), severity: "error" })))))))))))))
+                          { code: @config.codes.tConfigMissingRequiredKey.code, path: @path, message: (str/concat "Referenced trait '" @nm "' declares config knob '" @key "' as required (`!`), but this call site's config block does not supply it. Declared knobs: " @declStr "."), suggestion: (str/concat "Supply `" @key "` in this trait reference's config block (a literal, an `" (quote "@") "config." @key "` forward, or another binding)."), severity: "error" })))))))))))))
         (set @entity.propsReady false)
         (emit LINT_FOUND { rule: "trait-ref-config", scope: "", findings: @entity.findings })
     }
@@ -141,6 +144,12 @@ orbital OrbLintTraitRefConfigOrbital {
       OrbLintInput.LINT_INPUT -> LINT_PROPS_DONE
       OrbProducedEvents.PRODUCED_EVENTS -> FIRED_HEARD
     }
+    config {
+      codes : LintTraitRefConfigCodes = { tEventRenameUnknownKey: { code: "ORB_T_EVENT_RENAME_UNKNOWN_KEY", category: "trait", description: "An events rename key names no event declared by the referenced trait" }, tConfigUnknownCallSiteKey: { code: "ORB_T_CONFIG_UNKNOWN_CALL_SITE_KEY", category: "trait", description: "A call-site config key matches no config knob declared on the referenced trait" }, tConfigMissingRequiredKey: { code: "ORB_T_CONFIG_MISSING_REQUIRED_KEY", category: "trait", description: "A trait reference does not supply a config knob that the referenced trait declares as required" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintTraitRefConfigCli -> OrbLintTraitRefConfigRun [client] {

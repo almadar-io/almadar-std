@@ -8,10 +8,10 @@ const OS_PURE = ['os/path-base', 'os/path-dir', 'os/path-ext', 'os/path-is-absol
 const OS_EFFECTS = [
   'os/ac-power', 'os/access', 'os/append-file', 'os/battery-status', 'os/brightness-get', 'os/brightness-set', 'os/chdir', 'os/chmod', 'os/chown', 'os/clock-monotonic', 'os/close', 'os/copy',
   'os/cpu-usage', 'os/current-exe', 'os/cwd', 'os/default-gateway', 'os/disk-io', 'os/disk-usage', 'os/dns-resolve', 'os/environ', 'os/exists', 'os/fsync', 'os/getenv', 'os/gid', 'os/glob', 'os/group-of',
-  'os/hibernate', 'os/hostname', 'os/isatty', 'os/kill', 'os/link', 'os/list-dir', 'os/load-avg', 'os/lstat', 'os/memory-info', 'os/mkdir', 'os/mktemp', 'os/mounts', 'os/network-connected',
+  'os/hibernate', 'os/hostname', 'os/irq-ack', 'os/irq-wait', 'os/isatty', 'os/kill', 'os/link', 'os/list-dir', 'os/load-avg', 'os/lstat', 'os/memory-info', 'os/mkdir', 'os/mktemp', 'os/mmio-read', 'os/mmio-write', 'os/mounts', 'os/network-connected',
   'os/network-interfaces', 'os/network-stats', 'os/notify', 'os/open', 'os/pid', 'os/ppid', 'os/read', 'os/read-file', 'os/readlink', 'os/realpath', 'os/recv', 'os/recvfrom', 'os/remove',
   'os/rename', 'os/rmdir', 'os/seek', 'os/send', 'os/sendto', 'os/setenv', 'os/shutdown', 'os/spawn', 'os/speak', 'os/stat', 'os/stderr-write', 'os/stdin-read', 'os/stdout-write',
-  'os/suspend', 'os/symlink', 'os/tcp-connect', 'os/tcp-listen', 'os/thermal-zones', 'os/truncate', 'os/tty-size', 'os/udp-bind', 'os/uid', 'os/uname', 'os/unsetenv', 'os/uptime',
+  'os/suspend', 'os/symlink', 'os/tcp-connect', 'os/tcp-listen', 'os/tls-upgrade', 'os/thermal-zones', 'os/truncate', 'os/tty-size', 'os/udp-bind', 'os/uid', 'os/uname', 'os/unsetenv', 'os/uptime',
   'os/username', 'os/utimes', 'os/volume-get', 'os/volume-mute', 'os/volume-set', 'os/wait', 'os/watch-cron', 'os/watch-env', 'os/watch-files', 'os/watch-port',
   'os/watch-process', 'os/watch-signal', 'os/write', 'os/write-file',
 ];
@@ -28,9 +28,9 @@ describe('runsOn', () => {
 
   it('the server set is the data-owning effects, the OS watchers, and the effects that read installed packages through orb', () => {
     expect(getOperatorsRunningOn('server')).toEqual([
-      'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http',
+      'access-check', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/packages', 'behavior/resolve', 'behavior/source', 'behavior/texts', 'call-service', 'cancel-call', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'http',
       'oauth-authorize', 'oauth-connection-forget', 'oauth-connection-status', ...OS_EFFECTS,
-      'persist', 'persist/read-named', 'postgres', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/print', 'program/read', 'program/self', 'program/step', 'program/validate', 'random-bytes', 'redis',
+      'persist', 'persist/read-named', 'postgres', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/live', 'program/print', 'program/read', 'program/resolve-rows', 'program/self', 'program/step', 'program/tick', 'program/validate', 'random-bytes', 'redis',
     ].sort());
   });
 
@@ -41,15 +41,35 @@ describe('runsOn', () => {
     expect(validate.runsOn).toBe('server');
     expect(validate.hasSideEffects).toBe(true);
     expect(validate.params?.[0]).toEqual(evaluate.params?.[0]);
+    const diagnostic = { kind: 'object', fields: { code: 'string', path: 'string', message: 'string' }, open: true };
+    const nullable = (of: unknown) => ({ kind: 'union', of: [of, { kind: 'literal', value: null }] });
     expect(validate.returnType).toEqual({
-      kind: 'object',
-      fields: {
-        valid: 'boolean',
-        errors: { kind: 'array', of: { kind: 'object', fields: { code: 'string', message: 'string' }, open: true } },
-        warnings: { kind: 'array', of: { kind: 'object', fields: { code: 'string', message: 'string' }, open: true } },
-      },
+      kind: 'union',
+      of: [
+        {
+          kind: 'object',
+          fields: {
+            success: 'boolean',
+            valid: 'boolean',
+            errors: nullable({ kind: 'array', of: diagnostic }),
+            warnings: nullable({ kind: 'array', of: diagnostic }),
+            stats: nullable({ kind: 'object', fields: { orbitals: 'number', entities: 'number', traits: 'number', pages: 'number' }, open: true }),
+          },
+        },
+        {
+          kind: 'object',
+          fields: {
+            valid: 'boolean',
+            errors: { kind: 'array', of: { kind: 'object', fields: { code: 'string', message: 'string' }, open: true } },
+            warnings: { kind: 'array', of: { kind: 'object', fields: { code: 'string', message: 'string' }, open: true } },
+          },
+        },
+      ],
     });
-    expect(evaluate.returnType, 'control: eval returns the written program').toBe('EvaluatedProgram');
+    expect(evaluate.returnType, 'control: eval returns the written program or its report').toEqual({
+      kind: 'union',
+      of: ['EvaluatedProgram', { kind: 'object', fields: { files: 'number', lines: { kind: 'array', of: 'string' }, nextSteps: { kind: 'array', of: 'string' }, warnings: { kind: 'array', of: 'string' } } }],
+    });
   });
 
   it('the os family is exactly the contract: effects run on the server, path math is pure, os/debounce is gone', () => {
@@ -79,7 +99,7 @@ describe('runsOn', () => {
 
   it('bytes/ is a pure closed family and os/ reads return bytes', () => {
     const names = Object.keys(STD_OPERATORS).filter((k) => k.startsWith('bytes/')).sort();
-    expect(names).toEqual(['bytes/at', 'bytes/concat', 'bytes/equals', 'bytes/from-base64', 'bytes/from-string', 'bytes/index-of', 'bytes/length', 'bytes/read-uint', 'bytes/slice', 'bytes/to-base64', 'bytes/to-string', 'bytes/write-uint']);
+    expect(names).toEqual(['bytes/at', 'bytes/concat', 'bytes/equals', 'bytes/from-base64', 'bytes/from-string', 'bytes/index-of', 'bytes/length', 'bytes/read-uint', 'bytes/slice', 'bytes/to-base64', 'bytes/to-string', 'bytes/valid-utf8', 'bytes/write-uint']);
     for (const name of names) {
       expect(STD_OPERATORS[name].hasSideEffects, name).toBe(false);
       expect(STD_OPERATORS[name].runsOn, name).toBeUndefined();
@@ -105,8 +125,9 @@ describe('runsOn', () => {
     expect(typeOf('os/sendto', 'port')).toEqual({ kind: 'union', of: ['number', { kind: 'object', fields: { anchor: { kind: 'object', fields: { env: 'string' } } } }] });
   });
 
-  it('the client set is rendering, navigation, the server send and the browser device APIs', () => {
+  it('the client set is rendering, navigation, audio, sign-in, the server send and the browser device APIs', () => {
     expect(getOperatorsRunningOn('client')).toEqual([
+      'audio/change-music', 'audio/play-sound', 'audio/stop-music', 'audio/stop-sound', 'auth/sign-in', 'auth/sign-out',
       'browser/beacon', 'browser/clipboard-read', 'browser/clipboard-write', 'browser/embed', 'browser/geolocation-current', 'browser/open-file-picker', 'browser/page-facts', 'browser/prompt', 'browser/push-subscribe',
       'browser/tab-act', 'browser/tab-apply', 'browser/tab-apply-many', 'browser/tab-capture', 'browser/tab-close', 'browser/tab-list', 'browser/tab-navigate', 'browser/tab-open', 'browser/tab-query', 'browser/tab-unwatch', 'browser/tab-watch',
       'navigate', 'navigate-back', 'render-ui', 'send-server',

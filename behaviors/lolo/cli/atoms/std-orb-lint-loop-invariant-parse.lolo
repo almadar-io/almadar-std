@@ -16,6 +16,9 @@ type LoopTrait = { name : string, stateMachine : LoopMachine }
 type LoopOrbital = { name : string, traits : [LoopTrait] }
 type LoopInvariantProgram = { orbitals : [LoopOrbital]! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintLoopInvariantParseCodes = { lintNodeUnchecked : LintCodeDecl , wLoopInvariantParse : LintCodeDecl }
+
 orbital OrbLintLoopInvariantParseOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -70,12 +73,12 @@ orbital OrbLintLoopInvariantParseOrbital {
                                       (if (and (validate/string @n) (str/startsWith @n (quote "@")))
                                         [{ kind: "ref", name: (array/first (str/split (str/slice @n 1 (str/len @n)) ".")), op: "", refs: (array/filter [""] (fn q false)), binds: (array/filter [""] (fn q false)) }]
                                         [])))
-                                  LoopExpr))) (if (= @fres null) (let ((up (object/get @x "w"))) [{ code: "LINT_NODE_UNCHECKED", path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a LoopExpr; this rule could not check it"), suggestion: "", severity: "error" }]) (array/map
+                                  LoopExpr))) (if (= @fres null) (let ((up (object/get @x "w"))) [{ code: @config.codes.lintNodeUnchecked.code, path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a LoopExpr; this rule could not check it"), suggestion: "", severity: "error" }]) (array/map
                               (array/filter
                                 @fres
                                 (fn f (= (object/get @f "kind") "hit")))
                               (fn c
-                                { code: "ORB_W_LOOP_INVARIANT_PARSE", path: (object/get @x "w"), message: (str/concat (object/get @c "op") " re-parses the same value for every element; bind it once with let outside the lambda"), suggestion: "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.", severity: "warning" })))))))))))))))))))))))
+                                { code: @config.codes.wLoopInvariantParse.code, path: (object/get @x "w"), message: (str/concat (object/get @c "op") " re-parses the same value for every element; bind it once with let outside the lambda"), suggestion: "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.", severity: "warning" })))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "loop-invariant-parse", scope: @entity.scope, findings: @entity.findings })
@@ -95,6 +98,12 @@ orbital OrbLintLoopInvariantParseOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintLoopInvariantParseCodes = { lintNodeUnchecked: { code: "LINT_NODE_UNCHECKED", category: "lint", description: "A lint rule met a schema node of an unexpected shape and could not check it" }, wLoopInvariantParse: { code: "ORB_W_LOOP_INVARIANT_PARSE", category: "lint", description: "A parse inside a lambda re-parses the same value for every element and should be bound once outside" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintLoopInvariantParseCli -> OrbLintLoopInvariantParseRun [client] {

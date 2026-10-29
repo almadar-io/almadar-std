@@ -1,0 +1,233 @@
+{
+  "atom": "cli/atoms/std-orb-prove.lolo",
+  "trait": "OrbProve",
+  "cases": [
+    {
+      "id": "a relative file is joined to the working directory and proved",
+      "steps": [
+        {
+          "trait": "OrbProve",
+          "event": "PROVE_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"shop.orb\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        }
+      ]
+    },
+    {
+      "id": "an absolute file is proved as given",
+      "steps": [
+        {
+          "trait": "OrbProve",
+          "event": "PROVE_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"/a/shop.orb\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        }
+      ]
+    },
+    {
+      "id": "the findings print as pretty JSON (status 200)",
+      "steps": [
+        {
+          "trait": "OrbProve",
+          "event": "PROVE_DONE",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "verdict": "violated",
+                  "reason": "the evaluator confirmed a counterexample",
+                  "counterexample": {
+                    "payload": {
+                      "total": -1
+                    }
+                  },
+                  "site": "Checkout: open --ADD--> open, effect[0] (create)",
+                  "proposition": {
+                    "kind": "row",
+                    "entity": "Order",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "PROVE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"findings\": [\n    {\n      \"verdict\": \"violated\",\n      \"reason\": \"the evaluator confirmed a counterexample\",\n      \"counterexample\": {\n        \"payload\": {\n          \"total\": -1\n        }\n      },\n      \"site\": \"Checkout: open --ADD--> open, effect[0] (create)\",\n      \"proposition\": {\n        \"kind\": \"row\",\n        \"entity\": \"Order\",\n        \"expr\": [\n          \">=\",\n          \"@entity.total\",\n          0\n        ]\n      }\n    }\n  ]\n}",
+                  "stderr": ""
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a clean file prints an empty list",
+      "steps": [
+        {
+          "trait": "OrbProve",
+          "event": "PROVE_DONE",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "PROVE_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"findings\": []\n}",
+                  "stderr": ""
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a refused ask prints its reason (status 500)",
+      "steps": [
+        {
+          "trait": "OrbProve",
+          "event": "PROVE_REFUSED",
+          "from": "proving",
+          "payload": {
+            "error": "program/prove: Failed to read /x"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "PROVE_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: program/prove: Failed to read /x"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "no file is the usage",
+      "steps": [
+        {
+          "trait": "OrbProve",
+          "event": "PROVE_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "PROVE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb prove <FILE>"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "two files are the usage",
+      "steps": [
+        {
+          "trait": "OrbProve",
+          "event": "PROVE_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"a.orb\", \"b.orb\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "PROVE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb prove <FILE>"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "an unreadable command body is the usage",
+      "steps": [
+        {
+          "trait": "OrbProve",
+          "event": "PROVE_CALLED",
+          "from": "ready",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "PROVE_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "",
+                  "stderr": "usage: orb prove <FILE>"
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    }
+  ]
+}

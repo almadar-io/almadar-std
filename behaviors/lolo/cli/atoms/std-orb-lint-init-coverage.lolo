@@ -20,6 +20,9 @@ type InitPage = { traits : [InitPageTrait] }
 type InitOrbital = { name : string, pages : [InitPage], traits : [InitTrait] }
 type InitProgram = { orbitals : [InitOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintInitCoverageCodes = { lintNodeUnchecked : LintCodeDecl , circuitInitUncoveredState : LintCodeDecl }
+
 orbital OrbLintInitCoverageOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -51,7 +54,7 @@ orbital OrbLintInitCoverageOrbital {
                                     (gr (if (= @g0 null) null (tree/fold @g0 (fn (n k) (if (validate/array @n) (let ((len (array/len @k)) (kk (array/map @k (fn r (if (= @r null) { f: true, t: false, lit: true, v: "null" } @r))))) (let ((op (if (and (> @len 0) (validate/string (array/nth @n 0))) (array/nth @n 0) null)) (args (array/drop @kk 1))) (if (= @len 0) { f: true, t: false, lit: false, v: "" } (if (= @op null) { f: false, t: true, lit: false, v: "" } (if (= @op "and") { f: (array/some @args (fn x (object/get @x "f"))), t: (and (> (array/len @args) 0) (array/every @args (fn x (object/get @x "t")))), lit: false, v: "" } (if (= @op "or") { f: (and (> (array/len @args) 0) (array/every @args (fn x (object/get @x "f")))), t: (array/some @args (fn x (object/get @x "t"))), lit: false, v: "" } (if (= @op "not") { f: (and (= @len 2) (object/get (array/nth @kk 1) "t")), t: (and (= @len 2) (object/get (array/nth @kk 1) "f")), lit: false, v: "" } (if (array/includes ["=", "==", "!="] @op) (if (and (= @len 3) (object/get (array/nth @kk 1) "lit") (object/get (array/nth @kk 2) "lit")) (let ((eq (= (object/get (array/nth @kk 1) "v") (object/get (array/nth @kk 2) "v")))) { f: (= @eq (= @op "!=")), t: (= @eq (!= @op "!=")), lit: false, v: "" }) { f: false, t: false, lit: false, v: "" }) { f: false, t: false, lit: false, v: "" })))))))) (if (validate/object @n) { f: (= (array/len (object/keys @n)) 0), t: (> (array/len (object/keys @n)) 0), lit: false, v: "" } (if (validate/string @n) { f: (= @n ""), t: (and (!= @n "") (not (str/startsWith (json/stringify @n) "\"@"))), lit: (not (str/startsWith (json/stringify @n) "\"@")), v: (json/stringify @n) } (if (validate/number @n) { f: (= @n 0), t: (!= @n 0), lit: true, v: (json/stringify @n) } { f: (not @n), t: @n, lit: true, v: (json/stringify @n) }))))) "InitGuard"))))
                                 { froms: (if (validate/array @raw) @raw [@raw]), event: (object/get @a "event" ""), to: (object/get @a "to" ""), unk: (and (!= @g0 null) (= @gr null)), dead: (if (= @gr null) false (object/get @gr "f")) }))))
                             (initialRow (array/find (object/get @sm "states" []) (fn s (= (object/get @s "isInitial" false) true)))))
-                        (array/concat (array/flatten (array/map (array/range 0 (array/len @arms)) (fn ai (if (object/get (array/nth @arms @ai) "unk") (let ((up (str/concat "orbitals[" @oi " (" (object/get @o "name") ")].traits[" @ti " (" (object/get @t "name") ")].stateMachine.transitions[" @ai "].guard"))) [{ code: "LINT_NODE_UNCHECKED", path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a InitGuard; this rule could not check it"), suggestion: "", severity: "error" }]) [])))) (if (or (= @initialRow null) (not (array/includes @pageTraits (object/get @t "name"))))
+                        (array/concat (array/flatten (array/map (array/range 0 (array/len @arms)) (fn ai (if (object/get (array/nth @arms @ai) "unk") (let ((up (str/concat "orbitals[" @oi " (" (object/get @o "name") ")].traits[" @ti " (" (object/get @t "name") ")].stateMachine.transitions[" @ai "].guard"))) [{ code: @config.codes.lintNodeUnchecked.code, path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a InitGuard; this rule could not check it"), suggestion: "", severity: "error" }]) [])))) (if (or (= @initialRow null) (not (array/includes @pageTraits (object/get @t "name"))))
                           []
                           (let ((initial (object/get @initialRow "name")))
                             (if (not (array/some @arms (fn a (and (= (object/get @a "event") "INIT") (array/some (object/get @a "froms") (fn f (or (= @f @initial) (= @f "*"))))))))
@@ -59,7 +62,7 @@ orbital OrbLintInitCoverageOrbital {
                               (let ((reachable (array/reduce (array/range 0 (array/len @states)) [@initial]
                                   (fn (cur i) (array/unique (array/concat @cur (array/map (array/filter @arms (fn a (and (not (object/get @a "dead")) (array/some (object/get @a "froms") (fn f (or (= @f "*") (array/includes @cur @f))))))) (fn a (object/get @a "to")))))))))
                                 (array/map (array/filter @states (fn st (and (array/includes @reachable (object/get @st "name")) (not (array/some @arms (fn a (and (= (object/get @a "event") "INIT") (array/some (object/get @a "froms") (fn f (or (= @f (object/get @st "name")) (= @f "*")))))))))))
-                                  (fn st { code: "ORB_CIRCUIT_INIT_UNCOVERED_STATE", path: (str/concat "orbitals[" @oi " (" (object/get @o "name") ")].traits[" @ti " (" (object/get @t "name") ")].stateMachine.states." (object/get @st "name")), message: (str/concat "Page trait '" (object/get @t "name") "' handles INIT in '" @initial "' but not in reachable state '" (object/get @st "name") "': revisiting the page from there does nothing"), suggestion: (str/concat "Add an `INIT` arm to state '" (object/get @st "name") "' that re-initializes the trait (as '" @initial "' does)"), severity: "error" }))))))))))))))))))))
+                                  (fn st { code: @config.codes.circuitInitUncoveredState.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name") ")].traits[" @ti " (" (object/get @t "name") ")].stateMachine.states." (object/get @st "name")), message: (str/concat "Page trait '" (object/get @t "name") "' handles INIT in '" @initial "' but not in reachable state '" (object/get @st "name") "': revisiting the page from there does nothing"), suggestion: (str/concat "Add an `INIT` arm to state '" (object/get @st "name") "' that re-initializes the trait (as '" @initial "' does)"), severity: "error" }))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "init-coverage", scope: @entity.scope, findings: @entity.findings })
@@ -79,6 +82,12 @@ orbital OrbLintInitCoverageOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintInitCoverageCodes = { lintNodeUnchecked: { code: "LINT_NODE_UNCHECKED", category: "lint", description: "A lint rule met a schema node of an unexpected shape and could not check it" }, circuitInitUncoveredState: { code: "ORB_CIRCUIT_INIT_UNCOVERED_STATE", category: "circuit", description: "A page trait handles INIT in its initial state but not in another reachable state, so revisiting the page from there does nothing" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintInitCoverageCli -> OrbLintInitCoverageRun [client] {

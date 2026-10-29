@@ -1,0 +1,22 @@
+app cli-behavior-texts-spec [
+  version: "1.0.0",
+  description: "Design contract for the embedding texts of installed behaviors, as `orb behaviors texts` printed them. BUILD_ENTRY_TEXTS { rows } answers ENTRY_TEXTS_BUILT { organism, capability }: the organism text is the behavior name, its description, `Capabilities (organism): <phrases>`, `Entity: <name>` and `Events: <names>` joined by newlines, each part only when present, keyed by the name; the capability text is the capabilities line alone, keyed `<name>#capabilities`, only for a behavior that declares capabilities. BUILD_KNOB_TEXTS { name, described, written } answers KNOB_TEXTS_BUILT { texts } with one text per trait knob (none for an orbital that imports another behavior's orbital) then one per knob the orbital declares itself; KNOB_TEXTS_REFUSED { error } answers a described orbital the program does not declare. Every text carries the lower-case hex SHA-256 of its UTF-8 bytes."
+]
+
+orbital CliBehaviorTextsSpec {
+  expects entity TextsRun [runtime] {
+    id : string
+  }
+  expects trait BehaviorTexts {
+    state idle {
+      BUILD_ENTRY_TEXTS -> idle
+      BUILD_KNOB_TEXTS -> idle
+    }
+    emits {
+      ENTRY_TEXTS_BUILT { organism : [{ key : string!, text : string!, hash : string! }]!  capability : [{ key : string!, text : string!, hash : string! }]! }
+      KNOB_TEXTS_BUILT { texts : [{ key : string!, text : string!, hash : string! }]! }
+      KNOB_TEXTS_REFUSED { error : string! }
+    }
+  }
+  expects page boot -> BehaviorTexts
+}

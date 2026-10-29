@@ -39,6 +39,17 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [{ name: 'data', type: BYTES, description: 'The bytes to decode' }],
     example: '["bytes/to-string", "aGVsbG8="] // => "hello"',
   },
+  'bytes/valid-utf8': {
+    module: 'bytes',
+    category: 'std-codec',
+    minArity: 1,
+    maxArity: 1,
+    description: `Whether the bytes are well-formed UTF-8 text. ${REPRESENTATION}`,
+    hasSideEffects: false,
+    returnType: BOOLEAN,
+    params: [{ name: 'data', type: BYTES, description: 'The bytes to check' }],
+    example: '["bytes/valid-utf8", "aGVsbG8="] // => true',
+  },
   'bytes/from-base64': {
     module: 'bytes',
     category: 'std-codec',

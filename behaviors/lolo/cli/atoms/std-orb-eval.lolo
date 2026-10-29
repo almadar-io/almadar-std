@@ -5,7 +5,7 @@ app std-orb-eval [
 
 type EvalJson = string | number | boolean | [EvalJson?] | Map string EvalJson?
 type EvalEmitted = { payload : Map string EvalJson? }
-type EvalPlayedResult = { emitted : [EvalEmitted]? }
+type EvalPlayedResult = { emitted : [EvalEmitted]?, failure : string? }
 type EvalPlayed = { result : EvalPlayedResult? }
 
 orbital OrbEvalOrbital {
@@ -19,13 +19,15 @@ orbital OrbEvalOrbital {
     state idle {
       INIT -> idle
       EXPR_EVAL_START -> evaluating
-        (program/step (quasiquote { name: "evalprog" version: "1.0.0" orbitals: [{ name: "EvalOrbital" entity: { name: "EvalRow" persistence: "runtime" fields: [{ name: "id" type: "string" required: true }] } traits: [{ name: "Eval" category: "integration" linkedEntity: "EvalRow" emits: [{ event: "EVALUATED", payloadSchema: [{ name: "value", type: "string" }] }] stateMachine: { states: [{ name: "idle" isInitial: true }] events: [{ key: "INIT" name: "Initialize" }, { key: "EVAL" name: "Eval" }] transitions: [{ from: "idle" to: "idle" event: "INIT" }, { from: "idle" to: "idle" event: "EVAL" effects: [["emit", "EVALUATED", { value: (unquote @payload.expr) }]] }] } scope: "instance" }] pages: [{ name: "Eval" path: "/eval" traits: [{ ref: "Eval" }] }] }] schemaVersion: 1 }) [(object/merge { orbital: "EvalOrbital" trait: "Eval" from: "idle" event: "EVAL" payload: (default @payload.payload (json/parse "{}" EvalJson)) entity: (object/merge { id: "e" } (default @payload.entity (json/parse "{}" EvalJson))) } (if @payload.hasViewer { viewer: @payload.viewer } (json/parse "{}" EvalJson)))] { emit: { success: EXPR_EVAL_STEPPED, failure: EXPR_EVAL_REFUSED } })
+        (program/step (quasiquote { name: "evalprog" version: "1.0.0" orbitals: [{ name: "EvalOrbital" entity: { name: "EvalRow" persistence: "runtime" fields: [{ name: "id" type: "string" required: true }] } traits: [{ name: "Eval" linkedEntity: "EvalRow" emits: [{ event: "EVALUATED", payloadSchema: [{ name: "value", type: "string" }] }] stateMachine: { states: [{ name: "idle" isInitial: true }] events: [{ key: "INIT" name: "Initialize" }, { key: "EVAL" name: "Eval" }] transitions: [{ from: "idle" to: "idle" event: "INIT" }, { from: "idle" to: "idle" event: "EVAL" effects: [["emit", "EVALUATED", { value: ["json/stringify", (unquote @payload.expr)] }]] }] } }] pages: [{ name: "Eval" path: "/eval" traits: [{ ref: "Eval" }] }] }] schemaVersion: 1 }) [(object/merge { orbital: "EvalOrbital" trait: "Eval" from: "idle" event: "EVAL" payload: (default @payload.payload (json/parse "{}" EvalJson)) entity: (object/merge { id: "e" } (default @payload.entity (json/parse "{}" EvalJson))) } (if @payload.hasViewer { viewer: @payload.viewer } (json/parse "{}" EvalJson)))] { emit: { success: EXPR_EVAL_STEPPED, failure: EXPR_EVAL_REFUSED } })
     }
 
     state evaluating {
       INIT -> evaluating
-      EXPR_EVAL_STEPPED -> idle
-        (emit EXPR_EVAL_DONE { value: (object/get (object/get (array/first (object/get (object/get (array/first @payload.result) "result") "emitted")) "payload") "value") })
+      EXPR_EVAL_STEPPED -> idle when (!= (default (object/get (object/get (array/first @payload.result) "result") "failure") "") "")
+        (emit EXPR_EVAL_FAILED { error: (default (object/get (object/get (array/first @payload.result) "result") "failure") "") })
+      EXPR_EVAL_STEPPED -> idle when (= (default (object/get (object/get (array/first @payload.result) "result") "failure") "") "")
+        (emit EXPR_EVAL_DONE { value: (json/parse (object/get (object/get (array/first (object/get (object/get (array/first @payload.result) "result") "emitted")) "payload") "value") EvalJson) })
       EXPR_EVAL_REFUSED -> idle
         (emit EXPR_EVAL_FAILED { error: @payload.error })
     }

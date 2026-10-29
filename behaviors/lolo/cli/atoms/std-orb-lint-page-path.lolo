@@ -13,6 +13,9 @@ type PagePathPage = { name : string, path : string, protocol : string }
 type PagePathOrbital = { spec : boolean, pages : [PagePathPage] }
 type PagePathProgram = { orbitals : [PagePathOrbital]! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintPagePathCodes = { pMissingName : LintCodeDecl , pMissingPath : LintCodeDecl , pInvalidPath : LintCodeDecl }
+
 orbital OrbLintPagePathOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -37,19 +40,19 @@ orbital OrbLintPagePathOrbital {
                  (array/concat
                   (let ((nm (object/get @pg "name" "")))
                     (if (= @nm "")
-                      [{ code: "ORB_P_MISSING_NAME", path: (str/concat "orbitals[" @oi "].pages[" @pj "].name"), message: "Page name is required", suggestion: "Add a PascalCase name for the page (e.g., 'TaskList', 'UserProfile')", severity: "error" }]
+                      [{ code: @config.codes.pMissingName.code, path: (str/concat "orbitals[" @oi "].pages[" @pj "].name"), message: "Page name is required", suggestion: "Add a PascalCase name for the page (e.g., 'TaskList', 'UserProfile')", severity: "error" }]
                       (if (and @payload.latin (not (validate/pattern @nm "^[A-Z][a-zA-Z0-9]*$")))
-                        [{ code: "ORB_P_MISSING_NAME", path: (str/concat "orbitals[" @oi "].pages[" @pj "].name"), message: (str/concat "Page name '" @nm "' should be PascalCase"), suggestion: "Use PascalCase for page names (e.g., 'TaskList', 'Dashboard')", severity: "error" }]
+                        [{ code: @config.codes.pMissingName.code, path: (str/concat "orbitals[" @oi "].pages[" @pj "].name"), message: (str/concat "Page name '" @nm "' should be PascalCase"), suggestion: "Use PascalCase for page names (e.g., 'TaskList', 'Dashboard')", severity: "error" }]
                         [])))
                   (if (or (object/has @pg "protocol") (not (object/has @pg "path")))
                     []
                     (let ((route (object/get @pg "path")))
                       (let ((where (str/concat "orbitals[" @oi "].pages[" @pj "].path")))
                         (array/flatten [
-                          (if (= @route "") [{ code: "ORB_P_MISSING_PATH", path: @where, message: "Page path is required", suggestion: "Add a path starting with / (e.g., '/tasks', '/users/:id')", severity: "error" }] [])
-                          (if (and (!= @route "") (not (str/startsWith @route "/"))) [{ code: "ORB_P_INVALID_PATH", path: @where, message: (str/concat "Page path must start with '/': '" @route "'"), suggestion: "Prefix the path with / (e.g., '/tasks' instead of 'tasks')", severity: "error" }] [])
-                          (if (and (!= @route "") @payload.latin (not (validate/pattern @route "^/[a-zA-Z0-9\\-_/:]*$"))) [{ code: "ORB_P_INVALID_PATH", path: @where, message: (str/concat "Invalid page path format: '" @route "'"), suggestion: "Use valid path characters: letters, numbers, hyphens, underscores, and colons for params", severity: "error" }] [])
-                          (if (str/startsWith @route "/api") [{ code: "ORB_P_INVALID_PATH", path: @where, message: (str/concat "Page path '" @route "' starts with '/api' which collides with the API server proxy"), suggestion: "Choose a different path that doesn't start with '/api' (e.g., '/requests' instead of '/apirequests')", severity: "error" }] [])])))))))))))))))
+                          (if (= @route "") [{ code: @config.codes.pMissingPath.code, path: @where, message: "Page path is required", suggestion: "Add a path starting with / (e.g., '/tasks', '/users/:id')", severity: "error" }] [])
+                          (if (and (!= @route "") (not (str/startsWith @route "/"))) [{ code: @config.codes.pInvalidPath.code, path: @where, message: (str/concat "Page path must start with '/': '" @route "'"), suggestion: "Prefix the path with / (e.g., '/tasks' instead of 'tasks')", severity: "error" }] [])
+                          (if (and (!= @route "") @payload.latin (not (validate/pattern @route "^/[a-zA-Z0-9\\-_/:]*$"))) [{ code: @config.codes.pInvalidPath.code, path: @where, message: (str/concat "Invalid page path format: '" @route "'"), suggestion: "Use valid path characters: letters, numbers, hyphens, underscores, and colons for params", severity: "error" }] [])
+                          (if (str/startsWith @route "/api") [{ code: @config.codes.pInvalidPath.code, path: @where, message: (str/concat "Page path '" @route "' starts with '/api' which collides with the API server proxy"), suggestion: "Choose a different path that doesn't start with '/api' (e.g., '/requests' instead of '/apirequests')", severity: "error" }] [])])))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "page-path", scope: @entity.scope, findings: @entity.findings })
@@ -69,6 +72,12 @@ orbital OrbLintPagePathOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintPagePathCodes = { pMissingName: { code: "ORB_P_MISSING_NAME", category: "page", description: "A page does not declare a name" }, pMissingPath: { code: "ORB_P_MISSING_PATH", category: "page", description: "A page is missing its required path" }, pInvalidPath: { code: "ORB_P_INVALID_PATH", category: "page", description: "A page or navigate path does not start with a slash" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintPagePathCli -> OrbLintPagePathRun [client] {

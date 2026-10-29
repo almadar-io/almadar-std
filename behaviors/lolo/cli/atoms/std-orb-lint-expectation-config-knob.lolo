@@ -28,6 +28,9 @@ type ExPage = { name : string, path : string, protocol : string, traits : [ExPag
 type ExOrbital = { name : string, spec : boolean, expects : [ExExpect], entity : ExEntity, auxiliaryEntities : [ExEntity], traits : [ExTrait], pages : [ExPage] }
 type ExProgram = { orbitals : [ExOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintExpectationConfigKnobCodes = { sExpectedFieldTypeMismatch : LintCodeDecl , sExpectationUnsatisfied : LintCodeDecl }
+
 orbital OrbLintExpectationConfigKnobOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -62,9 +65,9 @@ orbital OrbLintExpectationConfigKnobOrbital {
                                    (= (object/get @k "items" null) (object/get (object/get @x "knob" {}) "items" null))
                                    (= (object/get @k "properties" null) (object/get (object/get @x "knob" {}) "properties" null))))))))
       (if (= (array/len @typed) 0)
-        [{ code: "ORB_S_EXPECTED_FIELD_TYPE_MISMATCH", path: @base, message: (str/concat "`" @on "` expects config knob `" (object/get @x "name" "") " : " (if (> (array/len (object/get (object/get @x "knob" {}) "values" [])) 0) (str/join (array/map (object/get (object/get @x "knob" {}) "values" []) (fn v (str/concat (quote "\"") @v (quote "\"")))) " | ") (object/get (object/get @x "knob" {}) "type" "")) "`, but " (str/join (array/map @knobs (fn kk (str/concat "`" (object/get @kk "t") "` declares `" (if (> (array/len (object/get (object/get @kk "k") "values" [])) 0) (str/join (array/map (object/get (object/get @kk "k") "values" []) (fn v (str/concat (quote "\"") @v (quote "\"")))) " | ") (object/get (object/get @kk "k") "type" "")) "`"))) ", ") "."), suggestion: (str/concat "Declare `" (object/get @x "name" "") "` as `" (if (> (array/len (object/get (object/get @x "knob" {}) "values" [])) 0) (str/join (array/map (object/get (object/get @x "knob" {}) "values" []) (fn v (str/concat (quote "\"") @v (quote "\"")))) " | ") (object/get (object/get @x "knob" {}) "type" "")) "` in the trait's `config`."), severity: "error" }]
+        [{ code: @config.codes.sExpectedFieldTypeMismatch.code, path: @base, message: (str/concat "`" @on "` expects config knob `" (object/get @x "name" "") " : " (if (> (array/len (object/get (object/get @x "knob" {}) "values" [])) 0) (str/join (array/map (object/get (object/get @x "knob" {}) "values" []) (fn v (str/concat (quote "\"") @v (quote "\"")))) " | ") (object/get (object/get @x "knob" {}) "type" "")) "`, but " (str/join (array/map @knobs (fn kk (str/concat "`" (object/get @kk "t") "` declares `" (if (> (array/len (object/get (object/get @kk "k") "values" [])) 0) (str/join (array/map (object/get (object/get @kk "k") "values" []) (fn v (str/concat (quote "\"") @v (quote "\"")))) " | ") (object/get (object/get @kk "k") "type" "")) "`"))) ", ") "."), suggestion: (str/concat "Declare `" (object/get @x "name" "") "` as `" (if (> (array/len (object/get (object/get @x "knob" {}) "values" [])) 0) (str/join (array/map (object/get (object/get @x "knob" {}) "values" []) (fn v (str/concat (quote "\"") @v (quote "\"")))) " | ") (object/get (object/get @x "knob" {}) "type" "")) "` in the trait's `config`."), severity: "error" }]
         (if (or (= (object/get (object/get @x "knob" {}) "default" null) null) (array/some @typed (fn kk (= (object/get (object/get @kk "k") "default" null) (object/get (object/get @x "knob" {}) "default" null))))) []
-          [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects config knob `" (object/get @x "name" "") "` to default to " (if (= (object/get (object/get @x "knob" {}) "default" null) null) "no default" (json/stringify (object/get (object/get @x "knob" {}) "default" null))) ", but " (str/join (array/map @typed (fn kk (str/concat "`" (object/get @kk "t") "` defaults it to " (if (= (object/get (object/get @kk "k") "default" null) null) "no default" (json/stringify (object/get (object/get @kk "k") "default" null)))))) ", ") "."), suggestion: (str/concat "Default `" (object/get @x "name" "") "` to " (if (= (object/get (object/get @x "knob" {}) "default" null) null) "no default" (json/stringify (object/get (object/get @x "knob" {}) "default" null))) " in the trait's `config`."), severity: "error" }]))))) [])))))))))))))))
+          [{ code: @config.codes.sExpectationUnsatisfied.code, path: @base, message: (str/concat "`" @on "` expects config knob `" (object/get @x "name" "") "` to default to " (if (= (object/get (object/get @x "knob" {}) "default" null) null) "no default" (json/stringify (object/get (object/get @x "knob" {}) "default" null))) ", but " (str/join (array/map @typed (fn kk (str/concat "`" (object/get @kk "t") "` defaults it to " (if (= (object/get (object/get @kk "k") "default" null) null) "no default" (json/stringify (object/get (object/get @kk "k") "default" null)))))) ", ") "."), suggestion: (str/concat "Default `" (object/get @x "name" "") "` to " (if (= (object/get (object/get @x "knob" {}) "default" null) null) "no default" (json/stringify (object/get (object/get @x "knob" {}) "default" null))) " in the trait's `config`."), severity: "error" }]))))) [])))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "expectation-config-knob", scope: @entity.scope, findings: @entity.findings })
@@ -84,6 +87,12 @@ orbital OrbLintExpectationConfigKnobOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintExpectationConfigKnobCodes = { sExpectedFieldTypeMismatch: { code: "ORB_S_EXPECTED_FIELD_TYPE_MISMATCH", category: "schema", description: "The provider has the expected field or knob but with an incompatible type" }, sExpectationUnsatisfied: { code: "ORB_S_EXPECTATION_UNSATISFIED", category: "schema", description: "An orbital expects an entity, trait, event, or config default that nothing in the program provides" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintExpectationConfigKnobCli -> OrbLintExpectationConfigKnobRun [client] {

@@ -1,0 +1,21 @@
+app lint-orbital-ref-closure-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint orbital-ref-closure <file>`; see the atom."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintOrbitalRefClosureSpec {
+  expects trait OrbLintOrbitalRefClosure {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintOrbitalRefClosureCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintOrbitalRefClosure, OrbLintOrbitalRefClosureCli
+}

@@ -16,6 +16,9 @@ type EventIdOrbital = { name : string, traits : [EventIdTrait] }
 type EventIdProgram = { orbitals : [EventIdOrbital] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEventIdUniquenessCodes = { idDuplicateEventId : LintCodeDecl }
+
 orbital OrbLintEventIdUniquenessOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -42,7 +45,7 @@ orbital OrbLintEventIdUniquenessOrbital {
                                 (fn i { id: @i, name: (object/get @t "name" "") })))))))
                 (array/map (array/filter (array/sort (array/map (array/unique (array/map @owners (fn w (object/get @w "id")))) (fn i { id: @i })) "id" "asc") (fn r (> (array/len (array/filter @owners (fn w (= (object/get @w "id") (object/get @r "id"))))) 1)))
                   (fn r (let ((who (array/map (array/filter @owners (fn w (= (object/get @w "id") (object/get @r "id")))) (fn w (object/get @w "name")))))
-                    { code: "ORB_ID_DUPLICATE_EVENT_ID", path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")]"), message: (str/concat "event id `" (object/get @r "id") "` is declared by " (array/len @who) " different traits (" (str/join @who ", ") ") — ids must be document-unique; every id→name resolution over this schema is ambiguous."), suggestion: "", severity: "error" }))))))))))
+                    { code: @config.codes.idDuplicateEventId.code, path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")]"), message: (str/concat "event id `" (object/get @r "id") "` is declared by " (array/len @who) " different traits (" (str/join @who ", ") ") — ids must be document-unique; every id→name resolution over this schema is ambiguous."), suggestion: "", severity: "error" }))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "event-id-uniqueness", scope: @entity.scope, findings: @entity.findings })
@@ -62,6 +65,12 @@ orbital OrbLintEventIdUniquenessOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintEventIdUniquenessCodes = { idDuplicateEventId: { code: "ORB_ID_DUPLICATE_EVENT_ID", category: "id", description: "An event id is declared by more than one trait, but ids must be document-unique" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintEventIdUniquenessCli -> OrbLintEventIdUniquenessRun [client] {

@@ -16,6 +16,9 @@ type PageTraitsPage = { traits : [PageTraitsInline], primaryEntity : string, vie
 type PageTraitsOrbital = { spec : boolean, pages : [PageTraitsPage], traits : [PageTraitsInline] }
 type PageTraitsProgram = { orbitals : [PageTraitsOrbital]! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintPageEmptyTraitsCodes = { pEmptyTraits : LintCodeDecl , pMissingTraits : LintCodeDecl , pInvalidViewType : LintCodeDecl , pInvalidTraitRef : LintCodeDecl }
+
 orbital OrbLintPageEmptyTraitsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -41,20 +44,20 @@ orbital OrbLintPageEmptyTraitsOrbital {
                 (let ((pg (array/nth @pgList @pj)))
                   (array/flatten [
                     (if (and (object/has @pg "traits") (= (array/len (object/get @pg "traits" [])) 0))
-                      [{ code: "ORB_P_EMPTY_TRAITS", path: (str/concat "orbitals[" @oi "].pages[" @pj "].traits"), message: "Page traits array cannot be empty", suggestion: "Add at least one trait to render UI on the page", severity: "error" }]
+                      [{ code: @config.codes.pEmptyTraits.code, path: (str/concat "orbitals[" @oi "].pages[" @pj "].traits"), message: "Page traits array cannot be empty", suggestion: "Add at least one trait to render UI on the page", severity: "error" }]
                       [])
                     (if (and (not (object/has @pg "traits")) (not (object/has @pg "primaryEntity")))
-                      [{ code: "ORB_P_MISSING_TRAITS", path: (str/concat "orbitals[" @oi "].pages[" @pj "].traits"), message: "Page should have traits array for trait-driven UI", suggestion: "Add traits: ['TraitName'] to define page behavior", severity: "error" }]
+                      [{ code: @config.codes.pMissingTraits.code, path: (str/concat "orbitals[" @oi "].pages[" @pj "].traits"), message: "Page should have traits array for trait-driven UI", suggestion: "Add traits: ['TraitName'] to define page behavior", severity: "error" }]
                       [])
                     (if (and (object/has @pg "viewType") (not (array/some ["list" "detail" "create" "edit" "dashboard" "custom"] (fn vt (= @vt (object/get @pg "viewType"))))))
-                      [{ code: "ORB_P_INVALID_VIEW_TYPE", path: (str/concat "orbitals[" @oi "].pages[" @pj "].viewType"), message: (str/concat "Invalid view type: '" (object/get @pg "viewType") "'"), suggestion: "", severity: "error" }]
+                      [{ code: @config.codes.pInvalidViewType.code, path: (str/concat "orbitals[" @oi "].pages[" @pj "].viewType"), message: (str/concat "Invalid view type: '" (object/get @pg "viewType") "'"), suggestion: "", severity: "error" }]
                       [])
                     (array/flatten (array/map (array/range 0 (array/len (object/get @pg "traits" []))) (fn ti
                       (let ((tr (array/nth (object/get @pg "traits" []) @ti)))
                         (let ((tp (str/concat "orbitals[" @oi "].pages[" @pj "].traits[" @ti " (" (if (object/has @tr "stateMachine") (object/get @tr "name" "") (if (object/has @tr "ref") (object/get @tr "ref") (if (object/has @tr "name") (object/get @tr "name") "<anonymous>"))) ")]")))
                           (if (object/has @tr "stateMachine")
                             (if (= (object/get @tr "name" "") "")
-                              [{ code: "ORB_P_INVALID_TRAIT_REF", path: @tp, message: "Inline trait must have a name", suggestion: "Add a name property to the inline trait", severity: "error" }]
+                              [{ code: @config.codes.pInvalidTraitRef.code, path: @tp, message: "Inline trait must have a name", suggestion: "Add a name property to the inline trait", severity: "error" }]
                               [])
                             (if (and (object/has @tr "refId") (array/includes @tids (object/get @tr "refId")))
                               []
@@ -62,8 +65,8 @@ orbital OrbLintPageEmptyTraitsOrbital {
                                 (let ((nm (if (object/has @tr "ref") (object/get @tr "ref") (object/get @tr "name"))))
                                   (if (or (array/includes @tnames @nm) (str/startsWith @nm "std/"))
                                     []
-                                    [{ code: "ORB_P_INVALID_TRAIT_REF", path: @tp, message: (str/concat "Trait '" @nm "' referenced on page does not exist"), suggestion: "Define traits inline within orbitals or use a std trait", severity: "error" }]))
-                                [{ code: "ORB_P_INVALID_TRAIT_REF", path: @tp, message: "Page trait reference must have 'ref' or 'name' property", suggestion: "Add ref: 'TraitName' to reference a trait", severity: "error" }]))))))))])))))))))))))
+                                    [{ code: @config.codes.pInvalidTraitRef.code, path: @tp, message: (str/concat "Trait '" @nm "' referenced on page does not exist"), suggestion: "Define traits inline within orbitals or use a std trait", severity: "error" }]))
+                                [{ code: @config.codes.pInvalidTraitRef.code, path: @tp, message: "Page trait reference must have 'ref' or 'name' property", suggestion: "Add ref: 'TraitName' to reference a trait", severity: "error" }]))))))))])))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "page-empty-traits", scope: @entity.scope, findings: @entity.findings })
@@ -83,6 +86,12 @@ orbital OrbLintPageEmptyTraitsOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintPageEmptyTraitsCodes = { pEmptyTraits: { code: "ORB_P_EMPTY_TRAITS", category: "page", description: "A page declares an empty traits array" }, pMissingTraits: { code: "ORB_P_MISSING_TRAITS", category: "page", description: "A page has no traits array for trait-driven UI" }, pInvalidViewType: { code: "ORB_P_INVALID_VIEW_TYPE", category: "page", description: "A page declares a view type that is not a valid view type" }, pInvalidTraitRef: { code: "ORB_P_INVALID_TRAIT_REF", category: "page", description: "A page's inline trait reference has no name" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintPageEmptyTraitsCli -> OrbLintPageEmptyTraitsRun [client] {

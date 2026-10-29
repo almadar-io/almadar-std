@@ -22,6 +22,9 @@ type CeR = { s : [string]!, c : number!, m : boolean!, p : boolean!, en : boolea
 type CeHit = { key : string!, ev : string!, ty : string! }
 type CeTr = { e : string!, f : [string]!, fs : string!, to : string! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintCircuitEmitsCodes = { circuitLifecycleEmitUndelivered : LintCodeDecl , renderActionLifecycleEvent : LintCodeDecl , circuitSelfEmitLoop : LintCodeDecl }
+
 orbital OrbLintCircuitEmitsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -65,7 +68,7 @@ orbital OrbLintCircuitEmitsOrbital {
                                   (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
                                     (let ((evs (array/flatten (array/map (array/filter (object/get (default (as (tree/index (let ((e (array/nth @effs @ej))) (if (validate/array @e) @e [])) ["emit"]) CeIndex) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (if (and (validate/array @n) (>= (array/len @n) 2)) (let ((ev (array/nth @n 1))) (if (validate/string @ev) (if (object/has @busSet (str/replaceAll (str/replaceAll @ev "~" "~t") "." "~d")) [@ev] @nos) @nos)) @nos)))))))
  (array/map @evs (fn ev
-                                        { code: "ORB_CIRCUIT_LIFECYCLE_EMIT_UNDELIVERED", path: (str/concat @ep @ej "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " emits lifecycle event '" @ev "' — the bus never delivers it"), suggestion: "route a named event whose arm re-enters via `EVENT -> ...`, or inline the target state's own effects directly into this arm; lifecycle events are never delivered through (emit ...)", severity: "error" }))))))
+                                        { code: @config.codes.circuitLifecycleEmitUndelivered.code, path: (str/concat @ep @ej "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " emits lifecycle event '" @ev "' — the bus never delivers it"), suggestion: "route a named event whose arm re-enters via `EVENT -> ...`, or inline the target state's own effects directly into this arm; lifecycle events are never delivered through (emit ...)", severity: "error" }))))))
                                   (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
                                     (let ((e (array/nth @effs @ej)))
                                       (if (and (validate/array @e) (> (array/len @e) 2) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (= @h0 "render-ui") false)) (validate/string (array/nth @e 1)))
@@ -85,7 +88,7 @@ orbital OrbLintCircuitEmitsOrbital {
                                                                  (array/map @kids (fn hh { key: (object/get @hh "key"), ev: (object/get @hh "ev"), ty: (if (= (object/get @hh "ty") "") @ty (object/get @hh "ty")) }))) })
                                                         @nr))) "CeNode")))
                                               (array/map (object/get (if (= @hr null) @nr @hr) "h") (fn hh
-                                                { code: "ORB_RENDER_ACTION_LIFECYCLE_EVENT", path: (str/concat @ep @ej "].props." (object/get @hh "key")), message: (str/concat "'" @on "." @tn "': prop '" (object/get @hh "key") "' on rendered '" (if (= (object/get @hh "ty") "") @outer (object/get @hh "ty")) "' targets lifecycle event '" (object/get @hh "ev") "' — the bus never delivers it"), suggestion: "route a named event (e.g. REFRESH) whose arm re-enters via `EVENT -> loading`; lifecycle events are never affordance targets", severity: "error" })))
+                                                { code: @config.codes.renderActionLifecycleEvent.code, path: (str/concat @ep @ej "].props." (object/get @hh "key")), message: (str/concat "'" @on "." @tn "': prop '" (object/get @hh "key") "' on rendered '" (if (= (object/get @hh "ty") "") @outer (object/get @hh "ty")) "' targets lifecycle event '" (object/get @hh "ev") "' — the bus never delivers it"), suggestion: "route a named event (e.g. REFRESH) whose arm re-enters via `EVENT -> loading`; lifecycle events are never affordance targets", severity: "error" })))
                                             @nof))
                                         @nof))))))
                                 (if (not (array/some @tl (fn t2 (and (= (object/get @t2 "e") (object/get @x "e")) (array/includes (object/get @t2 "f") (object/get @x "to")))))) @nof
@@ -113,7 +116,7 @@ orbital OrbLintCircuitEmitsOrbital {
                                                                   (if (or @pf (and @mut @ef)) 0 1))))
  0)))))))
                                         (array/map (array/range 0 @cnt) (fn z
-                                          { code: "ORB_CIRCUIT_SELF_EMIT_LOOP", path: (str/concat @ep @ej "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " re-emits its own trigger event '" (object/get @x "e") "' with a constant payload and a same-event arm is reachable at the target state — the runtime path loops forever re-entering this arm"), suggestion: "this arm re-emits its own trigger event and a same-event arm is reachable at the target state (this very arm, when it is a self-transition) with a constant payload — the runtime path loops forever re-entering this arm. Transition directly, emit a differently-named event, or make the payload derive from @payload / a mutated @entity so each hop makes progress.", severity: "error" }))))))))))))))))))))))))))
+                                          { code: @config.codes.circuitSelfEmitLoop.code, path: (str/concat @ep @ej "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " re-emits its own trigger event '" (object/get @x "e") "' with a constant payload and a same-event arm is reachable at the target state — the runtime path loops forever re-entering this arm"), suggestion: "this arm re-emits its own trigger event and a same-event arm is reachable at the target state (this very arm, when it is a self-transition) with a constant payload — the runtime path loops forever re-entering this arm. Transition directly, emit a differently-named event, or make the payload derive from @payload / a mutated @entity so each hop makes progress.", severity: "error" }))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       PROPS_HEARD -> ready
         (set @entity.names @payload.names)
@@ -143,6 +146,12 @@ orbital OrbLintCircuitEmitsOrbital {
         @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the events the bus never delivers."
       OrbLintInput.LINT_EVENT_PROPS -> PROPS_HEARD
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> SEMANTICS_HEARD
+    }
+
+    config {
+      codes : LintCircuitEmitsCodes = { circuitLifecycleEmitUndelivered: { code: "ORB_CIRCUIT_LIFECYCLE_EMIT_UNDELIVERED", category: "circuit", description: "A transition emits a lifecycle event that the event bus never delivers" }, renderActionLifecycleEvent: { code: "ORB_RENDER_ACTION_LIFECYCLE_EVENT", category: "render_ui", description: "A rendered pattern prop targets a lifecycle event that the bus never delivers" }, circuitSelfEmitLoop: { code: "ORB_CIRCUIT_SELF_EMIT_LOOP", category: "circuit", description: "A transition re-emits its own trigger event with a constant payload and a same-event arm is reachable, so it loops forever" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }
 
   }

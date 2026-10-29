@@ -12,6 +12,9 @@ type OrbFinding = { code : string!, path : string!, message : string!, suggestio
 type DuplicateNameOrbital = { name : string }
 type DuplicateNameProgram = { orbitals : [DuplicateNameOrbital]! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintOrbitalDuplicateNameCodes = { oDuplicateName : LintCodeDecl }
+
 orbital OrbLintOrbitalDuplicateNameOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -35,7 +38,7 @@ orbital OrbLintOrbitalDuplicateNameOrbital {
                 (let ((at (array/filter (array/range 0 (array/len @names)) (fn j (= (array/nth @names @j) @nm)))))
                   (if (or (< (array/len @at) 2) (!= (array/first @at) @oi))
                     []
-                    [{ code: "ORB_O_DUPLICATE_NAME", path: (str/concat "orbitals[" (array/nth @at 1) "]"), message: (str/concat "Orbital '" @nm "' is declared " (array/len @at) " times (orbitals [" (str/join (array/map @at (fn j (str/concat @j))) ", ") "])"), suggestion: "Give each orbital its own name", severity: "error" }])))))))))
+                    [{ code: @config.codes.oDuplicateName.code, path: (str/concat "orbitals[" (array/nth @at 1) "]"), message: (str/concat "Orbital '" @nm "' is declared " (array/len @at) " times (orbitals [" (str/join (array/map @at (fn j (str/concat @j))) ", ") "])"), suggestion: "Give each orbital its own name", severity: "error" }])))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "orbital-duplicate-name", scope: @entity.scope, findings: @entity.findings })
@@ -55,6 +58,12 @@ orbital OrbLintOrbitalDuplicateNameOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintOrbitalDuplicateNameCodes = { oDuplicateName: { code: "ORB_O_DUPLICATE_NAME", category: "orbital", description: "Two or more orbitals in a program share the same name" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintOrbitalDuplicateNameCli -> OrbLintOrbitalDuplicateNameRun [client] {

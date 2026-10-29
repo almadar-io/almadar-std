@@ -17,6 +17,9 @@ type ClientTickState = { name : string }
 type ClientTickOrbital = { name : string, entity : ClientTickEntity, auxiliaryEntities : [ClientTickEntity], traits : [ClientTickTrait] }
 type ClientTickLocalityProgram = { orbitals : [ClientTickOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintClientTickLocalityCodes = { tClientTickNotLocal : LintCodeDecl }
+
 orbital OrbLintClientTickLocalityOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -49,7 +52,7 @@ orbital OrbLintClientTickLocalityOrbital {
                           (array/flatten (array/map @bound (fn t
                             (if (and (or (= (object/get @ent "shared" false) true) (array/some (object/get @t "ticks" []) (fn k (not (object/get @k "runsInBackground" false)))))
                                      (not (array/includes ["client" "optimistic"] (object/get @t "dispatch" ""))))
-                              [{ code: "ORB_T_CLIENT_TICK_NOT_LOCAL", path: (str/concat "orbitals." (object/get @orb "name" "") ".traits." (object/get @t "name" "")), message: (str/concat "Trait '" (object/get @t "name" "") "' writes `" (object/get @ent "name" "") "`, a frame `" (object/get @ticker "name" "") "` ticks on the client, but declares no dispatch mode: a server-run step folds the host's never-ticked copy back over the live frame"), suggestion: (str/concat "Declare '" (object/get @t "name" "") "' `[client]` or `[optimistic]`, or move its server work to a trait bound to another entity"), severity: "error" }]
+                              [{ code: @config.codes.tClientTickNotLocal.code, path: (str/concat "orbitals." (object/get @orb "name" "") ".traits." (object/get @t "name" "")), message: (str/concat "Trait '" (object/get @t "name" "") "' writes `" (object/get @ent "name" "") "`, a frame `" (object/get @ticker "name" "") "` ticks on the client, but declares no dispatch mode: a server-run step folds the host's never-ticked copy back over the live frame"), suggestion: (str/concat "Declare '" (object/get @t "name" "") "' `[client]` or `[optimistic]`, or move its server work to a trait bound to another entity"), severity: "error" }]
                               []))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -70,6 +73,12 @@ orbital OrbLintClientTickLocalityOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintClientTickLocalityCodes = { tClientTickNotLocal: { code: "ORB_T_CLIENT_TICK_NOT_LOCAL", category: "trait", description: "A trait writes a frame entity ticked on the client but declares no dispatch mode, so a server step overwrites the live frame" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintClientTickLocalityCli -> OrbLintClientTickLocalityRun [client] {

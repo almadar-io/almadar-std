@@ -13,6 +13,9 @@ type TraitIdTrait = { id : string, name : string }
 type TraitIdOrbital = { name : string, traits : [TraitIdTrait] }
 type TraitIdProgram = { orbitals : [TraitIdOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintTraitIdUniquenessCodes = { xDuplicateTraitId : LintCodeDecl }
+
 orbital OrbLintTraitIdUniquenessOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -31,7 +34,7 @@ orbital OrbLintTraitIdUniquenessOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((entries (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn o (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "id"))) (fn t { id: (object/get @t "id"), name: (str/concat (object/get @o "name") "." (object/get @t "name")) })))))))
           (array/map (array/filter (array/sort (array/map (array/unique (array/map @entries (fn e (object/get @e "id")))) (fn i { id: @i })) "id" "asc") (fn r (> (array/len (array/filter @entries (fn e (= (object/get @e "id") (object/get @r "id"))))) 1)))
-            (fn r { code: "ORB_X_DUPLICATE_TRAIT_ID", path: "orbitals", message: (str/concat "trait id " (object/get @r "id") " is carried by " (str/join (array/map (array/filter @entries (fn e (= (object/get @e "id") (object/get @r "id")))) (fn e (object/get @e "name"))) ", ") "; listens match sources by id, so each of these hears the others' emits"), suggestion: "", severity: "error" }))))
+            (fn r { code: @config.codes.xDuplicateTraitId.code, path: "orbitals", message: (str/concat "trait id " (object/get @r "id") " is carried by " (str/join (array/map (array/filter @entries (fn e (= (object/get @e "id") (object/get @r "id")))) (fn e (object/get @e "name"))) ", ") "; listens match sources by id, so each of these hears the others' emits"), suggestion: "", severity: "error" }))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "trait-id-uniqueness", scope: @entity.scope, findings: @entity.findings })
@@ -51,6 +54,12 @@ orbital OrbLintTraitIdUniquenessOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintTraitIdUniquenessCodes = { xDuplicateTraitId: { code: "ORB_X_DUPLICATE_TRAIT_ID", category: "cross", description: "Two or more traits carry the same trait id, so listens match each other's emits" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintTraitIdUniquenessCli -> OrbLintTraitIdUniquenessRun [client] {

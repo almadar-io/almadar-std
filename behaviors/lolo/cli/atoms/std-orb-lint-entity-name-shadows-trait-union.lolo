@@ -16,6 +16,9 @@ type ShadowShapeState = { name : string }
 type ShadowOrbital = { spec : boolean, entity : ShadowEntity, auxiliaryEntities : [ShadowEntity], traits : [ShadowTrait] }
 type EntityNameShadowsTraitUnionProgram = { orbitals : [ShadowOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEntityNameShadowsTraitUnionCodes = { tEntityNameShadowsTraitUnion : LintCodeDecl }
+
 orbital OrbLintEntityNameShadowsTraitUnionOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -51,10 +54,10 @@ orbital OrbLintEntityNameShadowsTraitUnionOrbital {
                               []
                               (array/concat
                                 (if (= @en (str/concat @tn "State"))
-                                  [{ code: "ORB_T_ENTITY_NAME_SHADOWS_TRAIT_UNION", path: @pth, message: (str/concat "Entity '" @en "' name collides with trait '" @tn "'s generated state union — TS codegen would emit both `import type { " @en " }` and `type " @en " = '...'` in every handler/hook/view file (TS2440). Rename the entity (e.g. '" @tn "Data')."), suggestion: (str/concat "Rename entity '" @en "' to '" @tn "Data' (or any name that doesn't match a trait's <Name>State / <Name>Event union)"), severity: "error" }]
+                                  [{ code: @config.codes.tEntityNameShadowsTraitUnion.code, path: @pth, message: (str/concat "Entity '" @en "' name collides with trait '" @tn "'s generated state union — TS codegen would emit both `import type { " @en " }` and `type " @en " = '...'` in every handler/hook/view file (TS2440). Rename the entity (e.g. '" @tn "Data')."), suggestion: (str/concat "Rename entity '" @en "' to '" @tn "Data' (or any name that doesn't match a trait's <Name>State / <Name>Event union)"), severity: "error" }]
                                   [])
                                 (if (= @en (str/concat @tn "Event"))
-                                  [{ code: "ORB_T_ENTITY_NAME_SHADOWS_TRAIT_UNION", path: @pth, message: (str/concat "Entity '" @en "' name collides with trait '" @tn "'s generated event union — TS codegen would emit both `import type { " @en " }` and `type " @en " = '...'` in every handler/hook/view file (TS2440). Rename the entity (e.g. '" @tn "Data')."), suggestion: (str/concat "Rename entity '" @en "' to '" @tn "Data' (or any name that doesn't match a trait's <Name>State / <Name>Event union)"), severity: "error" }]
+                                  [{ code: @config.codes.tEntityNameShadowsTraitUnion.code, path: @pth, message: (str/concat "Entity '" @en "' name collides with trait '" @tn "'s generated event union — TS codegen would emit both `import type { " @en " }` and `type " @en " = '...'` in every handler/hook/view file (TS2440). Rename the entity (e.g. '" @tn "Data')."), suggestion: (str/concat "Rename entity '" @en "' to '" @tn "Data' (or any name that doesn't match a trait's <Name>State / <Name>Event union)"), severity: "error" }]
                                   []))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -75,6 +78,12 @@ orbital OrbLintEntityNameShadowsTraitUnionOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintEntityNameShadowsTraitUnionCodes = { tEntityNameShadowsTraitUnion: { code: "ORB_T_ENTITY_NAME_SHADOWS_TRAIT_UNION", category: "trait", description: "An entity name collides with a trait's generated state union type" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintEntityNameShadowsTraitUnionCli -> OrbLintEntityNameShadowsTraitUnionRun [client] {

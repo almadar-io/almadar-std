@@ -15,6 +15,9 @@ type LiteralOrbital = { entity : LiteralEntity }
 type LiteralProgram = { orbitals : [LiteralOrbital] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintLiteralDefaultCodes = { eLiteralUnionDefaultMismatch : LintCodeDecl }
+
 orbital OrbLintLiteralDefaultOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -43,7 +46,7 @@ orbital OrbLintLiteralDefaultOrbital {
                           []
                           (let ((label (object/get @fld "name" (str/concat "[index " @fi "]"))))
                             (let ((joined (str/join @vals ", ")))
-                              [{ code: "ORB_E_LITERAL_UNION_DEFAULT_MISMATCH", path: (str/concat "orbitals[" @oi "].entity(" (object/get @ent "name" "") ").fields[" @fi "](" @label ")"), message: (str/concat "Field '" @label "' default '" @dv "' is not one of the declared values [" @joined "]"), suggestion: (str/concat "Pick a default from [" @joined "] or add '" @dv "' to the values list"), severity: "error" }]))))))))) []))))))))
+                              [{ code: @config.codes.eLiteralUnionDefaultMismatch.code, path: (str/concat "orbitals[" @oi "].entity(" (object/get @ent "name" "") ").fields[" @fi "](" @label ")"), message: (str/concat "Field '" @label "' default '" @dv "' is not one of the declared values [" @joined "]"), suggestion: (str/concat "Pick a default from [" @joined "] or add '" @dv "' to the values list"), severity: "error" }]))))))))) []))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "literal-default", scope: @entity.scope, findings: @entity.findings })
@@ -63,6 +66,12 @@ orbital OrbLintLiteralDefaultOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintLiteralDefaultCodes = { eLiteralUnionDefaultMismatch: { code: "ORB_E_LITERAL_UNION_DEFAULT_MISMATCH", category: "entity", description: "A field default is not one of the values of its declared literal union" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintLiteralDefaultCli -> OrbLintLiteralDefaultRun [client] {

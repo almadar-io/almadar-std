@@ -1,10 +1,28 @@
 app std-orb-behaviors [
   version: "1.0.0",
   inbound: ["cli-behaviors-catalog", "cli-behaviors-describe", "cli-behaviors-source", "cli-behaviors-which", "cli-behaviors-texts", "cli-behaviors-expects"],
-  fs: { "/dev/fd/0": [read], cwd: "**": [read] },
-  description: "std-orb-behaviors — the `orb behaviors catalog|describe|source|which|texts|expects` commands over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]` lists the installed behaviors under the scopes (`behavior/catalog`; `--no-vectors` is its `vectors: false` option, reading no vector store) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>|<behavior>|<behavior>.orbitals.<Orbital>|- [--json] [--knob-vectors]` prints the description as JSON (`behavior/describe`; `-` reads a trait or orbital value as JSON from stdin; `--knob-vectors` attaches each knob's embedding vector, `behavior/describe`'s `knobVectors` option); `source <behavior> [--json]` prints the behavior's program as JSON (`behavior/source`); `which <spec>` prints `<path> (<owner>)`, the file the specifier resolves to and the package that owns it (`behavior/resolve` with `path: true`); `texts <scope…> [--kind organism|capability|knob] [--json]` prints the embedding texts under the scopes as one compact JSON array of { key, text, hash } (`behavior/texts`; `--json` is accepted, the only format). `expects <file.orb|spec> [--json]` prints each orbital's derived expectations as one compact JSON line, `{ <orbital>: { expectations, diagnostics } }` (`behavior/resolve` with `expects: true`; a spec naming an existing file under the working directory is read as that file, an absolute path when relative to the hook's cwd, `--json` is accepted, the only format). Each answers status 200 (exit 0). Each subcommand is its own cli hook, so the other `orb behaviors` subcommands (vectors) stay with the Rust command. A missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
+  fs: { "/dev/fd/0": [read], cwd: "**": [read, write, remove, create], "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], "~/.almadar/sidecars/**": [read], "/**": [read], "~/.orb/node_modules/**": [read], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
+  env: ["PATH", "ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
+  exec: ["kill", "orb"],
+  egress: ["https://api.openai.com", "https://openrouter.ai", "http://127.0.0.1:1234"],
+  description: "std-orb-behaviors — the `orb behaviors catalog|describe|source|which|texts|expects` commands over the behavior reflection operators. `catalog <scope…> [--exposure <e>]… [--json] [--no-vectors] [--no-traits] [--topics]` (`--topics` lists each package and topic once with its count, counted here over the rows) lists the installed behaviors under the scopes (`behavior/catalog`, which lists no vectors; `--no-vectors` reads no vector store) as one table row each, or as JSON with --json; `describe <behavior>.traits.<Trait>|<behavior>|<behavior>.orbitals.<Orbital>|- [--json] [--knob-vectors]` prints the description as JSON (`behavior/describe`; `-` reads a trait or orbital value as JSON from stdin; `--knob-vectors` attaches each knob's embedding vector; a whole-behavior description carries each orbital's `forwards`, the unhandled controls its `emitsScope external` traits leave for the embedder, from the control-unhandled analysis over std-orb-fired-events); `source <behavior> [--json]` prints the behavior's program as JSON (`behavior/source`); `which <spec>` prints `<path> (<owner>)`, the file the specifier resolves to and the package that owns it (`behavior/resolve` with `path: true`); `texts <scope…> [--kind organism|capability|knob] [--json]` prints the embedding texts under the scopes as one compact JSON array of { key, text, hash } (built by std-behavior-texts; `--json` is accepted, the only format). `expects <file.orb|spec> [--json]` prints each orbital's derived expectations as one compact JSON line, `{ <orbital>: { expectations, diagnostics } }` (`behavior/resolve` with `expects: true`; a spec naming an existing file under the working directory is read as that file, an absolute path when relative to the hook's cwd, `--json` is accepted, the only format). Each answers status 200 (exit 0). With vectors, the catalog lists rows asked for with `texts: true`, builds the organism and capability texts (std-behavior-texts), reads the packages' snapshots and the environment (std-vector-sources) and resolves every text's vector (std-vector-resolve: snapshots, then the user store, then the configured provider); `describe --knob-vectors` does the same for the trait's knob texts, and `texts` builds every kind itself, package by package in first-mention order and path order. A missing operand answers the usage (status 400, exit 2); a failed reflection answers its error (status 500, exit 1)."
 ]
 uses Spec from "almadar-std/orb-behaviors"
+uses Texts from "std/behaviors/std-behavior-texts"
+uses ControlUnhandled from "std/behaviors/std-orb-lint-control-unhandled"
+uses Fired from "std/behaviors/std-orb-fired-events"
+uses Chain from "std/behaviors/std-orb-embed-chain"
+uses LintInput from "std/behaviors/std-orb-lint-input"
+uses Sources from "std/behaviors/std-vector-sources"
+uses Resolve from "std/behaviors/std-vector-resolve"
+uses Store from "std/behaviors/std-vector-store"
+uses Llm from "std/behaviors/std-llm"
+uses Write from "std/behaviors/std-vector-write"
+uses Quantize from "std/behaviors/std-vector-quantize"
+uses F32 from "std/behaviors/std-f32"
+uses Delay from "std/behaviors/std-delay"
+uses Sig6 from "std/behaviors/std-sig6"
+uses BigCmp from "std/behaviors/std-bigcmp"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type OrbBehaviorsCatalogHit = {
@@ -19,10 +37,33 @@ type OrbBehaviorsCatalogHit = {
   value : behavior!
   vectors : Map string [number]
   model : string
+  name : string
+  rank : number
+  textOrder : number
+  defaultEntityName : string
+  connectableEvents : [string]
+  capabilitiesText : string
+  pattern : string
 }
+type StoreEntry = { found : boolean!, dims : number!, scale : number!, record : bytes!, vector : [number]! }
+type OrbBehaviorsPackage = { root : string!, prefix : string!, vectors : string }
+type WantedText = { key : string!, text : string! }
+type TextRow = { key : string!, text : string!, hash : string! }
+type KeyedVector = { key : string!, vector : [number]! }
+type DescribedValue = { behavior : string!, orbital : string! }
+type DescribedKnob = { name : string!, label : string, description : string, synonyms : string, values : [string] }
+type DescribedTrait = { trait : string!, ref : string, knobs : [DescribedKnob] }
+type DescribedField = { name : string }
+type DescribedEntity = { name : string!, fields : [DescribedField] }
+type DescribedOrbital = { value : DescribedValue!, entity : DescribedEntity, traits : [DescribedTrait], knobs : [DescribedKnob] }
+type DescribedBehavior = { behavior : string!, orbitals : [DescribedOrbital]! }
+type WrittenKnob = { type : string! }
+type WrittenRef = { ref : string! }
+type WrittenOrbital = { name : string!, reference : WrittenRef, config : Map string WrittenKnob }
+type WrittenProgram = { orbitals : [WrittenOrbital] }
 type OrbBehaviorsCatalogTopic = { package : string!, prefix : string!, topic : string!, count : number! }
 type OrbBehaviorsWhich = { path : string!, owner : string! }
-type OrbBehaviorsText = { key : string!, text : string!, hash : string! }
+type OrbBehaviorsSourceFile = { path : string!, source : string! }
 type ExpectValue = string | number | boolean | [ExpectValue?] | Map string ExpectValue?
 type DescribeValue = { behavior : string!, trait : string, orbital : string }
 type OrbBehaviorsKnobField = {
@@ -44,9 +85,19 @@ type TraitDescription = {
   events : TraitEvents!
   model : string
 }
+type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
+type FiredField = { default : FiredNode? }
+type FiredTransition = { event : string, guard : FiredNode?, effects : [FiredNode?] }
+type FiredTick = { guard : FiredNode?, effects : [FiredNode?] }
+type FiredMachine = { transitions : [FiredTransition] }
+type FiredTrait = { name : string, stateMachine : FiredMachine, ticks : [FiredTick], config : Map string FiredField? }
+type FiredOrbital = { traits : [FiredTrait] }
+type FiredProgram = { orbitals : [FiredOrbital] }
+type CuForward = { orbital : string!, trait : string!, event : string!, via : [string]! }
 type OrbBehaviorsDescription = {
   behavior : string!
   knobs : [OrbBehaviorsKnobField]!
+  orbitals : [DescribedOrbital]
 }
 
 orbital OrbBehaviorsOrbital {
@@ -65,11 +116,286 @@ orbital OrbBehaviorsOrbital {
     knobVectors : boolean = false
     kind : string = ""
     cwd : string = ""
+    rows : [OrbBehaviorsCatalogHit] = []
+    wanted : [WantedText] = []
+    vpaths : [string] = []
+    vpath : string = ""
+    stem : string = ""
+    base : TraitDescription
+    trait : string = ""
+    cur : OrbBehaviorsCatalogHit?
+    whole : DescribedBehavior
+    ranks : [number] = []
+    gi : number = 0
+    ri : number = 0
+    grp : [OrbBehaviorsCatalogHit] = []
+    gOrg : [TextRow] = []
+    gCap : [TextRow] = []
+    gKnobs : [TextRow] = []
+    acc : [TextRow] = []
+    raw : OrbBehaviorsDescription = { behavior: "", knobs: [], orbitals: [] }
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
     listens {
       OrbBehaviors.BEHAVIORS_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait BvStore = Store.traits.VectorLookup {
+    listens {
+      BvResolve.VECTOR_LOOKUP_MANY -> VECTOR_LOOKUP_MANY
+      BvSnapshot.VECTOR_LOOKUP_MANY -> VECTOR_LOOKUP_MANY
+      BvWrite.VECTOR_LOOKUP_MANY -> VECTOR_LOOKUP_MANY
+      BvSig6.SIG6_DONE -> SIG6_DONE
+      BvSig6.SIG6_REFUSED -> SIG6_REFUSED
+    }
+  }
+
+  trait BvWrite = Write.traits.VectorWrite {
+    listens {
+      BvResolve.VECTOR_WRITE -> VECTOR_WRITE
+      BvQuantize.QUANTIZED -> QUANTIZED
+      BvQuantize.QUANTIZE_REFUSED -> QUANTIZE_REFUSED
+      BvStore.VECTOR_RESOLVED -> VECTOR_RESOLVED
+      BvStore.VECTOR_REFUSED -> VECTOR_REFUSED
+      BvDelay.ELAPSED -> ELAPSED
+    }
+  }
+
+  trait BvQuantize = Quantize.traits.VectorQuantize {
+    listens {
+      BvWrite.QUANTIZE -> QUANTIZE
+      BvF32.F32_ENCODED -> F32_ENCODED
+      BvF32.F32_REFUSED -> F32_REFUSED
+      BvSig6.SIG6_DONE -> SIG6_DONE
+      BvSig6.SIG6_REFUSED -> SIG6_REFUSED
+    }
+  }
+
+  trait BvF32 = F32.traits.F32Encode {
+    listens {
+      BvQuantize.F32_ENCODE -> F32_ENCODE
+      BvSig6.F32_ENCODE -> F32_ENCODE
+    }
+  }
+
+  trait BvSig6 = Sig6.traits.Sig6 {
+    listens {
+      BvQuantize.SIG6 -> SIG6
+      BvStore.SIG6 -> SIG6
+      BvBigCmp.BIGCMP_ANSWERED -> BIGCMP_ANSWERED
+      BvF32.F32_ENCODED -> F32_ENCODED
+      BvF32.F32_REFUSED -> F32_REFUSED
+    }
+  }
+
+  trait BvBigCmp = BigCmp.traits.BigCmp {
+    listens {
+      BvSig6.BIGCMP_BATCH -> BIGCMP_BATCH
+    }
+  }
+
+  trait BvDelay = Delay.traits.Delay {
+    listens {
+      BvWrite.LOCK_WAIT -> START
+    }
+  }
+
+  trait BvLlmOrShared = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_ORS
+    }
+    config {
+      embedProvider: openrouter
+      embedOrigin: "https://openrouter.ai"
+      embedBasePath: "/api/v1"
+      embedModel: "baai/bge-base-en-v1.5"
+      embedApiKey: "EMBEDDING_API_KEY"
+    }
+    listens {
+      BvResolve.LLM_EMBED_ORS -> LLM_EMBED_ORS
+    }
+  }
+
+  trait BvLlmOrOwn = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_ORO
+    }
+    config {
+      embedProvider: openrouter
+      embedOrigin: "https://openrouter.ai"
+      embedBasePath: "/api/v1"
+      embedModel: "baai/bge-base-en-v1.5"
+      embedApiKey: "OPEN_ROUTER_API_KEY"
+    }
+    listens {
+      BvResolve.LLM_EMBED_ORO -> LLM_EMBED_ORO
+    }
+  }
+
+  trait BvLlmOaShared = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_OAS
+    }
+    config {
+      embedProvider: openai
+      embedOrigin: "https://api.openai.com"
+      embedBasePath: "/v1"
+      embedModel: "baai/bge-base-en-v1.5"
+      embedApiKey: "EMBEDDING_API_KEY"
+    }
+    listens {
+      BvResolve.LLM_EMBED_OAS -> LLM_EMBED_OAS
+    }
+  }
+
+  trait BvLlmOaOwn = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_OAO
+    }
+    config {
+      embedProvider: openai
+      embedOrigin: "https://api.openai.com"
+      embedBasePath: "/v1"
+      embedModel: "baai/bge-base-en-v1.5"
+      embedApiKey: "OPENAI_API_KEY"
+    }
+    listens {
+      BvResolve.LLM_EMBED_OAO -> LLM_EMBED_OAO
+    }
+  }
+
+  trait BvLlmLm = Llm.traits.LlmClient {
+    events {
+      LLM_EMBED: LLM_EMBED_LM
+    }
+    config {
+      embedProvider: lmstudio
+      embedOrigin: "http://127.0.0.1:1234"
+      embedBasePath: "/v1"
+      embedModel: "text-embedding-bge-base-en-v1.5"
+      embedApiKey: "EMBEDDING_API_KEY"
+    }
+    listens {
+      BvResolve.LLM_EMBED_LM -> LLM_EMBED_LM
+    }
+  }
+
+
+  trait BvResolve = Resolve.traits.VectorResolve {
+    listens {
+      OrbBehaviors.BV_RESOLVE -> RESOLVE
+      BvSources.USER_STORE_READ -> USER_STORE_READ
+      BvStore.VECTOR_RESOLVED -> VECTOR_RESOLVED
+      BvStore.VECTOR_REFUSED -> VECTOR_REFUSED
+      BvLlmOrShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      BvLlmOrShared.LLM_FAILED -> LLM_FAILED
+      BvLlmOrOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      BvLlmOrOwn.LLM_FAILED -> LLM_FAILED
+      BvLlmOaShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      BvLlmOaShared.LLM_FAILED -> LLM_FAILED
+      BvLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      BvLlmOaOwn.LLM_FAILED -> LLM_FAILED
+      BvLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      BvLlmLm.LLM_FAILED -> LLM_FAILED
+      BvWrite.VECTOR_WRITTEN -> VECTOR_WRITTEN
+      BvWrite.VECTOR_WRITE_REFUSED -> VECTOR_WRITE_REFUSED
+      RESOLVE {
+        wanted : [WantedText]!
+        snapshots : [bytes]!
+        snapshotPaths : [string]
+        userDir : string!
+        userAnchor : string!
+        providerModel : string!
+        providerKind : string
+        embedModel : string
+      }
+      USER_STORE_READ {
+        data : bytes!
+      }
+      VECTOR_RESOLVED {
+        model : string!
+        entries : [StoreEntry]!
+      }
+      VECTOR_REFUSED {
+        code : string!
+        detail : string!
+      }
+      LLM_EMBED_RESULT {
+        embeddings : [[number]]!
+      }
+      LLM_FAILED {
+        code : string
+        message : string!
+      }
+      VECTOR_WRITTEN {
+        path : string!
+        count : number!
+      }
+      VECTOR_WRITE_REFUSED {
+        code : string!
+        detail : string!
+      }
+    }
+  }
+
+
+  trait BvTexts = Texts.traits.BehaviorTexts {
+    listens {
+      OrbBehaviors.BV_ENTRY_TEXTS -> BUILD_ENTRY_TEXTS
+      OrbBehaviors.BV_KNOB_TEXTS -> BUILD_KNOB_TEXTS
+    }
+  }
+
+  trait BvSources = Sources.traits.VectorSources {
+    listens {
+      OrbBehaviors.BV_SOURCES -> SOURCES
+      BvResolve.USER_STORE_NEEDED -> USER_STORE_NEEDED
+    }
+  }
+
+  trait OrbLintControlUnhandled = ControlUnhandled.traits.OrbLintControlUnhandled {
+  }
+  trait Versions = LintInput.traits.Versions {
+  }
+  trait Packs = LintInput.traits.Packs {
+  }
+  trait OrbLintInput = LintInput.traits.OrbLintInput {
+    listens {
+      OrbBehaviors.BV_LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+  trait OrbFiredEvents = Fired.traits.OrbFiredEvents {
+    listens {
+      FIRED_PROPS_HEARD { names : [string]!  maps : [string]!  listens : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      FIRED_SEMANTICS_HEARD { semantics : Map string string!  functions : [string]!  busExcluded : [string]!  targetOptions : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: each operator's declared returnSemantics and the function-returning operators."
+      FIRED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_EVENT_PROPS -> FIRED_PROPS_HEARD
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> FIRED_SEMANTICS_HEARD
+      OrbLintInput.LINT_INPUT -> FIRED_INPUT_HEARD
+    }
+  }
+  trait OrbEmbedChain = Chain.traits.OrbEmbedChain {
+    listens {
+      EMBED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
+        @description "std-orb-lint-input's LINT_INPUT: the lowered program."
+      OrbLintInput.LINT_INPUT -> EMBED_INPUT_HEARD
+      EMBED_INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
+        @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait uses."
+      OrbLintInput.LINT_INDEX -> EMBED_INDEX_HEARD
     }
   }
 
@@ -157,35 +483,102 @@ orbital OrbBehaviorsOrbital {
 
     state working {
       INIT -> working
-      BEHAVIORS_CATALOG -> working when (not @entity.topics)
+      BEHAVIORS_CATALOG -> working when (and (not @entity.topics) @entity.noVectors)
         (behavior/catalog { paths: @entity.paths, exposure: @entity.exposure } {
-          vectors: (not @entity.noVectors)
           traits: (not @entity.noTraits)
           emit: { success: CATALOG_LISTED, failure: BEHAVIORS_FAILED }
         })
+      BEHAVIORS_CATALOG -> working when (and (not @entity.topics) (not @entity.noVectors))
+        (behavior/catalog { paths: @entity.paths, exposure: @entity.exposure } {
+          traits: (not @entity.noTraits)
+          texts: true
+          emit: { success: CATALOG_FACTS, failure: BEHAVIORS_FAILED }
+        })
+      CATALOG_FACTS -> working
+        (set @entity.rows @payload.result)
+        (emit BV_ENTRY_TEXTS { rows: @payload.result })
+      ENTRY_TEXTS_BUILT -> working when (= @entity.sub "catalog")
+        (set @entity.wanted @payload.wanted)
+        (behavior/packages { emit: { success: PACKAGES_LISTED, failure: BEHAVIORS_FAILED } })
+      PACKAGES_LISTED -> working when (= @entity.sub "catalog")
+        (emit BV_SOURCES { paths: (array/filter (array/map (array/filter @payload.result (fn p (array/some @entity.rows (fn r (= (array/first (str/split @r.behavior "/")) @p.prefix))))) (fn p (default @p.vectors ""))) (fn v (!= @v ""))) })
       BEHAVIORS_CATALOG -> working when @entity.topics
         (behavior/catalog { paths: @entity.paths, exposure: @entity.exposure } {
-          vectors: false
-          topics: true
-          emit: { success: CATALOG_TOPICS_LISTED, failure: BEHAVIORS_FAILED }
+          traits: false
+          emit: { success: CATALOG_TOPIC_ROWS, failure: BEHAVIORS_FAILED }
         })
-      BEHAVIORS_DESCRIBE -> working when (str/includes @entity.spec ".traits.")
+      CATALOG_TOPIC_ROWS -> working
+        (emit CATALOG_TOPICS_LISTED { result: (let ((rows @payload.result)) (array/map (array/filter (array/range 0 (array/len @rows)) (fn i (let ((r (default (array/nth @rows @i) {}))) (= @i (array/findIndex @rows (fn x (and (= (object/get @x "package" "") (object/get @r "package" "")) (= (object/get @x "topic" "") (object/get @r "topic" ""))))))))) (fn i (let ((r (default (array/nth @rows @i) {}))) { package: (object/get @r "package" ""), prefix: (default (array/first (str/split (object/get @r "behavior" "") "/")) ""), topic: (object/get @r "topic" ""), count: (array/len (array/filter @rows (fn x (and (= (object/get @x "package" "") (object/get @r "package" "")) (= (object/get @x "topic" "") (object/get @r "topic" "")))))) }))) ) })
+      BEHAVIORS_DESCRIBE -> working when (and (str/includes @entity.spec ".traits.") (not @entity.knobVectors))
         (behavior/describe { behavior: (array/first (str/split @entity.spec ".traits.")), trait: (array/nth (str/split @entity.spec ".traits.") 1) } {
-          knobVectors: @entity.knobVectors
           emit: { success: TRAIT_DESCRIBED, failure: BEHAVIORS_FAILED }
+        })
+      BEHAVIORS_DESCRIBE -> working when (and (str/includes @entity.spec ".traits.") @entity.knobVectors)
+        (behavior/describe { behavior: (array/first (str/split @entity.spec ".traits.")), trait: (array/nth (str/split @entity.spec ".traits.") 1) } {
+          emit: { success: KNOB_BASE_DESCRIBED, failure: BEHAVIORS_FAILED }
         })
       BEHAVIORS_DESCRIBE -> working when (not (str/includes @entity.spec ".traits."))
         (behavior/describe { behavior: @entity.spec } {
-          knobVectors: @entity.knobVectors
           emit: { success: BEHAVIOR_DESCRIBED, failure: BEHAVIORS_FAILED }
         })
+      BEHAVIOR_DESCRIBED -> working
+        (set @entity.raw @payload.result)
+        (behavior/source { behavior: (array/first (str/split @entity.spec ".orbitals.")) } {
+          file: true
+          emit: { success: FORWARDS_PATH_RESOLVED, failure: BEHAVIORS_FAILED }
+        })
+      FORWARDS_PATH_RESOLVED -> working
+        (emit BV_LINT_REQUEST { file: @payload.result.path })
+      FORWARDS_HEARD -> ready when (= @payload.scope "")
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify (object/merge @entity.raw { orbitals: (array/map (default @entity.raw.orbitals []) (fn o (object/merge @o { forwards: (array/map (array/filter @payload.forwards (fn f (= @f.orbital @o.value.orbital))) (fn f (object/pick @f ["trait", "event", "via"]))) }))) }) { pretty: true }) })
+      FORWARDS_UNREAD -> ready
+        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: (str/concat "behavior/describe: the forwarded controls of " @payload.file " cannot be read: " @payload.error) })
+      CATALOG_ATTACHED -> ready when @entity.json
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
+      CATALOG_ATTACHED -> ready when (not @entity.json)
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (str/join (array/map @payload.result (fn e (str/concat (str/padEnd (object/get @e behavior "") 48 " ") " " (str/padEnd (object/get @e level "") 9 " ") " " (str/padEnd (object/get @e exposure "-") 10 " ") " " (object/get @e description "")))) "
+") })
+      TRAIT_ATTACHED -> ready
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
+      KNOB_BASE_DESCRIBED -> working
+        (set @entity.base @payload.result)
+        (set @entity.trait (default (array/nth (str/split @entity.spec ".traits.") 1) ""))
+        (behavior/resolve { behavior: (array/first (str/split @entity.spec ".traits.")) } { path: true } {
+          emit: { success: KNOB_PATH_RESOLVED, failure: BEHAVIORS_FAILED }
+        })
+      KNOB_PATH_RESOLVED -> working
+        (set @entity.vpath @payload.result.path)
+        (set @entity.stem (str/replace-pattern (os/path-base @payload.result.path) "\\.[^.]*$" ""))
+        (behavior/packages { emit: { success: PACKAGES_LISTED, failure: BEHAVIORS_FAILED } })
+      PACKAGES_LISTED -> working when (and (= @entity.sub "describe") (not (array/some @payload.result (fn p (str/startsWith @entity.vpath (str/concat @p.root "/"))))))
+        (emit TRAIT_ATTACHED { result: @entity.base })
+      PACKAGES_LISTED -> working when (and (= @entity.sub "describe") (array/some @payload.result (fn p (str/startsWith @entity.vpath (str/concat @p.root "/")))))
+        (set @entity.vpaths (array/filter (array/map (array/filter @payload.result (fn p (str/startsWith @entity.vpath (str/concat @p.root "/")))) (fn p (default @p.vectors ""))) (fn v (!= @v ""))))
+        (behavior/describe { behavior: (array/first (str/split @entity.spec ".traits.")) } {
+          emit: { success: KNOB_WHOLE_DESCRIBED, failure: BEHAVIORS_FAILED }
+        })
+      KNOB_WHOLE_DESCRIBED -> working when (!= (json/parse (json/stringify @payload.result) DescribedBehavior) null)
+        (set @entity.whole (default (json/parse (json/stringify @payload.result) DescribedBehavior) @entity.whole))
+        (behavior/source { behavior: (array/first (str/split @entity.spec ".traits.")) } {
+          emit: { success: KNOB_SOURCED, failure: BEHAVIORS_FAILED }
+        })
+      KNOB_WHOLE_DESCRIBED -> ready when (= (json/parse (json/stringify @payload.result) DescribedBehavior) null)
+        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: "behavior/describe: the description is not a behavior description" })
+      KNOB_SOURCED -> working when (!= (json/parse (json/stringify @payload.result) WrittenProgram) null)
+        (emit BV_KNOB_TEXTS { name: @entity.stem, described: @entity.whole, written: (default (json/parse (json/stringify @payload.result) WrittenProgram) { orbitals: [] }) })
+      KNOB_SOURCED -> ready when (= (json/parse (json/stringify @payload.result) WrittenProgram) null)
+        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: "behavior/source: the program is not a program" })
+      KNOB_TEXTS_BUILT -> working when (= @entity.sub "describe")
+        (set @entity.wanted (array/filter (array/map (default @entity.base.knobs []) (fn k (let ((key (str/concat @entity.stem "/" (default (array/first (array/map (array/filter (default @entity.whole.orbitals []) (fn o (array/some (default @o.traits []) (fn t (= @t.trait @entity.trait))))) (fn o (default @o.value.orbital "")))) "") "/" @entity.trait "/" @k.key))) (let ((hit (array/find @payload.texts (fn t (= @t.key @key))))) (if (= @hit null) { key: "", text: "" } { key: @key, text: (default @hit.text "") }))))) (fn w (!= @w.key ""))))
+        (emit BV_SOURCES { paths: @entity.vpaths })
       BEHAVIORS_STDIN -> working
         (os/read-file "/dev/fd/0" { emit: { success: STDIN_READ, failure: STDIN_FAILED } })
-      STDIN_READ -> working
-        (behavior/describe (json/parse (bytes/to-string @payload.data) DescribeValue) {
-          knobVectors: @entity.knobVectors
+      STDIN_READ -> working when (not @entity.knobVectors)
+        (behavior/describe (json/parse (default (bytes/to-string @payload.data) "") DescribeValue) {
           emit: { success: TRAIT_DESCRIBED, failure: BEHAVIORS_FAILED }
         })
+      STDIN_READ -> ready when @entity.knobVectors
+        (emit BEHAVIORS_ANSWERED { status: 501, body: "", stderr: "describe -: --knob-vectors is not carried for a value read from stdin" })
       BEHAVIORS_SOURCE -> working
         (behavior/source { behavior: (array/first (str/split @entity.spec ".traits.")) } {
           emit: { success: SOURCED, failure: BEHAVIORS_FAILED }
@@ -194,14 +587,72 @@ orbital OrbBehaviorsOrbital {
         (behavior/resolve { behavior: @entity.spec } { path: true } {
           emit: { success: WHICH_RESOLVED, failure: BEHAVIORS_FAILED }
         })
-      BEHAVIORS_TEXTS -> working when (= @entity.kind "")
-        (behavior/texts { paths: @entity.paths } {
-          emit: { success: TEXTS_LISTED, failure: BEHAVIORS_FAILED }
+      BEHAVIORS_TEXTS -> ready when (and (!= @entity.kind "") (!= @entity.kind "organism") (!= @entity.kind "capability") (!= @entity.kind "knob"))
+        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: (str/concat "unknown --kind `" @entity.kind "` (one of organism, capability, knob)") })
+      BEHAVIORS_TEXTS -> working when (or (= @entity.kind "") (= @entity.kind "organism") (= @entity.kind "capability") (= @entity.kind "knob"))
+        (behavior/catalog { paths: @entity.paths, exposure: [] } {
+          traits: false
+          texts: true
+          emit: { success: TEXTS_ROWS, failure: BEHAVIORS_FAILED }
         })
-      BEHAVIORS_TEXTS -> working when (!= @entity.kind "")
-        (behavior/texts { paths: @entity.paths, kind: @entity.kind } {
-          emit: { success: TEXTS_LISTED, failure: BEHAVIORS_FAILED }
+      TEXTS_ROWS -> working
+        (set @entity.rows (array/sort @payload.result "textOrder"))
+        (set @entity.ranks (array/unique (array/map @payload.result (fn r (default @r.rank 0)))))
+        (set @entity.gi 0)
+        (set @entity.acc [])
+        (emit TX_GROUP { at: @entity.gi })
+      TX_GROUP -> ready when (>= @entity.gi (array/len @entity.ranks))
+        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @entity.acc) })
+      TX_GROUP -> working when (< @entity.gi (array/len @entity.ranks))
+        (set @entity.grp (array/filter @entity.rows (fn r (= (default @r.rank 0) (default (array/nth @entity.ranks @entity.gi) 0)))))
+        (set @entity.ri 0)
+        (set @entity.gKnobs [])
+        (emit BV_ENTRY_TEXTS { rows: (array/filter @entity.rows (fn r (= (default @r.rank 0) (default (array/nth @entity.ranks @entity.gi) 0)))) })
+      ENTRY_TEXTS_BUILT -> working when (= @entity.sub "texts")
+        (set @entity.gOrg @payload.organism)
+        (set @entity.gCap @payload.capability)
+        (set @entity.cur (array/nth @entity.grp @entity.ri))
+        (emit TX_KNOB { at: @entity.ri })
+      TX_KNOB -> working when (and (or (= @entity.kind "") (= @entity.kind "knob")) (< @entity.ri (array/len @entity.grp)) (!= (default @entity.cur.exposure "") "internal"))
+        (behavior/describe { behavior: (default @entity.cur.behavior "") } {
+          emit: { success: TX_DESCRIBED, failure: BEHAVIORS_FAILED }
         })
+      TX_KNOB -> working when (and (or (= @entity.kind "") (= @entity.kind "knob")) (< @entity.ri (array/len @entity.grp)) (= (default @entity.cur.exposure "") "internal"))
+        (set @entity.ri (+ @entity.ri 1))
+        (set @entity.cur (array/nth @entity.grp @entity.ri))
+        (emit TX_KNOB { at: @entity.ri })
+      TX_KNOB -> working when (or (and (!= @entity.kind "") (!= @entity.kind "knob")) (>= @entity.ri (array/len @entity.grp)))
+        (set @entity.acc (array/concat @entity.acc (array/concat (if (or (= @entity.kind "") (= @entity.kind "organism")) @entity.gOrg []) (array/concat (if (or (= @entity.kind "") (= @entity.kind "capability")) @entity.gCap []) @entity.gKnobs))))
+        (set @entity.gi (+ @entity.gi 1))
+        (emit TX_GROUP { at: @entity.gi })
+      TX_DESCRIBED -> working when (!= (json/parse (json/stringify @payload.result) DescribedBehavior) null)
+        (set @entity.whole (default (json/parse (json/stringify @payload.result) DescribedBehavior) @entity.whole))
+        (behavior/source { behavior: (default @entity.cur.behavior "") } {
+          emit: { success: TX_SOURCED, failure: BEHAVIORS_FAILED }
+        })
+      TX_DESCRIBED -> ready when (= (json/parse (json/stringify @payload.result) DescribedBehavior) null)
+        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: "behavior/describe: the description is not a behavior description" })
+      TX_SOURCED -> working when (!= (json/parse (json/stringify @payload.result) WrittenProgram) null)
+        (emit BV_KNOB_TEXTS { name: (default @entity.cur.name ""), described: @entity.whole, written: (default (json/parse (json/stringify @payload.result) WrittenProgram) { orbitals: [] }) })
+      TX_SOURCED -> ready when (= (json/parse (json/stringify @payload.result) WrittenProgram) null)
+        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: "behavior/source: the program is not a program" })
+      KNOB_TEXTS_BUILT -> working when (= @entity.sub "texts")
+        (set @entity.gKnobs (array/concat @entity.gKnobs @payload.texts))
+        (set @entity.ri (+ @entity.ri 1))
+        (set @entity.cur (array/nth @entity.grp @entity.ri))
+        (emit TX_KNOB { at: @entity.ri })
+      KNOB_TEXTS_REFUSED -> ready
+        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: @payload.error })
+      SOURCES_READY -> working
+        (emit BV_RESOLVE { wanted: @entity.wanted, snapshots: @payload.snapshots, snapshotPaths: @payload.snapshotPaths, userDir: @payload.userDir, userAnchor: @payload.userAnchor, providerModel: @payload.providerModel, providerKind: @payload.providerKind, embedModel: @payload.embedModel })
+      SOURCES_REFUSED -> ready
+        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: (str/concat @payload.code ": " @payload.detail) })
+      VECTORS_REFUSED -> ready
+        (emit BEHAVIORS_ANSWERED { status: 500, body: "", stderr: (str/concat @payload.code ": " @payload.detail) })
+      VECTORS_ANSWERED -> working when (= @entity.sub "catalog")
+        (emit CATALOG_ATTACHED { result: (array/map @entity.rows (fn r (object/merge (object/pick @r ["behavior", "package", "topic", "level", "exposure", "pattern", "description", "capabilities", "traits", "value"]) { vectors: (default (object/fromEntries (array/concat (let ((hit (array/find @payload.vectors (fn v (= @v.key @r.behavior))))) (if (= @hit null) [] [["description", (default @hit.vector [])]])) (let ((hit (array/find @payload.vectors (fn v (= @v.key (str/concat @r.behavior "#capabilities")))))) (if (= @hit null) [] [["capabilities", (default @hit.vector [])]])))) {}), model: @payload.model }))) })
+      VECTORS_ANSWERED -> working when (and (= @entity.sub "describe") (validate/required @entity.base))
+        (emit TRAIT_ATTACHED { result: (object/merge @entity.base { model: @payload.model, knobs: (array/map (default @entity.base.knobs []) (fn k (let ((hit (array/find @payload.vectors (fn v (= @v.key (str/concat @entity.stem "/" (default (array/first (array/map (array/filter (default @entity.whole.orbitals []) (fn o (array/some (default @o.traits []) (fn t (= @t.trait @entity.trait))))) (fn o (default @o.value.orbital "")))) "") "/" @entity.trait "/" @k.key)))))) (if (= @hit null) @k (object/merge @k { vector: @hit.vector }))))) }) })
       BEHAVIORS_EXPECTS -> working when (str/startsWith @entity.spec "/")
         (behavior/resolve { behavior: @entity.spec } { expects: true } {
           emit: { success: EXPECTS_DERIVED, failure: BEHAVIORS_FAILED }
@@ -220,8 +671,6 @@ orbital OrbBehaviorsOrbital {
         (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
       WHICH_RESOLVED -> ready
         (emit BEHAVIORS_ANSWERED { status: 200, body: (str/concat @payload.result.path " (" @payload.result.owner ")") })
-      TEXTS_LISTED -> ready
-        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result) })
       CATALOG_LISTED -> ready when @entity.json
         (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
       CATALOG_TOPICS_LISTED -> ready when @entity.json
@@ -231,8 +680,6 @@ orbital OrbBehaviorsOrbital {
       CATALOG_LISTED -> ready when (not @entity.json)
         (emit BEHAVIORS_ANSWERED { status: 200, body: (str/join (array/map @payload.result (fn e (str/concat (str/padEnd (object/get @e behavior "") 48 " ") " " (str/padEnd (object/get @e level "") 9 " ") " " (str/padEnd (object/get @e exposure "-") 10 " ") " " (object/get @e description "")))) "\n") })
       TRAIT_DESCRIBED -> ready
-        (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
-      BEHAVIOR_DESCRIBED -> ready
         (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
       SOURCED -> ready
         (emit BEHAVIORS_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
@@ -261,6 +708,56 @@ orbital OrbBehaviorsOrbital {
         @tier "internal"
       BEHAVIORS_CATALOG { }
         @description "Internal: list the behaviors under the scopes."
+        @tier "internal"
+      CATALOG_TOPICS_LISTED {
+        result : [OrbBehaviorsCatalogTopic]!
+      }
+        @description "Internal: the listing's topics counted."
+        @tier "internal"
+      BV_LINT_REQUEST -> external {
+        file : string!
+      }
+        @tier "secondary"
+      BV_ENTRY_TEXTS -> external {
+        rows : [OrbBehaviorsCatalogHit]!
+      }
+        @tier "secondary"
+      BV_KNOB_TEXTS -> external {
+        name : string!
+        described : DescribedBehavior!
+        written : WrittenProgram!
+      }
+        @tier "secondary"
+      BV_SOURCES -> external {
+        paths : [string]!
+      }
+        @tier "secondary"
+      BV_RESOLVE -> external {
+        wanted : [WantedText]!
+        snapshots : [bytes]!
+        snapshotPaths : [string]
+        userDir : string!
+        userAnchor : string!
+        providerModel : string!
+        providerKind : string
+        embedModel : string
+      }
+        @tier "secondary"
+      TX_GROUP {
+        at : number!
+      }
+        @tier "internal"
+      TX_KNOB {
+        at : number!
+      }
+        @tier "internal"
+      CATALOG_ATTACHED {
+        result : [OrbBehaviorsCatalogHit]!
+      }
+        @tier "internal"
+      TRAIT_ATTACHED {
+        result : TraitDescription!
+      }
         @tier "internal"
       BEHAVIORS_DESCRIBE { }
         @description "Internal: describe the named trait or behavior."
@@ -352,6 +849,117 @@ orbital OrbBehaviorsOrbital {
       ArgsCli.ARGS_PARSED -> BEHAVIORS_ARGS_DONE
       BEHAVIORS_CATALOG { }
         @description "Self: list the behaviors."
+      FORWARDS_PATH_RESOLVED {
+        result : OrbBehaviorsSourceFile!
+      }
+        @description "behavior/source's success with file: true, for the described behavior's forwarded controls: the file the lint input reads."
+      OrbLintControlUnhandled.CONTROLS_FORWARDED -> FORWARDS_HEARD
+      FORWARDS_HEARD {
+        scope : string!
+        forwards : [CuForward]!
+      }
+        @description "std-orb-lint-control-unhandled's CONTROLS_FORWARDED: the unhandled controls a trait leaves for its embedder."
+      OrbLintInput.LINT_INPUT_UNREAD -> FORWARDS_UNREAD
+      FORWARDS_UNREAD {
+        file : string!
+        error : string!
+      }
+        @description "std-orb-lint-input's LINT_INPUT_UNREAD: the described behavior's file could not be read or lowered."
+      TX_GROUP {
+        at : number!
+      }
+        @description "Self: texts of the next package."
+      TX_KNOB {
+        at : number!
+      }
+        @description "Self: knob texts of the next behavior."
+      CATALOG_FACTS {
+        result : [OrbBehaviorsCatalogHit]!
+      }
+        @description "behavior/catalog's success with `texts: true`."
+      CATALOG_TOPIC_ROWS {
+        result : [OrbBehaviorsCatalogHit]!
+      }
+        @description "behavior/catalog's success for the topics listing: the rows std counts per package and topic."
+      CATALOG_ATTACHED {
+        result : [OrbBehaviorsCatalogHit]!
+      }
+        @description "Self: the catalog with its vectors attached."
+      TRAIT_ATTACHED {
+        result : TraitDescription!
+      }
+        @description "Self: the trait description with its knob vectors attached."
+      TEXTS_ROWS {
+        result : [OrbBehaviorsCatalogHit]!
+      }
+        @description "behavior/catalog's success for the texts command."
+      PACKAGES_LISTED {
+        result : [OrbBehaviorsPackage]!
+      }
+        @description "behavior/packages's success."
+      KNOB_BASE_DESCRIBED {
+        result : TraitDescription!
+      }
+        @description "behavior/describe's success for the trait whose knob vectors are asked."
+      KNOB_PATH_RESOLVED {
+        result : OrbBehaviorsWhich!
+      }
+        @description "behavior/resolve's success for the trait's behavior."
+      KNOB_WHOLE_DESCRIBED {
+        result : DescribedBehavior!
+      }
+        @description "behavior/describe's success for the whole behavior."
+      KNOB_SOURCED {
+        result : SExpr!
+      }
+        @description "behavior/source's success for the knob texts."
+      TX_DESCRIBED {
+        result : DescribedBehavior!
+      }
+        @description "behavior/describe's success for a behavior whose knob texts are built."
+      TX_SOURCED {
+        result : SExpr!
+      }
+        @description "behavior/source's success for a behavior whose knob texts are built."
+      BvTexts.ENTRY_TEXTS_BUILT -> ENTRY_TEXTS_BUILT
+      ENTRY_TEXTS_BUILT {
+        organism : [TextRow]!
+        capability : [TextRow]!
+        wanted : [WantedText]!
+      }
+      BvTexts.KNOB_TEXTS_BUILT -> KNOB_TEXTS_BUILT
+      KNOB_TEXTS_BUILT {
+        texts : [TextRow]!
+      }
+      BvTexts.KNOB_TEXTS_REFUSED -> KNOB_TEXTS_REFUSED
+      KNOB_TEXTS_REFUSED {
+        error : string!
+      }
+      BvSources.SOURCES_READY -> SOURCES_READY
+      SOURCES_READY {
+        snapshots : [bytes]!
+        snapshotPaths : [string]!
+        userDir : string!
+        userAnchor : string!
+        providerModel : string!
+        providerKind : string!
+        embedModel : string!
+      }
+      BvSources.SOURCES_REFUSED -> SOURCES_REFUSED
+      SOURCES_REFUSED {
+        code : string!
+        detail : string!
+      }
+      BvResolve.VECTORS_ANSWERED -> VECTORS_ANSWERED
+      VECTORS_ANSWERED {
+        model : string!
+        vectors : [KeyedVector]!
+      }
+      BvResolve.VECTORS_REFUSED -> VECTORS_REFUSED
+      VECTORS_REFUSED {
+        code : string!
+        detail : string!
+      }
       BEHAVIORS_DESCRIBE { }
         @description "Self: describe the behavior."
       BEHAVIORS_STDIN { }
@@ -390,10 +998,6 @@ orbital OrbBehaviorsOrbital {
         result : OrbBehaviorsWhich!
       }
         @description "behavior/resolve's success with path: true."
-      TEXTS_LISTED {
-        result : [OrbBehaviorsText]!
-      }
-        @description "behavior/texts's success."
       CATALOG_LISTED {
         result : [OrbBehaviorsCatalogHit]!
       }
@@ -401,7 +1005,7 @@ orbital OrbBehaviorsOrbital {
       CATALOG_TOPICS_LISTED {
         result : [OrbBehaviorsCatalogTopic]!
       }
-        @description "behavior/catalog's success with `topics: true`."
+        @description "Self: the listing's packages and topics, each once in first-appearance order, with its count."
       TRAIT_DESCRIBED {
         result : TraitDescription!
       }
@@ -421,5 +1025,5 @@ orbital OrbBehaviorsOrbital {
     }
   }
 
-  page boot as OrbBehaviorsOrbitalStart -> OrbBehaviors, ArgsCli
+  page boot as OrbBehaviorsOrbitalStart -> OrbBehaviors, OrbLintControlUnhandled, OrbLintInput, OrbFiredEvents, OrbEmbedChain, Packs, Versions, ArgsCli, BvTexts, BvSources, BvResolve, BvStore, BvWrite, BvQuantize, BvF32, BvSig6, BvBigCmp, BvDelay, BvLlmOrShared, BvLlmOrOwn, BvLlmOaShared, BvLlmOaOwn, BvLlmLm
 }

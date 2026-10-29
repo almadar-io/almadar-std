@@ -17,6 +17,9 @@ type ThVariant = { colors : ThMap, typography : ThMap, typeScale : ThScale }
 type ThDef = { name : string, tokens : ThTokens, variants : Map string ThVariant }
 type ThOrbital = { theme : string | ThDef }
 type ThProgram = { theme : string | ThDef, orbitals : [ThOrbital] }
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintThemeValuesCodes = { eMissingName : LintCodeDecl , genInvalidValue : LintCodeDecl }
+
 orbital OrbLintThemeValuesOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -69,7 +72,7 @@ orbital OrbLintThemeValuesOrbital {
                       (fn it (or (validate/pattern @it "^\"[^\"]+\"$") (validate/pattern @it "^'[^']+'$") (validate/pattern @it "^-?[A-Za-z][\\p{L}\\p{N}_-]*(?: [A-Za-z0-9][\\p{L}\\p{N}_-]*)*$") (validate/pattern @it "^var\\(--[\\p{L}\\p{N}_-]+(?:,.*)?\\)$")))))))
                       (if (= @k "color") (not (let ((tv (str/trim @v))) (if (str/startsWith @tv "#") (validate/pattern @tv "^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$") (or (str/startsWith @tv "rgb") (str/startsWith @tv "hsl") (str/startsWith @tv "var(") (validate/pattern @tv "^[\\p{L}-]*$"))))) (not (let ((tv (str/trim @v))) (or (str/startsWith @tv "var(") (validate/pattern @tv "^(?:[+-]?(?:(?:[0-9]+\\.?[0-9]*|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?|[iI][nN][fF](?:[iI][nN][iI][tT][yY])?|[nN][aA][nN]))(?:px|rem|em|%|vh|vw|pt|ch|ex)?$"))))))))))
                 (fn s (let ((v (object/get @s "value")) (k (object/get @s "kind")))
-                  { code: (if (= @k "name") "ORB_E_MISSING_NAME" "ORB_GEN_INVALID_VALUE"), path: (object/get @s "path"),
+                  { code: (if (= @k "name") @config.codes.eMissingName.code @config.codes.genInvalidValue.code), path: (object/get @s "path"),
                     message: (if (= @k "name") "Theme name is required"
                       (if (= @k "font") (str/concat "Malformed CSS font-family stack '" @v "' — separate every family with a comma and fully quote multi-word names")
                         (if (= @k "color") (str/concat "Color value '" @v "' may not be a valid CSS color")
@@ -93,6 +96,11 @@ orbital OrbLintThemeValuesOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ThProgram  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+    config {
+      codes : LintThemeValuesCodes = { eMissingName: { code: "ORB_E_MISSING_NAME", category: "entity", description: "An entity is missing its required name" }, genInvalidValue: { code: "ORB_GEN_INVALID_VALUE", category: "generic", description: "A value is invalid for the position it is written in" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }
   }
 

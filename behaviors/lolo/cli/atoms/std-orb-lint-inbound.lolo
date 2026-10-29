@@ -19,6 +19,9 @@ type InboundTrait = { name : string, emits : [InboundEmit], stateMachine : Inbou
 type InboundOrbital = { name : string, traits : [InboundTrait] }
 type InboundProgram = { inbound : [string], orbitals : [InboundOrbital]! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintInboundCodes = { inboundEntryInvalid : LintCodeDecl , inboundUndeclared : LintCodeDecl , inboundDuplicate : LintCodeDecl , inboundVerifyInvalid : LintCodeDecl , inboundAnswerUndeclared : LintCodeDecl }
+
 orbital OrbLintInboundOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -53,19 +56,19 @@ orbital OrbLintInboundOrbital {
               (array/flatten (array/map (array/range 0 (array/len @entries)) (fn i
                 (let ((en (array/nth @entries @i)))
                   (if (not (validate/pattern @en "^[a-z0-9][a-z0-9-]*$"))
-                    [{ code: "ORB_INBOUND_ENTRY_INVALID", path: (str/concat "inbound[" @i "]"), message: (str/concat "inbound entry '" @en "' is not a hook name"), suggestion: "Write the one path segment after /api/hooks/: lower-case letters, digits and '-'", severity: "error" }]
+                    [{ code: @config.codes.inboundEntryInvalid.code, path: (str/concat "inbound[" @i "]"), message: (str/concat "inbound entry '" @en "' is not a hook name"), suggestion: "Write the one path segment after /api/hooks/: lower-case letters, digits and '-'", severity: "error" }]
                     (if (array/includes (array/slice @entries 0 @i) @en)
-                      [{ code: "ORB_INBOUND_ENTRY_INVALID", path: (str/concat "inbound[" @i "]"), message: (str/concat "inbound entry '" @en "' is listed twice"), suggestion: "", severity: "error" }]
+                      [{ code: @config.codes.inboundEntryInvalid.code, path: (str/concat "inbound[" @i "]"), message: (str/concat "inbound entry '" @en "' is listed twice"), suggestion: "", severity: "error" }]
                       []))))))
               (array/flatten (array/map (array/range 0 (array/len @handlers)) (fn k
                 (let ((h (array/nth @handlers @k)))
                   (array/flatten [
-                    (if (array/includes @entries (object/get @h "name")) [] [{ code: "ORB_INBOUND_UNDECLARED", path: (object/get @h "at"), message: (str/concat "event '" (object/get @h "key") "' handles the inbound hook '" (object/get @h "name") "', which the program's `inbound` does not declare"), suggestion: "Add the hook name to the app's `inbound: [...]`", severity: "error" }])
-                    (if (> (array/len (array/filter (array/slice @handlers 0 @k) (fn p (= (object/get @p "name") (object/get @h "name"))))) 0) [{ code: "ORB_INBOUND_DUPLICATE", path: (object/get @h "at"), message: (str/concat "the inbound hook '" (object/get @h "name") "' has more than one handler"), suggestion: "", severity: "error" }] [])
+                    (if (array/includes @entries (object/get @h "name")) [] [{ code: @config.codes.inboundUndeclared.code, path: (object/get @h "at"), message: (str/concat "event '" (object/get @h "key") "' handles the inbound hook '" (object/get @h "name") "', which the program's `inbound` does not declare"), suggestion: "Add the hook name to the app's `inbound: [...]`", severity: "error" }])
+                    (if (> (array/len (array/filter (array/slice @handlers 0 @k) (fn p (= (object/get @p "name") (object/get @h "name"))))) 0) [{ code: @config.codes.inboundDuplicate.code, path: (object/get @h "at"), message: (str/concat "the inbound hook '" (object/get @h "name") "' has more than one handler"), suggestion: "", severity: "error" }] [])
                     (if (and (object/get @h "hasV") (or (not (validate/pattern (object/get @h "hdr") "^[a-z0-9][a-z0-9-]*$")) (not (validate/pattern (object/get @h "cred") "^[A-Za-z0-9_]+$"))))
-                      [{ code: "ORB_INBOUND_VERIFY_INVALID", path: (object/get @h "at"), message: (str/concat "inbound hook '" (object/get @h "name") "' verifies header '" (object/get @h "hdr") "' against credential '" (object/get @h "cred") "', which are not a lower-case header name and a credential name"), suggestion: (str/concat "Write `verifies " (json/stringify "x-signature-token") " " (json/stringify "PROVIDER_TOKEN") "`: a lower-case header, then a credential name of letters, digits and '_'"), severity: "error" }]
+                      [{ code: @config.codes.inboundVerifyInvalid.code, path: (object/get @h "at"), message: (str/concat "inbound hook '" (object/get @h "name") "' verifies header '" (object/get @h "hdr") "' against credential '" (object/get @h "cred") "', which are not a lower-case header name and a credential name"), suggestion: (str/concat "Write `verifies " (json/stringify "x-signature-token") " " (json/stringify "PROVIDER_TOKEN") "`: a lower-case header, then a credential name of letters, digits and '_'"), severity: "error" }]
                       [])
-                    (if (array/includes (object/get @h "emitted") (object/get @h "ans")) [] [{ code: "ORB_INBOUND_ANSWER_UNDECLARED", path: (object/get @h "at"), message: (str/concat "event '" (object/get @h "key") "' answers with '" (object/get @h "ans") "', which the trait does not declare in `emits`"), suggestion: "Declare the answer event in the trait's `emits { … }` with a `status : number!` and a `body : string!` payload", severity: "error" }])])))))))))
+                    (if (array/includes (object/get @h "emitted") (object/get @h "ans")) [] [{ code: @config.codes.inboundAnswerUndeclared.code, path: (object/get @h "at"), message: (str/concat "event '" (object/get @h "key") "' answers with '" (object/get @h "ans") "', which the trait does not declare in `emits`"), suggestion: "Declare the answer event in the trait's `emits { … }` with a `status : number!` and a `body : string!` payload", severity: "error" }])])))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "inbound", scope: @entity.scope, findings: @entity.findings })
@@ -85,6 +88,12 @@ orbital OrbLintInboundOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintInboundCodes = { inboundEntryInvalid: { code: "ORB_INBOUND_ENTRY_INVALID", category: "inbound", description: "An inbound entry is not a valid hook name" }, inboundUndeclared: { code: "ORB_INBOUND_UNDECLARED", category: "inbound", description: "An event handles an inbound hook that the program's inbound block does not declare" }, inboundDuplicate: { code: "ORB_INBOUND_DUPLICATE", category: "inbound", description: "An inbound hook has more than one handler" }, inboundVerifyInvalid: { code: "ORB_INBOUND_VERIFY_INVALID", category: "inbound", description: "An inbound hook verifies a header against a credential, but the header is not a lower-case header name or the credential is not a credential name" }, inboundAnswerUndeclared: { code: "ORB_INBOUND_ANSWER_UNDECLARED", category: "inbound", description: "An inbound hook event answers with an event the trait does not declare in emits" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintInboundCli -> OrbLintInboundRun [client] {

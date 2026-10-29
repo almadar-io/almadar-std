@@ -1,0 +1,910 @@
+{
+ "atom": "cli/atoms/std-orb-lint-finding-codes.lolo",
+ "trait": "OrbLintFindingCodes",
+ "note": "Cases for the finding-codes lint on the resolved program: in a rule trait (a trait with a `codes` knob), an object under a transition or tick whose `code` string the knob's record does not declare is an error; a declared code, a trait without the knob and a non-string code are controls.",
+ "cases": [
+  {
+   "id": "a-code-the-record-does-not-declare-is-an-error",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fc",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "R",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "event": "LINT_INPUT",
+              "from": "ready",
+              "to": "ready",
+              "effects": [
+               [
+                "set",
+                "@entity.findings",
+                [
+                 {
+                  "code": "ORB_SOME_CODE",
+                  "path": "p",
+                  "message": "m",
+                  "suggestion": "",
+                  "severity": "error"
+                 }
+                ]
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "codes": {
+             "type": "Codes",
+             "default": {
+              "a": {
+               "code": "ORB_A",
+               "category": "x",
+               "description": "d"
+              }
+             }
+            }
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "finding-codes",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_LINT_FINDING_CODE_UNDECLARED",
+           "path": "orbitals[0 (O)].traits[0 (R)]",
+           "message": "A finding names the code 'ORB_SOME_CODE', which the rule's `codes` record does not declare",
+           "suggestion": "Declare the code in the rule's `codes` record and read it as `@config.codes.<name>.code`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-declared-code-is-clean",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fc",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "R",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "event": "LINT_INPUT",
+              "from": "ready",
+              "to": "ready",
+              "effects": [
+               [
+                "set",
+                "@entity.findings",
+                [
+                 {
+                  "code": "ORB_A",
+                  "path": "p",
+                  "message": "m",
+                  "suggestion": "",
+                  "severity": "error"
+                 }
+                ]
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "codes": {
+             "type": "Codes",
+             "default": {
+              "a": {
+               "code": "ORB_A",
+               "category": "x",
+               "description": "d"
+              },
+              "b": {
+               "code": "ORB_B",
+               "category": "x",
+               "description": "d"
+              }
+             }
+            }
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "finding-codes",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-the-second-declared-code-is-clean",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fc",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "R",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "event": "LINT_INPUT",
+              "from": "ready",
+              "to": "ready",
+              "effects": [
+               [
+                "set",
+                "@entity.findings",
+                [
+                 {
+                  "code": "ORB_B",
+                  "path": "p",
+                  "message": "m",
+                  "suggestion": "",
+                  "severity": "error"
+                 }
+                ]
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "codes": {
+             "type": "Codes",
+             "default": {
+              "a": {
+               "code": "ORB_A",
+               "category": "x",
+               "description": "d"
+              },
+              "b": {
+               "code": "ORB_B",
+               "category": "x",
+               "description": "d"
+              }
+             }
+            }
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "finding-codes",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-trait-without-a-codes-knob-may-carry-a-code-key",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fc",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "R",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "event": "LINT_INPUT",
+              "from": "ready",
+              "to": "ready",
+              "effects": [
+               [
+                "set",
+                "@entity.findings",
+                [
+                 {
+                  "code": "ORB_SOME_CODE",
+                  "path": "p",
+                  "message": "m",
+                  "suggestion": "",
+                  "severity": "error"
+                 }
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "finding-codes",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-undeclared-code-nested-in-a-let-and-an-if-is-found",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fc",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "R",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "event": "LINT_INPUT",
+              "from": "ready",
+              "to": "ready",
+              "effects": [
+               [
+                "set",
+                "@entity.findings",
+                [
+                 "let",
+                 [
+                  [
+                   "x",
+                   1
+                  ]
+                 ],
+                 [
+                  "if",
+                  [
+                   "=",
+                   "@x",
+                   1
+                  ],
+                  [
+                   {
+                    "code": "ORB_DEEP",
+                    "path": "p"
+                   }
+                  ],
+                  []
+                 ]
+                ]
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "codes": {
+             "type": "Codes",
+             "default": {
+              "a": {
+               "code": "ORB_A",
+               "category": "x",
+               "description": "d"
+              }
+             }
+            }
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "finding-codes",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_LINT_FINDING_CODE_UNDECLARED",
+           "path": "orbitals[0 (O)].traits[0 (R)]",
+           "message": "A finding names the code 'ORB_DEEP', which the rule's `codes` record does not declare",
+           "suggestion": "Declare the code in the rule's `codes` record and read it as `@config.codes.<name>.code`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-undeclared-code-in-a-tick-is-found",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fc",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "R",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "event": "LINT_INPUT",
+              "from": "ready",
+              "to": "ready",
+              "effects": [
+               [
+                "set",
+                "@entity.findings",
+                [
+                 {
+                  "code": "ORB_A",
+                  "path": "p",
+                  "message": "m",
+                  "suggestion": "",
+                  "severity": "error"
+                 }
+                ]
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "codes": {
+             "type": "Codes",
+             "default": {
+              "a": {
+               "code": "ORB_A",
+               "category": "x",
+               "description": "d"
+              }
+             }
+            }
+           },
+           "ticks": [
+            {
+             "name": "t",
+             "effects": [
+              [
+               "set",
+               "@entity.findings",
+               [
+                {
+                 "code": "ORB_TICK",
+                 "path": "p",
+                 "message": "m",
+                 "suggestion": "",
+                 "severity": "error"
+                }
+               ]
+              ]
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "finding-codes",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_LINT_FINDING_CODE_UNDECLARED",
+           "path": "orbitals[0 (O)].traits[0 (R)]",
+           "message": "A finding names the code 'ORB_TICK', which the rule's `codes` record does not declare",
+           "suggestion": "Declare the code in the rule's `codes` record and read it as `@config.codes.<name>.code`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "each-undeclared-occurrence-is-named",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fc",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "R",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "event": "LINT_INPUT",
+              "from": "ready",
+              "to": "ready",
+              "effects": [
+               [
+                "set",
+                "@entity.findings",
+                [
+                 {
+                  "code": "ORB_X",
+                  "path": "p",
+                  "message": "m",
+                  "suggestion": "",
+                  "severity": "error"
+                 }
+                ]
+               ],
+               [
+                "set",
+                "@entity.findings",
+                [
+                 {
+                  "code": "ORB_A",
+                  "path": "p",
+                  "message": "m",
+                  "suggestion": "",
+                  "severity": "error"
+                 }
+                ]
+               ],
+               [
+                "set",
+                "@entity.findings",
+                [
+                 {
+                  "code": "ORB_Y",
+                  "path": "p",
+                  "message": "m",
+                  "suggestion": "",
+                  "severity": "error"
+                 }
+                ]
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "codes": {
+             "type": "Codes",
+             "default": {
+              "a": {
+               "code": "ORB_A",
+               "category": "x",
+               "description": "d"
+              }
+             }
+            }
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "finding-codes",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_LINT_FINDING_CODE_UNDECLARED",
+           "path": "orbitals[0 (O)].traits[0 (R)]",
+           "message": "A finding names the code 'ORB_X', which the rule's `codes` record does not declare",
+           "suggestion": "Declare the code in the rule's `codes` record and read it as `@config.codes.<name>.code`",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_LINT_FINDING_CODE_UNDECLARED",
+           "path": "orbitals[0 (O)].traits[0 (R)]",
+           "message": "A finding names the code 'ORB_Y', which the rule's `codes` record does not declare",
+           "suggestion": "Declare the code in the rule's `codes` record and read it as `@config.codes.<name>.code`",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-non-string-code-key-is-not-a-finding-code",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fc",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "R",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "ready",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "event": "LINT_INPUT",
+              "from": "ready",
+              "to": "ready",
+              "effects": [
+               [
+                "set",
+                "@entity.findings",
+                [
+                 {
+                  "code": 3
+                 }
+                ]
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "codes": {
+             "type": "Codes",
+             "default": {
+              "a": {
+               "code": "ORB_A",
+               "category": "x",
+               "description": "d"
+              }
+             }
+            }
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "finding-codes",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-traits-no-findings",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "fc",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "T",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "finding-codes",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

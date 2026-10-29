@@ -1,13 +1,16 @@
-import type { StdOperatorMeta } from '../types.js';
+import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
 import { BOOLEAN, BYTES, NUMBER, STRING, list, lit, shape, union } from '../signature.js';
 import { OS_DATA, OS_HANDLE, OS_HOST, OS_PORT, arg, osEffect } from './os-common.js';
 
+const TLS_SPEC: OperatorTypeRef = shape({ serverName: STRING, ca: STRING, alpn: list(STRING) }, ['ca', 'alpn']);
+const TLS_ANSWER: OperatorTypeRef = shape({ sock: NUMBER, alpn: STRING }, ['alpn']);
+
 export const OS_NET_OPERATORS: Record<string, StdOperatorMeta> = {
   'os/tcp-connect': osEffect({
-    answer: shape({ sock: NUMBER }),
+    answer: TLS_ANSWER,
     grant: [{ kind: 'net', access: ['tcp'], host: 0, port: 1 }],
-    description: 'Open a TCP connection (grant net: tcp). Success payload: { sock }.',
-    params: [arg('host', OS_HOST, 'Host name or address'), arg('port', OS_PORT, 'Port')],
+    description: 'Open a TCP connection (grant net: tcp). Success payload: { sock }. With a third argument { serverName, ca?, alpn? } the kernel runs the TLS client handshake over the connected socket before answering (as os/tls-upgrade does) and the payload also carries alpn, the protocol the peer chose, when it chose one; a handshake or certificate failure answers { error, kind: "tls" } and closes the socket.',
+    params: [arg('host', OS_HOST, 'Host name or address'), arg('port', OS_PORT, 'Port'), arg('tls', TLS_SPEC, 'Optional TLS: { serverName, ca?, alpn? }. serverName is verified against the certificate and must be a host the net grant names; ca is PEM roots, else the web roots; alpn lists protocol names in offer order', true)],
     example: '["os/tcp-connect", "db.internal", 5432, { "emit": { "success": "SOCK_OPENED", "failure": "NET_FAILED" } }]',
   }),
   'os/tcp-listen': osEffect({
@@ -18,6 +21,13 @@ export const OS_NET_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [arg('host', OS_HOST, 'Address to bind'), arg('port', OS_PORT, 'Port')],
     stream: true,
     example: '["os/tcp-listen", "0.0.0.0", 8080, { "key": "listener", "emit": { "success": "LISTENING", "failure": "NET_FAILED", "onMessage": "SOCK_ACCEPTED" } }]',
+  }),
+  'os/tls-upgrade': osEffect({
+    answer: TLS_ANSWER,
+    grant: [],
+    description: 'Turn a connected socket into a TLS stream the kernel owns (serverName must be a host the net grant names). The kernel runs the client handshake as a journaled sequence of raw os/send and os/recv asks; a replay is byte-identical. Success payload: { sock, alpn? }, alpn being the protocol the peer chose from those offered; a handshake or certificate failure answers { error, kind: "tls" } and closes the socket. Afterwards os/send, os/recv and os/close on the socket carry plaintext; one os/send and one os/recv may be outstanding together.',
+    params: [arg('sock', OS_HANDLE, 'Socket handle'), arg('tls', TLS_SPEC, 'TLS: { serverName, ca?, alpn? }. serverName is verified against the certificate; ca is PEM roots, else the web roots; alpn lists protocol names in offer order')],
+    example: '["os/tls-upgrade", "@payload.sock", { "serverName": "db.internal" }, { "emit": { "success": "TLS_READY", "failure": "NET_FAILED" } }]',
   }),
   'os/send': osEffect({
     answer: shape({ bytes: NUMBER }),

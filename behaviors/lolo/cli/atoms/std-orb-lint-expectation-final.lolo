@@ -28,6 +28,9 @@ type ExPage = { name : string, path : string, protocol : string, traits : [ExPag
 type ExOrbital = { name : string, spec : boolean, expects : [ExExpect], entity : ExEntity, auxiliaryEntities : [ExEntity], traits : [ExTrait], pages : [ExPage] }
 type ExProgram = { orbitals : [ExOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintExpectationFinalCodes = { sExpectationUnsatisfied : LintCodeDecl, lintRuleFailed : LintCodeDecl }
+
 orbital OrbLintExpectationFinalOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -50,10 +53,12 @@ orbital OrbLintExpectationFinalOrbital {
        (allpg (array/flatten (array/map @orbs (fn o (object/get @o "pages" []))))))
 (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
   (let ((o (array/nth @orbs @oi)))
-   (if (or false (not (object/has @o "expects"))) []
+   (if (not (validate/required @o)) [{ code: @config.codes.lintRuleFailed.code, path: "", message: "rule expectation-final: an indexed orbital or expects entry is absent", suggestion: "Report this as a lint engine defect", severity: "error" }]
+   (if (not (object/has @o "expects")) []
     (let ((on (object/get @o "name" "")) (xs (object/get @o "expects" [])))
      (array/flatten (array/map (array/range 0 (array/len @xs)) (fn j
       (let ((x (array/nth @xs @j)))
+       (if (not (validate/required @x)) [{ code: @config.codes.lintRuleFailed.code, path: "", message: "rule expectation-final: an indexed orbital or expects entry is absent", suggestion: "Report this as a lint engine defect", severity: "error" }]
        (let ((base (str/concat "orbitals[" @oi " (" @on ")].expects[" @j "]")) (kind (object/get @x "kind" "")) (strict (object/get @x "strict" false)))
         (let ((unprov (if (= @kind "entity") (if (array/some @provs (fn p (= (object/get @p "n") (object/get @x "name" "")))) "" (str/concat "entity `" (object/get @x "name" "") "`"))
   (if (= @kind "identity") (if (!= (object/get @x "name" "") "") (if (array/some @provs (fn p (= (object/get @p "n") (object/get @x "name" "")))) "" (str/concat "identity `" (object/get @x "name" "") "`")) (if (array/some @provs (fn p (object/get @p "id"))) "" "an [identity] entity"))
@@ -65,7 +70,7 @@ orbital OrbLintExpectationFinalOrbital {
         "" (if (!= @pr "") (str/concat "a `" @pr "` page") (str/concat "page `" (object/get @x "path" "") "`"))))
   (if (= @kind "config") (if (array/some @alltr (fn p (object/has (object/get (object/get @p "t") "config" {}) (object/get @x "name" "")))) "" (str/concat "config knob `" (object/get @x "name" "") "` on a trait"))
     ""))))))))
-  (if (!= @unprov "") [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects " @unprov ", but nothing in this program provides it — its reads, writes and navigation would reach nothing."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }] []))))))))))))))))
+  (if (!= @unprov "") [{ code: @config.codes.sExpectationUnsatisfied.code, path: @base, message: (str/concat "`" @on "` expects " @unprov ", but nothing in this program provides it — its reads, writes and navigation would reach nothing."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }] []))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "expectation-final", scope: @entity.scope, findings: @entity.findings })
@@ -81,10 +86,16 @@ orbital OrbLintExpectationFinalOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ExProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ExProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintExpectationFinalCodes = { sExpectationUnsatisfied: { code: "ORB_S_EXPECTATION_UNSATISFIED", category: "schema", description: "An orbital expects an entity, trait, event, or config default that nothing in the program provides" }, lintRuleFailed: { code: "ORB_LINT_RULE_FAILED", category: "lint", description: "A lint rule met an input its own preconditions exclude and could not check it" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintExpectationFinalCli -> OrbLintExpectationFinalRun [client] {
@@ -95,7 +106,7 @@ orbital OrbLintExpectationFinalOrbital {
       LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
         (emit LINT_ANSWERED { status: 400, body: "usage: orb lint expectation-final <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_REQUEST { file: (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) })
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") })
     }
 
     state waiting {
@@ -129,7 +140,7 @@ orbital OrbLintExpectationFinalOrbital {
     listens {
       LINT_CALLED -> inbound "cli-lint-expectation-final" answers LINT_ANSWERED {
         headers : Map string string
-        rawBody : string
+        rawBody : string!
       }
         @description "Run `orb lint expectation-final` with its arguments and working directory."
         @synonyms "orb lint expectation-final"

@@ -30,6 +30,9 @@ const ValidationReport = shape({
   stats: nullable(openShape({ orbitals: NUMBER, entities: NUMBER, traits: NUMBER, pages: NUMBER })),
 });
 
+const PROVE_PROPOSITION = shape({ kind: STRING, entity: STRING, trait: STRING, state: STRING, from: STRING, event: STRING, to: STRING, expr: SEXPR }, ['entity', 'trait', 'state', 'from', 'event', 'to']);
+const PROVE_FINDING = shape({ verdict: union(lit('violated'), lit('unproved')), reason: STRING, counterexample: openShape({}), site: STRING, proposition: PROVE_PROPOSITION }, ['counterexample']);
+
 const GENERATE_OPTIONS = openShape({
   path: STRING,
   output: STRING,
@@ -110,6 +113,21 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
       EMIT_OPTIONS,
     ],
     example: '["program/validate", "@entity.program", { "emit": { "success": "CHECKED", "failure": "CHECK_FAILED" } }]',
+  },
+  'program/prove': {
+    module: 'program', category: 'std-program',
+    minArity: 1, maxArity: 3,
+    description: 'Prove the spec propositions of a program (`@invariant` on an entity, `@holds` on a state, `@ensures` on a transition) with the kernel\'s prover, and answer each one the program cannot be shown to keep: `{ findings }`, each `{ verdict, reason, counterexample?, site, proposition }`. `verdict` is `violated` (the evaluator confirmed `counterexample`, the bindings that break it) or `unproved` (the prover could not decide; `reason` says why, and `counterexample` is the possible one when it found one); a proposition that is proved is no finding. `site` names where it is owed, `proposition` is the proposition (`kind` row, state or transition, the names it belongs to, and its `expr`). The program is proved as given, or with `{ path }` (absolute) the file is resolved first and the program argument is not read.',
+    hasSideEffects: true,
+    runsOn: 'server',
+    host: 'program',
+    returnType: shape({ findings: list(PROVE_FINDING) }),
+    params: [
+      { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted, resolved program (null when `path` names the file)' },
+      { name: 'options', type: shape({ path: STRING }, ['path']), description: 'Optional `{ path }`: the absolute path of the file to resolve and prove', optional: true },
+      EMIT_OPTIONS,
+    ],
+    example: '["program/prove", "@entity.program", { "emit": { "success": "PROVED", "failure": "PROVE_FAILED" } }]',
   },
   'program/step': {
     module: 'program', category: 'std-program',

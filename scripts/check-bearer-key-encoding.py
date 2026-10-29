@@ -90,7 +90,7 @@ for original in GOLDENS["oidc"]["jwks"]["keys"]:
                 signature[-1] ^= 1
                 payload["signature"] = base64.b64encode(signature).decode()
             print("RUN real ES256 signature", "valid" if valid else "altered", flush=True)
-            wire = run("execute", str(ROOT / "behaviors/lolo/auth/atoms/std-ecdsa.lolo"), "--trait", "EcdsaVerifier",
+            wire = run("execute", str(ROOT / "behaviors/lolo/auth/atoms/std-jws.lolo"), "--trait", "JwsEc",
                        "--event", "ECDSA_VERIFY", "--payload", json.dumps(payload), "--cascade", "--json")
             assert emitted(wire, "ECDSA_VERIFIED") == [{"valid": valid}], wire
             print("PASS real ES256 signature", "valid" if valid else "altered", flush=True)

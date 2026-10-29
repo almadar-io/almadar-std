@@ -24,6 +24,9 @@ type NavOrbital = { name : string, traits : [NavTrait], pages : [NavPage], expec
 type NavLazy = { path : string }
 type NavProgram = { orbitals : [NavOrbital], lazyPages : [NavLazy] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintNavigateCodes = { effUnknownType : LintCodeDecl , pInvalidPath : LintCodeDecl , effNavigateTargetUnreachable : LintCodeDecl , effNavigateMissingPayload : LintCodeDecl }
+
 orbital OrbLintNavigateOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses LeavesUse from "std/behaviors/std-orb-effect-leaves"
@@ -76,15 +79,15 @@ orbital OrbLintNavigateOrbital {
               (if (not (and (validate/array @e) (> (array/len @e) 0) (or (= (array/nth @e 0) "navigate") (= (array/nth @e 0) "send-server")))) []
                 (let ((n (array/len @e)) (h (array/nth @e 0)))
               (if (= @h "send-server")
-                (if (< @n 2) [{ code: "ORB_EFF_UNKNOWN_TYPE", path: @p, message: "send-server requires an event name", suggestion: "Use: [\"send-server\", \"EVENT_NAME\"] or [\"send-server\", \"EVENT_NAME\", { payload }]", severity: "error" }] [])
-                (if (< @n 2) [{ code: "ORB_EFF_UNKNOWN_TYPE", path: @p, message: "navigate requires a path", suggestion: "Use: [\"navigate\", \"/path\"]", severity: "error" }]
+                (if (< @n 2) [{ code: @config.codes.effUnknownType.code, path: @p, message: "send-server requires an event name", suggestion: "Use: [\"send-server\", \"EVENT_NAME\"] or [\"send-server\", \"EVENT_NAME\", { payload }]", severity: "error" }] [])
+                (if (< @n 2) [{ code: @config.codes.effUnknownType.code, path: @p, message: "navigate requires a path", suggestion: "Use: [\"navigate\", \"/path\"]", severity: "error" }]
                   (let ((t (array/nth @e 1)))
                     (let ((np (if (validate/string @t) @t (if (and (validate/array @t) (> (array/len @t) 1) (= (array/nth @t 0) "str/concat") (validate/string (array/nth @t 1))) (array/nth @t 1) null))))
                       (if (= @np null) []
                         (let ((ext (or (str/startsWith @np "http://") (str/startsWith @np "https://"))) (dyn (validate/array @t)) (q (str/includes @np "?")) (route (array/first (str/split @np "?"))) (opts (if (> @n 2) (array/nth @e 2) null)))
                           (array/concat
                             (if (or @ext (str/startsWith @np "/") (str/startsWith @np (quote "@"))) []
-                              [{ code: "ORB_P_INVALID_PATH", path: @p, message: (str/concat "Navigate path should start with '/': '" @np "'"), suggestion: "Use absolute paths starting with /", severity: "error" }])
+                              [{ code: @config.codes.pInvalidPath.code, path: @p, message: (str/concat "Navigate path should start with '/': '" @np "'"), suggestion: "Use absolute paths starting with /", severity: "error" }])
                             (if (or @ext (= (str/replace-pattern @route "/+$" "") "/login")) []
                               (let ((m (if @q (let ((ex (array/find @reg (fn r (= (object/get @r "path") @route)))))
       (if (!= @ex null) @ex
@@ -100,12 +103,12 @@ orbital OrbLintNavigateOrbital {
             (array/find @reg (fn r (str/startsWith (object/get @r "path") (str/replace-pattern @np "/+$" ""))))))))))))
                                 (array/concat
                                   (if (and (= @m null) (> (array/len @reg) 0) (not (str/startsWith @np (quote "@"))))
-                                    [{ code: "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE", path: @p, message: (str/concat "Navigate target '" @np "' doesn't resolve to any declared page"), suggestion: (str/concat "Declare a matching `pages[].path` (e.g. `page \"" @np "\" -> ...`) or correct the navigate path"), severity: "error" }]
+                                    [{ code: @config.codes.effNavigateTargetUnreachable.code, path: @p, message: (str/concat "Navigate target '" @np "' doesn't resolve to any declared page"), suggestion: (str/concat "Declare a matching `pages[].path` (e.g. `page \"" @np "\" -> ...`) or correct the navigate path"), severity: "error" }]
                                     [])
                                   (if (= @m null) []
                                     (array/flatten (array/map (object/get @m "req") (fn rf
                                       (if (and (validate/object @opts) (array/includes (object/keys @opts) @rf)) []
-                                        [{ code: "ORB_EFF_NAVIGATE_MISSING_PAYLOAD", path: @p, message: (str/concat "Navigation to '" (object/get @m "path") "' requires payload field '" @rf "' for INIT event"), suggestion: (str/concat "Add payload to navigate effect: [\"navigate\", \"" @np "\", { \"" @rf "\": \"@entity." @rf "\" }]"), severity: "error" }]))))))))))))))))))))))))))
+                                        [{ code: @config.codes.effNavigateMissingPayload.code, path: @p, message: (str/concat "Navigation to '" (object/get @m "path") "' requires payload field '" @rf "' for INIT event"), suggestion: (str/concat "Add payload to navigate effect: [\"navigate\", \"" @np "\", { \"" @rf "\": \"@entity." @rf "\" }]"), severity: "error" }]))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "navigate", scope: @entity.scope, findings: @entity.findings })
@@ -131,6 +134,12 @@ orbital OrbLintNavigateOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintNavigateCodes = { effUnknownType: { code: "ORB_EFF_UNKNOWN_TYPE", category: "effect", description: "An effect has an unknown type or is malformed" }, pInvalidPath: { code: "ORB_P_INVALID_PATH", category: "page", description: "A page or navigate path does not start with a slash" }, effNavigateTargetUnreachable: { code: "ORB_EFF_NAVIGATE_TARGET_UNREACHABLE", category: "effect", description: "A navigate target path does not resolve to any declared page" }, effNavigateMissingPayload: { code: "ORB_EFF_NAVIGATE_MISSING_PAYLOAD", category: "effect", description: "A navigate effect omits a payload field the target page requires for its INIT event" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintNavigateCli -> OrbLintNavigateRun [client] {

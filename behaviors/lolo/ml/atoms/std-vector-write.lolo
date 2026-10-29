@@ -1,7 +1,7 @@
 app std-vector-write [
   version: "1.0.0",
-  description: "std-vector-write — write embedding vectors into an ORBVEC user store the way insert_many does. VECTOR_WRITE { path, model, records } quantizes through std-vector-quantize, creates the directory, takes the writer lock path.lock by exclusive create, reads the store, has std-vector-store validate it, refuses a model or dims that differ from the stored ones (ORB_VECTOR_MODEL_MISMATCH, ORB_VECTOR_DIMS_MISMATCH), merges (an incoming record wins a shared key, a later incoming duplicate wins an earlier one), keeps strictly ascending key order by inserting the sorted incoming records into the existing ones with a binary search, writes path.tmp and renames it over the store, then removes the lock. VECTOR_WRITTEN { path, count } carries the total records; VECTOR_WRITE_REFUSED { code, detail } carries any refusal after the lock was released. A held lock is waited on with the Rust backoff (5 ms doubling to 100 ms, delayed through std-delay whose resolution is its 100 ms deadline check) until 180 s, then ORB_VECTOR_LOCKED; a lock older than 120 s or whose recorded pid is gone (kill -0) is renamed aside and removed.",
-  fs: { cwd: "**": [read, write, remove, create] },
+  description: "std-vector-write — write embedding vectors into an ORBVEC user store the way insert_many does. VECTOR_WRITE { path, anchor, model, records } quantizes through std-vector-quantize, creates the directory, takes the writer lock path.lock by exclusive create, reads the store, has std-vector-store validate it, refuses a model or dims that differ from the stored ones (ORB_VECTOR_MODEL_MISMATCH, ORB_VECTOR_DIMS_MISMATCH), merges (an incoming record wins a shared key, a later incoming duplicate wins an earlier one), keeps strictly ascending key order by inserting the sorted incoming records into the existing ones with a binary search, writes path.tmp and renames it over the store, then removes the lock. The store is addressed under the anchor the caller declares, the way std-vector-sources reads it: `anchor` is `env` for the directory ALMADAR_VECTORS_DIR names (each file by its base name under that anchor) and `home` for ~/.almadar/vectors; `path` is the same file as an absolute path, used in messages and answers only. VECTOR_WRITTEN { path, count } carries the total records; VECTOR_WRITE_REFUSED { code, detail } carries any refusal after the lock was released. A held lock is waited on with the Rust backoff (5 ms doubling to 100 ms, delayed through std-delay whose resolution is its 100 ms deadline check) until 180 s, then ORB_VECTOR_LOCKED; a lock older than 120 s or whose recorded pid is gone (kill -0) is renamed aside and removed.",
+  fs: { "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   exec: ["kill"]
 ]
 uses Spec from "almadar-std/vector-write"
@@ -14,11 +14,18 @@ uses BigCmp from "std/behaviors/std-bigcmp"
 
 type VecRecord = { text : string!, vector : [number]! }
 type PlanStep = { row : bytes!, pos : number!, eq : number! }
+type StoreAnchor = { env : string! }
+type StorePath = string | { anchor : StoreAnchor!, path : string }
 
 orbital VectorWriteOrbital {
   entity VectorWriteRun [runtime] {
     id : string!
     path : string = ""
+    dirAt : StorePath = { anchor: { env: "ALMADAR_VECTORS_DIR" } }
+    at : StorePath = { anchor: { env: "ALMADAR_VECTORS_DIR" } }
+    lockAt : StorePath = { anchor: { env: "ALMADAR_VECTORS_DIR" } }
+    staleAt : StorePath = { anchor: { env: "ALMADAR_VECTORS_DIR" } }
+    tmpAt : StorePath = { anchor: { env: "ALMADAR_VECTORS_DIR" } }
     model : string = ""
     dims : number = 0
     rows : [bytes] = []
@@ -92,6 +99,11 @@ orbital VectorWriteOrbital {
     state idle {
       VECTOR_WRITE -> quantizing
         (set @entity.path @payload.path)
+        (set @entity.dirAt (if (== @payload.anchor "env") { anchor: { env: "ALMADAR_VECTORS_DIR" } } "~/.almadar/vectors"))
+        (set @entity.at (if (== @payload.anchor "env") { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (os/path-base @payload.path) } (str/concat "~/.almadar/vectors/" (os/path-base @payload.path))))
+        (set @entity.lockAt (if (== @payload.anchor "env") { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat (os/path-base @payload.path) ".lock") } (str/concat "~/.almadar/vectors/" (str/concat (os/path-base @payload.path) ".lock"))))
+        (set @entity.staleAt (if (== @payload.anchor "env") { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat (os/path-base @payload.path) ".lock.stale") } (str/concat "~/.almadar/vectors/" (str/concat (os/path-base @payload.path) ".lock.stale"))))
+        (set @entity.tmpAt (if (== @payload.anchor "env") { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (str/concat (os/path-base @payload.path) ".tmp") } (str/concat "~/.almadar/vectors/" (str/concat (os/path-base @payload.path) ".tmp"))))
         (set @entity.model @payload.model)
         (set @entity.existing (bytes/from-string ""))
         (set @entity.pendingCode "")
@@ -103,16 +115,16 @@ orbital VectorWriteOrbital {
       QUANTIZED -> preparing
         (set @entity.rows @payload.rows)
         (set @entity.dims @payload.dims)
-        (os/mkdir { anchor: "cwd" path: (os/path-dir @entity.path) } true { emit: { success: DIR_READY, failure: IO_FAILED } })
+        (os/mkdir @entity.dirAt true { emit: { success: DIR_READY, failure: IO_FAILED } })
       QUANTIZE_REFUSED -> idle
         (emit VECTOR_WRITE_REFUSED { code: @payload.code, detail: @payload.detail })
     }
 
     state preparing {
       DIR_READY -> locking
-        (set @entity.lockStart @now)
+        (set @entity.lockStart (time/diff @now (time/parse "1970-01-01T00:00:00Z")))
         (set @entity.wait 5)
-        (os/open { anchor: "cwd" path: (str/concat @entity.path ".lock") } "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } })
+        (os/open @entity.lockAt "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } })
       IO_FAILED -> idle
         (emit VECTOR_WRITE_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat @entity.path ": " @payload.error) })
     }
@@ -121,7 +133,7 @@ orbital VectorWriteOrbital {
       LOCK_TAKEN -> locked
         (os/close @payload.fd { emit: { success: FD_CLOSED, failure: FD_CLOSED } })
       LOCK_FAILED -> statting when (== @payload.kind "exists")
-        (os/stat { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_STATTED, failure: LOCK_BUSY } })
+        (os/stat @entity.lockAt { emit: { success: LOCK_STATTED, failure: LOCK_BUSY } })
       LOCK_FAILED -> idle when (!= @payload.kind "exists")
         (emit VECTOR_WRITE_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat @entity.path ".lock: " @payload.error) })
     }
@@ -133,21 +145,21 @@ orbital VectorWriteOrbital {
 
     state pidding {
       PID_READ -> stamping
-        (os/write-file { anchor: "cwd" path: (str/concat @entity.path ".lock") } (bytes/from-string (str/concat @payload.pid " " @now)) { emit: { success: LOCK_STAMPED, failure: LOCK_STAMPED } })
+        (os/write-file @entity.lockAt (bytes/from-string (str/concat @payload.pid " " @now)) { emit: { success: LOCK_STAMPED, failure: LOCK_STAMPED } })
       PID_FAILED -> stamping
-        (os/write-file { anchor: "cwd" path: (str/concat @entity.path ".lock") } (bytes/from-string (str/concat "0 " @now)) { emit: { success: LOCK_STAMPED, failure: LOCK_STAMPED } })
+        (os/write-file @entity.lockAt (bytes/from-string (str/concat "0 " @now)) { emit: { success: LOCK_STAMPED, failure: LOCK_STAMPED } })
     }
 
     state stamping {
       LOCK_STAMPED -> reading
-        (os/read-file { anchor: "cwd" path: @entity.path } { emit: { success: STORE_READ, failure: STORE_READ_FAILED } })
+        (os/read-file @entity.at { emit: { success: STORE_READ, failure: STORE_READ_FAILED } })
     }
 
     state statting {
-      LOCK_STATTED -> breaking when (>= (- @now @payload.mtime) 120000)
+      LOCK_STATTED -> breaking when (>= (- (time/diff @now (time/parse "1970-01-01T00:00:00Z")) @payload.mtime) 120000)
         (emit LOCK_STALE { reason: "age" })
-      LOCK_STATTED -> checking when (< (- @now @payload.mtime) 120000)
-        (os/read-file { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_PID_READ, failure: LOCK_BUSY } })
+      LOCK_STATTED -> checking when (< (- (time/diff @now (time/parse "1970-01-01T00:00:00Z")) @payload.mtime) 120000)
+        (os/read-file @entity.lockAt { emit: { success: LOCK_PID_READ, failure: LOCK_BUSY } })
       LOCK_BUSY -> backoff
         (emit LOCK_RETRY { })
     }
@@ -180,27 +192,27 @@ orbital VectorWriteOrbital {
 
     state breaking {
       LOCK_STALE -> breaking
-        (os/rename { anchor: "cwd" path: (str/concat @entity.path ".lock") } { anchor: "cwd" path: (str/concat @entity.path ".lock.stale") } { emit: { success: LOCK_ASIDE, failure: LOCK_ASIDE } })
+        (os/rename @entity.lockAt @entity.staleAt { emit: { success: LOCK_ASIDE, failure: LOCK_ASIDE } })
       LOCK_ASIDE -> unlocking
-        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock.stale") } { emit: { success: STALE_REMOVED, failure: STALE_REMOVED } })
+        (os/remove @entity.staleAt { emit: { success: STALE_REMOVED, failure: STALE_REMOVED } })
     }
 
     state unlocking {
       STALE_REMOVED -> locking
-        (os/open { anchor: "cwd" path: (str/concat @entity.path ".lock") } "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } })
+        (os/open @entity.lockAt "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } })
     }
 
     state backoff {
-      LOCK_RETRY -> idle when (>= (- @now @entity.lockStart) 180000)
-        (emit VECTOR_WRITE_REFUSED { code: "ORB_VECTOR_LOCKED", detail: (str/concat @entity.path ".lock stayed locked for " (- @now @entity.lockStart) " ms (another session is writing; if none is, delete the lock file)") })
-      LOCK_RETRY -> waiting when (< (- @now @entity.lockStart) 180000)
+      LOCK_RETRY -> idle when (>= (- (time/diff @now (time/parse "1970-01-01T00:00:00Z")) @entity.lockStart) 180000)
+        (emit VECTOR_WRITE_REFUSED { code: "ORB_VECTOR_LOCKED", detail: (str/concat @entity.path ".lock stayed locked for " (- (time/diff @now (time/parse "1970-01-01T00:00:00Z")) @entity.lockStart) " ms (another session is writing; if none is, delete the lock file)") })
+      LOCK_RETRY -> waiting when (< (- (time/diff @now (time/parse "1970-01-01T00:00:00Z")) @entity.lockStart) 180000)
         (emit LOCK_WAIT { delayMs: @entity.wait })
         (set @entity.wait (math/min (* @entity.wait 2) 100))
     }
 
     state waiting {
       ELAPSED -> locking
-        (os/open { anchor: "cwd" path: (str/concat @entity.path ".lock") } "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } })
+        (os/open @entity.lockAt "wx" { emit: { success: LOCK_TAKEN, failure: LOCK_FAILED } })
     }
 
     state reading {
@@ -213,7 +225,7 @@ orbital VectorWriteOrbital {
       STORE_READ_FAILED -> releasing when (!= @payload.kind "not-found")
         (set @entity.pendingCode "ORB_VECTOR_IO")
         (set @entity.pendingDetail (str/concat @entity.path ": " @payload.error))
-        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
     }
 
     state validating {
@@ -227,26 +239,26 @@ orbital VectorWriteOrbital {
       VECTOR_REFUSED -> releasing
         (set @entity.pendingCode @payload.code)
         (set @entity.pendingDetail @payload.detail)
-        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
     }
 
     state merging {
       HEADER_REFUSED -> releasing
         (set @entity.pendingCode @payload.code)
         (set @entity.pendingDetail @payload.detail)
-        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
       CHECKED -> releasing when @entity.unreadable
         (set @entity.pendingCode "ORB_VECTOR_CORRUPT")
         (set @entity.pendingDetail (str/concat @entity.path ": a record key could not be read"))
-        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
       CHECKED -> releasing when (and (not @entity.unreadable) (!= @entity.emodel "") (!= @entity.emodel @entity.model))
         (set @entity.pendingCode "ORB_VECTOR_MODEL_MISMATCH")
         (set @entity.pendingDetail (str/concat @entity.emodel " vs " @entity.model " — vectors from different embedding models are not comparable"))
-        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
       CHECKED -> releasing when (and (not @entity.unreadable) (!= @entity.emodel "") (== @entity.emodel @entity.model) (!= @entity.edims @entity.dims))
         (set @entity.pendingCode "ORB_VECTOR_DIMS_MISMATCH")
         (set @entity.pendingDetail (str/concat "model " @entity.model " has " @entity.edims " dims in one store and " @entity.dims " in the other"))
-        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
       CHECKED -> writing when (and (not @entity.unreadable) (or (== @entity.emodel "") (and (== @entity.emodel @entity.model) (== @entity.edims @entity.dims))))
         (set @entity.kept (array/filter (array/range 0 (array/len @entity.rows)) (fn i (not (array/some (array/range (+ @i 1) (array/len @entity.rows)) (fn j (bytes/equals (bytes/slice (array/nth @entity.rows @i) 0 32) (bytes/slice (array/nth @entity.rows @j) 0 32))))))))
         (set @entity.sorted (let ((rk (array/map @entity.kept (fn i { i: @i, r: (array/len (array/filter @entity.kept (fn j (< (array/reduce (array/range 0 8) 0 (fn cd cw (if (!= @cd 0) @cd (let ((cx (bytes/read-uint (bytes/slice (array/nth @entity.rows @j) 0 32) (* 4 @cw) 4 "be")) (cy (bytes/read-uint (bytes/slice (array/nth @entity.rows @i) 0 32) (* 4 @cw) 4 "be"))) (if (and (validate/required @cx) (validate/required @cy)) (if (< @cx @cy) -1 (if (> @cx @cy) 1 0)) 2))))) 0)))) })))) (array/map (array/range 0 (array/len @rk)) (fn r (array/nth @entity.rows (object/get (array/find @rk (fn z (== @z.r @r))) "i"))))))
@@ -262,21 +274,21 @@ orbital VectorWriteOrbital {
 
     state writing {
       MERGED -> renaming
-        (os/write-file { anchor: "cwd" path: (str/concat @entity.path ".tmp") } @payload.bytes { emit: { success: TMP_WRITTEN, failure: WRITE_FAILED } })
+        (os/write-file @entity.tmpAt @payload.bytes { emit: { success: TMP_WRITTEN, failure: WRITE_FAILED } })
     }
 
     state renaming {
       TMP_WRITTEN -> releasing
-        (os/rename { anchor: "cwd" path: (str/concat @entity.path ".tmp") } { anchor: "cwd" path: @entity.path } { emit: { success: RENAMED, failure: WRITE_FAILED } })
+        (os/rename @entity.tmpAt @entity.at { emit: { success: RENAMED, failure: WRITE_FAILED } })
       WRITE_FAILED -> releasing
         (set @entity.pendingCode "ORB_VECTOR_IO")
         (set @entity.pendingDetail (str/concat @entity.path ": " @payload.error))
-        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
     }
 
     state releasing {
       RENAMED -> releasing
-        (os/remove { anchor: "cwd" path: (str/concat @entity.path ".lock") } { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
+        (os/remove @entity.lockAt { emit: { success: LOCK_REMOVED, failure: LOCK_REMOVED } })
       LOCK_REMOVED -> idle when (!= @entity.pendingCode "")
         (emit VECTOR_WRITE_REFUSED { code: @entity.pendingCode, detail: @entity.pendingDetail })
       LOCK_REMOVED -> idle when (== @entity.pendingCode "")
@@ -404,6 +416,7 @@ orbital VectorWriteOrbital {
       }
       VECTOR_WRITE -> input {
         path : string!
+        anchor : string!
         model : string!
         records : [VecRecord]!
       }

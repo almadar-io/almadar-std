@@ -16,6 +16,9 @@ type DeadKnobOrbital = { name : string, config : Map string DeadKnobField?, trai
 type DeadKnobProgram = { config : Map string DeadKnobField?, orbitals : [DeadKnobOrbital] }
 type DeadKnobLink = { name : string, src : string }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintOrbitalConfigDeadKnobCodes = { oConfigDeadKnob : LintCodeDecl }
+
 orbital OrbLintOrbitalConfigDeadKnobOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -54,11 +57,11 @@ orbital OrbLintOrbitalConfigDeadKnobOrbital {
                                     (array/unique (array/concat @acc (array/map (array/filter @orbLinks (fn o (array/includes @acc (object/get @o "name")))) (fn o (str/slice (object/get @o "src") 8)))))))))
                   (array/concat
                     (array/map (array/filter (object/keys @appCfg) (fn k (not (array/includes @published @k))))
-                      (fn k { code: "ORB_O_CONFIG_DEAD_KNOB", path: (str/concat "config(" @k ")"), message: (str/concat "Declared app-level config knob '" @k "' is not forwarded by any trait's config default (`" (quote "@config.") @k "`) — nothing publishes it, so no call site can ever reach it."), suggestion: (str/concat "Forward it from a trait (`config { " @k ": " (quote "@config.") @k " }`) or delete the declaration."), severity: "error" }))
+                      (fn k { code: @config.codes.oConfigDeadKnob.code, path: (str/concat "config(" @k ")"), message: (str/concat "Declared app-level config knob '" @k "' is not forwarded by any trait's config default (`" (quote "@config.") @k "`) — nothing publishes it, so no call site can ever reach it."), suggestion: (str/concat "Forward it from a trait (`config { " @k ": " (quote "@config.") @k " }`) or delete the declaration."), severity: "error" }))
                     (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn i
                       (let ((orb (array/nth @orbitals @i)))
                         (array/map (array/filter (object/keys (object/get @orb "config" {})) (fn k (and (not (object/has @appCfg @k)) (not (array/includes @published @k)))))
-                          (fn k { code: "ORB_O_CONFIG_DEAD_KNOB", path: (str/concat "orbitals[" @i " (" (object/get @orb "name" "") ")].config(" @k ")"), message: (str/concat "Declared orbital config knob '" @k "' is not forwarded by any trait's config default (`" (quote "@config.") @k "`) — nothing publishes it, so no call site can ever reach it."), suggestion: (str/concat "Forward it from a trait (`config { " @k ": " (quote "@config.") @k " }`) or delete the declaration."), severity: "error" })))))))))))))
+                          (fn k { code: @config.codes.oConfigDeadKnob.code, path: (str/concat "orbitals[" @i " (" (object/get @orb "name" "") ")].config(" @k ")"), message: (str/concat "Declared orbital config knob '" @k "' is not forwarded by any trait's config default (`" (quote "@config.") @k "`) — nothing publishes it, so no call site can ever reach it."), suggestion: (str/concat "Forward it from a trait (`config { " @k ": " (quote "@config.") @k " }`) or delete the declaration."), severity: "error" })))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "orbital-config-dead-knob", scope: @entity.scope, findings: @entity.findings })
@@ -78,6 +81,12 @@ orbital OrbLintOrbitalConfigDeadKnobOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintOrbitalConfigDeadKnobCodes = { oConfigDeadKnob: { code: "ORB_O_CONFIG_DEAD_KNOB", category: "orbital", description: "A declared app-level config knob is not forwarded by any trait config default, so it has no effect" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintOrbitalConfigDeadKnobCli -> OrbLintOrbitalConfigDeadKnobRun [client] {

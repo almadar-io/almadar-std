@@ -1,0 +1,2128 @@
+{
+ "atom": "store/atoms/std-resp-client.lolo",
+ "trait": "RespClient",
+ "note": "parity oracle: the recorded fixtures of orbital-integration-tests/fixtures/redis (recorded against Redis 7 by fixtures/redis/record.py) without a password; the AUTH cases wait for the secret knob",
+ "cases": [
+  {
+   "id": "delete-existing",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "delete-existing",
+      "argv": [
+       "DEL",
+       "k"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "delete-existing",
+         "stage": "command",
+         "bytes": "KjINCiQzDQpERUwNCiQxDQprDQo="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "OjENCg==",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "delete-existing",
+         "kind": "int",
+         "text": "1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "delete-missing",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "delete-missing",
+      "argv": [
+       "DEL",
+       "k"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "delete-missing",
+         "stage": "command",
+         "bytes": "KjINCiQzDQpERUwNCiQxDQprDQo="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "OjANCg==",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "delete-missing",
+         "kind": "int",
+         "text": "0"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expire-existing",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "expire-existing",
+      "argv": [
+       "PEXPIRE",
+       "k",
+       "30000"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "expire-existing",
+         "stage": "command",
+         "bytes": "KjMNCiQ3DQpQRVhQSVJFDQokMQ0Kaw0KJDUNCjMwMDAwDQo="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 35
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "OjENCg==",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "expire-existing",
+         "kind": "int",
+         "text": "1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "expire-missing",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "expire-missing",
+      "argv": [
+       "PEXPIRE",
+       "k",
+       "30000"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "expire-missing",
+         "stage": "command",
+         "bytes": "KjMNCiQ3DQpQRVhQSVJFDQokMQ0Kaw0KJDUNCjMwMDAwDQo="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 35
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "OjANCg==",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "expire-missing",
+         "kind": "int",
+         "text": "0"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "get-connect-not-granted-fails",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "get-connect-not-granted-fails",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_IO_FAILED",
+     "payload": {
+      "error": "os/tcp-connect: redis.example.test:6379 is not granted",
+      "kind": "denied",
+      "key": "connect"
+     },
+     "expect": {
+      "state": "aborting",
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "get-connect-not-granted-fails",
+         "kind": "refused",
+         "message": "os/tcp-connect: redis.example.test:6379 is not granted"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_REPLIED"
+      ]
+     }
+    }
+   ],
+   "note": "the host's refusal answer is written by hand"
+  },
+  {
+   "id": "get-connection-refused-fails",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "get-connection-refused-fails",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_IO_FAILED",
+     "payload": {
+      "error": "os/tcp-connect: Connection refused (os error 61)",
+      "kind": "io",
+      "key": "connect"
+     },
+     "expect": {
+      "state": "aborting",
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "get-connection-refused-fails",
+         "kind": "failed",
+         "message": "os/tcp-connect: Connection refused (os error 61)"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_REPLIED"
+      ]
+     }
+    }
+   ],
+   "note": "the host's connect error is written by hand"
+  },
+  {
+   "id": "get-from-an-out-of-range-database-fails",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "get-from-an-out-of-range-database-fails",
+      "argv": [
+       "SELECT",
+       "99"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "get-from-an-out-of-range-database-fails",
+         "stage": "command",
+         "bytes": "KjINCiQ2DQpTRUxFQ1QNCiQyDQo5OQ0K"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 24
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "LUVSUiBEQiBpbmRleCBpcyBvdXQgb2YgcmFuZ2UNCg==",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "get-from-an-out-of-range-database-fails",
+         "kind": "redis",
+         "message": "ERR DB index is out of range",
+         "code": "ERR"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_REPLIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "get-hit",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "get-hit",
+      "argv": [
+       "GET",
+       "user:1"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "get-hit",
+         "stage": "command",
+         "bytes": "KjINCiQzDQpHRVQNCiQ2DQp1c2VyOjENCg=="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 25
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "JDUNCmFsaWNlDQo=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "get-hit",
+         "kind": "bulk",
+         "text": "alice"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "get-miss",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "get-miss",
+      "argv": [
+       "GET",
+       "user:2"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "get-miss",
+         "stage": "command",
+         "bytes": "KjINCiQzDQpHRVQNCiQ2DQp1c2VyOjINCg=="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 25
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "JC0xDQo=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "get-miss",
+         "kind": "null",
+         "text": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "get-read-timeout-fails",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "get-read-timeout-fails",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "get-read-timeout-fails",
+         "stage": "command",
+         "bytes": "KjINCiQzDQpHRVQNCiQxDQprDQo="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_IO_FAILED",
+     "payload": {
+      "error": "os/recv: Resource temporarily unavailable (os error 35)",
+      "kind": "timeout",
+      "key": "read3"
+     },
+     "expect": {
+      "state": "aborting",
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "get-read-timeout-fails",
+         "kind": "timeout",
+         "message": "os/recv: Resource temporarily unavailable (os error 35)"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_REPLIED"
+      ]
+     }
+    }
+   ],
+   "note": "the host's timeout answer is written by hand"
+  },
+  {
+   "id": "get-reply-split-across-reads",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "get-reply-split-across-reads",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "get-reply-split-across-reads",
+         "stage": "command",
+         "bytes": "KjINCiQzDQpHRVQNCiQxDQprDQo="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "JDUNCmhlbGw=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "neverEmits": [
+       "RESP_FAILED",
+       "RESP_REPLIED"
+      ]
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "bw0K",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "get-reply-split-across-reads",
+         "kind": "bulk",
+         "text": "hello"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ],
+   "note": "the recorded reply is delivered by two os/recv reads, cut inside the bulk string"
+  },
+  {
+   "id": "get-without-password-against-a-protected-server-fails",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "get-without-password-against-a-protected-server-fails",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "get-without-password-against-a-protected-server-fails",
+         "stage": "command",
+         "bytes": "KjINCiQzDQpHRVQNCiQxDQprDQo="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "LU5PQVVUSCBBdXRoZW50aWNhdGlvbiByZXF1aXJlZC4NCg==",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "get-without-password-against-a-protected-server-fails",
+         "kind": "redis",
+         "message": "NOAUTH Authentication required.",
+         "code": "NOAUTH"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_REPLIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "get-wrongtype-fails",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "get-wrongtype-fails",
+      "argv": [
+       "GET",
+       "list:1"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "get-wrongtype-fails",
+         "stage": "command",
+         "bytes": "KjINCiQzDQpHRVQNCiQ2DQpsaXN0OjENCg=="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 25
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "LVdST05HVFlQRSBPcGVyYXRpb24gYWdhaW5zdCBhIGtleSBob2xkaW5nIHRoZSB3cm9uZyBraW5kIG9mIHZhbHVlDQo=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "get-wrongtype-fails",
+         "kind": "redis",
+         "message": "WRONGTYPE Operation against a key holding the wrong kind of value",
+         "code": "WRONGTYPE"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_REPLIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "increment-by",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "increment-by",
+      "argv": [
+       "INCRBY",
+       "c",
+       "5"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "increment-by",
+         "stage": "command",
+         "bytes": "KjMNCiQ2DQpJTkNSQlkNCiQxDQpjDQokMQ0KNQ0K"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 30
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "OjE1DQo=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "increment-by",
+         "kind": "int",
+         "text": "15"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "increment-new-key",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "increment-new-key",
+      "argv": [
+       "INCRBY",
+       "c",
+       "1"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "increment-new-key",
+         "stage": "command",
+         "bytes": "KjMNCiQ2DQpJTkNSQlkNCiQxDQpjDQokMQ0KMQ0K"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 30
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "OjENCg==",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "increment-new-key",
+         "kind": "int",
+         "text": "1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "increment-not-an-integer-fails",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "increment-not-an-integer-fails",
+      "argv": [
+       "INCRBY",
+       "c",
+       "1"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "increment-not-an-integer-fails",
+         "stage": "command",
+         "bytes": "KjMNCiQ2DQpJTkNSQlkNCiQxDQpjDQokMQ0KMQ0K"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 30
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "LUVSUiB2YWx1ZSBpcyBub3QgYW4gaW50ZWdlciBvciBvdXQgb2YgcmFuZ2UNCg==",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "increment-not-an-integer-fails",
+         "kind": "redis",
+         "message": "ERR value is not an integer or out of range",
+         "code": "ERR"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_REPLIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "publish-no-subscribers",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "publish-no-subscribers",
+      "argv": [
+       "PUBLISH",
+       "news",
+       "hi"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "publish-no-subscribers",
+         "stage": "command",
+         "bytes": "KjMNCiQ3DQpQVUJMSVNIDQokNA0KbmV3cw0KJDINCmhpDQo="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 35
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "OjANCg==",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "publish-no-subscribers",
+         "kind": "int",
+         "text": "0"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "publish-one-subscriber",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "publish-one-subscriber",
+      "argv": [
+       "PUBLISH",
+       "news",
+       "hi"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "publish-one-subscriber",
+         "stage": "command",
+         "bytes": "KjMNCiQ3DQpQVUJMSVNIDQokNA0KbmV3cw0KJDINCmhpDQo="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 35
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "OjENCg==",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "publish-one-subscriber",
+         "kind": "int",
+         "text": "1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "set-plain",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "set-plain",
+      "argv": [
+       "SET",
+       "k",
+       "v"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "set-plain",
+         "stage": "command",
+         "bytes": "KjMNCiQzDQpTRVQNCiQxDQprDQokMQ0Kdg0K"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 27
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "K09LDQo=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "set-plain",
+         "kind": "simple",
+         "text": "OK"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "set-ttl-zero-is-plain",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "set-ttl-zero-is-plain",
+      "argv": [
+       "SET",
+       "k",
+       "v"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "set-ttl-zero-is-plain",
+         "stage": "command",
+         "bytes": "KjMNCiQzDQpTRVQNCiQxDQprDQokMQ0Kdg0K"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 27
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "K09LDQo=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "set-ttl-zero-is-plain",
+         "kind": "simple",
+         "text": "OK"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "set-with-ttl",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "set-with-ttl",
+      "argv": [
+       "SET",
+       "k",
+       "v",
+       "EX",
+       "60"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "set-with-ttl",
+         "stage": "command",
+         "bytes": "KjUNCiQzDQpTRVQNCiQxDQprDQokMQ0Kdg0KJDINCkVYDQokMg0KNjANCg=="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 43
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "K09LDQo=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "set-with-ttl",
+         "kind": "simple",
+         "text": "OK"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-empty-command-is-refused-before-any-ask",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "k",
+      "argv": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "k",
+         "kind": "refused"
+        }
+       }
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-empty-command-item-is-refused-before-any-ask",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "k",
+      "argv": [
+       "GET",
+       ""
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "k",
+         "kind": "refused"
+        }
+       }
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-authenticated-call-is-unconfigured-until-the-secret-knob-feeds-os-send",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "k",
+      "argv": [
+       "GET",
+       "k"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "k",
+         "kind": "unconfigured"
+        }
+       }
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "config": {
+    "authenticated": true
+   }
+  },
+  {
+   "id": "two-overlapping-keys-share-one-connection-and-are-answered-in-order",
+   "note": "pipelined: the second command is written while the first is in flight, replies are matched to keys in write order",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "a",
+      "argv": [
+       "GET",
+       "x"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "b",
+      "argv": [
+       "GET",
+       "y"
+      ]
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": []
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "a",
+         "stage": "command",
+         "bytes": "KjINCiQzDQpHRVQNCiQxDQp4DQoqMg0KJDMNCkdFVA0KJDENCnkNCg=="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 40
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "JDINCnYxDQo=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "a",
+         "kind": "bulk",
+         "text": "v1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "JDINCnYyDQo=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "b",
+         "kind": "bulk",
+         "text": "v2"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "c",
+      "argv": [
+       "GET",
+       "z"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-second-key-written_while_the_first_is_in_flight_goes_out_at_once",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "a",
+      "argv": [
+       "GET",
+       "x"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "b",
+      "argv": [
+       "GET",
+       "y"
+      ]
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "b",
+         "stage": "command",
+         "bytes": "KjINCiQzDQpHRVQNCiQxDQp5DQo="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "JDINCnYxDQokLTENCg==",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "a",
+         "kind": "bulk",
+         "text": "v1"
+        }
+       },
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "b",
+         "kind": "null",
+         "text": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reply_split_across_reads_while_two_keys_are_in_flight",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "a",
+      "argv": [
+       "GET",
+       "x"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "b",
+      "argv": [
+       "GET",
+       "y"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 40
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "JDINCnY=",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "neverEmits": [
+       "RESP_REPLIED",
+       "RESP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "MQ0KOjcNCg==",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "a",
+         "kind": "bulk",
+         "text": "v1"
+        }
+       },
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "b",
+         "kind": "int",
+         "text": "7"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-server-error-answers-only-its-own-key",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "a",
+      "argv": [
+       "GET",
+       "x"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "b",
+      "argv": [
+       "GET",
+       "y"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 40
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "LVdST05HVFlQRSBiYWQNCiQyDQp2Mg0K",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "a",
+         "kind": "redis",
+         "code": "WRONGTYPE"
+        }
+       },
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "b",
+         "kind": "bulk",
+         "text": "v2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-lost-connection-fails-every-key-in-flight",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "a",
+      "argv": [
+       "GET",
+       "x"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "b",
+      "argv": [
+       "GET",
+       "y"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 40
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "",
+      "eof": true,
+      "key": "read3"
+     },
+     "expect": {
+      "state": "aborting",
+      "emits": [
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "a",
+         "kind": "failed"
+        }
+       },
+       {
+        "event": "RESP_FAILED",
+        "payload": {
+         "key": "b",
+         "kind": "failed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_REPLIED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-stale-read-of-a-closed-socket-is-ignored",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "a",
+      "argv": [
+       "GET",
+       "x"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 20
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "JDINCnYxDQo=",
+      "eof": false,
+      "key": "read9"
+     },
+     "expect": {
+      "state": "open",
+      "neverEmits": [
+       "RESP_REPLIED",
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-real-redis-7-two-overlapping-keys-pipelined-on-one-connection",
+   "note": "recorded by record_real_redis.py against redis:7: both commands are written in one send, and the server's one read carries both replies, matched to the keys in write order",
+   "steps": [
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "a",
+      "argv": [
+       "GET",
+       "x"
+      ]
+     },
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "RESP_RUN",
+     "payload": {
+      "key": "b",
+      "argv": [
+       "INCRBY",
+       "n",
+       "7"
+      ]
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": []
+     }
+    },
+    {
+     "event": "RESP_CONNECTED",
+     "payload": {
+      "sock": 3
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RESP_WIRE_SENT",
+        "payload": {
+         "key": "a",
+         "stage": "command",
+         "bytes": "KjINCiQzDQpHRVQNCiQxDQp4DQoqMw0KJDYNCklOQ1JCWQ0KJDENCm4NCiQxDQo3DQo="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RESP_SENT",
+     "payload": {
+      "bytes": 62
+     },
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESP_READ",
+     "payload": {
+      "data": "JDINCnYxDQo6Nw0K",
+      "eof": false,
+      "key": "read3"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "a",
+         "kind": "bulk",
+         "text": "v1"
+        }
+       },
+       {
+        "event": "RESP_REPLIED",
+        "payload": {
+         "key": "b",
+         "kind": "int",
+         "text": "7"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RESP_FAILED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

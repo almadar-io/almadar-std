@@ -25,6 +25,9 @@ type FbFound = { e : string, id : boolean }
 type FbCall = { path : string!, node : FbVal! }
 type FbIndex = Map string [FbCall]
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintFetchByIdPayloadCodes = { effFetchByIdPayloadList : LintCodeDecl }
+
 orbital OrbLintFetchByIdPayloadOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -76,7 +79,7 @@ orbital OrbLintFetchByIdPayloadOrbital {
                                         (let ((field  (array/find @fields (fn f (= (object/get @f "name" "") "data")))))
                                           (if (or (= @field null) (not (str/startsWith (object/get @field "type" "") "[")))
                                             []
-                                            [{ code: "ORB_EFF_FETCH_BY_ID_PAYLOAD_LIST", path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" (object/get (array/find @ids (fn p (= (object/get @p "e") @ev))) "i") "].effects"), message: (str/concat "`(fetch … { id: … })` delivers one row as `payload.data`, but `" @ev "` declares `data : " (object/get @field "type" "") "`"), suggestion: (str/concat "Declare `" @ev " { data : <Row> }` (a struct type of the fields read) and read it with `(object/get ?data <field> <default>)`"), severity: "error" }])))))))))))))))))))))))))
+                                            [{ code: @config.codes.effFetchByIdPayloadList.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")].stateMachine.transitions[" (object/get (array/find @ids (fn p (= (object/get @p "e") @ev))) "i") "].effects"), message: (str/concat "`(fetch … { id: … })` delivers one row as `payload.data`, but `" @ev "` declares `data : " (object/get @field "type" "") "`"), suggestion: (str/concat "Declare `" @ev " { data : <Row> }` (a struct type of the fields read) and read it with `(object/get ?data <field> <default>)`"), severity: "error" }])))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "fetch-by-id-payload", scope: @entity.scope, findings: @entity.findings })
@@ -96,6 +99,12 @@ orbital OrbLintFetchByIdPayloadOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintFetchByIdPayloadCodes = { effFetchByIdPayloadList: { code: "ORB_EFF_FETCH_BY_ID_PAYLOAD_LIST", category: "effect", description: "A fetch by id effect takes its id from a payload that is a list rather than a single value" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintFetchByIdPayloadCli -> OrbLintFetchByIdPayloadRun [client] {

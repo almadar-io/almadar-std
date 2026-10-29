@@ -24,6 +24,9 @@ type StateShapePage = { protocol : string, traits : [StateShapeMount] }
 type StateShapeOrbital = { name : string, pages : [StateShapePage], traits : [StateShapeTrait] }
 type StateShapeProgram = { orbitals : [StateShapeOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintStateShapeCodes = { tNoInitialState : LintCodeDecl , tDuplicateState : LintCodeDecl , tMultipleInitialStates : LintCodeDecl , tMissingInitTransition : LintCodeDecl , tExternalInputNotResting : LintCodeDecl }
+
 orbital OrbLintStateShapeOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -65,12 +68,12 @@ orbital OrbLintStateShapeOrbital {
                     (let ((sm (object/get @td "stateMachine")) (tpath (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")))
                       (let ((sts (object/get @sm "states" [])) (where (str/concat @tpath ".stateMachine")))
                         (if (= (array/len @sts) 0)
-                          [{ code: "ORB_T_NO_INITIAL_STATE", path: (str/concat @where ".states"), message: "State machine must have at least one state", suggestion: "Add at least one state to the state machine", severity: "error" }]
+                          [{ code: @config.codes.tNoInitialState.code, path: (str/concat @where ".states"), message: "State machine must have at least one state", suggestion: "Add at least one state to the state machine", severity: "error" }]
                           (let ((names (array/map @sts (fn s (object/get @s "name" "")))) (inits (array/map (array/filter @sts (fn s (= (object/get @s "isInitial" false) true))) (fn s (object/get @s "name" "")))))
                             (array/flatten [
-                              (array/flatten (array/map (array/range 0 (array/len @sts)) (fn k (if (array/includes (array/take @names @k) (array/nth @names @k)) [{ code: "ORB_T_DUPLICATE_STATE", path: (str/concat @where ".states[" @k "]"), message: (str/concat "Duplicate state name: '" (array/nth @names @k) "'"), suggestion: "Each state must have a unique name", severity: "error" }] []))))
-                              (if (= (array/len @inits) 0) [{ code: "ORB_T_NO_INITIAL_STATE", path: (str/concat @where ".states"), message: "State machine must have an initial state", suggestion: "Mark one state with isInitial: true", severity: "error" }] [])
-                              (if (> (array/len @inits) 1) [{ code: "ORB_T_MULTIPLE_INITIAL_STATES", path: (str/concat @where ".states"), message: (str/concat "Multiple initial states found: [" (str/join (array/map @inits (fn n (str/concat "\"" @n "\""))) ", ") "]"), suggestion: "Only one state should be marked as initial", severity: "error" }] [])
+                              (array/flatten (array/map (array/range 0 (array/len @sts)) (fn k (if (array/includes (array/take @names @k) (array/nth @names @k)) [{ code: @config.codes.tDuplicateState.code, path: (str/concat @where ".states[" @k "]"), message: (str/concat "Duplicate state name: '" (array/nth @names @k) "'"), suggestion: "Each state must have a unique name", severity: "error" }] []))))
+                              (if (= (array/len @inits) 0) [{ code: @config.codes.tNoInitialState.code, path: (str/concat @where ".states"), message: "State machine must have an initial state", suggestion: "Mark one state with isInitial: true", severity: "error" }] [])
+                              (if (> (array/len @inits) 1) [{ code: @config.codes.tMultipleInitialStates.code, path: (str/concat @where ".states"), message: (str/concat "Multiple initial states found: [" (str/join (array/map @inits (fn n (str/concat "\"" @n "\""))) ", ") "]"), suggestion: "Only one state should be marked as initial", severity: "error" }] [])
                               (if (and (> (array/len @inits) 0) (or (array/includes @routeSet (object/get @td "name" "")) (and (object/has @td "id") (array/includes @routeSet (object/get @td "id")))) (array/some (array/concat
                             (array/flatten (array/map (let ((trl (object/get (object/get @td "stateMachine" {}) "transitions" null))) (if (validate/array @trl) @trl [])) (fn a (array/map (let ((nd (array/filter (object/get @a "effects" []) (fn r (not (validate/object @r)))))) (if (= @nd null) [] (as (json/nodes @nd) StateShapeForm))) (fn f
                                   (if (validate/array @f)
@@ -106,7 +109,7 @@ orbital OrbLintStateShapeOrbital {
                                 (let ((init0 (array/first @inits)))
                                   (if (array/some (object/get @sm "transitions" []) (fn tr (and (= (object/get @tr "event" "") "INIT") (let ((frm (object/get @tr "from" ""))) (let ((froms (if (validate/string @frm) (array/append [] @frm) @frm))) (or (array/includes @froms @init0) (array/includes @froms "*")))))))
                                     []
-                                    [{ code: "ORB_T_MISSING_INIT_TRANSITION", path: (str/concat @where ".transitions"), message: (str/concat "Route trait should have INIT transition on initial state '" @init0 "'"), suggestion: "Add a transition: { from: 'initialState', to: 'initialState', event: 'INIT', effects: [...] }", severity: "error" }]))
+                                    [{ code: @config.codes.tMissingInitTransition.code, path: (str/concat @where ".transitions"), message: (str/concat "Route trait should have INIT transition on initial state '" @init0 "'"), suggestion: "Add a transition: { from: 'initialState', to: 'initialState', event: 'INIT', effects: [...] }", severity: "error" }]))
                                 [])
                               (if (> (array/len @inits) 0)
                                 (let ((init0 (array/first @inits)))
@@ -114,7 +117,7 @@ orbital OrbLintStateShapeOrbital {
                                     (let ((ev (array/nth (object/get @sm "events" []) @ei)))
                                       (if (and (= (object/get @ev "input" false) true)
                                                (not (array/some (object/get @sm "transitions" []) (fn tr (and (= (object/get @tr "event" "") (object/get @ev "key" "")) (let ((frm (object/get @tr "from" ""))) (let ((froms (if (validate/string @frm) (array/append [] @frm) @frm))) (or (array/includes @froms @init0) (array/includes @froms "*")))))))))
-                                        [{ code: "ORB_T_EXTERNAL_INPUT_NOT_RESTING", path: (str/concat @where ".events[" @ei "]"), message: (str/concat "Input '" (object/get @ev "key" "") "' is not accepted from the initial state '" @init0 "'"), suggestion: "Declare as an input only a complete command the trait handles from its initial state (e.g. a persistor's DO_CREATE), or add that transition", severity: "error" }]
+                                        [{ code: @config.codes.tExternalInputNotResting.code, path: (str/concat @where ".events[" @ei "]"), message: (str/concat "Input '" (object/get @ev "key" "") "' is not accepted from the initial state '" @init0 "'"), suggestion: "Declare as an input only a complete command the trait handles from its initial state (e.g. a persistor's DO_CREATE), or add that transition", severity: "error" }]
                                         []))))))
                                 [])])))))))))))))))))))
         (emit LINT_FINISH { })
@@ -123,6 +126,9 @@ orbital OrbLintStateShapeOrbital {
     }
 
     config {
+      codes : LintStateShapeCodes = { tNoInitialState: { code: "ORB_T_NO_INITIAL_STATE", category: "trait", description: "A state machine declares no states and so has no initial state" }, tDuplicateState: { code: "ORB_T_DUPLICATE_STATE", category: "trait", description: "A trait declares the same state name more than once" }, tMultipleInitialStates: { code: "ORB_T_MULTIPLE_INITIAL_STATES", category: "trait", description: "A trait state machine declares more than one initial state" }, tMissingInitTransition: { code: "ORB_T_MISSING_INIT_TRANSITION", category: "trait", description: "A route trait has no INIT transition on its initial state" }, tExternalInputNotResting: { code: "ORB_T_EXTERNAL_INPUT_NOT_RESTING", category: "trait", description: "An external input is not accepted from the trait's initial state" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
       renderOps : [string] = ["render-ui"]
         @label "Render operators"
         @description "The effect operators that paint a slot."

@@ -29,6 +29,9 @@ type LsuName = { k : string }
 type LsuEntryMap = Map string [LsuEntry]
 type LsuNameMap = Map string [LsuName]
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintListenSourceUnresolvedCodes = { xListenSourceUnresolved : LintCodeDecl }
+
 orbital OrbLintListenSourceUnresolvedOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses Produced from "std/behaviors/std-orb-produced-events"
@@ -80,7 +83,7 @@ orbital OrbLintListenSourceUnresolvedOrbital {
                                   (if (not (object/has @byName @esorb)) @nofind
                                     (if (array/some (object/get @byKey (str/concat @esorb "|" (str/replaceAll (str/replaceAll (str/replaceAll @strait "~" "~t") "." "~d") "|" "~p")) @noent) (fn he (array/includes (object/get @he "evs" @nos) @ev))) @nofind
                                       (let ((sib (array/first (array/map (array/filter @entries (fn se (and (!= (object/get @se "o") @sorb) (= (object/get @se "t") @strait) (array/includes (object/get @se "evs" @nos) @ev)))) (fn se2 (object/get @se2 "o"))))))
-                                        [{ code: "ORB_X_LISTEN_SOURCE_UNRESOLVED", path: (str/concat "orbitals." @on ".traits." @tdn ".listens"), message: (str/concat "Listen entry in '" @on "." @tdn "' references source '" @sorb "." @strait "' event '" @ev "' which is not declared on the source trait."), suggestion: (if (and (= @sk "trait") (!= @sib null)) (str/concat "Trait '" @strait "' declares event '" @ev "' in sibling orbital '" @sib "' — a bare `Trait.EVENT` listen only resolves within this orbital; write the qualified form `" @sib "." @strait "." @ev "`.") "Either declare the event in the source trait's `emits` block, or remove the listens entry. Cross-orbital channels require the source trait to declare the emit explicitly."), severity: "error" }]))))))))))))))))))))))
+                                        [{ code: @config.codes.xListenSourceUnresolved.code, path: (str/concat "orbitals." @on ".traits." @tdn ".listens"), message: (str/concat "Listen entry in '" @on "." @tdn "' references source '" @sorb "." @strait "' event '" @ev "' which is not declared on the source trait."), suggestion: (if (and (= @sk "trait") (!= @sib null)) (str/concat "Trait '" @strait "' declares event '" @ev "' in sibling orbital '" @sib "' — a bare `Trait.EVENT` listen only resolves within this orbital; write the qualified form `" @sib "." @strait "." @ev "`.") "Either declare the event in the source trait's `emits` block, or remove the listens entry. Cross-orbital channels require the source trait to declare the emit explicitly."), severity: "error" }]))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "listen-source-unresolved", scope: @entity.scope, findings: @entity.findings })
@@ -103,6 +106,12 @@ orbital OrbLintListenSourceUnresolvedOrbital {
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       OrbProducedEvents.PRODUCED_EVENTS -> PRODUCED_HEARD
     }
+    config {
+      codes : LintListenSourceUnresolvedCodes = { xListenSourceUnresolved: { code: "ORB_X_LISTEN_SOURCE_UNRESOLVED", category: "cross", description: "A listen entry references a source trait event that the source does not declare" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintListenSourceUnresolvedCli -> OrbLintListenSourceUnresolvedRun [client] {

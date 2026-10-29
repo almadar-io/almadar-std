@@ -17,6 +17,9 @@ type PayloadFieldOrbital = { name : string, traits : [PayloadFieldTrait] }
 type PayloadFieldProgram = { orbitals : [PayloadFieldOrbital] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintPayloadFieldNameCodes = { lintNodeUnchecked : LintCodeDecl , xPayloadFieldName : LintCodeDecl }
+
 orbital OrbLintPayloadFieldNameOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -54,9 +57,9 @@ orbital OrbLintPayloadFieldNameOrbital {
                                       (if (or (= @nm "") (!= (str/replace-pattern @nm "^[A-Za-z_][A-Za-z0-9_]*$" "") "")) [{ rel: "", nm: @nm }] [])
                                       (array/map (object/get @k "properties" []) (fn h { rel: (str/concat "." @nm (let ((r0 (object/get @h "rel" ""))) (if (validate/string @r0) @r0 ""))), nm: (let ((n0 (object/get @h "nm" ""))) (if (validate/string @n0) @n0 "")) })))))
                                   [])))
-                            PayloadShape))) (if (= @fres null) (let ((up (object/get @x "w"))) [{ code: "LINT_NODE_UNCHECKED", path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a PayloadShape; this rule could not check it"), suggestion: "", severity: "error" }]) (array/map
+                            PayloadShape))) (if (= @fres null) (let ((up (object/get @x "w"))) [{ code: @config.codes.lintNodeUnchecked.code, path: @up, message: (str/concat @payload.file ": schema node at " @up " is not a PayloadShape; this rule could not check it"), suggestion: "", severity: "error" }]) (array/map
                           @fres
-                          (fn h (let ((rel (let ((r0 (object/get @h "rel" ""))) (if (validate/string @r0) @r0 ""))) (hn (let ((n0 (object/get @h "nm" ""))) (if (validate/string @n0) @n0 "")))) { code: "ORB_X_PAYLOAD_FIELD_NAME", path: (str/concat (object/get @x "w") @rel "." @hn), message: (str/concat "Payload field name '" @hn "' is not a valid TypeScript identifier"), suggestion: "Use a single identifier (letters, digits, underscores; no dot, no space, no leading digit). For a nested shape, declare an object field with nested properties instead of a dotted name.", severity: "error" }))))))))))))))))))))
+                          (fn h (let ((rel (let ((r0 (object/get @h "rel" ""))) (if (validate/string @r0) @r0 ""))) (hn (let ((n0 (object/get @h "nm" ""))) (if (validate/string @n0) @n0 "")))) { code: @config.codes.xPayloadFieldName.code, path: (str/concat (object/get @x "w") @rel "." @hn), message: (str/concat "Payload field name '" @hn "' is not a valid TypeScript identifier"), suggestion: "Use a single identifier (letters, digits, underscores; no dot, no space, no leading digit). For a nested shape, declare an object field with nested properties instead of a dotted name.", severity: "error" }))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "payload-field-name", scope: @entity.scope, findings: @entity.findings })
@@ -76,6 +79,12 @@ orbital OrbLintPayloadFieldNameOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintPayloadFieldNameCodes = { lintNodeUnchecked: { code: "LINT_NODE_UNCHECKED", category: "lint", description: "A lint rule met a schema node of an unexpected shape and could not check it" }, xPayloadFieldName: { code: "ORB_X_PAYLOAD_FIELD_NAME", category: "cross", description: "A payload field name is not a valid TypeScript identifier" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintPayloadFieldNameCli -> OrbLintPayloadFieldNameRun [client] {

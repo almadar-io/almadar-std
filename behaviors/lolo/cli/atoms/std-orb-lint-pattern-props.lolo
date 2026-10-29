@@ -23,6 +23,9 @@ type PtProgram = { orbitals : [PtOrbital] }
 type PtPropShape = { types : [string], requiredOnParent : boolean, requiredNames : [string], enumValues : [string], kind : string, itemKind : string, requiredFields : [string], items : PtPropShape, properties : Map string PtPropShape }
 type PtPatternShape = { drawHost : boolean, drawable : boolean, fieldsContract : string, accessibleName : [string], props : Map string PtPropShape }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintPatternPropsCodes = { lintUiVocabUnread : LintCodeDecl }
+
 orbital OrbLintPatternPropsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -59,7 +62,7 @@ orbital OrbLintPatternPropsOrbital {
         (set @entity.vocabUnread true)
       LINT_INPUT -> ready when @entity.vocabUnread
         (set @entity.scope @payload.scope)
-        (set @entity.findings [{ code: "ORB_LINT_UI_VOCAB_UNREAD", path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the base item-action props are unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
+        (set @entity.findings [{ code: @config.codes.lintUiVocabUnread.code, path: "uiVocabulary", message: "the installed @almadar/core declares no readable UI vocabulary, so the base item-action props are unknown", suggestion: "Reinstall @almadar/core so its language data declares orbLanguage.uiVocabulary", severity: "error" }])
         (emit LINT_FINISH { })
       LINT_INPUT -> ready when (not @entity.vocabUnread)
         (set @entity.scope @payload.scope)
@@ -218,6 +221,12 @@ orbital OrbLintPatternPropsOrbital {
       OrbLintInput.LINT_UI_VOCAB -> UI_VOCAB_HEARD
       OrbLintInput.LINT_UI_VOCAB_UNREAD -> UI_VOCAB_UNREAD
     }
+    config {
+      codes : LintPatternPropsCodes = { lintUiVocabUnread: { code: "ORB_LINT_UI_VOCAB_UNREAD", category: "lint", description: "The installed @almadar/core declares no readable UI vocabulary, so a UI lint check cannot run" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintPatternPropsCli -> OrbLintPatternPropsRun [client] {

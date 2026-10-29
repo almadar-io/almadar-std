@@ -25,9 +25,6 @@ uses Ticket from "std/behaviors/std-stream-ticket"
 uses Bearer from "std/behaviors/std-bearer-verify"
 uses KeyVerifier from "std/behaviors/std-api-key-verifier"
 uses Jws from "std/behaviors/std-jws"
-uses Rsa from "std/behaviors/std-rsa"
-uses Big from "std/behaviors/std-bigint"
-uses Ecdsa from "std/behaviors/std-ecdsa"
 uses X509 from "std/behaviors/std-x509"
 orbital HttpServerOrbital {
   entity HttpServerProgram [runtime] {
@@ -253,45 +250,15 @@ orbital HttpServerOrbital {
     }
   }
 
-  trait BearerBig = Big.traits.BigIntCodec {
-    listens {
-      BearerRsa.RSA_FROM_BYTES -> FROM_BYTES
-      BearerRsa.RSA_COMPARE -> COMPARE
-      BearerRsa.RSA_MODPOW -> MODPOW
-      BearerRsa.RSA_TO_BYTES -> TO_BYTES
-    }
-  }
-
-  trait BearerRsa = Rsa.traits.RsaVerifier {
+  trait BearerRsa = Jws.traits.JwsRsa {
     listens {
       BearerJws.JWS_RSA_VERIFY -> RSA_VERIFY
-      BearerBig.FROM_BYTES_ANSWERED -> BIG_DECODED
-      BearerBig.COMPARE_ANSWERED -> BIG_COMPARED
-      BearerBig.MODPOW_ANSWERED -> BIG_POWERED
-      BearerBig.TO_BYTES_ANSWERED -> BIG_ENCODED
-      BearerBig.BIGINT_REFUSED -> BIG_REFUSED
     }
   }
 
-  trait BearerEcBig = Big.traits.BigIntCodec {
-    listens {
-      BearerEc.EC_FROM_BYTES -> FROM_BYTES
-      BearerEc.EC_COMPARE -> COMPARE
-      BearerEc.EC_MODINV -> MODINV
-      BearerEc.EC_MUL -> MUL
-      BearerEc.EC_MOD -> MOD
-    }
-  }
-
-  trait BearerEc = Ecdsa.traits.EcdsaVerifier {
+  trait BearerEc = Jws.traits.JwsEc {
     listens {
       BearerJws.JWS_EC_VERIFY -> ECDSA_VERIFY
-      BearerEcBig.FROM_BYTES_ANSWERED -> BIG_DECODED
-      BearerEcBig.COMPARE_ANSWERED -> BIG_COMPARED
-      BearerEcBig.MODINV_ANSWERED -> BIG_INVERTED
-      BearerEcBig.MUL_ANSWERED -> BIG_MULTIPLIED
-      BearerEcBig.MOD_ANSWERED -> BIG_REMAINDER
-      BearerEcBig.BIGINT_REFUSED -> BIG_REFUSED
     }
   }
 
@@ -332,5 +299,5 @@ orbital HttpServerOrbital {
     }
   }
 
-  page http { host: @config.host, port: @config.port, path: "/" } as Api -> BootGuard, BootCreds, BootCheck, Http1, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, ServerSse, ServerLiveFeed, ServerBearer, ApiKeys, BearerJws, BearerX509, BearerRsa, BearerBig, BearerEc, BearerEcBig
+  page http { host: @config.host, port: @config.port, path: "/" } as Api -> BootGuard, BootCreds, BootCheck, Http1, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, ServerSse, ServerLiveFeed, ServerBearer, ApiKeys, BearerJws, BearerX509, BearerRsa, BearerEc
 }

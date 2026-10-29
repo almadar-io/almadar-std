@@ -16,6 +16,9 @@ type EmitRefOrbital = { name : string, traits : [EmitRefTrait] }
 type EmitRefProgram = { orbitals : [EmitRefOrbital] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEmitConfigRefCodes = { emitConfigRefInvalid : LintCodeDecl }
+
 orbital OrbLintEmitConfigRefOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -55,7 +58,7 @@ orbital OrbLintEmitConfigRefOrbital {
                                                    (str/concat "emits references `@config." @knob "` but the `" @knob "` config field is not string-typed (or its call-site/default value isn't a string literal).")))))))
                                 (if (= @why "")
                                   []
-                                  [{ code: "ORB_EMIT_CONFIG_REF_INVALID", path: (str/concat "orbitals[" @oi " (" (object/get @o "name") ")].traits[" @ti " (" (object/get @t "name") ")].emits(" @ev ")"), message: @why, suggestion: (str/concat "Declare `config { " @knob " : string = \"...\" }` on this trait, or reference an existing string-typed knob with a default."), severity: "error" }]))))))))))))))))))))
+                                  [{ code: @config.codes.emitConfigRefInvalid.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name") ")].traits[" @ti " (" (object/get @t "name") ")].emits(" @ev ")"), message: @why, suggestion: (str/concat "Declare `config { " @knob " : string = \"...\" }` on this trait, or reference an existing string-typed knob with a default."), severity: "error" }]))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "emit-config-ref", scope: @entity.scope, findings: @entity.findings })
@@ -75,6 +78,12 @@ orbital OrbLintEmitConfigRefOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintEmitConfigRefCodes = { emitConfigRefInvalid: { code: "ORB_EMIT_CONFIG_REF_INVALID", category: "effect", description: "An emit config reference is invalid" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintEmitConfigRefCli -> OrbLintEmitConfigRefRun [client] {

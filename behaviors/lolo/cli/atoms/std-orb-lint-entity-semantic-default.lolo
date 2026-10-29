@@ -16,6 +16,9 @@ type SemanticDefaultEntityRef = SemanticDefaultEntity | string
 type SemanticDefaultOrbital = { entity : SemanticDefaultEntityRef, auxiliaryEntities : [SemanticDefaultEntity], spec : boolean }
 type SemanticDefaultProgram = { orbitals : [SemanticDefaultOrbital]! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEntitySemanticDefaultCodes = { eSemanticValueInvalid : LintCodeDecl }
+
 orbital OrbLintEntitySemanticDefaultOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -46,10 +49,10 @@ orbital OrbLintEntitySemanticDefaultOrbital {
                           (let ((kind (object/get @f "type" "")) (lit (object/get @f "default" 0)) (at (str/concat (object/get @eb "base") ".fields[" @fi "].default")))
                             (if (and (array/includes ["email" "url" "phone" "uuid" "image"] @kind) (validate/string @lit))
                               (if (= @lit "")
-                                [{ code: "ORB_E_SEMANTIC_VALUE_INVALID", path: @at, message: (str/concat "A '" @kind "' field cannot default to an empty string"), suggestion: "Drop the default — the mock generator synthesizes a valid value", severity: "error" }]
+                                [{ code: @config.codes.eSemanticValueInvalid.code, path: @at, message: (str/concat "A '" @kind "' field cannot default to an empty string"), suggestion: "Drop the default — the mock generator synthesizes a valid value", severity: "error" }]
                                 (if (if (= @kind "email") (validate/email @lit) (if (= @kind "phone") (validate/phone @lit) (if (= @kind "uuid") (validate/uuid @lit) (validate/url @lit))))
                                   []
-                                  [{ code: "ORB_E_SEMANTIC_VALUE_INVALID", path: @at, message: (str/concat "'" @lit "' is not a valid " @kind), suggestion: (str/concat "Provide a valid " @kind " or drop the default"), severity: "error" }]))
+                                  [{ code: @config.codes.eSemanticValueInvalid.code, path: @at, message: (str/concat "'" @lit "' is not a valid " @kind), suggestion: (str/concat "Provide a valid " @kind " or drop the default"), severity: "error" }]))
                               []))))))) [])))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -70,6 +73,12 @@ orbital OrbLintEntitySemanticDefaultOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintEntitySemanticDefaultCodes = { eSemanticValueInvalid: { code: "ORB_E_SEMANTIC_VALUE_INVALID", category: "entity", description: "A semantically typed field has a default value that is invalid for its kind, such as an empty string" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintEntitySemanticDefaultCli -> OrbLintEntitySemanticDefaultRun [client] {

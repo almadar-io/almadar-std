@@ -11,7 +11,7 @@ type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type ReachEntry = { loc : string, path : string, labelled : boolean }
 type ReachVal = string | number | boolean | [ReachVal?] | Map string ReachVal?
-type ReachPage = { path : string, protocol : string, label : string }
+type ReachPage = { path : string, protocol : string, label : string, isNotFound : boolean }
 type ReachField = { default : ReachVal? }
 type ReachStrings = [string]
 type ReachCall = { path : string!, node : ReachVal! }
@@ -24,6 +24,9 @@ type ReachOrbital = { traits : [ReachTrait], config : Map string ReachField, pag
 type ReachSite = { signIn : string }
 type ReachLazy = { path : string, links : [string]? }
 type ReachProgram = { site : ReachSite, config : Map string ReachField, orbitals : [ReachOrbital], lazyPages : [ReachLazy]? }
+
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintPageUnreachableCodes = { pageUnreachable : LintCodeDecl }
 
 orbital OrbLintPageUnreachableOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -88,7 +91,7 @@ orbital OrbLintPageUnreachableOrbital {
                                     (let ((pgs (object/get (array/nth @orbitals @oi) "pages" [])))
                                       (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
                                         (let ((pg (array/nth @pgs @pj)))
-                                          (if (and (object/has @pg "path") (not (object/has @pg "protocol")))
+                                          (if (and (object/has @pg "path") (not (object/has @pg "protocol")) (!= (object/get @pg "isNotFound" false) true))
                                             [{ loc: (str/concat "orbitals[" @oi "].pages[" @pj "]"), path: (object/get @pg "path" ""), labelled: (object/has @pg "label") }]
                                             [])))))))))))
                     (let ((linked (array/concat @hrefs (if @sigil (array/map (array/filter @entries (fn en (object/get @en "labelled"))) (fn en (object/get @en "path"))) []))))
@@ -100,7 +103,7 @@ orbital OrbLintPageUnreachableOrbital {
                                   (array/includes @navs @pth)
                                   (array/some @navs (fn tg (and (> (str/len @tg) 1) (str/startsWith @pth @tg)))))
                             []
-                            [{ code: "ORB_PAGE_UNREACHABLE", path: (object/get @en "loc"), message: (str/concat "page '" @pth "' is declared but appears in no link, navItems entry or navigate effect"), suggestion: (str/concat "add an href to a nav/footer/link component, or a navigate effect, targeting '" @pth "', or remove the page if nothing should reach it"), severity: "error" }])))))
+                            [{ code: @config.codes.pageUnreachable.code, path: (object/get @en "loc"), message: (str/concat "page '" @pth "' is declared but appears in no link, navItems entry or navigate effect"), suggestion: (str/concat "add an href to a nav/footer/link component, or a navigate effect, targeting '" @pth "', or remove the page if nothing should reach it"), severity: "error" }])))))
                         (let ((lzs (object/get @payload.program "lazyPages" [])))
                           (let ((reached (array/reduce (array/range 0 (array/len @lzs)) @hrefs (fn (acc pass)
                                             (array/concat @acc (array/flatten (array/map
@@ -113,7 +116,7 @@ orbital OrbLintPageUnreachableOrbital {
                                         (array/includes @navs @lpth)
                                         (array/some @navs (fn tg (and (> (str/len @tg) 1) (str/startsWith @lpth @tg)))))
                                   []
-                                  [{ code: "ORB_PAGE_UNREACHABLE", path: (str/concat "lazyPages[" @k "]"), message: (str/concat "page '" @lpth "' is declared but appears in no link, navItems entry or navigate effect"), suggestion: (str/concat "add an href to a nav/footer/link component, or a navigate effect, targeting '" @lpth "', or remove the `uses lazy` page if nothing should reach it"), severity: "error" }]))))))))))))))))
+                                  [{ code: @config.codes.pageUnreachable.code, path: (str/concat "lazyPages[" @k "]"), message: (str/concat "page '" @lpth "' is declared but appears in no link, navItems entry or navigate effect"), suggestion: (str/concat "add an href to a nav/footer/link component, or a navigate effect, targeting '" @lpth "', or remove the `uses lazy` page if nothing should reach it"), severity: "error" }]))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "page-unreachable", scope: @entity.scope, findings: @entity.findings })
@@ -133,6 +136,12 @@ orbital OrbLintPageUnreachableOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintPageUnreachableCodes = { pageUnreachable: { code: "ORB_PAGE_UNREACHABLE", category: "page", description: "A page is declared but appears in no link, navItems entry or navigate effect" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintPageUnreachableCli -> OrbLintPageUnreachableRun [client] {

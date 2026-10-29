@@ -1,0 +1,261 @@
+{
+ "atom": "store/atoms/std-postgres.lolo",
+ "trait": "PostgresClient",
+ "spec": "spec/store/row-store-postgres.lolo",
+ "source": "archive/orbital-rust/crates/orbital-core/crates/runtime/src/drivers/postgres.rs (the postgres effect) over stores/pg_rows.rs",
+ "note": "Replay goldens for the std-postgres client: the read-only guard (std-sql-select-guard) runs before ROWS_SQL reaches the held session; the session's replies are the real Postgres 16 ones recorded in postgres-twin.replay.goldens.json. The harness runs the whole circuit of a turn, so the guard's SQL_GUARD_CHECKED and the ROWS_SQL that follows appear in the same step's emits; the reported state is the one after the first transition.",
+ "cases": [
+  {
+   "id": "good-a-select-passes-the-guard-in-the-same-turn-reaches-the-session-and-is-answered",
+   "steps": [
+    {
+     "event": "PG_QUERY",
+     "payload": {
+      "sql": "SELECT id FROM tickets WHERE id = $1",
+      "params": [
+       "t1"
+      ]
+     },
+     "from": "idle",
+     "entity": {
+      "id": "c"
+     },
+     "expect": {
+      "state": "guarding",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECK",
+        "payload": {
+         "requestId": "pg",
+         "statements": [
+          "SELECT id FROM tickets WHERE id = $1"
+         ]
+        }
+       },
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "pg",
+         "results": [
+          {
+           "ok": true,
+           "reason": ""
+          }
+         ]
+        }
+       },
+       {
+        "event": "ROWS_SQL",
+        "payload": {
+         "key": "pg",
+         "sql": "SELECT id FROM tickets WHERE id = $1",
+         "params": [
+          "t1"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "PG_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "SQL_ROWS",
+     "payload": {
+      "key": "pg",
+      "rows": [
+       {
+        "id": "t1"
+       }
+      ],
+      "rowCount": 1,
+      "columns": [
+       {
+        "name": "id",
+        "typeOid": 25
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PG_RESULT",
+        "payload": {
+         "rows": [
+          {
+           "id": "t1"
+          }
+         ],
+         "rowCount": 1,
+         "columns": [
+          {
+           "name": "id",
+           "typeOid": 25
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "PG_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-a-statement-that-writes-is-refused-before-the-session-is-touched",
+   "steps": [
+    {
+     "event": "PG_QUERY",
+     "payload": {
+      "sql": "DELETE FROM tickets"
+     },
+     "from": "idle",
+     "entity": {
+      "id": "c"
+     },
+     "expect": {
+      "state": "guarding",
+      "emits": [
+       {
+        "event": "SQL_GUARD_CHECK",
+        "payload": {
+         "requestId": "pg",
+         "statements": [
+          "DELETE FROM tickets"
+         ]
+        }
+       },
+       {
+        "event": "SQL_GUARD_CHECKED",
+        "payload": {
+         "requestId": "pg",
+         "results": [
+          {
+           "ok": false,
+           "reason": "Only SELECT statements are allowed"
+          }
+         ]
+        }
+       },
+       {
+        "event": "PG_FAILED",
+        "payload": {
+         "kind": "refused",
+         "message": "Read-only violation: Only SELECT statements are allowed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROWS_SQL"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-an-empty-statement-is-refused-without-the-guard",
+   "steps": [
+    {
+     "event": "PG_QUERY",
+     "payload": {
+      "sql": ""
+     },
+     "from": "idle",
+     "entity": {
+      "id": "c"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PG_FAILED",
+        "payload": {
+         "kind": "refused",
+         "message": "sql is required"
+        }
+       }
+      ],
+      "neverEmits": [
+       "SQL_GUARD_CHECK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-a-server-error-answers-its-sqlstate",
+   "steps": [
+    {
+     "event": "PG_QUERY",
+     "payload": {
+      "sql": "SELECT * FROM missing_table"
+     },
+     "from": "idle",
+     "entity": {
+      "id": "c"
+     }
+    },
+    {
+     "event": "SQL_FAILED",
+     "payload": {
+      "key": "pg",
+      "kind": "postgres",
+      "code": "42P01",
+      "message": "relation \"missing_table\" does not exist"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PG_FAILED",
+        "payload": {
+         "kind": "postgres",
+         "code": "42P01",
+         "message": "relation \"missing_table\" does not exist"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bad-an-unreachable-server-answers-failed",
+   "steps": [
+    {
+     "event": "PG_QUERY",
+     "payload": {
+      "sql": "SELECT 1"
+     },
+     "from": "idle",
+     "entity": {
+      "id": "c"
+     }
+    },
+    {
+     "event": "STORE_FAILED",
+     "payload": {
+      "key": "pg",
+      "message": "cannot connect to postgres.example.test:5432: refused"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PG_FAILED",
+        "payload": {
+         "kind": "failed",
+         "message": "cannot connect to postgres.example.test:5432: refused"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

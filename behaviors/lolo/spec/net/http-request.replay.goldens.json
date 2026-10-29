@@ -1,0 +1,2151 @@
+{
+ "atom": "net/atoms/std-http-request.lolo",
+ "trait": "HttpRequest",
+ "note": "request composition of the retired drivers/http_request request.rs (query, bodies, multipart) and the retry and pagination of driver.rs; auth is not built",
+ "cases": [
+  {
+   "id": "a-get-with-a-query-is-percent-encoded-in-map-order",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {
+       "q": "a b&c",
+       "limit": "2"
+      },
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x?q=a%20b%26c&limit=2",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REQUEST_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-query-has-no-question-mark",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REQUEST_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-json-body-sets-content-type-and-bytes",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "POST",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "json": "{\"a\":1}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "POST",
+         "target": "/x",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJhIjoxfQ==",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REQUEST_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-caller-content-type-wins",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "POST",
+      "path": "/x",
+      "query": {},
+      "headers": {
+       "Content-Type": "application/vnd.api+json"
+      },
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "json": "{\"a\":1}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "POST",
+         "target": "/x",
+         "headers": [
+          {
+           "name": "Content-Type",
+           "value": "application/vnd.api+json"
+          }
+         ],
+         "body": "eyJhIjoxfQ==",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REQUEST_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-form-body-is-html-encoded",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "POST",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {
+       "a": "b c",
+       "d": "e&f"
+      },
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "POST",
+         "target": "/x",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "application/x-www-form-urlencoded"
+          }
+         ],
+         "body": "YT1iK2MmZD1lJTI2Zg==",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REQUEST_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-form-body-in-rfc3986-writes-a-space-as-percent-20",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "POST",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {
+       "a": "b c"
+      },
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "POST",
+         "target": "/x",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "application/x-www-form-urlencoded"
+          }
+         ],
+         "body": "YT1iJTIwYw==",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REQUEST_REFUSED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "formEncoding": "rfc3986"
+   }
+  },
+  {
+   "id": "a-text-body",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "PUT",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "text": "hi"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "PUT",
+         "target": "/x",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "text/plain; charset=utf-8"
+          }
+         ],
+         "body": "aGk=",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REQUEST_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-bytes-body",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "PUT",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "bytes": "QUI="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "PUT",
+         "target": "/x",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "application/octet-stream"
+          }
+         ],
+         "body": "QUI=",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REQUEST_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rfc3986-query-escapes-the-sub-delims",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {
+       "q": "a(b)!"
+      },
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x?q=a%28b%29%21",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REQUEST_REFUSED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "queryEncoding": "rfc3986"
+   }
+  },
+  {
+   "id": "control-uri-query-leaves-the-sub-delims",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {
+       "q": "a(b)!"
+      },
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x?q=a(b)!",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REQUEST_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-body-keys-are-refused",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "POST",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "json": "{}",
+      "text": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REQUEST_REFUSED",
+        "payload": {
+         "key": "r1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-path-without-a-slash-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REQUEST_REFUSED",
+        "payload": {
+         "key": "r1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-empty-query-key-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {
+       "": "v"
+      },
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REQUEST_REFUSED",
+        "payload": {
+         "key": "r1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-unknown-pagination-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "cursor",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REQUEST_REFUSED",
+        "payload": {
+         "key": "r1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-multipart-related-body-is-framed-by-the-boundary",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "POST",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [
+       {
+        "headers": {
+         "Content-Type": "application/json"
+        },
+        "text": "{\"n\":1}"
+       },
+       {
+        "headers": {
+         "Content-Type": "text/plain"
+        },
+        "bytes": "cmF3"
+       }
+      ],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "multipartKind": "related",
+      "multipartBoundary": "BND"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "POST",
+         "target": "/x",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "multipart/related; boundary=BND"
+          }
+         ],
+         "body": "LS1CTkQNCkNvbnRlbnQtVHlwZTogYXBwbGljYXRpb24vanNvbg0KDQp7Im4iOjF9DQotLUJORA0KQ29udGVudC1UeXBlOiB0ZXh0L3BsYWluDQoNCnJhdw0KLS1CTkQtLQ0K",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REQUEST_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-multipart-form-data-body-names-its-kind",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "POST",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [
+       {
+        "headers": {
+         "Content-Type": "application/json"
+        },
+        "text": "{\"n\":1}"
+       },
+       {
+        "headers": {
+         "Content-Type": "text/plain"
+        },
+        "bytes": "cmF3"
+       }
+      ],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "multipartKind": "form-data",
+      "multipartBoundary": "BND"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "POST",
+         "target": "/x",
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "multipart/form-data; boundary=BND"
+          }
+         ],
+         "body": "LS1CTkQNCkNvbnRlbnQtVHlwZTogYXBwbGljYXRpb24vanNvbg0KDQp7Im4iOjF9DQotLUJORA0KQ29udGVudC1UeXBlOiB0ZXh0L3BsYWluDQoNCnJhdw0KLS1CTkQtLQ0K",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REQUEST_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-multipart-boundary-that-is-not-allowed-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "POST",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [
+       {
+        "headers": {
+         "Content-Type": "application/json"
+        },
+        "text": "{\"n\":1}"
+       },
+       {
+        "headers": {
+         "Content-Type": "text/plain"
+        },
+        "bytes": "cmF3"
+       }
+      ],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "multipartKind": "related",
+      "multipartBoundary": "a b"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REQUEST_REFUSED",
+        "payload": {
+         "key": "r1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-multipart-kind-that-is-unknown-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "POST",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [
+       {
+        "headers": {
+         "Content-Type": "application/json"
+        },
+        "text": "{\"n\":1}"
+       },
+       {
+        "headers": {
+         "Content-Type": "text/plain"
+        },
+        "bytes": "cmF3"
+       }
+      ],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "multipartKind": "mixed",
+      "multipartBoundary": "BND"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REQUEST_REFUSED",
+        "payload": {
+         "key": "r1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-multipart-with-no-parts-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "POST",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "multipartKind": "related",
+      "multipartBoundary": "BND"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REQUEST_REFUSED",
+        "payload": {
+         "key": "r1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-multipart-part-with-both-text-and-bytes-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "POST",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [
+       {
+        "headers": {},
+        "text": "a",
+        "bytes": "Yg=="
+       }
+      ],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "multipartKind": "related",
+      "multipartBoundary": "BND"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REQUEST_REFUSED",
+        "payload": {
+         "key": "r1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-multipart-part-with-neither-text-nor-bytes-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "POST",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [
+       {
+        "headers": {}
+       }
+      ],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "multipartKind": "related",
+      "multipartBoundary": "BND"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REQUEST_REFUSED",
+        "payload": {
+         "key": "r1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "multipart-and-json-together-are-refused",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "POST",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [
+       {
+        "headers": {
+         "Content-Type": "application/json"
+        },
+        "text": "{\"n\":1}"
+       },
+       {
+        "headers": {
+         "Content-Type": "text/plain"
+        },
+        "bytes": "cmF3"
+       }
+      ],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1,
+      "multipartKind": "related",
+      "multipartBoundary": "BND",
+      "json": "{}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REQUEST_REFUSED",
+        "payload": {
+         "key": "r1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-503-is-retried-after-each-delay-until-it-succeeds",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 2,
+      "retryOn": [
+       503
+      ],
+      "retryOnFailure": [
+       "timeout"
+      ],
+      "retryDelaysMs": [
+       10,
+       20
+      ],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 503,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RETRY_WAIT",
+        "payload": {
+         "delayMs": 10
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_RESULT"
+      ]
+     }
+    },
+    {
+     "event": "RETRY_ELAPSED",
+     "payload": {
+      "waitedMs": 10
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 503,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RETRY_WAIT",
+        "payload": {
+         "delayMs": 20
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RETRY_ELAPSED",
+     "payload": {
+      "waitedMs": 10
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 200,
+      "headers": {
+       "a": "b"
+      },
+      "body": "b2s="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_RESULT",
+        "payload": {
+         "key": "r1",
+         "status": 200,
+         "attempts": 3,
+         "pages": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "RETRY_WAIT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-404-is-a-result-not-a-retry",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 2,
+      "retryOn": [
+       503
+      ],
+      "retryOnFailure": [
+       "timeout"
+      ],
+      "retryDelaysMs": [
+       10,
+       20
+      ],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 404,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_RESULT",
+        "payload": {
+         "status": 404,
+         "attempts": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "RETRY_WAIT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-last-delay-repeats-and-the-retries-run-out",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 3,
+      "retryOn": [
+       503
+      ],
+      "retryOnFailure": [],
+      "retryDelaysMs": [
+       10
+      ],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 503,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RETRY_WAIT",
+        "payload": {
+         "delayMs": 10
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RETRY_ELAPSED",
+     "payload": {
+      "waitedMs": 10
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 503,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RETRY_WAIT",
+        "payload": {
+         "delayMs": 10
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RETRY_ELAPSED",
+     "payload": {
+      "waitedMs": 10
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 503,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RETRY_WAIT",
+        "payload": {
+         "delayMs": 10
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "RETRY_ELAPSED",
+     "payload": {
+      "waitedMs": 10
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 503,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_RESULT",
+        "payload": {
+         "status": 503,
+         "attempts": 4
+        }
+       }
+      ],
+      "neverEmits": [
+       "RETRY_WAIT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-timeout-failure-is-retried",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 2,
+      "retryOn": [
+       503
+      ],
+      "retryOnFailure": [
+       "timeout"
+      ],
+      "retryDelaysMs": [
+       10,
+       20
+      ],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "r1",
+      "error": "e",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RETRY_WAIT",
+        "payload": {
+         "delayMs": 10
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-denied-failure-is-not-retried",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 2,
+      "retryOn": [
+       503
+      ],
+      "retryOnFailure": [
+       "timeout"
+      ],
+      "retryDelaysMs": [
+       10,
+       20
+      ],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_FAILED",
+     "payload": {
+      "key": "r1",
+      "error": "e",
+      "kind": "denied"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REQUEST_FAILED",
+        "payload": {
+         "key": "r1",
+         "kind": "denied"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RETRY_WAIT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-second-request-while-waiting-to-retry-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 2,
+      "retryOn": [
+       503
+      ],
+      "retryOnFailure": [
+       "timeout"
+      ],
+      "retryDelaysMs": [
+       10,
+       20
+      ],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 503,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RETRY_WAIT"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r2",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REQUEST_REFUSED",
+        "payload": {
+         "key": "r2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "link-header-pagination-follows-rel-next-to-the-last-page",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "link-header",
+      "maxPages": 5
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 200,
+      "headers": {
+       "link": "<https://api.example.test/x?page=2>; rel=\"next\", <https://api.example.test/x?page=9>; rel=\"last\""
+      },
+      "body": "cDE="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_PAGE",
+        "payload": {
+         "page": 1,
+         "status": 200,
+         "body": "cDE="
+        }
+       },
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x?page=2",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_RESULT"
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 200,
+      "headers": {},
+      "body": "cDI="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_PAGE",
+        "payload": {
+         "page": 2,
+         "body": "cDI="
+        }
+       },
+       {
+        "event": "HTTP_RESULT",
+        "payload": {
+         "status": 200,
+         "pages": 2,
+         "body": "cDI="
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "link-header-pagination-stops-at-max-pages",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "link-header",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 200,
+      "headers": {
+       "link": "<https://api.example.test/x?page=2>; rel=\"next\", <https://api.example.test/x?page=9>; rel=\"last\""
+      },
+      "body": "cDE="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_PAGE",
+        "payload": {
+         "page": 1
+        }
+       },
+       {
+        "event": "HTTP_RESULT",
+        "payload": {
+         "pages": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-link-header-without-rel-next-ends-the-pages",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "link-header",
+      "maxPages": 5
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 200,
+      "headers": {
+       "link": "<https://api.example.test/x?page=1>; rel=\"prev\""
+      },
+      "body": "cDE="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_PAGE"
+       },
+       {
+        "event": "HTTP_RESULT",
+        "payload": {
+         "pages": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "caller-pagination-waits-for-next-and-sends-the-new-query",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {
+       "page": "1"
+      },
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "caller",
+      "maxPages": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x?page=1",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 200,
+      "headers": {},
+      "body": "cDE="
+     },
+     "expect": {
+      "state": "paging",
+      "emits": [
+       {
+        "event": "HTTP_PAGE",
+        "payload": {
+         "page": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_RESULT"
+      ]
+     }
+    },
+    {
+     "event": "HTTP_NEXT",
+     "payload": {
+      "key": "r1",
+      "query": {
+       "page": "2"
+      }
+     },
+     "expect": {
+      "state": "awaiting",
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x?page=2",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "caller-pagination-ends-on-stop",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "caller",
+      "maxPages": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 200,
+      "headers": {},
+      "body": "cDE="
+     },
+     "expect": {
+      "state": "paging"
+     }
+    },
+    {
+     "event": "HTTP_STOP",
+     "payload": {
+      "key": "r1"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_RESULT",
+        "payload": {
+         "pages": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-request-while-paging-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r1",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "caller",
+      "maxPages": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_SEND",
+        "payload": {
+         "key": "r1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "r1",
+      "status": 200,
+      "headers": {},
+      "body": "cDE="
+     },
+     "expect": {
+      "state": "paging"
+     }
+    },
+    {
+     "event": "HTTP_REQUEST",
+     "payload": {
+      "key": "r2",
+      "method": "GET",
+      "path": "/x",
+      "query": {},
+      "headers": {},
+      "form": {},
+      "multipartParts": [],
+      "stream": "none",
+      "retryMax": 0,
+      "retryOn": [],
+      "retryOnFailure": [],
+      "retryDelaysMs": [],
+      "paginate": "none",
+      "maxPages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "HTTP_REQUEST_REFUSED",
+        "payload": {
+         "key": "r2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

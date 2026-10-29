@@ -4,7 +4,7 @@ import { OS_COMMAND, OS_HANDLE, OS_PATH, OS_SIGNAL, OS_STREAM_MODE, OS_STRING_LI
 
 const SPAWN_CONFIG = shape({
   cwd: nullable(OS_PATH),
-  env: nullable(mapOf(STRING, STRING)),
+  env: nullable(mapOf(STRING, nullable(STRING))),
   stdin: OS_STREAM_MODE,
   stdout: OS_STREAM_MODE,
   stderr: OS_STREAM_MODE,

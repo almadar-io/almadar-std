@@ -15,6 +15,9 @@ type FieldTypeEntity = { fields : [FieldTypeField] }
 type FieldTypeOrbital = { entity : FieldTypeEntity, auxiliaryEntities : [FieldTypeEntity], spec : boolean }
 type FieldTypeProgram = { orbitals : [FieldTypeOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEntityFieldTypeCodes = { eInvalidFieldName : LintCodeDecl , eInvalidFieldType : LintCodeDecl , eInvalidRelation : LintCodeDecl }
+
 orbital OrbLintEntityFieldTypeOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -45,15 +48,15 @@ orbital OrbLintEntityFieldTypeOrbital {
                           (let ((f (array/nth @fields @fi)))
                             (array/concat
                               (if (and (object/has @f "name") (= (object/get @f "name" "x") ""))
-                                [{ code: "ORB_E_INVALID_FIELD_NAME", path: (str/concat @base ".fields[" @fi "].name"), message: "Field name cannot be empty", suggestion: "Provide a valid camelCase field name", severity: "error" }]
+                                [{ code: @config.codes.eInvalidFieldName.code, path: (str/concat @base ".fields[" @fi "].name"), message: "Field name cannot be empty", suggestion: "Provide a valid camelCase field name", severity: "error" }]
                                 (if (and @payload.latin (validate/string (object/get @f "name" null)) (not (validate/pattern (object/get @f "name") "^[a-z][a-zA-Z0-9]*$")))
-                                  [{ code: "ORB_E_INVALID_FIELD_NAME", path: (str/concat @base ".fields[" @fi "].name"), message: (str/concat "Field name '" (object/get @f "name") "' should be camelCase"), suggestion: "Use camelCase for field names (e.g., 'firstName', 'createdAt')", severity: "error" }]
+                                  [{ code: @config.codes.eInvalidFieldName.code, path: (str/concat @base ".fields[" @fi "].name"), message: (str/concat "Field name '" (object/get @f "name") "' should be camelCase"), suggestion: "Use camelCase for field names (e.g., 'firstName', 'createdAt')", severity: "error" }]
                                   []))
                               (if (array/includes @config.fieldTypes (object/get @f "type" "string"))
                                 []
-                                [{ code: "ORB_E_INVALID_FIELD_TYPE", path: (str/concat @base ".fields[" @fi "].type"), message: (str/concat "Invalid field type: '" (object/get @f "type" "") "'"), suggestion: "Use a valid field type", severity: "error", validValues: @config.fieldTypes }])
+                                [{ code: @config.codes.eInvalidFieldType.code, path: (str/concat @base ".fields[" @fi "].type"), message: (str/concat "Invalid field type: '" (object/get @f "type" "") "'"), suggestion: "Use a valid field type", severity: "error", validValues: @config.fieldTypes }])
                               (if (and (= (object/get @f "type" "") "relation") (not (object/has @f "relation")))
-                                [{ code: "ORB_E_INVALID_RELATION", path: (str/concat @base ".fields[" @fi "].relation"), message: "Relation field requires a 'relation' configuration", suggestion: "Add relation: { entity: 'EntityName', cardinality: 'one' }", severity: "error" }]
+                                [{ code: @config.codes.eInvalidRelation.code, path: (str/concat @base ".fields[" @fi "].relation"), message: "Relation field requires a 'relation' configuration", suggestion: "Add relation: { entity: 'EntityName', cardinality: 'one' }", severity: "error" }]
                                 [])))))))
                       [])))))))))))
         (emit LINT_FINISH { })
@@ -62,6 +65,9 @@ orbital OrbLintEntityFieldTypeOrbital {
     }
 
     config {
+      codes : LintEntityFieldTypeCodes = { eInvalidFieldName: { code: "ORB_E_INVALID_FIELD_NAME", category: "entity", description: "An entity field or entity name is empty or not in the required naming form" }, eInvalidFieldType: { code: "ORB_E_INVALID_FIELD_TYPE", category: "entity", description: "An entity field declares a type that is not a valid field type" }, eInvalidRelation: { code: "ORB_E_INVALID_RELATION", category: "entity", description: "A relation field is missing its relation configuration or points at an entity that does not exist" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
       fieldTypes : [string] = ["string", "number", "int", "boolean", "date", "datetime", "timestamp", "instant", "email", "url", "phone", "uuid", "image", "money", "file", "bytes", "CallKey", "array", "tuple", "object", "enum", "relation", "trait", "orbital", "behavior", "slot", "pattern", "node", "event", "union"]
         @label "Field types"
         @description "The field types an entity field may declare, as the compiler's field validation accepts them (G-STD-145)."

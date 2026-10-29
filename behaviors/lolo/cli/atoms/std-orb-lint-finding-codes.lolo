@@ -1,0 +1,159 @@
+app std-orb-lint-finding-codes [
+  version: "1.0.0",
+  inbound: ["cli-lint-finding-codes"],
+  env: ["PATH"],
+  exec: ["orb"],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-finding-codes - the `orb lint finding-codes <file>` command, the prevention rung of the lint code registry: a trait that declares a `codes` knob (a lint rule) may name a finding code only from that knob's declared record, which the generated registry reads. Every object under a transition or tick of such a trait whose `code` is a string the record does not declare is an error at the trait, one per occurrence. The program is the resolved one, so a `@config.codes.<name>.code` read is already its declared value: a literal that spells a declared code cannot be told from the read, and the type checker owns an undeclared name. Each finding reads its code from the rule's `codes` record (findingCodeUndeclared). Clean answers `lint finding-codes: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-finding-codes"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string] }
+type FcDocValue = string | number | boolean | [FcDocValue] | Map string FcDocValue
+type FcKnob = { default : FcDocValue }
+type FcTransition = { effects : [FcDocValue] }
+type FcMachine = { transitions : [FcTransition] }
+type FcTick = { effects : [FcDocValue] }
+type FcTrait = { name : string, config : Map string FcKnob, stateMachine : FcMachine, ticks : [FcTick] }
+type FcOrbital = { name : string, traits : [FcTrait] }
+type FcProgram = { orbitals : [FcOrbital] }
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type FindingCodesCodes = { findingCodeUndeclared : LintCodeDecl }
+
+orbital OrbLintFindingCodesOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintFindingCodesRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintFindingCodes -> OrbLintFindingCodesRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((orb (array/nth @orbitals @oi)))
+              (let ((trs (object/get @orb "traits" [])))
+                (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
+                  (let ((td (array/nth @trs @ti)))
+                    (if (not (validate/object (object/get (object/get @td "config" {}) "codes" null)))
+                      []
+                      (let ((dflt (object/get (object/get (object/get @td "config") "codes") "default" null)) (where (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]")))
+                        (let ((declared (if (validate/object @dflt) (array/map (object/values @dflt) (fn d (object/get @d "code" ""))) []))
+                              (effects (array/concat (array/flatten (array/map (object/get (object/get @td "stateMachine" {}) "transitions" []) (fn tr (object/get @tr "effects" [])))) (array/flatten (array/map (object/get @td "ticks" []) (fn tk (object/get @tk "effects" [])))))))
+                          (array/flatten (array/map (json/nodes [@effects]) (fn n
+                            (if (validate/object @n)
+                              (let ((c (object/get @n "code" null)))
+                                (if (validate/string @c)
+                                  (if (array/includes @declared @c)
+                                    []
+                                    [{ code: @config.codes.findingCodeUndeclared.code, path: @where, message: (str/concat "A finding names the code '" @c "', which the rule's `codes` record does not declare"), suggestion: "Declare the code in the rule's `codes` record and read it as `@config.codes.<name>.code`", severity: "error" }])
+                                  []))
+                              []))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "finding-codes", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    config {
+      codes : FindingCodesCodes = { findingCodeUndeclared: { code: "ORB_LINT_FINDING_CODE_UNDECLARED", category: "lint", description: "A lint rule names a finding code that its declared codes record does not carry." } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : FcProgram!  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+  }
+
+  trait OrbLintFindingCodesCli -> OrbLintFindingCodesRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint finding-codes <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_REQUEST { file: (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") })
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "finding-codes") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint finding-codes: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "finding-codes") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint finding-codes: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-finding-codes" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string!
+      }
+        @description "Run `orb lint finding-codes` with its arguments and working directory."
+        @synonyms "orb lint finding-codes"
+      OrbLintFindingCodes.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintFindingCodesCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintFindingCodesOrbitalStart -> OrbLintFindingCodes, OrbLintFindingCodesCli, OrbLintInput, Packs, Versions
+}

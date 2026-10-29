@@ -14,6 +14,9 @@ type SignInSite = { signIn : string }
 type SignInProgram = { site : SignInSite, orbitals : [SignInOrbital], lazyPages : [SignInPage] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintSignInRouteCodes = { pHostReservedRoute : LintCodeDecl , pSignInUnknownRoute : LintCodeDecl }
+
 orbital OrbLintSignInRouteOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -34,15 +37,15 @@ orbital OrbLintSignInRouteOrbital {
         (lazyp (object/get @payload.program "lazyPages" [])))
           (array/flatten [
             (array/flatten (array/map (array/filter (array/concat @allp @lazyp) (fn pg (or (= (object/get @pg "path" "") "/login") (= (object/get @pg "path" "") "/login/")))) (fn pg
-              [{ code: "ORB_P_HOST_RESERVED_ROUTE", path: (object/get @pg "path" ""), message: (str/concat "'" (object/get @pg "path" "") "' is the host's own sign-in route; no page may be declared on it"), suggestion: "move this page to another route; name `signIn: \"/login\"` to send viewers to the host's sign-in", severity: "error" }])))
+              [{ code: @config.codes.pHostReservedRoute.code, path: (object/get @pg "path" ""), message: (str/concat "'" (object/get @pg "path" "") "' is the host's own sign-in route; no page may be declared on it"), suggestion: "move this page to another route; name `signIn: \"/login\"` to send viewers to the host's sign-in", severity: "error" }])))
             (if (or (= @sgi "") (= @sgi "/login") (= @sgi "/login/"))
               []
               (let ((tgt (str/join (array/map (str/split @sgi "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/")))
                 (let ((hits (array/filter @allp (fn pg (= (str/join (array/map (str/split (object/get @pg "path" "") "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/") @tgt)))))
                   (if (and (= (array/len @hits) 0) (= (array/len (array/filter @lazyp (fn pg (= (str/join (array/map (str/split (object/get @pg "path" "") "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/") @tgt)))) 0))
-                    [{ code: "ORB_P_SIGN_IN_UNKNOWN_ROUTE", path: "site.signIn", message: (str/concat "the `signIn` route '" @sgi "' is no page of this app"), suggestion: "point `signIn:` at a page anonymous viewers can open", severity: "error" }]
+                    [{ code: @config.codes.pSignInUnknownRoute.code, path: "site.signIn", message: (str/concat "the `signIn` route '" @sgi "' is no page of this app"), suggestion: "point `signIn:` at a page anonymous viewers can open", severity: "error" }]
                     (if (and (> (array/len @hits) 0) (= (object/get (array/first @hits) "access" "") "authenticated"))
-                      [{ code: "ORB_P_SIGN_IN_UNKNOWN_ROUTE", path: "site.signIn", message: (str/concat "the `signIn` route '" @sgi "' is itself `access: authenticated`"), suggestion: "point `signIn:` at a page anonymous viewers can open", severity: "error" }]
+                      [{ code: @config.codes.pSignInUnknownRoute.code, path: "site.signIn", message: (str/concat "the `signIn` route '" @sgi "' is itself `access: authenticated`"), suggestion: "point `signIn:` at a page anonymous viewers can open", severity: "error" }]
                       [])))))])))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -63,6 +66,12 @@ orbital OrbLintSignInRouteOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintSignInRouteCodes = { pHostReservedRoute: { code: "ORB_P_HOST_RESERVED_ROUTE", category: "page", description: "A page is declared on the host's reserved sign-in route" }, pSignInUnknownRoute: { code: "ORB_P_SIGN_IN_UNKNOWN_ROUTE", category: "page", description: "The app's signIn route names a path that is no page of the app" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintSignInRouteCli -> OrbLintSignInRouteRun [client] {

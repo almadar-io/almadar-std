@@ -58,7 +58,7 @@ orbital VerifyWalkOrbital {
     credits : [WalkCredit] = []
     creditSteps : [WalkCreditStep] = []
     gaps : number! = 0
-    viewer : Map string WalkValue
+    viewer : (Map string WalkValue)?
     owners : Map string [string] = {}
   }
 
@@ -115,7 +115,7 @@ orbital VerifyWalkOrbital {
       VERIFY_WALK_ANSWERED -> external { status : number!  body : string! }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
-      VERIFY_WALK_START { file : string!, viewer : Map string WalkValue, owners : Map string [string] }
+      VERIFY_WALK_START { file : string!, viewer : (Map string WalkValue)?, owners : Map string [string] }
         @description "Internal: walk the program file."
         @tier "internal"
     }
@@ -183,6 +183,8 @@ orbital VerifyWalkOrbital {
 
     state planning {
       INIT -> planning
+      WALK_PLAN_REFUSED -> planning
+        (emit WALK_FAILED { error: @payload.error })
       WALK_PLAN_ANSWERED -> stepping
         (set @entity.planned (array/reduce @entity.machineRows [] (fn acc r
           (let ((s (array/nth @payload.steps (array/len @acc))))
@@ -269,7 +271,7 @@ orbital VerifyWalkOrbital {
       WALK_MACHINE_READ -> external { program : SExpr! }
         @description "Ask std-machine for the program's transition rows."
         @tier "internal"
-      WALK_PLAN_REQUEST -> external { program : SExpr!, rows : [WalkMachineRow]!, viewer : Map string WalkValue, owners : Map string [string] }
+      WALK_PLAN_REQUEST -> external { program : SExpr!, rows : [WalkMachineRow]!, viewer : (Map string WalkValue)?, owners : Map string [string] }
         @description "Ask std-verify-plan for one planned step per row."
         @tier "internal"
       WALK_JUDGE_REQUEST -> external { step : WalkPlanStep!, played : WalkResult!, program : SExpr! }
@@ -302,12 +304,13 @@ orbital VerifyWalkOrbital {
     }
 
     listens {
-      VERIFY_WALK_START { file : string!, viewer : Map string WalkValue, owners : Map string [string] }
+      VERIFY_WALK_START { file : string!, viewer : (Map string WalkValue)?, owners : Map string [string] }
         @description "Walk the program file."
       VerifyWalkCli.VERIFY_WALK_START -> VERIFY_WALK_START
       WalkMachine.MACHINE_ANSWERED -> WALK_MACHINE_ANSWERED
       WalkMachine.MACHINE_UNREAD -> WALK_MACHINE_UNREAD
       WalkPlan.PLAN_ANSWERED -> WALK_PLAN_ANSWERED
+      WalkPlan.PLAN_REFUSED -> WALK_PLAN_REFUSED
       WalkJudge.JUDGE_ANSWERED -> WALK_JUDGE_ANSWERED
       WalkCreditor.CREDIT_ANSWERED -> WALK_CREDIT_ANSWERED
       WALK_CREDIT_ANSWERED { credits : [WalkCredit]! }
@@ -316,6 +319,8 @@ orbital VerifyWalkOrbital {
         @description "std-verify-judge's JUDGE_ANSWERED."
       WALK_PLAN_ANSWERED { steps : [WalkPlanStep]! }
         @description "std-verify-plan's PLAN_ANSWERED."
+      WALK_PLAN_REFUSED { error : string! }
+        @description "std-verify-plan's PLAN_REFUSED: the program cannot be planned."
       WALK_MACHINE_ANSWERED { rows : [WalkMachineRow]! }
         @description "std-machine's MACHINE_ANSWERED."
       WALK_MACHINE_UNREAD {}

@@ -18,6 +18,9 @@ type TrRefsTrait = { stateMachine : TrRefsMachine }
 type TrRefsOrbital = { traits : [TrRefsTrait] }
 type TrRefsProgram = { orbitals : [TrRefsOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintTransitionRefsCodes = { tInvalidTransition : LintCodeDecl , tUndefinedEvent : LintCodeDecl }
+
 orbital OrbLintTransitionRefsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -50,9 +53,9 @@ orbital OrbLintTransitionRefsOrbital {
                               (let ((tr (array/nth @tx @k)) (p (str/concat @where ".transitions[" @k "]")) (frm (object/get (array/nth @tx @k) "from" "")) (ev (object/get (array/nth @tx @k) "event" "")))
                                 (let ((froms (if (validate/string @frm) (array/append [] @frm) @frm)))
                                   (array/flatten [
-                                    (array/flatten (array/map @froms (fn f (if (and (!= @f "*") (not (array/includes @names @f))) [{ code: "ORB_T_INVALID_TRANSITION", path: (str/concat @p ".from"), message: (str/concat "Source state '" @f "' does not exist"), suggestion: "", severity: "error" }] []))))
-                                    (if (not (array/includes @names (object/get @tr "to" ""))) [{ code: "ORB_T_INVALID_TRANSITION", path: (str/concat @p ".to"), message: (str/concat "Target state '" (object/get @tr "to" "") "' does not exist"), suggestion: "", severity: "error" }] [])
-                                    (if (and (> (array/len @evs) 0) (!= @ev "INIT") (not (array/includes @evs @ev))) [{ code: "ORB_T_UNDEFINED_EVENT", path: (str/concat @p ".event"), message: (str/concat "Event '" @ev "' is not defined in events array"), suggestion: "Add the event to the stateMachine.events array", severity: "error" }] [])])))))))))))))))))))))
+                                    (array/flatten (array/map @froms (fn f (if (and (!= @f "*") (not (array/includes @names @f))) [{ code: @config.codes.tInvalidTransition.code, path: (str/concat @p ".from"), message: (str/concat "Source state '" @f "' does not exist"), suggestion: "", severity: "error" }] []))))
+                                    (if (not (array/includes @names (object/get @tr "to" ""))) [{ code: @config.codes.tInvalidTransition.code, path: (str/concat @p ".to"), message: (str/concat "Target state '" (object/get @tr "to" "") "' does not exist"), suggestion: "", severity: "error" }] [])
+                                    (if (and (> (array/len @evs) 0) (!= @ev "INIT") (not (array/includes @evs @ev))) [{ code: @config.codes.tUndefinedEvent.code, path: (str/concat @p ".event"), message: (str/concat "Event '" @ev "' is not defined in events array"), suggestion: "Add the event to the stateMachine.events array", severity: "error" }] [])])))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "transition-refs", scope: @entity.scope, findings: @entity.findings })
@@ -72,6 +75,12 @@ orbital OrbLintTransitionRefsOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintTransitionRefsCodes = { tInvalidTransition: { code: "ORB_T_INVALID_TRANSITION", category: "trait", description: "A transition references a source or target state that does not exist" }, tUndefinedEvent: { code: "ORB_T_UNDEFINED_EVENT", category: "trait", description: "A transition uses an event that is not defined in the trait's events array" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintTransitionRefsCli -> OrbLintTransitionRefsRun [client] {

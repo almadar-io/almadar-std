@@ -1,0 +1,289 @@
+app std-http-request [
+  version: "1.0.0",
+  description: "std-http-request — the request builder above std-http-client, the request-composition half of the retired runtime drivers/http_request (request.rs, retry and pagination of driver.rs). HTTP_REQUEST { key, method, path, query, headers, json, form, text, bytes, multipartKind, multipartBoundary, multipartParts, stream, retryMax, retryOn, retryOnFailure, retryDelaysMs, paginate, maxPages } becomes HTTP_SEND for the wire atom. The query is percent-encoded in map order (queryEncoding uri is encodeURIComponent, rfc3986 also escapes ! ' ( ) *); at most one body is given: json (text already serialised, application/json), form (a map, application/x-www-form-urlencoded; formEncoding html writes a space as +), text, bytes, or multipart (kind related or form-data, a boundary the caller declares, parts each with a header map and exactly one of text or bytes, written as --boundary CRLF headers CRLF CRLF content CRLF and closed by --boundary-- CRLF); a content-type the caller gave wins. Retry: a reply whose status is in retryOn, or a failure whose kind is in retryOnFailure, is sent again up to retryMax times after delaysMs[attempt] (the last entry repeats), the wait being std-delay composed here (RETRY_WAIT starts it, ELAPSED sends again). Pagination: paginate link-header follows the rel=next target of each reply's link header (its path and query on the same origin), paginate caller waits for HTTP_NEXT { key, query } or HTTP_STOP { key } after each page; both stop at maxPages. Each page answers HTTP_PAGE { key, page, status, headers, body }, the end HTTP_RESULT { key, status, headers, body, attempts, pages } (the last reply) after the last page, a transport failure HTTP_REQUEST_FAILED { key, error, kind }. A request that cannot be built answers HTTP_REQUEST_REFUSED { key, error } and sends nothing. Credentials are not built here: authorization, cookie and api-key headers are refused by the wire atom, and bearer, api-key, basic, aws-sigv4, oauth and jwt arms wait for the secret knob that lets a declared secret feed an os/send argument."
+]
+uses Delay from "std/behaviors/std-delay"
+
+type HttpRequestHeader = { name : string!, value : string! }
+type HttpMultipartPart = { headers : Map string string!, text : string?, bytes : bytes? }
+type HttpWire = { key : string!, method : string!, target : string!, headers : [HttpRequestHeader]!, body : bytes!, stream : string! }
+type HttpReq = { key : string!, method : string!, path : string!, query : Map string string!, headers : Map string string!, json : string?, form : Map string string!, text : string?, bytes : bytes?, multipartKind : string?, multipartBoundary : string?, multipartParts : [HttpMultipartPart]!, stream : string!, retryMax : number!, retryOn : [number]!, retryOnFailure : [string]!, retryDelaysMs : [number]!, paginate : string!, maxPages : number! }
+
+orbital HttpRequestOrbital {
+  entity HttpRequestFlight [runtime] {
+    id : string!
+    req : HttpReq @description "The request in flight, as asked." = { key: "", method: "GET", path: "/", query: {}, headers: {}, form: {}, multipartParts: [], stream: "none", retryMax: 0, retryOn: [], retryOnFailure: [], retryDelaysMs: [], paginate: "none", maxPages: 1 }
+    wire : HttpWire @description "The wire request last sent." = { key: "", method: "GET", target: "/", headers: [], body: "", stream: "none" }
+    override : string @description "A target that replaces path and query (a link-header page)." = ""
+    attempt : number @description "Retries made for the current page." = 0
+    page : number @description "The page in flight, from 1." = 1
+  }
+
+  trait RequestDelay = Delay.traits.Delay {
+    listens {
+      HttpRequest.RETRY_WAIT -> START
+    }
+  }
+
+  trait HttpRequest -> HttpRequestFlight [optimistic] {
+    initial: ready
+
+    config {
+      queryEncoding : string = "uri"
+        @label "Query encoding"
+        @description "uri (encodeURIComponent) or rfc3986 (also escapes ! ' ( ) *)."
+        @tier "domain"
+      formEncoding : string = "html"
+        @label "Form encoding"
+        @description "html (a space is +) or rfc3986 (a space is %20)."
+        @tier "domain"
+      jsonType : string = "application/json"
+        @label "JSON content type"
+        @description "The content-type a json body gets."
+        @tier "domain"
+      formType : string = "application/x-www-form-urlencoded"
+        @label "Form content type"
+        @description "The content-type a form body gets."
+        @tier "domain"
+      textType : string = "text/plain; charset=utf-8"
+        @label "Text content type"
+        @description "The content-type a text body gets."
+        @tier "domain"
+      bytesType : string = "application/octet-stream"
+        @label "Bytes content type"
+        @description "The content-type a bytes body gets."
+        @tier "domain"
+      boundaryPattern : string = "^[0-9A-Za-z'()+_,./:=?-]{1,70}$"
+        @label "Multipart boundary"
+        @description "What a multipart boundary must match (RFC 2046)."
+        @tier "domain"
+      multipartKinds : [string] = ["related", "form-data"]
+        @label "Multipart kinds"
+        @description "The multipart subtypes a request may ask for."
+        @tier "domain"
+      paginations : [string] = ["none", "link-header", "caller"]
+        @label "Paginations"
+        @description "The pagination modes a request may ask for."
+        @tier "domain"
+      nextMarkers : [string] = ["rel=\"next\"", "rel=next"]
+        @label "Next markers"
+        @description "What marks the rel=next entry of a link header."
+        @tier "domain"
+    }
+
+    state ready {
+      INIT -> ready
+
+      HTTP_REQUEST -> ready when (or (not (str/startsWith @payload.path "/")) (> (+ (if (!= @payload.json null) 1 0) (if (> (array/len (object/keys @payload.form)) 0) 1 0) (if (!= @payload.text null) 1 0) (if (!= @payload.bytes null) 1 0) (if (!= @payload.multipartKind null) 1 0)) 1) (array/some (object/keys @payload.query) (fn k (= @k ""))) (array/some (object/keys @payload.form) (fn k (= @k ""))) (not (array/includes @config.paginations @payload.paginate)) (and (!= @payload.multipartKind null) (not (and (array/includes @config.multipartKinds (default @payload.multipartKind "")) (validate/pattern (default @payload.multipartBoundary "") @config.boundaryPattern) (> (array/len @payload.multipartParts) 0) (array/every @payload.multipartParts (fn p (= (+ (if (!= @p.text null) 1 0) (if (!= @p.bytes null) 1 0)) 1)))))))
+        (emit HTTP_REQUEST_REFUSED { key: @payload.key, error: "the request cannot be built: a path must start with /, at most one body may be given, a query or form key may not be empty, pagination must be known, and a multipart body needs a kind, a boundary and parts of exactly one of text or bytes" })
+
+      HTTP_REQUEST -> awaiting when (and (str/startsWith @payload.path "/") (<= (+ (if (!= @payload.json null) 1 0) (if (> (array/len (object/keys @payload.form)) 0) 1 0) (if (!= @payload.text null) 1 0) (if (!= @payload.bytes null) 1 0) (if (!= @payload.multipartKind null) 1 0)) 1) (not (array/some (object/keys @payload.query) (fn k (= @k "")))) (not (array/some (object/keys @payload.form) (fn k (= @k "")))) (array/includes @config.paginations @payload.paginate) (or (== @payload.multipartKind null) (and (array/includes @config.multipartKinds (default @payload.multipartKind "")) (validate/pattern (default @payload.multipartBoundary "") @config.boundaryPattern) (> (array/len @payload.multipartParts) 0) (array/every @payload.multipartParts (fn p (= (+ (if (!= @p.text null) 1 0) (if (!= @p.bytes null) 1 0)) 1))))))
+        (set @entity.req { key: @payload.key, method: @payload.method, path: @payload.path, query: @payload.query, headers: @payload.headers, json: @payload.json, form: @payload.form, text: @payload.text, bytes: @payload.bytes, multipartKind: @payload.multipartKind, multipartBoundary: @payload.multipartBoundary, multipartParts: @payload.multipartParts, stream: @payload.stream, retryMax: @payload.retryMax, retryOn: @payload.retryOn, retryOnFailure: @payload.retryOnFailure, retryDelaysMs: @payload.retryDelaysMs, paginate: @payload.paginate, maxPages: @payload.maxPages })
+        (set @entity.override "")
+        (set @entity.attempt 0)
+        (set @entity.page 1)
+        (emit HC_BUILD { n: 1 })
+    }
+
+    state awaiting {
+      INIT -> awaiting
+      HTTP_REQUEST -> awaiting
+        (emit HTTP_REQUEST_REFUSED { key: @payload.key, error: "a request is in flight on this frame" })
+
+      HC_BUILD -> awaiting
+        (set @entity.wire {
+          key: @entity.req.key,
+          method: @entity.req.method,
+          target: (if (!= @entity.override "") @entity.override
+            (str/concat @entity.req.path
+              (if (= (array/len (object/keys @entity.req.query)) 0) ""
+                (str/concat "?" (str/join (array/map (object/entries @entity.req.query) (fn kv (str/concat (if (= @config.queryEncoding "rfc3986") (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default (array/nth @kv 0) "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") (str/encode-uri-component (default (array/nth @kv 0) ""))) "=" (if (= @config.queryEncoding "rfc3986") (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default (array/nth @kv 1) "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") (str/encode-uri-component (default (array/nth @kv 1) "")))))) "&"))))),
+          headers: (array/concat
+            (array/map (object/entries @entity.req.headers) (fn kv { name: (default (array/nth @kv 0) ""), value: (default (array/nth @kv 1) "") }))
+            (if (array/some (object/keys @entity.req.headers) (fn k (= (str/lower @k) "content-type"))) []
+              (if (!= @entity.req.json null) [{ name: "content-type", value: @config.jsonType }]
+                (if (> (array/len (object/keys @entity.req.form)) 0) [{ name: "content-type", value: @config.formType }]
+                  (if (!= @entity.req.text null) [{ name: "content-type", value: @config.textType }]
+                    (if (!= @entity.req.bytes null) [{ name: "content-type", value: @config.bytesType }]
+                      (if (!= @entity.req.multipartKind null) [{ name: "content-type", value: (str/concat "multipart/" (default @entity.req.multipartKind "") "; boundary=" (default @entity.req.multipartBoundary "")) }] []))))))),
+          body: (if (!= @entity.req.json null) (bytes/from-string (default @entity.req.json ""))
+            (if (> (array/len (object/keys @entity.req.form)) 0) (bytes/from-string (str/join (array/map (object/entries @entity.req.form) (fn kv (str/concat (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default (array/nth @kv 0) "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") (if (= @config.formEncoding "html") "%20" "\u{1}") (if (= @config.formEncoding "html") "+" "%20")) "=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component (default (array/nth @kv 1) "")) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") (if (= @config.formEncoding "html") "%20" "\u{1}") (if (= @config.formEncoding "html") "+" "%20"))))) "&"))
+              (if (!= @entity.req.text null) (bytes/from-string (default @entity.req.text ""))
+                (if (!= @entity.req.bytes null) (default @entity.req.bytes (bytes/from-string ""))
+                  (if (!= @entity.req.multipartKind null)
+                    (bytes/concat (array/append
+                      (array/flatten (array/map @entity.req.multipartParts (fn p [
+                        (bytes/from-string (str/concat "--" (default @entity.req.multipartBoundary "") "\r\n" (str/join (array/map (object/entries @p.headers) (fn kv (str/concat (default (array/nth @kv 0) "") ": " (default (array/nth @kv 1) "") "\r\n"))) "") "\r\n")),
+                        (if (!= @p.text null) (bytes/from-string (default @p.text "")) (default @p.bytes (bytes/from-string ""))),
+                        (bytes/from-string "\r\n")])))
+                      (bytes/from-string (str/concat "--" (default @entity.req.multipartBoundary "") "--\r\n"))))
+                    (bytes/from-string "")))))),
+          stream: @entity.req.stream
+        })
+        (emit HTTP_SEND { key: @entity.wire.key, method: @entity.wire.method, target: @entity.wire.target, headers: @entity.wire.headers, body: @entity.wire.body, stream: @entity.wire.stream })
+
+      HTTP_REPLIED -> waiting when (and (array/includes @entity.req.retryOn @payload.status) (< @entity.attempt @entity.req.retryMax))
+        (set @entity.attempt (+ @entity.attempt 1))
+        (emit RETRY_WAIT { delayMs: (default (array/nth @entity.req.retryDelaysMs (- @entity.attempt 1)) (default (array/last @entity.req.retryDelaysMs) 0)) })
+      HTTP_FAILED -> waiting when (and (array/includes @entity.req.retryOnFailure @payload.kind) (< @entity.attempt @entity.req.retryMax))
+        (set @entity.attempt (+ @entity.attempt 1))
+        (emit RETRY_WAIT { delayMs: (default (array/nth @entity.req.retryDelaysMs (- @entity.attempt 1)) (default (array/last @entity.req.retryDelaysMs) 0)) })
+
+      HTTP_FAILED -> ready when (not (and (array/includes @entity.req.retryOnFailure @payload.kind) (< @entity.attempt @entity.req.retryMax)))
+        (emit HTTP_REQUEST_FAILED { key: @entity.req.key, error: @payload.error, kind: @payload.kind })
+
+      HTTP_REPLIED -> ready when (and (= @entity.req.paginate "none") (not (and (array/includes @entity.req.retryOn @payload.status) (< @entity.attempt @entity.req.retryMax))))
+        (emit HTTP_RESULT { key: @entity.req.key, status: @payload.status, headers: @payload.headers, body: @payload.body, attempts: (+ @entity.attempt 1), pages: 1 })
+
+      HTTP_REPLIED -> awaiting when (and (= @entity.req.paginate "link-header") (not (and (array/includes @entity.req.retryOn @payload.status) (< @entity.attempt @entity.req.retryMax))))
+        (emit HTTP_PAGE { key: @entity.req.key, page: @entity.page, status: @payload.status, headers: @payload.headers, body: @payload.body })
+        (emit HC_LINK { next: (let ((raw (let ((entry (array/find (str/split (default (object/get (default @payload.headers {}) "link" "") "") ",") (fn e (array/some @config.nextMarkers (fn m (str/includes @e @m))))))) (if (== @entry null) "" (default (array/nth (str/split (default (array/nth (str/split @entry "<") 1) "") ">") 0) ""))))) (if (str/startsWith @raw "http") (str/concat "/" (str/join (array/drop (str/split @raw "/") 3) "/")) @raw)), status: @payload.status, headers: @payload.headers, body: @payload.body })
+      HC_LINK -> awaiting when (and (!= @payload.next "") (< @entity.page @entity.req.maxPages))
+        (set @entity.override @payload.next)
+        (set @entity.page (+ @entity.page 1))
+        (set @entity.attempt 0)
+        (emit HC_BUILD { n: (+ @entity.page 1) })
+      HC_LINK -> ready when (or (= @payload.next "") (>= @entity.page @entity.req.maxPages))
+        (emit HTTP_RESULT { key: @entity.req.key, status: @payload.status, headers: @payload.headers, body: @payload.body, attempts: (+ @entity.attempt 1), pages: @entity.page })
+
+      HTTP_REPLIED -> paging when (and (= @entity.req.paginate "caller") (< @entity.page @entity.req.maxPages) (not (and (array/includes @entity.req.retryOn @payload.status) (< @entity.attempt @entity.req.retryMax))))
+        (emit HTTP_PAGE { key: @entity.req.key, page: @entity.page, status: @payload.status, headers: @payload.headers, body: @payload.body })
+      HTTP_REPLIED -> ready when (and (= @entity.req.paginate "caller") (>= @entity.page @entity.req.maxPages) (not (and (array/includes @entity.req.retryOn @payload.status) (< @entity.attempt @entity.req.retryMax))))
+        (emit HTTP_PAGE { key: @entity.req.key, page: @entity.page, status: @payload.status, headers: @payload.headers, body: @payload.body })
+        (emit HTTP_RESULT { key: @entity.req.key, status: @payload.status, headers: @payload.headers, body: @payload.body, attempts: (+ @entity.attempt 1), pages: @entity.page })
+    }
+
+    state waiting {
+      INIT -> waiting
+      HTTP_REQUEST -> waiting
+        (emit HTTP_REQUEST_REFUSED { key: @payload.key, error: "a request is waiting to retry on this frame" })
+      RETRY_ELAPSED -> awaiting
+        (emit HTTP_SEND { key: @entity.wire.key, method: @entity.wire.method, target: @entity.wire.target, headers: @entity.wire.headers, body: @entity.wire.body, stream: @entity.wire.stream })
+    }
+
+    state paging {
+      INIT -> paging
+      HTTP_REQUEST -> paging
+        (emit HTTP_REQUEST_REFUSED { key: @payload.key, error: "a paginated request is waiting for HTTP_NEXT or HTTP_STOP on this frame" })
+      HTTP_NEXT -> awaiting
+        (set @entity.req (object/merge @entity.req { query: @payload.query }))
+        (set @entity.override "")
+        (set @entity.page (+ @entity.page 1))
+        (set @entity.attempt 0)
+        (emit HC_BUILD { n: (+ @entity.page 1) })
+      HTTP_STOP -> ready
+        (emit HTTP_RESULT { key: @entity.req.key, status: 0, headers: {}, body: (bytes/from-string ""), attempts: 1, pages: @entity.page })
+    }
+
+    emits {
+      HTTP_SEND -> external {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpRequestHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "The wire request for std-http-client."
+        @tier "primary"
+      HTTP_REQUEST_REFUSED -> external {
+        key : string!
+        error : string!
+      }
+        @description "The request could not be built; nothing was sent."
+        @tier "primary"
+      HTTP_REQUEST_FAILED -> external {
+        key : string!
+        error : string!
+        kind : string!
+      }
+        @description "The wire produced no response and no retry is left."
+        @tier "primary"
+      HTTP_PAGE -> external {
+        key : string!
+        page : number!
+        status : number!
+        headers : Map string string
+        body : bytes!
+      }
+        @description "One page of a paginated request."
+        @tier "primary"
+      HTTP_RESULT -> external {
+        key : string!
+        status : number!
+        headers : Map string string
+        body : bytes!
+        attempts : number!
+        pages : number!
+      }
+        @description "The request is done: the last reply, the attempts of the last page and the pages."
+        @tier "primary"
+      HC_LINK -> internal {
+        next : string!
+        status : number!
+        headers : Map string string
+        body : bytes!
+      }
+        @description "Internal: the next link of the reply, empty when there is none."
+        @tier "internal"
+      HC_BUILD -> internal {
+        n : number!
+      }
+        @description "Internal: build the wire request from the request in flight."
+        @tier "internal"
+      RETRY_WAIT -> external {
+        delayMs : number!
+      }
+        @description "Start the retry delay (std-delay START)."
+        @tier "secondary"
+    }
+
+    listens {
+      HTTP_REQUEST {
+        key : string!
+        method : string!
+        path : string!
+        query : Map string string!
+        headers : Map string string!
+        json : string?
+        form : Map string string!
+        text : string?
+        bytes : bytes?
+        multipartKind : string?
+        multipartBoundary : string?
+        multipartParts : [HttpMultipartPart]!
+        stream : string!
+        retryMax : number!
+        retryOn : [number]!
+        retryOnFailure : [string]!
+        retryDelaysMs : [number]!
+        paginate : string!
+        maxPages : number!
+      }
+      HTTP_REPLIED {
+        key : string!
+        status : number!
+        headers : Map string string
+        body : bytes!
+      }
+      HTTP_FAILED {
+        key : string!
+        error : string!
+        kind : string!
+      }
+      HTTP_NEXT {
+        key : string!
+        query : Map string string!
+      }
+      HTTP_STOP {
+        key : string!
+      }
+      RequestDelay.ELAPSED -> RETRY_ELAPSED
+      RETRY_ELAPSED {
+        waitedMs : number!
+      }
+    }
+  }
+
+  page boot as HttpRequestPage -> HttpRequest, RequestDelay
+}

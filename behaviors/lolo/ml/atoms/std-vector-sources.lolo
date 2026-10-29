@@ -1,0 +1,160 @@
+app std-vector-sources [
+  version: "1.0.0",
+  description: "std-vector-sources — read where orb's embedding vectors live and which embedding provider is configured. SOURCES { paths } reads the environment the Rust embedder read (ALMADAR_VECTORS_DIR, HOME, EMBEDDING_PROVIDER, EMBEDDING_API_KEY, OPENAI_API_KEY, OPEN_ROUTER_API_KEY, EMBEDDING_MODEL, LMSTUDIO_EMBEDDING_MODEL) and each package snapshot path in order (a file that does not exist is an empty bytes value; any other read failure is a refusal), then answers SOURCES_READY { snapshots, snapshotPaths, userDir, userAnchor, providerModel, providerKind, embedModel } for std-vector-resolve: userDir is ALMADAR_VECTORS_DIR, else HOME/.almadar/vectors, and userAnchor says which (`env` or `home`), the anchor the user store is addressed under; providerKind selects the embedding instance (openrouter-shared, openrouter-own, openai-shared, openai-own, lmstudio, empty without a provider; openai and openrouter need a key); providerModel is the model it produces and embedModel the name it is asked for. USER_STORE_NEEDED { model, path } answers USER_STORE_READ { data } with the user store file (empty bytes when it does not exist), read under ALMADAR_VECTORS_DIR when set, else under ~/.almadar/vectors. SOURCES_REFUSED { code, detail } carries a failed read.",
+  env: ["ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
+  fs: { cwd: "**": [read], "~/.almadar/vectors/**": [read], "~/.almadar/sidecars/**": [read], env ALMADAR_VECTORS_DIR: "**": [read] }
+]
+uses Spec from "almadar-std/vector-sources"
+
+orbital VectorSourcesOrbital {
+  entity SourcesRun [runtime] {
+    id : string!
+    paths : [string] = []
+    vars : Map string string = {}
+    idx : number = 0
+    pos : number = 0
+    snapshots : [bytes] = []
+    envDir : string = ""
+    envProv : string = ""
+    envKey : string = ""
+    envOpenai : string = ""
+    envRouter : string = ""
+    envModel : string = ""
+    envLm : string = ""
+    userDir : string = ""
+    userAnchor : string = ""
+    providerKind : string = ""
+    providerModel : string = ""
+    embedModel : string = ""
+  }
+
+  trait VectorSources -> SourcesRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      SOURCES -> envs
+        (set @entity.paths @payload.paths)
+        (set @entity.vars {})
+        (set @entity.idx 0)
+        (set @entity.pos 0)
+        (set @entity.snapshots [])
+        (os/getenv "ALMADAR_VECTORS_DIR" { key: "ALMADAR_VECTORS_DIR" emit: { success: SRC_ENV, failure: SRC_FAILED } })
+      USER_STORE_NEEDED -> idle when (!= @entity.envDir "")
+        (os/read-file { anchor: { env: "ALMADAR_VECTORS_DIR" } path: (os/path-base @payload.path) } { key: @payload.path emit: { success: SRC_USER_READ, failure: SRC_USER_ABSENT } })
+      USER_STORE_NEEDED -> idle when (== @entity.envDir "")
+        (os/read-file (str/concat "~/.almadar/vectors/" (os/path-base @payload.path)) { key: @payload.path emit: { success: SRC_USER_READ, failure: SRC_USER_ABSENT } })
+      SRC_USER_READ -> idle
+        (emit USER_STORE_READ { data: @payload.data })
+      SRC_USER_ABSENT -> idle when (== @payload.kind "not-found")
+        (emit USER_STORE_READ { data: (bytes/from-string "") })
+      SRC_USER_ABSENT -> idle when (!= @payload.kind "not-found")
+        (emit SOURCES_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat (default @payload.key "the user store") ": " @payload.error) })
+    }
+
+    state envs {
+      INIT -> envs
+      SRC_FAILED -> idle
+        (emit SOURCES_REFUSED { code: "ORB_VECTOR_ENV", detail: (str/concat "cannot read the environment: " @payload.error) })
+      SRC_ENV -> envs when (< @entity.idx 7)
+        (set @entity.vars (default (object/merge @entity.vars (default (object/fromEntries [[(default @payload.key ""), (default @payload.value "")]]) {})) @entity.vars))
+        (set @entity.idx (+ @entity.idx 1))
+        (let ((name (default (array/nth ["ALMADAR_VECTORS_DIR", "HOME", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"] (+ @entity.idx 1)) "HOME"))) (os/getenv @name { key: @name emit: { success: SRC_ENV, failure: SRC_FAILED } }))
+      SRC_ENV -> snapshots when (>= @entity.idx 7)
+        (set @entity.vars (default (object/merge @entity.vars (default (object/fromEntries [[(default @payload.key ""), (default @payload.value "")]]) {})) @entity.vars))
+        (set @entity.envDir (default (object/get @entity.vars "ALMADAR_VECTORS_DIR") ""))
+        (set @entity.envProv (if (!= (default (object/get @entity.vars "EMBEDDING_PROVIDER") "") "") (default (object/get @entity.vars "EMBEDDING_PROVIDER") "") "openrouter"))
+        (set @entity.envKey (default (object/get @entity.vars "EMBEDDING_API_KEY") ""))
+        (set @entity.envOpenai (default (object/get @entity.vars "OPENAI_API_KEY") ""))
+        (set @entity.envRouter (default (object/get @entity.vars "OPEN_ROUTER_API_KEY") ""))
+        (set @entity.envModel (default (object/get @entity.vars "EMBEDDING_MODEL") ""))
+        (set @entity.envLm (default (object/get @entity.vars "LMSTUDIO_EMBEDDING_MODEL") ""))
+        (set @entity.userDir (if (!= @entity.envDir "") @entity.envDir (str/concat (default (object/get @entity.vars "HOME") "") "/.almadar/vectors")))
+        (set @entity.userAnchor (if (!= @entity.envDir "") "env" "home"))
+        (set @entity.providerKind (if (== @entity.envProv "openai") (if (!= @entity.envKey "") "openai-shared" (if (!= @entity.envOpenai "") "openai-own" "")) (if (== @entity.envProv "openrouter") (if (!= @entity.envKey "") "openrouter-shared" (if (!= @entity.envRouter "") "openrouter-own" "")) "lmstudio")))
+        (set @entity.providerModel (if (== @entity.providerKind "") "" (if (== @entity.envProv "lmstudio") "baai/bge-base-en-v1.5" (if (!= @entity.envModel "") @entity.envModel "baai/bge-base-en-v1.5"))))
+        (set @entity.embedModel (if (== @entity.providerKind "") "" (if (== @entity.envProv "lmstudio") (if (!= @entity.envLm "") @entity.envLm "text-embedding-bge-base-en-v1.5") @entity.providerModel)))
+        (emit SRC_NEXT { })
+    }
+
+    state snapshots {
+      INIT -> snapshots
+      SRC_NEXT -> snapshots when (< @entity.pos (array/len @entity.paths))
+        (let ((path (default (array/nth @entity.paths @entity.pos) ""))) (os/read-file @path { key: @path emit: { success: SRC_SNAPSHOT_READ, failure: SRC_SNAPSHOT_ABSENT } }))
+      SRC_NEXT -> idle when (>= @entity.pos (array/len @entity.paths))
+        (emit SOURCES_READY { snapshots: @entity.snapshots, snapshotPaths: @entity.paths, userDir: @entity.userDir, userAnchor: @entity.userAnchor, providerModel: @entity.providerModel, providerKind: @entity.providerKind, embedModel: @entity.embedModel })
+      SRC_SNAPSHOT_READ -> snapshots
+        (set @entity.snapshots (array/append @entity.snapshots @payload.data))
+        (set @entity.pos (+ @entity.pos 1))
+        (emit SRC_NEXT { })
+      SRC_SNAPSHOT_ABSENT -> snapshots when (== @payload.kind "not-found")
+        (set @entity.snapshots (array/append @entity.snapshots (bytes/from-string "")))
+        (set @entity.pos (+ @entity.pos 1))
+        (emit SRC_NEXT { })
+      SRC_SNAPSHOT_ABSENT -> idle when (!= @payload.kind "not-found")
+        (emit SOURCES_REFUSED { code: "ORB_VECTOR_IO", detail: (str/concat (default @payload.key "a snapshot") ": " @payload.error) })
+    }
+
+    emits {
+      SRC_NEXT -> internal { }
+      SOURCES_READY -> external {
+        snapshots : [bytes]!
+        snapshotPaths : [string]!
+        userDir : string!
+        userAnchor : string!
+        providerModel : string!
+        providerKind : string!
+        embedModel : string!
+      }
+        @tier "primary"
+      USER_STORE_READ -> external {
+        data : bytes!
+      }
+        @tier "secondary"
+      SOURCES_REFUSED -> external {
+        code : string!
+        detail : string!
+      }
+        @tier "primary"
+    }
+
+    listens {
+      SOURCES -> input {
+        paths : [string]!
+      }
+        @description "Read the environment and these snapshot files."
+      USER_STORE_NEEDED {
+        model : string!
+        path : string!
+      }
+      SRC_ENV {
+        key : string
+        value : string
+      }
+      SRC_FAILED {
+        error : string!
+        kind : string
+      }
+      SRC_SNAPSHOT_READ {
+        data : bytes!
+        key : string
+      }
+      SRC_SNAPSHOT_ABSENT {
+        error : string!
+        kind : string!
+        key : string
+      }
+      SRC_USER_READ {
+        data : bytes!
+        key : string
+      }
+      SRC_USER_ABSENT {
+        error : string!
+        kind : string!
+        key : string
+      }
+    }
+  }
+
+  page boot as VectorSourcesPage -> VectorSources
+}

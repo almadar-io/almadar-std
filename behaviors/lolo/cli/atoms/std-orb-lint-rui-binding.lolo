@@ -26,6 +26,9 @@ type EfSetHit = { f : string!, v : EfVal?, nm : string! }
 type EfPropShape = { kind : string? }
 type EfPatternShape = { props : Map string EfPropShape? }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintRuiBindingCodes = { xRenderUiEventLiteralStale : LintCodeDecl , ruiRenderableInGenericField : LintCodeDecl }
+
 orbital OrbLintRuiBindingOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -88,7 +91,7 @@ orbital OrbLintRuiBindingOrbital {
               [{ pat: @tyv, prop: @kk, ev: @pv }] @noSt))))))))
     (if (validate/array @n)
       (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (let ((r (array/nth @k @i))) (if (= @r null) @noSt @r)))))
-      @noSt))) EfVal))) (if (validate/array @h0) @h0 @noSt)) @noSt)))) (fn h { code: "ORB_X_RENDER_UI_EVENT_LITERAL_STALE", path: @ep,
+      @noSt))) EfVal))) (if (validate/array @h0) @h0 @noSt)) @noSt)))) (fn h { code: @config.codes.xRenderUiEventLiteralStale.code, path: @ep,
   message: (str/concat "Prop '" (object/get @h "prop") "' on '" (object/get @h "pat") "' references event '" (object/get @h "ev") "' but the trait's event set has no such key — literal is stale (likely missed by an `events: { OLD: NEW }` override rewrite, or an authoring rename that didn't reach this call site)"),
   suggestion: (str/concat "Either add '" (object/get @h "ev") "' to the trait's `emits` / `listens` / transition events, or rewrite the literal to match an existing event key"), severity: "error" })))
     (array/flatten (array/map (let ((h2 (tree/fold @e (fn (n k)
@@ -140,7 +143,7 @@ orbital OrbLintRuiBindingOrbital {
               [{ pat: @tyv, prop: @kk, ev: @pv }] @noSt))))))))
     (if (validate/array @n)
       (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (let ((r (array/nth @k @i))) (if (= @r null) @noSt @r)))))
-      @noSt))) EfVal))) (if (validate/array @h0) @h0 @noSt)) (fn h { code: "ORB_X_RENDER_UI_EVENT_LITERAL_STALE", path: @sp,
+      @noSt))) EfVal))) (if (validate/array @h0) @h0 @noSt)) (fn h { code: @config.codes.xRenderUiEventLiteralStale.code, path: @sp,
   message: (str/concat "Prop '" (object/get @h "prop") "' on '" (object/get @h "pat") "' references event '" (object/get @h "ev") "' but the trait's event set has no such key — literal is stale (likely missed by an `events: { OLD: NEW }` override rewrite, or an authoring rename that didn't reach this call site)"),
   suggestion: (str/concat "Either add '" (object/get @h "ev") "' to the trait's `emits` / `listens` / transition events, or rewrite the literal to match an existing event key"), severity: "error" })) @noF)))))
               (if (and (!= @v null) (let ((r (tree/fold @v (fn (n kk)
@@ -148,7 +151,7 @@ orbital OrbLintRuiBindingOrbital {
     (let ((ty (object/get @n "type" null)))
       (or (and (validate/string @ty) (array/some (object/keys @n) (fn q (and (!= @q "type") (array/includes (object/get @pnm @ty []) @q))))) (array/some (object/values @kk) (fn c (= @c true)))))
     (if (validate/array @n) (array/some @kk (fn c (= @c true))) false))) EfVal))) (= @r true)))
-                [{ code: "ORB_RUI_RENDERABLE_IN_GENERIC_FIELD", path: @sp,
+                [{ code: @config.codes.ruiRenderableInGenericField.code, path: @sp,
                    message: (str/concat "field '" @fname "' is not typed `node` but receives a render-ui pattern literal — renderable content in a generic/structured field escapes every render-ui check"),
                    suggestion: (str/concat "Type the field: `" @fname " : node` (or `[node]` for a fragment list)."), severity: "error" }]
                 @noF)))))))))))))))))))))))))))))))))
@@ -167,6 +170,9 @@ orbital OrbLintRuiBindingOrbital {
     }
 
     config {
+      codes : LintRuiBindingCodes = { xRenderUiEventLiteralStale: { code: "ORB_X_RENDER_UI_EVENT_LITERAL_STALE", category: "cross", description: "A render-ui prop references an event literal that no longer matches a declared event" }, ruiRenderableInGenericField: { code: "ORB_RUI_RENDERABLE_IN_GENERIC_FIELD", category: "render_ui", description: "A render-ui pattern literal is passed to a field not typed node, hiding renderable content from render-ui checks" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
       eventKinds : [string] = ["event", "event-ref", "event-listen", "callback"]
         @label "Event-bearing prop kinds"
         @description "The registry prop kinds whose string value names an event of the trait."

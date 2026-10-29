@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-10-29T10:02:59.336Z",
+  "generated": "2026-10-29T17:26:58.697Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -3008,19 +3008,10 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": {
-        "kind": "union",
-        "of": [
-          {
-            "kind": "array",
-            "of": "CatalogEntry"
-          },
-          {
-            "kind": "array",
-            "of": "CatalogTopic"
-          }
-        ]
+        "kind": "array",
+        "of": "CatalogEntry"
       },
-      "description": "List the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), optionally narrowed by exposure. Each entry carries its traits as values and its shipped embedding vectors; with `options.vectors: false` it carries none (`vectors: {}`, `model: \"\"`) and neither the vector store nor the embedding provider is read; with `options.traits: false` it carries no `traits`. With `options.topics: true` it answers each package and topic of the listing once, `{ package, prefix, topic, count }`, instead of the entries.",
+      "description": "List the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), optionally narrowed by exposure. Each entry carries its traits as values and no vectors (`vectors: {}`, `model: \"\"`): the shipped vectors and the topics view are std's (`std-orb-behaviors`, `std-orb-vectors`). With `options.traits: false` it carries no `traits`; with `options.texts: true` it carries the facts the embedding texts read (`name`, `rank`, `textOrder`, `defaultEntityName`, `connectableEvents`, `capabilitiesText`).",
       "module": "behavior",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -3049,9 +3040,8 @@
             "kind": "object",
             "fields": {
               "key": "string",
-              "vectors": "boolean",
               "traits": "boolean",
-              "topics": "boolean",
+              "texts": "boolean",
               "emit": {
                 "kind": "object",
                 "fields": {
@@ -3070,7 +3060,7 @@
             },
             "open": true
           },
-          "description": "Emit configuration ({ emit: { success, failure } }); `vectors: false` omits the vectors, `traits: false` the traits; `topics: true` answers `{ package, prefix, topic, count }` per topic",
+          "description": "Emit configuration ({ emit: { success, failure } }); `traits: false` omits the traits, `texts: true` adds the facts the embedding texts read",
           "optional": true
         }
       ],
@@ -3190,7 +3180,7 @@
         },
         "open": true
       },
-      "description": "Describe a trait value (its knobs, the events it emits and listens to, and its transition events; with `options.knobVectors: true`, each knob also carries its embedding vector, a missing one embedded through the configured provider, as `orb behaviors describe --knob-vectors`), or an orbital value or a whole behavior `{ behavior }` (its app knobs and, per orbital, its knobs, primary entity fields, the entities it borrows from sibling orbitals, its traits and pages).",
+      "description": "Describe a trait value (its knobs, the events it emits and listens to, and its transition events), or an orbital value or a whole behavior `{ behavior }` (its app knobs and, per orbital, its knobs, primary entity fields, the entities it borrows from sibling orbitals, its traits and pages). It carries no vectors and no forwarded controls: `orb behaviors describe` attaches them.",
       "module": "behavior",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -3214,7 +3204,6 @@
             "kind": "object",
             "fields": {
               "key": "string",
-              "knobVectors": "boolean",
               "emit": {
                 "kind": "object",
                 "fields": {
@@ -3233,7 +3222,7 @@
             },
             "open": true
           },
-          "description": "Emit configuration ({ emit: { success, failure } }); `knobVectors: true` attaches a trait's knob vectors",
+          "description": "Emit configuration ({ emit: { success, failure } })",
           "optional": true
         }
       ],
@@ -3298,7 +3287,7 @@
           }
         }
       },
-      "description": "The installed behavior packages, each `{ root, prefix, vectors, fingerprint }`: its directory, its behavior prefix, the path of its `orb.vectors` snapshot as the sidecar lock resolves it (the cached sidecar when locked, `null` when the package declares none), and the fingerprint its catalog index is cached under (it changes whenever any file the index depends on changes).",
+      "description": "The installed behavior packages, each `{ root, prefix, vectors }`: its directory, its behavior prefix and the path of its `orb.vectors` snapshot as the sidecar lock resolves it (the cached sidecar when locked, `null` when the package declares none).",
       "module": "behavior",
       "hasSideEffects": true,
       "runsOn": "server",
@@ -3546,74 +3535,6 @@
       ],
       "examples": [
         "(behavior/source @entity.widget {\"emit\":{\"success\":\"SOURCED\",\"failure\":\"SOURCE_FAILED\"}})"
-      ],
-      "docsSource": "generated"
-    },
-    "behavior/texts": {
-      "category": "std-behavior",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "array",
-        "of": {
-          "kind": "object",
-          "fields": {
-            "key": "string",
-            "text": "string",
-            "hash": "string"
-          }
-        }
-      },
-      "description": "The embedding texts of the installed behaviors under registry folders (`<prefix>/<topic>[/<tier>]`), in embed order: each organism text, then each `<name>#capabilities` text, then every knob text (`<name>/<orbital>/<trait>/<knob>`), each `{ key, text, hash }` with `hash` the SHA-256 of the text, as `orb behaviors texts --json` prints them. `kind` (`organism`, `capability` or `knob`) keeps one kind.",
-      "module": "behavior",
-      "hasSideEffects": true,
-      "runsOn": "server",
-      "host": "program",
-      "params": [
-        {
-          "name": "scope",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "paths": {
-                "kind": "array",
-                "of": "string"
-              },
-              "kind": "string"
-            }
-          },
-          "description": "Registry folders and an optional text kind"
-        },
-        {
-          "name": "options",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "key": "string",
-              "emit": {
-                "kind": "object",
-                "fields": {
-                  "success": {
-                    "kind": "eventKey"
-                  },
-                  "failure": {
-                    "kind": "eventKey"
-                  },
-                  "cancelled": {
-                    "kind": "eventKey"
-                  }
-                },
-                "open": true
-              }
-            },
-            "open": true
-          },
-          "description": "Emit configuration ({ emit: { success, failure } })",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(behavior/texts {\"paths\":[\"almadar-std/ui/core/molecules\"],\"kind\":\"knob\"} {\"emit\":{\"success\":\"TEXTS\",\"failure\":\"TEXTS_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -7367,6 +7288,40 @@
       ],
       "examples": [
         "(ease/smoothstep 0.5 0 1) // => 0.5"
+      ],
+      "docsSource": "generated"
+    },
+    "ecdsa/p256-verify": {
+      "category": "std-codec",
+      "minArity": 4,
+      "maxArity": 4,
+      "returnType": "string",
+      "description": "Verify an ECDSA P-256 / SHA-256 signature (FIPS 186-4 section 6.4.2, what JWS ES256 needs). The public key is two 32-byte big-endian coordinates, the message is text hashed as its UTF-8 bytes, the signature is 64 raw bytes r||s. Answers a closed verdict: valid, mismatch (the signature does not verify), invalid (an operand is not canonical padded base64), length (a coordinate not 32 bytes or a signature not 64), range (r or s zero or not below the group order) or point (a coordinate not below the field prime, or a point off the curve). Public inputs only: a private key never reaches this operator.",
+      "module": "ecdsa",
+      "params": [
+        {
+          "name": "x",
+          "type": "bytes",
+          "description": "The public key x coordinate, 32 big-endian bytes"
+        },
+        {
+          "name": "y",
+          "type": "bytes",
+          "description": "The public key y coordinate, 32 big-endian bytes"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "description": "The signed message, hashed as its UTF-8 bytes"
+        },
+        {
+          "name": "signature",
+          "type": "bytes",
+          "description": "The signature, 64 bytes r||s"
+        }
+      ],
+      "examples": [
+        "(ecdsa/p256-verify \"<x>\" \"<y>\" \"header.payload\" \"<signature>\") // => \"valid\""
       ],
       "docsSource": "generated"
     },
@@ -23166,6 +23121,129 @@
       ],
       "docsSource": "generated"
     },
+    "program/prove": {
+      "category": "std-program",
+      "minArity": 1,
+      "maxArity": 3,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "findings": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "verdict": {
+                  "kind": "union",
+                  "of": [
+                    {
+                      "kind": "literal",
+                      "value": "violated"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "unproved"
+                    }
+                  ]
+                },
+                "reason": "string",
+                "counterexample": {
+                  "kind": "object",
+                  "fields": {},
+                  "open": true
+                },
+                "site": "string",
+                "proposition": {
+                  "kind": "object",
+                  "fields": {
+                    "kind": "string",
+                    "entity": "string",
+                    "trait": "string",
+                    "state": "string",
+                    "from": "string",
+                    "event": "string",
+                    "to": "string",
+                    "expr": {
+                      "kind": "sexpr"
+                    }
+                  },
+                  "optional": [
+                    "entity",
+                    "trait",
+                    "state",
+                    "from",
+                    "event",
+                    "to"
+                  ]
+                }
+              },
+              "optional": [
+                "counterexample"
+              ]
+            }
+          }
+        }
+      },
+      "description": "Prove the spec propositions of a program (`@invariant` on an entity, `@holds` on a state, `@ensures` on a transition) with the kernel's prover, and answer each one the program cannot be shown to keep: `{ findings }`, each `{ verdict, reason, counterexample?, site, proposition }`. `verdict` is `violated` (the evaluator confirmed `counterexample`, the bindings that break it) or `unproved` (the prover could not decide; `reason` says why, and `counterexample` is the possible one when it found one); a proposition that is proved is no finding. `site` names where it is owed, `proposition` is the proposition (`kind` row, state or transition, the names it belongs to, and its `expr`). The program is proved as given, or with `{ path }` (absolute) the file is resolved first and the program argument is not read.",
+      "module": "program",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "program",
+          "type": {
+            "kind": "sexpr"
+          },
+          "description": "A quoted, resolved program (null when `path` names the file)"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "path": "string"
+            },
+            "optional": [
+              "path"
+            ]
+          },
+          "description": "Optional `{ path }`: the absolute path of the file to resolve and prove",
+          "optional": true
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/prove @entity.program {\"emit\":{\"success\":\"PROVED\",\"failure\":\"PROVE_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "program/read": {
       "category": "std-program",
       "minArity": 1,
@@ -24146,6 +24224,40 @@
       ],
       "examples": [
         "(row/matches {\"kind\":\"compare\",\"field\":\"status\",\"op\":\"==\",\"value\":\"open\"} {\"id\":\"t1\",\"status\":\"open\"}) // => true"
+      ],
+      "docsSource": "generated"
+    },
+    "rsa/verify": {
+      "category": "std-codec",
+      "minArity": 4,
+      "maxArity": 4,
+      "returnType": "string",
+      "description": "Verify an RSASSA-PKCS1-v1_5 signature with SHA-256 (RFC 8017 section 8.2.2, what JWS RS256 needs) under a public key of big-endian modulus and exponent. The message is text hashed as its UTF-8 bytes; n, e and the signature are bytes (a bytes value is a standard padded base64 string at run time). Answers a closed verdict: valid (the block is 00 01 FF..FF 00 DigestInfo hash byte for byte), mismatch (it is not), invalid (an operand is not canonical padded base64), key-size (a modulus under 256 bytes or with a leading zero byte, or an exponent empty or not shorter than the modulus), signature-length (not as long as the modulus) or signature-range (not below the modulus). Public inputs only: a private key never reaches this operator.",
+      "module": "rsa",
+      "params": [
+        {
+          "name": "n",
+          "type": "bytes",
+          "description": "The modulus, big-endian bytes"
+        },
+        {
+          "name": "e",
+          "type": "bytes",
+          "description": "The public exponent, big-endian bytes"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "description": "The signed message, hashed as its UTF-8 bytes"
+        },
+        {
+          "name": "signature",
+          "type": "bytes",
+          "description": "The signature, as long as the modulus"
+        }
+      ],
+      "examples": [
+        "(rsa/verify \"<n>\" \"AQAB\" \"header.payload\" \"<signature>\") // => \"valid\""
       ],
       "docsSource": "generated"
     },

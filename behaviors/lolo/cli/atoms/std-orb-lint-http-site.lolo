@@ -29,6 +29,9 @@ type SfRes = { sf : boolean!, st : boolean! }
 type HsInfo = { server : boolean!, keyless : boolean!, keyed : number! }
 type HsGroup = { site : string!, tname : string!, dispatch : string!, kind : string!, i : number!, label : string!, bg : boolean!, infos : [HsInfo]! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintHttpSiteCodes = { lintOperatorShapesUnread : LintCodeDecl , xMixedResidence : LintCodeDecl , httpAuthOnClient : LintCodeDecl }
+
 orbital OrbLintHttpSiteOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -61,7 +64,7 @@ orbital OrbLintHttpSiteOrbital {
         (set @entity.shapesUnread true)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (if @entity.shapesUnread [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so where an effect runs is unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
+        (set @entity.findings (if @entity.shapesUnread [{ code: @config.codes.lintOperatorShapesUnread.code, path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so where an effect runs is unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
           (let ((servers @entity.servers) (entityIdx @entity.entityIdx) (orbitals (object/get @payload.program "orbitals" [])) (nos : [string] []))
             (let ((browser (array/flatten (array/map @orbitals (fn o
                     (array/map (array/filter (array/concat (if (validate/object (object/get @o "entity" null)) [(object/get @o "entity")] (array/take (object/get @o "auxiliaryEntities" []) 0)) (object/get @o "auxiliaryEntities" [])) (fn e (object/get @e "browser" false))) (fn e (object/get @e "name"))))))))
@@ -171,12 +174,12 @@ orbital OrbLintHttpSiteOrbital {
         { f: (array/some (array/map (object/keys @k) (fn key (object/get (object/get @k @key) "f"))) (fn x @x)), h: (array/some (array/map (object/keys @k) (fn key (object/get (object/get @k @key) "f"))) (fn x @x)), ch: @nob }
         { f: false, h: false, ch: @nob })))) HsVal) "f"))) false) }))))))
           (array/concat
-           (array/flatten (array/map @gis (fn gi (if (object/get @gi "mixed") [{ code: "ORB_X_MIXED_RESIDENCE", path: (str/concat @st (if (= (object/get @gi "kind") "t") ".stateMachine.transitions[" ".ticks[") (object/get @gi "i") "].effects"), message: (str/concat "trait \"" @tname "\" " (if (= (object/get @gi "kind") "t") "transition '" "tick '") (object/get @gi "label") "' runs a keyless `http` (client work) and a server effect in one place — no single executor holds both"), suggestion: "Split it: send the `http` here and emit an event a trait on the server listens to, or make the call authenticated so it runs on the server.", severity: "error" }] [])))) 
+           (array/flatten (array/map @gis (fn gi (if (object/get @gi "mixed") [{ code: @config.codes.xMixedResidence.code, path: (str/concat @st (if (= (object/get @gi "kind") "t") ".stateMachine.transitions[" ".ticks[") (object/get @gi "i") "].effects"), message: (str/concat "trait \"" @tname "\" " (if (= (object/get @gi "kind") "t") "transition '" "tick '") (object/get @gi "label") "' runs a keyless `http` (client work) and a server effect in one place — no single executor holds both"), suggestion: "Split it: send the `http` here and emit an event a trait on the server listens to, or make the call authenticated so it runs on the server.", severity: "error" }] [])))) 
            (array/flatten (array/map @gis (fn gi
             (if (or (and (= (object/get @gi "kind") "t") (= @dispatch "client")) (and (= (object/get @gi "kind") "k") (array/includes ["client", "optimistic"] @dispatch) (not (object/get @gi "bg"))))
              (array/flatten (array/map (array/zip (array/range 0 (array/len (object/get @gi "keyed"))) (object/get @gi "keyed")) (fn pr
               (let ((j (array/nth @pr 0)))
-               (array/map (array/range 0 (array/nth @pr 1)) (fn z { code: "ORB_HTTP_AUTH_ON_CLIENT", path: (str/concat @st (if (= (object/get @gi "kind") "t") ".stateMachine.transitions[" ".ticks[") (object/get @gi "i") "].effects[" @j "]"), message: (str/concat "trait \"" @tname "\" " (if (= (object/get @gi "kind") "t") "is [client], so its transitions run on the client" (str/concat "runs tick '" (object/get @gi "label") "' in the browser")) ", but this `http` carries `auth` — a credential never reaches the client, so only a keyless `http` may run there"), suggestion: "Drop `auth`, or emit an event from here and make the authenticated call in a trait that runs on the server.", severity: "error" }))))))
+               (array/map (array/range 0 (array/nth @pr 1)) (fn z { code: @config.codes.httpAuthOnClient.code, path: (str/concat @st (if (= (object/get @gi "kind") "t") ".stateMachine.transitions[" ".ticks[") (object/get @gi "i") "].effects[" @j "]"), message: (str/concat "trait \"" @tname "\" " (if (= (object/get @gi "kind") "t") "is [client], so its transitions run on the client" (str/concat "runs tick '" (object/get @gi "label") "' in the browser")) ", but this `http` carries `auth` — a credential never reaches the client, so only a keyless `http` may run there"), suggestion: "Drop `auth`, or emit an event from here and make the authenticated call in a trait that runs on the server.", severity: "error" }))))))
              [])))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -203,6 +206,12 @@ orbital OrbLintHttpSiteOrbital {
       OrbLintInput.LINT_OPERATOR_SHAPES -> SHAPES_HEARD
       OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> SHAPES_UNREAD
     }
+    config {
+      codes : LintHttpSiteCodes = { lintOperatorShapesUnread: { code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", category: "lint", description: "The installed operator table could not be read or does not match the operator shape type, so a lint cannot run" }, xMixedResidence: { code: "ORB_X_MIXED_RESIDENCE", category: "cross", description: "One transition touches both browser-stored and server-stored entities" }, httpAuthOnClient: { code: "ORB_HTTP_AUTH_ON_CLIENT", category: "http", description: "An authenticated http request is made from a client trait, so its credentials would transit the browser" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintHttpSiteCli -> OrbLintHttpSiteRun [client] {

@@ -28,6 +28,9 @@ type ExPage = { name : string, path : string, protocol : string, traits : [ExPag
 type ExOrbital = { name : string, spec : boolean, expects : [ExExpect], entity : ExEntity, auxiliaryEntities : [ExEntity], traits : [ExTrait], pages : [ExPage] }
 type ExProgram = { orbitals : [ExOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintExpectedFieldNotProvidedCodes = { sExpectedFieldNotProvided : LintCodeDecl }
+
 orbital OrbLintExpectedFieldNotProvidedOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -59,14 +62,14 @@ orbital OrbLintExpectedFieldNotProvidedOrbital {
   (if (= @pv null) [] (let ((e (object/get @pv "e"))) (array/flatten (array/map (array/filter (object/get @x "shape" []) (fn f (!= (object/get @f "name" "") "")))
   (fn f (if (array/some (object/get @e "fields" []) (fn a (= (object/get @a "name" "") (object/get @f "name" ""))))
     []
-    [{ code: "ORB_S_EXPECTED_FIELD_NOT_PROVIDED", path: (str/concat @base "." (object/get @f "name" "")), message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "." (object/get @f "name" "") "`; `" (object/get @e "name" "") "` declares no such field."), suggestion: (str/concat "Add `" (object/get @f "name" "") "` to `" (object/get @e "name" "") "`, or drop it from `" @on "`'s expectation."), severity: "error" }])))))))
+    [{ code: @config.codes.sExpectedFieldNotProvided.code, path: (str/concat @base "." (object/get @f "name" "")), message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "." (object/get @f "name" "") "`; `" (object/get @e "name" "") "` declares no such field."), suggestion: (str/concat "Add `" (object/get @f "name" "") "` to `" (object/get @e "name" "") "`, or drop it from `" @on "`'s expectation."), severity: "error" }])))))))
   (if (= @kind "identity") (let ((nm (object/get @x "name" "")))
   (let ((pv (if (!= @nm "") (array/find @provs (fn p (= (object/get @p "n") @nm))) (array/find @provs (fn p (object/get @p "id"))))))
     (if (or (= @pv null) (and (!= @nm "") (not (object/get @pv "id")))) []
       (let ((e (object/get @pv "e"))) (array/flatten (array/map (array/filter (object/get @x "shape" []) (fn f (!= (object/get @f "name" "") "")))
   (fn f (if (array/some (object/get @e "fields" []) (fn a (= (object/get @a "name" "") (object/get @f "name" ""))))
     []
-    [{ code: "ORB_S_EXPECTED_FIELD_NOT_PROVIDED", path: (str/concat @base "." (object/get @f "name" "")), message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "." (object/get @f "name" "") "`; `" (object/get @e "name" "") "` declares no such field."), suggestion: (str/concat "Add `" (object/get @f "name" "") "` to `" (object/get @e "name" "") "`, or drop it from `" @on "`'s expectation."), severity: "error" }]))))))))
+    [{ code: @config.codes.sExpectedFieldNotProvided.code, path: (str/concat @base "." (object/get @f "name" "")), message: (str/concat "`" @on "` expects `" (object/get @e "name" "") "." (object/get @f "name" "") "`; `" (object/get @e "name" "") "` declares no such field."), suggestion: (str/concat "Add `" (object/get @f "name" "") "` to `" (object/get @e "name" "") "`, or drop it from `" @on "`'s expectation."), severity: "error" }]))))))))
     (if (= @kind "event") (let ((tr (array/find @alltr (fn p (= (object/get (object/get @p "t") "name" "") (object/get @x "traitName" ""))))))
   (if (or (= @tr null) (not (object/has @x "payload"))) []
     (let ((emit (array/find (object/get (object/get @tr "t") "emits" []) (fn m (= (object/get @m "event" "") (object/get @x "event" ""))))))
@@ -74,7 +77,7 @@ orbital OrbLintExpectedFieldNotProvidedOrbital {
         (array/flatten (array/map (object/get @x "payload" [])
           (fn want (if (array/some (object/get @emit "payloadSchema" []) (fn have (= (object/get @have "name" "") (object/get @want "name" ""))))
             []
-            [{ code: "ORB_S_EXPECTED_FIELD_NOT_PROVIDED", path: (str/concat @base "." (object/get @want "name" "")), message: (str/concat "`" @on "` expects `" (object/get @x "traitName" "") "." (object/get @x "event" "") "` to carry `" (object/get @want "name" "") "`; the event declares no such payload field."), suggestion: (str/concat "Add `" (object/get @want "name" "") "` to `" (object/get @x "event" "") "`'s payload in `" (object/get @x "traitName" "") "`, or drop it from the expectation."), severity: "error" }])))))))) [])))))))))))))))))
+            [{ code: @config.codes.sExpectedFieldNotProvided.code, path: (str/concat @base "." (object/get @want "name" "")), message: (str/concat "`" @on "` expects `" (object/get @x "traitName" "") "." (object/get @x "event" "") "` to carry `" (object/get @want "name" "") "`; the event declares no such payload field."), suggestion: (str/concat "Add `" (object/get @want "name" "") "` to `" (object/get @x "event" "") "`'s payload in `" (object/get @x "traitName" "") "`, or drop it from the expectation."), severity: "error" }])))))))) [])))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "expected-field-not-provided", scope: @entity.scope, findings: @entity.findings })
@@ -94,6 +97,12 @@ orbital OrbLintExpectedFieldNotProvidedOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintExpectedFieldNotProvidedCodes = { sExpectedFieldNotProvided: { code: "ORB_S_EXPECTED_FIELD_NOT_PROVIDED", category: "schema", description: "A rebound entity does not provide a field that the trait expects it to have" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintExpectedFieldNotProvidedCli -> OrbLintExpectedFieldNotProvidedRun [client] {

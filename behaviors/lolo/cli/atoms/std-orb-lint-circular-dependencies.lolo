@@ -33,6 +33,9 @@ type CycEdgeMap = Map string [CycEdge]
 type CycPeel = { e : [CycEdge], d : boolean }
 type CycWalk = { stack : [string], idx : [number], vis : [string], found : [string] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintCircularDependenciesCodes = { lintOperatorShapesUnread : LintCodeDecl , xCircularDependency : LintCodeDecl }
+
 orbital OrbLintCircularDependenciesOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -62,7 +65,7 @@ orbital OrbLintCircularDependenciesOrbital {
         (set @entity.shapesUnread true)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (if @entity.shapesUnread [{ code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the operators that can carry an emit option are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
+        (set @entity.findings (if @entity.shapesUnread [{ code: @config.codes.lintOperatorShapesUnread.code, path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the operators that can carry an emit option are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }]
           (let ((nos : [string] [])
                 (nonum : [number] [])
                 (nonodes : CycNodes [])
@@ -207,7 +210,7 @@ orbital OrbLintCircularDependenciesOrbital {
                                                           { stack: @stack, idx: (array/append (array/dropLast @idx 1) (+ @i 1)), vis: @vis, found: @nos }
                                                           { stack: (array/append @stack @d), idx: (array/append (array/append (array/dropLast @idx 1) (+ @i 1)) 0), vis: (array/append @vis @d), found: @nos }))))))))))))) "found")))
                             (if (= (array/len @found) 0) []
-                              [{ code: "ORB_X_CIRCULAR_DEPENDENCY", path: "traits", message: (str/concat "Circular event dependency detected: " (str/join @found " -> ")), suggestion: "Break the cycle by removing one of the listener/emitter relationships", severity: "error" }]))))))))))))
+                              [{ code: @config.codes.xCircularDependency.code, path: "traits", message: (str/concat "Circular event dependency detected: " (str/join @found " -> ")), suggestion: "Break the cycle by removing one of the listener/emitter relationships", severity: "error" }]))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "circular-dependencies", scope: @entity.scope, findings: @entity.findings })
@@ -233,6 +236,12 @@ orbital OrbLintCircularDependenciesOrbital {
       OrbLintInput.LINT_OPERATOR_SHAPES -> SHAPES_HEARD
       OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> SHAPES_UNREAD
     }
+    config {
+      codes : LintCircularDependenciesCodes = { lintOperatorShapesUnread: { code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", category: "lint", description: "The installed operator table could not be read or does not match the operator shape type, so a lint cannot run" }, xCircularDependency: { code: "ORB_X_CIRCULAR_DEPENDENCY", category: "cross", description: "Traits form a circular event dependency" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintCircularDependenciesCli -> OrbLintCircularDependenciesRun [client] {

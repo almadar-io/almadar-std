@@ -29,7 +29,7 @@ orbital OrbEmbedChainOrbital {
         (set @entity.roots @payload.roots)
       EMBED_INPUT_HEARD -> ready
         (let ((nr : [string] []))
-          (emit EMBED_CHAINS { scope: @payload.scope, chains: (let ((orbs (object/get @payload.program "orbitals" []))) (array/map (array/range 0 (array/len @orbs)) (fn oi (let ((o (array/nth @orbs @oi)))
+          (let ((res (let ((orbs (object/get @payload.program "orbitals" []))) (array/map (array/range 0 (array/len @orbs)) (fn oi (let ((o (array/nth @orbs @oi)))
           (let ((trs0 (object/get @o "traits" []))) (let ((inlK (array/filter (array/range 0 (array/len @trs0)) (fn i (object/has (array/nth @trs0 @i) "stateMachine"))))) (let ((inl (array/map @inlK (fn i (array/nth @trs0 @i)))))
             (let ((names (array/map @inl (fn t (object/get @t "name" ""))))
                   (pairs (array/flatten (array/map (array/range 0 (array/len @inl)) (fn kx
@@ -47,11 +47,11 @@ orbital OrbEmbedChainOrbital {
                           []))))))))))
               (let ((hosts (default (object/fromEntries (array/reverse @pairs)) {})))
                 (let ((chains (object/fromEntries (array/map @names (fn nm [@nm, (object/get (array/reduce (array/range 0 (+ (array/len @names) 1)) { cur: @nm, ch: (array/drop @names (array/len @names)), stop: false } (fn (acc i) (if (object/get @acc "stop") @acc (let ((h (object/get @hosts (object/get @acc "cur") ""))) (if (or (= @h "") (= @h @nm) (array/includes (object/get @acc "ch") @h)) { cur: (object/get @acc "cur"), ch: (object/get @acc "ch"), stop: true } { cur: @h, ch: (array/append (object/get @acc "ch") @h), stop: false}))))) "ch")])))))
-                  (default @chains {}))))))))))) }))
+                  (let ((emb (object/fromEntries (array/map @names (fn nm [@nm, (array/filter (object/get (array/reduce (array/range 0 (+ (array/len @names) 1)) { seen: [@nm] } (fn (acc i) { seen: (array/unique (array/concat (object/get @acc "seen") (array/flatten (array/map (object/get @acc "seen") (fn s (array/map (array/filter @pairs (fn p (= (array/first @p) @s))) (fn p (array/nth @p 1)))))))) }) ) "seen") (fn x (!= @x @nm)))]))))) { c: (default @chains {}), e: (default @emb {}) }))))))))))) )) (emit EMBED_CHAINS { scope: @payload.scope, chains: (array/map @res (fn r (object/get @r "c"))), embedders: (array/map @res (fn r (object/get @r "e"))) })))
     }
 
     emits {
-      EMBED_CHAINS -> external { scope : string!  chains : [EmbedMap]! }
+      EMBED_CHAINS -> external { scope : string!  chains : [EmbedMap]!  embedders : [EmbedMap]! }
         @description "Per orbital, in program order: each inline trait's host names, innermost first."
         @tier "internal"
     }

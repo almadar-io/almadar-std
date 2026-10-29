@@ -20,6 +20,9 @@ type EmdOrbital = { name : string, traits : [EmdTrait] }
 type EmdLeaf = { p : string!, e : EmdVal!, oi : number!, ti : number! }
 type EmdProgram = { orbitals : [EmdOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEmitDeclarationCodes = { tEvtUndeclared : LintCodeDecl , xPayloadMismatch : LintCodeDecl }
+
 orbital OrbLintEmitDeclarationOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses LeavesUse from "std/behaviors/std-orb-effect-leaves"
@@ -52,15 +55,15 @@ orbital OrbLintEmitDeclarationOrbital {
                   (if (not (validate/string @ev)) @nof
                     (let ((decls (array/filter (object/get @idx (str/concat (object/get @l "oi") "-" (object/get @l "ti")) []) (fn d (= (object/get @d "event" "") @ev)))))
                       (if (= (array/len @decls) 0)
-                        [{ code: "ORB_T_EVT_UNDECLARED", path: @p, message: (str/concat "Event '" @ev "' is emitted but not declared in trait's emits array"), suggestion: "Add the event to the trait's 'emits' array with proper payload schema", severity: "error" }]
+                        [{ code: @config.codes.tEvtUndeclared.code, path: @p, message: (str/concat "Event '" @ev "' is emitted but not declared in trait's emits array"), suggestion: "Add the event to the trait's 'emits' array with proper payload schema", severity: "error" }]
                         (let ((d (array/first @decls)))
                           (if (not (and (= (object/get @d "scope" "") "external") (>= (array/len @e) 3))) @nof
                             (let ((req (array/map (array/filter (object/get @d "payloadSchema" []) (fn f (= (object/get @f "required" false) true))) (fn f (object/get @f "name" "")))) (pl (array/nth @e 2)))
                               (if (validate/object @pl)
                                 (array/map (array/filter @req (fn r (not (object/has @pl @r)))) (fn r
-                                  { code: "ORB_X_PAYLOAD_MISMATCH", path: @p, message: (str/concat "External emit '" @ev "' is missing required payload field '" @r "'"), suggestion: (str/concat "Add the '" @r "' field to the emit payload"), severity: "error" }))
+                                  { code: @config.codes.xPayloadMismatch.code, path: @p, message: (str/concat "External emit '" @ev "' is missing required payload field '" @r "'"), suggestion: (str/concat "Add the '" @r "' field to the emit payload"), severity: "error" }))
                                 (if (= (array/len @req) 0) @nof
-                                  [{ code: "ORB_X_PAYLOAD_MISMATCH", path: @p, message: (str/concat "External emit '" @ev "' requires payload with fields: [" (str/join (array/map @req (fn r (json/stringify @r))) ", ") "]"), suggestion: "Add a payload object with the required fields", severity: "error" }])))))))))))))))))
+                                  [{ code: @config.codes.xPayloadMismatch.code, path: @p, message: (str/concat "External emit '" @ev "' requires payload with fields: [" (str/join (array/map @req (fn r (json/stringify @r))) ", ") "]"), suggestion: "Add a payload object with the required fields", severity: "error" }])))))))))))))))))
         (emit LINT_FINISH { })
 
       LINT_FINISH -> ready
@@ -87,6 +90,12 @@ orbital OrbLintEmitDeclarationOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintEmitDeclarationCodes = { tEvtUndeclared: { code: "ORB_T_EVT_UNDECLARED", category: "trait", description: "An event is emitted but not declared in the trait's emits array" }, xPayloadMismatch: { code: "ORB_X_PAYLOAD_MISMATCH", category: "cross", description: "An external emit is missing a payload field required by the event's declaration" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintEmitDeclarationCli -> OrbLintEmitDeclarationRun [client] {

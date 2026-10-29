@@ -17,6 +17,9 @@ type ThemePinNamed = { name : string }
 type ThemePinProgram = { theme : string | ThemePinNamed, orbitals : [ThemePinOrbital] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintThemePinContradictsAppCodes = { themePinContradictsApp : LintCodeDecl }
+
 orbital OrbLintThemePinContradictsAppOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -43,7 +46,7 @@ orbital OrbLintThemePinContradictsAppOrbital {
                     (let ((divergent (array/sort (array/filter @pins (fn p (!= @p @appKey))))))
                       (if (= (array/len @divergent) 0)
                         []
-                        [{ code: "ORB_THEME_PIN_CONTRADICTS_APP", path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].theme"), message: (str/concat (object/get @orb "name" "") " pins theme " (str/join (array/map @divergent (fn p (str/concat @dq @p @dq))) ", ") " while the app declares " @dq @appKey @dq " at the app level"), suggestion: (str/concat "remove the config pin so the orbital inherits the app theme via @currentTheme - or, for a deliberate per-orbital override, declare it as the orbital's own `theme " @dq "<key>" @dq "`"), severity: "error" }])))))))))))
+                        [{ code: @config.codes.themePinContradictsApp.code, path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].theme"), message: (str/concat (object/get @orb "name" "") " pins theme " (str/join (array/map @divergent (fn p (str/concat @dq @p @dq))) ", ") " while the app declares " @dq @appKey @dq " at the app level"), suggestion: (str/concat "remove the config pin so the orbital inherits the app theme via @currentTheme - or, for a deliberate per-orbital override, declare it as the orbital's own `theme " @dq "<key>" @dq "`"), severity: "error" }])))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "theme-pin-contradicts-app", scope: @entity.scope, findings: @entity.findings })
@@ -63,6 +66,12 @@ orbital OrbLintThemePinContradictsAppOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintThemePinContradictsAppCodes = { themePinContradictsApp: { code: "ORB_THEME_PIN_CONTRADICTS_APP", category: "theme", description: "An orbital pins a theme that differs from the theme the app declares at app level" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintThemePinContradictsAppCli -> OrbLintThemePinContradictsAppRun [client] {

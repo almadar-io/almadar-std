@@ -1,0 +1,41 @@
+app http-client-spec [
+  version: "1.0.0",
+  description: "Design contract for an HTTP/1.1 client over raw sockets, the parity oracle being the retired runtime drivers/http_request wire loop (archive/orbital-rust/.../drivers/http_request) and its exec_http cases. HTTP_SEND { key, host, port, tls, serverName, method, target, headers, body, stream } is ONE call on one frame: the atom opens a socket (os/tcp-connect; with tls true the kernel runs the TLS handshake and offers http/1.1), writes the request line, a host header, the caller's headers, content-length for a body and connection: close, then the body, reads until the status line and head end in CRLF CRLF (an interim 1xx head is skipped), and reads the body by the head: none for HEAD, 204, 304; content-length bytes; transfer-encoding: chunked (hex size line, extensions after a semicolon ignored, CRLF framing, trailers skipped); else until the peer closes. A reply of any status answers HTTP_REPLIED { key, status, headers, body }: header names lower-cased and repeated names joined with a comma and a space, body the bytes read (empty for a stream). With stream sse or jsonl each complete frame, as it arrives, answers HTTP_STREAM_EVENT { key, data, event, id } (sse: blocks end in a blank line, data lines joined with LF, event and id optional, comment lines skipped; jsonl: one event per non-empty line); a frame cut at the end of the body is delivered once more at the end. Nothing follows a redirect. A request the atom will not write (a method or header that is not a token, a control character in a value, a caller header the atom writes itself: host, content-length, transfer-encoding, connection; a target not starting with /, a port outside 1..65535, an unknown stream) answers HTTP_FAILED { key, error, kind: refused } before any socket is opened. A transport failure answers HTTP_FAILED { key, error, kind } with kind denied, timeout or tls (a handshake or certificate failure) as the host said it, else io; so does a malformed head, a body past maxBody, a chunk size that is not hex, or a close before the body is whole. The socket is closed after every call, answered or failed. A second HTTP_SEND while a call is in flight is refused busy."
+]
+
+type HttpHeader = { name : string!, value : string! }
+
+orbital HttpClientSpec {
+  expects entity HttpFlight [runtime] {
+    id : string!
+    key : string
+    sock : number
+    stage : string
+    headers : [HttpHeader]
+  }
+  expects trait HttpClient {
+    state ready {
+      HTTP_SEND -> connecting
+      HTTP_CLOSE -> ready
+    }
+    state connecting {
+      HC_CONNECTED -> sending
+      HC_IO_FAILED -> ready
+    }
+    state sending {
+      HC_SENT -> reading
+      HC_IO_FAILED -> ready
+    }
+    state reading {
+      HC_READ -> reading
+      HC_ADVANCE -> reading
+      HC_IO_FAILED -> ready
+    }
+    emits {
+      HTTP_REPLIED { key : string!  status : number!  headers : Map string string  body : bytes! }
+      HTTP_STREAM_EVENT { key : string!  data : string!  event : string  id : string }
+      HTTP_FAILED { key : string!  error : string!  kind : string! }
+    }
+  }
+  expects page boot -> HttpClient
+}

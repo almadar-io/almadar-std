@@ -66,6 +66,7 @@ orbital RowStorePostgresFixtureOrbital {
   type IndexPath = { fields : [string]!, orderBy : string? }
   type RowsEnsureIndexesVerb = { key : string!, entityType : string!, indexes : [IndexPath]! }
 
+  type SqlColumn = { name : string!, typeOid : number! }
   type PgNullParam = { kind : "null" }
   type PgTextParam = { kind : "text", text : string! }
   type PgParam = PgNullParam | PgTextParam
@@ -76,7 +77,7 @@ orbital RowStorePostgresFixtureOrbital {
   type PgRaw = { cells : [PgBind]! }
   type PgErr = { present : boolean!, code : string!, message : string! }
   type PgAuth = { code : number!, body : bytes! }
-  type PgScan = { pos : number!, cols : [PgCol]!, raw : [PgRaw]!, err : PgErr!, auth : [PgAuth]!, done : boolean!, stop : boolean!, bad : boolean! }
+  type PgScan = { pos : number!, cols : [PgCol]!, raw : [PgRaw]!, err : PgErr!, auth : [PgAuth]!, done : boolean!, stop : boolean!, bad : boolean!, tag : string! }
   type PgProof = { frame : bytes?, sig : bytes?, error : string! }
   type PgWrapped = { sql : string!, binds : [PgBind]! }
   type PgWhere = { sqls : [string]!, binds : [PgBind]! }
@@ -90,7 +91,7 @@ orbital RowStorePostgresFixtureOrbital {
     id : string!
     key : string @description "The kernel's key for the ask in flight; every reply carries it" = ""
     entityType : string @description "The entity type a read, list or query asks about" = ""
-    op : string @description "The ask in flight: read, list, query, write or ensure" = ""
+    op : string @description "The ask in flight: read, list, query, write, ensure or sql" = ""
     rowId : string @description "The id a read asks for" = ""
     table : string @description "The table the statement in flight targets" = ""
     project : string @description "What a query answers: rows or ids" = ""
@@ -120,7 +121,10 @@ orbital RowStorePostgresFixtureOrbital {
     raw : [PgRaw] @description "The data rows of the reply being read, cells undecoded" = []
     rows : [Row] @description "The decoded data rows of the finished reply" = []
     err : PgErr @description "The server error of the reply being read" = { present: false, code: "", message: "" }
-    scan : PgScan @description "The result of reading one chunk" = { pos: 0, cols: [], raw: [], err: { present: false, code: "", message: "" }, auth: [], done: false, stop: false, bad: false }
+    scan : PgScan @description "The result of reading one chunk" = { pos: 0, cols: [], raw: [], err: { present: false, code: "", message: "" }, auth: [], done: false, stop: false, bad: false, tag: "" }
+    tag : string @description "The command tag of the reply being read (SELECT 3): its last word is the row count a ROWS_SQL answers" = ""
+    userSql : string @description "The statement a ROWS_SQL ask carries, sent as given" = ""
+    userParams : [RowCell?] @description "The bind values a ROWS_SQL ask carries" = []
     act : PgAuth @description "The authentication request this chunk asks the driver to answer; code 0 when there is none" = { code: 0, body: "" }
     badSig : boolean @description "The server-final signature did not match" = false
     proof : PgProof @description "The SCRAM client-final frame and the signature expected back; absent when the exchange failed" = { error: "" }
@@ -145,6 +149,7 @@ orbital RowStorePostgresFixtureOrbital {
   trait RowStoreDriver = Pg.traits.RowStoreDriver -> RowStoreFlight {
     config {
       sslmode: "prefer"
+      statementTimeoutMs: 10000
     }
   }
 

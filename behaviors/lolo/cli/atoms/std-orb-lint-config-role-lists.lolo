@@ -32,6 +32,9 @@ type RlWorkList = [RlWork]
 type RlRfMap = Map string [string]
 type RlCfgMap = Map string RlShape?
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintConfigRoleListsCodes = { sRoleLiteralNotMember : LintCodeDecl }
+
 orbital OrbLintConfigRoleListsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -137,7 +140,7 @@ orbital OrbLintConfigRoleListsOrbital {
                             (fn lit
                               (if (array/includes @vocab @lit)
                                 @nof
-                                [{ code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", path: (str/concat (object/get @cx "tp" "") ".config." (object/get @s "knob" "")), message: (str/concat "\"" @lit "\" is not a declared value of `" (quote "@user.") @fld "` on the [identity] entity `" @idName "`. This comparison can never be true — the branch is dead."), suggestion: (str/concat "Use one of: " (str/join @vocab ", ") ", or add \"" @lit "\" to `" @idName "." @fld "`."), severity: "error" }])))))))))))))))))
+                                [{ code: @config.codes.sRoleLiteralNotMember.code, path: (str/concat (object/get @cx "tp" "") ".config." (object/get @s "knob" "")), message: (str/concat "\"" @lit "\" is not a declared value of `" (quote "@user.") @fld "` on the [identity] entity `" @idName "`. This comparison can never be true — the branch is dead."), suggestion: (str/concat "Use one of: " (str/join @vocab ", ") ", or add \"" @lit "\" to `" @idName "." @fld "`."), severity: "error" }])))))))))))))))))
         (emit LINT_FINISH { })
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
@@ -227,6 +230,12 @@ orbital OrbLintConfigRoleListsOrbital {
         @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: every operator's declared returnSemantics; an operator declaring identity-of-arg<N> passes argument N through."
       OrbLintInput.LINT_OPERATOR_SEMANTICS -> SEM_HEARD
     }
+    config {
+      codes : LintConfigRoleListsCodes = { sRoleLiteralNotMember: { code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", category: "schema", description: "A literal compared against an @user field with a closed vocabulary is not a member of that vocabulary, so the branch can never be taken" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintConfigRoleListsCli -> OrbLintConfigRoleListsRun [client] {

@@ -19,6 +19,9 @@ type XepTrait = { name : string, emits : [XepEmit], listens : [XepListen], state
 type XepOrbital = { name : string, traits : [XepTrait] }
 type XepProgram = { orbitals : [XepOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintExternalEmitPayloadCodes = { tEvtExternalMissingPayload : LintCodeDecl }
+
 orbital OrbLintExternalEmitPayloadOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -55,7 +58,7 @@ orbital OrbLintExternalEmitPayloadOrbital {
                                (= (array/len (object/get @e "payloadSchema" [])) 0)
                                (array/some @wired (fn r (!= (object/get @r "orb") (object/get @o "name" ""))))
                                (array/some @wired (fn r (object/get @r "expects"))))
-                        [{ code: "ORB_T_EVT_EXTERNAL_MISSING_PAYLOAD", path: (str/concat "traits." @tn ".emits." @en), message: (str/concat "External event '" @en "' in trait '" @tn "' should have a payload definition with typed fields"), suggestion: "Add a payload array with fields: { \"name\": \"fieldName\", \"type\": \"string\", \"required\": true, \"description\": \"...\" }", severity: "error" }]
+                        [{ code: @config.codes.tEvtExternalMissingPayload.code, path: (str/concat "traits." @tn ".emits." @en), message: (str/concat "External event '" @en "' in trait '" @tn "' should have a payload definition with typed fields"), suggestion: "Add a payload array with fields: { \"name\": \"fieldName\", \"type\": \"string\", \"required\": true, \"description\": \"...\" }", severity: "error" }]
                         [])))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -76,6 +79,12 @@ orbital OrbLintExternalEmitPayloadOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintExternalEmitPayloadCodes = { tEvtExternalMissingPayload: { code: "ORB_T_EVT_EXTERNAL_MISSING_PAYLOAD", category: "trait", description: "An external event does not declare a typed payload" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintExternalEmitPayloadCli -> OrbLintExternalEmitPayloadRun [client] {

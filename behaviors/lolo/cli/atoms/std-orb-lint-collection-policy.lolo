@@ -14,6 +14,9 @@ type PolicyOrbital = { entity : PolicyEntity, auxiliaryEntities : [PolicyEntity]
 type PolicyProgram = { orbitals : [PolicyOrbital] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintCollectionPolicyCodes = { sCollectionPolicyConflict : LintCodeDecl }
+
 orbital OrbLintCollectionPolicyOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -40,7 +43,7 @@ orbital OrbLintCollectionPolicyOrbital {
                 (let ((fi (array/first (array/filter (array/range 0 (array/len @es)) (fn j (= (object/get (array/nth @es @j) "collection") (object/get @en "collection"))))))
                       (first (array/find @es (fn x (= (object/get @x "collection") (object/get @en "collection"))))))
                   (if (and (!= @fi @i) (!= [(object/get @first "read_policy" "") (object/get @first "create_policy" "") (object/get @first "update_policy" "") (object/get @first "delete_policy" "")] [(object/get @en "read_policy" "") (object/get @en "create_policy" "") (object/get @en "update_policy" "") (object/get @en "delete_policy" "")]))
-                    [{ code: "ORB_S_COLLECTION_POLICY_CONFLICT", path: (str/concat (object/get @en "name") ".@access"), message: (str/concat "entities `" (object/get @first "name") "` and `" (object/get @en "name") "` both bind collection `" (object/get @en "collection") "` but declare different access directives. One collection is one table and cannot have two visibility rules — give them identical directives, or bind one of them to its own collection."), suggestion: "", severity: "error" }]
+                    [{ code: @config.codes.sCollectionPolicyConflict.code, path: (str/concat (object/get @en "name") ".@access"), message: (str/concat "entities `" (object/get @first "name") "` and `" (object/get @en "name") "` both bind collection `" (object/get @en "collection") "` but declare different access directives. One collection is one table and cannot have two visibility rules — give them identical directives, or bind one of them to its own collection."), suggestion: "", severity: "error" }]
                     [])))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -61,6 +64,12 @@ orbital OrbLintCollectionPolicyOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintCollectionPolicyCodes = { sCollectionPolicyConflict: { code: "ORB_S_COLLECTION_POLICY_CONFLICT", category: "schema", description: "Entities bound to the same collection declare different access directives" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintCollectionPolicyCli -> OrbLintCollectionPolicyRun [client] {

@@ -12694,6 +12694,1552 @@
      }
     }
    ]
+  },
+  {
+   "id": "set-relation-literal-enum-not-member",
+   "steps": [
+    {
+     "event": "LINT_OPERATOR_NAMES",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "if",
+       "array/map",
+       "fn",
+       "lambda"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "g_set-relation-literal-enum-not-member",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "owner",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           }
+          ],
+          "collection": "tasks"
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "set",
+                "@entity.owner",
+                {
+                 "kind": "nonsense"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "kind",
+            "type": "enum",
+            "values": [
+             "a",
+             "b"
+            ]
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "O3",
+         "entity": {
+          "name": "Bro",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "a",
+            "type": "number"
+           }
+          ],
+          "collection": "bros",
+          "browser": true
+         },
+         "traits": [
+          {
+           "name": "T3",
+           "linkedEntity": "Bro",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "Y"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Y",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "effect-forms",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_X_ENUM_VALUE_NOT_MEMBER",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+           "message": "set @entity.owner: 'nonsense' is not a member of the enum 'Other.kind'",
+           "suggestion": "Use one of the declared values for 'kind', or add 'nonsense' to its enum.",
+           "severity": "error",
+           "validValues": [
+            "a",
+            "b"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-set-relation-literal-enum-member",
+   "steps": [
+    {
+     "event": "LINT_OPERATOR_NAMES",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "if",
+       "array/map",
+       "fn",
+       "lambda"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "g_control-set-relation-literal-enum-member",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "owner",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           }
+          ],
+          "collection": "tasks"
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "set",
+                "@entity.owner",
+                {
+                 "kind": "a",
+                 "label": "x"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "kind",
+            "type": "enum",
+            "values": [
+             "a",
+             "b"
+            ]
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "O3",
+         "entity": {
+          "name": "Bro",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "a",
+            "type": "number"
+           }
+          ],
+          "collection": "bros",
+          "browser": true
+         },
+         "traits": [
+          {
+           "name": "T3",
+           "linkedEntity": "Bro",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "Y"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Y",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "effect-forms",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-set-relation-literal-binding-value",
+   "steps": [
+    {
+     "event": "LINT_OPERATOR_NAMES",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "if",
+       "array/map",
+       "fn",
+       "lambda"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "g_control-set-relation-literal-binding-value",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "owner",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           }
+          ],
+          "collection": "tasks"
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "set",
+                "@entity.owner",
+                {
+                 "kind": "@payload.k"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "kind",
+            "type": "enum",
+            "values": [
+             "a",
+             "b"
+            ]
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "O3",
+         "entity": {
+          "name": "Bro",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "a",
+            "type": "number"
+           }
+          ],
+          "collection": "bros",
+          "browser": true
+         },
+         "traits": [
+          {
+           "name": "T3",
+           "linkedEntity": "Bro",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "Y"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Y",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "effect-forms",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-set-relation-literal-unknown-key-is-not-an-enum-finding",
+   "steps": [
+    {
+     "event": "LINT_OPERATOR_NAMES",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "if",
+       "array/map",
+       "fn",
+       "lambda"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "g_control-set-relation-literal-unknown-key-is-not-an-enum-finding",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "owner",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           }
+          ],
+          "collection": "tasks"
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "set",
+                "@entity.owner",
+                {
+                 "bogus": "zzz"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "kind",
+            "type": "enum",
+            "values": [
+             "a",
+             "b"
+            ]
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "O3",
+         "entity": {
+          "name": "Bro",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "a",
+            "type": "number"
+           }
+          ],
+          "collection": "bros",
+          "browser": true
+         },
+         "traits": [
+          {
+           "name": "T3",
+           "linkedEntity": "Bro",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "Y"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Y",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "effect-forms",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-set-relation-literal-string-field-takes-any-text",
+   "steps": [
+    {
+     "event": "LINT_OPERATOR_NAMES",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "if",
+       "array/map",
+       "fn",
+       "lambda"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "g_control-set-relation-literal-string-field-takes-any-text",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "owner",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           }
+          ],
+          "collection": "tasks"
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "set",
+                "@entity.owner",
+                {
+                 "label": "anything"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "kind",
+            "type": "enum",
+            "values": [
+             "a",
+             "b"
+            ]
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "O3",
+         "entity": {
+          "name": "Bro",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "a",
+            "type": "number"
+           }
+          ],
+          "collection": "bros",
+          "browser": true
+         },
+         "traits": [
+          {
+           "name": "T3",
+           "linkedEntity": "Bro",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "Y"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Y",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "effect-forms",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-set-to-many-relation-literal-is-not-judged",
+   "steps": [
+    {
+     "event": "LINT_OPERATOR_NAMES",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "if",
+       "array/map",
+       "fn",
+       "lambda"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "g_control-set-to-many-relation-literal-is-not-judged",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "owner",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "many"
+            }
+           }
+          ],
+          "collection": "tasks"
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "set",
+                "@entity.owner",
+                {
+                 "kind": "nonsense"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "kind",
+            "type": "enum",
+            "values": [
+             "a",
+             "b"
+            ]
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "O3",
+         "entity": {
+          "name": "Bro",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "a",
+            "type": "number"
+           }
+          ],
+          "collection": "bros",
+          "browser": true
+         },
+         "traits": [
+          {
+           "name": "T3",
+           "linkedEntity": "Bro",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "Y"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Y",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "effect-forms",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-set-relation-literal-union-field-is-not-an-enum",
+   "steps": [
+    {
+     "event": "LINT_OPERATOR_NAMES",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "if",
+       "array/map",
+       "fn",
+       "lambda"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "g_control-set-relation-literal-union-field-is-not-an-enum",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "owner",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           }
+          ],
+          "collection": "tasks"
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "set",
+                "@entity.owner",
+                {
+                 "kind": "nonsense"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "kind",
+            "type": "union",
+            "values": [
+             "a",
+             "b"
+            ]
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "O3",
+         "entity": {
+          "name": "Bro",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "a",
+            "type": "number"
+           }
+          ],
+          "collection": "bros",
+          "browser": true
+         },
+         "traits": [
+          {
+           "name": "T3",
+           "linkedEntity": "Bro",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "Y"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Y",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "effect-forms",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

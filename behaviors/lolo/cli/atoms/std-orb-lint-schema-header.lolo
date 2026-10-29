@@ -12,6 +12,9 @@ type OrbFinding = { code : string!, path : string!, message : string!, suggestio
 type SchemaHeaderOrbital = { name : string }
 type SchemaHeaderProgram = { name : string, orbitals : [SchemaHeaderOrbital], version : string }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintSchemaHeaderCodes = { sMissingName : LintCodeDecl , sNoOrbitals : LintCodeDecl , sEmptyVersion : LintCodeDecl }
+
 orbital OrbLintSchemaHeaderOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -30,9 +33,9 @@ orbital OrbLintSchemaHeaderOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((res @payload.program))
           (array/flatten [
-            (if (= (object/get @res "name" "") "") [{ code: "ORB_S_MISSING_NAME", path: "name", message: "Schema name is required", suggestion: "Add a name for your schema", severity: "error" }] [])
-            (if (= (array/len (object/get @res "orbitals" [])) 0) [{ code: "ORB_S_NO_ORBITALS", path: "orbitals", message: "Schema must have at least one orbital", suggestion: "Add at least one orbital to define application features", severity: "error" }] [])
-            (if (and (object/has @res "version") (= (object/get @res "version") "")) [{ code: "ORB_S_EMPTY_VERSION", path: "version", message: "Schema version should not be empty", suggestion: "Use semantic versioning (e.g., '1.0.0')", severity: "error" }] [])])))
+            (if (= (object/get @res "name" "") "") [{ code: @config.codes.sMissingName.code, path: "name", message: "Schema name is required", suggestion: "Add a name for your schema", severity: "error" }] [])
+            (if (= (array/len (object/get @res "orbitals" [])) 0) [{ code: @config.codes.sNoOrbitals.code, path: "orbitals", message: "Schema must have at least one orbital", suggestion: "Add at least one orbital to define application features", severity: "error" }] [])
+            (if (and (object/has @res "version") (= (object/get @res "version") "")) [{ code: @config.codes.sEmptyVersion.code, path: "version", message: "Schema version should not be empty", suggestion: "Use semantic versioning (e.g., '1.0.0')", severity: "error" }] [])])))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "schema-header", scope: @entity.scope, findings: @entity.findings })
@@ -52,6 +55,12 @@ orbital OrbLintSchemaHeaderOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintSchemaHeaderCodes = { sMissingName: { code: "ORB_S_MISSING_NAME", category: "schema", description: "The schema does not declare a name" }, sNoOrbitals: { code: "ORB_S_NO_ORBITALS", category: "schema", description: "The schema declares no orbitals" }, sEmptyVersion: { code: "ORB_S_EMPTY_VERSION", category: "schema", description: "The schema version is empty" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintSchemaHeaderCli -> OrbLintSchemaHeaderRun [client] {

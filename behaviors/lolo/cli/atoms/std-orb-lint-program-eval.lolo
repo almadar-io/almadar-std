@@ -20,6 +20,9 @@ type PevTrait = { name : string, stateMachine : PevMachine, ticks : [PevTick], e
 type PevOrbital = { name : string, traits : [PevTrait] }
 type PevProgram = { orbitals : [PevOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintProgramEvalCodes = { effEmitKeyInvalid : LintCodeDecl , effEmitInvalidName : LintCodeDecl , effEmitUndeclaredEvent : LintCodeDecl , effProgramEvalFailureMissing : LintCodeDecl }
+
 orbital OrbLintProgramEvalOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses LeavesUse from "std/behaviors/std-orb-effect-leaves"
@@ -53,12 +56,12 @@ orbital OrbLintProgramEvalOrbital {
                       (array/flatten (array/map @emitobjs (fn eo
                         (array/flatten (array/map (object/keys @eo) (fn k
                           (let ((v (object/get @eo @k)))
-                            (if (not (array/includes ["success", "failure"] @k)) [{ code: "ORB_EFF_EMIT_KEY_INVALID", path: @p, message: (str/concat "emit." @k " is not supported on this operator (allowed: success, failure)"), suggestion: "Remove the invalid key or use a different operator that supports it", severity: "error" }]
+                            (if (not (array/includes ["success", "failure"] @k)) [{ code: @config.codes.effEmitKeyInvalid.code, path: @p, message: (str/concat "emit." @k " is not supported on this operator (allowed: success, failure)"), suggestion: "Remove the invalid key or use a different operator that supports it", severity: "error" }]
                               (if (validate/string @v)
-                                (if (not (validate/pattern @v "^[A-Za-z][A-Za-z0-9_]*$")) [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: (str/concat "emit." @k " = '" @v "' is not a valid identifier"), suggestion: "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')", severity: "error" }]
-                                  (if (array/includes @declared @v) [] [{ code: "ORB_EFF_EMIT_UNDECLARED_EVENT", path: @p, message: (str/concat "emit." @k " = '" @v "' is not declared in the trait's emits array"), suggestion: "Declare the event in the trait's `emits` block with its payload shape", severity: "error" }]))
-                                [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: (str/concat "emit." @k " must be a string event name"), suggestion: "e.g. emit.success = 'PATIENT_LOADED'", severity: "error" }])))))))))
-                      (if (array/some @emitobjs (fn eo (let ((fv (object/get @eo "failure" null))) (and (validate/string @fv) (!= @fv ""))))) [] [{ code: "ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING", path: @p, message: "`program/eval` carries no `emit.failure` event — the validator's errors come back through it and would be dropped", suggestion: "Add `{ emit: { success: \"<EVENT>\", failure: \"<FAILURE_EVENT>\" } }` as the last arg and handle the failure event in an arm.", severity: "error" }]))))))))))))
+                                (if (not (validate/pattern @v "^[A-Za-z][A-Za-z0-9_]*$")) [{ code: @config.codes.effEmitInvalidName.code, path: @p, message: (str/concat "emit." @k " = '" @v "' is not a valid identifier"), suggestion: "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')", severity: "error" }]
+                                  (if (array/includes @declared @v) [] [{ code: @config.codes.effEmitUndeclaredEvent.code, path: @p, message: (str/concat "emit." @k " = '" @v "' is not declared in the trait's emits array"), suggestion: "Declare the event in the trait's `emits` block with its payload shape", severity: "error" }]))
+                                [{ code: @config.codes.effEmitInvalidName.code, path: @p, message: (str/concat "emit." @k " must be a string event name"), suggestion: "e.g. emit.success = 'PATIENT_LOADED'", severity: "error" }])))))))))
+                      (if (array/some @emitobjs (fn eo (let ((fv (object/get @eo "failure" null))) (and (validate/string @fv) (!= @fv ""))))) [] [{ code: @config.codes.effProgramEvalFailureMissing.code, path: @p, message: "`program/eval` carries no `emit.failure` event — the validator's errors come back through it and would be dropped", suggestion: "Add `{ emit: { success: \"<EVENT>\", failure: \"<FAILURE_EVENT>\" } }` as the last arg and handle the failure event in an arm.", severity: "error" }]))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "program-eval", scope: @entity.scope, findings: @entity.findings })
@@ -84,6 +87,12 @@ orbital OrbLintProgramEvalOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintProgramEvalCodes = { effEmitKeyInvalid: { code: "ORB_EFF_EMIT_KEY_INVALID", category: "effect", description: "An emit config carries a key that the operator does not support" }, effEmitInvalidName: { code: "ORB_EFF_EMIT_INVALID_NAME", category: "effect", description: "The event name inside an emit effect is not a valid string event name" }, effEmitUndeclaredEvent: { code: "ORB_EFF_EMIT_UNDECLARED_EVENT", category: "effect", description: "An event named in emit is not declared in the trait's emits array" }, effProgramEvalFailureMissing: { code: "ORB_EFF_PROGRAM_EVAL_FAILURE_MISSING", category: "effect", description: "program/eval carries no emit.failure event, so validator errors would be dropped" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintProgramEvalCli -> OrbLintProgramEvalRun [client] {

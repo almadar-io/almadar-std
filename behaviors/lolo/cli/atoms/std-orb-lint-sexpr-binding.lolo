@@ -25,6 +25,9 @@ type SbRoot = { x : SbShape?, w : string! }
 type SbFront = { f : SbField, w : string }
 type SbLevel = { front : [SbFront], acc : [SbRoot] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintSexprBindingCodes = { sexprInvalidBinding : LintCodeDecl , sexprUnknownEntity : LintCodeDecl , bindingStateNoPath : LintCodeDecl }
+
 orbital OrbLintSexprBindingOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -141,14 +144,14 @@ orbital OrbLintSexprBindingOrbital {
                       (let ((parts (str/split (str/slice @s 1) ".")))
                         (let ((root (array/first @parts)))
                           (if (= @root "")
-                            [{ code: "SEXPR_INVALID_BINDING", path: @p, message: (str/concat "Invalid binding: '" @s "'"), suggestion: "Bindings should be @root.field format", severity: "error" }]
+                            [{ code: @config.codes.sexprInvalidBinding.code, path: @p, message: (str/concat "Invalid binding: '" @s "'"), suggestion: "Bindings should be @root.field format", severity: "error" }]
                             (array/concat
                               (let ((c0 (str/slice @root 0 1)))
                                 (if (and (!= (str/lower @c0) @c0) (> (array/len @known) 0) (not (array/includes @known @root)) (not (array/includes @bnd @root)))
-                                  [{ code: "SEXPR_UNKNOWN_ENTITY", path: @p, message: (str/concat "Entity '" @root "' in binding may not exist"), suggestion: "Ensure the entity is defined in the schema", severity: "error" }]
+                                  [{ code: @config.codes.sexprUnknownEntity.code, path: @p, message: (str/concat "Entity '" @root "' in binding may not exist"), suggestion: "Ensure the entity is defined in the schema", severity: "error" }]
                                   @nof))
                               (if (and (or (= @root "state") (= @root "now")) (> (array/len @parts) 1))
-                                [{ code: "ORB_BINDING_STATE_NO_PATH", path: @p, message: (str/concat (quote "@") @root " should not have a path"), suggestion: (str/concat "Use " (quote "@") @root " without path"), severity: "error" }]
+                                [{ code: @config.codes.bindingStateNoPath.code, path: @p, message: (str/concat (quote "@") @root " should not have a path"), suggestion: (str/concat "Use " (quote "@") @root " without path"), severity: "error" }]
                                 @nof))))))))))))))))
         (emit LINT_FINISH { })
 
@@ -170,6 +173,12 @@ orbital OrbLintSexprBindingOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintSexprBindingCodes = { sexprInvalidBinding: { code: "SEXPR_INVALID_BINDING", category: "sexpr", description: "An s-expression contains an invalid binding" }, sexprUnknownEntity: { code: "SEXPR_UNKNOWN_ENTITY", category: "sexpr", description: "An entity named in a binding may not exist in the program" }, bindingStateNoPath: { code: "ORB_BINDING_STATE_NO_PATH", category: "binding", description: "A binding root that returns a bare value, such as @state, is given a path" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintSexprBindingCli -> OrbLintSexprBindingRun [client] {

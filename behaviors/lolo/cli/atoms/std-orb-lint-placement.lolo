@@ -15,6 +15,9 @@ type PlUnits = Map string [string]
 type PlProgram = { orbitals : [PlOrbital], deployment : PlUnits? }
 type PlEntry = { u : string!, n : string! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintPlacementCodes = { placementOrbitalUnknown : LintCodeDecl , placementOrbitalDuplicate : LintCodeDecl , placementUnitEmpty : LintCodeDecl , placementOrbitalUnplaced : LintCodeDecl }
+
 orbital OrbLintPlacementOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -44,21 +47,21 @@ orbital OrbLintPlacementOrbital {
                           (let ((e (array/nth @seq @i)))
                             (let ((nm (object/get @e "n")) (u (object/get @e "u")))
                               (if (not (array/includes @names @nm))
-                                [{ u: @u, f: { code: "ORB_PLACEMENT_ORBITAL_UNKNOWN", path: (str/concat "deployment." @u), message: (str/concat "deployment unit `" @u "` lists `" @nm "`, which is not an orbital of this program"), suggestion: "", severity: "error" } }]
+                                [{ u: @u, f: { code: @config.codes.placementOrbitalUnknown.code, path: (str/concat "deployment." @u), message: (str/concat "deployment unit `" @u "` lists `" @nm "`, which is not an orbital of this program"), suggestion: "", severity: "error" } }]
                                 (if (array/includes (array/slice @allN 0 @i) @nm)
-                                  [{ u: @u, f: { code: "ORB_PLACEMENT_ORBITAL_DUPLICATE", path: (str/concat "deployment." @u), message: (str/concat "orbital `" @nm "` is placed more than once in `deployment`"), suggestion: "An orbital runs in exactly one unit", severity: "error" } }]
+                                  [{ u: @u, f: { code: @config.codes.placementOrbitalDuplicate.code, path: (str/concat "deployment." @u), message: (str/concat "orbital `" @nm "` is placed more than once in `deployment`"), suggestion: "An orbital runs in exactly one unit", severity: "error" } }]
                                   [])))))))))
                     (array/concat
                       (array/flatten (array/map (object/keys @units) (fn u
                         (array/concat
                           (if (= (array/len (object/get @units @u)) 0)
-                            [{ code: "ORB_PLACEMENT_UNIT_EMPTY", path: (str/concat "deployment." @u), message: (str/concat "deployment unit `" @u "` lists no orbital"), suggestion: "List the orbitals the unit runs, or remove the unit", severity: "error" }]
+                            [{ code: @config.codes.placementUnitEmpty.code, path: (str/concat "deployment." @u), message: (str/concat "deployment unit `" @u "` lists no orbital"), suggestion: "List the orbitals the unit runs, or remove the unit", severity: "error" }]
                             @none)
                           (array/map (array/filter @seqF (fn x (= (object/get @x "u") @u))) (fn x (object/get @x "f")))))))
                       (array/flatten (array/map (array/range 0 (array/len @names)) (fn i
                         (if (array/includes @allN (array/nth @names @i))
                           @none
-                          [{ code: "ORB_PLACEMENT_ORBITAL_UNPLACED", path: (str/concat "orbitals[" @i " (" (array/nth @names @i) ")]"), message: (str/concat "`deployment` is declared but orbital `" (array/nth @names @i) "` is in none of its units"), suggestion: "Place every orbital in a unit; nothing is placed on the program's behalf", severity: "error" }]))))))))))))
+                          [{ code: @config.codes.placementOrbitalUnplaced.code, path: (str/concat "orbitals[" @i " (" (array/nth @names @i) ")]"), message: (str/concat "`deployment` is declared but orbital `" (array/nth @names @i) "` is in none of its units"), suggestion: "Place every orbital in a unit; nothing is placed on the program's behalf", severity: "error" }]))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "placement", scope: @entity.scope, findings: @entity.findings })
@@ -78,6 +81,12 @@ orbital OrbLintPlacementOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintPlacementCodes = { placementOrbitalUnknown: { code: "ORB_PLACEMENT_ORBITAL_UNKNOWN", category: "placement", description: "A deployment unit lists an orbital name that is not an orbital of the program" }, placementOrbitalDuplicate: { code: "ORB_PLACEMENT_ORBITAL_DUPLICATE", category: "placement", description: "An orbital is placed more than once in the deployment" }, placementUnitEmpty: { code: "ORB_PLACEMENT_UNIT_EMPTY", category: "placement", description: "A deployment unit lists no orbital" }, placementOrbitalUnplaced: { code: "ORB_PLACEMENT_ORBITAL_UNPLACED", category: "placement", description: "A deployment is declared but an orbital belongs to none of its units" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintPlacementCli -> OrbLintPlacementRun [client] {

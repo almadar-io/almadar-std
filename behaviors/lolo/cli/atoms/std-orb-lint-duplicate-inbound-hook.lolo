@@ -17,6 +17,9 @@ type DupHookTrait = { stateMachine : DupHookMachine }
 type DupHookOrbital = { traits : [DupHookTrait] }
 type DupHookProgram = { orbitals : [DupHookOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintDuplicateInboundHookCodes = { inboundHookDuplicate : LintCodeDecl , unread : LintCodeDecl }
+
 orbital OrbLintDuplicateInboundHookOrbital {
   entity OrbLintDuplicateInboundHookRun [runtime] {
     id : string!
@@ -48,8 +51,8 @@ orbital OrbLintDuplicateInboundHookOrbital {
         (emit LINT_ANSWERED { status: 200, body: "duplicate-inbound-hook: clean" })
       LINT_FINISH -> ready when (or (> (array/len @entity.dups) 0) (> (array/len @entity.unread) 0))
         (emit LINT_ANSWERED { status: 500, body: (str/join (array/map (array/concat
-          (array/map @entity.dups (fn n (let ((files (array/sort (array/map (array/filter @entity.hooks (fn h (= (object/get @h "name") @n))) (fn h (object/get @h "file"))) "" "asc"))) { code: "inbound-hook-duplicate", path: @n, message: (str/concat "hook '" @n "' is handled by " (array/len @files) " programs: " (str/join @files ", ")), suggestion: "one program owns a hook; split the shared trait into a cli trait and an engine trait and compose the engine", severity: "error" })))
-          (array/map @entity.unread (fn u { code: "unread", path: @u, message: "the file could not be read or listed", suggestion: "", severity: "error" }))) (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+          (array/map @entity.dups (fn n (let ((files (array/sort (array/map (array/filter @entity.hooks (fn h (= (object/get @h "name") @n))) (fn h (object/get @h "file"))) "" "asc"))) { code: @config.codes.inboundHookDuplicate.code, path: @n, message: (str/concat "hook '" @n "' is handled by " (array/len @files) " programs: " (str/join @files ", ")), suggestion: "one program owns a hook; split the shared trait into a cli trait and an engine trait and compose the engine", severity: "error" })))
+          (array/map @entity.unread (fn u { code: @config.codes.unread.code, path: @u, message: "the file could not be read or listed", suggestion: "", severity: "error" }))) (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
     }
 
     state walking {
@@ -143,6 +146,12 @@ orbital OrbLintDuplicateInboundHookOrbital {
         @description "Run `orb lint duplicate-inbound-hook` with its arguments and working directory."
         @synonyms "orb lint duplicate-inbound-hook, shared type copies guard"
     }
+    config {
+      codes : LintDuplicateInboundHookCodes = { inboundHookDuplicate: { code: "inbound-hook-duplicate", category: "lint", description: "Two cli hooks declare the same inbound name" }, unread: { code: "unread", category: "lint", description: "The file the rule reads could not be read or listed" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   page boot as OrbLintDuplicateInboundHookOrbitalStart -> OrbLintDuplicateInboundHook

@@ -27,6 +27,9 @@ type CwS = { s : [string]!, b : boolean! }
 type CwTr = { f : [string]!, e : string!, to : string!, live : boolean! }
 type CwStrs = Map string [string]
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintComposedWiringCodes = { composedStateUnreachable : LintCodeDecl , composedTransitionUnreachable : LintCodeDecl }
+
 orbital OrbLintComposedWiringOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses Fired from "std/behaviors/std-orb-fired-events"
@@ -134,10 +137,10 @@ orbital OrbLintComposedWiringOrbital {
                                   (array/concat
                                     (if (= (array/len @dead) 0) @nof
                                       (let ((missing (array/sort (array/unique (array/map (array/filter @live (fn x (and (array/includes @dead (object/get @x "to")) (not (object/has @prodSet (object/get @x "e"))) (not (array/includes @locIn (object/get @x "e")))))) (fn x (object/get @x "e")))))))
-                                        [{ code: "ORB_COMPOSED_STATE_UNREACHABLE", path: @tp, message: (str/concat "'" @tn "' can never enter " (str/join (array/map @dead (fn s (str/concat "'" @s "'"))) ", ") " — it is entered only on " (str/join @missing ", ") ", which nothing in the program sends: no listens route, no control or effect fires it, and it is not a declared input"), suggestion: (str/concat "route a control's event to it: `listens { <Trait>.<EVENT> -> " (if (> (array/len @missing) 0) (array/first @missing) "<EVENT>") " }` on '" @tn "'"), severity: "error" }]))
+                                        [{ code: @config.codes.composedStateUnreachable.code, path: @tp, message: (str/concat "'" @tn "' can never enter " (str/join (array/map @dead (fn s (str/concat "'" @s "'"))) ", ") " — it is entered only on " (str/join @missing ", ") ", which nothing in the program sends: no listens route, no control or effect fires it, and it is not a declared input"), suggestion: (str/concat "route a control's event to it: `listens { <Trait>.<EVENT> -> " (if (> (array/len @missing) 0) (array/first @missing) "<EVENT>") " }` on '" @tn "'"), severity: "error" }]))
                                     (let ((deadEv (array/sort (array/unique (array/map (array/filter @live (fn x (and (not (object/has @prodSet (object/get @x "e"))) (not (array/includes @locIn (object/get @x "e"))) (not (array/includes @declared (object/get @x "e"))) (array/includes @reached (object/get @x "to")) (or (array/includes (object/get @x "f") "*") (array/some (object/get @x "f") (fn s (array/includes @reached @s))))))) (fn x (object/get @x "e")))))))
                                       (if (= (array/len @deadEv) 0) @nof
-                                        [{ code: "ORB_COMPOSED_TRANSITION_UNREACHABLE", path: @tp, message: (str/concat "'" @tn "' handles " (str/join @deadEv ", ") " but nothing in the program sends " (if (= (array/len @deadEv) 1) "it" "them") ": no listens route, no control or effect fires it under this composition's config, it is not a lifecycle event and the trait does not declare it in `listens`"), suggestion: (str/concat "route a control's event to it: `listens { <Trait>.<EVENT> -> " (array/first @deadEv) " }` on '" @tn "'"), severity: "error" }]))))))))))))))))))))
+                                        [{ code: @config.codes.composedTransitionUnreachable.code, path: @tp, message: (str/concat "'" @tn "' handles " (str/join @deadEv ", ") " but nothing in the program sends " (if (= (array/len @deadEv) 1) "it" "them") ": no listens route, no control or effect fires it under this composition's config, it is not a lifecycle event and the trait does not declare it in `listens`"), suggestion: (str/concat "route a control's event to it: `listens { <Trait>.<EVENT> -> " (array/first @deadEv) " }` on '" @tn "'"), severity: "error" }]))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_TRY -> ready when (not (and (= @entity.progScope @entity.firedScope) @entity.haveBus))
       LINT_FINISH -> ready
@@ -169,6 +172,9 @@ orbital OrbLintComposedWiringOrbital {
     }
 
     config {
+      codes : LintComposedWiringCodes = { composedStateUnreachable: { code: "ORB_COMPOSED_STATE_UNREACHABLE", category: "circuit", description: "A composed trait can never enter some states because nothing in the program sends the events that enter them" }, composedTransitionUnreachable: { code: "ORB_COMPOSED_TRANSITION_UNREACHABLE", category: "composed", description: "A composed trait handles events that nothing in the program ever sends" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
       overlaySlots : [string] = ["modal", "drawer", "dock", "overlay"]
         @label "Overlay slots"
         @description "The slots the generic portal shell wraps."

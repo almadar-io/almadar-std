@@ -14,6 +14,9 @@ type EntityShapeEntity = { name : string, fields : [EntityShapeField] }
 type EntityShapeOrbital = { entity : EntityShapeEntity, auxiliaryEntities : [EntityShapeEntity], spec : boolean }
 type EntityShapeProgram = { orbitals : [EntityShapeOrbital]! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEntityShapeCodes = { eMissingName : LintCodeDecl , eInvalidFieldName : LintCodeDecl , eNoFields : LintCodeDecl }
+
 orbital OrbLintEntityShapeOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -40,12 +43,12 @@ orbital OrbLintEntityShapeOrbital {
                   (let ((ent (object/get @eb "ent")) (base (object/get @eb "base")))
                     (if (and (validate/object @ent) (not (object/get (array/nth @orbitals @oi) "spec" false))) (array/concat
                       (if (= (object/get @ent "name" "") "")
-                        [{ code: "ORB_E_MISSING_NAME", path: (str/concat @base ".name"), message: "Entity name is required", suggestion: "Add a name for your entity using PascalCase (e.g., 'Task', 'User')", severity: "error" }]
+                        [{ code: @config.codes.eMissingName.code, path: (str/concat @base ".name"), message: "Entity name is required", suggestion: "Add a name for your entity using PascalCase (e.g., 'Task', 'User')", severity: "error" }]
                         (if (and @payload.latin (not (validate/pattern (object/get @ent "name" "") "^[A-Z][a-zA-Z0-9]*$")))
-                          [{ code: "ORB_E_INVALID_FIELD_NAME", path: (str/concat @base ".name"), message: (str/concat "Entity name '" (object/get @ent "name" "") "' should be PascalCase"), suggestion: "Use PascalCase for entity names (e.g., 'Task', 'UserProfile')", severity: "error" }]
+                          [{ code: @config.codes.eInvalidFieldName.code, path: (str/concat @base ".name"), message: (str/concat "Entity name '" (object/get @ent "name" "") "' should be PascalCase"), suggestion: "Use PascalCase for entity names (e.g., 'Task', 'UserProfile')", severity: "error" }]
                           []))
                       (if (= (array/len (object/get @ent "fields" [])) 0)
-                        [{ code: "ORB_E_NO_FIELDS", path: (str/concat @base ".fields"), message: "Entity must have at least one field", suggestion: "Add at least one field to define the entity's data structure", severity: "error" }]
+                        [{ code: @config.codes.eNoFields.code, path: (str/concat @base ".fields"), message: "Entity must have at least one field", suggestion: "Add at least one field to define the entity's data structure", severity: "error" }]
                         [])) [])))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -66,6 +69,12 @@ orbital OrbLintEntityShapeOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintEntityShapeCodes = { eMissingName: { code: "ORB_E_MISSING_NAME", category: "entity", description: "An entity is missing its required name" }, eInvalidFieldName: { code: "ORB_E_INVALID_FIELD_NAME", category: "entity", description: "An entity field or entity name is empty or not in the required naming form" }, eNoFields: { code: "ORB_E_NO_FIELDS", category: "entity", description: "An entity declares no fields and must have at least one" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintEntityShapeCli -> OrbLintEntityShapeRun [client] {

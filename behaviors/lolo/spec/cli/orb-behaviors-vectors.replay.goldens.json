@@ -1,0 +1,1257 @@
+{
+ "atom": "cli/atoms/std-orb-behaviors.lolo",
+ "trait": "OrbBehaviors",
+ "note": "The vector flows of `orb behaviors catalog|describe --knob-vectors|texts`: the host answers (behavior/catalog with texts, behavior/packages, behavior/describe, behavior/source) and the composed std traits' answers (text builder, sources, resolver) are fed as events. Cases are built from the retired orbital-cli behaviors_catalog.rs (catalog_with, describe_with) and behaviors_texts.rs (texts) and the Rust cases of tests/behaviors_catalog.rs, which also drive the real command end to end.",
+ "cases": [
+  {
+   "id": "catalog with vectors: the facts go to the text builder",
+   "entity": {
+    "sub": "catalog"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "CATALOG_FACTS",
+     "payload": {
+      "result": [
+       {
+        "behavior": "alpha/alpha-card",
+        "package": "alpha",
+        "topic": "ui/core",
+        "level": "atom",
+        "description": "A card.",
+        "capabilities": [
+         "display"
+        ],
+        "traits": [],
+        "value": {
+         "behavior": "alpha/alpha-card"
+        },
+        "vectors": {},
+        "model": "",
+        "name": "alpha-card",
+        "rank": 0,
+        "textOrder": 0,
+        "defaultEntityName": "Card",
+        "connectableEvents": [
+         "OPEN"
+        ],
+        "capabilitiesText": "display"
+       },
+       {
+        "behavior": "beta/beta-card",
+        "package": "beta",
+        "topic": "ui/core",
+        "level": "atom",
+        "description": "A card.",
+        "capabilities": [
+         "display"
+        ],
+        "traits": [],
+        "value": {
+         "behavior": "beta/beta-card"
+        },
+        "vectors": {},
+        "model": "",
+        "name": "beta-card",
+        "rank": 0,
+        "textOrder": 0,
+        "defaultEntityName": "Card",
+        "connectableEvents": [
+         "OPEN"
+        ],
+        "capabilitiesText": "display"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BV_ENTRY_TEXTS",
+        "payload": {
+         "rows": [
+          {
+           "behavior": "alpha/alpha-card",
+           "package": "alpha",
+           "topic": "ui/core",
+           "level": "atom",
+           "description": "A card.",
+           "capabilities": [
+            "display"
+           ],
+           "traits": [],
+           "value": {
+            "behavior": "alpha/alpha-card"
+           },
+           "vectors": {},
+           "model": "",
+           "name": "alpha-card",
+           "rank": 0,
+           "textOrder": 0,
+           "defaultEntityName": "Card",
+           "connectableEvents": [
+            "OPEN"
+           ],
+           "capabilitiesText": "display"
+          },
+          {
+           "behavior": "beta/beta-card",
+           "package": "beta",
+           "topic": "ui/core",
+           "level": "atom",
+           "description": "A card.",
+           "capabilities": [
+            "display"
+           ],
+           "traits": [],
+           "value": {
+            "behavior": "beta/beta-card"
+           },
+           "vectors": {},
+           "model": "",
+           "name": "beta-card",
+           "rank": 0,
+           "textOrder": 0,
+           "defaultEntityName": "Card",
+           "connectableEvents": [
+            "OPEN"
+           ],
+           "capabilitiesText": "display"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "catalog with vectors: only the packages the listing came from, and only those that declare a snapshot, are read",
+   "entity": {
+    "sub": "catalog",
+    "rows": [
+     {
+      "behavior": "alpha/alpha-card",
+      "package": "alpha",
+      "topic": "ui/core",
+      "level": "atom",
+      "description": "A card.",
+      "capabilities": [
+       "display"
+      ],
+      "traits": [],
+      "value": {
+       "behavior": "alpha/alpha-card"
+      },
+      "vectors": {},
+      "model": "",
+      "name": "alpha-card",
+      "rank": 0,
+      "textOrder": 0,
+      "defaultEntityName": "Card",
+      "connectableEvents": [
+       "OPEN"
+      ],
+      "capabilitiesText": "display"
+     },
+     {
+      "behavior": "beta/beta-card",
+      "package": "beta",
+      "topic": "ui/core",
+      "level": "atom",
+      "description": "A card.",
+      "capabilities": [
+       "display"
+      ],
+      "traits": [],
+      "value": {
+       "behavior": "beta/beta-card"
+      },
+      "vectors": {},
+      "model": "",
+      "name": "beta-card",
+      "rank": 0,
+      "textOrder": 0,
+      "defaultEntityName": "Card",
+      "connectableEvents": [
+       "OPEN"
+      ],
+      "capabilitiesText": "display"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "PACKAGES_LISTED",
+     "payload": {
+      "result": [
+       {
+        "root": "/p/alpha",
+        "prefix": "alpha",
+        "vectors": "/p/alpha/dist/vectors.vec"
+       },
+       {
+        "root": "/p/beta",
+        "prefix": "beta"
+       },
+       {
+        "root": "/p/gamma",
+        "prefix": "gamma",
+        "vectors": "/p/gamma/dist/vectors.vec"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BV_SOURCES",
+        "payload": {
+         "paths": [
+          "/p/alpha/dist/vectors.vec"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the sources and the wanted texts go to the resolver",
+   "entity": {
+    "sub": "catalog",
+    "wanted": [
+     {
+      "key": "alpha/alpha-card",
+      "text": "t1"
+     },
+     {
+      "key": "alpha/alpha-card#capabilities",
+      "text": "t2"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "SOURCES_READY",
+     "payload": {
+      "snapshots": [
+       "AAAA"
+      ],
+      "snapshotPaths": [
+       "/p/alpha/dist/vectors.vec"
+      ],
+      "userDir": "/u",
+      "userAnchor": "home",
+      "providerModel": "",
+      "providerKind": "",
+      "embedModel": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BV_RESOLVE",
+        "payload": {
+         "wanted": [
+          {
+           "key": "alpha/alpha-card",
+           "text": "t1"
+          },
+          {
+           "key": "alpha/alpha-card#capabilities",
+           "text": "t2"
+          }
+         ],
+         "snapshots": [
+          "AAAA"
+         ],
+         "snapshotPaths": [
+          "/p/alpha/dist/vectors.vec"
+         ],
+         "userDir": "/u",
+         "userAnchor": "home",
+         "providerModel": "",
+         "providerKind": "",
+         "embedModel": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the resolved vectors are attached under description and capabilities with the model, the text-builder facts dropped",
+   "entity": {
+    "sub": "catalog",
+    "rows": [
+     {
+      "behavior": "alpha/alpha-card",
+      "package": "alpha",
+      "topic": "ui/core",
+      "level": "atom",
+      "description": "A card.",
+      "capabilities": [
+       "display"
+      ],
+      "traits": [],
+      "value": {
+       "behavior": "alpha/alpha-card"
+      },
+      "vectors": {},
+      "model": "",
+      "name": "alpha-card",
+      "rank": 0,
+      "textOrder": 0,
+      "defaultEntityName": "Card",
+      "connectableEvents": [
+       "OPEN"
+      ],
+      "capabilitiesText": "display"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "VECTORS_ANSWERED",
+     "payload": {
+      "model": "m1",
+      "vectors": [
+       {
+        "key": "alpha/alpha-card",
+        "vector": [
+         1,
+         2
+        ]
+       },
+       {
+        "key": "alpha/alpha-card#capabilities",
+        "vector": [
+         3
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "CATALOG_ATTACHED",
+        "payload": {
+         "result": [
+          {
+           "behavior": "alpha/alpha-card",
+           "package": "alpha",
+           "topic": "ui/core",
+           "level": "atom",
+           "description": "A card.",
+           "capabilities": [
+            "display"
+           ],
+           "traits": [],
+           "value": {
+            "behavior": "alpha/alpha-card"
+           },
+           "vectors": {
+            "description": [
+             1,
+             2
+            ],
+            "capabilities": [
+             3
+            ]
+           },
+           "model": "m1"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a behavior with no stored capability vector carries only its description vector",
+   "entity": {
+    "sub": "catalog",
+    "rows": [
+     {
+      "behavior": "alpha/alpha-card",
+      "package": "alpha",
+      "topic": "ui/core",
+      "level": "atom",
+      "description": "A card.",
+      "capabilities": [
+       "display"
+      ],
+      "traits": [],
+      "value": {
+       "behavior": "alpha/alpha-card"
+      },
+      "vectors": {},
+      "model": "",
+      "name": "alpha-card",
+      "rank": 0,
+      "textOrder": 0,
+      "defaultEntityName": "Card",
+      "connectableEvents": [
+       "OPEN"
+      ],
+      "capabilitiesText": "display"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "VECTORS_ANSWERED",
+     "payload": {
+      "model": "m1",
+      "vectors": [
+       {
+        "key": "alpha/alpha-card",
+        "vector": [
+         1,
+         2
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "CATALOG_ATTACHED",
+        "payload": {
+         "result": [
+          {
+           "behavior": "alpha/alpha-card",
+           "package": "alpha",
+           "topic": "ui/core",
+           "level": "atom",
+           "description": "A card.",
+           "capabilities": [
+            "display"
+           ],
+           "traits": [],
+           "value": {
+            "behavior": "alpha/alpha-card"
+           },
+           "vectors": {
+            "description": [
+             1,
+             2
+            ]
+           },
+           "model": "m1"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "attached entries print as pretty JSON",
+   "entity": {
+    "sub": "catalog",
+    "json": true
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "CATALOG_ATTACHED",
+     "payload": {
+      "result": [
+       {
+        "behavior": "alpha/alpha-card",
+        "package": "alpha",
+        "topic": "ui/core",
+        "level": "atom",
+        "description": "A card.",
+        "capabilities": [
+         "display"
+        ],
+        "traits": [],
+        "value": {
+         "behavior": "alpha/alpha-card"
+        },
+        "vectors": {},
+        "model": "m1"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "[\n  {\n    \"behavior\": \"alpha/alpha-card\",\n    \"package\": \"alpha\",\n    \"topic\": \"ui/core\",\n    \"level\": \"atom\",\n    \"description\": \"A card.\",\n    \"capabilities\": [\n      \"display\"\n    ],\n    \"traits\": [],\n    \"value\": {\n      \"behavior\": \"alpha/alpha-card\"\n    },\n    \"vectors\": {},\n    \"model\": \"m1\"\n  }\n]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a refused resolve answers its code and detail on stderr (500)",
+   "entity": {
+    "sub": "catalog"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "VECTORS_REFUSED",
+     "payload": {
+      "code": "ORB_VECTOR_MODEL_MISMATCH",
+      "detail": "m1 vs m2"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "ORB_VECTOR_MODEL_MISMATCH: m1 vs m2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an unreadable source answers its code and detail on stderr (500)",
+   "entity": {
+    "sub": "catalog"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "SOURCES_REFUSED",
+     "payload": {
+      "code": "ORB_VECTOR_IO",
+      "detail": "/p/x.vec: denied"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "ORB_VECTOR_IO: /p/x.vec: denied"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: no packages left answers the accumulated texts as one compact JSON line",
+   "entity": {
+    "sub": "texts",
+    "ranks": [
+     0
+    ],
+    "gi": 1,
+    "acc": [
+     {
+      "key": "a",
+      "text": "a",
+      "hash": "h"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "TX_GROUP",
+     "payload": {
+      "at": 1
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "[{\"key\":\"a\",\"text\":\"a\",\"hash\":\"h\"}]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: no texts is an empty array",
+   "entity": {
+    "sub": "texts",
+    "ranks": [],
+    "gi": 0,
+    "acc": []
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "TX_GROUP",
+     "payload": {
+      "at": 0
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "[]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: a package's entry texts start its knob walk",
+   "entity": {
+    "sub": "texts",
+    "kind": ""
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "ENTRY_TEXTS_BUILT",
+     "payload": {
+      "organism": [
+       {
+        "key": "a",
+        "text": "a",
+        "hash": "h"
+       }
+      ],
+      "capability": [],
+      "wanted": [
+       {
+        "key": "p/a",
+        "text": "a"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "TX_KNOB",
+        "payload": {
+         "at": 0
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: kind organism ends the package with its organism texts only and moves to the next package",
+   "entity": {
+    "sub": "texts",
+    "kind": "organism",
+    "ranks": [
+     0,
+     1
+    ],
+    "gi": 0,
+    "ri": 0,
+    "grp": [],
+    "gOrg": [
+     {
+      "key": "a",
+      "text": "a",
+      "hash": "h"
+     }
+    ],
+    "gCap": [
+     {
+      "key": "a#capabilities",
+      "text": "c",
+      "hash": "i"
+     }
+    ],
+    "gKnobs": [],
+    "acc": []
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "TX_KNOB",
+     "payload": {
+      "at": 0
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "TX_GROUP",
+        "payload": {
+         "at": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: kind capability ends the package with its capability texts only",
+   "entity": {
+    "sub": "texts",
+    "kind": "capability",
+    "ranks": [
+     0
+    ],
+    "gi": 0,
+    "ri": 0,
+    "grp": [],
+    "gOrg": [
+     {
+      "key": "a",
+      "text": "a",
+      "hash": "h"
+     }
+    ],
+    "gCap": [
+     {
+      "key": "a#capabilities",
+      "text": "c",
+      "hash": "i"
+     }
+    ],
+    "gKnobs": [],
+    "acc": [
+     {
+      "key": "z",
+      "text": "z",
+      "hash": "z"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "TX_KNOB",
+     "payload": {
+      "at": 0
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "TX_GROUP",
+        "payload": {
+         "at": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: a behavior's knob texts are added to the package's and the walk goes on",
+   "entity": {
+    "sub": "texts",
+    "ri": 0,
+    "gKnobs": [
+     {
+      "key": "k0",
+      "text": "t0",
+      "hash": "h0"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "KNOB_TEXTS_BUILT",
+     "payload": {
+      "texts": [
+       {
+        "key": "k1",
+        "text": "t1",
+        "hash": "h1"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "TX_KNOB",
+        "payload": {
+         "at": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "texts: a described orbital the program does not declare answers its error (500)",
+   "entity": {
+    "sub": "texts"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "KNOB_TEXTS_REFUSED",
+     "payload": {
+      "error": "x: orb described an orbital the program does not declare"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "x: orb described an orbital the program does not declare"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe --knob-vectors: a behavior outside every package keeps the plain description",
+   "entity": {
+    "sub": "describe",
+    "base": {
+     "value": {
+      "behavior": "alpha/alpha-card",
+      "trait": "CardView"
+     },
+     "knobs": [
+      {
+       "key": "size",
+       "type": "number"
+      },
+      {
+       "key": "title",
+       "type": "string"
+      }
+     ],
+     "events": {
+      "emits": [],
+      "listens": [],
+      "transitions": []
+     },
+     "model": ""
+    },
+    "vpath": "/w/x.orb"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "PACKAGES_LISTED",
+     "payload": {
+      "result": [
+       {
+        "root": "/p/alpha",
+        "prefix": "alpha"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "TRAIT_ATTACHED",
+        "payload": {
+         "result": {
+          "value": {
+           "behavior": "alpha/alpha-card",
+           "trait": "CardView"
+          },
+          "knobs": [
+           {
+            "key": "size",
+            "type": "number"
+           },
+           {
+            "key": "title",
+            "type": "string"
+           }
+          ],
+          "events": {
+           "emits": [],
+           "listens": [],
+           "transitions": []
+          },
+          "model": ""
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe --knob-vectors: the vectors read are those of the package that owns the behavior",
+   "entity": {
+    "sub": "describe",
+    "spec": "alpha/alpha-card.traits.CardView",
+    "base": {
+     "value": {
+      "behavior": "alpha/alpha-card",
+      "trait": "CardView"
+     },
+     "knobs": [
+      {
+       "key": "size",
+       "type": "number"
+      },
+      {
+       "key": "title",
+       "type": "string"
+      }
+     ],
+     "events": {
+      "emits": [],
+      "listens": [],
+      "transitions": []
+     },
+     "model": ""
+    },
+    "vpath": "/p/alpha/behaviors/registry/alpha-card.orb"
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "PACKAGES_LISTED",
+     "payload": {
+      "result": [
+       {
+        "root": "/p/alpha",
+        "prefix": "alpha",
+        "vectors": "/p/alpha/dist/vectors.vec"
+       },
+       {
+        "root": "/p/beta",
+        "prefix": "beta",
+        "vectors": "/p/beta/dist/vectors.vec"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe --knob-vectors: each knob's text is wanted under <name>/<orbital>/<trait>/<knob>",
+   "entity": {
+    "sub": "describe",
+    "spec": "alpha/alpha-card.traits.CardView",
+    "trait": "CardView",
+    "stem": "alpha-card",
+    "base": {
+     "value": {
+      "behavior": "alpha/alpha-card",
+      "trait": "CardView"
+     },
+     "knobs": [
+      {
+       "key": "size",
+       "type": "number"
+      },
+      {
+       "key": "title",
+       "type": "string"
+      }
+     ],
+     "events": {
+      "emits": [],
+      "listens": [],
+      "transitions": []
+     },
+     "model": ""
+    },
+    "whole": {
+     "behavior": "alpha/alpha-card",
+     "orbitals": [
+      {
+       "value": {
+        "behavior": "alpha/alpha-card",
+        "orbital": "CardOrbital"
+       },
+       "traits": [
+        {
+         "trait": "CardView",
+         "knobs": [
+          {
+           "name": "size"
+          },
+          {
+           "name": "title"
+          }
+         ]
+        }
+       ],
+       "knobs": []
+      }
+     ]
+    },
+    "vpaths": [
+     "/p/alpha/dist/vectors.vec"
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "KNOB_TEXTS_BUILT",
+     "payload": {
+      "texts": [
+       {
+        "key": "alpha-card/CardOrbital/CardView/size",
+        "text": "ts",
+        "hash": "h"
+       },
+       {
+        "key": "alpha-card/CardOrbital/CardView/title",
+        "text": "tt",
+        "hash": "h"
+       },
+       {
+        "key": "other",
+        "text": "x",
+        "hash": "h"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "BV_SOURCES",
+        "payload": {
+         "paths": [
+          "/p/alpha/dist/vectors.vec"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe --knob-vectors: a found vector is attached to its knob and the model reported",
+   "entity": {
+    "sub": "describe",
+    "spec": "alpha/alpha-card.traits.CardView",
+    "trait": "CardView",
+    "stem": "alpha-card",
+    "base": {
+     "value": {
+      "behavior": "alpha/alpha-card",
+      "trait": "CardView"
+     },
+     "knobs": [
+      {
+       "key": "size",
+       "type": "number"
+      },
+      {
+       "key": "title",
+       "type": "string"
+      }
+     ],
+     "events": {
+      "emits": [],
+      "listens": [],
+      "transitions": []
+     },
+     "model": ""
+    },
+    "whole": {
+     "behavior": "alpha/alpha-card",
+     "orbitals": [
+      {
+       "value": {
+        "behavior": "alpha/alpha-card",
+        "orbital": "CardOrbital"
+       },
+       "traits": [
+        {
+         "trait": "CardView",
+         "knobs": [
+          {
+           "name": "size"
+          },
+          {
+           "name": "title"
+          }
+         ]
+        }
+       ],
+       "knobs": []
+      }
+     ]
+    },
+    "vpaths": [
+     "/p/alpha/dist/vectors.vec"
+    ]
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "VECTORS_ANSWERED",
+     "payload": {
+      "model": "m1",
+      "vectors": [
+       {
+        "key": "alpha-card/CardOrbital/CardView/title",
+        "vector": [
+         1,
+         2
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "working",
+      "emits": [
+       {
+        "event": "TRAIT_ATTACHED",
+        "payload": {
+         "result": {
+          "value": {
+           "behavior": "alpha/alpha-card",
+           "trait": "CardView"
+          },
+          "knobs": [
+           {
+            "key": "size",
+            "type": "number"
+           },
+           {
+            "key": "title",
+            "type": "string",
+            "vector": [
+             1,
+             2
+            ]
+           }
+          ],
+          "events": {
+           "emits": [],
+           "listens": [],
+           "transitions": []
+          },
+          "model": "m1"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe --knob-vectors on a value read from stdin is refused (501)",
+   "entity": {
+    "sub": "describe",
+    "knobVectors": true
+   },
+   "steps": [
+    {
+     "trait": "OrbBehaviors",
+     "from": "working",
+     "event": "STDIN_READ",
+     "payload": {
+      "data": "e30="
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "BEHAVIORS_ANSWERED",
+        "payload": {
+         "status": 501,
+         "body": "",
+         "stderr": "describe -: --knob-vectors is not carried for a value read from stdin"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

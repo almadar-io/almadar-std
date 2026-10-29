@@ -14,6 +14,9 @@ type PersistenceTrait = { name : string, dataEntities : [PersistenceEntity] }
 type PersistenceOrbital = { name : string, entity : PersistenceEntity, auxiliaryEntities : [PersistenceEntity], traits : [PersistenceTrait], spec : boolean }
 type PersistenceProgram = { orbitals : [PersistenceOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEntityPersistenceCodes = { eMissingCollection : LintCodeDecl , sSharedWithoutPersistenceMode : LintCodeDecl }
+
 orbital OrbLintEntityPersistenceOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -42,10 +45,10 @@ orbital OrbLintEntityPersistenceOrbital {
                       (if (and (validate/object @ent) (not (object/get @orb "spec" false)))
                         (array/concat
                           (if (and (= (object/get @ent "persistence" "") "persistent") (not (object/has @ent "collection")))
-                            [{ code: "ORB_E_MISSING_COLLECTION", path: (str/concat @base ".collection"), message: "Persistent entity requires a collection name", suggestion: "Add a 'collection' property for database storage", severity: "error" }]
+                            [{ code: @config.codes.eMissingCollection.code, path: (str/concat @base ".collection"), message: "Persistent entity requires a collection name", suggestion: "Add a 'collection' property for database storage", severity: "error" }]
                             [])
                           (if (and (= (object/get @ent "shared" false) true) (not (object/has @ent "persistence")))
-                            [{ code: "ORB_S_SHARED_WITHOUT_PERSISTENCE_MODE", path: (str/concat @base ".persistence"), message: (str/concat "Entity '" (object/get @ent "name" "") "' is [shared] but declares no persistence mode — nothing about a shared entity may be inferred."), suggestion: "Add an explicit `persistent: <collection>` or `runtime` persistence tag alongside `[shared]`.", severity: "error" }]
+                            [{ code: @config.codes.sSharedWithoutPersistenceMode.code, path: (str/concat @base ".persistence"), message: (str/concat "Entity '" (object/get @ent "name" "") "' is [shared] but declares no persistence mode — nothing about a shared entity may be inferred."), suggestion: "Add an explicit `persistent: <collection>` or `runtime` persistence tag alongside `[shared]`.", severity: "error" }]
                             []))
                         [])))))
                 (array/flatten (array/map (array/range 0 (array/len @trList)) (fn ti
@@ -53,7 +56,7 @@ orbital OrbLintEntityPersistenceOrbital {
                     (array/flatten (array/map (array/range 0 (array/len @des)) (fn di
                       (let ((de (array/nth @des @di)))
                         (if (and (validate/object @de) (= (object/get @de "shared" false) true) (not (object/has @de "persistence")))
-                          [{ code: "ORB_S_SHARED_WITHOUT_PERSISTENCE_MODE", path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")].dataEntities[" @di "].persistence"), message: (str/concat "Entity '" (object/get @de "name" "") "' is [shared] but declares no persistence mode — nothing about a shared entity may be inferred."), suggestion: "Add an explicit `persistent: <collection>` or `runtime` persistence tag alongside `[shared]`.", severity: "error" }]
+                          [{ code: @config.codes.sSharedWithoutPersistenceMode.code, path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")].dataEntities[" @di "].persistence"), message: (str/concat "Entity '" (object/get @de "name" "") "' is [shared] but declares no persistence mode — nothing about a shared entity may be inferred."), suggestion: "Add an explicit `persistent: <collection>` or `runtime` persistence tag alongside `[shared]`.", severity: "error" }]
                           []))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -74,6 +77,12 @@ orbital OrbLintEntityPersistenceOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintEntityPersistenceCodes = { eMissingCollection: { code: "ORB_E_MISSING_COLLECTION", category: "entity", description: "A persistent entity does not declare a collection name" }, sSharedWithoutPersistenceMode: { code: "ORB_S_SHARED_WITHOUT_PERSISTENCE_MODE", category: "schema", description: "A shared entity declares no persistence mode, and none may be inferred" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintEntityPersistenceCli -> OrbLintEntityPersistenceRun [client] {

@@ -27,6 +27,9 @@ type RedTrait = { name : string, stateMachine : RedMachine, ticks : [FiredTick],
 type RedOrbital = { name : string, traits : [RedTrait] }
 type RedProgram = { orbitals : [RedOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintListenRedundantEmbedRouteCodes = { listenRedundantEmbedRoute : LintCodeDecl }
+
 orbital OrbLintListenRedundantEmbedRouteOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses Fired from "std/behaviors/std-orb-fired-events"
@@ -87,7 +90,7 @@ orbital OrbLintListenRedundantEmbedRouteOrbital {
                                  (not (array/includes (object/get @be @src []) @ev))
                                  (array/some @inl (fn td (let ((tn (object/get @td "name" ""))) (and (array/includes (object/get @bc @tn []) @ev) (or (= @tn @src) (array/includes (object/get (default @chains {}) @tn []) @src))))))))))
                           (fn l (let ((src (object/get (object/get @l "source" {}) "trait" "")) (ev (object/get @l "event" "")))
-                            { code: "ORB_LISTEN_REDUNDANT_EMBED_ROUTE", path: (str/concat "orbitals." (object/get @o "name" "") ".traits." @hn ".listens"), message: (str/concat "listens route " @src "." @ev " -> " @ev " on '" @hn "' is redundant: '" @hn "' embeds '" @src "', so the control's " @ev " already reaches '" @hn "' as its own transition, and the route delivers the same event a second time"), suggestion: (str/concat "delete the `" @src "." @ev " -> " @ev "` listen from '" @hn "'"), severity: "error" })))))))))))))))
+                            { code: @config.codes.listenRedundantEmbedRoute.code, path: (str/concat "orbitals." (object/get @o "name" "") ".traits." @hn ".listens"), message: (str/concat "listens route " @src "." @ev " -> " @ev " on '" @hn "' is redundant: '" @hn "' embeds '" @src "', so the control's " @ev " already reaches '" @hn "' as its own transition, and the route delivers the same event a second time"), suggestion: (str/concat "delete the `" @src "." @ev " -> " @ev "` listen from '" @hn "'"), severity: "error" })))))))))))))))
         (set @entity.haveFired false)
         (set @entity.haveChains false)
         (emit LINT_FINISH { })
@@ -118,6 +121,12 @@ orbital OrbLintListenRedundantEmbedRouteOrbital {
       OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
       OrbEmbedChain.EMBED_CHAINS -> CHAINS_HEARD
     }
+    config {
+      codes : LintListenRedundantEmbedRouteCodes = { listenRedundantEmbedRoute: { code: "ORB_LISTEN_REDUNDANT_EMBED_ROUTE", category: "listen", description: "A listens route is redundant because the embedded trait already receives that event" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintListenRedundantEmbedRouteCli -> OrbLintListenRedundantEmbedRouteRun [client] {

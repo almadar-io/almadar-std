@@ -1,0 +1,21 @@
+app lint-invariants-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint invariants <file>`; see the atom."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintInvariantsSpec {
+  expects trait OrbLintInvariants {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintInvariantsCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintInvariants, OrbLintInvariantsCli
+}

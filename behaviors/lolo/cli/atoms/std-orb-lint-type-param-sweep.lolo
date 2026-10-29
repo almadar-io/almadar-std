@@ -22,6 +22,9 @@ type SweepOrbital = { name : string, expects : [SweepExpect], entity : SweepEnti
 type SweepProgram = { orbitals : [SweepOrbital] }
 type OrbFinding ={ code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintTypeParamSweepCodes = { lintNodeUnchecked : LintCodeDecl , tUnresolvedTypeParam : LintCodeDecl }
+
 orbital OrbLintTypeParamSweepOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -66,10 +69,10 @@ orbital OrbLintTypeParamSweepOrbital {
      (array/flatten (array/map (object/keys @k) (fn key (array/map (default (object/get @k @key) []) (fn h { rel: (str/concat "." @key (let ((s1 (object/get @h "rel" ""))) (if (validate/string @s1) @s1 ""))), ty: (let ((s2 (object/get @h "ty" ""))) (if (validate/string @s2) @s2 "")), nm: "" })))))))
    []))) SweepShape)))
    (if (= @fres null) null @fres))))))
- (if (= @hs null) [{ code: "LINT_NODE_UNCHECKED", path: (object/get @x "w"), message: (str/concat @payload.file ": schema node at " (object/get @x "w") " is not a SweepShape; this rule could not check it"), suggestion: "", severity: "error" }] (array/flatten (array/map @hs (fn h
+ (if (= @hs null) [{ code: @config.codes.lintNodeUnchecked.code, path: (object/get @x "w"), message: (str/concat @payload.file ": schema node at " (object/get @x "w") " is not a SweepShape; this rule could not check it"), suggestion: "", severity: "error" }] (array/flatten (array/map @hs (fn h
  (let ((rel (let ((s1 (object/get @h "rel" ""))) (if (validate/string @s1) @s1 ""))) (ty (let ((s2 (object/get @h "ty" ""))) (if (validate/string @s2) @s2 ""))))
   (let ((path (str/concat (let ((s6 (object/get @x "w"))) (if (validate/string @s6) @s6 "")) (let ((s7 (object/get @x "pre"))) (if (validate/string @s7) @s7 "")) @rel)) (pn (if (and (str/startsWith @ty "[$") (str/endsWith @ty "]")) (str/slice @ty 2 (- (str/len @ty) 1)) (if (str/startsWith @ty "$") (str/slice @ty 1) @ty))))
-   [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "'" @path "' has the unbound type variable '" @pn "' — no trait parameter of that name binds it"), suggestion: "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.", severity: "error" }]))))))))))
+   [{ code: @config.codes.tUnresolvedTypeParam.code, path: @path, message: (str/concat "'" @path "' has the unbound type variable '" @pn "' — no trait parameter of that name binds it"), suggestion: "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.", severity: "error" }]))))))))))
     (let ((licensed (array/flatten (array/map (object/get @orb "expects" []) (fn e (if (and (validate/object @e) (or (= (object/get @e "kind" "") "entity") (and (= (object/get @e "kind" "") "identity") (validate/string (object/get @e "name" null))))) [(object/get @e "name")] []))))))
      (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
       (let ((td (array/nth (object/get @orb "traits" []) @ti)))
@@ -117,26 +120,26 @@ orbital OrbLintTypeParamSweepOrbital {
      (array/flatten (array/map (object/keys @k) (fn key (array/map (default (object/get @k @key) []) (fn h { rel: (str/concat "." @key (let ((s1 (object/get @h "rel" ""))) (if (validate/string @s1) @s1 ""))), ty: (let ((s2 (object/get @h "ty" ""))) (if (validate/string @s2) @s2 "")), nm: "" })))))))
    []))) SweepShape)))
    (if (= @fres null) null @fres))))))
- (if (= @hs null) [{ code: "LINT_NODE_UNCHECKED", path: (object/get @x "w"), message: (str/concat @payload.file ": schema node at " (object/get @x "w") " is not a SweepShape; this rule could not check it"), suggestion: "", severity: "error" }] (array/flatten (array/map @hs (fn h
+ (if (= @hs null) [{ code: @config.codes.lintNodeUnchecked.code, path: (object/get @x "w"), message: (str/concat @payload.file ": schema node at " (object/get @x "w") " is not a SweepShape; this rule could not check it"), suggestion: "", severity: "error" }] (array/flatten (array/map @hs (fn h
  (let ((rel (let ((s1 (object/get @h "rel" ""))) (if (validate/string @s1) @s1 ""))) (ty (let ((s2 (object/get @h "ty" ""))) (if (validate/string @s2) @s2 ""))) (nm (let ((s3 (object/get @h "nm" ""))) (if (validate/string @s3) @s3 ""))))
   (let ((path (str/concat (let ((s16 (object/get @x "w"))) (if (validate/string @s16) @s16 "")) (let ((s17 (object/get @x "pre"))) (if (validate/string @s17) @s17 "")) @rel)) (pn (if (and (str/startsWith @ty "[$") (str/endsWith @ty "]")) (str/slice @ty 2 (- (str/len @ty) 1)) (if (str/startsWith @ty "$") (str/slice @ty 1) @ty))))
    (let ((kds (array/filter @tps (fn p (= (object/get @p "name" "") @pn)))))
  (let ((hasK (> (array/len @kds) 0)) (kind (if (> (array/len @kds) 0) (object/get (array/first @kds) "kind" "") "")))
   (if (= @md "payload") (if (and @df (or (= @ty (quote "@entity")) (= @ty (quote "[@entity]")) (and @hasK (= @kind "Entity")))) []
  (if (and @hasK (= @kind "Entity"))
-  [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "payload field '" @nm "' carries the unresolved type-parameter sentinel '" @ty "' — Entity-kind parameter '" @pn "' has no `linkedEntity` to monomorphize against"), suggestion: "Bind the trait to a `linkedEntity` (directly, via `-> Entity`, or via a call-site rebind) so the parameter has an entity to monomorphize against.", severity: "error" }]
+  [{ code: @config.codes.tUnresolvedTypeParam.code, path: @path, message: (str/concat "payload field '" @nm "' carries the unresolved type-parameter sentinel '" @ty "' — Entity-kind parameter '" @pn "' has no `linkedEntity` to monomorphize against"), suggestion: "Bind the trait to a `linkedEntity` (directly, via `-> Entity`, or via a call-site rebind) so the parameter has an entity to monomorphize against.", severity: "error" }]
   (if @hasK
-   [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "payload field '" @nm "' carries the unresolved type-parameter sentinel '" @ty "' — parameter '" @pn "' was not supplied a `:: " @pn " <arg>` call-site argument"), suggestion: "Supply an explicit call-site argument for this parameter — `:: <param> <arg>` on the trait reference (a primitive type name, or an entity name) — this Type-kind parameter has no default.", severity: "error" }]
-   [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "payload field '" @nm "' carries the unresolved type-parameter sentinel '" @ty "' — the compiler could not monomorphize the parameter"), suggestion: "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.", severity: "error" }])))
+   [{ code: @config.codes.tUnresolvedTypeParam.code, path: @path, message: (str/concat "payload field '" @nm "' carries the unresolved type-parameter sentinel '" @ty "' — parameter '" @pn "' was not supplied a `:: " @pn " <arg>` call-site argument"), suggestion: "Supply an explicit call-site argument for this parameter — `:: <param> <arg>` on the trait reference (a primitive type name, or an entity name) — this Type-kind parameter has no default.", severity: "error" }]
+   [{ code: @config.codes.tUnresolvedTypeParam.code, path: @path, message: (str/concat "payload field '" @nm "' carries the unresolved type-parameter sentinel '" @ty "' — the compiler could not monomorphize the parameter"), suggestion: "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.", severity: "error" }])))
    (if (= @md "sigil") (let ((reason (if (= @ty (quote "@user")) "this orbital declares no identity SHAPE (a bare `expects entity [identity]` declares existence only)" (if (str/startsWith @ty (quote "@payload(")) "the named knob does not hold a literal event name on this trait" (if (str/startsWith @ty (quote "@entity(")) "the named knob does not hold a literal entity name, or that entity is declared nowhere in this schema" (if (or (= @ty (quote "@entity")) (= @ty (quote "[@entity]"))) "the carrying trait declares no `linkedEntity`, so there is no bound row to resolve against" ""))))))
  (if (or (= @reason "") (and @df (or (= @ty (quote "@entity")) (= @ty (quote "[@entity]"))))) []
-  [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "config knob '" @nm "' still carries the unresolved type `" @ty "` — " @reason), suggestion: "A sigil type resolves against something the schema must actually declare: `@payload <knob>` needs the knob typed `event` with a literal default; `@entity <knob>` needs an `entity`-typed knob naming a declared entity; `@user` needs `expects entity <Name> [identity] { … }` with a shape.", severity: "error" }]))
+  [{ code: @config.codes.tUnresolvedTypeParam.code, path: @path, message: (str/concat "config knob '" @nm "' still carries the unresolved type `" @ty "` — " @reason), suggestion: "A sigil type resolves against something the schema must actually declare: `@payload <knob>` needs the knob typed `event` with a literal default; `@entity <knob>` needs an `entity`-typed knob naming a declared entity; `@user` needs `expects entity <Name> [identity] { … }` with a shape.", severity: "error" }]))
     (if (and @df @hasK (= @kind "Entity")) []
  (if (and @hasK (= @kind "Entity"))
-  [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "'" @path "' has the unbound type variable '" @pn "' — Entity-kind parameter '" @pn "' has no `linkedEntity` to bind it"), suggestion: "Bind the trait to a `linkedEntity` (directly, via `-> Entity`, or via a call-site rebind) so the parameter has an entity to monomorphize against.", severity: "error" }]
+  [{ code: @config.codes.tUnresolvedTypeParam.code, path: @path, message: (str/concat "'" @path "' has the unbound type variable '" @pn "' — Entity-kind parameter '" @pn "' has no `linkedEntity` to bind it"), suggestion: "Bind the trait to a `linkedEntity` (directly, via `-> Entity`, or via a call-site rebind) so the parameter has an entity to monomorphize against.", severity: "error" }]
   (if @hasK
-   [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "'" @path "' has the unbound type variable '" @pn "' — parameter '" @pn "' was not supplied a `:: " @pn " <arg>` call-site argument"), suggestion: "Supply an explicit call-site argument for this parameter — `:: <param> <arg>` on the trait reference (a primitive type name, or an entity name) — this Type-kind parameter has no default.", severity: "error" }]
-   [{ code: "ORB_T_UNRESOLVED_TYPE_PARAM", path: @path, message: (str/concat "'" @path "' has the unbound type variable '" @pn "' — no trait parameter of that name binds it"), suggestion: "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.", severity: "error" }]))))))))))))))))))
+   [{ code: @config.codes.tUnresolvedTypeParam.code, path: @path, message: (str/concat "'" @path "' has the unbound type variable '" @pn "' — parameter '" @pn "' was not supplied a `:: " @pn " <arg>` call-site argument"), suggestion: "Supply an explicit call-site argument for this parameter — `:: <param> <arg>` on the trait reference (a primitive type name, or an entity name) — this Type-kind parameter has no default.", severity: "error" }]
+   [{ code: @config.codes.tUnresolvedTypeParam.code, path: @path, message: (str/concat "'" @path "' has the unbound type variable '" @pn "' — no trait parameter of that name binds it"), suggestion: "Bind the trait to a `linkedEntity` so an Entity-kind parameter can default to it, or supply an explicit call-site `:: <param> <arg>` argument.", severity: "error" }]))))))))))))))))))
         [])))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -157,6 +160,12 @@ orbital OrbLintTypeParamSweepOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintTypeParamSweepCodes = { lintNodeUnchecked: { code: "LINT_NODE_UNCHECKED", category: "lint", description: "A lint rule met a schema node of an unexpected shape and could not check it" }, tUnresolvedTypeParam: { code: "ORB_T_UNRESOLVED_TYPE_PARAM", category: "trait", description: "A declaration uses a type variable that no trait parameter binds" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintTypeParamSweepCli -> OrbLintTypeParamSweepRun [client] {

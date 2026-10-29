@@ -1,0 +1,2260 @@
+{
+  "atom": "cli/atoms/std-orb-lint-invariants.lolo",
+  "trait": "OrbLintInvariants",
+  "note": "Cases mirror validate_propositions (composition/expectations.rs): the kernel's program/prove findings become ORB_S_INVARIANT_VIOLATED / ORB_S_INVARIANT_UNPROVED at the first expects entry that carries the proposition, else at the declaration that states it, else at `orbitals`. The proposition prints as its JSON s-expression where the compiler printed the Lisp text. The answers are the program/prove answers of the Rust host (program_host.rs tests: a confirmed counterexample, an undecidable atom, a proved proposition).",
+  "cases": [
+    {
+      "id": "violated-row-invariant-at-the-expects-entry-that-carries-it",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "open",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Order",
+                      "invariants": [
+                        [
+                          ">=",
+                          "@entity.total",
+                          0
+                        ]
+                      ],
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVED",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "verdict": "violated",
+                  "reason": "the evaluator confirmed a counterexample",
+                  "counterexample": {
+                    "payload": {
+                      "total": -1
+                    }
+                  },
+                  "site": "Checkout: open --ADD--> open, effect[0] (create)",
+                  "proposition": {
+                    "kind": "row",
+                    "entity": "Order",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_S_INVARIANT_VIOLATED",
+                      "path": "orbitals[0].expects[0]",
+                      "message": "`@invariant [\">=\",\"@entity.total\",0]` of entity `Order` is broken by Checkout: open --ADD--> open, effect[0] (create) — counterexample, confirmed by the evaluator: {\"payload\":{\"total\":-1}}.",
+                      "suggestion": "Guard the transition so the write keeps the proposition, or change what it writes.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unproved-keeps-the-reason-and-the-possible-counterexample",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "open",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Order",
+                      "invariants": [
+                        [
+                          ">=",
+                          "@entity.total",
+                          0
+                        ]
+                      ],
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVED",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "verdict": "unproved",
+                  "reason": "outside the decidable fragment: (> (str/len null) 0)",
+                  "site": "Checkout: open --ADD--> open, effect[0] (create)",
+                  "proposition": {
+                    "kind": "row",
+                    "entity": "Order",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  },
+                  "counterexample": {
+                    "entity": {
+                      "status": null
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_S_INVARIANT_UNPROVED",
+                      "path": "orbitals[0].expects[0]",
+                      "message": "`@invariant [\">=\",\"@entity.total\",0]` of entity `Order` cannot be proved at Checkout: open --ADD--> open, effect[0] (create): outside the decidable fragment: (> (str/len null) 0) (possible counterexample: {\"entity\":{\"status\":null}}).",
+                      "suggestion": "State the proposition and the guards it needs with comparisons, and/or/not and arithmetic by constants over number, string, boolean and enum fields; write values the prover can follow (a literal record, not a whole-record binding).",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unproved-without-a-counterexample",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "open",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Order",
+                      "invariants": [
+                        [
+                          ">=",
+                          "@entity.total",
+                          0
+                        ]
+                      ],
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVED",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "verdict": "unproved",
+                  "reason": "outside the decidable fragment: (> (str/len null) 0)",
+                  "site": "Checkout: open --ADD--> open, effect[0] (create)",
+                  "proposition": {
+                    "kind": "row",
+                    "entity": "Order",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_S_INVARIANT_UNPROVED",
+                      "path": "orbitals[0].expects[0]",
+                      "message": "`@invariant [\">=\",\"@entity.total\",0]` of entity `Order` cannot be proved at Checkout: open --ADD--> open, effect[0] (create): outside the decidable fragment: (> (str/len null) 0).",
+                      "suggestion": "State the proposition and the guards it needs with comparisons, and/or/not and arithmetic by constants over number, string, boolean and enum fields; write values the prover can follow (a literal record, not a whole-record binding).",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "row-invariant-written-on-the-real-entity-is-reported-at-the-entity",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "invariants": [
+                      [
+                        ">=",
+                        "@entity.total",
+                        0
+                      ]
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "open",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVED",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "verdict": "violated",
+                  "reason": "the evaluator confirmed a counterexample",
+                  "counterexample": {
+                    "payload": {
+                      "total": -1
+                    }
+                  },
+                  "site": "Checkout: open --ADD--> open, effect[0] (create)",
+                  "proposition": {
+                    "kind": "row",
+                    "entity": "Order",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_S_INVARIANT_VIOLATED",
+                      "path": "orbitals[0].entity",
+                      "message": "`@invariant [\">=\",\"@entity.total\",0]` of entity `Order` is broken by Checkout: open --ADD--> open, effect[0] (create) — counterexample, confirmed by the evaluator: {\"payload\":{\"total\":-1}}.",
+                      "suggestion": "Guard the transition so the write keeps the proposition, or change what it writes.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "row-invariant-on-an-auxiliary-entity",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ],
+                    "invariants": [
+                      [
+                        "<",
+                        1,
+                        2
+                      ]
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "open",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Line",
+                      "persistence": "runtime",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        }
+                      ],
+                      "invariants": [
+                        [
+                          ">=",
+                          "@entity.total",
+                          0
+                        ]
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVED",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "verdict": "violated",
+                  "reason": "the evaluator confirmed a counterexample",
+                  "counterexample": {
+                    "payload": {
+                      "total": -1
+                    }
+                  },
+                  "site": "Checkout: open --ADD--> open, effect[0] (create)",
+                  "proposition": {
+                    "kind": "row",
+                    "entity": "Line",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_S_INVARIANT_VIOLATED",
+                      "path": "orbitals[0].auxiliaryEntities[0]",
+                      "message": "`@invariant [\">=\",\"@entity.total\",0]` of entity `Line` is broken by Checkout: open --ADD--> open, effect[0] (create) — counterexample, confirmed by the evaluator: {\"payload\":{\"total\":-1}}.",
+                      "suggestion": "Guard the transition so the write keeps the proposition, or change what it writes.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "state-holds-at-the-expects-entry",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "open",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "state",
+                      "traitName": "Checkout",
+                      "state": "paid",
+                      "holds": [
+                        ">=",
+                        "@entity.total",
+                        0
+                      ],
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVED",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "verdict": "violated",
+                  "reason": "the evaluator confirmed a counterexample",
+                  "counterexample": {
+                    "payload": {
+                      "total": -1
+                    }
+                  },
+                  "site": "Checkout: tick in paid",
+                  "proposition": {
+                    "kind": "state",
+                    "trait": "Checkout",
+                    "state": "paid",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_S_INVARIANT_VIOLATED",
+                      "path": "orbitals[0].expects[0]",
+                      "message": "`state paid @holds [\">=\",\"@entity.total\",0]` of trait `Checkout` is broken by Checkout: tick in paid — counterexample, confirmed by the evaluator: {\"payload\":{\"total\":-1}}.",
+                      "suggestion": "Guard the transition so the write keeps the proposition, or change what it writes.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "state-holds-written-on-the-real-state-is-reported-at-the-state",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid",
+                            "holds": [
+                              ">=",
+                              "@entity.total",
+                              0
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "open",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVED",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "verdict": "violated",
+                  "reason": "the evaluator confirmed a counterexample",
+                  "counterexample": {
+                    "payload": {
+                      "total": -1
+                    }
+                  },
+                  "site": "Checkout: tick in paid",
+                  "proposition": {
+                    "kind": "state",
+                    "trait": "Checkout",
+                    "state": "paid",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_S_INVARIANT_VIOLATED",
+                      "path": "orbitals[0].traits[0].stateMachine.states[1]",
+                      "message": "`state paid @holds [\">=\",\"@entity.total\",0]` of trait `Checkout` is broken by Checkout: tick in paid — counterexample, confirmed by the evaluator: {\"payload\":{\"total\":-1}}.",
+                      "suggestion": "Guard the transition so the write keeps the proposition, or change what it writes.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "transition-ensures-at-the-expects-entry",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "open",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "transition",
+                      "traitName": "Checkout",
+                      "from": "open",
+                      "event": "PAY",
+                      "to": "paid",
+                      "ensures": [
+                        [
+                          ">=",
+                          "@entity.total",
+                          0
+                        ]
+                      ],
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVED",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "verdict": "violated",
+                  "reason": "the evaluator confirmed a counterexample",
+                  "counterexample": {
+                    "payload": {
+                      "total": -1
+                    }
+                  },
+                  "site": "Checkout: open --PAY--> paid",
+                  "proposition": {
+                    "kind": "transition",
+                    "trait": "Checkout",
+                    "from": "open",
+                    "event": "PAY",
+                    "to": "paid",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_S_INVARIANT_VIOLATED",
+                      "path": "orbitals[0].expects[0]",
+                      "message": "`open --PAY--> paid @ensures [\">=\",\"@entity.total\",0]` of trait `Checkout` is broken by Checkout: open --PAY--> paid — counterexample, confirmed by the evaluator: {\"payload\":{\"total\":-1}}.",
+                      "suggestion": "Guard the transition so the write keeps the proposition, or change what it writes.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "transition-ensures-written-on-the-real-transition-with-a-from-list",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": [
+                              "open",
+                              "paid"
+                            ],
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [],
+                            "ensures": [
+                              [
+                                ">=",
+                                "@entity.total",
+                                0
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVED",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "verdict": "violated",
+                  "reason": "the evaluator confirmed a counterexample",
+                  "counterexample": {
+                    "payload": {
+                      "total": -1
+                    }
+                  },
+                  "site": "Checkout: open --PAY--> paid",
+                  "proposition": {
+                    "kind": "transition",
+                    "trait": "Checkout",
+                    "from": "open",
+                    "event": "PAY",
+                    "to": "paid",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_S_INVARIANT_VIOLATED",
+                      "path": "orbitals[0].traits[0].stateMachine.transitions[0]",
+                      "message": "`open --PAY--> paid @ensures [\">=\",\"@entity.total\",0]` of trait `Checkout` is broken by Checkout: open --PAY--> paid — counterexample, confirmed by the evaluator: {\"payload\":{\"total\":-1}}.",
+                      "suggestion": "Guard the transition so the write keeps the proposition, or change what it writes.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-transition-whose-from-is-not-the-propositions-is-not-its-site",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "paid",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": [],
+                            "ensures": [
+                              [
+                                ">=",
+                                "@entity.total",
+                                0
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVED",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "verdict": "violated",
+                  "reason": "the evaluator confirmed a counterexample",
+                  "counterexample": {
+                    "payload": {
+                      "total": -1
+                    }
+                  },
+                  "site": "Checkout: open --PAY--> paid",
+                  "proposition": {
+                    "kind": "transition",
+                    "trait": "Checkout",
+                    "from": "open",
+                    "event": "PAY",
+                    "to": "paid",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_S_INVARIANT_VIOLATED",
+                      "path": "orbitals",
+                      "message": "`open --PAY--> paid @ensures [\">=\",\"@entity.total\",0]` of trait `Checkout` is broken by Checkout: open --PAY--> paid — counterexample, confirmed by the evaluator: {\"payload\":{\"total\":-1}}.",
+                      "suggestion": "Guard the transition so the write keeps the proposition, or change what it writes.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-proposition-no-declaration-carries-is-reported-at-the-orbitals",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "open",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": []
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVED",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "verdict": "violated",
+                  "reason": "the evaluator confirmed a counterexample",
+                  "counterexample": {
+                    "payload": {
+                      "total": -1
+                    }
+                  },
+                  "site": "Checkout: open --ADD--> open, effect[0] (create)",
+                  "proposition": {
+                    "kind": "row",
+                    "entity": "Order",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_S_INVARIANT_VIOLATED",
+                      "path": "orbitals",
+                      "message": "`@invariant [\">=\",\"@entity.total\",0]` of entity `Order` is broken by Checkout: open --ADD--> open, effect[0] (create) — counterexample, confirmed by the evaluator: {\"payload\":{\"total\":-1}}.",
+                      "suggestion": "Guard the transition so the write keeps the proposition, or change what it writes.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-finding-is-clean",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "open",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Order",
+                      "invariants": [
+                        [
+                          ">=",
+                          "@entity.total",
+                          0
+                        ]
+                      ],
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVED",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-file-the-host-cannot-resolve-is-skipped",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "open",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Order",
+                      "invariants": [
+                        [
+                          ">=",
+                          "@entity.total",
+                          0
+                        ]
+                      ],
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVE_FAILED",
+          "from": "proving",
+          "payload": {
+            "error": "cannot resolve"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "two-findings-are-both-reported-in-order",
+      "steps": [
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Shop",
+                  "entity": {
+                    "name": "Order",
+                    "collection": "orders",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Checkout",
+                      "linkedEntity": "Order",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "open",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "paid"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "open",
+                            "to": "paid",
+                            "event": "PAY",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "Order",
+                      "invariants": [
+                        [
+                          ">=",
+                          "@entity.total",
+                          0
+                        ]
+                      ],
+                      "strict": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/prove"
+              }
+            ],
+            "state": "proving"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_PROVED",
+          "from": "proving",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "verdict": "violated",
+                  "reason": "the evaluator confirmed a counterexample",
+                  "counterexample": {
+                    "payload": {
+                      "total": -1
+                    }
+                  },
+                  "site": "Checkout: open --ADD--> open, effect[0] (create)",
+                  "proposition": {
+                    "kind": "row",
+                    "entity": "Order",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  }
+                },
+                {
+                  "verdict": "unproved",
+                  "reason": "why",
+                  "site": "Checkout: open --ADD--> open, effect[0] (create)",
+                  "proposition": {
+                    "kind": "row",
+                    "entity": "Order",
+                    "expr": [
+                      ">=",
+                      "@entity.total",
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ],
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintInvariants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "invariants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_S_INVARIANT_VIOLATED",
+                      "path": "orbitals[0].expects[0]",
+                      "message": "`@invariant [\">=\",\"@entity.total\",0]` of entity `Order` is broken by Checkout: open --ADD--> open, effect[0] (create) — counterexample, confirmed by the evaluator: {\"payload\":{\"total\":-1}}.",
+                      "suggestion": "Guard the transition so the write keeps the proposition, or change what it writes.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_INVARIANT_UNPROVED",
+                      "path": "orbitals[0].expects[0]",
+                      "message": "`@invariant [\">=\",\"@entity.total\",0]` of entity `Order` cannot be proved at Checkout: open --ADD--> open, effect[0] (create): why.",
+                      "suggestion": "State the proposition and the guards it needs with comparisons, and/or/not and arithmetic by constants over number, string, boolean and enum fields; write values the prover can follow (a literal record, not a whole-record binding).",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

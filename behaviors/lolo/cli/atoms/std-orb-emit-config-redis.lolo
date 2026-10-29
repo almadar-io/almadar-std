@@ -9,6 +9,9 @@ type EmitConfigItem = { id : string!, path : string!, emit : Map string EmitConf
 
 type EmitConfigResult = { id : string!, findings : [OrbFinding]! }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type EmitConfigRedisCodes = { effEmitKeyInvalid : LintCodeDecl , effEmitInvalidName : LintCodeDecl , effEmitUndeclaredEvent : LintCodeDecl }
+
 orbital OrbEmitConfigRedisOrbital {
   entity OrbEmitConfigRedisRun [runtime] {
     id : string!
@@ -24,13 +27,13 @@ orbital OrbEmitConfigRedisOrbital {
           { id: (object/get @it "id"), findings: (array/flatten (array/map (object/entries (object/get @it "emit")) (fn kv
             (let ((key (array/nth @kv 0)) (v (array/nth @kv 1)) (p (object/get @it "path")) (allowed (object/get @it "allowedKeys")))
               (if (not (array/includes @allowed @key))
-                [{ code: "ORB_EFF_EMIT_KEY_INVALID", path: @p, message: (str/concat "emit." @key " is not supported on this operator (allowed: " (str/join @allowed ", ") ")"), suggestion: "Remove the invalid key or use a different operator that supports it", severity: "error" }]
+                [{ code: @config.codes.effEmitKeyInvalid.code, path: @p, message: (str/concat "emit." @key " is not supported on this operator (allowed: " (str/join @allowed ", ") ")"), suggestion: "Remove the invalid key or use a different operator that supports it", severity: "error" }]
                 (if (not (validate/string @v))
-                  [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: (str/concat "emit." @key " must be a string event name"), suggestion: "e.g. emit.success = 'PATIENT_LOADED'", severity: "error" }]
+                  [{ code: @config.codes.effEmitInvalidName.code, path: @p, message: (str/concat "emit." @key " must be a string event name"), suggestion: "e.g. emit.success = 'PATIENT_LOADED'", severity: "error" }]
                   (if (not (validate/pattern @v "^[A-Za-z][A-Za-z0-9_]*$"))
-                    [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: (str/concat "emit." @key " = '" @v "' is not a valid identifier"), suggestion: "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')", severity: "error" }]
+                    [{ code: @config.codes.effEmitInvalidName.code, path: @p, message: (str/concat "emit." @key " = '" @v "' is not a valid identifier"), suggestion: "Declare an `Event<T>` type alias and reference its name (e.g. 'PatientLoaded' or 'PATIENT_LOADED')", severity: "error" }]
                     (if (and (object/get @it "checkDeclared") (not (array/includes (object/get @it "declared") @v)))
-                      [{ code: "ORB_EFF_EMIT_UNDECLARED_EVENT", path: @p, message: (str/concat "emit." @key " = '" @v "' is not declared in the trait's emits array"), suggestion: "Declare the event in the trait's `emits` block with its payload shape", severity: "error" }]
+                      [{ code: @config.codes.effEmitUndeclaredEvent.code, path: @p, message: (str/concat "emit." @key " = '" @v "' is not declared in the trait's emits array"), suggestion: "Declare the event in the trait's `emits` block with its payload shape", severity: "error" }]
                       [])))))))) })) })
     }
 
@@ -45,6 +48,12 @@ orbital OrbEmitConfigRedisOrbital {
         @description "Check each item's emit object against its allowed keys and, when asked, the events its trait declares."
         @tier "internal"
     }
+    config {
+      codes : EmitConfigRedisCodes = { effEmitKeyInvalid: { code: "ORB_EFF_EMIT_KEY_INVALID", category: "effect", description: "An emit config carries a key that the operator does not support" }, effEmitInvalidName: { code: "ORB_EFF_EMIT_INVALID_NAME", category: "effect", description: "The event name inside an emit effect is not a valid string event name" }, effEmitUndeclaredEvent: { code: "ORB_EFF_EMIT_UNDECLARED_EVENT", category: "effect", description: "An event named in emit is not declared in the trait's emits array" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   page boot as OrbEmitConfigRedisOrbitalStart -> OrbEmitConfigRedis

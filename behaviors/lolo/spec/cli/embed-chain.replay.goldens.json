@@ -2260,6 +2260,315 @@
      "0-2-0": []
     }
    }
+  },
+  {
+   "id": "embedders-are-the-transitive-closure-of-every-referrer",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Mid"
+            }
+           }
+          },
+          {
+           "name": "Mid",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Leaf"
+            }
+           }
+          },
+          {
+           "name": "Leaf",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "Host": [],
+           "Mid": [
+            "Host"
+           ],
+           "Leaf": [
+            "Mid",
+            "Host"
+           ]
+          }
+         ],
+         "embedders": [
+          {
+           "Host": [],
+           "Mid": [
+            "Host"
+           ],
+           "Leaf": [
+            "Mid",
+            "Host"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "roots": {
+     "0-0": [
+      "@trait"
+     ],
+     "0-0-0": [],
+     "0-1": [
+      "@trait"
+     ],
+     "0-1-0": [],
+     "0-2": [],
+     "0-2-0": []
+    }
+   }
+  },
+  {
+   "id": "a-child-referenced-by-two-traits-has-both-as-embedders",
+   "steps": [
+    {
+     "trait": "OrbEmbedChain",
+     "event": "EMBED_INPUT_HEARD",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Host",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Leaf"
+            }
+           }
+          },
+          {
+           "name": "Mid",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "config": {
+            "body": {
+             "type": "string",
+             "default": "@trait.Leaf"
+            }
+           }
+          },
+          {
+           "name": "Leaf",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "EMBED_CHAINS",
+        "payload": {
+         "scope": "",
+         "chains": [
+          {
+           "Host": [],
+           "Mid": [],
+           "Leaf": [
+            "Host"
+           ]
+          }
+         ],
+         "embedders": [
+          {
+           "Host": [],
+           "Mid": [],
+           "Leaf": [
+            "Host",
+            "Mid"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "roots": {
+     "0-0": [
+      "@trait"
+     ],
+     "0-0-0": [],
+     "0-1": [
+      "@trait"
+     ],
+     "0-1-0": [],
+     "0-2": [],
+     "0-2-0": []
+    }
+   }
   }
  ]
 }

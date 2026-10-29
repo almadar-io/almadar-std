@@ -13,6 +13,9 @@ type DuplicateAliasUse = { as : string }
 type DuplicateAliasOrbital = { name : string, uses : [DuplicateAliasUse] }
 type DuplicateAliasProgram = { orbitals : [DuplicateAliasOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintDuplicateUseAliasCodes = { oDuplicateUseAlias : LintCodeDecl }
+
 orbital OrbLintDuplicateUseAliasOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -36,7 +39,7 @@ orbital OrbLintDuplicateUseAliasOrbital {
                 (if (= @hit null)
                   []
                   (let ((where (str/concat "orbitals[name=" (object/get @o "name" "") "].uses[" @hit "]")))
-                    [{ code: "ORB_O_DUPLICATE_USE_ALIAS", path: @where, message: (str/concat "Duplicate import alias '" (array/nth @names @hit) "' at " @where " — each `uses` alias names one import"), suggestion: "", severity: "error" }])))))))))
+                    [{ code: @config.codes.oDuplicateUseAlias.code, path: @where, message: (str/concat "Duplicate import alias '" (array/nth @names @hit) "' at " @where " — each `uses` alias names one import"), suggestion: "", severity: "error" }])))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "duplicate-use-alias", scope: @entity.scope, findings: @entity.findings })
@@ -56,6 +59,12 @@ orbital OrbLintDuplicateUseAliasOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintDuplicateUseAliasCodes = { oDuplicateUseAlias: { code: "ORB_O_DUPLICATE_USE_ALIAS", category: "orbital", description: "Two uses imports share the same alias" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintDuplicateUseAliasCli -> OrbLintDuplicateUseAliasRun [client] {

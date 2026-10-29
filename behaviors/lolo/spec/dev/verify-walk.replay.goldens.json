@@ -48,7 +48,7 @@
   {
    "id": "viewer-and-owner-map-forwarded-to-planner",
    "entity": {
-    "program": "{\"orbitals\": [{\"name\": \"O\", \"entity\": {\"name\": \"Item\", \"fields\": []}, \"traits\": [{\"name\": \"T\", \"linkedEntity\": \"Item\", \"stateMachine\": {\"transitions\": [{\"from\": \"a\", \"to\": \"b\", \"event\": \"GO\", \"effects\": []}]}}]}]}",
+    "program": "{\"orbitals\": [{\"name\": \"O\", \"entity\": {\"name\": \"Item\", \"fields\": []}, \"traits\": [{\"name\": \"T\", \"linkedEntity\": \"Item\", \"stateMachine\": {\"transitions\": [{\"from\": \"a\", \"to\": \"b\", \"event\": \"GO\", \"effects\": []}], \"states\": [{\"name\": \"a\", \"isInitial\": true}, {\"name\": \"b\"}]}}]}]}",
     "viewer": {
      "id": "viewer-7"
     },
@@ -99,6 +99,15 @@
                  "to": "b",
                  "event": "GO",
                  "effects": []
+                }
+               ],
+               "states": [
+                {
+                 "name": "a",
+                 "isInitial": true
+                },
+                {
+                 "name": "b"
                 }
                ]
               }
@@ -206,6 +215,164 @@
         "event": "WALK_FAILED",
         "payload": {
          "error": "the program could not be read as a machine"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-walk-without-a-viewer-still-asks-the-planner",
+   "entity": {
+    "program": "{\"orbitals\": [{\"name\": \"O\", \"entity\": {\"name\": \"Item\", \"fields\": []}, \"traits\": [{\"name\": \"T\", \"linkedEntity\": \"Item\", \"stateMachine\": {\"transitions\": [{\"from\": \"a\", \"to\": \"b\", \"event\": \"GO\", \"effects\": []}], \"states\": [{\"name\": \"a\", \"isInitial\": true}, {\"name\": \"b\"}]}}]}]}",
+    "owners": {}
+   },
+   "steps": [
+    {
+     "from": "machine",
+     "event": "WALK_MACHINE_ANSWERED",
+     "payload": {
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WALK_PLAN_REQUEST",
+        "payload": {
+         "program": {
+          "orbitals": [
+           {
+            "name": "O",
+            "entity": {
+             "name": "Item",
+             "fields": []
+            },
+            "traits": [
+             {
+              "name": "T",
+              "linkedEntity": "Item",
+              "stateMachine": {
+               "transitions": [
+                {
+                 "from": "a",
+                 "to": "b",
+                 "event": "GO",
+                 "effects": []
+                }
+               ],
+               "states": [
+                {
+                 "name": "a",
+                 "isInitial": true
+                },
+                {
+                 "name": "b"
+                }
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         },
+         "rows": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "guarded": false,
+           "payload": []
+          }
+         ],
+         "viewer": null,
+         "owners": {}
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-refused-plan-fails-the-walk",
+   "steps": [
+    {
+     "from": "planning",
+     "event": "WALK_PLAN_REFUSED",
+     "payload": {
+      "error": "verify-plan: no initial state declared for trait O.T"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WALK_FAILED",
+        "payload": {
+         "error": "verify-plan: no initial state declared for trait O.T"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-walk-started-without-a-viewer-asks-the-planner-from-the-start-event",
+   "note": "the start event itself sets the entity viewer to null; seeding the entity instead of starting the walk skips that write, so a null into a non-optional WALK_PLAN_REQUEST field is only seen on this chain (G-STD-184)",
+   "steps": [
+    {
+     "event": "VERIFY_WALK_START",
+     "payload": {
+      "file": "p.orb"
+     }
+    },
+    {
+     "from": "machine",
+     "event": "WALK_MACHINE_ANSWERED",
+     "entity": {
+      "program": "{\"orbitals\": [{\"name\": \"O\", \"entity\": {\"name\": \"Item\", \"fields\": []}, \"traits\": [{\"name\": \"T\", \"linkedEntity\": \"Item\", \"stateMachine\": {\"states\": [{\"name\": \"a\", \"isInitial\": true}, {\"name\": \"b\"}], \"transitions\": [{\"from\": \"a\", \"to\": \"b\", \"event\": \"GO\", \"effects\": []}]}}]}]}"
+     },
+     "payload": {
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WALK_PLAN_REQUEST",
+        "payload": {
+         "rows": [
+          {
+           "orbital": "O",
+           "trait": "T",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "guarded": false,
+           "payload": []
+          }
+         ]
         }
        }
       ]

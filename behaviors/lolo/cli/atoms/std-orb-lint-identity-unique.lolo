@@ -13,6 +13,9 @@ type IdentityEntity = { name : string, identity : boolean }
 type IdentityOrbital = { entity : IdentityEntity, auxiliaryEntities : [IdentityEntity] }
 type IdentityProgram = { orbitals : [IdentityOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintIdentityUniqueCodes = { sIdentityNotUnique : LintCodeDecl }
+
 orbital OrbLintIdentityUniqueOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -37,7 +40,7 @@ orbital OrbLintIdentityUniqueOrbital {
                         (array/map (array/filter (object/get (array/nth @orbitals @oi) "auxiliaryEntities" []) (fn en (and (validate/object @en) (object/get @en "identity" false)))) (fn en (object/get @en "name"))))))))
             (let ((names (array/unique (if (> (array/len @prim) 0) @prim @aux))))
               (if (> (array/len @names) 1)
-                [{ code: "ORB_S_IDENTITY_NOT_UNIQUE", path: "orbitals", message: (str/concat (array/len @names) " entities are tagged [identity]: " (str/join (array/sort @names) ", ") ". `@user` resolves to a single viewer, so more than one declaration makes every `@user.x` ambiguous."), suggestion: "Keep exactly one [identity] entity and reference it from the other orbitals (`ownerId : <IdentityEntity>`).", severity: "error" }]
+                [{ code: @config.codes.sIdentityNotUnique.code, path: "orbitals", message: (str/concat (array/len @names) " entities are tagged [identity]: " (str/join (array/sort @names) ", ") ". `@user` resolves to a single viewer, so more than one declaration makes every `@user.x` ambiguous."), suggestion: "Keep exactly one [identity] entity and reference it from the other orbitals (`ownerId : <IdentityEntity>`).", severity: "error" }]
                 [])))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -58,6 +61,12 @@ orbital OrbLintIdentityUniqueOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintIdentityUniqueCodes = { sIdentityNotUnique: { code: "ORB_S_IDENTITY_NOT_UNIQUE", category: "schema", description: "More than one entity is tagged identity, making every @user field reference ambiguous" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintIdentityUniqueCli -> OrbLintIdentityUniqueRun [client] {

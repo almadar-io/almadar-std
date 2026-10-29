@@ -1,0 +1,21 @@
+app lint-finding-codes-spec [
+  version: "1.0.0",
+  description: "std-orb-lint-finding-codes - the `orb lint finding-codes <file>` command: a lint rule (a trait with a `codes` knob) names a finding code only from its declared codes record. Clean answers `lint finding-codes: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintFindingCodesSpec {
+  expects trait OrbLintFindingCodes {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintFindingCodesCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintFindingCodes, OrbLintFindingCodesCli
+}

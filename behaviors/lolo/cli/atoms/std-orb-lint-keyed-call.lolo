@@ -18,6 +18,9 @@ type KcOrbital = { name : string, traits : [KcVal] }
 type KcProgram = { orbitals : [KcOrbital] }
 type KcHeads = [string]
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintKeyedCallCodes = { effectOptionDropped : LintCodeDecl , callServiceKeyDuplicate : LintCodeDecl }
+
 orbital OrbLintKeyedCallOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -62,7 +65,7 @@ orbital OrbLintKeyedCallOrbital {
                           [(array/first @n)]
                           [])
                         (if (validate/array @n) (array/flatten (array/filter @k (fn c (!= @c null)))) (if (validate/object @n) (array/flatten (array/map (object/keys @k) (fn key (default (object/get @k @key []) [])))) [])))) KcVal) []) KcHeads) []) (fn head
-                    { code: "ORB_EFFECT_OPTION_DROPPED", path: (object/get @pl "path"), message: (str/concat "`" @head "` carries no `key`, so its completion would never echo the `key` its options declare"), suggestion: (str/concat "Remove `key` from the `" @head "` options, or tell the arm apart by its event"), severity: "error" })))))
+                    { code: @config.codes.effectOptionDropped.code, path: (object/get @pl "path"), message: (str/concat "`" @head "` carries no `key`, so its completion would never echo the `key` its options declare"), suggestion: (str/concat "Remove `key` from the `" @head "` options, or tell the arm apart by its event"), severity: "error" })))))
                 (array/flatten (array/map @sites (fn s
                   (let ((trans (default (object/get (object/get (object/get @s "trait") "stateMachine") "transitions" []) [])))
                     (array/flatten (array/map (array/range 0 (array/len @trans)) (fn i
@@ -79,7 +82,7 @@ orbital OrbLintKeyedCallOrbital {
                             (let ((k (array/nth @keys @j)))
                               (if (or (= @k null) (not (array/includes (array/slice @keys 0 @j) @k)))
                                 []
-                                [{ code: "ORB_CALL_SERVICE_KEY_DUPLICATE", path: (str/concat (object/get @s "site") ".stateMachine.transitions[" @i "].effects[" @j "]"), message: (str/concat "call-service key '" @k "' is already used by another call in this transition"), suggestion: "Give each call-service of a transition its own key", severity: "error" }])))))))))))))))))))
+                                [{ code: @config.codes.callServiceKeyDuplicate.code, path: (str/concat (object/get @s "site") ".stateMachine.transitions[" @i "].effects[" @j "]"), message: (str/concat "call-service key '" @k "' is already used by another call in this transition"), suggestion: "Give each call-service of a transition its own key", severity: "error" }])))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "keyed-call", scope: @entity.scope, findings: @entity.findings })
@@ -99,6 +102,12 @@ orbital OrbLintKeyedCallOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintKeyedCallCodes = { effectOptionDropped: { code: "ORB_EFFECT_OPTION_DROPPED", category: "effect", description: "An effect carries options that depend on a key echo, but the effect has no key so the options are dropped" }, callServiceKeyDuplicate: { code: "ORB_CALL_SERVICE_KEY_DUPLICATE", category: "effect", description: "Two call-service effects in one transition use the same key" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintKeyedCallCli -> OrbLintKeyedCallRun [client] {

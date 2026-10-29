@@ -29,6 +29,9 @@ type ExOrbital = { name : string, spec : boolean, expects : [ExExpect], entity :
 type ExProgram = { orbitals : [ExOrbital] }
 type BwR = { lok : boolean, les : [string], eok : boolean, ees : [string], bok : boolean, bes : [string], aok : boolean, aes : [string], rok : boolean, res : [string], arr : boolean, head : string, hstr : boolean }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintExpectationPersistentUnwrittenCodes = { sExpectationUnsatisfied : LintCodeDecl }
+
 orbital OrbLintExpectationPersistentUnwrittenOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -105,7 +108,7 @@ orbital OrbLintExpectationPersistentUnwrittenOrbital {
             (let ((dp (if (= @a "create") 2 3)))
               [{ a: @a, e: @en, has: (> (array/len @tp) @dp), d: (as (if (> (array/len @tp) @dp) (array/nth @tp @dp) null) LObj) }]))))))) (fn w (= (object/get @w "e") (object/get @x "name" "")))))))
         (and (array/includes ["create", "upsert", "update"] @a1) (= (default (as (if (> (array/len @l) 2) (array/nth @l 2) null) LStr) "") (object/get @x "name" "")))))))))))))
-  [{ code: "ORB_S_EXPECTATION_UNSATISFIED", path: @base, message: (str/concat "`" @on "` expects entity `" (object/get @x "name" "") "` to be persisted, but nothing in this program provides it — no trait in the program writes `" (object/get @x "name" "") "` with a `persist create|update|upsert`."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }]
+  [{ code: @config.codes.sExpectationUnsatisfied.code, path: @base, message: (str/concat "`" @on "` expects entity `" (object/get @x "name" "") "` to be persisted, but nothing in this program provides it — no trait in the program writes `" (object/get @x "name" "") "` with a `persist create|update|upsert`."), suggestion: "Provide it in an orbital of this program (give the providing import that name, or declare it here).", severity: "error" }]
   [])))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -126,6 +129,12 @@ orbital OrbLintExpectationPersistentUnwrittenOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintExpectationPersistentUnwrittenCodes = { sExpectationUnsatisfied: { code: "ORB_S_EXPECTATION_UNSATISFIED", category: "schema", description: "An orbital expects an entity, trait, event, or config default that nothing in the program provides" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintExpectationPersistentUnwrittenCli -> OrbLintExpectationPersistentUnwrittenRun [client] {

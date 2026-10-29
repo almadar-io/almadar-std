@@ -26,6 +26,9 @@ type BfHit = { rel : string, s : string }
 type BfRoot = { x : BfShape?, w : string!, c : string!, ev : string!, pk : string!, lk : string! }
 type BfAcc = { lv : [BfField], miss : string, stop : boolean }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintBindingFieldsCodes = { bindingPayloadFieldUndeclared : LintCodeDecl , bindingEntityFieldNotFound : LintCodeDecl }
+
 orbital OrbLintBindingFieldsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
@@ -150,8 +153,8 @@ orbital OrbLintBindingFieldsOrbital {
                                (if (= @props null) { lv: (object/get @acc "lv"), miss: "", stop: true } { lv: @props, miss: "", stop: false })))))))))
             (if (= (object/get @res "miss") "")
               @nof
-              [{ code: "ORB_BINDING_PAYLOAD_FIELD_UNDECLARED", path: @p, message: (str/concat "Payload field '" (object/get @res "miss") "' is not declared in event '" @ev "' payload schema"), suggestion: (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "Add { \"name\": \"" (object/get @res "miss") "\", \"type\": \"...\" } to the event's payload array")), severity: "error" }]))
-          [{ code: "ORB_BINDING_PAYLOAD_FIELD_UNDECLARED", path: @p, message: (str/concat "Event '" @ev "' uses @payload." @f0 " (.lolo spelling: `?" @f0 "` or `@payload." @f0 "`) but has no payload schema defined"), suggestion: (if (array/includes ["INIT", "LOAD", "$MOUNT"] @ev) (str/concat "'" @ev "' is a lifecycle event and carries NO payload — @payload." @f0 " (written `?" @f0 "` in .lolo) can never resolve here. Read entity/config state instead, or move this logic to the transition for the event that actually delivers '" @f0 "'.") (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "declare the field in the event's `emits` payload block: `" @ev " -> external { " @f0 " : <type> }` — an event read via @payload." @f0 " must declare that field"))), severity: "error" }])))))
+              [{ code: @config.codes.bindingPayloadFieldUndeclared.code, path: @p, message: (str/concat "Payload field '" (object/get @res "miss") "' is not declared in event '" @ev "' payload schema"), suggestion: (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "Add { \"name\": \"" (object/get @res "miss") "\", \"type\": \"...\" } to the event's payload array")), severity: "error" }]))
+          [{ code: @config.codes.bindingPayloadFieldUndeclared.code, path: @p, message: (str/concat "Event '" @ev "' uses @payload." @f0 " (.lolo spelling: `?" @f0 "` or `@payload." @f0 "`) but has no payload schema defined"), suggestion: (if (array/includes ["INIT", "LOAD", "$MOUNT"] @ev) (str/concat "'" @ev "' is a lifecycle event and carries NO payload — @payload." @f0 " (written `?" @f0 "` in .lolo) can never resolve here. Read entity/config state instead, or move this logic to the transition for the event that actually delivers '" @f0 "'.") (if @hybrid (str/concat "the `?` sigil already denotes the event payload — `?payload." @restPath "` lowers to `@payload.payload." @restPath "`; write `?" @restPath "` or `@payload." @restPath "` instead") (str/concat "declare the field in the event's `emits` payload block: `" @ev " -> external { " @f0 " : <type> }` — an event read via @payload." @f0 " must declare that field"))), severity: "error" }])))))
                   @nof)
                 (let ((s2 (if (and (= @c "k") (str/startsWith @s @fP)) (str/concat @eP (str/slice @s 12)) @s)))
   (if (str/startsWith @s2 @eP)
@@ -159,7 +162,7 @@ orbital OrbLintBindingFieldsOrbital {
           (lent (object/get @defIdx (object/get @x "lk") null)))
       (if (or (= @fld "") (array/includes ["id", "createdAt", "updatedAt"] @fld) (= @lent null) (array/includes (object/get @lent "fields" []) @fld))
         @nof
-        [{ code: "ORB_BINDING_ENTITY_FIELD_NOT_FOUND", path: @p, message: (str/concat (quote "@") "entity." @fld " — field '" @fld "' not found on entity '" (object/get @lent "name") "'"), suggestion: (str/concat "Add field '" @fld "' to entity '" (object/get @lent "name") "' or fix the binding path"), severity: "error" }]))
+        [{ code: @config.codes.bindingEntityFieldNotFound.code, path: @p, message: (str/concat (quote "@") "entity." @fld " — field '" @fld "' not found on entity '" (object/get @lent "name") "'"), suggestion: (str/concat "Add field '" @fld "' to entity '" (object/get @lent "name") "' or fix the binding path"), severity: "error" }]))
     (let ((parts (str/split (str/slice @s2 1) ".")))
       (if (< (array/len @parts) 2)
         @nof
@@ -167,7 +170,7 @@ orbital OrbLintBindingFieldsOrbital {
           (let ((pent (object/get @defIdx @root null)))
             (if (or (not (validate/pattern @root "^[A-Z][a-zA-Z0-9]*$")) (= @pent null) (array/includes ["id", "createdAt", "updatedAt"] @fld) (array/includes (object/get @pent "fields" []) @fld))
               @nof
-              [{ code: "ORB_BINDING_ENTITY_FIELD_NOT_FOUND", path: @p, message: (str/concat (quote "@") @root "." @fld " — field '" @fld "' not found on entity '" @root "'"), suggestion: (str/concat "Add field '" @fld "' to entity '" @root "' or fix the binding path"), severity: "error" }])))))))))))))))))))
+              [{ code: @config.codes.bindingEntityFieldNotFound.code, path: @p, message: (str/concat (quote "@") @root "." @fld " — field '" @fld "' not found on entity '" @root "'"), suggestion: (str/concat "Add field '" @fld "' to entity '" @root "' or fix the binding path"), severity: "error" }])))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "binding-fields", scope: @entity.scope, findings: @entity.findings })
@@ -189,6 +192,12 @@ orbital OrbLintBindingFieldsOrbital {
       OrbLintInput.LINT_INPUT -> LINT_INPUT
 
     }
+    config {
+      codes : LintBindingFieldsCodes = { bindingPayloadFieldUndeclared: { code: "ORB_BINDING_PAYLOAD_FIELD_UNDECLARED", category: "binding", description: "A @payload binding reads a field that the triggering event does not declare in its payload" }, bindingEntityFieldNotFound: { code: "ORB_BINDING_ENTITY_FIELD_NOT_FOUND", category: "binding", description: "An @entity binding names a field that the linked entity does not declare" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintBindingFieldsCli -> OrbLintBindingFieldsRun [client] {

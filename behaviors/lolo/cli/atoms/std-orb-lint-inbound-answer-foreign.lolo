@@ -26,6 +26,9 @@ type IafTrait = { name : string, stateMachine : IafMachine, listens : [IafListen
 type IafOrbital = { name : string, traits : [IafTrait] }
 type IafProgram = { orbitals : [IafOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintInboundAnswerForeignCodes = { inboundAnswerForeign : LintCodeDecl }
+
 orbital OrbLintInboundAnswerForeignOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses Fired from "std/behaviors/std-orb-fired-events"
@@ -67,7 +70,7 @@ orbital OrbLintInboundAnswerForeignOrbital {
                                                       (or (= @lev @ans) (= @lev (str/concat @k "." @ans)))
                                                       (and (= (object/get @src "trait" "") @k) (= @lev @ans)))))))))))))
                                 (array/map @emitters (fn k
-                                  { code: "ORB_INBOUND_ANSWER_FOREIGN", path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" @tn ")].stateMachine.events[" @ei "]"), message: (str/concat "trait '" @k "' emits '" @ans "', the answer of '" @tn "''s inbound hook '" @hook "', but only '" @tn "''s own emit answers the hook, so that emit never reaches the caller"), suggestion: (str/concat "Relay it: in '" @tn "' add `listens { " @k "." @ans " -> <RELAYED> }` and an arm on <RELAYED> that emits '" @ans "' with the payload's status and body"), severity: "error" })))))))))))))))))))))
+                                  { code: @config.codes.inboundAnswerForeign.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" @tn ")].stateMachine.events[" @ei "]"), message: (str/concat "trait '" @k "' emits '" @ans "', the answer of '" @tn "''s inbound hook '" @hook "', but only '" @tn "''s own emit answers the hook, so that emit never reaches the caller"), suggestion: (str/concat "Relay it: in '" @tn "' add `listens { " @k "." @ans " -> <RELAYED> }` and an arm on <RELAYED> that emits '" @ans "' with the payload's status and body"), severity: "error" })))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "inbound-answer-foreign", scope: @entity.scope, findings: @entity.findings })
@@ -90,6 +93,12 @@ orbital OrbLintInboundAnswerForeignOrbital {
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
     }
+    config {
+      codes : LintInboundAnswerForeignCodes = { inboundAnswerForeign: { code: "ORB_INBOUND_ANSWER_FOREIGN", category: "inbound", description: "A trait other than an inbound handler emits the handler's answer event, so the answer never reaches the caller" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintInboundAnswerForeignCli -> OrbLintInboundAnswerForeignRun [client] {

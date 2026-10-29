@@ -1,8 +1,8 @@
 app std-vector-resolve [
   version: "1.0.0",
-  description: "std-vector-resolve — resolve embedding vectors for a batch of texts the way orb does: package snapshots first, then the user store, then the configured provider for what no store holds. RESOLVE { wanted, snapshots, userDir, providerModel } takes the texts with the caller's keys, the snapshot files as bytes (empty = missing), the user vectors directory ($ALMADAR_VECTORS_DIR or ~/.almadar/vectors, resolved by the caller) and the model the configured provider produces (empty when no provider is configured). The model is the first non-empty snapshot's, else the provider's, else baai/bge-base-en-v1.5; an empty wanted list answers at once. It asks for the user store with USER_STORE_NEEDED { path, model } (userDir/model-slug.vec, characters outside A-Za-z0-9._- become _), the caller answers USER_STORE_READ { data }, and std-vector-store resolves every text across the layers. Texts it holds are answered; the rest are deduplicated and embedded through std-llm in batches of 64. With misses and no provider it refuses ORB_VECTOR_PROVIDER_MISSING naming the count and the first 5 caller keys; a provider whose model differs from the stored model refuses ORB_VECTOR_MODEL_MISMATCH. The embedded vectors are persisted into the user store through std-vector-write (quantized, merged, locked) and the whole lookup is run again, so VECTORS_ANSWERED { model, vectors } carries one { key, vector } per wanted text with the int8-rounded values Rust returns; VECTORS_EMBEDDED { model, texts, vectors } still reports the raw provider vectors; VECTORS_REFUSED { code, detail } carries any refusal, the store's included.",
+  description: "std-vector-resolve — resolve embedding vectors for a batch of texts the way orb does: package snapshots first, then the user store, then the configured provider for what no store holds. RESOLVE { wanted, snapshots, userDir, userAnchor, providerModel } takes the texts with the caller's keys, the snapshot files as bytes (empty = missing), the user vectors directory ($ALMADAR_VECTORS_DIR or ~/.almadar/vectors, resolved by the caller) and the model the configured provider produces (empty when no provider is configured). The model is the first non-empty snapshot's, else the provider's, else baai/bge-base-en-v1.5; an empty wanted list answers at once. It asks for the user store with USER_STORE_NEEDED { path, model } (userDir/model-slug.vec, characters outside A-Za-z0-9._- become _), the caller answers USER_STORE_READ { data }, and std-vector-store resolves every text across the layers. Texts it holds are answered; the rest are deduplicated and embedded through std-llm in batches of 64. With misses and no provider it refuses ORB_VECTOR_PROVIDER_MISSING naming the count and the first 5 caller keys; a provider whose model differs from the stored model refuses ORB_VECTOR_MODEL_MISMATCH. The embedded vectors are persisted into the user store through std-vector-write (quantized, merged, locked) and the whole lookup is run again, so VECTORS_ANSWERED { model, vectors } carries one { key, vector } per wanted text with the int8-rounded values Rust returns; VECTORS_EMBEDDED { model, texts, vectors } still reports the raw provider vectors; VECTORS_REFUSED { code, detail } carries any refusal, the store's included.",
   egress: ["https://api.openai.com", "https://openrouter.ai", "http://127.0.0.1:1234"],
-  fs: { cwd: "**": [read, write, remove, create] },
+  fs: { cwd: "**": [read, write, remove, create], "~/.almadar": [create], "~/.almadar/vectors/**": [read, write, remove, create], env ALMADAR_VECTORS_DIR: "**": [read, write, remove, create] },
   exec: ["kill"]
 ]
 uses Spec from "almadar-std/vector-resolve"
@@ -26,6 +26,7 @@ orbital VectorResolveOrbital {
     snapshots : [bytes] = []
     snapshotPaths : [string] = []
     userDir : string = ""
+    userAnchor : string = ""
     providerModel : string = ""
     providerKind : string = ""
     embedModel : string = ""
@@ -191,6 +192,7 @@ orbital VectorResolveOrbital {
         (set @entity.snapshots @payload.snapshots)
         (set @entity.snapshotPaths (default @payload.snapshotPaths []))
         (set @entity.userDir @payload.userDir)
+        (set @entity.userAnchor @payload.userAnchor)
         (set @entity.providerModel @payload.providerModel)
         (set @entity.providerKind (default @payload.providerKind ""))
         (set @entity.embedModel (default @payload.embedModel ""))
@@ -255,7 +257,7 @@ orbital VectorResolveOrbital {
       LLM_EMBED_RESULT -> persisting when (and (== (array/len @payload.embeddings) (array/len (array/nth @entity.chunks @entity.chunkIdx))) (>= (+ @entity.chunkIdx 1) (array/len @entity.chunks)))
         (set @entity.got (array/concat @entity.got @payload.embeddings))
         (emit VECTORS_EMBEDDED { model: @entity.model, texts: @entity.misses, vectors: @entity.got })
-        (emit VECTOR_WRITE { path: @entity.userPath, model: @entity.model, records: (array/map (array/range 0 (array/len @entity.misses)) (fn wi { text: (array/nth @entity.misses @wi), vector: (array/nth @entity.got @wi) })) })
+        (emit VECTOR_WRITE { path: @entity.userPath, anchor: @entity.userAnchor, model: @entity.model, records: (array/map (array/range 0 (array/len @entity.misses)) (fn wi { text: (array/nth @entity.misses @wi), vector: (array/nth @entity.got @wi) })) })
       LLM_FAILED -> idle
         (emit VECTORS_REFUSED { code: "ORB_VECTOR_EMBED_FAILED", detail: (str/concat "embedding failed: " @payload.message) })
     }
@@ -312,6 +314,7 @@ orbital VectorResolveOrbital {
         @tier "secondary"
       VECTOR_WRITE -> external {
         path : string!
+        anchor : string!
         model : string!
         records : [{ text : string!, vector : [number]! }]!
       }
@@ -382,6 +385,7 @@ orbital VectorResolveOrbital {
         snapshots : [bytes]!
         snapshotPaths : [string]
         userDir : string!
+        userAnchor : string!
         providerModel : string!
         providerKind : string
         embedModel : string

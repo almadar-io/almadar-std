@@ -18,6 +18,9 @@ type EmitOrbital = { name : string, traits : [EmitTrait] }
 type EmitLeaf = { p : string!, e : EmitVal!, oi : number!, ti : number! }
 type EmitProgram = { orbitals : [EmitOrbital] }
 
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintEmitCodes = { circuitOrphanEvent : LintCodeDecl , tEvtInvalidName : LintCodeDecl , effEmitInvalidName : LintCodeDecl }
+
 orbital OrbLintEmitOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
   uses LeavesUse from "std/behaviors/std-orb-effect-leaves"
@@ -45,14 +48,14 @@ orbital OrbLintEmitOrbital {
             (let ((e (object/get @l "e")) (p (object/get @l "p")))
               (if (not (and (validate/array @e) (> (array/len @e) 0) (= (array/nth @e 0) "emit"))) []
               (if (< (array/len @e) 2)
-                [{ code: "CIRCUIT_ORPHAN_EVENT", path: @p, message: "emit requires event name", suggestion: "Use: [\"emit\", \"EVENT_NAME\"]", severity: "error" }]
+                [{ code: @config.codes.circuitOrphanEvent.code, path: @p, message: "emit requires event name", suggestion: "Use: [\"emit\", \"EVENT_NAME\"]", severity: "error" }]
                 (let ((x (array/nth @e 1)))
                   (if (validate/string @x)
                     (if (validate/pattern @x "^[A-Za-z][A-Za-z0-9_]*$") []
-                      [{ code: "ORB_T_EVT_INVALID_NAME", path: @p, message: (str/concat "Event name '" @x "' is not a valid identifier"), suggestion: "Declare the event via `type EventName = Event<Payload>` and reference it by identifier", severity: "error" }])
+                      [{ code: @config.codes.tEvtInvalidName.code, path: @p, message: (str/concat "Event name '" @x "' is not a valid identifier"), suggestion: "Declare the event via `type EventName = Event<Payload>` and reference it by identifier", severity: "error" }])
                     (if (or (validate/array @x) (validate/number @x) (validate/boolean @x) (= @x null))
-                      [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: (str/concat "emit's first argument must be the event name (a string identifier), got " (if (validate/array @x) "a list" (if (validate/number @x) "a number" (if (validate/boolean @x) "a boolean" "null")))), suggestion: "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block", severity: "error" }]
-                      [{ code: "ORB_EFF_EMIT_INVALID_NAME", path: @p, message: "emit's first argument must be the event name, but an object was passed — this looks like the payload with the event name missing", suggestion: "Write `(emit EVENT_NAME { … })` — the event name comes first, then the payload object. The event must be declared in the trait's `emits` block.", severity: "error" }]))))))))))))
+                      [{ code: @config.codes.effEmitInvalidName.code, path: @p, message: (str/concat "emit's first argument must be the event name (a string identifier), got " (if (validate/array @x) "a list" (if (validate/number @x) "a number" (if (validate/boolean @x) "a boolean" "null")))), suggestion: "Write `(emit EVENT_NAME)` or `(emit EVENT_NAME { … })` with an event declared in the trait's `emits` block", severity: "error" }]
+                      [{ code: @config.codes.effEmitInvalidName.code, path: @p, message: "emit's first argument must be the event name, but an object was passed — this looks like the payload with the event name missing", suggestion: "Write `(emit EVENT_NAME { … })` — the event name comes first, then the payload object. The event must be declared in the trait's `emits` block.", severity: "error" }]))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "emit", scope: @entity.scope, findings: @entity.findings })
@@ -78,6 +81,12 @@ orbital OrbLintEmitOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
+    config {
+      codes : LintEmitCodes = { circuitOrphanEvent: { code: "CIRCUIT_ORPHAN_EVENT", category: "circuit", description: "An action or emit raises an event that has no transition handler" }, tEvtInvalidName: { code: "ORB_T_EVT_INVALID_NAME", category: "trait", description: "An event name is not a valid UPPER_SNAKE_CASE identifier" }, effEmitInvalidName: { code: "ORB_EFF_EMIT_INVALID_NAME", category: "effect", description: "The event name inside an emit effect is not a valid string event name" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
   }
 
   trait OrbLintEmitCli -> OrbLintEmitRun [client] {
