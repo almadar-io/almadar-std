@@ -1,0 +1,137 @@
+{
+ "atom": "../ui/core/atoms/std-calendar.lolo",
+ "trait": "CalendarEventCalendar",
+ "note": "SELECT_DAY sets the range and refetches with a filter that reads the row's start column as an instant",
+ "cases": [
+  {
+   "id": "select-day-sets-the-range-and-fetches-rows-with-a-readable-start",
+   "steps": [
+    {
+     "trait": "CalendarEventCalendar",
+     "from": "month-view",
+     "entity": {
+      "id": "c",
+      "name": "n",
+      "selectedRange": "month"
+     },
+     "event": "SELECT_DAY",
+     "payload": {
+      "value": "week"
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.selectedRange",
+        "arg1": "@payload.value"
+       },
+       {
+        "type": "fetch",
+        "arg0": "CalendarEvent",
+        "arg1": {
+         "emit": {
+          "failure": "CalendarEventLoadFailed",
+          "success": "CalendarEventLoaded"
+         },
+         "include": [],
+         "limit": 1000,
+         "filter": [
+          "let",
+          [
+           [
+            "t",
+            [
+             "as",
+             [
+              "default",
+              [
+               "object/get",
+               "@entity",
+               "date"
+              ],
+              ""
+             ],
+             "{\"version\":1,\"name\":\"CalendarInstant\",\"type\":{\"kind\":\"instant\"}}"
+            ]
+           ]
+          ],
+          [
+           "and",
+           [
+            "!=",
+            "@t",
+            null
+           ],
+           [
+            "time/isAfter",
+            "@t",
+            [
+             "if",
+             [
+              "=",
+              "@payload.value",
+              "week"
+             ],
+             [
+              "time/subtract",
+              [
+               "time/now"
+              ],
+              1,
+              "week"
+             ],
+             [
+              "if",
+              [
+               "=",
+               "@payload.value",
+               "3months"
+              ],
+              [
+               "time/subtract",
+               [
+                "time/now"
+               ],
+               3,
+               "month"
+              ],
+              [
+               "if",
+               [
+                "=",
+                "@payload.value",
+                "year"
+               ],
+               [
+                "time/subtract",
+                [
+                 "time/now"
+                ],
+                1,
+                "year"
+               ],
+               [
+                "time/subtract",
+                [
+                 "time/now"
+                ],
+                1,
+                "month"
+               ]
+              ]
+             ]
+            ]
+           ]
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

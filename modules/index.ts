@@ -49,7 +49,6 @@ export { PATH_OPERATORS, getPathOperators } from './path.js';
 export { LLM_OPERATORS, getLlmOperators } from './llm.js';
 export { WORKSPACE_OPERATORS, getWorkspaceOperators } from './workspace.js';
 export { SESSION_OPERATORS, getSessionOperators } from './session.js';
-export { MEMORY_OPERATORS, getMemoryOperators } from './memory.js';
 export { TRACE_OPERATORS, getTraceOperators } from './trace.js';
 export { AUDIO_OPERATORS, getAudioOperators } from './audio.js';
 export { AUTH_OPERATORS, getAuthOperators } from './auth.js';

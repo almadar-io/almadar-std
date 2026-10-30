@@ -123,7 +123,7 @@ orbital OrbLintBindingRootsOrbital {
                     (if (validate/object @a)
                       (array/map @invs (fn iv { x: @iv, w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @index "]"), c: "guard" }))
                       @noroots)))))))))))) (knownIdx (default (object/fromEntries (array/map @known (fn z [@z, true]))) {  }))
-      (rh : [BrRH] (array/map @roots (fn x { x: @x, hs: (default (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
+      (rh (let ((nroot : BrRoot { x: null, w: "", c: "" }) (keys (array/map @roots (fn kx (bytes/to-base64 (bytes/from-string (json/stringify (object/get @kx "x" null)))))))) (let ((firstIdx (default (object/fromEntries (array/map (array/range 0 (array/len @keys)) (fn xk [(default (array/nth @keys @xk) ""), @xk]))) {}))) (let ((foldD (default (object/fromEntries (array/map (object/values @firstIdx) (fn xk [(default (array/nth @keys @xk) ""), (default (tree/fold (object/get (default (array/nth @roots @xk) @nroot) "x" null) (fn (n k) (if (validate/string @n)
   (if (str/startsWith @n (quote "@"))
     [{ rel: "", r: (array/first (str/split (array/first (str/split (str/slice @n 1) ".")) "[")), s: @n }]
     @nohits)
@@ -167,7 +167,7 @@ orbital OrbLintBindingRootsOrbital {
         (array/map (object/keys @k)
           (fn key
             (array/map (let ((r : [BrHit]? (object/get @k @key))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
-      @nohits)))) BrShape) @nohits) })))
+      @nohits)))) BrShape) @nohits)]))) {}))) (array/map (array/range 0 (array/len @roots)) (fn xi { x: (default (array/nth @roots @xi) @nroot), hs: (default (object/get @foldD (default (array/nth @keys @xi) "")) @nohits) })))))) 
       (allS : [string] (array/map (array/flatten (array/map @rh (fn p (object/get @p "hs" [])))) (fn h (object/get @h "s" ""))))
       (joined (str/join @allS "\n"))
       (fmtAll (and (> (array/len @allS) 0) (= (array/len (str/split @joined "\n")) (array/len @allS)) (validate/pattern @joined "^@[\\p{L}_][\\p{L}0-9_]*(?:\\.[\\p{L}0-9_]+|\\[\\d+\\])*(?:\\n@[\\p{L}_][\\p{L}0-9_]*(?:\\.[\\p{L}0-9_]+|\\[\\d+\\])*)*$"))))

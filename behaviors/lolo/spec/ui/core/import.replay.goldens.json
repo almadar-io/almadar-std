@@ -1,0 +1,52 @@
+{
+  "atom": "../ui/core/atoms/std-import.lolo",
+  "trait": "ImportMenu",
+  "cases": [
+    {
+      "id": "paste-source-emits-import-requested",
+      "note": "a non-file source emits IMPORT_REQUESTED at once",
+      "steps": [
+        {
+          "trait": "ImportMenu",
+          "from": "idle",
+          "event": "IMPORT_SOURCE_PICKED",
+          "entity": { "id": "e", "pendingSource": {}, "pendingFiles": [] },
+          "payload": { "itemId": "paste", "label": "Paste text" },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [{ "event": "IMPORT_REQUESTED", "payload": {} }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-file-source-waits-for-the-picker",
+      "note": "control: a file source moves to picking and requests nothing until the picker answers",
+      "steps": [
+        {
+          "trait": "ImportMenu",
+          "from": "idle",
+          "event": "IMPORT_SOURCE_PICKED",
+          "entity": { "id": "e", "pendingSource": {}, "pendingFiles": [] },
+          "payload": { "itemId": "markdown", "label": "Markdown files" },
+          "expect": { "fired": true, "state": "picking", "neverEmits": ["IMPORT_REQUESTED"] }
+        }
+      ]
+    },
+    {
+      "id": "control-unknown-source-fails",
+      "note": "control: an id no source carries emits IMPORT_FAILED",
+      "steps": [
+        {
+          "trait": "ImportMenu",
+          "from": "idle",
+          "event": "IMPORT_SOURCE_PICKED",
+          "entity": { "id": "e", "pendingSource": {}, "pendingFiles": [] },
+          "payload": { "itemId": "nope", "label": "Nope" },
+          "expect": { "fired": true, "emits": [{ "event": "IMPORT_FAILED", "payload": {} }] }
+        }
+      ]
+    }
+  ]
+}

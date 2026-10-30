@@ -14,7 +14,11 @@
       "state": "open"
      }
     }
-   ]
+   ],
+   "entity": {
+    "failureCount": 4,
+    "threshold": 5
+   }
   },
   {
    "id": "cooldown-elapsing-goes-half-open",
@@ -32,7 +36,11 @@
       "state": "halfOpen"
      }
     }
-   ]
+   ],
+   "entity": {
+    "failureCount": 4,
+    "threshold": 5
+   }
   },
   {
    "id": "half-open-success-closes",
@@ -55,7 +63,11 @@
       "state": "closed"
      }
     }
-   ]
+   ],
+   "entity": {
+    "failureCount": 4,
+    "threshold": 5
+   }
   },
   {
    "id": "half-open-failure-reopens",
@@ -78,7 +90,11 @@
       "state": "open"
      }
     }
-   ]
+   ],
+   "entity": {
+    "failureCount": 4,
+    "threshold": 5
+   }
   },
   {
    "id": "control-reset-closes-an-open-circuit",
@@ -92,6 +108,151 @@
      "event": "RESET",
      "payload": {},
      "from": "open",
+     "expect": {
+      "state": "closed"
+     }
+    }
+   ],
+   "entity": {
+    "failureCount": 4,
+    "threshold": 5
+   }
+  },
+  {
+   "id": "failure-below-threshold-keeps-the-circuit-closed",
+   "now": 1760531400000,
+   "entity": {
+    "failureCount": 0,
+    "threshold": 5
+   },
+   "steps": [
+    {
+     "event": "FAILURE",
+     "payload": {},
+     "expect": {
+      "state": "closed"
+     }
+    }
+   ]
+  },
+  {
+   "id": "failures-accumulate-until-the-threshold-then-open",
+   "now": 1760531400000,
+   "entity": {
+    "failureCount": 0,
+    "threshold": 2
+   },
+   "steps": [
+    {
+     "event": "FAILURE",
+     "payload": {},
+     "expect": {
+      "state": "closed"
+     }
+    },
+    {
+     "event": "FAILURE",
+     "payload": {},
+     "from": "closed",
+     "expect": {
+      "state": "open"
+     }
+    }
+   ]
+  },
+  {
+   "id": "success-in-closed-resets-the-consecutive-failure-count",
+   "now": 1760531400000,
+   "entity": {
+    "failureCount": 1,
+    "threshold": 2
+   },
+   "steps": [
+    {
+     "event": "SUCCESS",
+     "payload": {},
+     "expect": {
+      "state": "closed"
+     }
+    },
+    {
+     "event": "FAILURE",
+     "payload": {},
+     "from": "closed",
+     "expect": {
+      "state": "closed"
+     }
+    }
+   ]
+  },
+  {
+   "id": "half-open-success-closes-with-a-fresh-failure-count",
+   "now": 1760531400000,
+   "entity": {
+    "failureCount": 1,
+    "threshold": 2
+   },
+   "steps": [
+    {
+     "event": "FAILURE",
+     "payload": {},
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "TIMEOUT",
+     "payload": {},
+     "from": "open",
+     "expect": {
+      "state": "halfOpen"
+     }
+    },
+    {
+     "event": "SUCCESS",
+     "payload": {},
+     "from": "halfOpen",
+     "expect": {
+      "state": "closed"
+     }
+    },
+    {
+     "event": "FAILURE",
+     "payload": {},
+     "from": "closed",
+     "expect": {
+      "state": "closed"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-reset-clears-the-count",
+   "now": 1760531400000,
+   "entity": {
+    "failureCount": 1,
+    "threshold": 2
+   },
+   "steps": [
+    {
+     "event": "FAILURE",
+     "payload": {},
+     "expect": {
+      "state": "open"
+     }
+    },
+    {
+     "event": "RESET",
+     "payload": {},
+     "from": "open",
+     "expect": {
+      "state": "closed"
+     }
+    },
+    {
+     "event": "FAILURE",
+     "payload": {},
+     "from": "closed",
      "expect": {
       "state": "closed"
      }

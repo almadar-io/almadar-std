@@ -169,8 +169,31 @@ orbital ServiceNodeOrbital {
           gap: lg
           type: stack
         })
-      FAILURE -> open
+      FAILURE -> closed when (< (+ @entity.failureCount 1) @entity.threshold)
+        @ensures (= @entity.failureCount (+ @fromEntity.failureCount 1))
+        (set @entity.failureCount (+ @entity.failureCount 1))
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [@trait.ShieldIcon, @trait.ServiceNodeLabel]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, @trait.ClosedStatusDot]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, @trait.CircuitDivider, @trait.SuccessAlert, @trait.StatsGrid, @trait.FailuresMeter]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      FAILURE -> open when (>= (+ @entity.failureCount 1) @entity.threshold)
         @ensures (!= @entity.openedAt null)
+        (set @entity.failureCount (+ @entity.failureCount 1))
         (set @entity.openedAt (time/now))
         (render-ui main {
           children: [{
@@ -192,6 +215,8 @@ orbital ServiceNodeOrbital {
           type: stack
         })
       SUCCESS -> closed
+        (set @entity.successCount (+ @entity.successCount 1))
+        (set @entity.failureCount 0)
         (render-ui main {
           children: [{
             align: center
@@ -259,6 +284,8 @@ orbital ServiceNodeOrbital {
           type: stack
         })
       RESET -> closed
+        (set @entity.failureCount 0)
+        (set @entity.successCount 0)
         (render-ui main {
           children: [{
             align: center
@@ -306,6 +333,8 @@ orbital ServiceNodeOrbital {
           type: stack
         })
       SUCCESS -> closed
+        (set @entity.successCount (+ @entity.successCount 1))
+        (set @entity.failureCount 0)
         (render-ui main {
           children: [{
             align: center
@@ -327,6 +356,7 @@ orbital ServiceNodeOrbital {
         })
       FAILURE -> open
         @ensures (!= @entity.openedAt null)
+        (set @entity.failureCount (+ @entity.failureCount 1))
         (set @entity.openedAt (time/now))
         (render-ui main {
           children: [{
@@ -348,6 +378,8 @@ orbital ServiceNodeOrbital {
           type: stack
         })
       RESET -> closed
+        (set @entity.failureCount 0)
+        (set @entity.successCount 0)
         (render-ui main {
           children: [{
             align: center

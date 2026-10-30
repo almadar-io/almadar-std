@@ -60,7 +60,7 @@ orbital OrbLintSigilContextOrbital {
         (set @entity.factsUnread true)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((nohits : [SgHit] []) (noroots : [SgRoot] []) (nostr : [string] [])  (nof : [OrbFinding] []) (collOps : [string] @entity.collOps) (orbitals : [SgOrbital] (object/get @payload.program "orbitals" [])))
+        (set @entity.findings (let ((nohits : [SgHit] []) (noroots : [SgRoot] []) (nostr : [string] [])  (nof : [OrbFinding] []) (collSet : Map string boolean (default (object/fromEntries (array/map @entity.collOps (fn c [@c true]))) {})) (orbitals : [SgOrbital] (object/get @payload.program "orbitals" [])))
   (if (or @entity.shapesUnread @entity.factsUnread)
     (array/concat
       (if @entity.shapesUnread [{ code: @config.codes.lintOperatorShapesUnread.code, path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the collection callback operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }] @nof)
@@ -77,7 +77,7 @@ orbital OrbLintSigilContextOrbital {
                   (let ((t (array/nth @trts @ti)))
                     (if (not (object/has @t "stateMachine"))
                       @noroots
-                      (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (trs : [SgTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (tks : [SgTick] (object/get @t "ticks" [])))
+                      (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (trs : [SgTransition] (object/get @t "stateMachine.transitions" [])) (tks : [SgTick] (object/get @t "ticks" [])))
                       (array/concat
                         (array/flatten
                           (array/map (array/range 0 (array/len @trs))
@@ -91,7 +91,7 @@ orbital OrbLintSigilContextOrbital {
                                     (let ((ens : [SgShape] (object/get @tr "ensures" [])))
                                       (array/map (array/range 0 (array/len @ens)) (fn ki { x: (array/nth @ens @ki), w: (str/concat @xp ".ensures[" @ki "]"), c: "ensures" })))))))))
                         (array/concat
-                        (let ((sts : [SgState] (object/get (object/get @t "stateMachine" { transitions: [] }) "states" [])))
+                        (let ((sts : [SgState] (object/get @t "stateMachine.states" [])))
                           (array/flatten
                             (array/map (array/range 0 (array/len @sts))
                               (fn si
@@ -114,10 +114,9 @@ orbital OrbLintSigilContextOrbital {
                   (fn ai
                     (let ((invs : [SgShape] (object/get (array/nth @auxs @ai) "invariants" [])))
                       (array/map (array/range 0 (array/len @invs)) (fn n { x: (array/nth @invs @n), w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @n "]"), c: "invariant" }))))))))))))))))
-      (array/flatten
-        (array/map @roots
-          (fn x
-            (let ((hs (default (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
+      (let ((nroot : SgRoot { x: null, w: "", c: "" }) (keys (array/map @roots (fn kx (bytes/to-base64 (bytes/from-string (json/stringify (object/get @kx "x" null))))))))
+        (let ((firstIdx : Map string number (default (object/fromEntries (array/map (array/range 0 (array/len @keys)) (fn xk [(default (array/nth @keys @xk) ""), @xk]))) {})))
+          (let ((foldD (default (object/fromEntries (array/map (object/values @firstIdx) (fn xk [(default (array/nth @keys @xk) ""), (default (tree/fold (object/get (default (array/nth @roots @xk) @nroot) "x" null) (fn (n k) (if (validate/string @n)
   (if (and (str/startsWith @n (quote "@")) (>= (str/len @n) 2))
     (let ((root (array/first (str/split (str/replaceAll (str/slice @n 1) "[" ".") "."))))
       (if (or (= @root "") (validate/pattern @root "^[A-Z]"))
@@ -147,7 +146,7 @@ orbital OrbLintSigilContextOrbital {
                     (array/map (array/filter @k1 (fn h (not (array/includes @names (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")) })))
                     (array/map (array/filter (let ((r : [SgHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes @names (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) })))))
                 (array/map (let ((r : [SgHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) }))))))
-          (if (and (>= @len 3) (array/includes @collOps @op))
+          (if (and (>= @len 3) (object/has @collSet @op))
             (array/concat
               (array/map (let ((r : [SgHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")) })))
               (array/flatten
@@ -163,13 +162,17 @@ orbital OrbLintSigilContextOrbital {
         (array/map (object/keys @k)
           (fn key
             (array/map (let ((r : [SgHit]? (object/get @k @key))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
-      @nohits)))) SgShape) @nohits)))
+      @nohits)))) SgShape) @nohits)]))) {})))
+            (array/flatten
+              (array/map (array/range 0 (array/len @roots))
+                (fn xi
+                  (let ((x (default (array/nth @roots @xi) @nroot)) (hs (default (object/get @foldD (default (array/nth @keys @xi) "")) @nohits)))
               (let ((c (object/get @x "c" "")))
               (let ((allowed : [string] (if (= @c "effect") @entity.effectAllowed (if (= @c "tick") @entity.tickAllowed (if (= @c "ensures") (array/concat @entity.guardAllowed @config.ensuresSigils) @entity.guardAllowed)))))
   (array/map (array/filter @hs (fn h (or (= (object/get @h "r" "") "item") (= (object/get @h "r" "") "index") (not (array/includes @allowed (object/get @h "r" ""))))))
     (fn h
       (let ((root (object/get @h "r" "")))
-        { code: (if (and (= @c "tick") (= @root "payload")) @config.codes.bindingPayloadInTick.code @config.codes.bindingUnknownRoot.code), path: (str/concat (object/get @x "w" "") (object/get @h "rel" "")), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in " @c " context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" })))))))))))))
+        { code: (if (and (= @c "tick") (= @root "payload")) @config.codes.bindingPayloadInTick.code @config.codes.bindingUnknownRoot.code), path: (str/concat (object/get @x "w" "") (object/get @h "rel" "")), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in " @c " context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" }))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "sigil-context", scope: @entity.scope, findings: @entity.findings })

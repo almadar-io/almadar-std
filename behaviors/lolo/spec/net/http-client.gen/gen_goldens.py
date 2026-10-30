@@ -269,6 +269,61 @@ case("a-call-sent-after-a-cancel-runs-whole",[
  step("HC_SENT",{"bytes":10,"key":"send"},{"state":"reading"}),
  step("HC_READ",read(head(200,"OK",[("content-length","2")])+"ok"),{"emits":[replied("k2",200,{"content-length":"2"},"ok")]})])
 
+# credential placement: header (encoded), query, body. The host encodes the value at the boundary; the program holds only the reference.
+HOSTL="\r\nhost: api.example.test\r\n"
+FORMCT=[{"name":"Content-Type","value":"application/x-www-form-urlencoded"}]
+def gcase(id,config,steps,credentials=None):
+    case(id,steps); cases[-1]["config"]=config
+    if credentials is not None: cases[-1]["credentials"]=credentials
+def segs(enc,headkey="@entity.head"):
+    seg={"bytes":headkey,"credential":"@config.credential"}
+    if enc: seg["encode"]=enc
+    return [seg,{"bytes":"@entity.request","credential":""}]
+def exact(head,req): return {"state":"connecting","effects":[{"type":"os/tcp-connect","arg0":"api.example.test","arg1":80}],"emits":[cbuilt(head,req)],"exactEmits":[cbuilt(head,req)],"neverEmits":["HTTP_FAILED"]}
+def sent(enc): return step("HC_CONNECTED",{"sock":5,"key":"connect"},{"state":"sending","effects":[{"type":"os/send","arg1":segs(enc)}]})
+BASIC={"credential":"BASIC_LOGIN","credentialHeader":"authorization","credentialPrefix":"Basic ","credentialEncode":"base64"}
+gcase("a-basic-credential-is-a-header-segment-the-host-base64-encodes",BASIC,[
+ dict(send(),expect=exact("GET /x?a=1 HTTP/1.1"+HOSTL+"authorization: Basic ","\r\n\r\n")),sent("base64")],credentials={"BASIC_LOGIN":"user:pass"})
+gcase("control-the-same-header-credential-with-encode-none-writes-the-segment-without-an-encode",dict(BASIC,credentialEncode="none"),[
+ dict(send(),expect=exact("GET /x?a=1 HTTP/1.1"+HOSTL+"authorization: Basic ","\r\n\r\n")),sent(None)],credentials={"BASIC_LOGIN":"user:pass"})
+for e in ("uri","form"):
+    gcase("a-header-credential-can-ask-the-host-for-the-%s-encode"%e,dict(BASIC,credentialEncode=e),[
+     dict(send(),expect=exact("GET /x?a=1 HTTP/1.1"+HOSTL+"authorization: Basic ","\r\n\r\n")),sent(e)],credentials={"BASIC_LOGIN":"user:pass"})
+QRY={"credential":"API_KEY","credentialIn":"query","credentialName":"key"}
+gcase("a-query-credential-is-spliced-after-a-question-mark-and-uri-encoded-by-the-host",QRY,[
+ dict(send(target="/x",headers=[{"name":"Accept","value":"text/plain"}]),expect=exact("GET /x?key="," HTTP/1.1"+HOSTL+"accept: text/plain\r\n\r\n")),sent("uri")],credentials={"API_KEY":"k e&y"})
+gcase("control-a-target-that-already-has-a-query-takes-an-ampersand",QRY,[
+ dict(send(target="/x?a=1"),expect=exact("GET /x?a=1&key="," HTTP/1.1"+HOSTL+"\r\n")),sent("uri")],credentials={"API_KEY":"k e&y"})
+gcase("a-query-credential-keeps-the-payload-body-after-the-head",QRY,[
+ dict(send(method="POST",target="/x",body="abc"),expect=exact("POST /x?key="," HTTP/1.1"+HOSTL+"content-length: 3\r\n\r\nabc")),sent("uri")],credentials={"API_KEY":"k"})
+gcase("a-required-query-credential-that-is-not-held-fails-the-send-as-denied",QRY,[
+ dict(send(target="/x"),expect=exact("GET /x?key="," HTTP/1.1"+HOSTL+"\r\n")),
+ step("HC_CONNECTED",{"sock":5,"key":"connect"},{"state":"sending","effects":[{"type":"os/send"}]}),
+ step("HC_IO_FAILED",{"error":"credential not held","kind":"denied","key":"send"},{"state":"ready","emits":[failed("k1","denied","credential not held")],"neverEmits":["HTTP_REPLIED"]})])
+gcase("control-an-optional-query-credential-that-is-not-held-adds-no-parameter",dict(QRY,credentialOptional=True),[
+ dict(send(target="/x"),expect=dict(exact("","GET /x HTTP/1.1"+HOSTL+"\r\n"))),
+ step("HC_CONNECTED",{"sock":5,"key":"connect"},{"state":"sending","effects":[{"type":"os/send","arg1":"@entity.request"}]})])
+BOD={"credential":"CLIENT_SECRET","credentialIn":"body","credentialName":"client_secret"}
+CT="content-type: application/x-www-form-urlencoded\r\n"
+gcase("a-body-credential-is-the-last-form-field-and-the-content-length-counts-its-encoded-length",BOD,[
+ dict(send(method="POST",target="/token",headers=FORMCT,body="grant_type=x"),expect=exact("POST /token HTTP/1.1"+HOSTL+CT+"content-length: 34\r\n\r\ngrant_type=x&client_secret=","")),sent("form")],credentials={"CLIENT_SECRET":"a b&c"})
+gcase("control-a-body-credential-with-no-payload-body-needs-no-ampersand",BOD,[
+ dict(send(method="POST",target="/token",headers=FORMCT,body=""),expect=exact("POST /token HTTP/1.1"+HOSTL+CT+"content-length: 21\r\n\r\nclient_secret=","")),sent("form")],credentials={"CLIENT_SECRET":"a b&c"})
+gcase("a-body-credential-never-enters-an-emit-the-built-head-holds-only-the-field-name",BOD,[
+ dict(send(method="POST",target="/token",headers=FORMCT,body="g=1"),expect=dict(exact("POST /token HTTP/1.1"+HOSTL+CT+"content-length: 25\r\n\r\ng=1&client_secret=",""))),
+ sent("form")],credentials={"CLIENT_SECRET":"a b&c"})
+def grefuse(id,config,**kw):
+    s=send(**kw); s["expect"]={"state":"ready","emits":[failed("k1","refused")],"neverEmits":["HC_BUILT"],"effects":[]}
+    gcase(id,config,[s])
+grefuse("a-query-credential-with-no-name-is-refused",{"credential":"API_KEY","credentialIn":"query"},target="/x")
+grefuse("a-body-credential-with-no-name-is-refused",{"credential":"API_KEY","credentialIn":"body"},method="POST",headers=FORMCT)
+grefuse("a-body-credential-under-a-json-content-type-is-refused",BOD,method="POST",headers=[{"name":"Content-Type","value":"application/json"}],body="{}")
+grefuse("a-body-credential-with-no-content-type-is-refused",BOD,method="POST")
+grefuse("a-query-credential-with-an-encode-knob-is-refused-the-position-fixes-the-encode",dict(QRY,credentialEncode="base64"),target="/x")
+grefuse("a-query-credential-with-a-credential-header-is-refused",dict(QRY,credentialHeader="authorization"),target="/x")
+grefuse("a-header-credential-with-a-credential-name-is-refused",dict(CRED,credentialName="key"))
+grefuse("an-encode-with-no-credential-header-is-refused",{"credential":"BASIC_LOGIN","credentialEncode":"base64"})
+
 # body limit
 json.dump({"atom":"net/atoms/std-http-client.lolo","trait":"HttpClient","spec":"spec/net/http-client.lolo","note":"parity oracle: the retired drivers/http_request wire loop; request composition, framing, streaming, refusals and failure kinds","cases":cases},open(out,'w'),indent=1)
 print(len(cases))

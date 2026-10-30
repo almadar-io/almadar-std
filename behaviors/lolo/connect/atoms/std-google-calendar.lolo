@@ -4,6 +4,8 @@ app std-google-calendar [
   egress: ["https://www.googleapis.com"],
   inbound: ["google-calendar"]
 ]
+type CalendarDay = date
+type CalendarInstant = instant
 type CalendarRawTime = { dateTime : string, date : string }
 type CalendarRawEvent = { id : string, summary : string, description : string, location : string, start : CalendarRawTime, end : CalendarRawTime, status : string, updated : string }
 type CalendarEventsReply = { items : [CalendarRawEvent], nextSyncToken : string }
@@ -39,8 +41,8 @@ orbital CalendarOrbital {
           timeoutMs: @config.timeoutMs
         } { key: "list", emit: { success: CALENDAR_REPLIED, failure: CALENDAR_REQUEST_FAILED } })
       CALENDAR_CREATE_EVENT -> idle when (or (validate/required @payload.end) (= (str/len @payload.start) 10) (> (default @payload.durationMinutes 0) 0))
-        (let ((st (if (validate/required @payload.end) null (time/parse @payload.start))))
-         (let ((endValue (if (validate/required @payload.end) @payload.end (if (== @st null) null (if (= (str/len @payload.start) 10) (time/format (time/add @st 1 day) "YYYY-MM-DD") (time/add @st (default @payload.durationMinutes 0) "minute"))))))
+        (let ((allDay (as @payload.start CalendarDay)) (st (as @payload.start CalendarInstant)))
+         (let ((endValue (if (validate/required @payload.end) @payload.end (if (= (str/len @payload.start) 10) (if (== @allDay null) null (time/format (time/add @allDay 1 day) "YYYY-MM-DD")) (if (== @st null) null (str/concat (time/format (time/add @st (default @payload.durationMinutes 0) "minute") "YYYY-MM-DDTHH:mm:ss") "Z"))))))
           (if (== @endValue null)
             (emit CALENDAR_CREATE_EVENT_FAILED { message: "createEvent could not read `start` as a date or date-time to compute `end`" })
           (http POST @config.origin (str/concat "/calendar/v3/calendars/" (str/encode-uri-component (default @payload.calendarId @config.calendarId)) "/events") {

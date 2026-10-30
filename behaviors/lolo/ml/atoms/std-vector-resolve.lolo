@@ -441,7 +441,7 @@ orbital VectorResolveOrbital {
       LLM_EMBED_RESULT -> persisting when (and (== (array/len @payload.embeddings) (array/len (default (array/nth @entity.chunks @entity.chunkIdx) []))) (>= (+ @entity.chunkIdx 1) (array/len @entity.chunks)))
         (set @entity.got (array/concat @entity.got @payload.embeddings))
         (emit VECTORS_EMBEDDED { model: @entity.model, texts: @entity.misses, vectors: @entity.got })
-        (emit VECTOR_WRITE { path: @entity.userPath, anchor: @entity.userAnchor, model: @entity.model, records: (array/map (array/range 0 (array/len @entity.misses)) (fn wi { text: (default (array/nth @entity.misses @wi) ""), vector: (default (array/nth @entity.got @wi) []) })) })
+        (emit VECTOR_WRITE { path: (os/path-base @entity.userPath), anchor: @entity.userAnchor, model: @entity.model, records: (array/map (array/range 0 (array/len @entity.misses)) (fn wi { text: (default (array/nth @entity.misses @wi) ""), vector: (default (array/nth @entity.got @wi) []) })) })
       LLM_FAILED -> idle
         (emit VECTORS_REFUSED { code: "ORB_VECTOR_EMBED_FAILED", detail: (str/concat "embedding failed: " @payload.message) })
     }

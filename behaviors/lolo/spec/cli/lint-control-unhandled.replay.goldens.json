@@ -210,7 +210,17 @@
               "from": "idle",
               "to": "idle",
               "event": "SAVE",
-              "effects": []
+              "effects": [
+               [
+                "persist",
+                "update",
+                "E",
+                "@entity.id",
+                {
+                 "n": 1
+                }
+               ]
+              ]
              }
             ]
            },
@@ -382,7 +392,17 @@
               "from": "idle",
               "to": "idle",
               "event": "SAVE",
-              "effects": []
+              "effects": [
+               [
+                "persist",
+                "update",
+                "E",
+                "@entity.id",
+                {
+                 "n": 1
+                }
+               ]
+              ]
              }
             ]
            },
@@ -1866,7 +1886,17 @@
               "from": "idle",
               "to": "idle",
               "event": "SAVE",
-              "effects": []
+              "effects": [
+               [
+                "persist",
+                "update",
+                "E",
+                "@entity.id",
+                {
+                 "n": 1
+                }
+               ]
+              ]
              }
             ]
            },
@@ -3057,6 +3087,1610 @@
            "path": "orbitals.O.traits.View",
            "message": "A control rendered by 'View' (button.action) fires 'SAVE', which no transition of 'View' or an embedder of it handles and no `listens` routes",
            "suggestion": "Handle 'SAVE' in 'View' (or the trait that embeds it), route it with `listens`, or remove the control",
+           "severity": "error"
+          }
+         ]
+        }
+       },
+       {
+        "event": "CONTROLS_FORWARDED",
+        "payload": {
+         "scope": "",
+         "forwards": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-consequence-an-arm-with-no-effects-is-an-error",
+   "steps": [
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "View",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             }
+            ]
+           },
+           "listens": [],
+           "emits": []
+          }
+         ],
+         "listens": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "View": []
+       }
+      ],
+      "embedders": [
+       {
+        "View": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "controls": {
+       "View": [
+        {
+         "event": "GO",
+         "sites": [
+          "button.action"
+         ]
+        }
+       ]
+      },
+      "bridged": {
+       "View": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "control-unhandled",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CONTROL_NO_CONSEQUENCE",
+           "path": "orbitals.O.traits.View",
+           "message": "control button.action emits GO, whose handler in View changes nothing the app or the viewer can observe",
+           "suggestion": "Make 'GO' persist, fetch, navigate, emit an event, render, or set a field a render reads, or remove the control",
+           "severity": "error"
+          }
+         ]
+        }
+       },
+       {
+        "event": "CONTROLS_FORWARDED",
+        "payload": {
+         "scope": "",
+         "forwards": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-consequence-an-arm-that-sets-a-field-no-render-reads-is-an-error",
+   "steps": [
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "View",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "button",
+                   "label": "go",
+                   "action": "GO"
+                  },
+                  {
+                   "type": "typography",
+                   "content": "@entity.id"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                1
+               ]
+              ]
+             }
+            ]
+           },
+           "listens": [],
+           "emits": []
+          }
+         ],
+         "listens": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "View": []
+       }
+      ],
+      "embedders": [
+       {
+        "View": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "controls": {
+       "View": [
+        {
+         "event": "GO",
+         "sites": [
+          "button.action"
+         ]
+        }
+       ]
+      },
+      "bridged": {
+       "View": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "control-unhandled",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CONTROL_NO_CONSEQUENCE",
+           "path": "orbitals.O.traits.View",
+           "message": "control button.action emits GO, whose handler in View changes nothing the app or the viewer can observe",
+           "suggestion": "Make 'GO' persist, fetch, navigate, emit an event, render, or set a field a render reads, or remove the control",
+           "severity": "error"
+          }
+         ]
+        }
+       },
+       {
+        "event": "CONTROLS_FORWARDED",
+        "payload": {
+         "scope": "",
+         "forwards": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-consequence-a-persist-arm-is-clean",
+   "steps": [
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "View",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "persist",
+                "update",
+                "E",
+                "@entity.id",
+                {
+                 "n": 2
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "listens": [],
+           "emits": []
+          }
+         ],
+         "listens": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "View": []
+       }
+      ],
+      "embedders": [
+       {
+        "View": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "controls": {
+       "View": [
+        {
+         "event": "GO",
+         "sites": [
+          "button.action"
+         ]
+        }
+       ]
+      },
+      "bridged": {
+       "View": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "control-unhandled",
+         "scope": "",
+         "findings": []
+        }
+       },
+       {
+        "event": "CONTROLS_FORWARDED",
+        "payload": {
+         "scope": "",
+         "forwards": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-consequence-an-arm-that-emits-is-clean-and-an-unlistened-emit-is-the-unused-emission-rules",
+   "steps": [
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "View",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "emit",
+                "SOMETHING",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "listens": [],
+           "emits": []
+          }
+         ],
+         "listens": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "View": []
+       }
+      ],
+      "embedders": [
+       {
+        "View": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "controls": {
+       "View": [
+        {
+         "event": "GO",
+         "sites": [
+          "button.action"
+         ]
+        }
+       ]
+      },
+      "bridged": {
+       "View": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "control-unhandled",
+         "scope": "",
+         "findings": []
+        }
+       },
+       {
+        "event": "CONTROLS_FORWARDED",
+        "payload": {
+         "scope": "",
+         "forwards": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-consequence-a-navigate-arm-is-clean",
+   "steps": [
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "View",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "navigate",
+                "/x"
+               ]
+              ]
+             }
+            ]
+           },
+           "listens": [],
+           "emits": []
+          }
+         ],
+         "listens": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "View": []
+       }
+      ],
+      "embedders": [
+       {
+        "View": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "controls": {
+       "View": [
+        {
+         "event": "GO",
+         "sites": [
+          "button.action"
+         ]
+        }
+       ]
+      },
+      "bridged": {
+       "View": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "control-unhandled",
+         "scope": "",
+         "findings": []
+        }
+       },
+       {
+        "event": "CONTROLS_FORWARDED",
+        "payload": {
+         "scope": "",
+         "forwards": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-consequence-a-toggle-setting-a-field-a-render-reads-is-clean",
+   "steps": [
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "View",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "button",
+                   "label": "go",
+                   "action": "GO"
+                  },
+                  {
+                   "type": "typography",
+                   "content": "@entity.n"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "TOGGLE",
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                1
+               ]
+              ]
+             }
+            ]
+           },
+           "listens": [],
+           "emits": []
+          }
+         ],
+         "listens": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "View": []
+       }
+      ],
+      "embedders": [
+       {
+        "View": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "controls": {
+       "View": [
+        {
+         "event": "TOGGLE",
+         "sites": [
+          "button.action"
+         ]
+        }
+       ]
+      },
+      "bridged": {
+       "View": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "control-unhandled",
+         "scope": "",
+         "findings": []
+        }
+       },
+       {
+        "event": "CONTROLS_FORWARDED",
+        "payload": {
+         "scope": "",
+         "forwards": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-consequence-a-persist-nested-in-an-if-is-clean",
+   "steps": [
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "View",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "if",
+                [
+                 "=",
+                 "@entity.n",
+                 0
+                ],
+                [
+                 "do",
+                 [
+                  "persist",
+                  "update",
+                  "E",
+                  "@entity.id",
+                  {
+                   "n": 2
+                  }
+                 ]
+                ],
+                null
+               ]
+              ]
+             }
+            ]
+           },
+           "listens": [],
+           "emits": []
+          }
+         ],
+         "listens": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "View": []
+       }
+      ],
+      "embedders": [
+       {
+        "View": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "controls": {
+       "View": [
+        {
+         "event": "GO",
+         "sites": [
+          "button.action"
+         ]
+        }
+       ]
+      },
+      "bridged": {
+       "View": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "control-unhandled",
+         "scope": "",
+         "findings": []
+        }
+       },
+       {
+        "event": "CONTROLS_FORWARDED",
+        "payload": {
+         "scope": "",
+         "forwards": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-consequence-one-arm-with-a-consequence-covers-a-guarded-empty-arm",
+   "steps": [
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "View",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "call-service",
+                "svc",
+                "run",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "listens": [],
+           "emits": []
+          }
+         ],
+         "listens": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "View": []
+       }
+      ],
+      "embedders": [
+       {
+        "View": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "controls": {
+       "View": [
+        {
+         "event": "GO",
+         "sites": [
+          "button.action"
+         ]
+        }
+       ]
+      },
+      "bridged": {
+       "View": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "control-unhandled",
+         "scope": "",
+         "findings": []
+        }
+       },
+       {
+        "event": "CONTROLS_FORWARDED",
+        "payload": {
+         "scope": "",
+         "forwards": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-consequence-a-set-after-the-target-reading-only-the-value-is-an-error",
+   "steps": [
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "n",
+            "type": "number"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "View",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "children": [
+                  {
+                   "type": "button",
+                   "label": "go",
+                   "action": "GO"
+                  },
+                  {
+                   "type": "typography",
+                   "content": "@entity.id"
+                  }
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO",
+              "effects": [
+               [
+                "set",
+                "@entity.n",
+                "@entity.id"
+               ]
+              ]
+             }
+            ]
+           },
+           "listens": [],
+           "emits": []
+          }
+         ],
+         "listens": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "View": []
+       }
+      ],
+      "embedders": [
+       {
+        "View": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "controls": {
+       "View": [
+        {
+         "event": "GO",
+         "sites": [
+          "button.action"
+         ]
+        }
+       ]
+      },
+      "bridged": {
+       "View": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintControlUnhandled",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "control-unhandled",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CONTROL_NO_CONSEQUENCE",
+           "path": "orbitals.O.traits.View",
+           "message": "control button.action emits GO, whose handler in View changes nothing the app or the viewer can observe",
+           "suggestion": "Make 'GO' persist, fetch, navigate, emit an event, render, or set a field a render reads, or remove the control",
            "severity": "error"
           }
          ]

@@ -1,0 +1,117 @@
+{
+ "atom": "store/atoms/std-data-import.lolo",
+ "trait": "DataImportLifecycle",
+ "cases": [
+  {
+   "id": "a-negative-error-count-fails-the-batch-instead-of-staging-it",
+   "entity": {
+    "id": "b1",
+    "sourceName": "s",
+    "status": "uploaded",
+    "rowCount": 0,
+    "errorCount": 0
+   },
+   "steps": [
+    {
+     "from": "uploaded",
+     "event": "STAGE_ROWS",
+     "payload": {
+      "rows": [
+       "{\"a\":\"1\"}"
+      ],
+      "errorCount": -3
+     },
+     "expect": {
+      "state": "failed",
+      "emits": [
+       {
+        "event": "IMPORT_FAILED",
+        "payload": {
+         "batchId": "b1",
+         "error": "The staged error count is negative, nothing was staged."
+        }
+       }
+      ],
+      "neverEmits": [
+       "ROWS_STAGED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-zero-error-count-stages-the-rows",
+   "entity": {
+    "id": "b1",
+    "sourceName": "s",
+    "status": "uploaded",
+    "rowCount": 0,
+    "errorCount": 0
+   },
+   "steps": [
+    {
+     "from": "uploaded",
+     "event": "STAGE_ROWS",
+     "payload": {
+      "rows": [
+       "{\"a\":\"1\"}"
+      ],
+      "errorCount": 0
+     },
+     "expect": {
+      "state": "staged"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-absent-error-count-stages-the-rows",
+   "entity": {
+    "id": "b1",
+    "sourceName": "s",
+    "status": "uploaded",
+    "rowCount": 0,
+    "errorCount": 0
+   },
+   "steps": [
+    {
+     "from": "uploaded",
+     "event": "STAGE_ROWS",
+     "payload": {
+      "rows": [
+       "{\"a\":\"1\"}"
+      ]
+     },
+     "expect": {
+      "state": "staged"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-positive-error-count-stages-the-rows",
+   "entity": {
+    "id": "b1",
+    "sourceName": "s",
+    "status": "uploaded",
+    "rowCount": 0,
+    "errorCount": 0
+   },
+   "steps": [
+    {
+     "from": "uploaded",
+     "event": "STAGE_ROWS",
+     "payload": {
+      "rows": [
+       "{\"a\":\"1\"}"
+      ],
+      "errorCount": 2
+     },
+     "expect": {
+      "state": "staged"
+     }
+    }
+   ]
+  }
+ ]
+}

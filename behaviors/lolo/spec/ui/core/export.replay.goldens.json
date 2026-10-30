@@ -1,0 +1,88 @@
+{
+  "atom": "../ui/core/atoms/std-export.lolo",
+  "trait": "ExportMenu",
+  "cases": [
+    {
+      "id": "picked-format-emits-export-requested",
+      "note": "the menu item fires EXPORT_PICKED; the trait answers with the consumer contract EXPORT_REQUESTED { itemId, label }",
+      "steps": [
+        {
+          "trait": "ExportMenu",
+          "from": "idle",
+          "event": "EXPORT_PICKED",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {
+            "itemId": "xlsx",
+            "label": "XLSX"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "exactEmits": [
+              {
+                "event": "EXPORT_REQUESTED",
+                "payload": {
+                  "itemId": "xlsx",
+                  "label": "XLSX"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-another-format-carries-its-own-payload",
+      "note": "control: a different entry emits its own itemId and label, not the first one",
+      "steps": [
+        {
+          "trait": "ExportMenu",
+          "from": "idle",
+          "event": "EXPORT_PICKED",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {
+            "itemId": "pdf",
+            "label": "PDF"
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "EXPORT_REQUESTED",
+                "payload": {
+                  "itemId": "pdf",
+                  "label": "PDF"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-init-renders-and-emits-nothing",
+      "note": "control: mounting renders the menu and requests no export",
+      "steps": [
+        {
+          "trait": "ExportMenu",
+          "from": "idle",
+          "event": "INIT",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "EXPORT_REQUESTED"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

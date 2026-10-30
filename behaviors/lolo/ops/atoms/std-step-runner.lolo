@@ -19,8 +19,8 @@ orbital StepRunnerOrbital {
     dirFlag : string @description "The flag that names a step's directory in its argv (for git, -C); blank passes no directory." = ""
     rawInputs : [bytes] @description "Raw stdin bytes, indexed by step." = []
     cursor : number = 0
-    outputs : [string] = []
-    rawOuts : [bytes] = []
+    outputs : [string] @description "Each step's stdout as text; empty when the stdout is not UTF-8 text (a binary step such as a bundle), whose bytes are in rawOuts at the same index." = []
+    rawOuts : [bytes] @description "Each step's stdout bytes, always kept." = []
     codes : [number] = []
     failures : [string] = []
     argv : [string] = []
@@ -70,12 +70,16 @@ orbital StepRunnerOrbital {
       STEPS_RUN -> running
         (emit STEPS_FAILED { requestId: @payload.requestId, index: -1, code: "steps_busy", stderr: (str/concat "run " @entity.requestId " is in flight"), stdout: "" })
 
-      STEP_NEXT -> running
-        (set @entity.argv (array/concat (if (!= @entity.dirFlag "") [@entity.dirFlag, (if (== (object/get (array/nth @entity.steps @entity.cursor) scope) "root") @entity.rootDir @entity.repoDir)] []) @entity.prefix (object/get (array/nth @entity.steps @entity.cursor) args)))
-        (set @entity.stepIn (object/get (array/nth @entity.steps @entity.cursor) stdin))
-        (set @entity.stepFeed (object/get (array/nth @entity.steps @entity.cursor) feed))
-        (set @entity.stepRaw (object/get (array/nth @entity.steps @entity.cursor) raw))
-        (set @entity.stepRawIn (if (object/get (array/nth @entity.steps @entity.cursor) raw) (array/nth @entity.rawInputs @entity.cursor) (bytes/from-string "")))
+      STEP_NEXT -> idle when (not (and (>= @entity.cursor 0) (< @entity.cursor (array/len @entity.steps))))
+        (emit STEPS_FAILED { requestId: @entity.requestId, index: @entity.cursor, code: "step_missing", stderr: (str/concat "step " @entity.cursor " is not in the run's " (array/len @entity.steps) " steps"), stdout: "" })
+      STEP_NEXT -> idle when (and (and (>= @entity.cursor 0) (< @entity.cursor (array/len @entity.steps))) (and (object/get (default (array/nth @entity.steps @entity.cursor) { scope: "repo", args: [], stdin: "", feed: false, tolerate: false, raw: false }) feed false) (object/get (default (array/nth @entity.steps @entity.cursor) { scope: "repo", args: [], stdin: "", feed: false, tolerate: false, raw: false }) raw false) (>= @entity.cursor (array/len @entity.rawInputs))))
+        (emit STEPS_FAILED { requestId: @entity.requestId, index: @entity.cursor, code: "raw_input_missing", stderr: (str/concat "step " @entity.cursor " feeds raw stdin but the run carries " (array/len @entity.rawInputs) " raw inputs"), stdout: "" })
+      STEP_NEXT -> running when (and (and (>= @entity.cursor 0) (< @entity.cursor (array/len @entity.steps))) (not (and (object/get (default (array/nth @entity.steps @entity.cursor) { scope: "repo", args: [], stdin: "", feed: false, tolerate: false, raw: false }) feed false) (object/get (default (array/nth @entity.steps @entity.cursor) { scope: "repo", args: [], stdin: "", feed: false, tolerate: false, raw: false }) raw false) (>= @entity.cursor (array/len @entity.rawInputs)))))
+        (set @entity.argv (array/concat (if (!= @entity.dirFlag "") [@entity.dirFlag, (if (== (object/get (default (array/nth @entity.steps @entity.cursor) { scope: "repo", args: [], stdin: "", feed: false, tolerate: false, raw: false }) scope "repo") "root") @entity.rootDir @entity.repoDir)] []) @entity.prefix (object/get (default (array/nth @entity.steps @entity.cursor) { scope: "repo", args: [], stdin: "", feed: false, tolerate: false, raw: false }) args [])))
+        (set @entity.stepIn (object/get (default (array/nth @entity.steps @entity.cursor) { scope: "repo", args: [], stdin: "", feed: false, tolerate: false, raw: false }) stdin ""))
+        (set @entity.stepFeed (object/get (default (array/nth @entity.steps @entity.cursor) { scope: "repo", args: [], stdin: "", feed: false, tolerate: false, raw: false }) feed false))
+        (set @entity.stepRaw (object/get (default (array/nth @entity.steps @entity.cursor) { scope: "repo", args: [], stdin: "", feed: false, tolerate: false, raw: false }) raw false))
+        (set @entity.stepRawIn (if (and (object/get (default (array/nth @entity.steps @entity.cursor) { scope: "repo", args: [], stdin: "", feed: false, tolerate: false, raw: false }) feed false) (object/get (default (array/nth @entity.steps @entity.cursor) { scope: "repo", args: [], stdin: "", feed: false, tolerate: false, raw: false }) raw false)) (default (array/nth @entity.rawInputs @entity.cursor) (bytes/from-string "")) (bytes/from-string "")))
         (emit STEP_EXEC { })
 
       STEP_EXEC -> running when (not @entity.stepFeed)
@@ -83,17 +87,19 @@ orbital StepRunnerOrbital {
       STEP_EXEC -> running when @entity.stepFeed
         (emit STEP_CLI_RUN { stage: @entity.requestId, argv: @entity.argv, env: @entity.env, stdin: (if @entity.stepRaw @entity.stepRawIn (bytes/from-string @entity.stepIn)) })
 
-      STEP_RAN -> idle when (and (!= @payload.exitCode 0) (not (object/get (array/nth @entity.steps @entity.cursor) tolerate)))
-        (emit STEPS_FAILED { requestId: @entity.requestId, index: @entity.cursor, code: "step_failed", stderr: @payload.stderr, stdout: (if (base64/valid (str/template "{{data}}" { data: @payload.stdoutBytes })) (bytes/to-string @payload.stdoutBytes) "") })
-      STEP_RAN -> running when (and (or (== @payload.exitCode 0) (object/get (array/nth @entity.steps @entity.cursor) tolerate)) (< (+ @entity.cursor 1) (array/len @entity.steps)))
-        (set @entity.outputs (array/append @entity.outputs (if (base64/valid (str/template "{{data}}" { data: @payload.stdoutBytes })) (bytes/to-string @payload.stdoutBytes) "")))
+      STEP_RAN -> idle when (not (and (>= @entity.cursor 0) (< @entity.cursor (array/len @entity.steps))))
+        (emit STEPS_FAILED { requestId: @entity.requestId, index: @entity.cursor, code: "step_missing", stderr: (str/concat "step " @entity.cursor " is not in the run's " (array/len @entity.steps) " steps"), stdout: "" })
+      STEP_RAN -> idle when (and (and (>= @entity.cursor 0) (< @entity.cursor (array/len @entity.steps))) (!= @payload.exitCode 0) (not (object/get (default (array/nth @entity.steps @entity.cursor) { scope: "repo", args: [], stdin: "", feed: false, tolerate: false, raw: false }) tolerate false)))
+        (emit STEPS_FAILED { requestId: @entity.requestId, index: @entity.cursor, code: "step_failed", stderr: @payload.stderr, stdout: (if (base64/valid (str/template "{{data}}" { data: @payload.stdoutBytes })) (default (bytes/to-string @payload.stdoutBytes) "") "") })
+      STEP_RAN -> running when (and (and (>= @entity.cursor 0) (< @entity.cursor (array/len @entity.steps))) (or (== @payload.exitCode 0) (object/get (default (array/nth @entity.steps @entity.cursor) { scope: "repo", args: [], stdin: "", feed: false, tolerate: false, raw: false }) tolerate false)) (< (+ @entity.cursor 1) (array/len @entity.steps)))
+        (set @entity.outputs (array/append @entity.outputs (if (base64/valid (str/template "{{data}}" { data: @payload.stdoutBytes })) (default (bytes/to-string @payload.stdoutBytes) "") "")))
         (set @entity.rawOuts (array/append @entity.rawOuts @payload.stdoutBytes))
         (set @entity.codes (array/append @entity.codes @payload.exitCode))
         (set @entity.failures (array/append @entity.failures @payload.stderr))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit STEP_NEXT { })
-      STEP_RAN -> idle when (and (or (== @payload.exitCode 0) (object/get (array/nth @entity.steps @entity.cursor) tolerate)) (>= (+ @entity.cursor 1) (array/len @entity.steps)))
-        (set @entity.outputs (array/append @entity.outputs (if (base64/valid (str/template "{{data}}" { data: @payload.stdoutBytes })) (bytes/to-string @payload.stdoutBytes) "")))
+      STEP_RAN -> idle when (and (and (>= @entity.cursor 0) (< @entity.cursor (array/len @entity.steps))) (or (== @payload.exitCode 0) (object/get (default (array/nth @entity.steps @entity.cursor) { scope: "repo", args: [], stdin: "", feed: false, tolerate: false, raw: false }) tolerate false)) (>= (+ @entity.cursor 1) (array/len @entity.steps)))
+        (set @entity.outputs (array/append @entity.outputs (if (base64/valid (str/template "{{data}}" { data: @payload.stdoutBytes })) (default (bytes/to-string @payload.stdoutBytes) "") "")))
         (set @entity.rawOuts (array/append @entity.rawOuts @payload.stdoutBytes))
         (set @entity.codes (array/append @entity.codes @payload.exitCode))
         (set @entity.failures (array/append @entity.failures @payload.stderr))
@@ -111,7 +117,7 @@ orbital StepRunnerOrbital {
         codes : [number]!
         failures : [string]!
       }
-        @description "Every step ran (a non-zero exit only for tolerated steps): each step's text output, bytes output, exit code and stderr, in order."
+        @description "Every step ran (a non-zero exit only for tolerated steps): each step's text output (empty when its stdout is not UTF-8 text; the bytes are in rawOuts), bytes output, exit code and stderr, in order."
         @synonyms "steps finished, run finished"
         @tier "primary"
       STEPS_FAILED -> external {
@@ -121,7 +127,7 @@ orbital StepRunnerOrbital {
         stderr : string!
         stdout : string!
       }
-        @description "The run stopped: step_failed (the step at index exited non-zero and is not tolerated), cli_spawn_failed (the CLI could not run the step) or steps_busy (a run is already in flight)."
+        @description "The run stopped: step_failed (the step at index exited non-zero and is not tolerated), step_missing (the cursor names no step in the run), raw_input_missing (a step that feeds raw stdin has no raw input at its index), cli_spawn_failed (the CLI could not run the step) or steps_busy (a run is already in flight)."
         @tier "primary"
       STEP_NEXT -> internal { }
         @tier "internal"

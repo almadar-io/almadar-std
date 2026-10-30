@@ -43,7 +43,6 @@ import { PATH_OPERATORS } from './modules/path.js';
 import { LLM_OPERATORS } from './modules/llm.js';
 import { WORKSPACE_OPERATORS } from './modules/workspace.js';
 import { SESSION_OPERATORS } from './modules/session.js';
-import { MEMORY_OPERATORS } from './modules/memory.js';
 import { TRACE_OPERATORS } from './modules/trace.js';
 import { AUDIO_OPERATORS } from './modules/audio.js';
 import { AUTH_OPERATORS } from './modules/auth.js';
@@ -90,7 +89,6 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...SESSION_OPERATORS,
   ...AUDIO_OPERATORS,
   ...AUTH_OPERATORS,
-  ...MEMORY_OPERATORS,
   ...TRACE_OPERATORS,
   ...BEHAVIOR_OPERATORS,
   ...PROGRAM_OPERATORS,
@@ -146,7 +144,6 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   llm: LLM_OPERATORS,
   workspace: WORKSPACE_OPERATORS,
   session: SESSION_OPERATORS,
-  memory: MEMORY_OPERATORS,
   trace: TRACE_OPERATORS,
   audio: AUDIO_OPERATORS,
   auth: AUTH_OPERATORS,

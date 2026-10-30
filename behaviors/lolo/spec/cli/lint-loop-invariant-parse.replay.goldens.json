@@ -1698,6 +1698,415 @@
           }
         }
       ]
+    },
+    {
+      "id": "a json/stringify then json/parse round trip in an effect is an error",
+      "note": "Owner hard rule 2026-10-30 (CLAUDE.md): no stringify→parse round trip in .lolo.",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "json/parse",
+                                  [
+                                    "json/stringify",
+                                    "@payload.result"
+                                  ],
+                                  "Row"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [
+                    {
+                      "code": "ORB_JSON_ROUNDTRIP",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "json/parse re-parses a value json/stringify just serialized: this round trip launders the value's type past the checker",
+                      "suggestion": "Narrow the value with `(as value T)` instead; keep json/parse for text that arrives as text (a body, a file, rawBody).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a round trip in a guard is an error",
+      "note": "",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "guard": [
+                              "!=",
+                              [
+                                "json/parse",
+                                [
+                                  "json/stringify",
+                                  "@payload.result"
+                                ],
+                                "Row"
+                              ],
+                              null
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [
+                    {
+                      "code": "ORB_JSON_ROUNDTRIP",
+                      "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].guard",
+                      "message": "json/parse re-parses a value json/stringify just serialized: this round trip launders the value's type past the checker",
+                      "suggestion": "Narrow the value with `(as value T)` instead; keep json/parse for text that arrives as text (a body, a file, rawBody).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: json/parse of text that arrives as text is clean",
+      "note": "",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "json/parse",
+                                  "@payload.body",
+                                  "Row"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: checked narrowing with as is clean",
+      "note": "",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.out",
+                                [
+                                  "as",
+                                  "@payload.result",
+                                  "Row"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: json/stringify alone, to build text, is clean",
+      "note": "",
+      "steps": [
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_INPUT",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "traits": [
+                    {
+                      "name": "T",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "E",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.text",
+                                [
+                                  "json/stringify",
+                                  "@payload.result"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintLoopInvariantParse",
+          "from": "ready",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "loop-invariant-parse",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

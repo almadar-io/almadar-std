@@ -9,6 +9,7 @@
  */
 
 import type { OperatorTypeRef, StdOperatorMeta } from '../types.js';
+import { OS_SEGMENT_ENCODE } from './os-common.js';
 import { BOOLEAN, BYTES, NUMBER, STRING, shape, lit, nullable, union } from '../signature.js';
 
 const DIGEST_ENCODING: OperatorTypeRef = union(lit('hex'), lit('base64'));
@@ -137,12 +138,15 @@ export const CREDENTIAL_VALUE_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'credential',
     category: 'std-codec',
     minArity: 1,
-    maxArity: 1,
-    description: 'The length in UTF-8 bytes of a credential\'s value, so a program can frame a wire message around a credential segment the host fills in (an os/send segment) without ever holding the value. The credential argument is a credential slot: a secret-typed @config knob naming the credential the kernel resolves into the evaluation. The result is null when the credential is not held. Runs only in the kernel',
+    maxArity: 2,
+    description: 'The length in UTF-8 bytes of a credential\'s value, or of the value after the encode (base64, uri or form, as an os/send segment encode) when one is given, so a program can frame a wire message around a credential segment the host fills in (an os/send segment) without ever holding the value. The credential argument is a credential slot: a secret-typed @config knob naming the credential the kernel resolves into the evaluation. The result is null when the credential is not held. Runs only in the kernel',
     hasSideEffects: false,
     returnType: nullable(NUMBER),
-    params: [{ name: 'credential', type: STRING, description: 'A secret-typed @config knob naming the credential that holds the value' }],
-    example: '["credential/byte-length", "@config.password"] // => 8 when the credential holds password',
+    params: [
+      { name: 'credential', type: STRING, description: 'A secret-typed @config knob naming the credential that holds the value' },
+      { name: 'encode', type: OS_SEGMENT_ENCODE, description: 'The os/send segment encode whose output length is answered', optional: true },
+    ],
+    example: '["credential/byte-length", "@config.password", "form"] // => the length of the form-encoded password',
   },
 };
 

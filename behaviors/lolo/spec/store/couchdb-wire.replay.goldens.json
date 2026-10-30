@@ -1,0 +1,653 @@
+{
+  "atom": "store/atoms/std-couchdb.lolo",
+  "trait": "RowStoreDriver",
+  "note": "The CouchDB request shapes: method, escaped target, headers and body of each COUCH_HTTP_SEND. Basic auth is the composed client's COUCHDB_BASIC_AUTH credential and never appears in an event.",
+  "cases": [
+    {
+      "id": "get-asks-one-get-on-the-escaped-document-path",
+      "steps": [
+        {
+          "event": "COUCH_GET",
+          "payload": {
+            "db": "time_entries",
+            "id": "a b"
+          },
+          "from": "idle",
+          "expect": {
+            "state": "getting",
+            "emits": [
+              {
+                "event": "COUCH_HTTP_SEND",
+                "payload": {
+                  "key": "get",
+                  "method": "GET",
+                  "target": "/time_entries/a%20b",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CouchHttp"
+      ]
+    },
+    {
+      "id": "create-on-a-new-database-asks-a-put-on-the-database",
+      "steps": [
+        {
+          "event": "COUCH_CREATE",
+          "payload": {
+            "db": "stocks",
+            "id": "s1",
+            "row": {
+              "stock": 1
+            }
+          },
+          "from": "idle",
+          "expect": {
+            "state": "ensuring",
+            "emits": [
+              {
+                "event": "COUCH_HTTP_SEND",
+                "payload": {
+                  "key": "ensure",
+                  "method": "PUT",
+                  "target": "/stocks",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "c",
+            "ensured": []
+          }
+        }
+      ],
+      "defaults": [
+        "CouchHttp"
+      ]
+    },
+    {
+      "id": "create-on-a-known-database-puts-the-document-with-its-id-merged",
+      "steps": [
+        {
+          "event": "COUCH_CREATE",
+          "payload": {
+            "db": "stocks",
+            "id": "s1",
+            "row": {
+              "stock": 1
+            }
+          },
+          "from": "idle",
+          "expect": {
+            "state": "writing",
+            "emits": [
+              {
+                "event": "COUCH_HTTP_SEND",
+                "payload": {
+                  "key": "write",
+                  "method": "PUT",
+                  "target": "/stocks/s1",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJzdG9jayI6MSwiX2lkIjoiczEiLCJpZCI6InMxIn0=",
+                  "stream": "none"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "c",
+            "ensured": [
+              "stocks"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CouchHttp"
+      ]
+    },
+    {
+      "id": "list-asks-all-docs-with-the-documents-included",
+      "steps": [
+        {
+          "event": "COUCH_LIST",
+          "payload": {
+            "db": "stocks"
+          },
+          "from": "idle",
+          "expect": {
+            "state": "listing",
+            "emits": [
+              {
+                "event": "COUCH_HTTP_SEND",
+                "payload": {
+                  "key": "list",
+                  "method": "GET",
+                  "target": "/stocks/_all_docs?include_docs=true",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CouchHttp"
+      ]
+    },
+    {
+      "id": "update-reads-the-document-first",
+      "steps": [
+        {
+          "event": "COUCH_UPDATE",
+          "payload": {
+            "db": "stocks",
+            "id": "s1",
+            "changes": {
+              "stock": 2
+            }
+          },
+          "from": "idle",
+          "expect": {
+            "state": "reading",
+            "emits": [
+              {
+                "event": "COUCH_HTTP_SEND",
+                "payload": {
+                  "key": "read",
+                  "method": "GET",
+                  "target": "/stocks/s1",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CouchHttp"
+      ]
+    },
+    {
+      "id": "delete-reads-the-document-first",
+      "steps": [
+        {
+          "event": "COUCH_DELETE",
+          "payload": {
+            "db": "stocks",
+            "id": "s1"
+          },
+          "from": "idle",
+          "expect": {
+            "state": "reading",
+            "emits": [
+              {
+                "event": "COUCH_HTTP_SEND",
+                "payload": {
+                  "key": "read",
+                  "method": "GET",
+                  "target": "/stocks/s1",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CouchHttp"
+      ]
+    },
+    {
+      "id": "ensure-indexes-asks-a-put-on-the-database-first",
+      "steps": [
+        {
+          "event": "ROWS_ENSURE_INDEXES",
+          "payload": {
+            "key": "k",
+            "entityType": "Stock",
+            "indexes": [
+              {
+                "fields": [
+                  "a"
+                ],
+                "orderBy": "b:desc"
+              }
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "state": "indexing",
+            "emits": [
+              {
+                "event": "COUCH_HTTP_SEND",
+                "payload": {
+                  "key": "idb",
+                  "method": "PUT",
+                  "target": "/stocks",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CouchHttp"
+      ]
+    },
+    {
+      "id": "index-post-lists-the-fields-then-the-order-column-descending",
+      "steps": [
+        {
+          "event": "COUCH_IDX_DB_REPLIED",
+          "payload": {
+            "status": 201,
+            "headers": {},
+            "body": "{}"
+          },
+          "from": "indexing",
+          "expect": {
+            "state": "indexing",
+            "emits": [
+              {
+                "event": "COUCH_HTTP_SEND",
+                "payload": {
+                  "key": "idx",
+                  "method": "POST",
+                  "target": "/stock/_index",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJpbmRleCI6eyJmaWVsZHMiOlt7ImEiOiJkZXNjIn0seyJiIjoiZGVzYyJ9XX0sIm5hbWUiOiJhX2JfZGVzY19pZHgiLCJ0eXBlIjoianNvbiJ9",
+                  "stream": "none"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "c",
+            "db": "stock",
+            "paths": [
+              {
+                "fields": [
+                  "a"
+                ],
+                "orderBy": "b:desc"
+              }
+            ],
+            "at": 0
+          }
+        }
+      ],
+      "defaults": [
+        "CouchHttp"
+      ]
+    },
+    {
+      "id": "control-index-post-without-an-order-column-lists-plain-fields",
+      "steps": [
+        {
+          "event": "COUCH_IDX_DB_REPLIED",
+          "payload": {
+            "status": 201,
+            "headers": {},
+            "body": "{}"
+          },
+          "from": "indexing",
+          "expect": {
+            "state": "indexing",
+            "emits": [
+              {
+                "event": "COUCH_HTTP_SEND",
+                "payload": {
+                  "key": "idx",
+                  "method": "POST",
+                  "target": "/stock/_index",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJpbmRleCI6eyJmaWVsZHMiOlsiYSIsImMiXX0sIm5hbWUiOiJhX2NfaWR4IiwidHlwZSI6Impzb24ifQ==",
+                  "stream": "none"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "c",
+            "db": "stock",
+            "paths": [
+              {
+                "fields": [
+                  "a",
+                  "c"
+                ]
+              }
+            ],
+            "at": 0
+          }
+        }
+      ],
+      "defaults": [
+        "CouchHttp"
+      ]
+    },
+    {
+      "id": "delete-write-is-a-delete-carrying-the-read-rev",
+      "steps": [
+        {
+          "event": "COUCH_READ_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "{\"_id\":\"s1\",\"_rev\":\"3-x y\"}"
+          },
+          "from": "reading",
+          "expect": {
+            "state": "writing",
+            "emits": [
+              {
+                "event": "COUCH_HTTP_SEND",
+                "payload": {
+                  "key": "write",
+                  "method": "DELETE",
+                  "target": "/stocks/s1?rev=3-x%20y",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "c",
+            "db": "stocks",
+            "docId": "s1",
+            "op": "delete"
+          }
+        }
+      ],
+      "defaults": [
+        "CouchHttp"
+      ]
+    },
+    {
+      "id": "find-posts-the-selector-sort-and-limit",
+      "steps": [
+        {
+          "event": "COUCH_FIND",
+          "payload": {
+            "db": "stocks",
+            "selector": "{\"a\":1}",
+            "sort": "[{\"_id\":\"asc\"}]",
+            "limit": 5
+          },
+          "from": "idle",
+          "expect": {
+            "state": "finding",
+            "emits": [
+              {
+                "event": "COUCH_HTTP_SEND",
+                "payload": {
+                  "key": "find",
+                  "method": "POST",
+                  "target": "/stocks/_find",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJzZWxlY3RvciI6eyJhIjoxfSwic29ydCI6W3siX2lkIjoiYXNjIn1dLCJza2lwIjowLCJsaW1pdCI6NX0=",
+                  "stream": "none"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "c",
+            "fields": ""
+          }
+        }
+      ],
+      "defaults": [
+        "CouchHttp"
+      ]
+    },
+    {
+      "id": "count-posts-the-selector-asking-only-ids",
+      "steps": [
+        {
+          "event": "COUCH_FIND",
+          "payload": {
+            "db": "stocks",
+            "selector": "{\"a\":1}",
+            "sort": "[]",
+            "limit": 0
+          },
+          "from": "idle",
+          "expect": {
+            "state": "counting",
+            "emits": [
+              {
+                "event": "COUCH_HTTP_SEND",
+                "payload": {
+                  "key": "count",
+                  "method": "POST",
+                  "target": "/stocks/_find",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    },
+                    {
+                      "name": "content-type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "eyJzZWxlY3RvciI6eyJhIjoxfSwiZmllbGRzIjpbIl9pZCJdLCJsaW1pdCI6MTAwMH0=",
+                  "stream": "none"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "c"
+          }
+        }
+      ],
+      "defaults": [
+        "CouchHttp"
+      ]
+    },
+    {
+      "id": "the-deadline-passing-fails-the-request-with-the-timeout-message",
+      "steps": [
+        {
+          "trait": "CouchTimeout",
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "key": "get"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TIMED_OUT",
+                "payload": {
+                  "key": "get",
+                  "timeoutMs": 10000
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-timeout-in-the-getting-state-fails-the-get-with-the-request-failed-message",
+      "steps": [
+        {
+          "event": "COUCH_UNREACHABLE",
+          "payload": {
+            "error": "timeout of 10000ms exceeded",
+            "kind": "timeout"
+          },
+          "from": "getting",
+          "entity": {
+            "id": "c",
+            "op": "get"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "COUCH_FAILED",
+                "payload": {
+                  "status": 0,
+                  "message": "CouchDB request failed: timeout of 10000ms exceeded"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-reply-before-the-deadline-wins-the-race-and-disarms-it",
+      "steps": [
+        {
+          "trait": "CouchTimeout",
+          "event": "START",
+          "payload": {
+            "key": "get"
+          },
+          "expect": {
+            "state": "running"
+          }
+        },
+        {
+          "trait": "CouchTimeout",
+          "event": "SUCCEEDED",
+          "payload": {
+            "key": "get"
+          },
+          "from": "running",
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "TIMED_OUT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-request-starts-the-deadline-under-its-call-key",
+      "defaults": [
+        "CouchHttp"
+      ],
+      "steps": [
+        {
+          "event": "COUCH_GET",
+          "payload": {
+            "db": "stocks",
+            "id": "s1"
+          },
+          "from": "idle",
+          "expect": {
+            "emits": [
+              {
+                "event": "ASK_STARTED",
+                "payload": {
+                  "key": "get"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

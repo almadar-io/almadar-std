@@ -4340,6 +4340,1305 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-basic-credential-is-a-header-segment-the-host-base64-encodes",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmFzaWMg",
+         "request": "DQoNCg=="
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmFzaWMg",
+         "request": "DQoNCg=="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential",
+          "encode": "base64"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "BASIC_LOGIN",
+    "credentialHeader": "authorization",
+    "credentialPrefix": "Basic ",
+    "credentialEncode": "base64"
+   },
+   "credentials": {
+    "BASIC_LOGIN": "user:pass"
+   }
+  },
+  {
+   "id": "control-the-same-header-credential-with-encode-none-writes-the-segment-without-an-encode",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmFzaWMg",
+         "request": "DQoNCg=="
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmFzaWMg",
+         "request": "DQoNCg=="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "BASIC_LOGIN",
+    "credentialHeader": "authorization",
+    "credentialPrefix": "Basic ",
+    "credentialEncode": "none"
+   },
+   "credentials": {
+    "BASIC_LOGIN": "user:pass"
+   }
+  },
+  {
+   "id": "a-header-credential-can-ask-the-host-for-the-uri-encode",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmFzaWMg",
+         "request": "DQoNCg=="
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmFzaWMg",
+         "request": "DQoNCg=="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential",
+          "encode": "uri"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "BASIC_LOGIN",
+    "credentialHeader": "authorization",
+    "credentialPrefix": "Basic ",
+    "credentialEncode": "uri"
+   },
+   "credentials": {
+    "BASIC_LOGIN": "user:pass"
+   }
+  },
+  {
+   "id": "a-header-credential-can-ask-the-host-for-the-form-encode",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmFzaWMg",
+         "request": "DQoNCg=="
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSBIVFRQLzEuMQ0KaG9zdDogYXBpLmV4YW1wbGUudGVzdA0KYXV0aG9yaXphdGlvbjogQmFzaWMg",
+         "request": "DQoNCg=="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential",
+          "encode": "form"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "BASIC_LOGIN",
+    "credentialHeader": "authorization",
+    "credentialPrefix": "Basic ",
+    "credentialEncode": "form"
+   },
+   "credentials": {
+    "BASIC_LOGIN": "user:pass"
+   }
+  },
+  {
+   "id": "a-query-credential-is-spliced-after-a-question-mark-and-uri-encoded-by-the-host",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [
+       {
+        "name": "Accept",
+        "value": "text/plain"
+       }
+      ],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2tleT0=",
+         "request": "IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQphY2NlcHQ6IHRleHQvcGxhaW4NCg0K"
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2tleT0=",
+         "request": "IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQphY2NlcHQ6IHRleHQvcGxhaW4NCg0K"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential",
+          "encode": "uri"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "API_KEY",
+    "credentialIn": "query",
+    "credentialName": "key"
+   },
+   "credentials": {
+    "API_KEY": "k e&y"
+   }
+  },
+  {
+   "id": "control-a-target-that-already-has-a-query-takes-an-ampersand",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSZrZXk9",
+         "request": "IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQoNCg=="
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2E9MSZrZXk9",
+         "request": "IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQoNCg=="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential",
+          "encode": "uri"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "API_KEY",
+    "credentialIn": "query",
+    "credentialName": "key"
+   },
+   "credentials": {
+    "API_KEY": "k e&y"
+   }
+  },
+  {
+   "id": "a-query-credential-keeps-the-payload-body-after-the-head",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "POST",
+      "target": "/x",
+      "headers": [],
+      "body": "YWJj",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "UE9TVCAveD9rZXk9",
+         "request": "IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQpjb250ZW50LWxlbmd0aDogMw0KDQphYmM="
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "UE9TVCAveD9rZXk9",
+         "request": "IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQpjb250ZW50LWxlbmd0aDogMw0KDQphYmM="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential",
+          "encode": "uri"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "API_KEY",
+    "credentialIn": "query",
+    "credentialName": "key"
+   },
+   "credentials": {
+    "API_KEY": "k"
+   }
+  },
+  {
+   "id": "a-required-query-credential-that-is-not-held-fails-the-send-as-denied",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2tleT0=",
+         "request": "IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQoNCg=="
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "R0VUIC94P2tleT0=",
+         "request": "IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQoNCg=="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send"
+       }
+      ]
+     }
+    },
+    {
+     "event": "HC_IO_FAILED",
+     "payload": {
+      "error": "credential not held",
+      "kind": "denied",
+      "key": "send"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "denied",
+         "error": "credential not held"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_REPLIED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "API_KEY",
+    "credentialIn": "query",
+    "credentialName": "key"
+   }
+  },
+  {
+   "id": "control-an-optional-query-credential-that-is-not-held-adds-no-parameter",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "",
+         "request": "R0VUIC94IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQoNCg=="
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "",
+         "request": "R0VUIC94IEhUVFAvMS4xDQpob3N0OiBhcGkuZXhhbXBsZS50ZXN0DQoNCg=="
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": "@entity.request"
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "API_KEY",
+    "credentialIn": "query",
+    "credentialName": "key",
+    "credentialOptional": true
+   }
+  },
+  {
+   "id": "a-body-credential-is-the-last-form-field-and-the-content-length-counts-its-encoded-length",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "POST",
+      "target": "/token",
+      "headers": [
+       {
+        "name": "Content-Type",
+        "value": "application/x-www-form-urlencoded"
+       }
+      ],
+      "body": "Z3JhbnRfdHlwZT14",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "UE9TVCAvdG9rZW4gSFRUUC8xLjENCmhvc3Q6IGFwaS5leGFtcGxlLnRlc3QNCmNvbnRlbnQtdHlwZTogYXBwbGljYXRpb24veC13d3ctZm9ybS11cmxlbmNvZGVkDQpjb250ZW50LWxlbmd0aDogMzQNCg0KZ3JhbnRfdHlwZT14JmNsaWVudF9zZWNyZXQ9",
+         "request": ""
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "UE9TVCAvdG9rZW4gSFRUUC8xLjENCmhvc3Q6IGFwaS5leGFtcGxlLnRlc3QNCmNvbnRlbnQtdHlwZTogYXBwbGljYXRpb24veC13d3ctZm9ybS11cmxlbmNvZGVkDQpjb250ZW50LWxlbmd0aDogMzQNCg0KZ3JhbnRfdHlwZT14JmNsaWVudF9zZWNyZXQ9",
+         "request": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential",
+          "encode": "form"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "CLIENT_SECRET",
+    "credentialIn": "body",
+    "credentialName": "client_secret"
+   },
+   "credentials": {
+    "CLIENT_SECRET": "a b&c"
+   }
+  },
+  {
+   "id": "control-a-body-credential-with-no-payload-body-needs-no-ampersand",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "POST",
+      "target": "/token",
+      "headers": [
+       {
+        "name": "Content-Type",
+        "value": "application/x-www-form-urlencoded"
+       }
+      ],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "UE9TVCAvdG9rZW4gSFRUUC8xLjENCmhvc3Q6IGFwaS5leGFtcGxlLnRlc3QNCmNvbnRlbnQtdHlwZTogYXBwbGljYXRpb24veC13d3ctZm9ybS11cmxlbmNvZGVkDQpjb250ZW50LWxlbmd0aDogMjENCg0KY2xpZW50X3NlY3JldD0=",
+         "request": ""
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "UE9TVCAvdG9rZW4gSFRUUC8xLjENCmhvc3Q6IGFwaS5leGFtcGxlLnRlc3QNCmNvbnRlbnQtdHlwZTogYXBwbGljYXRpb24veC13d3ctZm9ybS11cmxlbmNvZGVkDQpjb250ZW50LWxlbmd0aDogMjENCg0KY2xpZW50X3NlY3JldD0=",
+         "request": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential",
+          "encode": "form"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "CLIENT_SECRET",
+    "credentialIn": "body",
+    "credentialName": "client_secret"
+   },
+   "credentials": {
+    "CLIENT_SECRET": "a b&c"
+   }
+  },
+  {
+   "id": "a-body-credential-never-enters-an-emit-the-built-head-holds-only-the-field-name",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "POST",
+      "target": "/token",
+      "headers": [
+       {
+        "name": "Content-Type",
+        "value": "application/x-www-form-urlencoded"
+       }
+      ],
+      "body": "Zz0x",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "connecting",
+      "effects": [
+       {
+        "type": "os/tcp-connect",
+        "arg0": "api.example.test",
+        "arg1": 80
+       }
+      ],
+      "emits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "UE9TVCAvdG9rZW4gSFRUUC8xLjENCmhvc3Q6IGFwaS5leGFtcGxlLnRlc3QNCmNvbnRlbnQtdHlwZTogYXBwbGljYXRpb24veC13d3ctZm9ybS11cmxlbmNvZGVkDQpjb250ZW50LWxlbmd0aDogMjUNCg0KZz0xJmNsaWVudF9zZWNyZXQ9",
+         "request": ""
+        }
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "HC_BUILT",
+        "payload": {
+         "head": "UE9TVCAvdG9rZW4gSFRUUC8xLjENCmhvc3Q6IGFwaS5leGFtcGxlLnRlc3QNCmNvbnRlbnQtdHlwZTogYXBwbGljYXRpb24veC13d3ctZm9ybS11cmxlbmNvZGVkDQpjb250ZW50LWxlbmd0aDogMjUNCg0KZz0xJmNsaWVudF9zZWNyZXQ9",
+         "request": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "HTTP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "HC_CONNECTED",
+     "payload": {
+      "sock": 5,
+      "key": "connect"
+     },
+     "expect": {
+      "state": "sending",
+      "effects": [
+       {
+        "type": "os/send",
+        "arg1": [
+         {
+          "bytes": "@entity.head",
+          "credential": "@config.credential",
+          "encode": "form"
+         },
+         {
+          "bytes": "@entity.request",
+          "credential": ""
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "credential": "CLIENT_SECRET",
+    "credentialIn": "body",
+    "credentialName": "client_secret"
+   },
+   "credentials": {
+    "CLIENT_SECRET": "a b&c"
+   }
+  },
+  {
+   "id": "a-query-credential-with-no-name-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "config": {
+    "credential": "API_KEY",
+    "credentialIn": "query"
+   }
+  },
+  {
+   "id": "a-body-credential-with-no-name-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "POST",
+      "target": "/x?a=1",
+      "headers": [
+       {
+        "name": "Content-Type",
+        "value": "application/x-www-form-urlencoded"
+       }
+      ],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "config": {
+    "credential": "API_KEY",
+    "credentialIn": "body"
+   }
+  },
+  {
+   "id": "a-body-credential-under-a-json-content-type-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "POST",
+      "target": "/x?a=1",
+      "headers": [
+       {
+        "name": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": "e30=",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "config": {
+    "credential": "CLIENT_SECRET",
+    "credentialIn": "body",
+    "credentialName": "client_secret"
+   }
+  },
+  {
+   "id": "a-body-credential-with-no-content-type-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "POST",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "config": {
+    "credential": "CLIENT_SECRET",
+    "credentialIn": "body",
+    "credentialName": "client_secret"
+   }
+  },
+  {
+   "id": "a-query-credential-with-an-encode-knob-is-refused-the-position-fixes-the-encode",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "config": {
+    "credential": "API_KEY",
+    "credentialIn": "query",
+    "credentialName": "key",
+    "credentialEncode": "base64"
+   }
+  },
+  {
+   "id": "a-query-credential-with-a-credential-header-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "config": {
+    "credential": "API_KEY",
+    "credentialIn": "query",
+    "credentialName": "key",
+    "credentialHeader": "authorization"
+   }
+  },
+  {
+   "id": "a-header-credential-with-a-credential-name-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "config": {
+    "credential": "EMBEDDING_API_KEY",
+    "credentialHeader": "authorization",
+    "credentialPrefix": "Bearer ",
+    "credentialName": "key"
+   }
+  },
+  {
+   "id": "an-encode-with-no-credential-header-is-refused",
+   "steps": [
+    {
+     "event": "HTTP_SEND",
+     "payload": {
+      "key": "k1",
+      "method": "GET",
+      "target": "/x?a=1",
+      "headers": [],
+      "body": "",
+      "stream": "none"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "HTTP_FAILED",
+        "payload": {
+         "key": "k1",
+         "kind": "refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "HC_BUILT"
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "config": {
+    "credential": "BASIC_LOGIN",
+    "credentialEncode": "base64"
+   }
   }
  ]
 }

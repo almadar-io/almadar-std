@@ -328,8 +328,10 @@ orbital SemanticIndexOrbital {
         (set @entity.semCursor (+ @entity.semCursor 1))
         (emit SEMANTIC_NEXT { index: @entity.semCursor })
 
-      SemanticWritten -> idle when (and (= @entity.semPhase "write") (= @entity.semOp "index"))
+      SemanticWritten -> idle when (and (= @entity.semPhase "write") (= @entity.semOp "index") (= ?completedCount ?totalCount))
         (emit SEMANTIC_INDEXED { ids: (array/map @entity.semItems (fn it @it.id)), skipped: @entity.semSkipped, key: @entity.semKey, promptTokens: 0 })
+      SemanticWritten -> idle when (and (= @entity.semPhase "write") (= @entity.semOp "index") (!= ?completedCount ?totalCount))
+        (emit SEMANTIC_FAILED { op: "index", key: @entity.semKey, message: (str/concat "the vector write landed " ?completedCount " of " ?totalCount " rows") })
 
       SemanticFetched -> idle when (and (= @entity.semPhase "search") (= @entity.semOp "search"))
         (emit SEMANTIC_RESULTS {
@@ -432,7 +434,10 @@ orbital SemanticIndexOrbital {
       SEMANTIC_NEXT {
         index : number
       }
-      SemanticWritten
+      SemanticWritten {
+        completedCount : number!
+        totalCount : number!
+      }
       SemanticFetched {
         data : [SemanticRowShape]!
       }

@@ -27,10 +27,10 @@ orbital MachineOrbital {
 
     state ready {
       INIT -> ready
-      MACHINE_READ -> ready when (= (json/parse (json/stringify @payload.program) MachineProgram) null)
+      MACHINE_READ -> ready when (= (as @payload.program MachineProgram) null)
         (emit MACHINE_UNREAD { })
-      MACHINE_READ -> ready when (!= (json/parse (json/stringify @payload.program) MachineProgram) null)
-        (set @entity.rows (array/flatten (array/map (object/get (json/parse (json/stringify @payload.program) MachineProgram) "orbitals") (fn o
+      MACHINE_READ -> ready when (!= (as @payload.program MachineProgram) null)
+        (set @entity.rows (array/flatten (array/map (object/get (as @payload.program MachineProgram) "orbitals") (fn o
           (array/flatten (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t
             (let ((sm (object/get @t "stateMachine")))
              (if (= @sm null) []

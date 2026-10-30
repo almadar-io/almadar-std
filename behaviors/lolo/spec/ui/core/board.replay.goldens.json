@@ -1,0 +1,94 @@
+{
+ "atom": "../ui/core/atoms/std-board.lolo",
+ "trait": "BoardItemBoard",
+ "cases": [
+  {
+   "id": "the-add-form-starts-from-the-entity-declared-defaults",
+   "entity": {
+    "id": "b"
+   },
+   "steps": [
+    {
+     "from": "viewing_board",
+     "event": "ADD_CARD",
+     "payload": {},
+     "expect": {
+      "state": "adding",
+      "effects": [
+       {
+        "type": "render-ui",
+        "arg1": {
+         "children": [
+          {
+           "align": "center",
+           "children": [
+            {
+             "action": "CANCEL_ADD",
+             "icon": "x",
+             "label": "Cancel",
+             "type": "button",
+             "variant": "ghost"
+            },
+            {
+             "name": "plus",
+             "size": "lg",
+             "type": "icon"
+            },
+            {
+             "content": "New board item",
+             "type": "typography",
+             "variant": "h3"
+            }
+           ],
+           "direction": "horizontal",
+           "gap": "sm",
+           "type": "stack"
+          },
+          {
+           "type": "divider"
+          },
+          {
+           "cancelEvent": "CANCEL_ADD",
+           "entity": "@entity",
+           "fields": [
+            "list",
+            "title",
+            "description",
+            "stage",
+            "notes"
+           ],
+           "initialData": "@entity",
+           "mode": "create",
+           "submitEvent": "SAVE_CARD",
+           "type": "form-section"
+          }
+         ],
+         "direction": "vertical",
+         "gap": "md",
+         "type": "stack"
+        },
+        "arg0": "main"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-cancelling-the-add-form-returns-to-the-board",
+   "entity": {
+    "id": "b"
+   },
+   "steps": [
+    {
+     "from": "adding",
+     "event": "CANCEL_ADD",
+     "payload": {},
+     "expect": {
+      "state": "viewing_board"
+     }
+    }
+   ]
+  }
+ ]
+}

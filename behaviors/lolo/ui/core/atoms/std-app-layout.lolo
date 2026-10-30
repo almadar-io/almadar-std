@@ -95,8 +95,10 @@ orbital AppLayoutOrbital {
       AppLayoutStateLoaded -> composing
       AppLayoutStateLoadFailed -> composing
         (notify error (str/concat "Couldn't load the layout — " ?error))
-      SEARCH -> composing
-      NOTIFY_CLICK -> composing
+      SEARCH_PICKED -> composing
+        (emit SEARCH { value: (default ?value "") })
+      NOTIFY_PICKED -> composing
+        (emit NOTIFY_CLICK { })
     }
 
     emits {
@@ -123,6 +125,18 @@ orbital AppLayoutOrbital {
     }
 
     listens {
+      SEARCH_PICKED {
+        value : string
+      }
+        @description "The search box was submitted; the layout answers by emitting SEARCH."
+        @synonyms "search submitted, query entered"
+        @tier "internal"
+      NOTIFY_PICKED {
+        id : string
+      }
+        @description "The bell was clicked; the layout answers by emitting NOTIFY_CLICK."
+        @synonyms "bell clicked, notification picked"
+        @tier "internal"
       AppLayoutStateLoadFailed {
         error : string
         code : string
@@ -170,7 +184,7 @@ orbital AppLayoutOrbital {
         @description "Top-level navigation links shown on the left rail."
         @synonyms "nav links, menu items, sidebar sections, navigation entries, pages"
         @tier "presentation"
-      searchEvent : event = SEARCH
+      searchEvent : event = SEARCH_PICKED
         @label "Search event"
         @description "Event emitted when the user runs a global search"
         @tier "internal"
@@ -204,9 +218,9 @@ orbital AppLayoutOrbital {
         @description "Items shown in the notifications dropdown."
         @synonyms "alerts, messages, notices, notification items, bell items"
         @tier "presentation"
-      notificationClickEvent : event = NOTIFY_CLICK
+      notificationClickEvent : event = NOTIFY_PICKED
         @label "Notification click event"
-        @description "Event emitted when the user picks a notification"
+        @description "Internal event the bell fires on click; the layout answers by emitting NOTIFY_CLICK, which is what a notification panel or any consumer listens to"
         @tier "internal"
       layoutPattern : pattern = dashboard-layout
         @label "Layout pattern"

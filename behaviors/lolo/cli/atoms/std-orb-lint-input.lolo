@@ -408,7 +408,7 @@ orbital OrbLintInputOrbital {
                 busExcluded: (object/get (object/get @ops "emit") "busExcluded"),
                 targetOptions: (object/get (object/get @ops "program/dispatch") "targetOptions"),
                 functions: (array/sort (array/filter (object/keys @ops) (fn n (let ((rt (object/get (object/get @ops @n) "returnType" ""))) (and (validate/object @rt) (= (object/get @rt "kind" "") "fn")))))),
-                emitSlots: (array/sort (array/unique (array/flatten (array/map (object/keys @ops) (fn n (array/flatten (array/map (object/get (object/get @ops @n) "params" []) (fn p (let ((ty (object/get @p "type" null))) (if (validate/object @ty) (let ((em (object/get (object/get (json/parse (json/stringify @ty) OpShape) "fields" {}) "emit" null))) (if (validate/object @em) (object/keys (object/get (json/parse (json/stringify @em) OpShape) "fields" {})) [])) [])))))))))) }))))
+                emitSlots: (array/sort (array/unique (array/flatten (array/map (object/keys @ops) (fn n (array/flatten (array/map (object/get (object/get @ops @n) "params" []) (fn p (let ((ty (object/get @p "type" null))) (if (validate/object @ty) (let ((em (object/get (object/get (default (as @ty OpShape) { kind: "", fields: {} }) "fields" {}) "emit" null))) (if (validate/object @em) (object/keys (object/get (default (as @em OpShape) { kind: "", fields: {} }) "fields" {})) [])) [])))))))))) }))))
         (let ((text (bytes/to-string @payload.data)))
           (if (= @text null)
             (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table is not valid text" })
@@ -423,7 +423,7 @@ orbital OrbLintInputOrbital {
               (if (= @doc null)
                 (emit LINT_HOST_FACTS_UNREAD { error: "the installed @almadar/std operator table is not an operator table" })
                 (let ((names (array/sort (array/filter (object/keys (object/get @doc "operators")) (fn n (array/some @fields (fn f (!= (object/get @doc (str/concat "operators." @n "." @f) null) null))))))))
-                  (let ((ops (json/parse (json/stringify (default (object/fromEntries (array/map @names (fn n [@n, (default (object/fromEntries (array/filter (array/map @fields (fn f [@f, (object/get @doc (str/concat "operators." @n "." @f) null)])) (fn pr (!= (array/nth @pr 1) null)))) {})]))) {})) HostOpFactMap)))
+                  (let ((ops (as (default (object/fromEntries (array/map @names (fn n [@n, (default (object/fromEntries (array/filter (array/map @fields (fn f [@f, (object/get @doc (str/concat "operators." @n "." @f) null)])) (fn pr (!= (array/nth @pr 1) null)))) {})]))) {}) HostOpFactMap)))
                     (if (= @ops null)
                       (emit LINT_HOST_FACTS_UNREAD { error: "the installed @almadar/std operator table has an operator whose closedCall, oauth, grant, defaultPorts, httpWire, family or emitKeys is not declared in the table's shape" })
                       (emit LINT_HOST_FACTS { operators: @ops }))))))))
@@ -438,10 +438,10 @@ orbital OrbLintInputOrbital {
         (emit LINT_PROGRAM_START { })
       LINT_SERVICES_FILE -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text SrRawRegistry) null)))
         (emit LINT_SERVICES { services: (let ((reg (object/get (json/parse (default (bytes/to-string @payload.data) "") SrRawRegistry) "services")))
-          (default (json/parse (json/stringify (object/mapValues @reg (fn s
+          (object/mapValues @reg (fn s
             { actions: (default (object/fromEntries (array/map (object/get @s "actions" []) (fn a
                 [(object/get @a "name"), { hasKey: (object/has (object/get @a "responseShape" {}) "key"),
-                  params: (array/map (object/get @a "params" []) (fn p { name: (object/get @p "name"), type: (object/get @p "type" ""), required: (object/get @p "required" false), kind: (let ((tt (str/trim (object/get @p "type" "")))) (if (= @tt "string") "string" (if (= @tt "number") "number" (if (= @tt "boolean") "boolean" (if (or (= @tt "object") (= @tt "map")) "object" (if (or (= @tt "array") (str/endsWith @tt "[]")) "array" (if (str/startsWith @tt "'") "string" ""))))))) })) }]))) {}) }))) SrServices) {})) })
+                  params: (array/map (object/get @a "params" []) (fn p { name: (object/get @p "name"), type: (object/get @p "type" ""), required: (object/get @p "required" false), kind: (let ((tt (str/trim (object/get @p "type" "")))) (if (= @tt "string") "string" (if (= @tt "number") "number" (if (= @tt "boolean") "boolean" (if (or (= @tt "object") (= @tt "map")) "object" (if (or (= @tt "array") (str/endsWith @tt "[]")) "array" (if (str/startsWith @tt "'") "string" ""))))))) })) }]))) {}) }))) })
         (emit LINT_PROGRAM_START { })
       LINT_SERVICES_FAILED -> reading
         (emit LINT_SERVICES_UNREAD { error: (default @payload.error "") })

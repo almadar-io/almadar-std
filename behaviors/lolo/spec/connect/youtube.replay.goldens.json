@@ -1,25 +1,11 @@
 {
   "atom": "connect/atoms/std-youtube.lolo",
   "trait": "YoutubeClient",
-  "note": "std-youtube typed events and keyed pending [{key, job}]: each attempt is tracked under a counter key, a reply or unreachable answer is matched by key, and a reply for a key nothing waits on is dropped. The api-key-in-query http path is G-STD-191 and is unchanged.",
+  "note": "std-youtube typed events and keyed pending [{key, job}]: each attempt is tracked under a counter key, a reply or unreachable answer is matched by key, and a reply for a key nothing waits on is dropped. The call rides the composed std-http-client (api key as its query credential, never in an event); the request shape is pinned as YOUTUBE_HTTP_SEND, a denied call is rejected without retry and any other transport failure is retried.",
   "cases": [
     {
       "id": "search-reply-lists-whichever-fields-the-api-returned",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "search",
-            "attempt": 0,
-            "query": "cats",
-            "maxResults": 10,
-            "type": "",
-            "id": ""
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -52,6 +38,22 @@
             "neverEmits": [
               "YOUTUBE_SEARCH_FAILED"
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 1
           }
         }
       ]
@@ -59,20 +61,6 @@
     {
       "id": "search-reply-that-is-not-json-is-a-malformed-reply",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "search",
-            "attempt": 0,
-            "query": "cats",
-            "maxResults": 10,
-            "type": "",
-            "id": ""
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -95,6 +83,22 @@
             "neverEmits": [
               "YOUTUBE_SEARCH_RESULT"
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 1
           }
         }
       ]
@@ -102,20 +106,6 @@
     {
       "id": "search-reply-that-is-json-but-not-a-search-reply-is-a-malformed-reply",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "search",
-            "attempt": 0,
-            "query": "cats",
-            "maxResults": 10,
-            "type": "",
-            "id": ""
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -138,6 +128,22 @@
             "neverEmits": [
               "YOUTUBE_SEARCH_RESULT"
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 1
           }
         }
       ]
@@ -145,20 +151,6 @@
     {
       "id": "control-search-reply-with-no-items-lists-nothing",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "search",
-            "attempt": 0,
-            "query": "cats",
-            "maxResults": 10,
-            "type": "",
-            "id": ""
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -180,6 +172,22 @@
             "neverEmits": [
               "YOUTUBE_SEARCH_FAILED"
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 1
           }
         }
       ]
@@ -187,20 +195,6 @@
     {
       "id": "video-reply-answers-title-and-counts",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "video",
-            "attempt": 0,
-            "query": "",
-            "maxResults": 0,
-            "type": "",
-            "id": "v1"
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -225,6 +219,22 @@
             "neverEmits": [
               "YOUTUBE_VIDEO_FAILED"
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "video",
+                  "attempt": 0,
+                  "query": "",
+                  "maxResults": 0,
+                  "type": "",
+                  "id": "v1"
+                }
+              }
+            ],
+            "seq": 1
           }
         }
       ]
@@ -232,20 +242,6 @@
     {
       "id": "video-reply-with-no-items-is-not-found",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "video",
-            "attempt": 0,
-            "query": "",
-            "maxResults": 0,
-            "type": "",
-            "id": "v9"
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -267,6 +263,22 @@
             "neverEmits": [
               "YOUTUBE_VIDEO_RESULT"
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "video",
+                  "attempt": 0,
+                  "query": "",
+                  "maxResults": 0,
+                  "type": "",
+                  "id": "v9"
+                }
+              }
+            ],
+            "seq": 1
           }
         }
       ]
@@ -274,20 +286,6 @@
     {
       "id": "channel-reply-with-hidden-subscribers-omits-the-count",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "channel",
-            "attempt": 0,
-            "query": "",
-            "maxResults": 0,
-            "type": "",
-            "id": "c1"
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -307,6 +305,22 @@
                 }
               }
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "channel",
+                  "attempt": 0,
+                  "query": "",
+                  "maxResults": 0,
+                  "type": "",
+                  "id": "c1"
+                }
+              }
+            ],
+            "seq": 1
           }
         }
       ]
@@ -314,20 +328,6 @@
     {
       "id": "control-channel-reply-answers-name-and-count",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "channel",
-            "attempt": 0,
-            "query": "",
-            "maxResults": 0,
-            "type": "",
-            "id": "c1"
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -348,6 +348,22 @@
                 }
               }
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "channel",
+                  "attempt": 0,
+                  "query": "",
+                  "maxResults": 0,
+                  "type": "",
+                  "id": "c1"
+                }
+              }
+            ],
+            "seq": 1
           }
         }
       ]
@@ -355,20 +371,6 @@
     {
       "id": "channel-reply-with-no-items-is-not-found",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "channel",
-            "attempt": 0,
-            "query": "",
-            "maxResults": 0,
-            "type": "",
-            "id": "c9"
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -387,6 +389,22 @@
                 }
               }
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "channel",
+                  "attempt": 0,
+                  "query": "",
+                  "maxResults": 0,
+                  "type": "",
+                  "id": "c9"
+                }
+              }
+            ],
+            "seq": 1
           }
         }
       ]
@@ -394,20 +412,6 @@
     {
       "id": "an-api-error-object-reports-its-error-details",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "search",
-            "attempt": 0,
-            "query": "cats",
-            "maxResults": 10,
-            "type": "",
-            "id": ""
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -426,6 +430,22 @@
                 }
               }
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 1
           }
         }
       ]
@@ -433,20 +453,6 @@
     {
       "id": "an-api-error-string-reports-itself",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "search",
-            "attempt": 0,
-            "query": "cats",
-            "maxResults": 10,
-            "type": "",
-            "id": ""
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -465,6 +471,22 @@
                 }
               }
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 1
           }
         }
       ]
@@ -472,20 +494,6 @@
     {
       "id": "an-error-reply-that-is-not-json-reports-its-body",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "search",
-            "attempt": 0,
-            "query": "cats",
-            "maxResults": 10,
-            "type": "",
-            "id": ""
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -504,6 +512,22 @@
                 }
               }
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 1
           }
         }
       ]
@@ -511,20 +535,6 @@
     {
       "id": "control-an-error-reply-below-400-reports-the-status",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "search",
-            "attempt": 0,
-            "query": "cats",
-            "maxResults": 10,
-            "type": "",
-            "id": ""
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -543,6 +553,22 @@
                 }
               }
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 1
           }
         }
       ]
@@ -550,20 +576,6 @@
     {
       "id": "a-server-error-is-retried-under-a-new-key-and-the-retry-answers",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "search",
-            "attempt": 0,
-            "query": "cats",
-            "maxResults": 10,
-            "type": "",
-            "id": ""
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -586,10 +598,23 @@
                   "id": ""
                 }
               }
-            ],
-            "neverEmits": [
-              "YOUTUBE_SEARCH_FAILED"
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 1
           }
         },
         {
@@ -606,6 +631,22 @@
             "neverEmits": [
               "YOUTUBE_SEARCH_RESULT"
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-1",
+                "job": {
+                  "kind": "search",
+                  "attempt": 1,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 2
           }
         },
         {
@@ -626,27 +667,32 @@
                 }
               }
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-1",
+                "job": {
+                  "kind": "search",
+                  "attempt": 1,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 2
           }
         }
+      ],
+      "defaults": [
+        "YoutubeHttp"
       ]
     },
     {
       "id": "a-server-error-is-rejected-after-three-retries",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "search",
-            "attempt": 0,
-            "query": "cats",
-            "maxResults": 10,
-            "type": "",
-            "id": ""
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -670,6 +716,22 @@
                 }
               }
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 1
           }
         },
         {
@@ -695,6 +757,22 @@
                 }
               }
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-1",
+                "job": {
+                  "kind": "search",
+                  "attempt": 1,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 2
           }
         },
         {
@@ -720,6 +798,22 @@
                 }
               }
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-2",
+                "job": {
+                  "kind": "search",
+                  "attempt": 2,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 3
           }
         },
         {
@@ -743,27 +837,32 @@
             "neverEmits": [
               "YOUTUBE_REQUEST"
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-3",
+                "job": {
+                  "kind": "search",
+                  "attempt": 3,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 4
           }
         }
+      ],
+      "defaults": [
+        "YoutubeHttp"
       ]
     },
     {
       "id": "an-unreachable-call-is-retried-then-rejected-with-the-transport-error",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "search",
-            "attempt": 0,
-            "query": "cats",
-            "maxResults": 10,
-            "type": "",
-            "id": ""
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_UNREACHED",
           "payload": {
@@ -786,6 +885,22 @@
                 }
               }
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 1
           }
         },
         {
@@ -810,6 +925,22 @@
                 }
               }
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-1",
+                "job": {
+                  "kind": "search",
+                  "attempt": 1,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 2
           }
         },
         {
@@ -832,27 +963,32 @@
             "neverEmits": [
               "YOUTUBE_REQUEST"
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-2",
+                "job": {
+                  "kind": "search",
+                  "attempt": 2,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 3
           }
         }
+      ],
+      "defaults": [
+        "YoutubeHttp"
       ]
     },
     {
       "id": "a-refused-call-is-rejected-without-retry",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "search",
-            "attempt": 0,
-            "query": "cats",
-            "maxResults": 10,
-            "type": "",
-            "id": ""
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_UNREACHED",
           "payload": {
@@ -873,83 +1009,22 @@
             "neverEmits": [
               "YOUTUBE_REQUEST"
             ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "an-unconfigured-key-names-the-credential",
-      "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "video",
-            "attempt": 0,
-            "query": "",
-            "maxResults": 0,
-            "type": "",
-            "id": "v1"
           },
-          "expect": {
-            "state": "idle"
-          }
-        },
-        {
-          "event": "YOUTUBE_UNREACHED",
-          "payload": {
-            "error": "no key",
-            "kind": "unconfigured",
-            "credential": "YOUTUBE_API_KEY",
-            "key": "youtube-0"
-          },
-          "expect": {
-            "state": "idle",
-            "emits": [
+          "entity": {
+            "pending": [
               {
-                "event": "YOUTUBE_VIDEO_FAILED",
-                "payload": {
-                  "message": "YOUTUBE_API_KEY not configured"
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
                 }
               }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-an-unconfigured-call-without-a-credential-name-reports-the-error",
-      "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "video",
-            "attempt": 0,
-            "query": "",
-            "maxResults": 0,
-            "type": "",
-            "id": "v1"
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
-        {
-          "event": "YOUTUBE_UNREACHED",
-          "payload": {
-            "error": "no key",
-            "kind": "unconfigured",
-            "key": "youtube-0"
-          },
-          "expect": {
-            "state": "idle",
-            "emits": [
-              {
-                "event": "YOUTUBE_VIDEO_FAILED",
-                "payload": {
-                  "message": "no key"
-                }
-              }
-            ]
+            ],
+            "seq": 1
           }
         }
       ]
@@ -977,6 +1052,10 @@
               "YOUTUBE_CHANNEL_FAILED",
               "YOUTUBE_REJECTED"
             ]
+          },
+          "entity": {
+            "pending": [],
+            "seq": 0
           }
         }
       ]
@@ -984,34 +1063,6 @@
     {
       "id": "two-calls-in-flight-are-answered-by-their-own-key",
       "steps": [
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "search",
-            "attempt": 0,
-            "query": "cats",
-            "maxResults": 10,
-            "type": "",
-            "id": ""
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
-        {
-          "event": "YOUTUBE_REQUEST",
-          "payload": {
-            "kind": "video",
-            "attempt": 0,
-            "query": "",
-            "maxResults": 0,
-            "type": "",
-            "id": "v1"
-          },
-          "expect": {
-            "state": "idle"
-          }
-        },
         {
           "event": "YOUTUBE_REPLIED",
           "payload": {
@@ -1036,6 +1087,33 @@
             "neverEmits": [
               "YOUTUBE_SEARCH_RESULT"
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              },
+              {
+                "key": "youtube-1",
+                "job": {
+                  "kind": "video",
+                  "attempt": 0,
+                  "query": "",
+                  "maxResults": 0,
+                  "type": "",
+                  "id": "v1"
+                }
+              }
+            ],
+            "seq": 2
           }
         },
         {
@@ -1059,6 +1137,22 @@
             "neverEmits": [
               "YOUTUBE_VIDEO_RESULT"
             ]
+          },
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 2
           }
         }
       ]
@@ -1084,6 +1178,602 @@
                   "maxResults": 10,
                   "type": "video",
                   "id": ""
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "YoutubeHttp"
+      ]
+    },
+    {
+      "id": "a-search-request-is-one-get-with-part-query-and-max-results",
+      "defaults": [
+        "YoutubeHttp"
+      ],
+      "steps": [
+        {
+          "event": "YOUTUBE_REQUEST",
+          "payload": {
+            "kind": "search",
+            "attempt": 0,
+            "query": "cats",
+            "maxResults": 10,
+            "type": "",
+            "id": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "YOUTUBE_HTTP_SEND",
+                "payload": {
+                  "key": "youtube-0",
+                  "method": "GET",
+                  "target": "/youtube/v3/search?part=snippet&q=cats&maxResults=10",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-search-request-with-a-type-adds-the-type-after-max-results",
+      "defaults": [
+        "YoutubeHttp"
+      ],
+      "steps": [
+        {
+          "event": "YOUTUBE_REQUEST",
+          "payload": {
+            "kind": "search",
+            "attempt": 0,
+            "query": "cats",
+            "maxResults": 5,
+            "type": "video",
+            "id": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "YOUTUBE_HTTP_SEND",
+                "payload": {
+                  "key": "youtube-0",
+                  "method": "GET",
+                  "target": "/youtube/v3/search?part=snippet&q=cats&maxResults=5&type=video",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-search-query-is-rfc3986-encoded",
+      "defaults": [
+        "YoutubeHttp"
+      ],
+      "steps": [
+        {
+          "event": "YOUTUBE_REQUEST",
+          "payload": {
+            "kind": "search",
+            "attempt": 0,
+            "query": "a b&c d!(x)*'",
+            "maxResults": 10,
+            "type": "",
+            "id": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "YOUTUBE_HTTP_SEND",
+                "payload": {
+                  "key": "youtube-0",
+                  "method": "GET",
+                  "target": "/youtube/v3/search?part=snippet&q=a%20b%26c%20d%21%28x%29%2A%27&maxResults=10",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-video-request-asks-snippet-and-statistics-for-the-id",
+      "defaults": [
+        "YoutubeHttp"
+      ],
+      "steps": [
+        {
+          "event": "YOUTUBE_REQUEST",
+          "payload": {
+            "kind": "video",
+            "attempt": 0,
+            "query": "",
+            "maxResults": 0,
+            "type": "",
+            "id": "v 1"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "YOUTUBE_HTTP_SEND",
+                "payload": {
+                  "key": "youtube-0",
+                  "method": "GET",
+                  "target": "/youtube/v3/videos?part=snippet&part=statistics&id=v%201",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-channel-request-asks-snippet-and-statistics-for-the-id",
+      "defaults": [
+        "YoutubeHttp"
+      ],
+      "steps": [
+        {
+          "event": "YOUTUBE_REQUEST",
+          "payload": {
+            "kind": "channel",
+            "attempt": 0,
+            "query": "",
+            "maxResults": 0,
+            "type": "",
+            "id": "UC1"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "YOUTUBE_HTTP_SEND",
+                "payload": {
+                  "key": "youtube-0",
+                  "method": "GET",
+                  "target": "/youtube/v3/channels?part=snippet&part=statistics&id=UC1",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-api-key-never-rides-the-request-event",
+      "defaults": [
+        "YoutubeHttp"
+      ],
+      "steps": [
+        {
+          "event": "YOUTUBE_REQUEST",
+          "payload": {
+            "kind": "video",
+            "attempt": 0,
+            "query": "",
+            "maxResults": 0,
+            "type": "",
+            "id": "v1"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "YOUTUBE_HTTP_SEND",
+                "payload": {
+                  "key": "youtube-0",
+                  "method": "GET",
+                  "target": "/youtube/v3/videos?part=snippet&part=statistics&id=v1",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ],
+            "neverEmits": [
+              "YOUTUBE_REPLIED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-call-the-client-cannot-open-is-rejected-with-the-client-error",
+      "defaults": [
+        "YoutubeHttp"
+      ],
+      "steps": [
+        {
+          "event": "YOUTUBE_REQUEST",
+          "payload": {
+            "kind": "video",
+            "attempt": 0,
+            "query": "",
+            "maxResults": 0,
+            "type": "",
+            "id": "v1"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "youtube-0",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "YOUTUBE_VIDEO_FAILED",
+                "payload": {
+                  "message": "os/tcp-connect: no os host configured"
+                }
+              }
+            ],
+            "neverEmits": [
+              "YOUTUBE_VIDEO_RESULT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-denied-call-is-rejected-without-retry-with-the-client-error",
+      "steps": [
+        {
+          "event": "YOUTUBE_UNREACHED",
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "video",
+                  "attempt": 0,
+                  "query": "",
+                  "maxResults": 0,
+                  "type": "",
+                  "id": "x1"
+                }
+              }
+            ],
+            "seq": 1
+          },
+          "payload": {
+            "error": "credential YOUTUBE_API_KEY is not held",
+            "kind": "denied",
+            "key": "youtube-0"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "YOUTUBE_VIDEO_FAILED",
+                "payload": {
+                  "message": "credential YOUTUBE_API_KEY is not held"
+                }
+              }
+            ],
+            "neverEmits": [
+              "YOUTUBE_REQUEST"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-denied-search-is-rejected-without-retry",
+      "steps": [
+        {
+          "event": "YOUTUBE_UNREACHED",
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "search",
+                  "attempt": 0,
+                  "query": "cats",
+                  "maxResults": 10,
+                  "type": "",
+                  "id": ""
+                }
+              }
+            ],
+            "seq": 1
+          },
+          "payload": {
+            "error": "egress denied",
+            "kind": "denied",
+            "key": "youtube-0"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "YOUTUBE_SEARCH_FAILED",
+                "payload": {
+                  "message": "egress denied"
+                }
+              }
+            ],
+            "neverEmits": [
+              "YOUTUBE_REQUEST"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-denied-channel-is-rejected-without-retry",
+      "steps": [
+        {
+          "event": "YOUTUBE_UNREACHED",
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "channel",
+                  "attempt": 0,
+                  "query": "",
+                  "maxResults": 0,
+                  "type": "",
+                  "id": "x1"
+                }
+              }
+            ],
+            "seq": 1
+          },
+          "payload": {
+            "error": "egress denied",
+            "kind": "denied",
+            "key": "youtube-0"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "YOUTUBE_CHANNEL_FAILED",
+                "payload": {
+                  "message": "egress denied"
+                }
+              }
+            ],
+            "neverEmits": [
+              "YOUTUBE_REQUEST"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-timeout-call-is-retried-under-a-new-key",
+      "defaults": [
+        "YoutubeHttp"
+      ],
+      "steps": [
+        {
+          "event": "YOUTUBE_UNREACHED",
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "video",
+                  "attempt": 0,
+                  "query": "",
+                  "maxResults": 0,
+                  "type": "",
+                  "id": "v1"
+                }
+              }
+            ],
+            "seq": 1
+          },
+          "payload": {
+            "error": "timed out",
+            "kind": "timeout",
+            "key": "youtube-0"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "YOUTUBE_REQUEST",
+                "payload": {
+                  "kind": "video",
+                  "attempt": 1,
+                  "query": "",
+                  "maxResults": 0,
+                  "type": "",
+                  "id": "v1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-deadline-passing-retries-the-call-as-an-unreachable-one",
+      "steps": [
+        {
+          "trait": "YoutubeTimeout",
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "key": "youtube-0"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TIMED_OUT",
+                "payload": {
+                  "key": "youtube-0",
+                  "timeoutMs": 30000
+                }
+              }
+            ],
+            "neverEmits": [
+              "YOUTUBE_VIDEO_RESULT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-timed-out-call-is-retried-under-a-new-key-then-rejected-with-the-timeout-message",
+      "defaults": [
+        "YoutubeHttp"
+      ],
+      "steps": [
+        {
+          "event": "YOUTUBE_UNREACHED",
+          "entity": {
+            "pending": [
+              {
+                "key": "youtube-0",
+                "job": {
+                  "kind": "video",
+                  "attempt": 2,
+                  "query": "",
+                  "maxResults": 0,
+                  "type": "",
+                  "id": "v1"
+                }
+              }
+            ],
+            "seq": 1
+          },
+          "payload": {
+            "error": "timeout of 30000ms exceeded",
+            "kind": "timeout",
+            "key": "youtube-0"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "YOUTUBE_VIDEO_FAILED",
+                "payload": {
+                  "message": "timeout of 30000ms exceeded"
+                }
+              }
+            ],
+            "neverEmits": [
+              "YOUTUBE_REQUEST"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-reply-before-the-deadline-wins-the-race-and-disarms-it",
+      "steps": [
+        {
+          "trait": "YoutubeTimeout",
+          "event": "START",
+          "payload": {
+            "key": "youtube-0"
+          },
+          "expect": {
+            "state": "running"
+          }
+        },
+        {
+          "trait": "YoutubeTimeout",
+          "event": "SUCCEEDED",
+          "payload": {
+            "key": "youtube-0"
+          },
+          "from": "running",
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "TIMED_OUT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-request-starts-the-deadline-under-its-call-key",
+      "defaults": [
+        "YoutubeHttp"
+      ],
+      "steps": [
+        {
+          "event": "YOUTUBE_REQUEST",
+          "payload": {
+            "kind": "video",
+            "attempt": 0,
+            "query": "",
+            "maxResults": 0,
+            "type": "",
+            "id": "v1"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ASK_STARTED",
+                "payload": {
+                  "key": "youtube-0"
                 }
               }
             ]

@@ -3,7 +3,7 @@
   "trait": "OrbExecute",
   "cases": [
     {
-      "id": "a call parses its words against the six flags",
+      "id": "a call parses its words against the seven flags",
       "steps": [
         {
           "trait": "OrbExecute",
@@ -58,6 +58,12 @@
                     },
                     {
                       "name": "cascade",
+                      "aliases": [],
+                      "takesValue": false,
+                      "repeatable": false
+                    },
+                    {
+                      "name": "played",
                       "aliases": [],
                       "takesValue": false,
                       "repeatable": false
@@ -980,6 +986,289 @@
       ]
     },
     {
+      "id": "--played with --steps is checked (R12)",
+      "entity": {
+        "cwd": "/w"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "steps": [
+                "[{\"trait\":\"T\",\"event\":\"E\"}]"
+              ],
+              "played": []
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "checking",
+            "neverEmits": [
+              "EXEC_ANSWERED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: --played with --event and --trait is checked",
+      "entity": {
+        "cwd": "/w"
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "parsing",
+          "event": "EXEC_ARGS_DONE",
+          "payload": {
+            "stage": "execute",
+            "flags": {
+              "event": [
+                "E"
+              ],
+              "trait": [
+                "T"
+              ],
+              "played": []
+            },
+            "positionals": [
+              "a.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "checking",
+            "neverEmits": [
+              "EXEC_ANSWERED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a played run steps the program without the raw report (R12)",
+      "note": "`orb execute --played` asks program/step for its played answer (PlayedStep[]), the non-raw branch.",
+      "entity": {
+        "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+        "live": false,
+        "played": true
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "reading",
+          "event": "EXEC_PROGRAM",
+          "payload": {
+            "result": {
+              "name": "x",
+              "orbitals": [
+                {
+                  "name": "SendOrbital",
+                  "traits": [
+                    {
+                      "name": "Sender",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "stepping",
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "program/step",
+                "arg2": {
+                  "live": "@entity.live"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a played run names each step's orbital from the program (R12)",
+      "note": "program/step's played answer needs every request's orbital; a step that names none takes the orbital that declares its trait.",
+      "entity": {
+        "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+        "live": false,
+        "played": true
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "reading",
+          "event": "EXEC_PROGRAM",
+          "payload": {
+            "result": {
+              "name": "x",
+              "orbitals": [
+                {
+                  "name": "SendOrbital",
+                  "traits": [
+                    {
+                      "name": "Sender",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "stepping",
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "program/step"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a played run whose trait is in no orbital answers success false",
+      "entity": {
+        "stepsText": "[{\"trait\":\"Ghost\",\"event\":\"GO\"}]",
+        "live": false,
+        "played": true
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "reading",
+          "event": "EXEC_PROGRAM",
+          "payload": {
+            "result": {
+              "name": "x",
+              "orbitals": [
+                {
+                  "name": "SendOrbital",
+                  "traits": [
+                    {
+                      "name": "Sender"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"success\": false,\n  \"error\": \"no orbital declares trait Ghost\"\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a run without --played keeps the raw cascade report",
+      "entity": {
+        "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+        "live": false,
+        "played": false
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "reading",
+          "event": "EXEC_PROGRAM",
+          "payload": {
+            "result": {
+              "name": "x"
+            }
+          },
+          "expect": {
+            "state": "stepping",
+            "effects": [
+              {
+                "type": "program/step",
+                "arg2": {
+                  "report": "raw",
+                  "live": "@entity.live"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a played run answers the PlayedStep list, re-indented (R12)",
+      "entity": {
+        "mode": "steps",
+        "played": true
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "stepping",
+          "event": "EXEC_PLAYED",
+          "payload": {
+            "result": [
+              {
+                "orbital": "O",
+                "trait": "Sender",
+                "from": "idle",
+                "event": "GO",
+                "payload": {}
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "[\n  {\n    \"orbital\": \"O\",\n    \"trait\": \"Sender\",\n    \"from\": \"idle\",\n    \"event\": \"GO\",\n    \"payload\": {}\n  }\n]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "an event run also hoists steps[0].outcomes to the top level",
       "entity": {
         "mode": "event"
@@ -1398,6 +1687,140 @@
                 "payload": {
                   "status": 400,
                   "body": "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a played run of a program with unreadable orbitals answers success false",
+      "entity": {
+        "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+        "live": false,
+        "played": true
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "reading",
+          "event": "EXEC_PROGRAM",
+          "payload": {
+            "result": {
+              "name": "x"
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"success\": false,\n  \"error\": \"the program's orbitals could not be read\"\n}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a played step with no from starts at its trait's initial state (R12)",
+      "note": "`--event` steps carry no from; played mode starts each such step at the state its trait declares isInitial.",
+      "entity": {
+        "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+        "live": false,
+        "played": true
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "reading",
+          "event": "EXEC_PROGRAM",
+          "payload": {
+            "result": {
+              "name": "x",
+              "orbitals": [
+                {
+                  "name": "SendOrbital",
+                  "traits": [
+                    {
+                      "name": "Sender",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "sent"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "stepping",
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "program/step"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a played step whose trait declares no initial state answers success false",
+      "entity": {
+        "stepsText": "[{\"trait\":\"Sender\",\"event\":\"GO\"}]",
+        "live": false,
+        "played": true
+      },
+      "steps": [
+        {
+          "trait": "OrbExecute",
+          "from": "reading",
+          "event": "EXEC_PROGRAM",
+          "payload": {
+            "result": {
+              "name": "x",
+              "orbitals": [
+                {
+                  "name": "SendOrbital",
+                  "traits": [
+                    {
+                      "name": "Sender",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "EXEC_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"success\": false,\n  \"error\": \"trait Sender declares no initial state\"\n}"
                 }
               }
             ]

@@ -33,8 +33,11 @@ orbital TimeoutOrbital {
       CANCEL -> idle
         (cancel-call @entity.key)
         (set @entity.deadline null)
-      TIMER_DUE -> idle
+      TIMER_DUE -> idle when @config.cancelOnDeadline
         (cancel-call @entity.key)
+        (set @entity.deadline null)
+        (emit TIMED_OUT { key: @entity.key, timeoutMs: @config.timeoutMs })
+      TIMER_DUE -> idle when (not @config.cancelOnDeadline)
         (set @entity.deadline null)
         (emit TIMED_OUT { key: @entity.key, timeoutMs: @config.timeoutMs })
     }
@@ -99,6 +102,11 @@ orbital TimeoutOrbital {
     }
 
     config {
+      cancelOnDeadline : boolean = true
+        @label "Cancel on deadline"
+        @description "True cancels the ask's call key (cancel-call) before TIMED_OUT. False is for an event-driven ask, such as an os/* client, that the caller cancels itself on TIMED_OUT: the deadline only emits TIMED_OUT."
+        @synonyms "cancel call, event driven ask"
+        @tier "domain"
       timeoutMs : number = 5000
         @label "Deadline (ms)"
         @description "Milliseconds the ask may run before it is cancelled. Resolution is the 100ms deadline check."

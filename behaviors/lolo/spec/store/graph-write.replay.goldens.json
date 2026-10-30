@@ -1,0 +1,102 @@
+{
+ "atom": "store/atoms/std-graph.lolo",
+ "trait": "GraphStore",
+ "cases": [
+  {
+   "id": "a-batch-that-wrote-fewer-ops-than-it-held-fails-instead-of-answering-written",
+   "entity": {
+    "id": "g:n",
+    "reqOp": "recompute",
+    "reqGraphId": "g"
+   },
+   "steps": [
+    {
+     "from": "writing",
+     "event": "GraphBatchWritten",
+     "payload": {
+      "completedCount": 0,
+      "totalCount": 3
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GRAPH_FAILED",
+        "payload": {
+         "error": "the graph write landed 0 of 3 operations",
+         "graphId": "g"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GRAPH_WRITTEN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-batch-that-wrote-every-op-answers-written",
+   "entity": {
+    "id": "g:n",
+    "reqOp": "recompute",
+    "reqGraphId": "g"
+   },
+   "steps": [
+    {
+     "from": "writing",
+     "event": "GraphBatchWritten",
+     "payload": {
+      "completedCount": 3,
+      "totalCount": 3
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GRAPH_WRITTEN",
+        "payload": {
+         "op": "recompute",
+         "graphId": "g"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GRAPH_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-single-row-write-answers-written",
+   "entity": {
+    "id": "g:n",
+    "reqOp": "recompute",
+    "reqGraphId": "g"
+   },
+   "steps": [
+    {
+     "from": "writing",
+     "event": "GraphWritten",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GRAPH_WRITTEN",
+        "payload": {
+         "op": "recompute",
+         "graphId": "g"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GRAPH_FAILED"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

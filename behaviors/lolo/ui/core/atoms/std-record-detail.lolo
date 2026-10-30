@@ -14,6 +14,9 @@ orbital RecordItemOrbital {
   type RecordTab = { id : string!, label : string!, fields : [string], content : render-ui }
   type LineItemColumn = { key : string!, header : string, align : left | center | right, format : badge | date | currency | number | percent | boolean }
 
+  type RecordValue = string | number | boolean | [RecordValue?] | Map string RecordValue?
+  type RecordRow = Map string RecordValue?
+
   type RecordItemLoaded = Event { data : RecordItem!, totalCount : number } "Fired when the single record finishes loading; payload.data holds the record. totalCount is accepted so a fetch emitter shared with collection atoms still validates."
 
   type RecordItemSlugLoaded = Event { data : [RecordItem]!, totalCount : number } "Fired when a slug-routed record finishes loading. The fetch filters on the slug field, so the payload is a collection — (array/first ?data) is the record, and an empty array means no record matches the address."
@@ -29,7 +32,7 @@ orbital RecordItemOrbital {
     content : string @description "The record's rich-text body as HTML, edited in place by the document look." @synonyms "body, text, document, article body" = ""
     coverUrl : string @intrinsic @description "The document look's cover/hero image URL, stamped from the loaded row's coverField." = ""
     iconName : string @intrinsic @description "The document look's icon name, stamped from the loaded row's iconField." = ""
-    loadedRow : RecordItem @intrinsic @description "The full row exactly as last fetched (relations hydrated when config.include asks). The details drawer binds it, and hosts that need it (e.g. a settings modal) stash it from RecordItemLoaded — the document panel itself takes only scalar props and emits scalar payloads ({ id, title })."
+    loadedRow : RecordRow @intrinsic @description "The full row exactly as last fetched (relations hydrated when config.include asks). The details drawer binds it, and hosts that need it (e.g. a settings modal) stash it from RecordItemLoaded — the document panel itself takes only scalar props and emits scalar payloads ({ id, title })." = {}
     openDraft : string @intrinsic @description "Set from the navigate payload when the surface was opened on a record that was JUST minted blank; read once the row loads to decide whether the document body opens authoring (draft) or read-only. Absent on a refresh or a normal open, so the draft entry never repeats." @synonyms "new document, just created, draft open" = ""
     createdAt : string
   }
@@ -136,22 +139,22 @@ orbital RecordItemOrbital {
       ;; draft=1 and lands straight in the editor — a distinct target state,
       ;; not a flag on the render, so the machine stays honest about being
       ;; in an editing session.
-      RecordItemLoaded -> editing when (and (= @config.detailLook document) (= (default (object/get @entity openDraft) "") "1"))
-        ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
-        (set @entity.loadedRow (object/merge ?data {}))
+      RecordItemLoaded -> editing when (and (!= (as ?data RecordRow) null) (= @config.detailLook document) (= (default (object/get @entity openDraft) "") "1"))
+        ;; the typed empty base copies the fetched row into loadedRow's Map type
+        (set @entity.loadedRow (default (as ?data RecordRow) @entity.loadedRow))
         (set @entity.id (object/get ?data id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get ?data @f) ""))) " ") (default (object/get ?data @config.titleField) "")))
-        (set @entity.description (if (!= @config.subtitleRelation null) (default (object/get (object/get ?data @config.subtitleRelation) @config.subtitleRelatedField) "") (if (validate/required @config.subtitleField) (default (object/get ?data @config.subtitleField) "") "")))
+        (set @entity.description (if (!= @config.subtitleRelation null) (let ((rel (object/get ?data @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (object/get @rel @config.subtitleRelatedField) "") "")) (if (validate/required @config.subtitleField) (default (object/get ?data @config.subtitleField) "") "")))
         (set @entity.content (if (validate/required @config.contentField) (default (object/get ?data @config.contentField) "") ""))
         (set @entity.coverUrl (if (validate/required @config.coverField) (default (object/get ?data @config.coverField) "") ""))
         (set @entity.iconName (if (validate/required @config.iconField) (default (object/get ?data @config.iconField) "") ""))
         (render-ui main @config.documentEditingContent)
-      RecordItemLoaded -> viewing when (or (!= @config.detailLook document) (!= (default (object/get @entity openDraft) "") "1"))
-        ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
-        (set @entity.loadedRow (object/merge ?data {}))
+      RecordItemLoaded -> viewing when (and (!= (as ?data RecordRow) null) (or (!= @config.detailLook document) (!= (default (object/get @entity openDraft) "") "1")))
+        ;; the typed empty base copies the fetched row into loadedRow's Map type
+        (set @entity.loadedRow (default (as ?data RecordRow) @entity.loadedRow))
         (set @entity.id (object/get ?data id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get ?data @f) ""))) " ") (default (object/get ?data @config.titleField) "")))
-        (set @entity.description (if (!= @config.subtitleRelation null) (default (object/get (object/get ?data @config.subtitleRelation) @config.subtitleRelatedField) "") (if (validate/required @config.subtitleField) (default (object/get ?data @config.subtitleField) "") "")))
+        (set @entity.description (if (!= @config.subtitleRelation null) (let ((rel (object/get ?data @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (object/get @rel @config.subtitleRelatedField) "") "")) (if (validate/required @config.subtitleField) (default (object/get ?data @config.subtitleField) "") "")))
         (set @entity.content (if (validate/required @config.contentField) (default (object/get ?data @config.contentField) "") ""))
         (set @entity.coverUrl (if (validate/required @config.coverField) (default (object/get ?data @config.coverField) "") ""))
         (set @entity.iconName (if (validate/required @config.iconField) (default (object/get ?data @config.iconField) "") ""))
@@ -162,20 +165,20 @@ orbital RecordItemOrbital {
             (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
-      RecordItemSlugLoaded -> editing when (and (> (array/len ?data) 0) (= @config.detailLook document) (= (default (object/get @entity openDraft) "") "1"))
-        (set @entity.loadedRow (array/first ?data))
+      RecordItemSlugLoaded -> editing when (and (> (array/len ?data) 0) (!= (as (array/first ?data) RecordRow) null) (= @config.detailLook document) (= (default (object/get @entity openDraft) "") "1"))
+        (set @entity.loadedRow (default (as (array/first ?data) RecordRow) @entity.loadedRow))
         (set @entity.id (object/get (array/first ?data) id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get (array/first ?data) @f) ""))) " ") (default (object/get (array/first ?data) @config.titleField) "")))
-        (set @entity.description (if (!= @config.subtitleRelation null) (default (object/get (object/get (array/first ?data) @config.subtitleRelation) @config.subtitleRelatedField) "") (if (validate/required @config.subtitleField) (default (object/get (array/first ?data) @config.subtitleField) "") "")))
+        (set @entity.description (if (!= @config.subtitleRelation null) (let ((rel (object/get (array/first ?data) @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (object/get @rel @config.subtitleRelatedField) "") "")) (if (validate/required @config.subtitleField) (default (object/get (array/first ?data) @config.subtitleField) "") "")))
         (set @entity.content (if (validate/required @config.contentField) (default (object/get (array/first ?data) @config.contentField) "") ""))
         (set @entity.coverUrl (if (validate/required @config.coverField) (default (object/get (array/first ?data) @config.coverField) "") ""))
         (set @entity.iconName (if (validate/required @config.iconField) (default (object/get (array/first ?data) @config.iconField) "") ""))
         (render-ui main @config.documentEditingContent)
-      RecordItemSlugLoaded -> viewing when (and (> (array/len ?data) 0) (or (!= @config.detailLook document) (!= (default (object/get @entity openDraft) "") "1")))
-        (set @entity.loadedRow (array/first ?data))
+      RecordItemSlugLoaded -> viewing when (and (> (array/len ?data) 0) (!= (as (array/first ?data) RecordRow) null) (or (!= @config.detailLook document) (!= (default (object/get @entity openDraft) "") "1")))
+        (set @entity.loadedRow (default (as (array/first ?data) RecordRow) @entity.loadedRow))
         (set @entity.id (object/get (array/first ?data) id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get (array/first ?data) @f) ""))) " ") (default (object/get (array/first ?data) @config.titleField) "")))
-        (set @entity.description (if (!= @config.subtitleRelation null) (default (object/get (object/get (array/first ?data) @config.subtitleRelation) @config.subtitleRelatedField) "") (if (validate/required @config.subtitleField) (default (object/get (array/first ?data) @config.subtitleField) "") "")))
+        (set @entity.description (if (!= @config.subtitleRelation null) (let ((rel (object/get (array/first ?data) @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (object/get @rel @config.subtitleRelatedField) "") "")) (if (validate/required @config.subtitleField) (default (object/get (array/first ?data) @config.subtitleField) "") "")))
         (set @entity.content (if (validate/required @config.contentField) (default (object/get (array/first ?data) @config.contentField) "") ""))
         (set @entity.coverUrl (if (validate/required @config.coverField) (default (object/get (array/first ?data) @config.coverField) "") ""))
         (set @entity.iconName (if (validate/required @config.iconField) (default (object/get (array/first ?data) @config.iconField) "") ""))
@@ -186,6 +189,10 @@ orbital RecordItemOrbital {
             (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
+      RecordItemLoaded -> error when (= (as ?data RecordRow) null)
+        (render-ui main { message: "The fetched record is not a readable row.", title: "Couldn't load this record", type: alert, variant: error })
+      RecordItemSlugLoaded -> error when (and (> (array/len ?data) 0) (= (as (array/first ?data) RecordRow) null))
+        (render-ui main { message: "The fetched record is not a readable row.", title: "Couldn't load this record", type: alert, variant: error })
       RecordItemSlugLoaded -> error when (= (array/len ?data) 0)
         (render-ui main { description: "No record matches this address.", icon: search-x, title: "Not found", type: empty-state })
       RecordItemLoadFailed -> error
@@ -223,7 +230,7 @@ orbital RecordItemOrbital {
         (render-ui main @config.loadingContent)
       CONTENT_CHANGE -> editing
         (set @entity.content ?value)
-        (set @entity.loadedRow (if (validate/required @config.contentField) (object/set @entity.loadedRow @config.contentField ?value) @entity.loadedRow))
+        (set @entity.loadedRow (if (validate/required @config.contentField) (default (object/set @entity.loadedRow @config.contentField ?value) @entity.loadedRow) @entity.loadedRow))
         (emit CONTENT_SAVED { id: @entity.id, content: @entity.content })
       TITLE_COMMITTED -> editing
         (set @entity.name ?title)
@@ -261,12 +268,12 @@ orbital RecordItemOrbital {
           emit: { failure: RecordItemLoadFailed, success: RecordItemSlugLoaded }
           include: @config.include
         })
-      RecordItemLoaded -> viewing
-        ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
-        (set @entity.loadedRow (object/merge ?data {}))
+      RecordItemLoaded -> viewing when (!= (as ?data RecordRow) null)
+        ;; the typed empty base copies the fetched row into loadedRow's Map type
+        (set @entity.loadedRow (default (as ?data RecordRow) @entity.loadedRow))
         (set @entity.id (object/get ?data id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get ?data @f) ""))) " ") (default (object/get ?data @config.titleField) "")))
-        (set @entity.description (if (!= @config.subtitleRelation null) (default (object/get (object/get ?data @config.subtitleRelation) @config.subtitleRelatedField) "") (if (validate/required @config.subtitleField) (default (object/get ?data @config.subtitleField) "") "")))
+        (set @entity.description (if (!= @config.subtitleRelation null) (let ((rel (object/get ?data @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (object/get @rel @config.subtitleRelatedField) "") "")) (if (validate/required @config.subtitleField) (default (object/get ?data @config.subtitleField) "") "")))
         (set @entity.content (if (validate/required @config.contentField) (default (object/get ?data @config.contentField) "") ""))
         (set @entity.coverUrl (if (validate/required @config.coverField) (default (object/get ?data @config.coverField) "") ""))
         (set @entity.iconName (if (validate/required @config.iconField) (default (object/get ?data @config.iconField) "") ""))
@@ -277,11 +284,11 @@ orbital RecordItemOrbital {
             (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
-      RecordItemSlugLoaded -> viewing when (> (array/len ?data) 0)
-        (set @entity.loadedRow (array/first ?data))
+      RecordItemSlugLoaded -> viewing when (and (> (array/len ?data) 0) (!= (as (array/first ?data) RecordRow) null))
+        (set @entity.loadedRow (default (as (array/first ?data) RecordRow) @entity.loadedRow))
         (set @entity.id (object/get (array/first ?data) id))
         (set @entity.name (if (> (array/len @config.titleFields) 0) (str/join (array/map @config.titleFields (fn f (default (object/get (array/first ?data) @f) ""))) " ") (default (object/get (array/first ?data) @config.titleField) "")))
-        (set @entity.description (if (!= @config.subtitleRelation null) (default (object/get (object/get (array/first ?data) @config.subtitleRelation) @config.subtitleRelatedField) "") (if (validate/required @config.subtitleField) (default (object/get (array/first ?data) @config.subtitleField) "") "")))
+        (set @entity.description (if (!= @config.subtitleRelation null) (let ((rel (object/get (array/first ?data) @config.subtitleRelation))) (if (and (validate/required @rel) (validate/required @config.subtitleRelatedField)) (default (object/get @rel @config.subtitleRelatedField) "") "")) (if (validate/required @config.subtitleField) (default (object/get (array/first ?data) @config.subtitleField) "") "")))
         (set @entity.content (if (validate/required @config.contentField) (default (object/get (array/first ?data) @config.contentField) "") ""))
         (set @entity.coverUrl (if (validate/required @config.coverField) (default (object/get (array/first ?data) @config.coverField) "") ""))
         (set @entity.iconName (if (validate/required @config.iconField) (default (object/get (array/first ?data) @config.iconField) "") ""))
@@ -292,6 +299,10 @@ orbital RecordItemOrbital {
             (if (= @config.detailLook page)
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
+      RecordItemLoaded -> error when (= (as ?data RecordRow) null)
+        (render-ui main { message: "The fetched record is not a readable row.", title: "Couldn't load this record", type: alert, variant: error })
+      RecordItemSlugLoaded -> error when (and (> (array/len ?data) 0) (= (as (array/first ?data) RecordRow) null))
+        (render-ui main { message: "The fetched record is not a readable row.", title: "Couldn't load this record", type: alert, variant: error })
       RecordItemSlugLoaded -> error when (= (array/len ?data) 0)
         (render-ui main { description: "No record matches this address.", icon: search-x, title: "Not found", type: empty-state })
       ;; The document body is its own edit affordance: clicking it (or its
@@ -821,7 +832,7 @@ orbital RecordItemOrbital {
       INIT -> idle
       ;; stash only — the drawer opens on demand, never on load
       SHOW_DETAILS -> idle
-        (set @entity.loadedRow (object/merge ?data {}))
+        (set @entity.loadedRow (default (as ?data RecordRow) @entity.loadedRow))
       OPEN_DETAILS -> showing
         (render-ui drawer @config.detailsContent)
       ;; validator self-loop; the real consumer is the host's persistor.
@@ -831,7 +842,7 @@ orbital RecordItemOrbital {
     state showing {
       ;; a refetch echo while the drawer is open repaints it in place
       SHOW_DETAILS -> showing
-        (set @entity.loadedRow (object/merge ?data {}))
+        (set @entity.loadedRow (default (as ?data RecordRow) @entity.loadedRow))
         (render-ui drawer @config.detailsContent)
       OPEN_DETAILS -> showing
         (render-ui drawer @config.detailsContent)
@@ -865,7 +876,7 @@ orbital RecordItemOrbital {
 
     listens {
       SHOW_DETAILS {
-        data : RecordItem
+        data : RecordItem!
       }
         @description "The document finished loading; stash the row the details drawer will show. Hosts route the doc trait's RecordItemLoaded (or SlugLoaded first element) here."
         @synonyms "record loaded, show metadata, populate details"

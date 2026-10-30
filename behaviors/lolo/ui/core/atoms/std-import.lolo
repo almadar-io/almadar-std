@@ -3,7 +3,6 @@ app std-import [
   description: "std-import — a dropdown source menu (Paste text / Markdown files defaults; caller can override via config.sources) plus the OS file picker for file-kind sources. Emits IMPORT_REQUESTED { source, files } on the bus — source is the picked SourceOption descriptor; files carries file metadata when the picker ran (empty otherwise). The actual import work is delegated to a sibling std-migration-job, which listens for IMPORT_REQUESTED and drives the migration service. Mirrors std-export: the menu emits each entry's own literal event field, so overriding the event alone does not retarget the click — also set sources[].event to match."
 ]
 orbital ImportOrbital {
-    uses Button from "std/behaviors/ui-button"
     uses Menu from "std/behaviors/ui-menu"
 
     type SourceOption = { id : string!, kind : string!, label : string!, event : string }
@@ -16,21 +15,17 @@ orbital ImportOrbital {
     pendingFiles : [ImportFileMeta] = []
   }
 
-  trait Button1 = Button.traits.ButtonRender -> ImportPanel {
-    config {
-      action: OPEN_IMPORT
-      icon: upload
-      label: @config.buttonLabel
-      size: sm
-      variant: ghost
-    }
-  }
-
   trait Menu1 = Menu.traits.MenuRender -> ImportPanel {
     config {
       items: @config.sources
       position: bottom-start
-      trigger: [@trait.Button1]
+      trigger: {
+        type: button
+        variant: ghost
+        size: sm
+        icon: upload
+        label: @config.buttonLabel
+      }
     }
   }
 
@@ -40,7 +35,6 @@ orbital ImportOrbital {
     state idle {
       INIT -> idle
         (render-ui main { children: [@trait.Menu1], type: box })
-      OPEN_IMPORT -> idle
       IMPORT_SOURCE_PICKED -> picking when (let ((src (array/find @config.sources (fn s (== (object/get @s id) ?itemId))))) (if (= @src null) false (== (object/get @src kind "") "file")))
         (set @entity.pendingSource (let ((src (array/find @config.sources (fn s (== (object/get @s id) ?itemId))))) (if (= @src null) @entity.pendingSource @src)))
         (browser/open-file-picker { accept: @config.accept, multiple: true }
@@ -131,5 +125,5 @@ orbital ImportOrbital {
     }
   }
 
-  page "/imports/menu" as ImportMenuPage -> ImportMenu, Button1, Menu1
+  page "/imports/menu" as ImportMenuPage -> ImportMenu, Menu1
 }

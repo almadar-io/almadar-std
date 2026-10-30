@@ -114,10 +114,7 @@ orbital OrbLintBindingFieldsOrbital {
                   (if (validate/object (array/nth @auxs @ai))
                     (array/map (array/range 0 (array/len @invs)) (fn ni { x: (array/nth @invs @ni), w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @ni "]"), c: "i", ev: "", pk: "", lk: @en }))
                     @noroots)))))))))))))
-    (array/flatten
-      (array/map @roots
-        (fn x
-          (let ((hs (default (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
+    (let ((nroot : BfRoot { x: null, w: "", c: "", ev: "", pk: "", lk: "" }) (keys (array/map @roots (fn kx (bytes/to-base64 (bytes/from-string (json/stringify (object/get @kx "x" null)))))))) (let ((firstIdx (default (object/fromEntries (array/map (array/range 0 (array/len @keys)) (fn xk [(default (array/nth @keys @xk) ""), @xk]))) {}))) (let ((foldD (default (object/fromEntries (array/map (object/values @firstIdx) (fn xk [(default (array/nth @keys @xk) ""), (default (tree/fold (object/get (default (array/nth @roots @xk) @nroot) "x" null) (fn (n k) (if (validate/string @n)
   (if (str/startsWith @n (quote "@")) [{ rel: "", s: @n }] @nohits)
   (if (validate/array @n)
     (array/flatten
@@ -129,7 +126,11 @@ orbital OrbLintBindingFieldsOrbital {
         (array/map (object/keys @k)
           (fn key
             (array/map (let ((r : [BfHit]? (object/get @k @key))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
-      @nohits)))) BfShape) @nohits)))
+      @nohits)))) BfShape) @nohits)]))) {})))
+            (array/flatten
+              (array/map (array/range 0 (array/len @roots))
+                (fn xi
+                  (let ((x (default (array/nth @roots @xi) @nroot)) (hs (default (object/get @foldD (default (array/nth @keys @xi) "")) @nohits)))
             (array/flatten
               (array/map @hs
                 (fn h
@@ -170,7 +171,7 @@ orbital OrbLintBindingFieldsOrbital {
           (let ((pent (object/get @defIdx @root null)))
             (if (or (not (validate/pattern @root "^[A-Z][a-zA-Z0-9]*$")) (= @pent null) (array/includes ["id", "createdAt", "updatedAt"] @fld) (array/includes (object/get @pent "fields" []) @fld))
               @nof
-              [{ code: @config.codes.bindingEntityFieldNotFound.code, path: @p, message: (str/concat (quote "@") @root "." @fld " — field '" @fld "' not found on entity '" @root "'"), suggestion: (str/concat "Add field '" @fld "' to entity '" @root "' or fix the binding path"), severity: "error" }])))))))))))))))))))
+              [{ code: @config.codes.bindingEntityFieldNotFound.code, path: @p, message: (str/concat (quote "@") @root "." @fld " — field '" @fld "' not found on entity '" @root "'"), suggestion: (str/concat "Add field '" @fld "' to entity '" @root "' or fix the binding path"), severity: "error" }]))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "binding-fields", scope: @entity.scope, findings: @entity.findings })

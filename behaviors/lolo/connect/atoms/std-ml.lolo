@@ -53,7 +53,7 @@ orbital MlOrbital {
                 (if (!= @failed null)
                   (emit ML_INFER_FAILED { code: "SERVICE_ERROR", message: (str/concat "ML service could not infer: " (default (object/get (default @failed {}) error null) "model unavailable")) })
                   (let ((hit (array/find @results (fn r (and (= (object/get @r effect "") "emit") (= (object/get @r success false) true) (= (object/get (object/get @r data {}) event "") "INFERRED"))))))
-                    (let ((inferred (if (= @hit null) null (json/parse (json/stringify (object/get (object/get @hit data {}) payload null)) MlInferPayload))))
+                    (let ((inferred (if (= @hit null) null (as (object/get (object/get @hit data {}) payload null) MlInferPayload))))
                       (if (= @inferred null)
                         (emit ML_INFER_FAILED { code: "SERVICE_ERROR", message: "ML service response did not include a valid inference result" })
                         (emit ML_INFERRED {

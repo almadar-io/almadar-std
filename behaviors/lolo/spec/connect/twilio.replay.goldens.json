@@ -1,0 +1,1272 @@
+{
+  "atom": "connect/atoms/std-twilio.lolo",
+  "trait": "TwilioClient",
+  "note": "std-twilio over the composed std-http-client: the Messages form post is one TWILIO_HTTP_SEND (basic auth rides the client's TWILIO_BASIC_AUTH credential, never the event), replies and failures return by call key, and every failure answers TWILIO_SMS_FAILED or TWILIO_WHATSAPP_FAILED.",
+  "cases": [
+    {
+      "id": "sms-send-asks-the-http-client-for-one-form-post-to-the-messages-resource",
+      "steps": [
+        {
+          "event": "TWILIO_SEND_SMS",
+          "payload": {
+            "to": "+15551234",
+            "body": "Hi there!"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_HTTP_SEND",
+                "payload": {
+                  "key": "sms",
+                  "method": "POST",
+                  "target": "/2010-04-01/Accounts/ACabc/Messages.json",
+                  "headers": [
+                    {
+                      "name": "content-type",
+                      "value": "application/x-www-form-urlencoded"
+                    },
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "VG89JTJCMTU1NTEyMzQmRnJvbT0lMkIxNTU1MDAwMSZCb2R5PUhpJTIwdGhlcmUlMjE=",
+                  "stream": "none"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_WHATSAPP_HTTP_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      },
+      "defaults": [
+        "TwilioHttp"
+      ]
+    },
+    {
+      "id": "control-sms-send-with-its-own-sender-uses-it-instead-of-the-configured-number",
+      "steps": [
+        {
+          "event": "TWILIO_SEND_SMS",
+          "payload": {
+            "to": "+15551234",
+            "body": "x",
+            "from": "+15559999"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_HTTP_SEND",
+                "payload": {
+                  "key": "sms",
+                  "method": "POST",
+                  "target": "/2010-04-01/Accounts/ACabc/Messages.json",
+                  "headers": [
+                    {
+                      "name": "content-type",
+                      "value": "application/x-www-form-urlencoded"
+                    },
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "VG89JTJCMTU1NTEyMzQmRnJvbT0lMkIxNTU1OTk5OSZCb2R5PXg=",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      },
+      "defaults": [
+        "TwilioHttp"
+      ]
+    },
+    {
+      "id": "control-sms-send-with-an-empty-sender-falls-to-the-configured-number",
+      "steps": [
+        {
+          "event": "TWILIO_SEND_SMS",
+          "payload": {
+            "to": "+15551234",
+            "body": "x",
+            "from": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_HTTP_SEND",
+                "payload": {
+                  "key": "sms",
+                  "method": "POST",
+                  "target": "/2010-04-01/Accounts/ACabc/Messages.json",
+                  "headers": [
+                    {
+                      "name": "content-type",
+                      "value": "application/x-www-form-urlencoded"
+                    },
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "VG89JTJCMTU1NTEyMzQmRnJvbT0lMkIxNTU1MDAwMSZCb2R5PXg=",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      },
+      "defaults": [
+        "TwilioHttp"
+      ]
+    },
+    {
+      "id": "whatsapp-send-prefixes-both-numbers-and-keys-the-call-whatsapp",
+      "steps": [
+        {
+          "event": "TWILIO_SEND_WHATSAPP",
+          "payload": {
+            "to": "+15551234",
+            "body": "a (b)*"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_HTTP_SEND",
+                "payload": {
+                  "key": "whatsapp",
+                  "method": "POST",
+                  "target": "/2010-04-01/Accounts/ACabc/Messages.json",
+                  "headers": [
+                    {
+                      "name": "content-type",
+                      "value": "application/x-www-form-urlencoded"
+                    },
+                    {
+                      "name": "accept",
+                      "value": "application/json"
+                    }
+                  ],
+                  "body": "VG89d2hhdHNhcHAlM0ElMkIxNTU1MTIzNCZGcm9tPXdoYXRzYXBwJTNBJTJCMTU1NTAwMDEmQm9keT1hJTIwJTI4YiUyOSUyQQ==",
+                  "stream": "none"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_SMS_HTTP_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      },
+      "defaults": [
+        "TwilioHttp"
+      ]
+    },
+    {
+      "id": "sms-without-an-account-sid-fails-not-configured",
+      "steps": [
+        {
+          "event": "TWILIO_SEND_SMS",
+          "payload": {
+            "to": "+1",
+            "body": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_SMS_FAILED",
+                "payload": {
+                  "message": "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_HTTP_SEND"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "sms-with-an-api-key-sid-fails-and-names-the-account-sid-rule",
+      "steps": [
+        {
+          "event": "TWILIO_SEND_SMS",
+          "payload": {
+            "to": "+1",
+            "body": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_SMS_FAILED",
+                "payload": {
+                  "message": "accountSid must start with AC. The given SID indicates an API Key which requires the accountSid to be passed as an additional option"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_HTTP_SEND"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "SKabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "sms-with-another-sid-prefix-fails",
+      "steps": [
+        {
+          "event": "TWILIO_SEND_SMS",
+          "payload": {
+            "to": "+1",
+            "body": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_SMS_FAILED",
+                "payload": {
+                  "message": "accountSid must start with AC"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_HTTP_SEND"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "XYabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "sms-created-reply-answers-sid-and-status",
+      "steps": [
+        {
+          "event": "TWILIO_SMS_REPLIED",
+          "payload": {
+            "status": 201,
+            "headers": {},
+            "body": "{\"sid\":\"SM1\",\"status\":\"queued\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_SMS_RESULT",
+                "payload": {
+                  "sid": "SM1",
+                  "status": "queued"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_SMS_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "control-sms-created-reply-without-a-status-answers-the-sid-alone",
+      "steps": [
+        {
+          "event": "TWILIO_SMS_REPLIED",
+          "payload": {
+            "status": 201,
+            "headers": {},
+            "body": "{\"sid\":\"SM1\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_SMS_RESULT",
+                "payload": {
+                  "sid": "SM1"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_SMS_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "sms-ok-reply-that-is-not-json-fails-not-a-message",
+      "steps": [
+        {
+          "event": "TWILIO_SMS_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "oops"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_SMS_FAILED",
+                "payload": {
+                  "message": "Twilio answered a body that is not a message"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_SMS_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "sms-error-body-answers-its-http-status-and-title",
+      "steps": [
+        {
+          "event": "TWILIO_SMS_REPLIED",
+          "payload": {
+            "status": 400,
+            "headers": {},
+            "body": "{\"type\":\"t\",\"title\":\"Bad number\",\"status\":400,\"code\":21211,\"message\":\"m\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_SMS_FAILED",
+                "payload": {
+                  "message": "[HTTP 400] Bad number"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_SMS_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "control-sms-error-body-without-the-full-shape-answers-its-message",
+      "steps": [
+        {
+          "event": "TWILIO_SMS_REPLIED",
+          "payload": {
+            "status": 400,
+            "headers": {},
+            "body": "{\"message\":\"Boom\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_SMS_FAILED",
+                "payload": {
+                  "message": "Boom"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "sms-error-reply-that-is-not-json-answers-the-bare-http-failure",
+      "steps": [
+        {
+          "event": "TWILIO_SMS_REPLIED",
+          "payload": {
+            "status": 502,
+            "headers": {},
+            "body": "<html>"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_SMS_FAILED",
+                "payload": {
+                  "message": "[HTTP 502] Failed to execute request"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "sms-call-that-never-answered-fails-with-the-client-error",
+      "steps": [
+        {
+          "event": "TWILIO_SMS_HTTP_FAILED",
+          "payload": {
+            "error": "connection refused",
+            "kind": "io"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_SMS_FAILED",
+                "payload": {
+                  "message": "connection refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_SMS_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "sms-credential-not-held-fails-with-the-denied-error",
+      "steps": [
+        {
+          "event": "TWILIO_SMS_HTTP_FAILED",
+          "payload": {
+            "error": "credential TWILIO_BASIC_AUTH is not held",
+            "kind": "denied"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_SMS_FAILED",
+                "payload": {
+                  "message": "credential TWILIO_BASIC_AUTH is not held"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "whatsapp-without-an-account-sid-fails-not-configured",
+      "steps": [
+        {
+          "event": "TWILIO_SEND_WHATSAPP",
+          "payload": {
+            "to": "+1",
+            "body": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_WHATSAPP_FAILED",
+                "payload": {
+                  "message": "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN not configured"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_HTTP_SEND"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "whatsapp-with-an-api-key-sid-fails-and-names-the-account-sid-rule",
+      "steps": [
+        {
+          "event": "TWILIO_SEND_WHATSAPP",
+          "payload": {
+            "to": "+1",
+            "body": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_WHATSAPP_FAILED",
+                "payload": {
+                  "message": "accountSid must start with AC. The given SID indicates an API Key which requires the accountSid to be passed as an additional option"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_HTTP_SEND"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "SKabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "whatsapp-with-another-sid-prefix-fails",
+      "steps": [
+        {
+          "event": "TWILIO_SEND_WHATSAPP",
+          "payload": {
+            "to": "+1",
+            "body": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_WHATSAPP_FAILED",
+                "payload": {
+                  "message": "accountSid must start with AC"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_HTTP_SEND"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "XYabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "whatsapp-created-reply-answers-sid-and-status",
+      "steps": [
+        {
+          "event": "TWILIO_WHATSAPP_REPLIED",
+          "payload": {
+            "status": 201,
+            "headers": {},
+            "body": "{\"sid\":\"SM1\",\"status\":\"queued\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_WHATSAPP_RESULT",
+                "payload": {
+                  "sid": "SM1",
+                  "status": "queued"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_WHATSAPP_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "control-whatsapp-created-reply-without-a-status-answers-the-sid-alone",
+      "steps": [
+        {
+          "event": "TWILIO_WHATSAPP_REPLIED",
+          "payload": {
+            "status": 201,
+            "headers": {},
+            "body": "{\"sid\":\"SM1\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_WHATSAPP_RESULT",
+                "payload": {
+                  "sid": "SM1"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_WHATSAPP_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "whatsapp-ok-reply-that-is-not-json-fails-not-a-message",
+      "steps": [
+        {
+          "event": "TWILIO_WHATSAPP_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "oops"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_WHATSAPP_FAILED",
+                "payload": {
+                  "message": "Twilio answered a body that is not a message"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_WHATSAPP_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "whatsapp-error-body-answers-its-http-status-and-title",
+      "steps": [
+        {
+          "event": "TWILIO_WHATSAPP_REPLIED",
+          "payload": {
+            "status": 400,
+            "headers": {},
+            "body": "{\"type\":\"t\",\"title\":\"Bad number\",\"status\":400,\"code\":21211,\"message\":\"m\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_WHATSAPP_FAILED",
+                "payload": {
+                  "message": "[HTTP 400] Bad number"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_WHATSAPP_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "control-whatsapp-error-body-without-the-full-shape-answers-its-message",
+      "steps": [
+        {
+          "event": "TWILIO_WHATSAPP_REPLIED",
+          "payload": {
+            "status": 400,
+            "headers": {},
+            "body": "{\"message\":\"Boom\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_WHATSAPP_FAILED",
+                "payload": {
+                  "message": "Boom"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "whatsapp-error-reply-that-is-not-json-answers-the-bare-http-failure",
+      "steps": [
+        {
+          "event": "TWILIO_WHATSAPP_REPLIED",
+          "payload": {
+            "status": 502,
+            "headers": {},
+            "body": "<html>"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_WHATSAPP_FAILED",
+                "payload": {
+                  "message": "[HTTP 502] Failed to execute request"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "whatsapp-call-that-never-answered-fails-with-the-client-error",
+      "steps": [
+        {
+          "event": "TWILIO_WHATSAPP_HTTP_FAILED",
+          "payload": {
+            "error": "connection refused",
+            "kind": "io"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_WHATSAPP_FAILED",
+                "payload": {
+                  "message": "connection refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_WHATSAPP_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "whatsapp-credential-not-held-fails-with-the-denied-error",
+      "steps": [
+        {
+          "event": "TWILIO_WHATSAPP_HTTP_FAILED",
+          "payload": {
+            "error": "credential TWILIO_BASIC_AUTH is not held",
+            "kind": "denied"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_WHATSAPP_FAILED",
+                "payload": {
+                  "message": "credential TWILIO_BASIC_AUTH is not held"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      }
+    },
+    {
+      "id": "the-clients-reply-for-the-sms-key-reaches-the-sms-reply-route",
+      "steps": [
+        {
+          "trait": "TwilioHttp",
+          "event": "HC_READ",
+          "from": "reading",
+          "entity": {
+            "key": "sms",
+            "stage": "head",
+            "stream": "none"
+          },
+          "payload": {
+            "data": "SFRUUC8xLjEgMjAxIFgNCmNvbnRlbnQtbGVuZ3RoOiAyOQ0KDQp7InNpZCI6IlNNOSIsInN0YXR1cyI6InNlbnQifQ==",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "sms",
+                  "status": 201
+                }
+              },
+              {
+                "event": "TWILIO_SMS_RESULT",
+                "payload": {
+                  "sid": "SM9",
+                  "status": "sent"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_WHATSAPP_RESULT",
+              "TWILIO_SMS_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      },
+      "defaults": [
+        "TwilioHttp"
+      ]
+    },
+    {
+      "id": "control-the-clients-reply-for-the-whatsapp-key-reaches-the-whatsapp-route-only",
+      "steps": [
+        {
+          "trait": "TwilioHttp",
+          "event": "HC_READ",
+          "from": "reading",
+          "entity": {
+            "key": "whatsapp",
+            "stage": "head",
+            "stream": "none"
+          },
+          "payload": {
+            "data": "SFRUUC8xLjEgMjAxIFgNCmNvbnRlbnQtbGVuZ3RoOiAxMw0KDQp7InNpZCI6IlNNOCJ9",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "whatsapp",
+                  "status": 201
+                }
+              },
+              {
+                "event": "TWILIO_WHATSAPP_RESULT",
+                "payload": {
+                  "sid": "SM8"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_SMS_RESULT",
+              "TWILIO_WHATSAPP_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      },
+      "defaults": [
+        "TwilioHttp"
+      ]
+    },
+    {
+      "id": "the-clients-error-status-for-the-sms-key-answers-the-sms-failure",
+      "steps": [
+        {
+          "trait": "TwilioHttp",
+          "event": "HC_READ",
+          "from": "reading",
+          "entity": {
+            "key": "sms",
+            "stage": "head",
+            "stream": "none"
+          },
+          "payload": {
+            "data": "SFRUUC8xLjEgNDAwIFgNCmNvbnRlbnQtbGVuZ3RoOiAxOA0KDQp7Im1lc3NhZ2UiOiJCb29tIn0=",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "sms",
+                  "status": 400
+                }
+              },
+              {
+                "event": "TWILIO_SMS_FAILED",
+                "payload": {
+                  "message": "Boom"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_SMS_RESULT",
+              "TWILIO_WHATSAPP_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      },
+      "defaults": [
+        "TwilioHttp"
+      ]
+    },
+    {
+      "id": "a-sms-the-client-cannot-open-answers-the-sms-failure-with-the-client-error",
+      "steps": [
+        {
+          "event": "TWILIO_SEND_SMS",
+          "payload": {
+            "to": "+1",
+            "body": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "sms",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "TWILIO_SMS_FAILED",
+                "payload": {
+                  "message": "os/tcp-connect: no os host configured"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_WHATSAPP_FAILED",
+              "TWILIO_SMS_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      },
+      "defaults": [
+        "TwilioHttp"
+      ]
+    },
+    {
+      "id": "control-a-whatsapp-the-client-cannot-open-answers-the-whatsapp-failure-only",
+      "steps": [
+        {
+          "event": "TWILIO_SEND_WHATSAPP",
+          "payload": {
+            "to": "+1",
+            "body": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "whatsapp",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "TWILIO_WHATSAPP_FAILED",
+                "payload": {
+                  "message": "os/tcp-connect: no os host configured"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_SMS_FAILED",
+              "TWILIO_WHATSAPP_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      },
+      "defaults": [
+        "TwilioHttp"
+      ]
+    },
+    {
+      "id": "the-basic-auth-credential-is-a-host-written-header-segment-and-never-in-the-request-bytes",
+      "steps": [
+        {
+          "event": "TWILIO_SEND_SMS",
+          "payload": {
+            "to": "+1",
+            "body": "x"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "HC_BUILT",
+                "payload": {
+                  "head": "UE9TVCAvMjAxMC0wNC0wMS9BY2NvdW50cy9BQ2FiYy9NZXNzYWdlcy5qc29uIEhUVFAvMS4xDQpob3N0OiBhcGkudHdpbGlvLmNvbQ0KYXV0aG9yaXphdGlvbjogQmFzaWMg"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "TwilioHttp",
+          "event": "HC_CONNECTED",
+          "from": "connecting",
+          "entity": {
+            "key": "sms",
+            "credUse": true,
+            "credEnc": "base64",
+            "head": "SA==",
+            "request": "Ug=="
+          },
+          "payload": {
+            "sock": 5,
+            "key": "connect"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/send",
+                "arg1": [
+                  {
+                    "bytes": "@entity.head",
+                    "credential": "@config.credential",
+                    "encode": "base64"
+                  },
+                  {
+                    "bytes": "@entity.request",
+                    "credential": ""
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      },
+      "defaults": [
+        "TwilioHttp"
+      ]
+    },
+    {
+      "id": "the-deadline-passing-times-the-send-out-with-the-old-timeout-message",
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      },
+      "steps": [
+        {
+          "trait": "TwilioTimeout",
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "key": "sms"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TIMED_OUT",
+                "payload": {
+                  "key": "sms",
+                  "timeoutMs": 30000
+                }
+              },
+              {
+                "event": "TWILIO_SMS_FAILED",
+                "payload": {
+                  "message": "timeout of 30000ms exceeded"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_SMS_RESULT",
+              "TWILIO_WHATSAPP_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-whatsapp-deadline-times-out-the-whatsapp-route-only",
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      },
+      "steps": [
+        {
+          "trait": "TwilioTimeout",
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "key": "whatsapp"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TWILIO_WHATSAPP_FAILED",
+                "payload": {
+                  "message": "timeout of 30000ms exceeded"
+                }
+              }
+            ],
+            "neverEmits": [
+              "TWILIO_SMS_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-reply-before-the-deadline-wins-the-race-and-disarms-it",
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      },
+      "steps": [
+        {
+          "trait": "TwilioTimeout",
+          "event": "START",
+          "payload": {
+            "key": "sms"
+          },
+          "expect": {
+            "state": "running"
+          }
+        },
+        {
+          "trait": "TwilioTimeout",
+          "event": "SUCCEEDED",
+          "payload": {
+            "key": "sms"
+          },
+          "from": "running",
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "TIMED_OUT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-send-starts-the-deadline-under-the-same-key",
+      "config": {
+        "accountSid": "ACabc",
+        "phoneNumber": "+15550001"
+      },
+      "defaults": [
+        "TwilioHttp"
+      ],
+      "steps": [
+        {
+          "event": "TWILIO_SEND_SMS",
+          "payload": {
+            "to": "+1",
+            "body": "x"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ASK_STARTED",
+                "payload": {
+                  "key": "sms"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

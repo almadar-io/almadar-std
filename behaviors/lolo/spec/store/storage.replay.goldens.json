@@ -1,0 +1,225 @@
+{
+ "atom": "store/atoms/std-storage.lolo",
+ "trait": "StorageClient",
+ "note": "a data url whose percent-encoding does not decode, and an error response body that is not base64, answer STORAGE_FAILED; the decodable twins go on",
+ "cases": [
+  {
+   "id": "bad-percent-encoding-fails",
+   "steps": [
+    {
+     "event": "STORAGE_UPLOAD",
+     "payload": {
+      "bucket": "my-bucket",
+      "file": {
+       "name": "a.txt",
+       "size": 5,
+       "type": "text/plain",
+       "content": "data:text/plain,%E0%A4%A"
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "URI malformed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-percent-encoding-is-stored",
+   "steps": [
+    {
+     "event": "STORAGE_UPLOAD",
+     "payload": {
+      "bucket": "my-bucket",
+      "file": {
+       "name": "a.txt",
+       "size": 5,
+       "type": "text/plain",
+       "content": "data:text/plain,hello%20world"
+      }
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_PUT"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "undecodable-error-body-fails",
+   "steps": [
+    {
+     "event": "STORAGE_DOWNLOAD_REPLIED",
+     "payload": {
+      "status": 404,
+      "body": "!!not base64!!",
+      "headers": {},
+      "key": "k"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "The storage error response could not be decoded"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "decodable-error-body-reaches-error-parse",
+   "steps": [
+    {
+     "event": "STORAGE_DOWNLOAD_REPLIED",
+     "payload": {
+      "status": 404,
+      "body": "PEVycm9yPjxDb2RlPk5vU3VjaEtleTwvQ29kZT48TWVzc2FnZT5nb25lPC9NZXNzYWdlPjwvRXJyb3I+",
+      "headers": {},
+      "key": "k"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_HTTP_ERROR",
+        "payload": {
+         "text": "<Error><Code>NoSuchKey</Code><Message>gone</Message></Error>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "list-final-page-reads-last-modified",
+   "steps": [
+    {
+     "event": "STORAGE_LIST_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>a.txt</Key><Size>5</Size><LastModified>2024-01-18T09:30:00.000Z</LastModified></Contents></ListBucketResult>",
+      "headers": {},
+      "key": "k"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_LISTED",
+        "payload": {
+         "keys": [
+          {
+           "key": "a.txt",
+           "size": 5,
+           "lastModified": 1705570200000
+          }
+         ],
+         "truncated": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "list-truncated-page-reads-last-modified",
+   "steps": [
+    {
+     "event": "STORAGE_LIST_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>true</IsTruncated><NextContinuationToken>tok</NextContinuationToken><Contents><Key>a.txt</Key><Size>5</Size><LastModified>2024-01-18T09:30:00.000Z</LastModified></Contents></ListBucketResult>",
+      "headers": {},
+      "key": "k"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_LISTED",
+        "payload": {
+         "keys": [
+          {
+           "key": "a.txt",
+           "size": 5,
+           "lastModified": 1705570200000
+          }
+         ],
+         "truncated": true,
+         "nextToken": "tok"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "list-unreadable-last-modified-fails",
+   "steps": [
+    {
+     "event": "STORAGE_LIST_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>a.txt</Key><Size>5</Size><LastModified>yesterday</LastModified></Contents></ListBucketResult>",
+      "headers": {},
+      "key": "k"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "The listing could not be read"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "list-truncated-unreadable-last-modified-fails",
+   "steps": [
+    {
+     "event": "STORAGE_LIST_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>true</IsTruncated><NextContinuationToken>tok</NextContinuationToken><Contents><Key>a.txt</Key><Size>5</Size><LastModified></LastModified></Contents></ListBucketResult>",
+      "headers": {},
+      "key": "k"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STORAGE_FAILED",
+        "payload": {
+         "message": "The listing could not be read"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

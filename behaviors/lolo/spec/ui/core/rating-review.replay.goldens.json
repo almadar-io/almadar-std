@@ -1,0 +1,67 @@
+{
+ "atom": "../ui/core/atoms/std-rating-review.lolo",
+ "trait": "RatingReviewSubmit",
+ "note": "Reviews are stored rows of the persistent Review entity; ReviewView is the runtime view the trait renders from. SUBMIT_REVIEW persists a Review (never a ReviewView), and the board fetches Review.",
+ "cases": [
+  {
+   "id": "submit-persists-a-stored-review-row",
+   "steps": [
+    {
+     "trait": "RatingReviewSubmit",
+     "from": "composing",
+     "entity": { "id": "v", "draftRating": 4, "draftComment": "Great" },
+     "event": "SUBMIT_REVIEW",
+     "payload": { "data": { "id": "v", "draftComment": "x" } },
+     "expect": {
+      "fired": true,
+      "state": "submitting",
+      "effects": [
+       { "type": "persist", "arg0": "create", "arg1": "Review" },
+       { "type": "render-ui" }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "board-submit-persists-a-stored-review-row",
+   "steps": [
+    {
+     "trait": "RatingReviewBoard",
+     "from": "composing",
+     "entity": { "id": "v", "draftRating": 5, "draftComment": "Fine" },
+     "event": "SUBMIT_REVIEW",
+     "payload": { "data": { "id": "v", "draftComment": "x" } },
+     "expect": {
+      "fired": true,
+      "state": "submitting",
+      "effects": [
+       { "type": "persist", "arg0": "create", "arg1": "Review" },
+       { "type": "render-ui" }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "board-init-fetches-the-stored-reviews",
+   "steps": [
+    {
+     "trait": "RatingReviewBoard",
+     "from": "loading",
+     "entity": { "id": "v" },
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       { "type": "fetch", "arg0": "Review" },
+       { "type": "render-ui" }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

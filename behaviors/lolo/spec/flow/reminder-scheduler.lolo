@@ -1,0 +1,37 @@
+app reminder-scheduler-spec [
+  version: "1.0.0",
+  description: "Design contract for the reminder scheduler: a target whose deadline is a date, a datetime or an instant composes and scans."
+]
+
+orbital ReminderTargetSpec {
+  uses Reminder from "std/behaviors/std-reminder-scheduler"
+
+  entity DateTarget [persistent: reminder_date_targets] {
+    id : string!
+    dueOn : date @description "Calendar deadline." = "2026-01-01"
+    remindedAt : instant @description "Dedup marker; absent = not reminded."
+  }
+
+  entity DatetimeTarget [persistent: reminder_datetime_targets] {
+    id : string!
+    dueAt : datetime @description "Wall-clock deadline." = "2026-01-01T09:00:00"
+    remindedAt : instant @description "Dedup marker; absent = not reminded."
+  }
+
+  trait DateReminder = Reminder.traits.ReminderScheduler -> DateTarget {
+    config {
+      enabled: true
+      targetEntity: DateTarget
+      dateField: dueOn
+    }
+  }
+
+  trait DatetimeReminder = Reminder.traits.ReminderScheduler -> DatetimeTarget {
+    config {
+      enabled: true
+      targetEntity: DatetimeTarget
+      dateField: dueAt
+      direction: past
+    }
+  }
+}

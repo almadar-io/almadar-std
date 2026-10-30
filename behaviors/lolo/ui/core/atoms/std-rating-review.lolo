@@ -14,9 +14,19 @@ orbital RatingReviewOrbital {
 
     type ReviewsLoadFailed = Event { error : string, code : string } "Fired when reviews fetch fails"
 
-    type ReviewSaved = Event ReviewView "Fired after a new review persists successfully"
+    type ReviewSaved = Event Review "Fired after a new review persists successfully"
 
     type ReviewSaveFailed = Event { error : string, code : string } "Fired when persist fails"
+
+  entity Review [persistent: reviews] {
+    id : string!
+    rating : number @description "The star rating the reviewer gave." @synonyms "stars, score, value"
+    comment : string @description "The reviewer's written comment." @synonyms "text, body, content"
+    authorName : string @description "Display name of the reviewer." @synonyms "author, reviewer, name"
+    avatarIcon : string @description "Icon shown beside the reviewer's name." @synonyms "avatar, icon"
+    createdAt : string
+    helpful : number @description "How many readers marked the review helpful." @synonyms "helpful count, upvotes" = 0
+  }
 
   entity ReviewView [runtime] {
     id : string!
@@ -36,7 +46,7 @@ orbital RatingReviewOrbital {
 
     state loading {
       INIT -> loading
-        (fetch ReviewView {
+        (fetch Review {
           emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
         })
         (render-ui main {
@@ -252,7 +262,7 @@ orbital RatingReviewOrbital {
           type: error-state
         })
       ReviewSaved -> loading
-        (fetch ReviewView {
+        (fetch Review {
           emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
         })
         (render-ui main {
@@ -272,7 +282,7 @@ orbital RatingReviewOrbital {
 
     state viewing {
       INIT -> loading
-        (fetch ReviewView {
+        (fetch Review {
           emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
         })
         (render-ui main {
@@ -1087,7 +1097,7 @@ orbital RatingReviewOrbital {
 
     state composing {
       INIT -> loading
-        (fetch ReviewView {
+        (fetch Review {
           emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
         })
         (render-ui main {
@@ -1158,7 +1168,7 @@ orbital RatingReviewOrbital {
           type: stack
         })
       SUBMIT_REVIEW -> submitting
-        (persist create ReviewView { comment: @entity.draftComment, rating: @entity.draftRating } {
+        (persist create Review { comment: @entity.draftComment, rating: @entity.draftRating } {
           emit: { failure: ReviewSaveFailed, success: ReviewSaved }
         })
         (render-ui main {
@@ -1187,7 +1197,7 @@ orbital RatingReviewOrbital {
 
     state submitting {
       INIT -> loading
-        (fetch ReviewView {
+        (fetch Review {
           emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
         })
         (render-ui main {
@@ -1236,7 +1246,7 @@ orbital RatingReviewOrbital {
 
     state submitted {
       INIT -> loading
-        (fetch ReviewView {
+        (fetch Review {
           emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
         })
         (render-ui main {
@@ -1246,7 +1256,7 @@ orbital RatingReviewOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }, { type: skeleton, variant: list, rows: 6 }]
         })
       RESTART -> loading
-        (fetch ReviewView {
+        (fetch Review {
           emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
         })
         (render-ui main {
@@ -1259,7 +1269,7 @@ orbital RatingReviewOrbital {
 
     state error {
       INIT -> loading
-        (fetch ReviewView {
+        (fetch Review {
           emit: { failure: ReviewsLoadFailed, success: ReviewsLoaded }
         })
         (render-ui main {
@@ -1527,7 +1537,7 @@ orbital RatingReviewOrbital {
           type: card
         })
       SUBMIT_REVIEW -> submitting
-        (persist create ReviewView { comment: @entity.draftComment, rating: @entity.draftRating } {
+        (persist create Review { comment: @entity.draftComment, rating: @entity.draftRating } {
           emit: { failure: ReviewSaveFailed, success: ReviewSaved }
         })
         (render-ui main {

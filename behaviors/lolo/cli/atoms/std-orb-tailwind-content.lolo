@@ -74,14 +74,14 @@ orbital OrbTailwindContentOrbital {
         (emit TAILWIND_ANSWERED { status: 500, body: (str/concat "Error: could not read behavior " (+ @entity.cursor 1) " of " (array/len @entity.hits) ": " @payload.error) })
       TAILWIND_SOURCED -> working
         (set @entity.acc (array/concat @entity.acc
-          (let ((nodes (default (json/parse (json/stringify (json/nodes [@payload.result])) TailwindNodes) [])))
+          (let ((nodes (default (as (json/nodes [@payload.result]) TailwindNodes) [])))
             (array/filter
               (array/flatten (array/map @nodes (fn n
                 (if (validate/object @n)
                   (let ((cn : TailwindDoc? (object/get @n "className" null)))
                     (if (not (or (validate/string @cn) (validate/array @cn)))
                       []
-                      (let ((ns (default (json/parse (json/stringify (json/nodes @cn)) TailwindNodes) [])))
+                      (let ((ns (default (as (json/nodes @cn) TailwindNodes) [])))
                         (let ((heads (array/flatten (array/map @ns (fn m (if (validate/array @m) (if (> (array/len @m) 0) (let ((h : TailwindDoc? (array/first @m))) (if (validate/string @h) [@h] [])) []) []))))))
                           (array/flatten (array/map @ns (fn m (if (validate/string @m) (if (array/includes @heads @m) [] (str/split (str/trim (str/replace-pattern @m "\\s+" " ")) " ")) []))))))))
                   []))))

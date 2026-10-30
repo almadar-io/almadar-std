@@ -15,7 +15,7 @@ type FiredNames = [string]
 type FiredNodes = [FiredNode?]
 type FiredMap = Map string FiredNode?
 type FiredItem = [string]
-type FiredLf = { lf : [string]!, ll : [string]! }
+type FiredLf = { lf : [FiredNode?]!, ll : [FiredNode?]! }
 type WalkSlot = { kind : string!, args : [number] }
 type FiredPatternProp = { pattern : string!, prop : string!, field : string! }
 
@@ -72,7 +72,7 @@ orbital OrbProducedEventsOrbital {
     (if (object/has @n @prop)
       (let ((leaves (let ((v (object/get @n @prop null))) (if (validate/array @v) (let ((sr (tree/fold @v (fn (n k)
   (if (validate/array @n)
-    (let ((len (array/len @n)) (kk (array/map @k (fn r (if (= @r null) @nl @r)))))
+    (let ((len (array/len @n)) (kk : [FiredLf] (array/map @k (fn r (default (as @r FiredLf) @nl)))))
       (let ((argc (- @len 1)))
         (let ((sl (let ((h (array/nth @n 0))) (if (and (> @len 0) (validate/string @h)) (default (object/get @sem @h) @noslot) @noslot))) (sm (object/get @sl "kind" "")))
           (let ((lamIdx (if (= @sm "lambdaResult") (array/filter (array/range 0 (if (> @argc 0) @argc 0)) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d")))))))) []))
@@ -82,11 +82,11 @@ orbital OrbProducedEventsOrbital {
                            (if (= @sm "last") (if (>= @argc 1) (object/get (array/nth @kk @argc) "lf") null)
                              (if (= @sm "lambdaResult") (if (> (array/len @lamIdx) 0) (object/get (array/nth @kk (+ (array/last @lamIdx) 1)) "ll") null)
                                (if (and (> (array/len @picked) 0) (not (array/some @picked (fn i (or (< @i 0) (>= @i @argc)))))) (array/flatten (array/map @picked (fn i (object/get (array/nth @kk (+ @i 1)) "lf")))) null)))))))
-              { lf: (if (= @sel null) [(json/stringify @n)] (if (and (= (array/len @sel) 0) (!= @sm "branches")) [(json/stringify @n)] @sel)), ll: (if (> @len 0) (object/get (array/last @kk) "lf") []) })))))
-    { lf: [(json/stringify @n)], ll: [] })) "FiredNode"))) (object/get @sr "lf" [])) (if (= @v null) [] [(json/stringify @v)])))))
+              { lf: (if (= @sel null) [@n] (if (and (= (array/len @sel) 0) (!= @sm "branches")) [@n] @sel)), ll: (if (> @len 0) (object/get (array/last @kk) "lf") []) })))))
+    { lf: [@n], ll: [] })) "FiredNode"))) (default (as (object/get @sr "lf" []) FiredNodes) [])) (if (= @v null) [] [@v])))))
         (if (= @field "")
-          (array/map (array/flatten (array/map @leaves (fn lf (if (str/startsWith @lf "\"") (default (json/parse (str/concat "[" @lf "]") FiredNames) []) [])))) (fn x ["c", @x]))
-          (array/map (array/flatten (array/map @leaves (fn lf (if (str/startsWith @lf "[") (array/flatten (array/map (default (json/parse @lf FiredNodes) []) (fn it (let ((m (if (validate/object @it) (json/parse (json/stringify @it) FiredMap) null))) (if (= @m null) [] (if (str/startsWith (json/stringify (object/get @m @field null)) "\"") (default (json/parse (str/concat "[" (json/stringify (object/get @m @field null)) "]") FiredNames) []) [])))))) (if (str/startsWith @lf "{") (let ((m (if (validate/object (default (json/parse @lf FiredMap) null)) (json/parse (json/stringify (default (json/parse @lf FiredMap) null)) FiredMap) null))) (if (= @m null) [] (if (str/startsWith (json/stringify (object/get @m @field null)) "\"") (default (json/parse (str/concat "[" (json/stringify (object/get @m @field null)) "]") FiredNames) []) []))) []))))) (fn x ["c", @x]))))
+          (array/map (array/flatten (array/map @leaves (fn lf (if (validate/string @lf) [(str/concat @lf "")] [])))) (fn x ["c", @x]))
+          (array/map (array/flatten (array/map @leaves (fn lf (let ((items : FiredNodes (if (validate/array @lf) (default (as @lf FiredNodes) []) [@lf]))) (array/flatten (array/map @items (fn it (let ((m : FiredMap? (as @it FiredMap))) (if (= @m null) [] (let ((fv : FiredNode? (object/get @m @field null))) (if (validate/string @fv) [(str/concat @fv "")] []))))))))))) (fn x ["c", @x]))))
       []))))))))
                 (let ((all (array/concat (array/concat @kids @emitEv) @ctlItems)))
                   (if (= (array/len @all) 0) @nr @all)))))))

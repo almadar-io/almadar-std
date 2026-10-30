@@ -143,7 +143,7 @@ orbital DataImportOrbital {
           variant: info
         })
         (emit STAGE_ROWS { rows: (array/map (csv/parse @entity.pendingCsv) (fn r (json/stringify @r))) })
-      STAGE_ROWS -> staged when (> (array/len ?rows) 0)
+      STAGE_ROWS -> staged when (and (> (array/len ?rows) 0) (>= (default ?errorCount 0) 0))
         (set @entity.rowCount (array/len ?rows))
         (set @entity.errorCount (default ?errorCount 0))
         (set @entity.status staged)
@@ -188,6 +188,17 @@ orbital DataImportOrbital {
           direction: vertical
           gap: md
           type: stack
+        })
+      ;; A negative error count is a corrupt answer: the batch fails through
+      ;; IMPORT_FAILED rather than staging a count no parser can produce.
+      STAGE_ROWS -> failed when (and (> (array/len ?rows) 0) (< (default ?errorCount 0) 0))
+        (set @entity.status failed)
+        (persist update ImportBatch { id: @entity.id, status: failed })
+        (emit IMPORT_FAILED { batchId: @entity.id, error: "The staged error count is negative, nothing was staged." })
+        (render-ui main {
+          message: "The staged error count is negative, nothing was staged."
+          type: alert
+          variant: error
         })
       ;; Empty staging is a failed run, not a silent no-op. `< 1` (not
       ;; `= 0`) so guard-payload synthesis can steer both arms.

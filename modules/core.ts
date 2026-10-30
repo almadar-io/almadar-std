@@ -1010,7 +1010,10 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["http", "GET", "https://api.example.com", "/items", { "query": { "limit": 10 } }, { "emit": { "success": "ITEMS_LOADED", "failure": "ITEMS_FAILED" } }]',
     effect: {
       kind: 'http',
-      produces: shape({ status: NUMBER, headers: mapOf(STRING, STRING), body: STRING, key: union(STRING, lit(null)) }),
+      produces: union(
+        shape({ status: NUMBER, headers: mapOf(STRING, STRING), body: STRING, key: union(STRING, lit(null)) }),
+        shape({ url: STRING, key: union(STRING, lit(null)) }),
+      ),
     },
   },
   'cancel-call': {
@@ -1134,7 +1137,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1,
     maxArity: 2,
     description:
-      "Masked credential inventory: whether the host's credential store can encrypt, the integrations mode, each service's status and every declared credential's source (store, env or none) with its last four characters, never the value. The declared names are the registry's remaining services plus the secret knobs the running program reads. Open to every caller. The success payload is { enabled, mode, services, entries }.",
+      "Raw credential inventory: whether the host's credential store can encrypt, the rows it holds (service and name, never a value) and the credentials the registered programs declare (group, envVar, description). Masking and the role gate are the std-credential-admin program's. The success payload is { enabled, entries, declared }.",
     hasSideEffects: true,
     runsOn: 'server',
     closedCall: { request: true },
@@ -1149,7 +1152,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       },
     ],
     example: '["credential-list", { "service": "llm" }, { "emit": { "success": "LISTED" } }]',
-    effect: { kind: 'credential-list', produces: shape({ enabled: BOOLEAN, mode: STRING, services: list(openShape({ id: STRING, service: STRING, configured: BOOLEAN, mocked: BOOLEAN, status: STRING, backend: STRING, needs: STRING })), entries: list(openShape({ id: STRING, service: STRING, envVar: STRING, required: BOOLEAN, description: STRING, configured: BOOLEAN, source: STRING, last4: STRING })) }) },
+    effect: { kind: 'credential-list', produces: shape({ enabled: BOOLEAN, entries: list(openShape({ service: STRING, name: STRING })), declared: list(openShape({ group: STRING, envVar: STRING, description: STRING })) }) },
   },
   'credential-set': {
     module: 'core',
@@ -1157,7 +1160,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1,
     maxArity: 2,
     description:
-      "Store a credential value encrypted in the host's credential store; only a credential the named service or program group declares is accepted. Requires the caller's @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { saved, service, envVar, last4 }; the value is never echoed or logged.",
+      "Store a credential value encrypted in the host's credential store; only a credential the named service or program group declares is accepted. Requires the caller's @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { saved }; the value is never echoed or logged.",
     hasSideEffects: true,
     runsOn: 'server',
     closedCall: { request: true },
@@ -1172,7 +1175,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       },
     ],
     example: '["credential-set", { "service": "KeysOrbital", "envVar": "ALMADAR_API_KEY_SALT", "value": "@payload.value" }, { "emit": { "success": "SAVED" } }]',
-    effect: { kind: 'credential-set', produces: shape({ saved: BOOLEAN, service: STRING, envVar: STRING, last4: STRING }) },
+    effect: { kind: 'credential-set', produces: shape({ saved: BOOLEAN }) },
   },
   'credential-remove': {
     module: 'core',

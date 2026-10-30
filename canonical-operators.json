@@ -7241,7 +7241,7 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": "void",
-      "description": "Masked credential inventory: whether the host's credential store can encrypt, the integrations mode, each service's status and every declared credential's source (store, env or none) with its last four characters, never the value. The declared names are the registry's remaining services plus the secret knobs the running program reads. Open to every caller. The success payload is { enabled, mode, services, entries }.",
+      "description": "Raw credential inventory: whether the host's credential store can encrypt, the rows it holds (service and name, never a value) and the credentials the registered programs declare (group, envVar, description). Masking and the role gate are the std-credential-admin program's. The success payload is { enabled, entries, declared }.",
       "module": "core",
       "visual": {
         "form": "actuator"
@@ -7253,36 +7253,25 @@
           "kind": "object",
           "fields": {
             "enabled": "boolean",
-            "mode": "string",
-            "services": {
-              "kind": "array",
-              "of": {
-                "kind": "object",
-                "fields": {
-                  "id": "string",
-                  "service": "string",
-                  "configured": "boolean",
-                  "mocked": "boolean",
-                  "status": "string",
-                  "backend": "string",
-                  "needs": "string"
-                },
-                "open": true
-              }
-            },
             "entries": {
               "kind": "array",
               "of": {
                 "kind": "object",
                 "fields": {
-                  "id": "string",
                   "service": "string",
+                  "name": "string"
+                },
+                "open": true
+              }
+            },
+            "declared": {
+              "kind": "array",
+              "of": {
+                "kind": "object",
+                "fields": {
+                  "group": "string",
                   "envVar": "string",
-                  "required": "boolean",
-                  "description": "string",
-                  "configured": "boolean",
-                  "source": "string",
-                  "last4": "string"
+                  "description": "string"
                 },
                 "open": true
               }
@@ -7537,7 +7526,7 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": "void",
-      "description": "Store a credential value encrypted in the host's credential store; only a credential the named service or program group declares is accepted. Requires the caller's @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { saved, service, envVar, last4 }; the value is never echoed or logged.",
+      "description": "Store a credential value encrypted in the host's credential store; only a credential the named service or program group declares is accepted. Requires the caller's @user.role to be one of ALMADAR_CREDENTIAL_ADMIN_ROLES (default admin, owner); fails closed without one. The success payload is { saved }; the value is never echoed or logged.",
       "module": "core",
       "visual": {
         "form": "actuator"
@@ -7548,10 +7537,7 @@
         "produces": {
           "kind": "object",
           "fields": {
-            "saved": "boolean",
-            "service": "string",
-            "envVar": "string",
-            "last4": "string"
+            "saved": "boolean"
           }
         }
       },
@@ -7758,7 +7744,7 @@
     "credential/byte-length": {
       "category": "std-codec",
       "minArity": 1,
-      "maxArity": 1,
+      "maxArity": 2,
       "returnType": {
         "kind": "union",
         "of": [
@@ -7769,7 +7755,7 @@
           }
         ]
       },
-      "description": "The length in UTF-8 bytes of a credential's value, so a program can frame a wire message around a credential segment the host fills in (an os/send segment) without ever holding the value. The credential argument is a credential slot: a secret-typed @config knob naming the credential the kernel resolves into the evaluation. The result is null when the credential is not held. Runs only in the kernel",
+      "description": "The length in UTF-8 bytes of a credential's value, or of the value after the encode (base64, uri or form, as an os/send segment encode) when one is given, so a program can frame a wire message around a credential segment the host fills in (an os/send segment) without ever holding the value. The credential argument is a credential slot: a secret-typed @config knob naming the credential the kernel resolves into the evaluation. The result is null when the credential is not held. Runs only in the kernel",
       "module": "credential",
       "visual": {
         "form": "block"
@@ -7779,10 +7765,32 @@
           "name": "credential",
           "type": "string",
           "description": "A secret-typed @config knob naming the credential that holds the value"
+        },
+        {
+          "name": "encode",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "base64"
+              },
+              {
+                "kind": "literal",
+                "value": "uri"
+              },
+              {
+                "kind": "literal",
+                "value": "form"
+              }
+            ]
+          },
+          "description": "The os/send segment encode whose output length is answered",
+          "optional": true
         }
       ],
       "examples": [
-        "(credential/byte-length @config.password) // => 8 when the credential holds password"
+        "(credential/byte-length @config.password \"form\") // => the length of the form-encoded password"
       ],
       "docsSource": "generated"
     },
@@ -9832,26 +9840,47 @@
       "effect": {
         "kind": "http",
         "produces": {
-          "kind": "object",
-          "fields": {
-            "status": "number",
-            "headers": {
-              "kind": "map",
-              "key": "string",
-              "value": "string"
-            },
-            "body": "string",
-            "key": {
-              "kind": "union",
-              "of": [
-                "string",
-                {
-                  "kind": "literal",
-                  "value": null
+          "kind": "union",
+          "of": [
+            {
+              "kind": "object",
+              "fields": {
+                "status": "number",
+                "headers": {
+                  "kind": "map",
+                  "key": "string",
+                  "value": "string"
+                },
+                "body": "string",
+                "key": {
+                  "kind": "union",
+                  "of": [
+                    "string",
+                    {
+                      "kind": "literal",
+                      "value": null
+                    }
+                  ]
                 }
-              ]
+              }
+            },
+            {
+              "kind": "object",
+              "fields": {
+                "url": "string",
+                "key": {
+                  "kind": "union",
+                  "of": [
+                    "string",
+                    {
+                      "kind": "literal",
+                      "value": null
+                    }
+                  ]
+                }
+              }
             }
-          }
+          ]
         }
       },
       "oauth": {
@@ -12892,104 +12921,6 @@
       ],
       "examples": [
         "(math/wrap 15 0 10) // => 5"
-      ],
-      "docsSource": "generated"
-    },
-    "memory/list": {
-      "category": "std-memory",
-      "minArity": 0,
-      "maxArity": 1,
-      "returnType": {
-        "kind": "array",
-        "of": "AgentMemoryRecord"
-      },
-      "description": "List all memories, optionally filtered by category.",
-      "module": "memory",
-      "visual": {
-        "form": "block"
-      },
-      "host": "substrate",
-      "title": "List Memories",
-      "params": [
-        {
-          "name": "category",
-          "type": "string",
-          "description": "Memory category filter",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(memory/list)"
-      ],
-      "docsSource": "generated"
-    },
-    "memory/recall": {
-      "category": "std-memory",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": {
-        "kind": "array",
-        "of": "AgentMemoryRecord"
-      },
-      "description": "Search memories by semantic query. Returns matching memory records.",
-      "module": "memory",
-      "visual": {
-        "form": "block"
-      },
-      "host": "substrate",
-      "title": "Recall Memory",
-      "params": [
-        {
-          "name": "query",
-          "type": "string",
-          "description": "Semantic search query"
-        },
-        {
-          "name": "limit",
-          "type": "number",
-          "description": "Max results to return",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(memory/recall \"important events\")"
-      ],
-      "docsSource": "generated"
-    },
-    "memory/store": {
-      "category": "std-memory",
-      "minArity": 2,
-      "maxArity": 3,
-      "returnType": "string",
-      "description": "Store a new memory. Returns the new memory ID.",
-      "module": "memory",
-      "visual": {
-        "form": "actuator"
-      },
-      "hasSideEffects": true,
-      "runsOn": "any",
-      "host": "substrate",
-      "title": "Store Memory",
-      "params": [
-        {
-          "name": "content",
-          "type": "string",
-          "description": "Memory content to store"
-        },
-        {
-          "name": "category",
-          "type": "string",
-          "description": "Category: preference, correction, pattern-affinity, entity-template, error-resolution"
-        },
-        {
-          "name": "scope",
-          "type": "string",
-          "description": "Scope: global or project",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(memory/store \"User preference\" \"prefs\") // => \"mem-abc123\""
       ],
       "docsSource": "generated"
     },
@@ -19735,7 +19666,7 @@
       "minArity": 2,
       "maxArity": 3,
       "returnType": "void",
-      "description": "Send on a connected socket (grant net). The data is bytes, or a list of { bytes, credential } segments written in order as one send: a segment is its bytes followed by the value of the credential it names, where the credential is a secret-typed @config knob (the empty string names none, so a segment of bytes alone), and the host fills the value in at the boundary, so the value never enters program data, the journal or the answer (the journal records the segment as the credential reference). A credential that is not held fails the send as denied before anything is written. Success payload: { bytes }. Sends on one socket are written in call order and never interleave. A keyed send under a declared route writes in the background and answers its route when the write ends (success { bytes }, or a failure such as timeout after the 5 s socket bound or closed), so a peer that stops reading does not hold the dispatch; an unkeyed send answers in place.",
+      "description": "Send on a connected socket (grant net). The data is bytes, or a list of { bytes, credential, encode? } segments written in order as one send: a segment is its bytes followed by the value of the credential it names, passed through its encode when it has one (base64 is standard padded base64, uri is encodeURIComponent, form is application/x-www-form-urlencoded with a space as +; any other value is refused), where the credential is a secret-typed @config knob (the empty string names none, so a segment of bytes alone), and the host fills the value in at the boundary, so the value never enters program data, the journal or the answer (the journal records the segment as the credential reference). A credential that is not held fails the send as denied before anything is written. Success payload: { bytes }. Sends on one socket are written in call order and never interleave. A keyed send under a declared route writes in the background and answers its route when the write ends (success { bytes }, or a failure such as timeout after the 5 s socket bound or closed), so a peer that stops reading does not hold the dispatch; an unkeyed send answers in place.",
       "module": "os",
       "visual": {
         "form": "actuator"
@@ -19775,13 +19706,33 @@
                   "kind": "object",
                   "fields": {
                     "bytes": "bytes",
-                    "credential": "string"
-                  }
+                    "credential": "string",
+                    "encode": {
+                      "kind": "union",
+                      "of": [
+                        {
+                          "kind": "literal",
+                          "value": "base64"
+                        },
+                        {
+                          "kind": "literal",
+                          "value": "uri"
+                        },
+                        {
+                          "kind": "literal",
+                          "value": "form"
+                        }
+                      ]
+                    }
+                  },
+                  "optional": [
+                    "encode"
+                  ]
                 }
               }
             ]
           },
-          "description": "Content to send: bytes, or a list of { bytes, credential } segments"
+          "description": "Content to send: bytes, or a list of { bytes, credential, encode? } segments"
         },
         {
           "name": "options",

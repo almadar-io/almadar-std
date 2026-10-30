@@ -1323,7 +1323,7 @@
                 "payload": {
                   "requestId": "r1",
                   "outputs": [
-                    "quotes \" slash \\ line\nنور 🌍"
+                    "quotes \" slash \\ line\n\u0646\u0648\u0631 \ud83c\udf0d"
                   ],
                   "rawOuts": [
                     "cXVvdGVzICIgc2xhc2ggXCBsaW5lCtmG2YjYsSDwn4yN"
@@ -1715,6 +1715,272 @@
             ]
           },
           "from": "running"
+        }
+      ]
+    },
+    {
+      "id": "next-cursor-past-steps-fails-step-missing",
+      "steps": [
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "requestId": "r1",
+            "steps": [],
+            "cursor": 0,
+            "dirFlag": "",
+            "prefix": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "STEPS_FAILED",
+                "payload": {
+                  "requestId": "r1",
+                  "index": 0,
+                  "code": "step_missing",
+                  "stderr": "step 0 is not in the run's 0 steps",
+                  "stdout": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "next-cursor-negative-fails-step-missing",
+      "steps": [
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "requestId": "r1",
+            "steps": [
+              {
+                "scope": "repo",
+                "args": [
+                  "status"
+                ],
+                "stdin": "",
+                "feed": false,
+                "tolerate": false,
+                "raw": false
+              }
+            ],
+            "cursor": -1,
+            "dirFlag": "",
+            "prefix": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "STEPS_FAILED",
+                "payload": {
+                  "requestId": "r1",
+                  "index": -1,
+                  "code": "step_missing",
+                  "stderr": "step -1 is not in the run's 1 steps",
+                  "stdout": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ran-cursor-past-steps-fails-step-missing",
+      "steps": [
+        {
+          "event": "STEP_RAN",
+          "payload": {
+            "stage": "r1",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "from": "running",
+          "entity": {
+            "requestId": "r1",
+            "steps": [],
+            "cursor": 0,
+            "dirFlag": "",
+            "prefix": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "STEPS_FAILED",
+                "payload": {
+                  "requestId": "r1",
+                  "index": 0,
+                  "code": "step_missing",
+                  "stderr": "step 0 is not in the run's 0 steps",
+                  "stdout": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "next-cursor-in-bounds-control",
+      "steps": [
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "requestId": "r1",
+            "steps": [
+              {
+                "scope": "repo",
+                "args": [
+                  "status"
+                ],
+                "stdin": "",
+                "feed": false,
+                "tolerate": false,
+                "raw": false
+              }
+            ],
+            "cursor": 0,
+            "dirFlag": "",
+            "prefix": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "STEP_EXEC",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "next-raw-step-without-raw-input-fails",
+      "steps": [
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "requestId": "r1",
+            "steps": [
+              {
+                "scope": "repo",
+                "args": [
+                  "status"
+                ],
+                "stdin": "",
+                "feed": true,
+                "tolerate": false,
+                "raw": true
+              }
+            ],
+            "cursor": 0,
+            "dirFlag": "",
+            "prefix": [],
+            "rawInputs": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "STEPS_FAILED",
+                "payload": {
+                  "requestId": "r1",
+                  "index": 0,
+                  "code": "raw_input_missing",
+                  "stderr": "step 0 feeds raw stdin but the run carries 0 raw inputs",
+                  "stdout": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "next-raw-step-with-raw-input-control",
+      "steps": [
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "requestId": "r1",
+            "steps": [
+              {
+                "scope": "repo",
+                "args": [
+                  "status"
+                ],
+                "stdin": "",
+                "feed": true,
+                "tolerate": false,
+                "raw": true
+              }
+            ],
+            "cursor": 0,
+            "dirFlag": "",
+            "prefix": [],
+            "rawInputs": [
+              "YQ=="
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "STEP_EXEC",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "next-raw-step-without-feed-needs-no-raw-input-control",
+      "steps": [
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "requestId": "r1",
+            "steps": [
+              {
+                "scope": "repo",
+                "args": [
+                  "status"
+                ],
+                "stdin": "",
+                "feed": false,
+                "tolerate": false,
+                "raw": true
+              }
+            ],
+            "cursor": 0,
+            "dirFlag": "",
+            "prefix": [],
+            "rawInputs": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "STEP_EXEC",
+                "payload": {}
+              }
+            ]
+          }
         }
       ]
     }

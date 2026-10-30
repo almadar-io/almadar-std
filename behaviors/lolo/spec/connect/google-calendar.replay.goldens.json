@@ -69,6 +69,61 @@
           }
         }
       ]
+    },
+    {
+      "id": "create-event-with-a-date-time-start-and-duration-is-sent",
+      "steps": [
+        {
+          "event": "CALENDAR_CREATE_EVENT",
+          "payload": {
+            "summary": "Standup",
+            "start": "2026-10-26T09:00:00Z",
+            "durationMinutes": 30
+          },
+          "expect": {
+            "state": "idle",
+            "emits": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "create-event-with-an-all-day-start-is-sent",
+      "steps": [
+        {
+          "event": "CALENDAR_CREATE_EVENT",
+          "payload": {
+            "summary": "Offsite",
+            "start": "2026-10-26"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "create-event-with-an-unreadable-all-day-start-is-refused",
+      "steps": [
+        {
+          "event": "CALENDAR_CREATE_EVENT",
+          "payload": {
+            "summary": "Offsite",
+            "start": "2026-13-45"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CALENDAR_CREATE_EVENT_FAILED",
+                "payload": {
+                  "message": "createEvent could not read `start` as a date or date-time to compute `end`"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

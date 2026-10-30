@@ -1,0 +1,372 @@
+{
+ "atom": "../ui/core/atoms/std-record-detail.lolo",
+ "trait": "RecordItemDetail",
+ "note": "std-record-detail: the fetched row lands in loadedRow (RecordItemLoaded and RecordItemSlugLoaded), in-place edits update it, the details drawer stashes the row, and failures reach the error state.",
+ "cases": [
+  {
+   "id": "fetched-row-moves-the-trait-to-viewing-and-stamps-the-row",
+   "steps": [
+    {
+     "trait": "RecordItemDetail",
+     "from": "loading",
+     "entity": {
+      "id": "r1",
+      "name": "n"
+     },
+     "event": "RecordItemLoaded",
+     "payload": {
+      "data": {
+       "id": "r1",
+       "name": "Alpha",
+       "content": "<p>hi</p>",
+       "status": "active"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "viewing",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.loadedRow"
+       },
+       {
+        "type": "set",
+        "arg0": "@entity.id"
+       },
+       {
+        "type": "set",
+        "arg0": "@entity.name"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-record-that-loaded-lets-the-title-commit-update-the-stored-row",
+   "steps": [
+    {
+     "trait": "RecordItemDetail",
+     "from": "loading",
+     "entity": {
+      "id": "r1",
+      "name": "n"
+     },
+     "event": "RecordItemLoaded",
+     "payload": {
+      "data": {
+       "id": "r1",
+       "name": "Alpha",
+       "content": "<p>hi</p>",
+       "status": "active"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "viewing"
+     }
+    },
+    {
+     "trait": "RecordItemDetail",
+     "from": "viewing",
+     "event": "TITLE_COMMITTED",
+     "payload": {
+      "title": "Beta",
+      "id": "r1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "viewing",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.name",
+        "arg1": "@payload.title"
+       },
+       {
+        "type": "set",
+        "arg0": "@entity.loadedRow"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-title-commit-with-no-stashed-row-still-fires",
+   "steps": [
+    {
+     "trait": "RecordItemDetail",
+     "from": "viewing",
+     "entity": {
+      "id": "r1",
+      "name": "Alpha"
+     },
+     "event": "TITLE_COMMITTED",
+     "payload": {
+      "title": "Beta",
+      "id": "r1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "viewing"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-content-edit-autosaves-the-typed-html",
+   "steps": [
+    {
+     "trait": "RecordItemDetail",
+     "from": "editing",
+     "entity": {
+      "id": "r1",
+      "name": "Alpha",
+      "content": ""
+     },
+     "event": "CONTENT_CHANGE",
+     "payload": {
+      "value": "<p>typed</p>"
+     },
+     "expect": {
+      "fired": true,
+      "state": "editing",
+      "emits": [
+       {
+        "event": "CONTENT_SAVED",
+        "payload": {
+         "id": "r1",
+         "content": "<p>typed</p>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-content-edit-after-a-load-autosaves-the-typed-html",
+   "steps": [
+    {
+     "trait": "RecordItemDetail",
+     "from": "loading",
+     "entity": {
+      "id": "r1",
+      "name": "n"
+     },
+     "event": "RecordItemLoaded",
+     "payload": {
+      "data": {
+       "id": "r1",
+       "name": "Alpha",
+       "content": "<p>hi</p>",
+       "status": "active"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "viewing"
+     }
+    },
+    {
+     "trait": "RecordItemDetail",
+     "from": "viewing",
+     "event": "TITLE_COMMITTED",
+     "payload": {
+      "title": "Beta",
+      "id": "r1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "viewing"
+     }
+    },
+    {
+     "trait": "RecordItemDetail",
+     "from": "editing",
+     "event": "CONTENT_CHANGE",
+     "payload": {
+      "value": "<p>typed</p>"
+     },
+     "expect": {
+      "fired": true,
+      "state": "editing",
+      "emits": [
+       {
+        "event": "CONTENT_SAVED",
+        "payload": {
+         "id": "r1",
+         "content": "<p>typed</p>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "slug-load-with-one-row-moves-to-viewing",
+   "steps": [
+    {
+     "trait": "RecordItemDetail",
+     "from": "loading",
+     "entity": {
+      "id": "",
+      "name": "n",
+      "slug": "alpha"
+     },
+     "event": "RecordItemSlugLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "r1",
+        "name": "Alpha",
+        "content": "<p>hi</p>",
+        "status": "active"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "viewing",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.loadedRow"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-slug-load-with-no-row-routes-to-error",
+   "steps": [
+    {
+     "trait": "RecordItemDetail",
+     "from": "loading",
+     "entity": {
+      "id": "",
+      "name": "n",
+      "slug": "nope"
+     },
+     "event": "RecordItemSlugLoaded",
+     "payload": {
+      "data": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "error"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-failed-load-routes-to-error",
+   "steps": [
+    {
+     "trait": "RecordItemDetail",
+     "from": "loading",
+     "entity": {
+      "id": "r1",
+      "name": "n"
+     },
+     "event": "RecordItemLoadFailed",
+     "payload": {
+      "error": "boom"
+     },
+     "expect": {
+      "fired": true,
+      "state": "error"
+     }
+    }
+   ]
+  },
+  {
+   "id": "details-trait-stashes-the-loaded-row-then-opens-the-drawer",
+   "steps": [
+    {
+     "trait": "RecordItemDetails",
+     "from": "idle",
+     "entity": {
+      "id": "r1",
+      "name": "n"
+     },
+     "event": "SHOW_DETAILS",
+     "payload": {
+      "data": {
+       "id": "r1",
+       "name": "Alpha",
+       "content": "<p>hi</p>",
+       "status": "active"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.loadedRow"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "RecordItemDetails",
+     "from": "idle",
+     "event": "OPEN_DETAILS",
+     "payload": {
+      "id": "r1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "showing",
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "details-trait-repaints-an-open-drawer-on-a-refetch-echo",
+   "steps": [
+    {
+     "trait": "RecordItemDetails",
+     "from": "showing",
+     "entity": {
+      "id": "r1",
+      "name": "n"
+     },
+     "event": "SHOW_DETAILS",
+     "payload": {
+      "data": {
+       "id": "r1",
+       "name": "Alpha",
+       "content": "<p>hi</p>",
+       "status": "active"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "showing",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.loadedRow"
+       },
+       {
+        "type": "render-ui"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

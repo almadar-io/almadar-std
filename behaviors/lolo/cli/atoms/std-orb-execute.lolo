@@ -2,7 +2,7 @@ app std-orb-execute [
   version: "1.0.0",
   inbound: ["cli-execute"],
   fs: { cwd: "**": [read], "/**": [read] },
-  description: "std-orb-execute — the `orb execute <file> --steps <json> [--live]` and `orb execute <file> --event <E> --trait <T> [--payload <json>] [--cascade]` command (spec/cli/orb-execute.lolo; port of orbital-cli commands/execute.rs execute_cascade_steps_cli and execute_cascade_cli). The program is read (os/read-file, program/read) and its steps are played in one run of the kernel by program/step { report: \"raw\" }, which answers exactly the cascade report `orb execute --steps` printed: { success, steps: [{ outcomes, states, entities, entityAfter }], dispatchModes }. `--event`/`--trait` is one step { trait, event, payload } whose steps[0].outcomes is also hoisted to the top-level `outcomes`; `--cascade` is accepted and implied. The answer is that report as 2-space pretty JSON (json/stringify { pretty: true }). A run that cannot start or fails answers { \"success\": false, \"error\": \"…\" } with status 200, as Rust printed it. Owner-sanctioned retirement: the plain `--event` DTO mode of Rust (execute_schema_cli: --json, --entity, the human print) is not ported, its only consumer (rust-harness.ts) is archived; `--event` without `--cascade` behaves as `--cascade`. Usage (status 400, exit 2): no file or a second word, an unknown flag, neither --steps nor --event, --steps with --event/--trait/--payload, --event without --trait, --live without --steps. The program file may be a relative path (read under the working directory) or an absolute path. Known differences from the Rust bytes: a number the kernel holds as a whole float prints `1`, not `1.0`; the wording of a JSON syntax error is `Invalid JSON: <text>` (not serde's position text); a step or file error names the host's wording."
+  description: "std-orb-execute — the `orb execute <file> --steps <json> [--live] [--played]` and `orb execute <file> --event <E> --trait <T> [--payload <json>] [--cascade] [--played]` command (spec/cli/orb-execute.lolo; port of orbital-cli commands/execute.rs execute_cascade_steps_cli and execute_cascade_cli). The program is read (os/read-file, program/read) and its steps are played in one run of the kernel by program/step { report: \"raw\" }, which answers exactly the cascade report `orb execute --steps` printed: { success, steps: [{ outcomes, states, entities, entityAfter }], dispatchModes }. `--played` asks program/step for its played answer instead (no `report: \"raw\"`) and prints that PlayedStep list (owner R12). `--event`/`--trait` is one step { trait, event, payload } whose steps[0].outcomes is also hoisted to the top-level `outcomes`; `--cascade` is accepted and implied. The answer is that report as 2-space pretty JSON (json/stringify { pretty: true }). A run that cannot start or fails answers { \"success\": false, \"error\": \"…\" } with status 200, as Rust printed it. Owner-sanctioned retirement: the plain `--event` DTO mode of Rust (execute_schema_cli: --json, --entity, the human print) is not ported, its only consumer (rust-harness.ts) is archived; `--event` without `--cascade` behaves as `--cascade`. Usage (status 400, exit 2): no file or a second word, an unknown flag, neither --steps nor --event, --steps with --event/--trait/--payload, --event without --trait, --live without --steps. The program file may be a relative path (read under the working directory) or an absolute path. Known differences from the Rust bytes: a number the kernel holds as a whole float prints `1`, not `1.0`; the wording of a JSON syntax error is `Invalid JSON: <text>` (not serde's position text); a step or file error names the host's wording."
 ]
 uses Spec from "almadar-std/orb-execute"
 uses Args from "std/behaviors/std-args"
@@ -14,6 +14,12 @@ type ExecSteps = [ExecStepIn]
 type ExecReport = Map string ExecJson?
 type ExecStepOut = { outcomes : [ExecJson?]? }
 type ExecHoist = { steps : [ExecStepOut]? }
+type ExecName = string
+type ExecStateRef = { name : string!, isInitial : boolean }
+type ExecMachineRef = { states : [ExecStateRef] }
+type ExecTraitRef = { name : string!, stateMachine : ExecMachineRef }
+type ExecOrbitalRef = { name : string!, traits : [ExecTraitRef] }
+type ExecProgramRef = { orbitals : [ExecOrbitalRef]! }
 type PrettyAcc = { out : [string]!, depth : number!, inStr : boolean!, esc : boolean!, open : boolean! }
 
 orbital OrbExecuteOrbital {
@@ -24,6 +30,8 @@ orbital OrbExecuteOrbital {
     path : string = ""
     mode : string = "steps"
     live : boolean = false
+    played : boolean = false
+    orbs : [ExecOrbitalRef] = []
     argText : string = ""
     stepsText : string = ""
   }
@@ -43,7 +51,7 @@ orbital OrbExecuteOrbital {
         (emit EXEC_ANSWERED { status: 400, body: "usage: orb execute <file> --steps <json> [--live] | <file> --event <E> --trait <T> [--payload <json>] [--cascade]" })
       EXEC_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (set @entity.cwd (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd"))
-        (emit EXEC_ARGS_PARSE { stage: "execute" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "steps" aliases: [] takesValue: true repeatable: false }, { name: "live" aliases: [] takesValue: false repeatable: false }, { name: "event" aliases: [] takesValue: true repeatable: false }, { name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "payload" aliases: [] takesValue: true repeatable: false }, { name: "cascade" aliases: [] takesValue: false repeatable: false }] })
+        (emit EXEC_ARGS_PARSE { stage: "execute" argv: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv") flags: [{ name: "steps" aliases: [] takesValue: true repeatable: false }, { name: "live" aliases: [] takesValue: false repeatable: false }, { name: "event" aliases: [] takesValue: true repeatable: false }, { name: "trait" aliases: [] takesValue: true repeatable: false }, { name: "payload" aliases: [] takesValue: true repeatable: false }, { name: "cascade" aliases: [] takesValue: false repeatable: false }, { name: "played" aliases: [] takesValue: false repeatable: false }] })
     }
 
     state parsing {
@@ -55,6 +63,7 @@ orbital OrbExecuteOrbital {
         (set @entity.path (default (array/first @payload.positionals) ""))
         (set @entity.mode (if (object/has @payload.flags "steps") "steps" "event"))
         (set @entity.live (object/has @payload.flags "live"))
+        (set @entity.played (object/has @payload.flags "played"))
         (set @entity.argText (if (object/has @payload.flags "steps") (default (array/first (object/get @payload.flags "steps")) "") (if (object/has @payload.flags "payload") (default (array/first (object/get @payload.flags "payload")) "") "{}")))
         (set @entity.stepsText (if (object/has @payload.flags "steps") (default (array/first (object/get @payload.flags "steps")) "") (str/concat "[{\"trait\":" (json/stringify (default (array/first (object/get @payload.flags "trait")) "")) ",\"event\":" (json/stringify (default (array/first (object/get @payload.flags "event")) "")) ",\"payload\":" (if (object/has @payload.flags "payload") (default (array/first (object/get @payload.flags "payload")) "") "{}") "}]")))
         (emit EXEC_CHECK {})
@@ -80,20 +89,31 @@ orbital OrbExecuteOrbital {
         (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: EXEC_PROGRAM, failure: EXEC_PROGRAM_FAILED } })
       EXEC_PROGRAM_FAILED -> ready
         (emit EXEC_ANSWERED { status: 200, body: (str/concat "{\n  \"success\": false,\n  \"error\": " (json/stringify (default @payload.error "")) "\n}") })
-      EXEC_PROGRAM -> stepping
+      EXEC_PROGRAM -> stepping when (not @entity.played)
         (program/step @payload.result (json/parse @entity.stepsText ExecSteps) { report: "raw" live: @entity.live } { emit: { success: EXEC_STEPPED, failure: EXEC_STEP_FAILED } })
+      EXEC_PROGRAM -> ready when (and @entity.played (= (as @payload.result ExecProgramRef) null))
+        (emit EXEC_ANSWERED { status: 200, body: "{\n  \"success\": false,\n  \"error\": \"the program's orbitals could not be read\"\n}" })
+      EXEC_PROGRAM -> ready when (and @entity.played (!= (as @payload.result ExecProgramRef) null) (let ((orbs : [ExecOrbitalRef] (default (object/get (as @payload.result ExecProgramRef) "orbitals") [])) (steps : ExecSteps (default (json/parse @entity.stepsText ExecSteps) []))) (array/some @steps (fn s (and (not (object/has @s "orbital")) (= (array/find @orbs (fn o (array/some (default @o.traits []) (fn t (= @t.name (as (object/get @s "trait") ExecName)))))) null))))))
+        (let ((orbs : [ExecOrbitalRef] (default (object/get (as @payload.result ExecProgramRef) "orbitals") [])) (steps : ExecSteps (default (json/parse @entity.stepsText ExecSteps) []))) (emit EXEC_ANSWERED { status: 200, body: (str/concat "{\n  \"success\": false,\n  \"error\": " (json/stringify (str/concat "no orbital declares trait " (default (as (object/get (default (array/find @steps (fn s (and (not (object/has @s "orbital")) (= (array/find @orbs (fn o (array/some (default @o.traits []) (fn t (= @t.name (as (object/get @s "trait") ExecName)))))) null)))) {}) "trait") ExecName) ""))) "\n}") }))
+      EXEC_PROGRAM -> ready when (and @entity.played (!= (as @payload.result ExecProgramRef) null) (let ((orbs : [ExecOrbitalRef] (default (object/get (as @payload.result ExecProgramRef) "orbitals") [])) (steps : ExecSteps (default (json/parse @entity.stepsText ExecSteps) []))) (and (not (array/some @steps (fn s (and (not (object/has @s "orbital")) (= (array/find @orbs (fn o (array/some (default @o.traits []) (fn t (= @t.name (as (object/get @s "trait") ExecName)))))) null))))) (array/some @steps (fn s (and (not (object/has @s "from")) (= (array/find (default (object/get (default (object/get (default (array/find (array/flatten (array/map @orbs (fn o (default @o.traits [])))) (fn t (= @t.name (as (object/get @s "trait") ExecName)))) { name: "", stateMachine: { states: [] } }) "stateMachine") { states: [] }) "states") []) (fn x (default @x.isInitial false))) null)))))))
+        (let ((orbs : [ExecOrbitalRef] (default (object/get (as @payload.result ExecProgramRef) "orbitals") [])) (steps : ExecSteps (default (json/parse @entity.stepsText ExecSteps) []))) (emit EXEC_ANSWERED { status: 200, body: (str/concat "{\n  \"success\": false,\n  \"error\": " (json/stringify (str/concat "trait " (default (as (object/get (default (array/find @steps (fn s (and (not (object/has @s "from")) (= (array/find (default (object/get (default (object/get (default (array/find (array/flatten (array/map @orbs (fn o (default @o.traits [])))) (fn t (= @t.name (as (object/get @s "trait") ExecName)))) { name: "", stateMachine: { states: [] } }) "stateMachine") { states: [] }) "states") []) (fn x (default @x.isInitial false))) null)))) {}) "trait") ExecName) "") " declares no initial state")) "\n}") }))
+      EXEC_PROGRAM -> stepping when (and @entity.played (!= (as @payload.result ExecProgramRef) null) (let ((orbs : [ExecOrbitalRef] (default (object/get (as @payload.result ExecProgramRef) "orbitals") [])) (steps : ExecSteps (default (json/parse @entity.stepsText ExecSteps) []))) (and (not (array/some @steps (fn s (and (not (object/has @s "orbital")) (= (array/find @orbs (fn o (array/some (default @o.traits []) (fn t (= @t.name (as (object/get @s "trait") ExecName)))))) null))))) (not (array/some @steps (fn s (and (not (object/has @s "from")) (= (array/find (default (object/get (default (object/get (default (array/find (array/flatten (array/map @orbs (fn o (default @o.traits [])))) (fn t (= @t.name (as (object/get @s "trait") ExecName)))) { name: "", stateMachine: { states: [] } }) "stateMachine") { states: [] }) "states") []) (fn x (default @x.isInitial false))) null))))))))
+        (set @entity.orbs (default (object/get (as @payload.result ExecProgramRef) "orbitals") []))
+        (program/step @payload.result (array/map (default (json/parse @entity.stepsText ExecSteps) []) (fn s (let ((so : ExecStepIn (if (object/has @s "orbital") @s (object/set @s "orbital" (default (object/get (default (array/find @entity.orbs (fn o (array/some (default @o.traits []) (fn t (= @t.name (as (object/get @s "trait") ExecName)))))) { name: "", traits: [] }) "name") ""))))) (if (object/has @so "from") @so (object/set @so "from" (default (object/get (default (array/find (default (object/get (default (object/get (default (array/find (array/flatten (array/map @entity.orbs (fn o (default @o.traits [])))) (fn t (= @t.name (as (object/get @s "trait") ExecName)))) { name: "", stateMachine: { states: [] } }) "stateMachine") { states: [] }) "states") []) (fn x (default @x.isInitial false))) { name: "" }) "name") "")))))) { live: @entity.live } { emit: { success: EXEC_PLAYED, failure: EXEC_STEP_FAILED } })
     }
 
     state stepping {
       INIT -> stepping
+      EXEC_PLAYED -> ready
+        (emit EXEC_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
       EXEC_STEP_FAILED -> ready
         (emit EXEC_ANSWERED { status: 200, body: (str/concat "{\n  \"success\": false,\n  \"error\": " (json/stringify (if (str/startsWith (default @payload.error "") "program/step: ") (str/slice (default @payload.error "") 14 (str/len (default @payload.error ""))) (default @payload.error ""))) "\n}") })
-      EXEC_STEPPED -> ready when (= (json/parse (json/stringify @payload.result) ExecHoist) null)
+      EXEC_STEPPED -> ready when (= (as @payload.result ExecHoist) null)
         (emit EXEC_ANSWERED { status: 200, body: "{\n  \"success\": false,\n  \"error\": \"the cascade report could not be read\"\n}" })
-      EXEC_STEPPED -> ready when (and (!= (json/parse (json/stringify @payload.result) ExecHoist) null) (not (and (= @entity.mode "event") (> (array/len (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps" [])) 0) (!= (object/get (default (array/first (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps" [])) {}) "outcomes") null))))
+      EXEC_STEPPED -> ready when (and (!= (as @payload.result ExecHoist) null) (not (and (= @entity.mode "event") (> (array/len (object/get (as @payload.result ExecHoist) "steps" [])) 0) (!= (object/get (default (array/first (object/get (as @payload.result ExecHoist) "steps" [])) {}) "outcomes") null))))
         (emit EXEC_ANSWERED { status: 200, body: (json/stringify @payload.result { pretty: true }) })
-      EXEC_STEPPED -> ready when (and (!= (json/parse (json/stringify @payload.result) ExecHoist) null) (and (= @entity.mode "event") (> (array/len (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps" [])) 0) (!= (object/get (default (array/first (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps" [])) {}) "outcomes") null)))
-        (emit EXEC_ANSWERED { status: 200, body: (json/stringify (object/set (default @payload.result {}) "outcomes" (object/get (default (array/first (object/get (json/parse (json/stringify @payload.result) ExecHoist) "steps" [])) {}) "outcomes")) { pretty: true }) })
+      EXEC_STEPPED -> ready when (and (!= (as @payload.result ExecHoist) null) (and (= @entity.mode "event") (> (array/len (object/get (as @payload.result ExecHoist) "steps" [])) 0) (!= (object/get (default (array/first (object/get (as @payload.result ExecHoist) "steps" [])) {}) "outcomes") null)))
+        (emit EXEC_ANSWERED { status: 200, body: (json/stringify (object/set (default @payload.result {}) "outcomes" (object/get (default (array/first (object/get (as @payload.result ExecHoist) "steps" [])) {}) "outcomes")) { pretty: true }) })
     }
 
     emits {
@@ -127,6 +147,9 @@ orbital OrbExecuteOrbital {
         @tier "internal"
       EXEC_STEPPED { result : Map string ExecJson? }
         @description "The kernel's cascade report."
+        @tier "internal"
+      EXEC_PLAYED { result : [ExecJson?]! }
+        @description "The kernel's played answer (PlayedStep[]) for `--played`."
         @tier "internal"
       EXEC_STEP_FAILED { error : string }
         @description "The run failed."

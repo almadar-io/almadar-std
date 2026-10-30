@@ -50,7 +50,7 @@ orbital ReminderSchedulerOrbital {
       ReminderStepped -> scanning
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (== (object/get @entity remindedAt) null) (or (and (= @config.direction "future") (> (object/get @entity @config.dateField) @now) (< (object/get @entity @config.dateField) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (< (object/get @entity @config.dateField) (time/subtract @now @config.offsetHours "hour")))))
+          filter: (and (== (object/get @entity remindedAt) null) (or (and (= @config.direction "future") (time/isAfter (object/get @entity @config.dateField) @now) (time/isBefore (object/get @entity @config.dateField) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.offsetHours "hour")))))
           limit: 1
         })
       ScanRecordsLoaded -> scanning when (> (array/len ?data) 0)
@@ -103,7 +103,7 @@ orbital ReminderSchedulerOrbital {
       scanCycle every "*/15 * * * *" [background]
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (== (object/get @entity remindedAt) null) (or (and (= @config.direction "future") (> (object/get @entity @config.dateField) @now) (< (object/get @entity @config.dateField) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (< (object/get @entity @config.dateField) (time/subtract @now @config.offsetHours "hour")))))
+          filter: (and (== (object/get @entity remindedAt) null) (or (and (= @config.direction "future") (time/isAfter (object/get @entity @config.dateField) @now) (time/isBefore (object/get @entity @config.dateField) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.offsetHours "hour")))))
           limit: 1
         })
       

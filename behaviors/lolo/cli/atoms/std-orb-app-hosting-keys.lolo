@@ -54,10 +54,10 @@ orbital OrbAppHostingKeysOrbital {
       INIT -> readingProgram
       APP_HOSTING_KEYS_FAILED -> ready
         (emit APP_HOSTING_KEYS_ANSWERED { status: 500, body: (str/concat "Error: " (default @payload.error "unreadable")) })
-      APP_HOSTING_KEYS_PROGRAM_LOWERED -> ready when (= (json/parse (json/stringify @payload.result) KeysResolved) null)
+      APP_HOSTING_KEYS_PROGRAM_LOWERED -> ready when (= (as @payload.result KeysResolved) null)
         (emit APP_HOSTING_KEYS_ANSWERED { status: 500, body: "Error: the resolved program is not valid JSON of the expected shape" })
-      APP_HOSTING_KEYS_PROGRAM_LOWERED -> readingProgram when (!= (json/parse (json/stringify @payload.result) KeysResolved) null)
-        (let ((program (object/get (json/parse (json/stringify @payload.result) KeysResolved) "program" { osGrants: { env: [] }, orbitals: [] })))
+      APP_HOSTING_KEYS_PROGRAM_LOWERED -> readingProgram when (!= (as @payload.result KeysResolved) null)
+        (let ((program (object/get (as @payload.result KeysResolved) "program" { osGrants: { env: [] }, orbitals: [] })))
           (do (set @entity.declared (object/get (default (object/get @program "osGrants" { env: [] }) { env: [] }) "env" []))
           (set @entity.secrets (array/unique (array/flatten (array/map (object/get @program "orbitals" []) (fn o (array/flatten (array/map (object/get @o "traits" []) (fn t (array/filter (array/map (array/filter (object/values (object/get @t "config" {})) (fn k (= (object/get @k "type") "secret"))) (fn k (let ((d (object/get @k "default"))) (if (validate/string @d) @d "")))) (fn n (!= @n "")))))))))))))
         (emit APP_HOSTING_KEYS_READ_FILE {})

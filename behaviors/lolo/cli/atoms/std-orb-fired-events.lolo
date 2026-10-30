@@ -36,6 +36,9 @@ orbital OrbFiredEventsOrbital {
     busExcluded : [string] = []
     targetOptions : [string] = []
     ctl : Map string string = {}
+    busSet : Map string boolean = {}
+    tgtSet : Map string boolean = {}
+    fnSet : Map string boolean = {}
   }
 
   trait OrbFiredEvents -> OrbFiredEventsRun [optimistic] {
@@ -53,15 +56,18 @@ orbital OrbFiredEventsOrbital {
         (set @entity.functions @payload.functions)
         (set @entity.busExcluded @payload.busExcluded)
         (set @entity.targetOptions @payload.targetOptions)
+        (set @entity.busSet (default (object/fromEntries (array/map @payload.busExcluded (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
+        (set @entity.tgtSet (default (object/fromEntries (array/map @payload.targetOptions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
+        (set @entity.fnSet (default (object/fromEntries (array/map @payload.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
       FIRED_INPUT_HEARD -> ready
-        (let ((sem @entity.walk) (noslot : WalkSlot { kind: "", args: [] }) (names @entity.names) (maps @entity.maps) (ctl @entity.ctl) (nr : FiredR { h: "", ok: false, it: [] }) (ns : FiredS { s: [], ls: [] }) (nb : FiredB { f: false, t: false, lit: false, v: "" }) (busSet (default (object/fromEntries (array/map @entity.busExcluded (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (tgtSet (default (object/fromEntries (array/map @entity.targetOptions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (fnSet (default (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
+        (let ((sem @entity.walk) (noslot : WalkSlot { kind: "", args: [] }) (names @entity.names) (maps @entity.maps) (ctl @entity.ctl) (nr : FiredR { h: "", ok: false, it: [] }) (ns : FiredS { s: [], ls: [] }) (nb : FiredB { f: false, t: false, lit: false, v: "" }) (busSet @entity.busSet) (tgtSet @entity.tgtSet) (fnSet @entity.fnSet))
           (let ((recs (array/flatten (array/map (object/get (default @payload.program { orbitals: [] }) "orbitals" []) (fn o
                   (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t
                     (let ((cfg (object/get @t "config" {})))
                       (let ((kn (object/fromEntries (array/map (array/filter (object/keys @cfg) (fn key (let ((d (object/get (default (object/get @cfg @key null) {}) "default" null))) (or (validate/string @d) (validate/number @d) (validate/boolean @d))))) (fn key [@key, (object/get (object/get @cfg @key) "default")]))))
                             (roots (array/concat
                                      (array/concat
-                                       (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn x (let ((ti (array/indexOf (object/get @t "stateMachine.transitions" []) @x))) (array/concat (array/map (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r, "~ti": (str/concat "t" @ti) })) (if (!= (object/get @x "guard" null) null) [{ w: ["if", (object/get @x "guard"), ["emit", (str/concat "~T" @ti)]] }] []))))))
+                                       (let ((trsT (object/get @t "stateMachine.transitions" []))) (array/flatten (array/map (array/range 0 (array/len @trsT)) (fn ti (let ((x (array/nth @trsT @ti))) (array/concat (array/map (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r, "~ti": (str/concat "t" @ti) })) (if (!= (object/get @x "guard" null) null) [{ w: ["if", (object/get @x "guard"), ["emit", (str/concat "~T" @ti)]] }] [])))))))
                                        (array/flatten (array/map (object/get @t "ticks" []) (fn x (array/map (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r, "~ti": "tick" }))))))
                                      (array/map (array/filter (array/map (object/keys @cfg) (fn key (object/get (default (object/get @cfg @key null) {}) "default" null))) (fn d (!= @d null))) (fn r { w: @r, "~ti": "cfg" })))))
                         (let ((fr (tree/fold @roots (fn (n k)
@@ -239,7 +245,7 @@ orbital OrbFiredEventsOrbital {
       (if (validate/string @n) { h: @n, ok: true, it: [] } @nr)))) "FiredNode")))
                         (let ((items (object/get @fr "it" [])) (trs (object/get @t "stateMachine.transitions" [])) (sts (object/get @t "stateMachine.states" [])))
                           (let ((evAll (array/map (array/filter @items (fn x (= (object/get @x "k") "e"))) (fn x (object/get @x "h")))) (init (array/find @sts (fn s (= (object/get @s "isInitial" false) true)))))
-                            (let ((tp (array/map @trs (fn x { x: @x, a: (or (= (object/get @x "guard" null) null) (array/includes @evAll (str/concat "~T" (array/indexOf @trs @x)))) }))))
+                            (let ((tp (array/map (array/range 0 (array/len @trs)) (fn ti (let ((x (array/nth @trs @ti))) { x: @x, a: (or (= (object/get @x "guard" null) null) (array/includes @evAll (str/concat "~T" @ti))) })))))
                               (let ((reach (if (= @init null) [] (array/reduce (array/range 0 (array/len @sts)) [(object/get @init "name" "")] (fn (vis i) (array/unique (array/concat @vis (array/map (array/filter @tp (fn p (and (object/get @p "a") (let ((fr (let ((f (object/get (object/get @p "x") "from" ""))) (if (validate/string @f) (array/append [] @f) @f)))) (or (array/includes @fr "*") (array/some @fr (fn q (array/includes @vis @q)))))))) (fn p (object/get (object/get @p "x") "to" ""))))))))))
                                 (let ((liveIdx (array/map (array/filter @tp (fn p (and (object/get @p "a") (or (= @init null) (let ((fr (let ((f (object/get (object/get @p "x") "from" ""))) (if (validate/string @f) (array/append [] @f) @f)))) (or (array/includes @fr "*") (array/some @fr (fn q (array/includes @reach @q))))))))) (fn p (str/concat "t" (array/indexOf @trs (object/get @p "x")))))))
                                   { trait: (object/get @t "name" ""), ev: (array/filter @evAll (fn e (not (str/startsWith @e "~T")))), ctl: (array/map (array/filter @items (fn x (= (object/get @x "k") "c"))) (fn x (object/get @x "h"))), lv: (array/map (array/filter @items (fn x (and (= (object/get @x "k") "c") (= (object/get @x "kind") "y") (or (= (object/get @x "src") "tick") (array/includes @liveIdx (object/get @x "src")))))) (fn x { ev: (object/get @x "h"), site: (object/get @x "site") })), br: (array/map (array/filter @items (fn x (= (object/get @x "k") "b"))) (fn x (object/get @x "h"))) })))))))))))))))

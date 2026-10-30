@@ -1,0 +1,1185 @@
+{
+  "atom": "connect/atoms/std-meta-ads.lolo",
+  "trait": "MetaAdsClient",
+  "note": "std-meta-ads over the composed std-http-client: each Graph call is one META_ADS_HTTP_SEND (the access token is the client's query credential access_token, never in an event), replies and failures return by call key, and every failure answers META_ADS_FAILED.",
+  "cases": [
+    {
+      "id": "spend-request-is-one-get-on-the-insights-edge-with-the-range",
+      "steps": [
+        {
+          "event": "META_ADS_GET_SPEND",
+          "payload": {
+            "accountId": "999",
+            "since": "2024-01-01",
+            "until": "2024-01-31"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_HTTP_SEND",
+                "payload": {
+                  "key": "spend",
+                  "method": "GET",
+                  "target": "/v21.0/act_999/insights?fields=spend%2Cimpressions%2Cclicks%2Caccount_currency&time_range=%7B%22since%22%3A%222024-01-01%22%2C%22until%22%3A%222024-01-31%22%7D&level=account",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      },
+      "defaults": [
+        "MetaAdsHttp"
+      ]
+    },
+    {
+      "id": "control-spend-request-with-an-act-prefixed-id-does-not-double-the-prefix",
+      "steps": [
+        {
+          "event": "META_ADS_GET_SPEND",
+          "payload": {
+            "accountId": "act_999",
+            "since": "2024-01-01",
+            "until": "2024-01-31"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_HTTP_SEND",
+                "payload": {
+                  "key": "spend",
+                  "method": "GET",
+                  "target": "/v21.0/act_999/insights?fields=spend%2Cimpressions%2Cclicks%2Caccount_currency&time_range=%7B%22since%22%3A%222024-01-01%22%2C%22until%22%3A%222024-01-31%22%7D&level=account",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      },
+      "defaults": [
+        "MetaAdsHttp"
+      ]
+    },
+    {
+      "id": "control-spend-request-without-an-account-uses-the-default-account-id",
+      "steps": [
+        {
+          "event": "META_ADS_GET_SPEND",
+          "payload": {
+            "since": "2024-02-01",
+            "until": "2024-02-29"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_HTTP_SEND",
+                "payload": {
+                  "key": "spend",
+                  "method": "GET",
+                  "target": "/v21.0/act_123/insights?fields=spend%2Cimpressions%2Cclicks%2Caccount_currency&time_range=%7B%22since%22%3A%222024-02-01%22%2C%22until%22%3A%222024-02-29%22%7D&level=account",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      },
+      "defaults": [
+        "MetaAdsHttp"
+      ]
+    },
+    {
+      "id": "spend-without-any-account-fails-and-sends-nothing",
+      "steps": [
+        {
+          "event": "META_ADS_GET_SPEND",
+          "payload": {
+            "since": "2024-01-01",
+            "until": "2024-01-31"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "No ad account: pass `accountId` or set META_AD_ACCOUNT_ID"
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_HTTP_SEND"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": ""
+      }
+    },
+    {
+      "id": "campaigns-request-is-one-get-on-the-campaigns-edge",
+      "steps": [
+        {
+          "event": "META_ADS_LIST_CAMPAIGNS",
+          "payload": {
+            "accountId": "999"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_HTTP_SEND",
+                "payload": {
+                  "key": "campaigns",
+                  "method": "GET",
+                  "target": "/v21.0/act_999/campaigns?fields=id%2Cname%2Cstatus%2Cdaily_budget",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      },
+      "defaults": [
+        "MetaAdsHttp"
+      ]
+    },
+    {
+      "id": "campaigns-request-with-a-status-adds-the-effective-status-filter",
+      "steps": [
+        {
+          "event": "META_ADS_LIST_CAMPAIGNS",
+          "payload": {
+            "status": "ACTIVE"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_HTTP_SEND",
+                "payload": {
+                  "key": "campaigns",
+                  "method": "GET",
+                  "target": "/v21.0/act_123/campaigns?fields=id%2Cname%2Cstatus%2Cdaily_budget&effective_status=%5B%22ACTIVE%22%5D",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      },
+      "defaults": [
+        "MetaAdsHttp"
+      ]
+    },
+    {
+      "id": "campaigns-without-any-account-fails-and-sends-nothing",
+      "steps": [
+        {
+          "event": "META_ADS_LIST_CAMPAIGNS",
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "No ad account: pass `accountId` or set META_AD_ACCOUNT_ID"
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_HTTP_SEND"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": ""
+      }
+    },
+    {
+      "id": "the-api-version-knob-is-the-first-path-segment",
+      "steps": [
+        {
+          "event": "META_ADS_LIST_CAMPAIGNS",
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_HTTP_SEND",
+                "payload": {
+                  "key": "campaigns",
+                  "method": "GET",
+                  "target": "/v19.0/act_123/campaigns?fields=id%2Cname%2Cstatus%2Cdaily_budget",
+                  "headers": [
+                    {
+                      "name": "accept",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "",
+                  "stream": "none"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123",
+        "apiVersion": "v19.0"
+      },
+      "defaults": [
+        "MetaAdsHttp"
+      ]
+    },
+    {
+      "id": "spend-5xx-fails-with-the-status",
+      "steps": [
+        {
+          "event": "META_ADS_SPEND_REPLIED",
+          "payload": {
+            "status": 503,
+            "headers": {},
+            "body": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "Meta Graph API returned 503"
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_SPEND_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "spend-4xx-fails-with-the-graph-error-message",
+      "steps": [
+        {
+          "event": "META_ADS_SPEND_REPLIED",
+          "payload": {
+            "status": 400,
+            "headers": {},
+            "body": "{\"error\":{\"message\":\"Invalid OAuth access token.\"}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "Meta Graph API error: Invalid OAuth access token."
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_SPEND_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "control-spend-4xx-without-an-error-body-fails-with-the-status",
+      "steps": [
+        {
+          "event": "META_ADS_SPEND_REPLIED",
+          "payload": {
+            "status": 404,
+            "headers": {},
+            "body": "nope"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "Meta Graph API error: 404"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "spend-reply-answers-the-numbers-of-the-first-row",
+      "steps": [
+        {
+          "event": "META_ADS_SPEND_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "{\"data\":[{\"spend\":\"12.50\",\"impressions\":\"1000\",\"clicks\":\"40\",\"account_currency\":\"USD\"}]}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_SPEND_RESULT",
+                "payload": {
+                  "spend": 12.5,
+                  "currency": "USD",
+                  "impressions": 1000,
+                  "clicks": 40
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "control-spend-reply-with-no-rows-answers-zeros",
+      "steps": [
+        {
+          "event": "META_ADS_SPEND_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "{\"data\":[]}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_SPEND_RESULT",
+                "payload": {
+                  "spend": 0,
+                  "currency": "",
+                  "impressions": 0,
+                  "clicks": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "spend-reply-that-is-not-an-insights-list-is-malformed",
+      "steps": [
+        {
+          "event": "META_ADS_SPEND_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "{\"data\":\"x\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "code": "MALFORMED_REPLY",
+                  "message": "Meta Graph API replied with insights that are not a list"
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_SPEND_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "spend-row-with-a-non-numeric-count-is-malformed",
+      "steps": [
+        {
+          "event": "META_ADS_SPEND_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "{\"data\":[{\"spend\":\"x\",\"impressions\":\"1\",\"clicks\":\"2\",\"account_currency\":\"USD\"}]}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "code": "MALFORMED_REPLY",
+                  "message": "Meta Graph API replied with an insights row whose counts are not numbers"
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_SPEND_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "campaigns-5xx-fails-with-the-status",
+      "steps": [
+        {
+          "event": "META_ADS_CAMPAIGNS_REPLIED",
+          "payload": {
+            "status": 500,
+            "headers": {},
+            "body": ""
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "Meta Graph API returned 500"
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_CAMPAIGNS_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "campaigns-4xx-fails-with-the-graph-error-message",
+      "steps": [
+        {
+          "event": "META_ADS_CAMPAIGNS_REPLIED",
+          "payload": {
+            "status": 403,
+            "headers": {},
+            "body": "{\"error\":{\"message\":\"Permissions error\"}}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "Meta Graph API error: Permissions error"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "campaigns-reply-converts-the-daily-budget-from-minor-units",
+      "steps": [
+        {
+          "event": "META_ADS_CAMPAIGNS_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "{\"data\":[{\"id\":\"1\",\"name\":\"A\",\"status\":\"ACTIVE\",\"daily_budget\":\"2550\"},{\"id\":\"2\",\"name\":\"B\",\"status\":\"PAUSED\",\"daily_budget\":\"\"}]}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_CAMPAIGNS_RESULT",
+                "payload": {
+                  "campaigns": [
+                    {
+                      "id": "1",
+                      "name": "A",
+                      "status": "ACTIVE",
+                      "dailyBudget": 25.5
+                    },
+                    {
+                      "id": "2",
+                      "name": "B",
+                      "status": "PAUSED",
+                      "dailyBudget": 0
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "campaigns-2xx-body-that-is-not-json-is-malformed",
+      "steps": [
+        {
+          "event": "META_ADS_CAMPAIGNS_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "<html>"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "code": "MALFORMED_REPLY",
+                  "message": "Meta Graph API replied with a body that is not valid JSON"
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_CAMPAIGNS_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "campaigns-reply-whose-data-is-not-a-list-is-malformed",
+      "steps": [
+        {
+          "event": "META_ADS_CAMPAIGNS_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "{\"data\":\"x\"}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "code": "MALFORMED_REPLY",
+                  "message": "Meta Graph API replied with campaigns that are not a list"
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_CAMPAIGNS_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "campaigns-row-with-a-non-numeric-budget-is-malformed",
+      "steps": [
+        {
+          "event": "META_ADS_CAMPAIGNS_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "{\"data\":[{\"id\":\"1\",\"name\":\"A\",\"status\":\"ACTIVE\",\"daily_budget\":\"abc\"}]}"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "code": "MALFORMED_REPLY",
+                  "message": "Meta Graph API replied with a campaign whose daily budget is not a number"
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_CAMPAIGNS_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "spend-denied-call-fails-with-the-client-error",
+      "steps": [
+        {
+          "event": "META_ADS_SPEND_FAILED",
+          "payload": {
+            "error": "credential META_ACCESS_TOKEN is not held",
+            "kind": "denied"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "credential META_ACCESS_TOKEN is not held"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "spend-timeout-fails-with-the-abort-message",
+      "steps": [
+        {
+          "event": "META_ADS_SPEND_FAILED",
+          "payload": {
+            "error": "timed out",
+            "kind": "timeout"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "The operation was aborted due to timeout"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "control-spend-io-failure-fails-fetch-failed",
+      "steps": [
+        {
+          "event": "META_ADS_SPEND_FAILED",
+          "payload": {
+            "error": "reset",
+            "kind": "io"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "fetch failed"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "campaigns-denied-call-fails-with-the-client-error",
+      "steps": [
+        {
+          "event": "META_ADS_CAMPAIGNS_FAILED",
+          "payload": {
+            "error": "credential META_ACCESS_TOKEN is not held",
+            "kind": "denied"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "credential META_ACCESS_TOKEN is not held"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "campaigns-timeout-fails-with-the-abort-message",
+      "steps": [
+        {
+          "event": "META_ADS_CAMPAIGNS_FAILED",
+          "payload": {
+            "error": "timed out",
+            "kind": "timeout"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "The operation was aborted due to timeout"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "control-campaigns-io-failure-fails-fetch-failed",
+      "steps": [
+        {
+          "event": "META_ADS_CAMPAIGNS_FAILED",
+          "payload": {
+            "error": "reset",
+            "kind": "io"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "fetch failed"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      }
+    },
+    {
+      "id": "the-clients-reply-for-the-spend-key-reaches-the-spend-route",
+      "steps": [
+        {
+          "trait": "MetaAdsHttp",
+          "event": "HC_READ",
+          "from": "reading",
+          "entity": {
+            "key": "spend",
+            "stage": "head",
+            "stream": "none"
+          },
+          "payload": {
+            "data": "SFRUUC8xLjEgMjAwIFgNCmNvbnRlbnQtbGVuZ3RoOiA4MA0KDQp7ImRhdGEiOlt7InNwZW5kIjoiMSIsImltcHJlc3Npb25zIjoiMiIsImNsaWNrcyI6IjMiLCJhY2NvdW50X2N1cnJlbmN5IjoiRVVSIn1dfQ==",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "spend",
+                  "status": 200
+                }
+              },
+              {
+                "event": "META_ADS_SPEND_RESULT",
+                "payload": {
+                  "spend": 1,
+                  "currency": "EUR",
+                  "impressions": 2,
+                  "clicks": 3
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_CAMPAIGNS_RESULT",
+              "META_ADS_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      },
+      "defaults": [
+        "MetaAdsHttp"
+      ]
+    },
+    {
+      "id": "control-the-clients-reply-for-the-campaigns-key-reaches-the-campaigns-route-only",
+      "steps": [
+        {
+          "trait": "MetaAdsHttp",
+          "event": "HC_READ",
+          "from": "reading",
+          "entity": {
+            "key": "campaigns",
+            "stage": "head",
+            "stream": "none"
+          },
+          "payload": {
+            "data": "SFRUUC8xLjEgMjAwIFgNCmNvbnRlbnQtbGVuZ3RoOiAxMQ0KDQp7ImRhdGEiOltdfQ==",
+            "eof": false,
+            "key": "read"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "HTTP_REPLIED",
+                "payload": {
+                  "key": "campaigns",
+                  "status": 200
+                }
+              },
+              {
+                "event": "META_ADS_CAMPAIGNS_RESULT",
+                "payload": {
+                  "campaigns": []
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_SPEND_RESULT",
+              "META_ADS_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      },
+      "defaults": [
+        "MetaAdsHttp"
+      ]
+    },
+    {
+      "id": "a-spend-the-client-cannot-open-fails-with-the-client-error",
+      "steps": [
+        {
+          "event": "META_ADS_GET_SPEND",
+          "payload": {
+            "since": "2024-01-01",
+            "until": "2024-01-31"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "spend",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "os/tcp-connect: no os host configured"
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_SPEND_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      },
+      "defaults": [
+        "MetaAdsHttp"
+      ]
+    },
+    {
+      "id": "control-a-campaigns-list-the-client-cannot-open-fails-with-the-client-error",
+      "steps": [
+        {
+          "event": "META_ADS_LIST_CAMPAIGNS",
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "HTTP_FAILED",
+                "payload": {
+                  "key": "campaigns",
+                  "kind": "denied"
+                }
+              },
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "os/tcp-connect: no os host configured"
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_CAMPAIGNS_RESULT"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      },
+      "defaults": [
+        "MetaAdsHttp"
+      ]
+    },
+    {
+      "id": "the-access-token-is-a-query-credential-the-host-fills-and-never-an-event-field",
+      "steps": [
+        {
+          "event": "META_ADS_LIST_CAMPAIGNS",
+          "payload": {},
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "HC_BUILT",
+                "payload": {
+                  "head": "R0VUIC92MjEuMC9hY3RfMTIzL2NhbXBhaWducz9maWVsZHM9aWQlMkNuYW1lJTJDc3RhdHVzJTJDZGFpbHlfYnVkZ2V0JmFjY2Vzc190b2tlbj0="
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "defaultAccountId": "123"
+      },
+      "defaults": [
+        "MetaAdsHttp"
+      ]
+    },
+    {
+      "id": "the-deadline-passing-fails-the-spend-with-the-abort-message",
+      "config": {
+        "defaultAccountId": "123"
+      },
+      "steps": [
+        {
+          "trait": "MetaAdsTimeout",
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "key": "spend"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TIMED_OUT",
+                "payload": {
+                  "key": "spend",
+                  "timeoutMs": 15000
+                }
+              },
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "The operation was aborted due to timeout"
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_SPEND_RESULT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-deadline-of-a-campaigns-call-fails-the-campaigns-route",
+      "config": {
+        "defaultAccountId": "123"
+      },
+      "steps": [
+        {
+          "trait": "MetaAdsTimeout",
+          "event": "TIMER_DUE",
+          "payload": {},
+          "from": "running",
+          "entity": {
+            "key": "campaigns"
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "META_ADS_FAILED",
+                "payload": {
+                  "message": "The operation was aborted due to timeout"
+                }
+              }
+            ],
+            "neverEmits": [
+              "META_ADS_CAMPAIGNS_RESULT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-reply-before-the-deadline-wins-the-race-and-disarms-it",
+      "config": {
+        "defaultAccountId": "123"
+      },
+      "steps": [
+        {
+          "trait": "MetaAdsTimeout",
+          "event": "START",
+          "payload": {
+            "key": "spend"
+          },
+          "expect": {
+            "state": "running"
+          }
+        },
+        {
+          "trait": "MetaAdsTimeout",
+          "event": "SUCCEEDED",
+          "payload": {
+            "key": "spend"
+          },
+          "from": "running",
+          "expect": {
+            "state": "idle",
+            "neverEmits": [
+              "TIMED_OUT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-spend-request-starts-the-deadline-under-its-key",
+      "config": {
+        "defaultAccountId": "123"
+      },
+      "defaults": [
+        "MetaAdsHttp"
+      ],
+      "steps": [
+        {
+          "event": "META_ADS_GET_SPEND",
+          "payload": {
+            "since": "2024-01-01",
+            "until": "2024-01-31"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ASK_STARTED",
+                "payload": {
+                  "key": "spend"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

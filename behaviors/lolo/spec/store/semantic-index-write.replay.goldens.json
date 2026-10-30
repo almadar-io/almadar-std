@@ -1,0 +1,259 @@
+{
+ "atom": "store/atoms/std-semantic-index.lolo",
+ "trait": "SemanticIndex",
+ "cases": [
+  {
+   "id": "a-batch-that-wrote-fewer-rows-than-it-held-fails-instead-of-answering-indexed",
+   "entity": {
+    "id": "r",
+    "semPhase": "write",
+    "semOp": "index",
+    "semKey": "k1",
+    "semItems": [
+     {
+      "id": "a"
+     },
+     {
+      "id": "b"
+     }
+    ],
+    "semSkipped": []
+   },
+   "steps": [
+    {
+     "from": "working",
+     "event": "SemanticWritten",
+     "payload": {
+      "completedCount": 0,
+      "totalCount": 2
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SEMANTIC_FAILED",
+        "payload": {
+         "op": "index",
+         "key": "k1",
+         "message": "the vector write landed 0 of 2 rows"
+        }
+       }
+      ],
+      "neverEmits": [
+       "SEMANTIC_INDEXED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-batch-that-wrote-every-row-answers-indexed",
+   "entity": {
+    "id": "r",
+    "semPhase": "write",
+    "semOp": "index",
+    "semKey": "k1",
+    "semItems": [
+     {
+      "id": "a"
+     },
+     {
+      "id": "b"
+     }
+    ],
+    "semSkipped": []
+   },
+   "steps": [
+    {
+     "from": "working",
+     "event": "SemanticWritten",
+     "payload": {
+      "completedCount": 2,
+      "totalCount": 2
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SEMANTIC_INDEXED",
+        "payload": {
+         "ids": [
+          "a",
+          "b"
+         ],
+         "skipped": [],
+         "key": "k1",
+         "promptTokens": 0
+        }
+       }
+      ],
+      "neverEmits": [
+       "SEMANTIC_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cursor-at-the-end-resolves-once-and-never-loops-on-the-out-of-range-item",
+   "entity": {
+    "id": "r",
+    "semPhase": "canonical",
+    "semOp": "canonical",
+    "semKey": "k1",
+    "semItems": [
+     {
+      "id": "a"
+     },
+     {
+      "id": "b"
+     }
+    ],
+    "semVectors": [
+     [
+      1
+     ],
+     [
+      1
+     ]
+    ],
+    "semCursor": 2,
+    "semResolutions": []
+   },
+   "steps": [
+    {
+     "from": "working",
+     "event": "SEMANTIC_NEXT",
+     "payload": {
+      "index": 2
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SEMANTIC_CANONICAL_RESOLVED",
+        "payload": {
+         "resolutions": [],
+         "key": "k1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "SEMANTIC_NEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cursor-at-the-end-with-no-vectors-still-resolves-once",
+   "entity": {
+    "id": "r",
+    "semPhase": "canonical",
+    "semOp": "canonical",
+    "semKey": "k1",
+    "semItems": [
+     {
+      "id": "a"
+     },
+     {
+      "id": "b"
+     }
+    ],
+    "semVectors": [],
+    "semCursor": 2,
+    "semResolutions": []
+   },
+   "steps": [
+    {
+     "from": "working",
+     "event": "SEMANTIC_NEXT",
+     "payload": {
+      "index": 2
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SEMANTIC_CANONICAL_RESOLVED",
+        "payload": {
+         "resolutions": [],
+         "key": "k1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "SEMANTIC_NEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-in-range-item-with-an-empty-vector-advances-and-the-loop-terminates",
+   "entity": {
+    "id": "r",
+    "semPhase": "canonical",
+    "semOp": "canonical",
+    "semKey": "k1",
+    "semItems": [
+     {
+      "id": "a"
+     },
+     {
+      "id": "b"
+     }
+    ],
+    "semVectors": [
+     [],
+     [
+      1
+     ]
+    ],
+    "semCursor": 0,
+    "semResolutions": []
+   },
+   "steps": [
+    {
+     "from": "working",
+     "event": "SEMANTIC_NEXT",
+     "payload": {
+      "index": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SEMANTIC_NEXT",
+        "payload": {
+         "index": 1
+        }
+       },
+       {
+        "event": "SEMANTIC_CANONICAL_RESOLVED",
+        "payload": {
+         "resolutions": [
+          {
+           "id": "a",
+           "adopted": false,
+           "matchId": "",
+           "matchName": "",
+           "score": 0
+          },
+          {
+           "id": "b",
+           "adopted": false,
+           "matchId": "",
+           "matchName": "",
+           "score": 0
+          }
+         ],
+         "key": "k1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

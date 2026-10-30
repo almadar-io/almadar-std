@@ -46,13 +46,13 @@ orbital BehaviorBorrowsOrbital {
 
     state working {
       INIT -> working
-      BORROWS_BEHAVIOR_DESCRIBED -> working when (!= (json/parse (json/stringify @payload.result) BwValue) null)
-        (set @entity.raw (default (json/parse (json/stringify @payload.result) BwValue) @entity.raw))
+      BORROWS_BEHAVIOR_DESCRIBED -> working when (!= (as @payload.result BwValue) null)
+        (set @entity.raw (default (as @payload.result BwValue) @entity.raw))
         (behavior/source { behavior: (array/first (str/split @entity.behavior ".orbitals.")) } {
           file: true
           emit: { success: BORROWS_PATH_RESOLVED, failure: BORROWS_OPERATOR_FAILED }
         })
-      BORROWS_BEHAVIOR_DESCRIBED -> ready when (= (json/parse (json/stringify @payload.result) BwValue) null)
+      BORROWS_BEHAVIOR_DESCRIBED -> ready when (= (as @payload.result BwValue) null)
         (emit BORROWS_FAILED { error: "behavior/describe: the description is not a behavior description" })
       BORROWS_PATH_RESOLVED -> working
         (set @entity.file @payload.result.path)

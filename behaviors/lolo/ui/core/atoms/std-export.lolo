@@ -1,9 +1,8 @@
 app std-export [
   version: "3.0.0",
-  description: "std-export — a dropdown format menu (CSV/XLSX/PDF defaults; caller can override via config.formats). Emits EXPORT_REQUESTED { itemId, label } on the bus — itemId is the picked format id; host or sibling orbital generates the file. A format entry may carry `url`: the menu then downloads that file directly on pick (gesture-driven; the event still emits) — used for pre-baked artifacts like sprite sheets. tileId is a static per-instance config value, not echoed in the click payload."
+  description: "std-export — a dropdown format menu (CSV/XLSX/PDF defaults; caller can override via config.formats). Picking an entry fires the internal EXPORT_PICKED (each formats[].event); the menu trait answers by emitting EXPORT_REQUESTED { itemId, label } on the bus — itemId is the picked format id; host or sibling orbital generates the file. A format entry may carry `url`: the menu then downloads that file directly on pick (gesture-driven; EXPORT_REQUESTED still emits) — used for pre-baked artifacts like sprite sheets. tileId is a static per-instance config value, not echoed in the click payload."
 ]
 orbital ExportOrbital {
-    uses Button from "std/behaviors/ui-button"
     uses Menu from "std/behaviors/ui-menu"
 
     type FormatOption = { id : string!, format : string!, label : string!, event : string, url : string }
@@ -12,21 +11,17 @@ orbital ExportOrbital {
     id : string!
   }
 
-  trait Button1 = Button.traits.ButtonRender -> ExportPanel {
-    config {
-      action: OPEN_EXPORT
-      icon: download
-      label: @config.buttonLabel
-      size: sm
-      variant: ghost
-    }
-  }
-
   trait Menu1 = Menu.traits.MenuRender -> ExportPanel {
     config {
       items: @config.formats
       position: bottom-start
-      trigger: [@trait.Button1]
+      trigger: {
+        type: button
+        variant: ghost
+        size: sm
+        icon: download
+        label: @config.buttonLabel
+      }
     }
   }
 
@@ -36,8 +31,8 @@ orbital ExportOrbital {
     state idle {
       INIT -> idle
         (render-ui main { children: [@trait.Menu1], type: box })
-      OPEN_EXPORT -> idle
-      EXPORT_REQUESTED -> idle
+      EXPORT_PICKED -> idle
+        (emit EXPORT_REQUESTED { itemId: ?itemId, label: ?label })
     }
 
     emits {
@@ -51,28 +46,28 @@ orbital ExportOrbital {
     }
 
     listens {
-      EXPORT_REQUESTED {
+      EXPORT_PICKED {
         itemId : string!
         label : string!
       }
-        @description "A request to export data in a specific format. itemId is the picked format id."
-        @synonyms "export, generate, save, download"
-        @tier "domain"
+        @description "A format entry was picked from the menu. itemId is the picked format id; the trait answers by emitting EXPORT_REQUESTED."
+        @synonyms "format selected, export format chosen"
+        @tier "internal"
     }
 
     config {
       formats : [FormatOption] = [{
-        event: EXPORT_REQUESTED
+        event: EXPORT_PICKED
         format: csv
         id: csv
         label: CSV
       }, {
-        event: EXPORT_REQUESTED
+        event: EXPORT_PICKED
         format: xlsx
         id: xlsx
         label: XLSX
       }, {
-        event: EXPORT_REQUESTED
+        event: EXPORT_PICKED
         format: pdf
         id: pdf
         label: PDF
@@ -89,5 +84,5 @@ orbital ExportOrbital {
     }
   }
 
-  page "/exports/menu" as ExportMenuPage -> ExportMenu, Button1, Menu1
+  page "/exports/menu" as ExportMenuPage -> ExportMenu, Menu1
 }

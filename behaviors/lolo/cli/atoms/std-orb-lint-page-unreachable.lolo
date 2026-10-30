@@ -54,7 +54,7 @@ orbital OrbLintPageUnreachableOrbital {
                     (orbCfg (array/map @orbitals (fn orb (array/filter (array/map (object/values (object/get @orb "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))))
                     (appCfgDefaults (array/filter (array/map (object/values @appCfg) (fn f (object/get @f "default" null))) (fn v (!= @v null))))
                     (payloads (array/filter (array/map (array/filter (array/map @effects (fn x (let ((w (object/get @x "w" null))) (if (validate/array @w) (default (as @w ReachEffect) []) [])))) (fn e (and (validate/array @e) (> (array/len @e) 2) (validate/string (array/first @e)) (= (array/first @e) "render-ui")))) (fn e (array/nth @e 2))) (fn v (!= @v null)))))
-                (let ((hrefs (default (tree/fold (default (json/parse (json/stringify { cfg: @trCfg, pay: @payloads }) ReachVal) "") (fn (n kids)
+                (let ((hrefs (default (tree/fold { cfg: @trCfg, pay: @payloads } (fn (n kids)
                                   (array/concat
                                     (if (and (validate/object @n) (not (validate/array @n)))
                                       (array/flatten (array/map ["href" "navigatesTo"] (fn k
@@ -81,7 +81,7 @@ orbital OrbLintPageUnreachableOrbital {
                                             [(array/nth @tg 1)]
                                             [])))
                                       []))))))))))
-                      (sigil (= (tree/fold (default (json/parse (json/stringify { app: @appCfgDefaults, orb: @orbCfg, tr: @trCfg, eff: @transEffects }) ReachVal) "") (fn (n kids)
+                      (sigil (= (tree/fold { app: @appCfgDefaults, orb: @orbCfg, tr: @trCfg, eff: @transEffects } (fn (n kids)
                                       (if (validate/string @n)
                                         (= @n (quote "@pages"))
                                         (if (validate/array @n)

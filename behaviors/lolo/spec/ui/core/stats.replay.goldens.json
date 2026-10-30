@@ -1,0 +1,556 @@
+{
+ "atom": "../ui/core/atoms/std-stats.lolo",
+ "trait": "StatsItemStats",
+ "cases": [
+  {
+   "id": "number-gt-clause-evaluates",
+   "note": "kind number, op >, bound: the clause narrows the row value with as and compares",
+   "config": {
+    "metrics": [
+     {
+      "aggregation": "count",
+      "label": "Over 3",
+      "where": [
+       {
+        "field": "value",
+        "op": ">",
+        "kind": "number",
+        "bound": 3
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "StatsItemStats",
+     "from": "idle",
+     "event": "ITEMS_LOADED",
+     "entity": {
+      "id": "s",
+      "cards": []
+     },
+     "payload": {
+      "data": [
+       {
+        "id": "a",
+        "label": "a",
+        "value": 5
+       },
+       {
+        "id": "b",
+        "label": "b",
+        "value": 2
+       }
+      ],
+      "totalCount": 2
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.cards"
+       },
+       {
+        "type": "if"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "number-gt-control-equals-clause",
+   "note": "control: the same rows through an equality clause",
+   "config": {
+    "metrics": [
+     {
+      "aggregation": "count",
+      "label": "Is 5",
+      "where": [
+       {
+        "field": "value",
+        "op": "=",
+        "value": 5
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "StatsItemStats",
+     "from": "idle",
+     "event": "ITEMS_LOADED",
+     "entity": {
+      "id": "s",
+      "cards": []
+     },
+     "payload": {
+      "data": [
+       {
+        "id": "a",
+        "label": "a",
+        "value": 5
+       },
+       {
+        "id": "b",
+        "label": "b",
+        "value": 2
+       }
+      ],
+      "totalCount": 2
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.cards"
+       },
+       {
+        "type": "if"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "number-clause-against-other-column",
+   "note": "kind number with otherField compares two columns of the row",
+   "config": {
+    "metrics": [
+     {
+      "aggregation": "count",
+      "label": "Value over itself",
+      "where": [
+       {
+        "field": "value",
+        "op": ">=",
+        "kind": "number",
+        "otherField": "value"
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "StatsItemStats",
+     "from": "idle",
+     "event": "ITEMS_LOADED",
+     "entity": {
+      "id": "s",
+      "cards": []
+     },
+     "payload": {
+      "data": [
+       {
+        "id": "a",
+        "label": "a",
+        "value": 5
+       },
+       {
+        "id": "b",
+        "label": "b",
+        "value": 2
+       }
+      ],
+      "totalCount": 2
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.cards"
+       },
+       {
+        "type": "if"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "instant-lt-clause-evaluates",
+   "note": "kind instant, op <, value: both sides narrowed with as, ordered by time/diff",
+   "config": {
+    "metrics": [
+     {
+      "aggregation": "count",
+      "label": "Before June",
+      "where": [
+       {
+        "field": "label",
+        "op": "<",
+        "kind": "instant",
+        "value": "2024-06-01T00:00:00Z"
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "StatsItemStats",
+     "from": "idle",
+     "event": "ITEMS_LOADED",
+     "entity": {
+      "id": "s",
+      "cards": []
+     },
+     "payload": {
+      "data": [
+       {
+        "id": "a",
+        "label": "2024-01-01T00:00:00Z",
+        "value": 1
+       },
+       {
+        "id": "b",
+        "label": "2024-09-01T00:00:00Z",
+        "value": 2
+       }
+      ],
+      "totalCount": 2
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.cards"
+       },
+       {
+        "type": "if"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "instant-lt-control-without-ordering",
+   "note": "control: the same instant rows through an in clause",
+   "config": {
+    "metrics": [
+     {
+      "aggregation": "count",
+      "label": "Listed",
+      "where": [
+       {
+        "field": "label",
+        "op": "in",
+        "values": [
+         "2024-01-01T00:00:00Z"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "StatsItemStats",
+     "from": "idle",
+     "event": "ITEMS_LOADED",
+     "entity": {
+      "id": "s",
+      "cards": []
+     },
+     "payload": {
+      "data": [
+       {
+        "id": "a",
+        "label": "2024-01-01T00:00:00Z",
+        "value": 1
+       },
+       {
+        "id": "b",
+        "label": "2024-09-01T00:00:00Z",
+        "value": 2
+       }
+      ],
+      "totalCount": 2
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.cards"
+       },
+       {
+        "type": "if"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "mismatched-string-under-kind-number-does-not-raise",
+   "note": "a string value under kind number narrows to null so the clause is false and the transition still fires",
+   "config": {
+    "metrics": [
+     {
+      "aggregation": "count",
+      "label": "Label over 3",
+      "where": [
+       {
+        "field": "label",
+        "op": ">",
+        "kind": "number",
+        "bound": 3
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "StatsItemStats",
+     "from": "idle",
+     "event": "ITEMS_LOADED",
+     "entity": {
+      "id": "s",
+      "cards": []
+     },
+     "payload": {
+      "data": [
+       {
+        "id": "a",
+        "label": "a",
+        "value": 5
+       },
+       {
+        "id": "b",
+        "label": "b",
+        "value": 2
+       }
+      ],
+      "totalCount": 2
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.cards"
+       },
+       {
+        "type": "if"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "mismatched-text-under-kind-instant-does-not-raise",
+   "note": "text that is not an instant under kind instant is false, not an error",
+   "config": {
+    "metrics": [
+     {
+      "aggregation": "count",
+      "label": "Label before June",
+      "where": [
+       {
+        "field": "label",
+        "op": "<",
+        "kind": "instant",
+        "value": "2024-06-01T00:00:00Z"
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "StatsItemStats",
+     "from": "idle",
+     "event": "ITEMS_LOADED",
+     "entity": {
+      "id": "s",
+      "cards": []
+     },
+     "payload": {
+      "data": [
+       {
+        "id": "a",
+        "label": "a",
+        "value": 5
+       },
+       {
+        "id": "b",
+        "label": "b",
+        "value": 2
+       }
+      ],
+      "totalCount": 2
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.cards"
+       },
+       {
+        "type": "if"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "baseline-where-orders-by-kind",
+   "note": "baselineWhere carries the same clause: variance uses a kind number clause",
+   "config": {
+    "metrics": [
+     {
+      "aggregation": "variance",
+      "label": "Delta",
+      "where": [
+       {
+        "field": "value",
+        "op": ">",
+        "kind": "number",
+        "bound": 3
+       }
+      ],
+      "field": "value",
+      "baselineWhere": [
+       {
+        "field": "value",
+        "op": "<=",
+        "kind": "number",
+        "bound": 3
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "StatsItemStats",
+     "from": "idle",
+     "event": "ITEMS_LOADED",
+     "entity": {
+      "id": "s",
+      "cards": []
+     },
+     "payload": {
+      "data": [
+       {
+        "id": "a",
+        "label": "a",
+        "value": 5
+       },
+       {
+        "id": "b",
+        "label": "b",
+        "value": 2
+       }
+      ],
+      "totalCount": 2
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.cards"
+       },
+       {
+        "type": "if"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "relative-window-and-epoch-clauses-fire",
+   "note": "within and older-than-ms read their days without a time/parse",
+   "config": {
+    "metrics": [
+     {
+      "aggregation": "count",
+      "label": "Recent",
+      "where": [
+       {
+        "field": "label",
+        "op": "within",
+        "days": 30
+       }
+      ]
+     },
+     {
+      "aggregation": "count",
+      "label": "Old ms",
+      "where": [
+       {
+        "field": "value",
+        "op": "older-than-ms",
+        "days": 0
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "StatsItemStats",
+     "from": "idle",
+     "event": "ITEMS_LOADED",
+     "entity": {
+      "id": "s",
+      "cards": []
+     },
+     "payload": {
+      "data": [
+       {
+        "id": "a",
+        "label": "a",
+        "value": 5
+       },
+       {
+        "id": "b",
+        "label": "b",
+        "value": 2
+       }
+      ],
+      "totalCount": 2
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.cards"
+       },
+       {
+        "type": "if"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

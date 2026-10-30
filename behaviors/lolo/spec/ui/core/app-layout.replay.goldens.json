@@ -1,0 +1,150 @@
+{
+  "atom": "../ui/core/atoms/std-app-layout.lolo",
+  "trait": "AppLayout",
+  "cases": [
+    {
+      "id": "bell-click-emits-notify-click",
+      "note": "the bell fires the internal NOTIFY_PICKED; the layout answers with the consumer contract NOTIFY_CLICK so a panel listening AppLayout.NOTIFY_CLICK hears it",
+      "steps": [
+        {
+          "trait": "AppLayout",
+          "from": "composing",
+          "event": "NOTIFY_PICKED",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "composing",
+            "emitCounts": {
+              "NOTIFY_CLICK": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-load-failure-emits-no-notify-click",
+      "note": "control: a layout load failure notifies the viewer and requests no notification panel",
+      "steps": [
+        {
+          "trait": "AppLayout",
+          "from": "composing",
+          "event": "AppLayoutStateLoadFailed",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {
+            "error": "x"
+          },
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "NOTIFY_CLICK"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-loaded-emits-no-notify-click",
+      "note": "control: the loaded signal opens nothing",
+      "steps": [
+        {
+          "trait": "AppLayout",
+          "from": "composing",
+          "event": "AppLayoutStateLoaded",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {
+            "data": []
+          },
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "NOTIFY_CLICK"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "search-submit-emits-search",
+      "note": "the search box fires the internal SEARCH_PICKED; the layout answers with SEARCH { value } for the app's listeners",
+      "steps": [
+        {
+          "trait": "AppLayout",
+          "from": "composing",
+          "event": "SEARCH_PICKED",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {
+            "value": "abc"
+          },
+          "expect": {
+            "fired": true,
+            "state": "composing",
+            "exactEmits": [
+              {
+                "event": "SEARCH",
+                "payload": {
+                  "value": "abc"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-search-without-value-emits-empty-query",
+      "note": "control: a submit with no value emits an empty query, not a null",
+      "steps": [
+        {
+          "trait": "AppLayout",
+          "from": "composing",
+          "event": "SEARCH_PICKED",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "SEARCH",
+                "payload": {
+                  "value": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-bell-emits-no-search",
+      "note": "control: the bell opens notifications and runs no search",
+      "steps": [
+        {
+          "trait": "AppLayout",
+          "from": "composing",
+          "event": "NOTIFY_PICKED",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "SEARCH"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

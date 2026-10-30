@@ -564,7 +564,8 @@ orbital LearnClassifyOrbital {
               (set @entity.verdict "")
             )
             (let (
-                (nextIndex (if @config.loopRound (math/mod (+ @entity.itemIndex @config.orderStride) @entity.totalItems) (+ @entity.itemIndex @config.orderStride)))
+                ;; math/mod is null only for zero items; the missing item below then reads as empty.
+                (nextIndex (if @config.loopRound (default (math/mod (+ @entity.itemIndex @config.orderStride) @entity.totalItems) 0) (+ @entity.itemIndex @config.orderStride)))
                 (item (array/nth @entity.items @nextIndex))
               )
               (do

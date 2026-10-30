@@ -368,7 +368,7 @@ orbital AgentToolLoopOrbital {
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
             (set @entity.binding @b)
-            (persist/read-named (object/get (default (json/parse (json/stringify @entity.current.arguments) AgentReadArguments) {}) entity "") { emit: { success: READ_DONE, failure: READ_FAILED } })))
+            (persist/read-named (object/get (default (as @entity.current.arguments AgentReadArguments) {}) entity "") { emit: { success: READ_DONE, failure: READ_FAILED } })))
       DISPATCHED -> running when @payload.result.ok
         (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: true, content: ?text, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))

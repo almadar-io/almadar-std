@@ -1,8 +1,11 @@
 app std-youtube [
   version: "1.0.0",
-  description: "std-youtube — YouTube Data API v3 search, video and channel lookups. YOUTUBE_SEARCH lists matching video snippets, YOUTUBE_GET_VIDEO and YOUTUBE_GET_CHANNEL fetch snippet and statistics. The API key is a secret knob sent as the key query parameter; server errors, rate limiting and dead connections are retried as the googleapis SDK does.",
-  egress: ["https://youtube.googleapis.com"]
+  description: "std-youtube — YouTube Data API v3 search, video and channel lookups. YOUTUBE_SEARCH lists matching video snippets, YOUTUBE_GET_VIDEO and YOUTUBE_GET_CHANNEL fetch snippet and statistics. The API key is the credential of the composed std-http-client trait YoutubeHttp, written by the host as the key query parameter; server errors, rate limiting and dead connections are retried as the googleapis SDK does.",
+  net: { "youtube.googleapis.com:443": [tcp] }
 ]
+uses Http from "std/behaviors/std-http-client"
+uses Timeout from "std/behaviors/std-timeout"
+type HttpHeader = { name : string!, value : string! }
 type YoutubeJob = { kind : string!, attempt : number!, query : string!, maxResults : number!, type : string!, id : string! }
 type YoutubePending = { key : string!, job : YoutubeJob! }
 type YoutubeKv = { k : string!, v : string? }
@@ -25,6 +28,34 @@ orbital YoutubeOrbital {
     seq : number = 0
   }
 
+  trait YoutubeHttp = Http.traits.HttpClient {
+    config {
+      host: "youtube.googleapis.com"
+      port: 443
+      tls: true
+      serverName: "youtube.googleapis.com"
+      credential: "YOUTUBE_API_KEY"
+      credentialIn: "query"
+      credentialName: "key"
+    }
+    listens {
+      YoutubeClient.YOUTUBE_HTTP_SEND -> HTTP_SEND
+      YoutubeTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait YoutubeTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 30000
+      cancelOnDeadline: false
+    }
+    listens {
+      YoutubeClient.YOUTUBE_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      YoutubeHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      YoutubeHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
+  }
+
   trait YoutubeClient -> YoutubeLookup [optimistic] {
     initial: idle
 
@@ -43,49 +74,25 @@ orbital YoutubeOrbital {
           (do
             (set @entity.pending (array/append @entity.pending { key: @k, job: { kind: @payload.kind, attempt: @payload.attempt, query: @payload.query, maxResults: @payload.maxResults, type: @payload.type, id: @payload.id } }))
             (set @entity.seq (+ @entity.seq 1))
-            (http GET @config.origin "/youtube/v3/search" {
-              query: { part: "snippet", q: @payload.query, maxResults: @payload.maxResults, type: @payload.type },
-              queryEncoding: rfc3986,
-              headers: { Accept: "*/*" },
-              auth: { scheme: api-key, credential: @config.apiKey, name: "key", in: query },
-              timeoutMs: @config.timeoutMs
-            } { key: @k, emit: { success: YOUTUBE_REPLIED, failure: YOUTUBE_UNREACHED } })))
+            (emit YOUTUBE_HTTP_SEND { key: @k, method: "GET", target: (str/concat "/youtube/v3/search?part=snippet&q=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.query) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "&maxResults=" @payload.maxResults "&type=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.type) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")), headers: [{ name: "accept", value: "*/*" }], body: (bytes/from-string ""), stream: "none" })))
       YOUTUBE_REQUEST -> idle when (and (= @payload.kind "search") (= @payload.type ""))
         (let ((k (str/concat "youtube-" @entity.seq)))
           (do
             (set @entity.pending (array/append @entity.pending { key: @k, job: { kind: @payload.kind, attempt: @payload.attempt, query: @payload.query, maxResults: @payload.maxResults, type: @payload.type, id: @payload.id } }))
             (set @entity.seq (+ @entity.seq 1))
-            (http GET @config.origin "/youtube/v3/search" {
-              query: { part: "snippet", q: @payload.query, maxResults: @payload.maxResults },
-              queryEncoding: rfc3986,
-              headers: { Accept: "*/*" },
-              auth: { scheme: api-key, credential: @config.apiKey, name: "key", in: query },
-              timeoutMs: @config.timeoutMs
-            } { key: @k, emit: { success: YOUTUBE_REPLIED, failure: YOUTUBE_UNREACHED } })))
+            (emit YOUTUBE_HTTP_SEND { key: @k, method: "GET", target: (str/concat "/youtube/v3/search?part=snippet&q=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.query) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A") "&maxResults=" @payload.maxResults), headers: [{ name: "accept", value: "*/*" }], body: (bytes/from-string ""), stream: "none" })))
       YOUTUBE_REQUEST -> idle when (= @payload.kind "video")
         (let ((k (str/concat "youtube-" @entity.seq)))
           (do
             (set @entity.pending (array/append @entity.pending { key: @k, job: { kind: @payload.kind, attempt: @payload.attempt, query: @payload.query, maxResults: @payload.maxResults, type: @payload.type, id: @payload.id } }))
             (set @entity.seq (+ @entity.seq 1))
-            (http GET @config.origin "/youtube/v3/videos" {
-              query: { part: ["snippet", "statistics"], id: @payload.id },
-              queryEncoding: rfc3986,
-              headers: { Accept: "*/*" },
-              auth: { scheme: api-key, credential: @config.apiKey, name: "key", in: query },
-              timeoutMs: @config.timeoutMs
-            } { key: @k, emit: { success: YOUTUBE_REPLIED, failure: YOUTUBE_UNREACHED } })))
+            (emit YOUTUBE_HTTP_SEND { key: @k, method: "GET", target: (str/concat "/youtube/v3/videos?part=snippet&part=statistics&id=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.id) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")), headers: [{ name: "accept", value: "*/*" }], body: (bytes/from-string ""), stream: "none" })))
       YOUTUBE_REQUEST -> idle when (= @payload.kind "channel")
         (let ((k (str/concat "youtube-" @entity.seq)))
           (do
             (set @entity.pending (array/append @entity.pending { key: @k, job: { kind: @payload.kind, attempt: @payload.attempt, query: @payload.query, maxResults: @payload.maxResults, type: @payload.type, id: @payload.id } }))
             (set @entity.seq (+ @entity.seq 1))
-            (http GET @config.origin "/youtube/v3/channels" {
-              query: { part: ["snippet", "statistics"], id: @payload.id },
-              queryEncoding: rfc3986,
-              headers: { Accept: "*/*" },
-              auth: { scheme: api-key, credential: @config.apiKey, name: "key", in: query },
-              timeoutMs: @config.timeoutMs
-            } { key: @k, emit: { success: YOUTUBE_REPLIED, failure: YOUTUBE_UNREACHED } })))
+            (emit YOUTUBE_HTTP_SEND { key: @k, method: "GET", target: (str/concat "/youtube/v3/channels?part=snippet&part=statistics&id=" (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/encode-uri-component @payload.id) "!" "%21") "'" "%27") "(" "%28") ")" "%29") "*" "%2A")), headers: [{ name: "accept", value: "*/*" }], body: (bytes/from-string ""), stream: "none" })))
 
       YOUTUBE_REPLIED -> idle when (and (or (and (>= @payload.status 200) (< @payload.status 300)) (= @payload.status 304)) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "search")))))
         (let ((r (json/parse @payload.body YoutubeSearchReply)))
@@ -197,51 +204,51 @@ orbital YoutubeOrbital {
                     (if (>= @payload.status 400) @payload.body (str/concat "Request failed with status code " @payload.status))))
               })))) 
 
-      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "unconfigured") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "search") (< @p.job.attempt 2)))))
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "denied") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "search") (< @p.job.attempt 2)))))
         (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key)))))
           (do
             (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
             (if (= @e null)
               (emit YOUTUBE_SEARCH_FAILED { message: "YouTube replied for a request that is no longer pending" })
               (emit YOUTUBE_REQUEST { kind: @e.job.kind, attempt: (+ @e.job.attempt 1), query: @e.job.query, maxResults: @e.job.maxResults, type: @e.job.type, id: @e.job.id }))))
-      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "unconfigured") (or (= @payload.kind "refused") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (>= @p.job.attempt 2))))) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "search")))))
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "denied") (or (= @payload.kind "refused") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (>= @p.job.attempt 2))))) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "search")))))
         (do
           (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
           (emit YOUTUBE_REJECTED { kind: "search", message: @payload.error }))
-      YOUTUBE_UNREACHED -> idle when (and (= @payload.kind "unconfigured") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "search")))))
+      YOUTUBE_UNREACHED -> idle when (and (= @payload.kind "denied") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "search")))))
         (do
           (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
-          (emit YOUTUBE_REJECTED { kind: "search", message: (if (validate/string @payload.credential) (str/concat @payload.credential " not configured") @payload.error) }))
-      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "unconfigured") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "video") (< @p.job.attempt 2)))))
+          (emit YOUTUBE_REJECTED { kind: "search", message: @payload.error }))
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "denied") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "video") (< @p.job.attempt 2)))))
         (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key)))))
           (do
             (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
             (if (= @e null)
               (emit YOUTUBE_VIDEO_FAILED { message: "YouTube replied for a request that is no longer pending" })
               (emit YOUTUBE_REQUEST { kind: @e.job.kind, attempt: (+ @e.job.attempt 1), query: @e.job.query, maxResults: @e.job.maxResults, type: @e.job.type, id: @e.job.id }))))
-      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "unconfigured") (or (= @payload.kind "refused") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (>= @p.job.attempt 2))))) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "video")))))
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "denied") (or (= @payload.kind "refused") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (>= @p.job.attempt 2))))) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "video")))))
         (do
           (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
           (emit YOUTUBE_REJECTED { kind: "video", message: @payload.error }))
-      YOUTUBE_UNREACHED -> idle when (and (= @payload.kind "unconfigured") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "video")))))
+      YOUTUBE_UNREACHED -> idle when (and (= @payload.kind "denied") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "video")))))
         (do
           (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
-          (emit YOUTUBE_REJECTED { kind: "video", message: (if (validate/string @payload.credential) (str/concat @payload.credential " not configured") @payload.error) }))
-      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "unconfigured") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "channel") (< @p.job.attempt 2)))))
+          (emit YOUTUBE_REJECTED { kind: "video", message: @payload.error }))
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "denied") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "channel") (< @p.job.attempt 2)))))
         (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key)))))
           (do
             (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
             (if (= @e null)
               (emit YOUTUBE_CHANNEL_FAILED { message: "YouTube replied for a request that is no longer pending" })
               (emit YOUTUBE_REQUEST { kind: @e.job.kind, attempt: (+ @e.job.attempt 1), query: @e.job.query, maxResults: @e.job.maxResults, type: @e.job.type, id: @e.job.id }))))
-      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "unconfigured") (or (= @payload.kind "refused") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (>= @p.job.attempt 2))))) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "channel")))))
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "denied") (or (= @payload.kind "refused") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (>= @p.job.attempt 2))))) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "channel")))))
         (do
           (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
           (emit YOUTUBE_REJECTED { kind: "channel", message: @payload.error }))
-      YOUTUBE_UNREACHED -> idle when (and (= @payload.kind "unconfigured") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "channel")))))
+      YOUTUBE_UNREACHED -> idle when (and (= @payload.kind "denied") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "channel")))))
         (do
           (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
-          (emit YOUTUBE_REJECTED { kind: "channel", message: (if (validate/string @payload.credential) (str/concat @payload.credential " not configured") @payload.error) }))
+          (emit YOUTUBE_REJECTED { kind: "channel", message: @payload.error }))
 
       YOUTUBE_REJECTED -> idle when (= @payload.kind "search")
         (emit YOUTUBE_SEARCH_FAILED { message: @payload.message })
@@ -305,21 +312,15 @@ orbital YoutubeOrbital {
       }
         @description "Internal: one attempt at a Data API call."
         @tier "secondary"
-      YOUTUBE_REPLIED {
-        status : number!
-        headers : Map string string
-        body : string!
+      YOUTUBE_HTTP_SEND {
         key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
       }
-        @description "Internal: a Data API call's HTTP reply."
-        @tier "secondary"
-      YOUTUBE_UNREACHED {
-        error : string!
-        kind : string!
-        credential : string
-        key : string!
-      }
-        @description "Internal: a Data API call never produced a reply."
+        @description "Internal: one Data API request, for the HTTP client."
         @tier "secondary"
       YOUTUBE_REJECTED {
         kind : string!
@@ -368,29 +369,14 @@ orbital YoutubeOrbital {
       YOUTUBE_UNREACHED {
         error : string!
         kind : string!
-        credential : string
         key : string!
       }
+      YoutubeHttp.HTTP_REPLIED -> YOUTUBE_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key }
+      YoutubeHttp.HTTP_FAILED -> YOUTUBE_UNREACHED with { error: ?error, kind: ?kind, key: ?key }
+      YoutubeTimeout.TIMED_OUT -> YOUTUBE_UNREACHED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout", key: ?key }
     }
 
-    config {
-      origin : url = "https://youtube.googleapis.com"
-        @label "YouTube API origin"
-        @description "The YouTube Data API origin (scheme://host, no path). Must be declared in the app egress list."
-        @synonyms "youtube url, api host, data api origin"
-        @tier "infra"
-      apiKey : secret = "YOUTUBE_API_KEY"
-        @label "API key credential"
-        @description "Name of the credential holding the YouTube Data API key."
-        @synonyms "api key, youtube key, credential"
-        @tier "infra"
-      timeoutMs : number = 30000
-        @label "Request timeout (ms)"
-        @description "Milliseconds each YouTube request may take before it counts as unreachable."
-        @synonyms "timeout, request deadline, wait limit"
-        @tier "infra"
-    }
   }
 
-  page boot as YoutubePage -> YoutubeClient
+  page boot as YoutubePage -> YoutubeClient, YoutubeHttp, YoutubeTimeout
 }

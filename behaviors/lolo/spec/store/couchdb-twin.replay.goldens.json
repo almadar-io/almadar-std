@@ -2,7 +2,7 @@
  "atom": "store/atoms/std-couchdb.lolo",
  "trait": "RowStoreDriver",
  "source": "orbital-rust/crates/orbital-core/crates/runtime/src/stores/couchdb.rs (behavior and tests)",
- "note": "Each reply step seeds the state and entity the Rust driver would hold at that point and feeds the reply the Rust driver parses (status plus JSON body), asserting what the Rust driver returns. The replay kernel has no scripted HTTP host and its effect assertion reports only type, key, status and options position, so request shapes (URL, method, headers, body) are pinned by the live wire probe and the Rust twin test, not here.",
+ "note": "Each reply step seeds the state and entity the Rust driver would hold at that point and feeds the reply the Rust driver parses (status plus JSON body), asserting what the Rust driver returns. Each request is one COUCH_HTTP_SEND for the composed std-http-client (key names the call, method asserted here); the full request shape (target, headers, body) is pinned in couchdb-wire.replay.goldens.json.",
  "cases": [
   {
    "id": "get-issues-one-http-ask-and-waits-for-the-reply",
@@ -16,10 +16,13 @@
      "from": "idle",
      "expect": {
       "state": "getting",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "get",
+         "method": "GET"
+        }
        }
       ]
      }
@@ -320,10 +323,13 @@
      },
      "expect": {
       "state": "ensuring",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "ensure",
+         "method": "PUT"
+        }
        }
       ]
      }
@@ -338,10 +344,13 @@
      "from": "ensuring",
      "expect": {
       "state": "writing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "write",
+         "method": "PUT"
+        }
        }
       ]
      }
@@ -398,10 +407,13 @@
      },
      "expect": {
       "state": "writing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "write",
+         "method": "PUT"
+        }
        }
       ]
      }
@@ -431,10 +443,13 @@
      },
      "expect": {
       "state": "writing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "write",
+         "method": "PUT"
+        }
        }
       ]
      }
@@ -464,10 +479,13 @@
      },
      "expect": {
       "state": "writing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "write",
+         "method": "PUT"
+        }
        }
       ]
      }
@@ -497,10 +515,13 @@
      },
      "expect": {
       "state": "writing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "write",
+         "method": "PUT"
+        }
        }
       ]
      }
@@ -804,10 +825,13 @@
      },
      "expect": {
       "state": "ensuring",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "ensure",
+         "method": "PUT"
+        }
        }
       ]
      }
@@ -822,10 +846,13 @@
      "from": "ensuring",
      "expect": {
       "state": "reading",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "read",
+         "method": "GET"
+        }
        }
       ]
      }
@@ -853,10 +880,13 @@
      },
      "expect": {
       "state": "reading",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "read",
+         "method": "GET"
+        }
        }
       ]
      }
@@ -886,10 +916,13 @@
      },
      "expect": {
       "state": "writing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "write",
+         "method": "PUT"
+        }
        }
       ]
      }
@@ -947,10 +980,13 @@
      },
      "expect": {
       "state": "writing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "write",
+         "method": "PUT"
+        }
        }
       ]
      }
@@ -1062,10 +1098,13 @@
      },
      "expect": {
       "state": "reading",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "read",
+         "method": "GET"
+        }
        }
       ]
      }
@@ -1163,10 +1202,13 @@
      },
      "expect": {
       "state": "reading",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "read",
+         "method": "GET"
+        }
        }
       ]
      }
@@ -1197,10 +1239,13 @@
      },
      "expect": {
       "state": "writing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "write",
+         "method": "PUT"
+        }
        }
       ]
      }
@@ -1299,10 +1344,13 @@
      },
      "expect": {
       "state": "reading",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "read",
+         "method": "GET"
+        }
        }
       ]
      }
@@ -1333,10 +1381,13 @@
      },
      "expect": {
       "state": "reading",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "read",
+         "method": "GET"
+        }
        }
       ]
      }
@@ -1529,10 +1580,13 @@
      },
      "expect": {
       "state": "reading",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "read",
+         "method": "GET"
+        }
        }
       ]
      }
@@ -1559,10 +1613,13 @@
      },
      "expect": {
       "state": "writing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "write",
+         "method": "DELETE"
+        }
        }
       ]
      }
@@ -1644,10 +1701,13 @@
      },
      "expect": {
       "state": "reading",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "read",
+         "method": "GET"
+        }
        }
       ]
      }
@@ -1833,10 +1893,13 @@
      },
      "expect": {
       "state": "listing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "list",
+         "method": "GET"
+        }
        }
       ]
      }
@@ -2100,10 +2163,13 @@
      },
      "expect": {
       "state": "finding",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "find",
+         "method": "POST"
+        }
        }
       ]
      }
@@ -2128,10 +2194,13 @@
      },
      "expect": {
       "state": "finding",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "find",
+         "method": "POST"
+        }
        }
       ]
      }
@@ -2155,10 +2224,13 @@
      },
      "expect": {
       "state": "counting",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "count",
+         "method": "POST"
+        }
        }
       ]
      }
@@ -2333,10 +2405,13 @@
       "neverEmits": [
        "COUCH_FOUND"
       ],
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "count",
+         "method": "POST"
+        }
        }
       ]
      }
@@ -2374,10 +2449,13 @@
       "neverEmits": [
        "COUCH_FOUND"
       ],
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "find",
+         "method": "POST"
+        }
        }
       ]
      }
@@ -2648,10 +2726,13 @@
       "neverEmits": [
        "COUCH_FOUND"
       ],
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "count",
+         "method": "POST"
+        }
        }
       ]
      }
@@ -2685,10 +2766,13 @@
      },
      "expect": {
       "state": "counting",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "count",
+         "method": "POST"
+        }
        }
       ]
      }
@@ -2763,10 +2847,13 @@
       "neverEmits": [
        "COUCH_FOUND"
       ],
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "count",
+         "method": "POST"
+        }
        }
       ]
      }
@@ -5863,10 +5950,13 @@
      "from": "idle",
      "expect": {
       "state": "counting",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "count",
+         "method": "POST"
+        }
        }
       ]
      },
@@ -6020,10 +6110,13 @@
      "from": "finding",
      "expect": {
       "state": "counting",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "count",
+         "method": "POST"
+        }
        }
       ]
      },
@@ -6185,10 +6278,13 @@
      "from": "finding",
      "expect": {
       "state": "counting",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "count",
+         "method": "POST"
+        }
        }
       ]
      },
@@ -6318,10 +6414,13 @@
      "from": "idle",
      "expect": {
       "state": "finding",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "find",
+         "method": "POST"
+        }
        }
       ]
      },
@@ -6341,10 +6440,13 @@
      "from": "idle",
      "expect": {
       "state": "finding",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "find",
+         "method": "POST"
+        }
        }
       ]
      },
@@ -7774,14 +7876,17 @@
      "from": "reading",
      "expect": {
       "state": "writing",
-      "effects": [
-       {
-        "type": "http",
-        "optionsAt": 3
-       }
-      ],
       "neverEmits": [
        "COUCH_REFUSED"
+      ],
+      "emits": [
+       {
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "write",
+         "method": "PUT"
+        }
+       }
       ]
      },
      "entity": {
@@ -7892,10 +7997,13 @@
      "from": "writing",
      "expect": {
       "state": "reading",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "read",
+         "method": "GET"
+        }
        }
       ]
      },
@@ -7954,10 +8062,13 @@
      "from": "reading",
      "expect": {
       "state": "writing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "write",
+         "method": "DELETE"
+        }
        }
       ]
      },
@@ -8053,10 +8164,13 @@
      "from": "reading",
      "expect": {
       "state": "writing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "write",
+         "method": "DELETE"
+        }
        }
       ]
      },
@@ -8383,10 +8497,13 @@
      "from": "reading",
      "expect": {
       "state": "writing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "write",
+         "method": "PUT"
+        }
        }
       ]
      },
@@ -8520,10 +8637,13 @@
      },
      "expect": {
       "state": "indexing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "idb",
+         "method": "PUT"
+        }
        }
       ]
      }
@@ -8562,10 +8682,13 @@
      },
      "expect": {
       "state": "indexing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "idx",
+         "method": "POST"
+        }
        }
       ]
      }
@@ -8606,10 +8729,13 @@
      },
      "expect": {
       "state": "indexing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "idx",
+         "method": "POST"
+        }
        }
       ]
      }
@@ -8734,10 +8860,13 @@
      },
      "expect": {
       "state": "indexing",
-      "effects": [
+      "emits": [
        {
-        "type": "http",
-        "optionsAt": 3
+        "event": "COUCH_HTTP_SEND",
+        "payload": {
+         "key": "idx",
+         "method": "POST"
+        }
        }
       ]
      }

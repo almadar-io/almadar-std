@@ -130,11 +130,11 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/packages': {
     module: 'behavior', category: 'std-behavior',
     minArity: 0, maxArity: 1,
-    description: 'The installed behavior packages, each `{ root, prefix, vectors }`: its directory, its behavior prefix and the path of its `orb.vectors` snapshot as the sidecar lock resolves it (the cached sidecar when locked, `null` when the package declares none).',
+    description: 'The installed behavior packages, each `{ root, prefix, vectors, vectorsRel, vectorsIn }`: its directory, its behavior prefix and the path of its `orb.vectors` snapshot as the sidecar lock resolves it (the cached sidecar when locked, `null` when the package declares none). `vectorsIn` is a fixed anchor a program spells as a literal and `vectorsRel` the snapshot relative to it: `node-modules` (`<cwd>/node_modules`, `vectorsRel` starting at the package name), `sidecars` (the default `~/.almadar/sidecars`, `vectorsRel` the cached name) or `outside` (a node_modules higher up the ancestors, a linked package whose real path is elsewhere, a custom sidecar cache; `vectorsRel` `null`). No snapshot answers `vectorsRel` and `vectorsIn` `null`.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
-    returnType: list(shape({ root: STRING, prefix: STRING, vectors: nullable(STRING) })),
+    returnType: list(shape({ root: STRING, prefix: STRING, vectors: nullable(STRING), vectorsRel: nullable(STRING), vectorsIn: nullable(union('node-modules', 'sidecars', 'outside')) })),
     params: [
       { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
     ],

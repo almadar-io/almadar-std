@@ -1,0 +1,89 @@
+{
+ "atom": "connect/atoms/std-notify-on-event.lolo",
+ "trait": "NotifyOnEventListener",
+ "note": "a threshold guard (gt/lt/gte/lte) needs the upstream event's data; an event without data never passes it. eq mode is unchanged.",
+ "cases": [
+  {
+   "id": "lt-guard-with-no-data-does-not-fire",
+   "config": {
+    "guardOp": "lt",
+    "guardField": "level",
+    "guardValue": 5,
+    "fallbackRecipient": "ops"
+   },
+   "steps": [
+    {
+     "event": "EventOccurred",
+     "payload": {
+      "status": "ok"
+     },
+     "expect": {
+      "fired": false,
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "gte-guard-with-no-data-does-not-fire",
+   "config": {
+    "guardOp": "gte",
+    "guardField": "level",
+    "guardValue": 0,
+    "fallbackRecipient": "ops"
+   },
+   "steps": [
+    {
+     "event": "EventOccurred",
+     "payload": {
+      "status": "ok"
+     },
+     "expect": {
+      "fired": false,
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "lt-guard-with-data-fires",
+   "config": {
+    "guardOp": "lt",
+    "guardField": "level",
+    "guardValue": 5,
+    "fallbackRecipient": "ops"
+   },
+   "steps": [
+    {
+     "event": "EventOccurred",
+     "payload": {
+      "status": "ok",
+      "data": {
+       "id": "r1"
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "eq-guard-with-no-data-fires",
+   "steps": [
+    {
+     "event": "EventOccurred",
+     "payload": {
+      "status": "ok"
+     },
+     "expect": {
+      "fired": true
+     }
+    }
+   ],
+   "config": {
+    "fallbackRecipient": "ops"
+   }
+  }
+ ]
+}

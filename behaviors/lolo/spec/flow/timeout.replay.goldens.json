@@ -159,6 +159,104 @@
      }
     }
    ]
+  },
+  {
+   "id": "cancel-on-deadline-false-times-out-without-a-cancel-call",
+   "now": 1760531400000,
+   "config": {
+    "timeoutMs": 2000,
+    "cancelOnDeadline": false
+   },
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "key": "k1"
+     }
+    },
+    {
+     "event": "TIMER_DUE",
+     "payload": {},
+     "from": "running",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TIMED_OUT",
+        "payload": {
+         "key": "k1",
+         "timeoutMs": 2000
+        }
+       }
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-the-default-cancels-the-key-on-the-deadline",
+   "now": 1760531400000,
+   "config": {
+    "timeoutMs": 2000
+   },
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "key": "k1"
+     }
+    },
+    {
+     "event": "TIMER_DUE",
+     "payload": {},
+     "from": "running",
+     "expect": {
+      "state": "idle",
+      "effects": [
+       {
+        "type": "cancel-call"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "cancel-on-deadline-false-success-before-the-deadline-still-completes",
+   "now": 1760531400000,
+   "config": {
+    "cancelOnDeadline": false
+   },
+   "steps": [
+    {
+     "event": "START",
+     "payload": {
+      "key": "k1"
+     }
+    },
+    {
+     "event": "SUCCEEDED",
+     "payload": {
+      "key": "k1"
+     },
+     "from": "running",
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "COMPLETED",
+        "payload": {
+         "key": "k1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TIMED_OUT"
+      ]
+     }
+    }
+   ]
   }
  ]
 }
